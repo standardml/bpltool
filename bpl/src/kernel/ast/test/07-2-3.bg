@@ -1,0 +1,3 @@
+(* Expect error: Testing tensor product with local inner name clash *)
+
+'{x,y}'  *  K<><{z},{y}>

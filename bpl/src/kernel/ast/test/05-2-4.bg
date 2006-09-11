@@ -1,0 +1,3 @@
+(* Expect error: Testing ill-formed permutation *)
+
+[(2,{x}),(0,{}),(0,{y,z})]

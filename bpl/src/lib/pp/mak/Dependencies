@@ -1,0 +1,5 @@
+. = pretty
+ppengine-sig:
+ppengine: ppengine-sig %NODASHSIG
+pretty-sig: ppengine-sig ppengine
+pretty: pretty-sig ppengine-sig ppengine %NODASHSIG

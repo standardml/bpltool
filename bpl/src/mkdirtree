@@ -1,0 +1,92 @@
+#! /bin/sh
+# Copyright (c) 2006  The BPL Group at the IT University of Copenhagen
+#
+# This file is part of BPL.
+#
+# BPL is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or (at
+# your option) any later version.
+#
+# BPL is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with BPL; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+# USA
+
+# Script for generating a directory tree automagically from .desc files
+
+# It generates trees like this:
+#
+# ml                        ML implementation of BPL
+# +-ast                     Abstract syntax, parser etc.
+# | +-lib                   Library for abstract syntax etc.
+# |    +-smlnj              SML/NJ stuff for abstract syntax
+# |    +-ml-yacc            Parser generator
+# +-bdnf                    BDNF normalisation
+#   +-examples              Examples for testing normalisation
+
+### Customisation ####################################################
+
+# Directories to exclude from list
+exclude_dirs="CVS CM .cm doc mosmake autom4te.cache"
+# Description Indentation as dots
+dots="....................."
+# Description indentation as spaces (at least as long as $dots)
+spcs="                     "
+# Description file name
+descfile=.description
+######################################################################
+
+exclude_pat=
+for d in $exclude_dirs
+do
+  exclude_pat="$exclude_pat -o -name $d"
+done
+
+echodir () { # echodir prefix dirprefix dirpath subdir 
+  prefix="$1"
+  dirprefix="$2"
+  dirpath="$3"
+  subdir="$4"
+  dirtxt=`echo "$prefix$dirprefix$subdir$spcs" | sed -e "s/\($dots\) *\$/\1/"`
+  dirdesc=
+  [ -r "$dirpath$subdir/$descfile" ] \
+    && dirdesc=`head -n 1 "$dirpath$subdir/$descfile"`
+  echo "$dirtxt $dirdesc"
+}
+
+processdir () { # processdir prefix dirpath dirname
+#echo "processdir '$1' '$2' '$3'"
+  local prefix="$1"
+  local dirpath="$2"
+  dirname="$3"
+  local subdirs=`cd $dirpath && find .* * -maxdepth 0 -type d -not '(' -name . -o -name .. $exclude_pat ')'`
+  local last=`echo "$subdirs" | tail -n 1`
+  local prefixadd="| "
+  for subdir in $subdirs
+  do
+    [ "$subdir" = "$last" ] && prefixadd='  '
+    echodir "$prefix" "+-" "$dirpath" "$subdir"
+#     dirtxt=`echo "$prefix+-$subdir$spcs" | sed -e 's/\($dots\) *$/\1/'`
+#     dirdesc=
+#     [ -r "$dirpath$subdir$descfile" ] \
+#       && dirdesc=`head -n 1 "$dirpath$subdir$descfile"`
+#     echo "$dirtxt $dirdesc"
+    
+    processdir "$prefix$prefixadd" "$dirpath$subdir/" "$subdir"
+  done
+}
+
+case "$1" in
+  "") dir=. ;;
+  *) dir="$1"
+esac
+
+echodir "" "" "$dir/../" `basename $dir`
+
+processdir '' "$dir/" `basename $dir`

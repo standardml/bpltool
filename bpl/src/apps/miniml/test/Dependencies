@@ -1,0 +1,4 @@
+# INCLUDE=../../../kernel
+# INCLUDE=../../../lib/smlunit
+
+minimltest: /lib/smlunit/. /kernel/bg-sig

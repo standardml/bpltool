@@ -1,0 +1,3 @@
+. = unsafe legacyio hash/. word32/.
+unsafe:
+legacyio:

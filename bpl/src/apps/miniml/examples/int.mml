@@ -1,0 +1,9 @@
+datatype bool = True | False
+datatype 'a list = Nil | Cons of 'a * 'a list
+
+val x = 17 + 2
+val y = Cons (1, Nil)
+val z = "Foo Bar"
+val x = case y of Nil => 0 | Cons(y, ys) => 1 + y
+val _ = 
+    if x=2 then [] else 1::2::3::[]

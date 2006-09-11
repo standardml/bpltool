@@ -1,0 +1,3 @@
+(* Expect error: Testing prime product with global inner name clash *)
+
+x/{x,y} | (z/{z,y} | [(0,{})])

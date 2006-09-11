@@ -1,0 +1,23 @@
+# INCLUDE=../../lib/coll
+# INCLUDE=../../lib/pp/smlnj
+# MLton: $(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
+sigs = name-sig link-sig control-sig interface-sig ion-sig 
+       permutation-sig wiring-sig
+funs = name interface control link ion wiring permutation 
+
+name-sig: /lib/coll/ordering-sig
+name: /lib/coll/ordering-sig name-sig %NODASHSIG
+interface-sig:
+interface: /lib/coll/monoset-sig /lib/coll/pp /lib/pp/smlnj/. name-sig
+link-sig:
+link: /lib/coll/set /lib/coll/pp + name-sig
+wiring-sig:
+wiring: + /lib/pp/smlnj/. /lib/coll/set /lib/coll/pp
+   /lib/compat/mosml/hash/. link-sig name-sig
+permutation-sig:
+permutation: + /lib/compat/common/legacyarray /lib/coll/set
+   /lib/coll/pp /lib/pp/smlnj/. interface-sig name-sig
+control-sig:
+control:
+ion-sig:
+ion: + /lib/coll/set /lib/coll/pp /lib/pp/smlnj/. control-sig name-sig 

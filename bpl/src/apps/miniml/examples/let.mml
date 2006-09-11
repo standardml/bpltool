@@ -1,0 +1,3 @@
+let val id = fn x => x
+in  id ()
+end

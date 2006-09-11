@@ -1,0 +1,3 @@
+(* Expect error: Testing ion with 0/duplicate names *)
+
+K<><{x,x}>

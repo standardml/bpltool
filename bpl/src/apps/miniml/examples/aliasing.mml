@@ -1,0 +1,3 @@
+let val z = ref (1,2)
+in let val y = z in #2 (y:=(17,42), !z) end
+end

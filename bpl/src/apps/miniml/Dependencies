@@ -1,0 +1,48 @@
+# INCLUDE=../../kernel
+# INCLUDE=../../lib/coll
+# INCLUDE=../../lib/pp/mak
+# INCLUDE=../../lib/util
+# MLton: $(SML_LIB)/mlyacc-lib/mlyacc-lib.mlb
+
+# AST
+pattern-sig: /lib/coll/set /lib/pp/mak/.
+pattern: pattern-sig /lib/coll/set /lib/pp/mak/. %NODASHSIG
+miniml-sig: /lib/pp/mak/.
+miniml: miniml-sig /lib/pp/mak/. + /lib/util/util /lib/coll/map
+   /lib/util/flags %NODASHSIG
+
+# Parsing / lexing
+miniml.grm-sig: /lib/ml-yacc/.
+miniml.lex: /lib/compat/mosml/. miniml.grm-sig
+miniml.grm: miniml.grm-sig miniml pattern 
+   /lib/ml-yacc/. /lib/compat/mosml/. /lib/util/util %NODASHSIG
+minimlparser-sig: pattern miniml
+minimlparser: minimlparser-sig miniml miniml.lex miniml.grm pattern
+   /lib/ml-yacc/. /lib/pp/mak/. %NODASHSIG
+matchcompiler-sig: pattern miniml
+matchcompiler: matchcompiler-sig miniml pattern 
+   /lib/pp/mak/. /lib/util/util /lib/coll/set
+   /lib/util/flags /lib/util/dump %NODASHSIG
+
+# Type inference
+typeexp-sig: miniml /lib/pp/mak/.
+typeexp: typeexp-sig miniml pattern /lib/util/uref /lib/pp/mak/.
+   /lib/coll/map /lib/compat/common/legacyarray %NODASHSIG
+typeinference-sig: typeexp pattern miniml
+typeinference: typeinference-sig miniml pattern typeexp
+   /lib/coll/set /lib/coll/map /lib/pp/mak/. %NODASHSIG
+
+# Code generation
+bggen-sig: miniml
+bggen: bggen-sig miniml /kernel/bg/name /kernel/bgadt-sig
+   /kernel/ast/bgbdnf-sig /lib/pp/smlnj/. /lib/coll/set /lib/coll/map
+   /lib/util/util %NODASHSIG
+mml2bg: miniml minimlparser pattern matchcompiler typeinference
+   bggen-sig /kernel/bgadt-sig /lib/pp/smlnj/. /lib/util/flags
+   /lib/util/dump /lib/util/util
+
+# Main program
+translate: /lib/util/flags  miniml minimlparser pattern matchcompiler typeinference
+   bggen /kernel/bgadt /lib/pp/smlnj/. /lib/pp/mak/. /lib/util/util
+   /lib/compat/mosml/legacyio /lib/util/argparse
+   %PROGRAM

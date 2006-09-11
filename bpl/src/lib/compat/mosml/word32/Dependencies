@@ -1,0 +1,7 @@
+. = compatword32
+compatlarge-word: 
+compatlarge-int :
+compatword-sig  : compatlarge-word compatlarge-int
+compatword      : compatword-sig compatlarge-word compatlarge-int %NODASHSIG
+compatword32    : compatlarge-word compatword-sig compatword 
+

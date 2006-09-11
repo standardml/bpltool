@@ -1,0 +1,10 @@
+# MLton: $(SML_LIB)/mlyacc-lib/mlyacc-lib.mlb
+# INCLUDE=../../lib/util
+# INCLUDE=../bg
+# INCLUDE=../ast
+
+. = bg.grm bg.lex
+bg.grm-sig: /lib/ml-yacc/.
+bg.lex: /lib/util/errormsg /lib/compat/mosml/hash/. bg.grm-sig
+bg.grm: /lib/ml-yacc/.  /lib/coll/monoset-sig bg.grm-sig
+   /kernel/bg/sigs /kernel/ast/sigs /lib/util/errormsg %NODASHSIG

@@ -1,0 +1,55 @@
+Copyright (c) 2006  The BPL Group at the IT University of Copenhagen
+
+This file is part of BPL.
+
+BPL is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+
+BPL is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with BPL; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+USA
+
+
+README file for core/ast/test
+======================================
+
+This directory contains:
+
+bdnfTest.sml:  SML code for running tests
+
+*-*.bg: Sample bigraph input for testing
+
+
+
+The sample files are numbered lexicographically, MAJOR-MINOR[-MINOR2].bg,
+with the intention that it tests the MINOR2 aspect of MINOR aspect
+of feature number MAJOR.
+
+There is no strict way of determining what counts as MAJOR or
+MINOR aspects; look at the examples and use your own Common Sense(tm).
+The main point is to allow numbering to be multidimensionally
+extendable so that new test cases can be added to already tested
+MAJOR or MINOR features in a systematic way.
+
+
+TESTING
+=======
+
+Testing is probably best done from the top directory.  bdnfTest.sml is
+intended to be run by the SMLUnit framework (see the SML# project
+at http://www.pllab.riec.tohoku.ac.jp/smlsharp/ ), but one can 
+probably hack up an adequate similar framework relatively quickly.
+
+
+IF YOU FIND A BUG...
+====================
+
+..then add a minimal test case that detects the bug!

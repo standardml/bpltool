@@ -1,0 +1,9 @@
+. = assert-sig assert test-sig test testrunner-sig textuitestrunner smlunit
+assert-sig: /lib/compat/mosml/word32/.
+assert: assert-sig /lib/compat/mosml/word32/. %NODASHSIG
+test-sig:
+test: test-sig %NODASHSIG
+testrunner-sig: test
+textuitestrunner: testrunner-sig test assert
+smlunit-sig: assert-sig test-sig testrunner-sig
+smlunit: smlunit-sig test assert textuitestrunner %NODASHSIG

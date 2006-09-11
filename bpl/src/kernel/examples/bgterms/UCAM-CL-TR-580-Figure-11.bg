@@ -1,0 +1,13 @@
+(* UCAM-CL-TR-580 Figure 11 *)
+
+(w/w * merge 2)
+  o (merge 1
+       * (/z o z/{x0,y0}
+            * w/z0
+            || ((w/w * V1<><>)
+                  o (merge 1 | (V1p<w><> o merge 0)))))
+      o ((merge 1 * x0/x0 * /z)
+           o (((merge 1 * z/z * /x1) o ((x1/x1 * z/z) || V0<x1><>)
+                 o V2<x1,z><> o merge 0)
+                | (V2p<z,x0><> o merge 0))
+           * V2pp<y0,z0><> o merge 0)

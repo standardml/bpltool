@@ -1,0 +1,3 @@
+let val f = fix f' (x) => f' x
+in  f ()
+end

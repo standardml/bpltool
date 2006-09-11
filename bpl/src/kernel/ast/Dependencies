@@ -1,0 +1,16 @@
+# INCLUDE=../../lib/coll
+# INCLUDE=../bg
+sigs = bgterm-sig bgval-sig bgbdnf-sig sugar-sig 
+funs = bgterm bgval bgbdnf sugar
+
+bgterm-sig:
+bgterm: + /lib/pp/smlnj/. /lib/coll/pp /kernel/bg/sigs
+bgval-sig:
+bgval: + /lib/pp/smlnj/. /lib/coll/monoset-sig /lib/coll/pp
+   bgterm-sig /kernel/bg/sigs
+bgbdnf-sig:
+bgbdnf: + /lib/coll/monoset-sig /lib/coll/pp /kernel/bg/sigs
+   bgval-sig /lib/pp/smlnj/.
+#ppbg bgterm-sig /lib/pp/smlnj/. %NODASHSIG
+sugar-sig:
+sugar: + /lib/coll/monoset-sig /lib/coll/pp /kernel/bg/sigs bgval-sig

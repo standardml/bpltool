@@ -1,0 +1,4 @@
+(* Testing prime product of bigraphs of width >0/0 *)
+
+[(1,{}),(0,{w})]  |  x/{x,y}  |  y/{z}
+

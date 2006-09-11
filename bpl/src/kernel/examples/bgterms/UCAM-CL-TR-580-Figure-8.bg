@@ -1,0 +1,7 @@
+(* UCAM-CL-TR-580 Figure 8 *)
+
+(((y0/{y0,z} * merge 1)
+    o (V0<y0><> * z/z) o V1<z><>) 
+   | (V2<y0,y1,y3><> o ()))
+  || y2/x0
+  || (merge 1 | (y2/y2 * /x1) o (x1/x1 || V3<y2, x1><>))

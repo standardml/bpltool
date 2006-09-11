@@ -1,0 +1,3 @@
+(* Testing ion with >1/>1(>1) names/sets(elements) *)
+
+K<x,y><{y,z},{}>

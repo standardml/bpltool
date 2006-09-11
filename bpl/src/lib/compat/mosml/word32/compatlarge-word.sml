@@ -1,0 +1,1 @@
+structure LargeWord = Word

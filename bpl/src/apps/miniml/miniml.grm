@@ -1,0 +1,399 @@
+(* Copyright (c) 2006  The BPL Group at the IT University of Copenhagen
+ *
+ * This file is part of BPL.
+ *
+ * BPL is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
+ *
+ * BPL is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BPL; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+ * USA
+ *)
+
+(** Parser specification for MiniML terms with syntactic sugar.
+ * @version $Revision: 1.19 $
+ * Modified: $Date: 2006/06/04 20:13:27 $ by: $Author: hniss $
+ *)
+
+structure A = MiniML
+structure P = Pattern
+
+type info = int * int
+
+type pat = P.pat
+type  exp = (info,pat)  MiniML.exp
+type bind = (info,pat) MiniML.bind
+type prog = (info,pat) MiniML.prog
+
+fun mk_const name arity span = P.ConstCon({name=name,arity=arity,span=span})
+val TRUEcon  = mk_const "True"  0 2
+val FALSEcon = mk_const "False" 0 2
+val NILcon   = mk_const "Nil"   0 2
+val CONScon  = mk_const "Cons"  2 2
+val UNITcon  = P.TupleCon 0
+
+fun mk_case info eof pnes = A.Info(info, A.Case(eof, pnes))
+
+fun mk_fun info (fmatch as (f,_)::_) =
+    let val fs = List.map #1 fmatch
+	val _ = case List.filter (fn f' => not(f=f')) fs of 
+		    [] => ()
+		  | _ => raise Fail"different function symbols"
+    in  A.ValBind(f, A.Fix(f, "_x", mk_case info (A.Var"_x") (List.map #2 fmatch)))
+    end
+  | mk_fun info _ = raise Fail"no match"
+
+fun mk_list xs =
+    let fun f (x, xs) = A.Const("Cons", A.Tuple [x,xs])
+    in  List.foldr f (A.Const("Nil", A.Unit)) xs
+    end
+
+val native_strings = ref true
+fun mk_string s =
+    if !native_strings then A.String s
+    else 
+	let val s = String.explode s
+	    fun char2exp ch = A.Const(Char.toString ch, A.Unit)
+	in  mk_list (map (char2exp o Char.toUpper) s)
+	end
+
+val native_ints = ref true
+fun mk_int i = 
+    if !native_ints then A.Integer i
+    else if i < 0 then raise Fail("The encoding does not support negative ints")
+    else
+      let fun loop 0 = A.Const("Z", A.Unit)
+	    | loop n = A.Const("S", loop (n-1))
+      in  loop i
+      end
+
+local
+    fun prim func e1 e2 = A.App(A.Var func, A.Tuple [e1,e2])
+    val primops = 
+	[ ("+",   prim "iplus")
+	, ("-",   prim "iminus")
+	, ("*",   prim "itimes")
+	, ("=",   prim "iequal")
+	, ("<=",  prim "ileq")
+	, ("@",   prim "lappend")
+	, ("^",   prim "sconcat")
+	]
+
+    structure HT = HashTable
+    exception PrimNotFound
+
+    val primop_table =
+	HT.mkTable(HashString.hashString, op = ) (37,PrimNotFound)
+    val _ = 
+	List.app (fn (s,t) => HT.insert primop_table (s, t)) primops
+in
+    val lookup = HT.lookup primop_table
+
+end (*local*)
+
+fun mk_aprim ope e1 e2 =
+    if !native_ints then A.PrimOp(A.Arith ope, e1, e2)
+    else (lookup ope) e1 e2
+
+fun mk_rprim ope e1 e2 =
+    if !native_ints then A.PrimOp(A.Rel ope, e1, e2)
+    else (lookup ope) e1 e2
+
+%%
+
+
+  %header (functor MiniMLLrValsFun(structure Token: TOKEN))
+
+
+  %term  
+         PERIOD     |  COMMA      |  SEMICOLON
+      |  EQ         |  GE  |  LE  |  GT  |  LT
+      |  PLUS       |  MINUS      |  DIV
+      |  DARROW     |  BAR        |  HASH
+      |  LAMBDA     |  ARROW      |  ASTERISK
+      |  LPAREN     |  RPAREN     
+      |  LBRACKET   |  RBRACKET   |  COLONCOLON
+      |  REF        |  BANG       |  ASSIGN
+      |  HAT        |  AT
+
+      |  INTLIT of int
+
+      |  ID of string
+      |  TYID of string
+      |  CONS of string
+      |  STRING of string
+
+      |  LET        |  IN         |  END
+      |  IF         |  THEN       |  ELSE
+      |  FIX        |  CASE       |  OF
+      |  FUN        |  DATATYPE   |  TYPE
+      |  VAL
+
+      |  EOF
+
+
+  %keyword
+         LET IN END
+         IF THEN ELSE
+         FIX CASE OF
+         FUN DATATYPE
+         TYPE VAL
+
+  %nonterm
+         IdList of string list
+      |  IdListOpt of string list
+      |  Exp of exp
+      |  OpExp of exp
+      |  AppExp of exp
+      |  AtExp of exp
+      |  ExpList of exp list
+      |  ExpListOpt of exp list
+      |  ParenExpListOpt of exp list
+      
+      |  PMatch of (pat * exp) list
+      |  BarRuleOpt of (pat * exp) list
+      |  Rule of pat * exp
+
+      |  FMatch of (string * (pat * exp)) list
+      |  FBarRuleOpt of (string * (pat * exp)) list
+      |  FRule of string * (pat * exp)
+
+      |  Pattern of pat
+      |  AtPattern of pat
+      |  PatternList of pat list
+      |  PatternListOpt of pat list
+      |  Patterns of pat list
+
+      |  TyIds of string list
+      |  AtTyExp of MiniML.tyexp
+      |  TupleTyExp of MiniML.tyexp list
+      |  TyExp of MiniML.tyexp
+      |  TyExpSeq of MiniML.tyexp list
+
+      |  ConBind of MiniML.conbind
+      |  ConBinds of MiniML.conbind list
+      
+      |  ValBind of bind
+      |  FunBind of bind
+      |  DatBind of bind
+      |  TyBind  of bind
+
+      |  Binding of bind
+      |  Bindings of bind list
+
+      |  SemiOpt
+
+      |  Program of prog
+
+
+  %start Program
+
+  %nodefault
+  %name MiniML
+  %eop EOF
+  %noshift EOF
+  %verbose
+  %pos int
+
+  %left         ASSIGN
+  %left		EQ LT GT LE GE
+  %left		PLUS MINUS 
+  %left		DIV
+
+  %right         COLONCOLON
+  %left         AT
+  %left         HAT
+
+  %left         DARROW  (* could also be %right *)
+  %left         BAR    (* could also be %right *)
+  %left         ELSE
+
+  %right        ARROW
+  %right        ASTERISK (* oops, used for multiplication *and* tuple-types *)
+
+
+%%
+
+Program : Bindings                      (A.Prog Bindings)
+        | Exp                           (A.Prog([A.ValBind("_", Exp)]))
+
+Bindings: Binding SemiOpt               ([Binding])
+        | Binding SemiOpt Bindings      (Binding::Bindings)
+
+Binding : ValBind                       (ValBind)
+        | FunBind                       (FunBind)
+        | DatBind                       (DatBind)
+	| TyBind                        (TyBind)
+
+SemiOpt :                               ()
+        | SEMICOLON                     ()
+
+ValBind : VAL ID EQ Exp                 (A.ValBind(ID,Exp))
+
+FunBind : FUN FMatch                    (mk_fun (FUNleft,FMatchright) FMatch)
+
+Exp     : OpExp                         (OpExp)
+(*
+        | LAMBDA ID DARROW Exp          (A.Abs((LAMBDAleft,Expright),ID,Exp))
+*)
+	| LAMBDA PMatch                 (case PMatch of
+					     [(P.PVar x,e)] => A.Info((LAMBDAleft,PMatchright), A.Abs(x,e))
+					   | match => A.Abs("_x", mk_case (LAMBDAleft,PMatchright) (A.Var "_x") match)
+					)
+					       
+        | FIX ID LPAREN ID RPAREN DARROW Exp (A.Info((FIXleft,Expright),A.Fix(ID1,ID2,Exp)))
+	| FIX ID ID DARROW Exp          (A.Fix(ID1,ID2,Exp))
+        | CASE Exp OF PMatch            (mk_case (CASEleft,PMatchright) Exp PMatch)
+        | CONS ParenExpListOpt          (let val (p1,p2,p3) =
+						 (CONSleft,ParenExpListOptleft,
+						  ParenExpListOptright)
+					 in  case ParenExpListOpt of
+					     [] => A.Const(CONS,A.Unit)
+					   | [e] => A.Const(CONS,e)
+					   | es => A.Const(CONS,A.Tuple es)
+					 end)
+	| IF Exp THEN Exp ELSE Exp      (A.Case(Exp1,
+					        [ (P.PCon(TRUEcon,[]), Exp2)
+					        , (P.PCon(FALSEcon,[]), Exp3)
+                                                ]))
+
+OpExp   : AppExp                        (A.Info((AppExpleft,AppExpright),AppExp))
+        | OpExp PLUS OpExp              (mk_aprim "+" OpExp1 OpExp2)
+        | OpExp MINUS OpExp             (mk_aprim "-" OpExp1 OpExp2)
+        | OpExp ASTERISK OpExp          (mk_aprim "*" OpExp1 OpExp2)
+(*
+        | OpExp DIV OpExp               (mk_aprim "/" OpExp1 OpExp2)
+*)
+        | OpExp EQ OpExp                (mk_rprim "=" OpExp1 OpExp2)
+        | OpExp LT OpExp                (mk_rprim "<" OpExp1 OpExp2)
+        | OpExp HAT OpExp               (mk_aprim "^" OpExp1 OpExp2)
+        | OpExp AT OpExp                (mk_aprim "@" OpExp1 OpExp2)
+
+        | OpExp COLONCOLON OpExp        (A.Const("Cons",A.Tuple [OpExp1,OpExp2]))
+        | OpExp ASSIGN OpExp            (A.Assign(OpExp1, OpExp2))
+
+
+AppExp  : AtExp                         (A.Info((AtExpleft,AtExpright),AtExp))
+        | AppExp AtExp                  (A.App(AppExp,AtExp))
+        | HASH INTLIT AtExp             (A.Proj(INTLIT, AtExp))
+        | BANG AtExp                    (A.DeRef AtExp)
+        | REF  AtExp                    (A.Ref AtExp)
+
+AtExp   : ID                            (A.Var ID)
+        | LET Bindings IN Exp END       (A.mkLet Bindings Exp)
+        | LPAREN ExpListOpt RPAREN      (let val (p1,p2) = (LPARENleft,RPARENright)
+					 in  case ExpListOpt of
+						 [] => A.Unit
+					       | [e] => e
+					       | es => A.Tuple es
+					 end)
+        | INTLIT                        (mk_int INTLIT)
+	| STRING                        (mk_string STRING)
+	| LBRACKET RBRACKET             (let val i = 
+						 (LBRACKETleft,RBRACKETright)
+					 in  A.Const("Nil", A.Unit)
+					 end)
+
+ParenExpListOpt:                        ([])
+	| LPAREN ExpListOpt RPAREN      (ExpListOpt)
+
+ExpListOpt:                             ([])
+        | ExpList                       (ExpList)
+
+ExpList : Exp                           ([Exp])
+        | Exp COMMA ExpList             (Exp::ExpList)
+
+(* Function matches *)
+FMatch  : FRule FBarRuleOpt             (FRule :: FBarRuleOpt)
+
+FBarRuleOpt: BAR FMatch                 (FMatch)
+        | %prec EQ                      ([])
+
+FRule   : ID AtPattern EQ Exp           ((ID,(AtPattern,Exp)))
+
+(* Pattern matches *)
+PMatch  : Rule BarRuleOpt               (Rule :: BarRuleOpt)
+
+BarRuleOpt: BAR PMatch                  (PMatch)
+        | %prec DARROW                  ([])
+
+Rule    : Pattern DARROW Exp            ((Pattern, Exp))
+
+AtPattern: ID                           (P.PVar ID)
+        | CONS                          (P.PCon(mk_const CONS 0 2, []))
+        | LBRACKET RBRACKET             (P.PCon(NILcon,[]))
+	| LPAREN RPAREN                 (P.PCon(UNITcon,[]))
+	| LPAREN PatternList RPAREN     (case PatternList of
+					     [p] => p
+					   | ps => P.PCon(P.TupleCon(List.length ps), ps)
+                                        )
+		
+Pattern : AtPattern                     (AtPattern)
+        | CONS AtPattern                (case AtPattern of
+					     P.PCon(P.TupleCon(ar), ps) =>
+					        P.PCon(mk_const CONS ar 2, ps)
+					   | p =>
+					        P.PCon(mk_const CONS 1 2, [p])
+                                        )
+        | AtPattern COLONCOLON AtPattern
+                                        (P.PCon(CONScon,[AtPattern1, AtPattern2]))
+
+PatternList : Pattern                   ([Pattern])
+        | Pattern COMMA PatternList     (Pattern :: PatternList)
+
+(*
+Patterns : Pattern                      ([Pattern])
+        | Pattern Patterns              (Pattern :: Patterns)
+
+IdListOpt:                              ([])
+        | IdList                        (IdList)
+
+IdList  : ID                            ([ID])
+        | ID COMMA IdList               ((ID) :: IdList)
+*)
+
+(* Datatypes *)
+DatBind : DATATYPE ID EQ ConBinds       (A.DatBind(ID, [], ConBinds))
+        | DATATYPE TYID ID EQ ConBinds  (A.DatBind(ID, [TYID], ConBinds))
+        | DATATYPE LPAREN TyIds RPAREN
+            ID EQ ConBinds              (A.DatBind(ID, TyIds, ConBinds))
+
+
+ConBinds: ConBind                       ([ConBind])
+        | ConBind BAR ConBinds          (ConBind :: ConBinds)
+
+ConBind : CONS                          (A.Con(CONS, A.TyCon([],"unit")))
+        | CONS OF TyExp                 (A.Con(CONS, TyExp))
+
+TyBind  : TYPE ID EQ TyExp              (A.TyBind(ID, [], TyExp))
+        | TYPE TYID ID EQ TyExp         (A.TyBind(ID, [TYID], TyExp))
+	| TYPE LPAREN TyIds RPAREN ID TyExp
+	                                (A.TyBind(ID, TyIds, TyExp))
+
+TyExp   : TupleTyExp                    (A.TyTuple(TupleTyExp))
+        | TyExp ARROW TyExp             (A.TyArrow(TyExp1,TyExp2))
+        | AtTyExp                       (AtTyExp)
+
+TupleTyExp:
+          AtTyExp ASTERISK AtTyExp      ([AtTyExp1,AtTyExp2])
+        | AtTyExp ASTERISK TupleTyExp   (AtTyExp::TupleTyExp)
+
+AtTyExp:  ID                            (A.TyCon([],ID))
+	| TYID                          (A.TyVar TYID)
+        | LPAREN TyExp RPAREN           (TyExp)
+        | AtTyExp ID                    (A.TyCon([AtTyExp],ID))
+        | LPAREN TyExpSeq RPAREN ID     (A.TyCon(TyExpSeq,ID))
+
+TyExpSeq: TyExp COMMA TyExp             ([TyExp1,TyExp2])
+        | TyExp COMMA TyExpSeq          (TyExp :: TyExpSeq)
+
+TyIds:    TYID                          ([TYID])
+        | TYID COMMA TyIds              (TYID :: TyIds)

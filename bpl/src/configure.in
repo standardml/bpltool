@@ -1,0 +1,35 @@
+dnl Process this file with autoconf to produce a configure script
+
+AC_PREREQ(2.50)
+
+AC_REVISION()
+
+AC_INIT(README)
+
+AC_PROG_MAKE_SET
+AC_PROG_CC
+AC_EXEEXT
+
+AC_CHECK_PROGS(PERL,perl)
+AC_CHECK_PROGS(MOSMLC,mosmlc)
+AC_CHECK_PROGS(MLYACC,mlyacc ml-yacc ml-yacc.bat)
+AC_CHECK_PROGS(MLLEX,mllex ml-lex ml-lex.bat)
+AC_CHECK_PROGS(SMLNJ,sml-cm sml sml.bat)
+AC_CHECK_PROGS(MLTON,mlton)
+
+
+dnl  Provoke rebuilding of mosmake.dep each time the configuration
+dnl  or the master Makefile changes; such a change may have affected
+dnl  the set of directories known to Mosmake. For intricate timing
+dnl  reasons it does not work simply to let mosmake.dep depend on
+dnl  Makefile. Sigh.
+AC_CONFIG_COMMANDS(newdeps,[test -f mosmake.dep &&
+                            echo $as_me: removing mosmake.dep &&
+                            rm -f mosmake.dep])
+
+AC_OUTPUT(Makefile Makefile.chain)
+
+echo;
+echo Configuration complete
+echo;
+

@@ -1,0 +1,7 @@
+# MLton: $(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
+
+. = prettyprint-sig prettyprint
+# the macro . should *NOT* include smlnjprettyprint
+prettyprint-sig:
+prettyprint:
+

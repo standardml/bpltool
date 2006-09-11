@@ -1,0 +1,7 @@
+. = base parser2 lrtable join
+base:
+parser1: base
+parser2: base lrtable stream
+lrtable: base
+join: base
+stream: base
