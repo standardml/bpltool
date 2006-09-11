@@ -1,0 +1,50 @@
+<REWRITE_RULESET NAME="WideTest" CONSTRAINT="//*">
+  <REWRITE_RULE NAME="MinTest">
+    <RULE_LEFT>
+      <person name="$p"/>
+      <msg to="$p"/>
+    </RULE_LEFT>
+    <RULE_RIGHT>
+      <person name="$p">
+	<msg />
+      </person>
+    </RULE_RIGHT>
+  </REWRITE_RULE>
+  <WIDE_REWRITE_RULE NAME="TEST">
+    <RULE_LEFT>
+      <WIDTH>
+	<room name="$from">
+	  <person name="$p">
+	    <RULE_HOLE NAME="MESSAGES"/>
+	  </person>
+	  <RULE_HOLE NAME="FROM-PERSONS"/>
+	</room>
+      </WIDTH>
+      <WIDTH>
+      <room name="$to">
+	<RULE_HOLE NAME="TO-PERSONS" />
+      </room>
+      </WIDTH>
+      <WIDTH>
+	  <pos name="$p" where="$to"/>
+      </WIDTH>
+    </RULE_LEFT>
+    <RULE_RIGHT>
+      <WIDTH>
+	<room name="$from">
+	  <RULE_HOLE NAME="FROM-PERSONS"/>
+	</room>
+      </WIDTH>
+      <WIDTH>
+	<room name="$to">
+	  <RULE_HOLE NAME="TO-PERSONS" />
+	  <person name="$p">
+	    <RULE_HOLE NAME="MESSAGES"/>
+	  </person>
+	</room>
+      </WIDTH>
+      <WIDTH>
+      </WIDTH>
+  </RULE_RIGHT>
+  </WIDE_REWRITE_RULE>
+</REWRITE_RULESET>

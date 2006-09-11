@@ -1,0 +1,17 @@
+<REWRITE_RULESET NAME="BookRoom" CONSTRAINT="">
+
+  <REWRITE_RULE NAME="BOOK">
+
+     <RULE_LEFT>
+        <room p1="$room"/>
+        <person p1="$person"/>
+     </RULE_LEFT>
+
+     <RULE_RIGHT>
+        <room p1="$room" p2="$person"/>
+        <person p1="$person"/>
+     </RULE_RIGHT>
+
+  </REWRITE_RULE>
+
+</REWRITE_RULESET>

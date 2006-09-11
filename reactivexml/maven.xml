@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<project
+  default="jar:jar"
+  xmlns:j="jelly:core"
+  xmlns:deploy="deploy"
+>
+
+  <preGoal name="java:jar-resources">
+    <mkdir dir="${basedir}/target/lib"/>
+    <mkdir dir="${basedir}/target/lib-expanded"/>
+    <deploy:copy-deps todir="${basedir}/target/lib"/>
+    <unjar dest="${basedir}/target/lib-expanded">
+      <fileset dir="${basedir}/target/lib">
+        <include name="**/*.jar"/>
+      </fileset>
+    </unjar>
+  </preGoal>
+
+</project>

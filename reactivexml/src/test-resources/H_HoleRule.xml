@@ -1,0 +1,36 @@
+<REWRITE_RULESET NAME="H_Hole_Test" CONSTRAINT="">
+  <REWRITE_RULE NAME="H_Hole">
+    <RULE_LEFT>
+      <a/>
+      <H_HOLE XPATH="//b/c/*" NAME="HH">
+	<RULE_HOLE NAME="H"/>
+      </H_HOLE>
+    </RULE_LEFT>
+    <RULE_RIGHT>
+      <a/>
+      <H_HOLE NAME="HH">
+	<e/>
+      </H_HOLE>
+    </RULE_RIGHT>
+  </REWRITE_RULE>
+  <WIDE_REWRITE_RULE NAME="Wide_H_Hole">
+    <RULE_LEFT>
+      <WIDTH>
+	<a/>
+      </WIDTH>
+      <WIDTH>
+	<H_HOLE XPATH="//b/c/*" NAME="HH">
+	  <RULE_HOLE NAME="H"/>
+	</H_HOLE>	
+      </WIDTH>
+    </RULE_LEFT>
+    <RULE_RIGHT>
+      <WIDTH>
+	<blip/>
+      </WIDTH>
+      <WIDTH>
+	<H_HOLE NAME="HH"/>
+      </WIDTH>      
+    </RULE_RIGHT>
+  </WIDE_REWRITE_RULE>
+</REWRITE_RULESET>

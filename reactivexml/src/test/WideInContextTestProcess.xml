@@ -1,0 +1,64 @@
+<r>
+  <instance name="instanceA">
+    <sequence>
+      <assign>
+	<copy>
+	  <from variable="from" query="//message/child::*"/>
+	  <to variable="to" query="//message" />
+	</copy>
+      </assign>
+      <next>
+	<assign>
+	  <copy>
+	    <from variable="to"/>
+	    <to variable="from" />
+	  </copy>
+	</assign>
+      </next>
+    </sequence>
+    <variables>
+      <variable name="from">
+	<message>
+	  <bla>
+	    <blip/>
+	  </bla>
+	</message>
+	<id>
+	  1
+	</id>
+      </variable>
+      <variable name="to">
+	<message/>
+      </variable>
+      <variable name="foo">
+	foo
+      </variable>
+    </variables>
+  </instance>
+  <instance name="instanceB">
+    <assign>
+      <copy>
+	<from variable="from" query="//message/child::*"/>
+	<to variable="to" query="//message" />
+      </copy>
+    </assign>
+    <variables>
+      <variable name="from">
+	<message>
+	  <bla>
+	    <blip/>
+	  </bla>
+	</message>
+	<id>
+	  1
+	</id>
+      </variable>
+      <variable name="to">
+	<message/>
+      </variable>
+      <variable name="foo">
+	foo
+      </variable>
+    </variables>
+  </instance>  
+</r>

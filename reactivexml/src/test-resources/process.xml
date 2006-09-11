@@ -1,0 +1,17 @@
+<r>
+  <AMBIENT p1="MrWhite">
+    <IN p1="ClassRoom" />
+    <OPEN p1="message">
+      <RECIEVE p1="messageChannel" />
+    </OPEN>
+  </AMBIENT>
+  <AMBIENT p1="ClassRoom">
+    <AMBIENT p1="MrPink"></AMBIENT>
+    <AMBIENT p1="MrGreen"></AMBIENT>
+    <AMBIENT p1="message">
+      <IN p1="MrWhite">
+        <SEND p1="messageChannel" />
+      </IN>
+    </AMBIENT>
+  </AMBIENT>
+</r>

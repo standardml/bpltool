@@ -1,0 +1,56 @@
+<REWRITE_RULESET NAME="WideInContextTest" CONSTRAINT="//*[not (ancestor-or-self::*[
+						      name()='assign' or
+						      name()='variables' or
+						      name()='variable' or
+						      name()='copy' or
+						      name()='from' or
+						      name()='to' or
+						      name()='next'])]">
+  <WIDE_REWRITE_RULE NAME="Assign" CONTEXT="name(node())='instance'">
+    <RULE_LEFT>
+      <WIDTH>
+	<variables>
+	  <variable name="$from">
+	      <RULE_HOLE NAME="FROM_VALUE" />
+	  </variable>
+	  <variable name="$to">
+	    <RULE_HOLE NAME="TO_VALUE" />
+	  </variable>
+	  <RULE_HOLE NAME="MORE_VARIABLES"/>
+	</variables>
+      </WIDTH>
+      <WIDTH>
+	<assign>
+	  <copy>
+	    <from variable="$from" query="$q" />
+	    <to variable="$to"  query="$q2"/>
+	  </copy>
+	</assign>
+      </WIDTH>
+    </RULE_LEFT>
+    <RULE_RIGHT>
+      <WIDTH>
+	<variables>
+	  <variable name="$to">
+	    <UPDATE XPATH_VAR="$q2">
+	      <ROOT>
+	        <RULE_HOLE NAME="TO_VALUE"/>
+	      </ROOT>
+	      <NEW_NODE>
+	        <EXEC XPATH_VAR="$q">
+	          <RULE_HOLE NAME="FROM_VALUE" />
+	        </EXEC>
+	      </NEW_NODE>
+	    </UPDATE>
+	  </variable>
+	  <variable name="$from">
+	    <RULE_HOLE NAME="FROM_VALUE" />
+	  </variable>
+	  <RULE_HOLE NAME="MORE_VARIABLES"/>	  
+	</variables>
+      </WIDTH>
+      <WIDTH>
+      </WIDTH>
+    </RULE_RIGHT>
+  </WIDE_REWRITE_RULE>
+</REWRITE_RULESET>

@@ -1,0 +1,80 @@
+<REWRITE_RULESET NAME="FindEtNavn" CONSTRAINT="
+  descendant-or-self::*[not( ancestor-or-self::*[name()='SEND' or
+           name()='RECEIVE' or name()='IN' or
+           name()='OUT' or name()='OPEN'])]">
+  <REWRITE_RULE NAME="sync rule">
+    <RULE_LEFT>
+      <SEND p1="$channel">
+        <RULE_HOLE NAME="SEND_HOLE"/>
+      </SEND>
+      <RECIEVE p1="$channel">
+        <RULE_HOLE NAME="RECIEVE_HOLE"/>
+      </RECIEVE>
+    </RULE_LEFT>
+    <RULE_RIGHT>
+      <RULE_HOLE NAME="SEND_HOLE"/>
+      <RULE_HOLE NAME="RECIEVE_HOLE"/>
+    </RULE_RIGHT>
+  </REWRITE_RULE>
+  
+  <REWRITE_RULE NAME="in">
+    <RULE_LEFT>
+      <AMBIENT p1="$beingMoved">
+        <IN p1="$moveTo">
+          <RULE_HOLE NAME="IN_SUFFIX" />
+        </IN>
+        <RULE_HOLE NAME="IN_SIBLINGS" />
+      </AMBIENT>
+      <AMBIENT p1="$moveTo">
+      	<RULE_HOLE NAME="MOVE_TO_CHILDREN" />
+      </AMBIENT>
+    </RULE_LEFT>
+    <RULE_RIGHT>
+      <AMBIENT p1="$moveTo">
+        <AMBIENT p1="$beingMoved">
+          <RULE_HOLE NAME="IN_SUFFIX" />
+          <RULE_HOLE NAME="IN_SIBLINGS" />
+        </AMBIENT>
+        <RULE_HOLE NAME="MOVE_TO_CHILDREN" />
+      </AMBIENT>
+    </RULE_RIGHT> 
+  </REWRITE_RULE>
+
+  <REWRITE_RULE NAME="out">
+    <RULE_LEFT>
+      <AMBIENT p1="$moveFrom">
+        <AMBIENT p1="$beingMoved">
+          <OUT p1="$moveFrom">
+            <RULE_HOLE NAME="OUT_SUFFIX" />
+          </OUT>
+          <RULE_HOLE NAME="OUT_SIBLINGS" />
+        </AMBIENT>
+        <RULE_HOLE NAME="MOVE_FROM_SIBLINGS" />
+      </AMBIENT>
+    </RULE_LEFT>
+    <RULE_RIGHT>
+      <AMBIENT p1="$beingMoved">
+        <RULE_HOLE NAME="OUT_SUFFIX" />
+        <RULE_HOLE NAME="OUT_SIBLINGS" />
+      </AMBIENT>
+      <AMBIENT p1="$moveFrom">
+        <RULE_HOLE NAME="MOVE_FROM_SIBLINGS" />
+      </AMBIENT>
+    </RULE_RIGHT> 
+  </REWRITE_RULE>
+
+  <REWRITE_RULE NAME="open">
+    <RULE_LEFT>
+      <OPEN p1="$openName">
+        <RULE_HOLE NAME="OPEN_SUFFIX" />
+      </OPEN>
+      <AMBIENT p1="$openName">
+        <RULE_HOLE NAME="AMBIENT_CONTENT" />
+      </AMBIENT>
+    </RULE_LEFT>
+    <RULE_RIGHT>
+      <RULE_HOLE NAME="OPEN_SUFFIX" />
+      <RULE_HOLE NAME="AMBIENT_CONTENT" />
+    </RULE_RIGHT> 
+  </REWRITE_RULE>
+</REWRITE_RULESET>    

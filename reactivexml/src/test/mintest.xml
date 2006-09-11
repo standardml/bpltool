@@ -1,0 +1,15 @@
+<r>
+ <building name="itu">
+   <floor name="1">
+     <room name="1A4">
+       <person name="hniss"/>
+       <msg to="hniss"/>
+       <person name="mol"/>
+     </room>
+   </floor>
+   <floor name="2">
+    <room name="2A3">
+    </room>
+   </floor>
+ </building>
+</r>

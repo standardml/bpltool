@@ -1,0 +1,47 @@
+<REWRITE_RULESET NAME="TEST-1" CONSTRAINT="//*">
+  <REWRITE_RULE NAME="TEST-1-1">
+    <RULE_LEFT>
+      <wide>
+	<reg>
+	  <a/>
+	  <b/>
+	</reg>
+      </wide>
+    </RULE_LEFT>
+    <RULE_RIGHT>
+      <wide>
+	<reg>
+	  <a>
+	    <c/>
+	  </a>
+	  <b/>
+	</reg>
+      </wide>
+    </RULE_RIGHT>
+  </REWRITE_RULE>
+
+  <REWRITE_RULE NAME="TEST-1-2">
+    <RULE_LEFT>
+      <wide>
+	<reg>
+	  <a>
+	    <RULE_HOLE NAME="1"/>	
+	  </a>
+	  <b/>
+	</reg>
+      </wide>
+    </RULE_LEFT>
+    <RULE_RIGHT>
+      <wide>
+	<reg>
+	  <a>
+	    <RULE_HOLE NAME="1"/>	
+	  </a>
+	  <b/>
+	  <RULE_HOLE NAME="1"/>	
+	</reg>
+      </wide>
+    </RULE_RIGHT>
+  </REWRITE_RULE>
+
+</REWRITE_RULESET>
