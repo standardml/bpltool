@@ -2,4 +2,4 @@ Group
 is
 kernel/sources.cm
 test/sources.cm
-lib/compat/smlnj/hash/sources.cm
+

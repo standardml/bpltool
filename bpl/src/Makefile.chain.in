@@ -48,7 +48,7 @@ phony_FORCE:
 	   $(MLYACC) $< && mv $*.grm.sig $*.grm-sig.sml
 
 sources.cm: Dependencies $(DEP2SOURCES)
-	$(DEP2SOURCES) -r $(UP) -c /lib/compat/mosml=/lib/compat/smlnj -x /lib/compat/mlton Dependencies $@
+	$(DEP2SOURCES) -r $(UP) -c '/lib/compat/mosml/hash/.=/lib/compat/smlnj/sources.cm' -c /lib/compat/mosml=/lib/compat/smlnj -x /lib/compat/mlton Dependencies $@
 	
 mlton.mlb: Dependencies
 	@echo genmlton `pwd`

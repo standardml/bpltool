@@ -154,11 +154,10 @@ sed -n \
 echo " " >> $outputfile
 sed -n \
 	-e '/^ *[^#][^=]*$/ { s/^\([^:]*:\)*[ \t]*//; s/\r//g; ' \
-	-e "  :repeat h; s/ .*//; s+^/+$rootdir/+; s+/[^/]*\$+/$sources_cm+p; " \
-	-e '  g; s/^[^ ][^ ]* *//; t repeat;' \
+	-e '  :repeat h; s/ .*//; s+\(/[^/]*$\)+\1+p; g; s/^[^ ][^ ]* *//; t repeat;' \
 	-e '}' \
- < $inputfile | sed -e y/// $changes | sort | uniq \
- | grep -v -e "\($excludedirs\)\(/.*\)*/sources.cm" \
+ < $inputfile | sed -e y/// $changes \
+ | sed -e "s+^/+$rootdir/+; s+/\\([^/]\\|[^/][^/]\\|[^/]*\\([^./][^/][^/]\\|\\.[^c/][^/]\\|\\.c[^m/]\\)\\)\$+/$sources_cm+" \
+ | sort | uniq | grep -v -e "\($excludedirs\)\(/.*\)*/sources.cm" \
  >> $outputfile
-
 true # exit with status code 0

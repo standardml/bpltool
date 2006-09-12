@@ -1,2 +1,19 @@
 Group
+#if defined (NEW_CM)
+  library($/basis.cm)
+  library($smlnj/compiler/compiler.cm)
+  library($/smlnj-lib.cm)
+#else
+  signature HASH_TABLE
+  structure HashTable
+  structure HashString
+  functor HashTableFn
+#endif
 is
+#if defined (NEW_CM)
+  $/basis.cm
+  $smlnj/compiler/compiler.cm
+  $/smlnj-lib.cm
+#else
+  smlnj-lib.cm
+#endif
