@@ -379,7 +379,9 @@ struct
                 let
                   val Z = Wiring.innernames id_Z
                   val aZ = Wiring.restrict a Z
-                  val N' = bgvalRen2NBDNF ((Wir aZ xx Per id_1) oo N)
+                  val X = Interface.loc (outerface N)
+                  val id_X = Permutation.id X
+                  val N' = bgvalRen2NBDNF ((Wir aZ xx Per id_X) oo N)
                 in
                   (Wir (Wiring.id_X (Wiring.app a Z)) xx Ion KyX) oo N'
                 end
