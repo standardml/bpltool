@@ -380,8 +380,8 @@ struct
                   val Z = Wiring.innernames id_Z
                   val aZ = Wiring.restrict a Z
                   val X = Interface.loc (outerface N)
-                  val id_X = Permutation.id X
-                  val N' = bgvalRen2NBDNF ((Wir aZ xx Per id_X) oo N)
+                  val pid_X = Permutation.id X
+                  val N' = bgvalRen2NBDNF ((Wir aZ xx Per pid_X) oo N)
                 in
                   (Wir (Wiring.id_X (Wiring.app a Z)) xx Ion KyX) oo N'
                 end
@@ -393,25 +393,26 @@ struct
             case match (PCom (PTen [PWir, PPer],
                               PAbs (PCom (PTen [PWir, PMer],
                                           PTns)))) v of
-              MCom (MTen [MWir a, MPer id_1],
+              MCom (MTen [MWir a, MPer id_X],
                     MAbs (X, MCom (MTen [MWir id_Y, MMer n],
                                    MTns (Ss))))
                 => (* Rule Pren *)
                 let
+		  val a'    = Wiring.* (a, Wiring.id_X X)
                   val Y     = Wiring.outernames id_Y
-                  val X'    = Wiring.app a X
-                  val Y'    = Wiring.app a Y
+                  val Y'    = Wiring.app a' Y
                   val id_Y' = Wiring.id_X Y'
+		  val pid_1 = Permutation.id_n 1
                   fun StoS' Si = 
                       let
                         val Z_i  = Interface.glob (outerface Si)
-                        val aZ_i = Wiring.restrict a Z_i
+                        val a'Z_i = Wiring.restrict a' Z_i
                       in
-                        bgvalRen2SBDNF ((Wir aZ_i xx Per id_1) oo Si)
+                        bgvalRen2SBDNF ((Wir a'Z_i xx Per pid_1) oo Si)
                       end
                   val S's = map StoS' Ss
                 in
-                  Abs (X', (Wir id_Y' xx Mer n) oo Ten S's)
+                  Abs (X, (Wir id_Y' xx Mer n) oo Ten S's)
                 end
             | wrongterm => 
                 raise MalformedBDNF ("bgbdnf.sml", i, wrongterm,

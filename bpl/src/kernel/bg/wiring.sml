@@ -415,10 +415,15 @@ struct
 		     NameEdgeMap.insert new_ht_inv
 					(ne,NameSet.singleton x);
 				       i)
+	     | NONE => i)
+(* The following code is wrong: It causes the restriction of the
+   empty wiring to become a closure of the name set X.
+ 
 	     | NONE =>
 	       (NameEdgeMap.insert new_ht_inv
 				   (Closure (i + 1), NameSet.singleton x);
 				  i + 1))
+*)
 	(* First we determine the maximum i value in closures in ht. *)
 	val i_max = NameMap.foldi mapmax_i 0 ht
         (* Then we add all the links mapping from X. *)
