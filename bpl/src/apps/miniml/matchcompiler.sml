@@ -211,14 +211,14 @@ structure MatchCompiler :> MATCHCOMPILER = struct
       end
 
     val dump_match_compile =
-	Flags.makeBoolFlag{name="/dump/matchcompile",default=false,
-			   short="", long="dump-match-compiled",
-			   desc="Dump match-compiled MiniML program"}
+	Flags.makeBoolFlag{name="dump_match_compile",short="",
+			   long="dump-match-compiled",
+			   desc="Dump match-compiled MiniML program"} false
 
     val compile = fn getpos => fn noinfo => fn prog =>
         let val prog' = compile getpos noinfo prog
 	in  if !dump_match_compile
-	    then Dump.pretty (MiniML.pp MiniML.ppPat) "match" prog'
+	    then Util.dumpPretty (MiniML.pp MiniML.ppPat) "match" prog'
 	    else ()
           ; prog'
 	end

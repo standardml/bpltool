@@ -22,7 +22,7 @@ minimlparser: minimlparser-sig miniml miniml.lex miniml.grm pattern
 matchcompiler-sig: pattern miniml
 matchcompiler: matchcompiler-sig miniml pattern 
    /lib/pp/mak/. /lib/util/util /lib/coll/set
-   /lib/util/flags /lib/util/dump %NODASHSIG
+   /lib/util/flags %NODASHSIG
 
 # Type inference
 typeexp-sig: miniml /lib/pp/mak/.
@@ -39,10 +39,10 @@ bggen: bggen-sig miniml /kernel/bg/name /kernel/bgadt-sig
    /lib/util/util %NODASHSIG
 mml2bg: miniml minimlparser pattern matchcompiler typeinference
    bggen-sig /kernel/bgadt-sig /lib/pp/smlnj/. /lib/util/flags
-   /lib/util/dump /lib/util/util
+   /lib/util/util
 
 # Main program
-translate: /lib/util/flags  miniml minimlparser pattern matchcompiler typeinference
-   bggen /kernel/bgadt /lib/pp/smlnj/. /lib/pp/mak/. /lib/util/util
-   /lib/compat/mosml/legacyio /lib/util/argparse
-   %PROGRAM
+# translate  miniml minimlparser pattern matchcompiler typeinference
+#   bggen /kernel/bgadt /lib/pp/smlnj/. /lib/pp/mak/. /lib/util/util
+#   /lib/compat/mosml/legacyio /lib/util/argparse /lib/util/errorloc
+#   %PROGRAM

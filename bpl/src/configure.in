@@ -16,7 +16,20 @@ AC_CHECK_PROGS(MLYACC,mlyacc ml-yacc ml-yacc.bat)
 AC_CHECK_PROGS(MLLEX,mllex ml-lex ml-lex.bat)
 AC_CHECK_PROGS(SMLNJ,sml-cm sml sml.bat)
 AC_CHECK_PROGS(MLTON,mlton)
-
+AC_ARG_VAR(MLC,ML compiler)
+if test -z "$MLC"
+then
+	if test -n "$ac_cv_prog_SMLNJ"
+	then
+		MLC="smlnj"
+	elif test -n "$ac_cv_prog_MOSMLC"
+	then
+		MLC="mosml"
+	elif test -n "$ac_cv_prog_MLTON"
+	then
+		MLC="mlton"
+	fi
+fi
 
 dnl  Provoke rebuilding of mosmake.dep each time the configuration
 dnl  or the master Makefile changes; such a change may have affected

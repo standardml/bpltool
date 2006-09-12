@@ -56,7 +56,7 @@ local
     structure HT = HashTable
     exception KeyWordNotFound
 
-    val keywords_table =
+    val keywords_table : (string, (pos * pos) -> (svalue, pos) token) HashTable.hash_table =
 	HT.mkTable(HashString.hashString, op = ) (32,KeyWordNotFound)
     val _ = 
 	List.app (fn (s,t) => HT.insert keywords_table (s, t)) keywords

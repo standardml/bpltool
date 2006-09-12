@@ -69,7 +69,8 @@ fun ppToStdErr pptree =
     Pretty.ppPrint pptree (Pretty.plainOutput ("(*","*)")) TextIO.stdErr
 
 fun ppError file pos msg =
-    ppToStdErr(Pretty.ppList Pretty.ppString msg)
+    ppToStdErr(ErrorLoc.ppErrorLocation file pos 
+					(List.map Pretty.ppString msg))
     
 
 (* Main translator *)
@@ -149,9 +150,7 @@ fun translate file =
 	     => ppError file pos ["Non exhaustive match"]
 
 fun main _ =
-    let 
-	val _ = Flags.listDefaults TextIO.stdOut
-	val (setFile,getFile) = stringOption ()
+    let val (setFile,getFile) = stringOption ()
 	val _ = ArgParse.parse NONE specs setFile
     in  case getFile () of
 	    NONE => error("! Error: expected a file name\n")

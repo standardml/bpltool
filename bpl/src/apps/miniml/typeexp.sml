@@ -78,7 +78,7 @@ structure TypeExp :> TYPEEXP = struct
 	    val _ = !level_terms ::== (!level, ty :: (!level_terms !! !level))
 	in  ty
 	end
-    fun unmake tau = #term(U.!! tau)
+    fun unmake tau = #term((U.!! tau) : {term : typeexp', rank : int ref, mark : unit ref ref})
     fun sub_types tau =
 	case tau of
 	    TyVar _ => []
@@ -87,8 +87,8 @@ structure TypeExp :> TYPEEXP = struct
 	  | TyCon(_,tys) => tys
 			    
     open Pretty
-    fun ppVar {id,nm=SOME a,...} = ppString a
-      | ppVar {id,nm=NONE,...} = ppString ("'a" ^ Int.toString id)
+    fun ppVar {id,nm=SOME a} = ppString a
+      | ppVar {id,nm=NONE} = ppString ("'a" ^ Int.toString id)
     fun pp tau =
 	let
 	    fun paren my safe tree0 =

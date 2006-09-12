@@ -76,9 +76,9 @@ fun mk_int i =
       end
 
 local
-    fun prim func e1 e2 = A.App(A.Var func, A.Tuple [e1,e2])
+    fun prim func e1 e2 : exp = A.App(A.Var func, A.Tuple [e1,e2])
     val primops = 
-	[ ("+",   prim "iplus")
+	[ ("+",   prim "iplus" : exp -> exp -> exp)
 	, ("-",   prim "iminus")
 	, ("*",   prim "itimes")
 	, ("=",   prim "iequal")
@@ -90,10 +90,10 @@ local
     structure HT = HashTable
     exception PrimNotFound
 
-    val primop_table =
+    val primop_table : (string, exp -> exp -> exp) HashTable.hash_table =
 	HT.mkTable(HashString.hashString, op = ) (37,PrimNotFound)
     val _ = 
-	List.app (fn (s,t) => HT.insert primop_table (s, t)) primops
+	List.app (fn (s,t : exp -> exp -> exp) => HT.insert primop_table (s, t)) primops
 in
     val lookup = HT.lookup primop_table
 
