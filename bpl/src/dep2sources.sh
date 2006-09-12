@@ -156,8 +156,8 @@ sed -n \
 	-e '/^ *[^#][^=]*$/ { s/^\([^:]*:\)*[ \t]*//; s/\r//g; ' \
 	-e '  :repeat h; s/ .*//; s+\(/[^/]*$\)+\1+p; g; s/^[^ ][^ ]* *//; t repeat;' \
 	-e '}' \
- < $inputfile | sed -e y/// $changes \
- | sed -e "s+^/+$rootdir/+; s+/\\([^/]\\|[^/][^/]\\|[^/]*\\([^./][^/][^/]\\|\\.[^c/][^/]\\|\\.c[^m/]\\)\\)\$+/$sources_cm+" \
+ < $inputfile | sed -e y/// $changes -e 't replroot' -e "s+/[^/]*\$+/$sources_cm+" -e :replroot -e "s+^/+$rootdir/+" \
  | sort | uniq | grep -v -e "\($excludedirs\)\(/.*\)*/sources.cm" \
  >> $outputfile
 true # exit with status code 0
+# | sed -e "s+^/+$rootdir/+; s+/\\([^/]\\|[^/][^/]\\|[^/]*\\([^./][^/][^/]\\|\\.[^c/][^/]\\|\\.c[^m/]\\)\\)\$+/$sources_cm+" \

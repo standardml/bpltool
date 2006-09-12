@@ -164,8 +164,10 @@ parsersclean:
 	for g in $(GRMFILES); do $(RM) $$g.{desc,sig,-sig.sml,sml}; done
 	for l in $(LEXFILES); do $(RM) $$l.sml; done
 
+
+CMDIRS = $(filter-out lib/pp/smlnj,$(MOSMAKEDIRS))
 cmclean:
-	for d in $(filter-out lib/pp/smlnj,$(MOSMAKEDIRS)); do $(RM) -f $$d/sources.cm; done
+	for d in $(CMDIRS); do [ -r $$d/Dependencies ] && $(RM) -f $$d/sources.cm; done
 
 realclean: clean cmclean parsersclean
 
