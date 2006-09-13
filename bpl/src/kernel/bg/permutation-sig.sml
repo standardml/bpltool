@@ -29,6 +29,8 @@ sig
 
   (** The permutation data type. *)
   type permutation
+  (** Signal a logical error, i.e. an error which "cannot happen" ;-).*)
+  exception LogicalError of string * string
   (** Signal incorrect permutation data. *)
   exception NotPermutation of (int * nameset) list
   (** Construct a permutation.

@@ -47,6 +47,7 @@ struct
 		      pi : (int * nameset) array,
 		      pi_inv : (int * nameset) array}
 
+  exception LogicalError of string * string
   exception NotPermutation of (int * nameset) list
 
   val array = Array.array
@@ -371,6 +372,10 @@ struct
                  (l, n::ns, sumns))
               else
                 nlocatedAt (j, x, (l + 1, ns, n + sumns))
+            | nlocatedAt _ =
+                raise LogicalError ("permutation.sml",
+                                    "the local function nlocated was \
+                                    \called on an empty list")
           fun mlocatedAt (j, _, (l, i)) =
               (update (mlocated, j, (l, i));
                if j >= (width - 1)
