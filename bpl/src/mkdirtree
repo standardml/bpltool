@@ -33,7 +33,7 @@
 ### Customisation ####################################################
 
 # Directories to exclude from list
-exclude_dirs="CVS CM .cm doc mosmake autom4te.cache"
+exclude_dirs="CVS CM .cm doc mosmake autom4te.cache .svn"
 # Description Indentation as dots
 dots="....................."
 # Description indentation as spaces (at least as long as $dots)

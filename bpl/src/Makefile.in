@@ -53,8 +53,8 @@ DOCDIR		= doc
 SMLDOC		= smldoc
 SMLDOC-FLAGS	= -d $(DOCDIR) --overview=overview.html --argfile=smldoc.cfg
 
-ROOTDIR		= ../..
-THISDIR		= code/ml
+ROOTDIR		= ..
+THISDIR		= src
 MKDIRTREE	= $(PWD)/mkdirtree
 DESCFILES	= $(shell find . -name .description)
 
