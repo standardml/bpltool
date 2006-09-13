@@ -37,6 +37,7 @@ struct
   fun make link = link
   fun unmk link = link
   val innernames : link -> nameset = #inner
+  val outername : link -> name option = #outer
 
   structure Order : ORDERING =
   struct

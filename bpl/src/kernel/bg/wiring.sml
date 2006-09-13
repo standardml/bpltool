@@ -391,6 +391,15 @@ struct
 		   NameSet.empty
 		   X
 
+  fun app_inverse (ls, _) Y =
+      Link'Set.fold (fn {outer = Name y, inner} =>
+                          (fn X => if NameSet.member y Y then
+                                     NameSet.union X inner
+                                   else
+                                     X)
+                      | _ => fn X => X)
+                    NameSet.empty ls
+
   (* Algorithm for restricting a wiring:
    * Construct an inverse hash table (mapping nameedges to
    * name sets) by looking up what each inner name maps to.
@@ -431,7 +440,33 @@ struct
       in
 	(invmap2link'set new_ht_inv, invert (NameSet.size X) new_ht_inv)
       end
-	       
+
+  (** Restrict a wiring to only map to a given set of names.
+   * The inner face is trimmed to include only names which maps to an
+   * outer name.
+   *)
+  fun restrict_outer (ls, ht) Y =
+      let
+	val (new_ls, new_ht_size)
+            = Link'Set.fold (fn (l as {outer = Name n, inner}) =>
+                               (fn (new_ls, new_ht_size) =>
+                                  if NameSet.member n Y then
+                                    (Link'Set.insert l new_ls,
+                                     new_ht_size + NameSet.size inner)
+                                  else
+                                    (new_ls, new_ht_size))
+                              | _ => fn new => new)
+                            (Link'Set.empty, 0) ls
+        val new_ht = createNameMap new_ht_size
+        fun add_nameedge {outer, inner}
+            = NameSet.apply
+                (fn n => NameMap.insert new_ht (n, outer))
+                inner
+      in
+        (Link'Set.apply add_nameedge new_ls;
+         (new_ls, new_ht))
+      end
+
   fun id_X X =
       let
 	val ht = createNameMap' ()
@@ -469,6 +504,8 @@ struct
       end
   
   val op * = x
+
+  val ** = foldr x id_0
 
   val (op o) = compose
 end

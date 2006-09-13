@@ -41,6 +41,8 @@ sig
   val unmk : link -> {outer : name option, inner : nameset}
   (** Return the inner names of a link. *)
   val innernames : link -> nameset
+  (** Return the outer name of a link (if it has one). *)
+  val outername : link -> name option
 
   structure Order : ORDERING where type T = link
 end

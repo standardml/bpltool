@@ -58,6 +58,11 @@ sig
    * undefined. 
    *)
   val * : (wiring * wiring) -> wiring
+  (** Make the tensor product of a list of wirings.  Note that
+   * disjointness of interfaces is NOT checked; the result in this case
+   * will be undefined. 
+   *)
+  val ** : wiring list -> wiring
   (** Make the parallel product of two wirings.  Note that disjointness
    * of inner faces is NOT checked; the result in this case will be
    * undefined. 
@@ -66,12 +71,19 @@ sig
 
   (** Compute the set of names to which the wiring maps a given set. *)
   val app : wiring -> nameset -> nameset
+  (** Compute the set of names which the wiring maps to a given set. *)
+  val app_inverse : wiring -> nameset -> nameset
   (** Restrict a wiring to only map a given set of names.
    * The outer face is trimmed to include only names to which some
    * inner name maps.  Each name in the set not mapped by the wiring
    * will result in a single, closed link.
    *)
   val restrict : wiring -> nameset -> wiring
+  (** Restrict a wiring to only map to a given set of names.
+   * The inner face is trimmed to include only names which maps to an
+   * outer name.
+   *)
+  val restrict_outer : wiring -> nameset -> wiring
   (** Determine whether some wiring is an identity. *)
   val is_id : wiring -> bool
   (** Determine whether some wiring is a zero identity. *)
