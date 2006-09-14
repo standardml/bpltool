@@ -616,7 +616,7 @@ fun is_id0 (VMer (1, _))    = false
   fun Pri i vs =
       let
 	val _ 
-	  = map (fn v => 
+	  = app (fn v => 
 		    if NameSet.isEmpty 
 			 (Interface.glob (innerface v)) then
 		      () 
