@@ -367,15 +367,19 @@ struct
         val mlocated = array (width, (~18, ~18))
         local
           fun nlocatedAt (j, x, (l, n::ns, sumns)) =
-              if (j - sumns) < n then
-                (update (nlocated, j, (l, j - sumns));
-                 (l, n::ns, sumns))
-              else
-                nlocatedAt (j, x, (l + 1, ns, n + sumns))
+              let
+                val j' = j - sumns
+              in
+                if j' < n then
+                  (update (nlocated, j, (l, j'));
+                   (l, n::ns, sumns))
+                else
+                  nlocatedAt (j, x, (l + 1, ns, n + sumns))
+              end
             | nlocatedAt _ =
                 raise LogicalError ("permutation.sml",
-                                    "the local function nlocated was \
-                                    \called on an empty list")
+                                    "the function nlocatedAt was \
+                                    \called with an empty list")
           fun mlocatedAt (j, _, (l, i)) =
               (update (mlocated, j, (l, i));
                if j >= (width - 1)
@@ -391,29 +395,33 @@ struct
                    else
                      ())
         end
+
+        fun make_minor_pi (Xs, (j, offset)) =
+            let
+              val {pi = minor_pi, pi_inv = minor_pi_inv, ...}
+                  = minors sub j
+            in
+              (j + 1,
+               foldl
+                 (fn (X, i) =>
+                     let
+                       val (nloc, npos)  = nlocated sub i
+                       val (pi_inv_i, _) = pi_inv sub i
+                       val (mloc, mpos)  = mlocated sub pi_inv_i
+                     in
+                       (update (minor_pi, mpos, (npos, X));
+                        update (minor_pi_inv, npos, (mpos, X));
+                        (* the same entry is updated for
+                           each site in that group... *)
+                        update (major_pi, mloc, (nloc, NameSet.empty));
+                        update (major_pi_inv, nloc,
+                                (mloc, NameSet.empty));
+                        i + 1)
+                     end)
+                 offset Xs)
+            end
       in
-        (foldl (fn (Xs, (j, offset)) =>
-                   let
-                     val {pi = minor_pi, pi_inv = minor_pi_inv, ...} = minors sub j
-                     val width
-                         = foldl
-                             (fn (X, i) =>
-                                 let
-                                   val (nloc, npos) = nlocated sub i
-                                   val (pi_inv_i, _) = pi_inv sub i
-                                   val (mloc, mpos) = mlocated sub pi_inv_i
-                                 in
-                                   (update (minor_pi, mpos, (npos, X));
-                                    update (minor_pi_inv, npos, (mpos, X));
-                                    update (major_pi, mloc, (nloc, NameSet.empty(*FIXME local names?*)));
-                                    update (major_pi_inv, nloc, (mloc, NameSet.empty(*FIXME local names?*)));
-                                    i + 1)
-                                 end)
-                             offset Xs
-                   in
-                     (j + 1, offset + width)
-                   end)
-               (0, 0) Xss;
+        (foldl make_minor_pi (0, 0) Xss;
          {major = {width  = k,
                    pi     = major_pi,
                    pi_inv = major_pi_inv},
