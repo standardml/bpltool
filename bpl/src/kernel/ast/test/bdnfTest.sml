@@ -356,6 +356,19 @@ datatype expectedresult = S of string | E of string
 	   \          ((idw_0 * L<><{x}>)\
 	   \           ({x})(x/x * merge_1) ((x/x * idp_1) '{x}')))) [0{x}])",
 	  "06-1-3"),
+         ("06-1-4: normalisation and composition",
+          S"K L<><{x}>",
+	  S"(idw_0 * idp_1)\
+	   \ (idw_0\
+	   \  * (idw_0 * ({})(idw_0 * idp_1) '{}')\
+	   \     (({})\
+	   \      (idw_0 * merge_1)\
+	   \       ((idw_0 * K)\
+	   \        ({})\
+	   \         (idw_0 * merge_1)\
+	   \          ((idw_0 * L<><{x}>)\
+	   \           ({x})(x/x * merge_1) ((x/x * idp_1) '{x}')))) [0{x}])",
+	  "06-1-4"),
          ("07-0-0: tensor product of bigraphs of width 0/0",
           S"x/{x, y} * y/z * z/{} * /w", 
 	  S"((x/{x, y} * y/z * z/{} * /w) * idp_0)\
