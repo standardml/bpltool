@@ -542,30 +542,48 @@ fun is_id0 (VMer (1, _))    = false
 	
   fun Par i vs =
       let
+        (* Parallel product is only defined if the inner names are
+           disjoint. *)
+	val _ = foldl
+                  (fn (X, all) => NameSet.union X all)
+                  NameSet.empty 
+                  (map (Interface.names o innerface) vs)
+	        handle DuplicatesRemoved (X, xs) 
+	        => raise 
+                     NotParallelisable
+                       ("bgval.sml", vs,
+                        "while computing parallel product in Par")
+
 	(* Ys is a list of pairs of (outer, outer local) name sets. *)
 	val Ys = map (locglobnames o outerface) vs
-	(* clashnames are names in 2 or more interfaces, locclashnames
-	 * are names local to 2 or more interfaces, allnames
+	(* clashnames are names in 2 or more interfaces, allnames
 	 * contains the names of all interfaces, alllocnames contains
-	 * the local names of all interfaces.
+	 * the local names of all interfaces, allglobnames contains
+	 * the global names of all interfaces.
 	 *)
-	val (clashnames, locclashnames, allnames, alllocnames)
+	val (clashnames, allnames, alllocnames, allglobnames)
 	  = foldl 
-	      (fn ((Y, Yloc, Yglob), (clns, locclns, alns, allocns))
-		  => (NameSet.union' clns (NameSet.intersect Y alns),
-		      NameSet.union locclns 
-				    (NameSet.intersect Yloc allocns),
-		      NameSet.union' Y alns,
-		      NameSet.union Yloc allocns))
-	      (NameSet.empty, NameSet.empty, NameSet.empty, NameSet.empty)
-	      Ys
-	      handle DuplicatesRemoved (X, xs) 
-	      => raise 
-		NotParallelisable
-		  ("bgval.sml", vs,
-		   "while computing parallel product in Par")
+              (fn ((Y, Yloc, Yglob), (clns, alns, allocns, alglobns))
+                  => (NameSet.union' clns (NameSet.intersect Y alns),
+                      NameSet.union' Y alns,
+                      NameSet.union Yloc allocns,
+                      NameSet.union' Yglob alglobns))
+              (NameSet.empty, NameSet.empty, NameSet.empty, NameSet.empty)
+              Ys
+              handle DuplicatesRemoved (X, xs) 
+              => raise 
+                   NotParallelisable
+                     ("bgval.sml", vs,
+                      "while computing parallel product in Par")
+        val _ = if not (NameSet.isEmpty
+                  (NameSet.intersect alllocnames allglobnames)) then
+                    raise 
+                      NotParallelisable
+                        ("bgval.sml", vs,
+                         "while computing parallel product in Par")
+                else ()
       in
-	if NameSet.isEmpty clashnames then
+        if NameSet.isEmpty clashnames then
 	  Ten i vs
 	else
 	  let
@@ -615,46 +633,57 @@ fun is_id0 (VMer (1, _))    = false
 
   fun Pri i vs =
       let
-	val _ 
-	  = app (fn v => 
-		    if NameSet.isEmpty 
-			 (Interface.glob (innerface v)) then
-		      () 
-		    else
-		      raise 
-			NotPrimeable 
-			  ("bgval.sml", vs,
-			   "factors not prime \
-			   \while making prime product in Pri"))
-		vs
+        (* Prime product is only defined when there are no
+           global inner names and the local inner names are
+           disjoint. *)
+	val _ = foldl
+                  (fn (inner, allloc) =>
+                      if NameSet.isEmpty (Interface.glob inner) then
+                        foldl
+                          (fn (loc, allloc) => NameSet.union loc allloc)
+                          allloc
+                          (Interface.loc inner)
+                      else
+                        raise 
+                          NotPrimeable
+                            ("bgval.sml", vs,
+                             "while computing parallel product in Par"))
+                  NameSet.empty 
+                  (map innerface vs)
+	        handle DuplicatesRemoved (X, xs) 
+	        => raise 
+                     NotPrimeable
+                       ("bgval.sml", vs,
+                        "while computing parallel product in Par")
 	(* Ys is a list of pairs of (outer, outer local) name sets. *)
 	val Ys = map (locglobnames o outerface) vs
-	(* clashnames are names in 2 or more interfaces,
-	 * allglobnames are all global interface names,
-	 * allnames contains the names of all interfaces,
-	 * alllocnames contains the local names of all interfaces.
+	(* clashnames are names in 2 or more interfaces, allnames
+	 * contains the names of all interfaces, alllocnames contains
+	 * the local names of all interfaces, allglobnames contains
+	 * the global names of all interfaces.
 	 *)
-	val (clashnames, allglobnames, allnames, alllocnames)
+	val (clashnames, allnames, alllocnames, allglobnames)
 	  = foldl 
-	      (fn ((Y, Yloc, Yglob), (clns, alglobns, alns, allocns))
-		  => ((if not (NameSet.isEmpty
-				 (NameSet.intersect Yloc alglobns))
-			  orelse
-			  not (NameSet.isEmpty
-				 (NameSet.intersect Yglob allocns))
-		       then
-			 raise 
-			   NotPrimeable
-			     ("bgval.sml", vs,
-			      "while computing prime product in Pri")
-		       else
-			 ());
-		      (NameSet.union' clns (NameSet.intersect Y alns),
-		      NameSet.union' alglobns Yglob,
-		      NameSet.union' Y alns,
-		      NameSet.union' Yloc allocns)))
-	      (NameSet.empty, NameSet.empty, NameSet.empty, NameSet.empty)
-	      Ys
+              (fn ((Y, Yloc, Yglob), (clns, alns, allocns, alglobns))
+                  => (NameSet.union' clns (NameSet.intersect Y alns),
+                      NameSet.union' Y alns,
+                      NameSet.union Yloc allocns,
+                      NameSet.union' Yglob alglobns))
+              (NameSet.empty, NameSet.empty, NameSet.empty, NameSet.empty)
+              Ys
+              handle DuplicatesRemoved (X, xs) 
+              => raise 
+	           NotPrimeable
+                     ("bgval.sml", vs,
+                      "while computing prime product in Pri")
+        val _ = if not (NameSet.isEmpty
+                          (NameSet.intersect alllocnames allglobnames))
+                then
+                    raise NotPrimeable
+                            ("bgval.sml", vs,
+                             "while computing prime product in Pri")
+                else ()
+
 	(* Given a bgval, used names set, a list of local link sets,
 	 * a global link list, a list of tuples of
 	 * bgvals, (B_i, v_i), 
