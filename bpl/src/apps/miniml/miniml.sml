@@ -202,8 +202,8 @@ struct
     fun ppPat (C,x) = ppCtor C ++ ppId x
 
     val dump_fresh =
-	Flags.makeBoolFlag{name="dump_fresh",short="",long="dump-alpha",
-			   desc="Dump alpha-renamed MiniML program"} false
+	Flags.makeBoolFlag{name="/dump/fresh",short="",long="dump-alpha",
+			   desc="Dump alpha-renamed MiniML program",default=false}
 
     local 
 	val counter = ref 0

@@ -67,6 +67,8 @@ structure Test = struct
 	end
 end
 
+val _ = Flags.listDefaults TextIO.stdOut
+
 val _ = ( Test.run ()
         ; if !ErrorMsg.anyErrors then OS.Process.exit OS.Process.failure
 	  else print "Test finished.\n"

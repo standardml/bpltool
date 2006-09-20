@@ -6,6 +6,6 @@
 # INCLUDE=../apps/miniml
 # INCLUDE=../apps/miniml/test
 
-unittest: /lib/smlunit/. /lib/pp/smlnj/. /lib/util/errormsg
+unittest: /lib/smlunit/. /lib/pp/smlnj/. /lib/util/errormsg /lib/util/flags
    /kernel/bg /apps/miniml/bggen /apps/miniml/mml2bg
    /kernel/ast/test/bdnfTest /apps/miniml/test/minimltest %PROGRAM

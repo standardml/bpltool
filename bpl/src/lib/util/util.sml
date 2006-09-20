@@ -6,9 +6,10 @@ struct
     fun abort code = raise ShouldntHappen code
 
     val dump_prefix =
-	Flags.makeStringFlag{name="Util.dump_prefix",
+	Flags.makeStringFlag{name="/dump/prefix",default="",
 			     short="",long="dump-prefix",
-			     desc="Filename prefix for dumps"} ""
+			     desc="Filename prefix for dumps"}
+
     fun setDumpPrefix filename =
 	let open OS.Path
 	    val {dir,file} = splitDirFile filename

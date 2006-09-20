@@ -78,7 +78,7 @@ struct
 		    val res = BG.bgvalToString(BG.bgvalUsefile'' resfile)
 		    val exp = BG.bgvalToString(BG.bgvalUsefile'' expectedfile)
 		in  Assert.assertEqualString res exp ; ()
-		end
+		end handle MiniMLToBG.CompileError reason => Assert.fail reason
 	    fun test1 infile resfile expectedfile =
 		let val _ = MiniMLToBG.compile infile resfile
 		in  Assert.assertEqualUnit () ()
