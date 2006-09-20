@@ -69,7 +69,9 @@ struct
                    ".mml" for the input file, and ".bpl" for the expected
                    result.
                 *)
-		[ "id", "id-app" , "k", "fix", "let"]
+		[ "id", "id-app" , "k", "fix", "let", 
+                  "unit", "ref", "tuple"
+                ]
 
 	    fun test1 infile resfile expectedfile =
 		let val _ = MiniMLToBG.compile infile resfile

@@ -56,7 +56,11 @@ fun mk_list xs =
     in  List.foldr f (A.Const("Nil", A.Unit)) xs
     end
 
-val native_strings = ref true
+
+val native_strings =
+    Flags.makeBoolFlag{name="/codegen/native/strings",short="",long="native-strings",
+		       desc="Use native strings, or a datatype"} false
+
 fun mk_string s =
     if !native_strings then A.String s
     else 
@@ -65,7 +69,10 @@ fun mk_string s =
 	in  mk_list (map (char2exp o Char.toUpper) s)
 	end
 
-val native_ints = ref true
+val native_ints =
+    Flags.makeBoolFlag{name="/codegen/native/ints",short="",long="native-ints",
+		       desc="Use native integers, or a datatype"} false
+
 fun mk_int i = 
     if !native_ints then A.Integer i
     else if i < 0 then raise Fail("The encoding does not support negative ints")

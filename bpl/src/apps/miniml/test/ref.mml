@@ -1,0 +1,6 @@
+datatype int = Z | S of int
+
+val z = ref (1,2)
+val y = z
+val it = #2 (y:=(17,42), !z) 
+

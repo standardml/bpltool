@@ -45,8 +45,14 @@ functor MiniMLToBG(structure BG : BG_ADT
 		     , flush = fn () => TextIO.flushOut(os)
 		     }
 
+    fun explain exn =
+	case exn of 
+	    Util.ShouldntHappen code => "Internal error; grep for " ^ Int.toString code ^ " in the source"
+	  | TypeInference.TypeError (p, msg) => String.concat("type error\n"::msg)
+	  | exn => BG.BGErrorHandler.explain' exn
+	
     fun handler reason exn =
-	( raise CompileError(reason ^ ":" ^ BG.BGErrorHandler.explain' exn)
+	( raise CompileError(reason ^ ": " ^ explain exn)
         )
 
     fun compile infile outfile =
@@ -56,11 +62,17 @@ functor MiniMLToBG(structure BG : BG_ADT
             (* Frontend issues: parsing, type inference, match compilation,
                   alpha-renaming
             *)
-	    val ast = MiniMLParser.parseFile infile
-	    val ast = TypeInference.inference 
-			  (fn x => x) (fn pos => fn tau => pos) ast
-	    val ast = MatchCompiler.compile (fn x=>x) (0,0) ast
-	    val ast = MiniML.fresh MiniML.freshPat ast
+	    val ast =
+		let 
+		    val ast = MiniMLParser.parseFile infile
+		    val ast = TypeInference.inference 
+				  (fn x => x) (fn pos => fn tau => pos) ast
+		    val ast = MatchCompiler.compile (fn x=>x) (0,0) ast
+		    val ast = MiniML.fresh MiniML.freshPat ast
+		in  ast
+		end
+		handle exn => handler "Frontend failed" exn
+
 	    (* possibly dump desugared miniml term *)
 	    val _ = 
 		if !dump_desugar then

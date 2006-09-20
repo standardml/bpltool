@@ -243,7 +243,7 @@ fun exp2bg (X:nameset) exp =
 	    then (VAR x') tt (make_onames (NameSet.remove x' X))
 	    else raise Fail ("Unbound variable " ^ x)
 	end
-      | M.Integer i => Util.abort 1
+      | M.Integer i => Util.abort 19844
       | M.String s => Util.abort 19845
       (*(VAL tt id X) oo (INT i tt make_onames X)*)
 

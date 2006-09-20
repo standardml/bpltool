@@ -1,0 +1,5 @@
+let val t1 = #2 ((),()) 
+    val t2 = (t1, t1)
+in  #1 t2
+end
+

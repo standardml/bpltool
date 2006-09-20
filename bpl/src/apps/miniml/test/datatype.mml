@@ -1,0 +1,8 @@
+datatype 'a list = Nil | Cons of 'a * list
+(*val one = Cons( (), Nil)*)
+val length = 
+  fix l' xs => case xs of
+            	 [] => 0
+               | y::ys => 1 + l' ys
+(*val len = length one*)
+
