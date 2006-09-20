@@ -178,7 +178,7 @@ struct
 	  val pi_inv = array (width1, (~6, NameSet.empty))
 	  fun compentry (i, (j1, X1)) =
 	      let
-		val (j2, X2) = pi2 sub j1
+		val (j2, X2) = pi1 sub j1
 	      in
 		if NameSet.eq X1 X2 then 
 		  (update (pi, i, (j2, X2));
@@ -189,7 +189,7 @@ struct
 			 "different local names in compose")
 	      end
 	in
-	  appi compentry pi1;
+	  appi compentry pi2;
 	  {width = width1, pi = pi, pi_inv = pi_inv}
 	end
 
