@@ -357,17 +357,19 @@ datatype expectedresult = S of string | E of string
 	   \           ({x})(x/x * merge_1) ((x/x * idp_1) '{x}')))) [0{x}])",
 	  "06-1-3"),
          ("06-1-4: normalisation and composition",
-          S"K L<><{x}>",
+          S"K<><{x}> ({x})L * x/{}",
 	  S"(idw_0 * idp_1)\
 	   \ (idw_0\
 	   \  * (idw_0 * ({})(idw_0 * idp_1) '{}')\
 	   \     (({})\
-	   \      (idw_0 * merge_1)\
-	   \       ((idw_0 * K)\
-	   \        ({})\
-	   \         (idw_0 * merge_1)\
-	   \          ((idw_0 * L<><{x}>)\
-	   \           ({x})(x/x * merge_1) ((x/x * idp_1) '{x}')))) [0{x}])",
+	   \       (idw_0 * merge_1)\
+	   \        ((idw_0 * K<><{}>)\
+	   \          ({})\
+	   \           (idw_0 * merge_1)\
+	   \            ((idw_0 * L)\
+	   \              ({})\
+	   \               (idw_0 * merge_1) ((idw_0 * idp_1) '{}'))))\
+	   \     idp_1)",
 	  "06-1-4"),
          ("07-0-0: tensor product of bigraphs of width 0/0",
           S"x/{x, y} * y/z * z/{} * /w", 
@@ -472,7 +474,108 @@ datatype expectedresult = S of string | E of string
          ("08-2-3: composition with inner/outer local name set sizes >0/0",
           E"NotComposable", E"NotComposable", "08-2-3"),
          ("08-2-4: composition with inner/outer global name set sizes >0/0",
-          E"NotComposable", E"NotComposable", "08-2-4")
+          E"NotComposable", E"NotComposable", "08-2-4"),
+         ("09-0-0: parallel product of bigraphs of width 0/0",
+          S"x/{x, y} * y/z * z/{} * /w", 
+	  S"((x/{x, y} * y/z * z/{} * /w) * idp_0)\
+           \ (idw_{w, x, y, z} * idx_0 idp_0)", "09-0-0"),
+         ("09-0-1: parallel product of bigraphs of width 0/>0",
+          S"x/{x, y} * y/z * [1, 0{w}]", 
+	  S"((x/{x, y} * y/z) * [0{w}, 1])\
+           \ (idw_{x, y, z}\
+           \  * ((idw_0 * ({w})(w/w * idp_1) '{w}')\
+           \      (({w})(w/w * merge_1) ((w/w * idp_1) '{w}'))\
+           \     * (idw_0 * ({})(idw_0 * idp_1) '{}')\
+           \        ({})(idw_0 * merge_1)\
+           \             ((idw_0 * idp_1) '{}'))\
+           \     [1, 0{w}])", "09-0-1"),
+         ("09-1-0: parallel product of bigraphs of width >0/0",
+          S"[1, 0{w}] * x/{x, y} * y/z",
+	  S"((x/{x, y} * y/z) * [0{w}, 1])\
+           \ (idw_{x, y, z}\
+           \  * ((idw_0 * ({w})(w/w * idp_1) '{w}')\
+           \      (({w})(w/w * merge_1) ((w/w * idp_1) '{w}'))\
+           \     * (idw_0 * ({})(idw_0 * idp_1) '{}')\
+           \        ({})(idw_0 * merge_1)\
+           \             ((idw_0 * idp_1) '{}'))\
+           \     [1, 0{w}])", "09-1-0"),
+         ("09-1-1: parallel product of bigraphs of width >0/>0",
+          S"[1, 0{w}] * [2{x}, 0, 1{y, z}]", 
+	  S"(idw_0 * [0{w}, 1, 2, 3{y, z}, 4{x}])\
+           \ (idw_0\
+           \  * ((idw_0 * ({w})(w/w * idp_1) '{w}')\
+           \      (({w})(w/w * merge_1) ((w/w * idp_1) '{w}'))\
+           \     * (idw_0 * ({})(idw_0 * idp_1) '{}')\
+           \        (({})(idw_0 * merge_1) ((idw_0 * idp_1) '{}'))\
+           \     * (idw_0 * ({})(idw_0 * idp_1) '{}')\
+           \        (({})(idw_0 * merge_1) ((idw_0 * idp_1) '{}'))\
+           \     * (idw_0 * ({y, z})(idw_{y, z} * idp_1) '{y, z}')\
+           \        (({y, z})\
+           \         (idw_{y, z} * merge_1)\
+           \          ((idw_{y, z} * idp_1) '{y, z}'))\
+           \     * (idw_0 * ({x})(x/x * idp_1) '{x}')\
+           \        ({x})(x/x * merge_1) ((x/x * idp_1) '{x}'))\
+           \     [1, 0{w}, 4{x}, 2, 3{y, z}])", "09-1-1"),
+         ("09-2-0: parallel product with global outer name clash",
+          S"((x/x * y/{y_0,y_1}) * idp_2)\
+           \ (((x/x * y_1/y) * idp_1) K<x,y>\
+           \     * (y_0/y * idp_1) (y/z * merge_1))",
+          S"((x/x * y/{y,z}) * idp_2)\
+           \ (z/z\
+           \  * ((idw_{x,y} * ({}) (idw_0 * idp_1) '{}')\
+           \      (({})\
+           \        (idw_{x,y} * merge_1)\
+           \         ((idw_0 * K<x,y>)\
+           \           ({})(idw_0 * merge_1) ((idw_0 * idp_1) '{}')))\
+           \     * (idw_0 * ({})(idw_0 * idp_1) '{}')\
+           \        ({})\
+           \         (idw_0 * merge_1) ((idw_0 * idp_1) '{}'))\
+           \  idp_2)", "09-2-0"),
+         ("09-2-1: parallel product with global inner name clash",
+          E"NotParallelisable", E"NotParallelisable", "09-2-1"),
+         ("09-2-2: parallel product with local outer name clash",
+          E"NotParallelisable", E"NotParallelisable", "09-2-2"),
+         ("09-2-3: parallel product with local inner name clash",
+          E"NotParallelisable", E"NotParallelisable", "09-2-3"),
+         ("09-2-4: parallel product with local/global inner name clash",
+          E"NotParallelisable", E"NotParallelisable", "09-2-4"),
+         ("09-2-5: parallel product with local/global outer name clash",
+          E"NotParallelisable", E"NotParallelisable", "09-2-5"),
+         ("10-0-0: prime product of bigraphs of width 0/0",
+          E"NotPrimeable", E"NotPrimeable", "10-0-0"),
+         ("10-0-1: prime product of bigraphs of width 0/>0",
+          E"NotPrimeable", E"NotPrimeable", "10-0-1"),
+         ("10-1-0: prime product of bigraphs of width >0/0",
+          E"NotPrimeable", E"NotPrimeable", "10-1-0"),
+         ("10-1-1: prime product of bigraphs of width >0/>0",
+          S"({w,x,y,z})\
+           \ (idw_{w,x,y,z} * merge_5)\
+           \  (('{w}'*'{}') [1, 0{w}]\
+           \   * ('{}' * '{y,z}' * '{x}') [2{x},0,1{y,z}])",
+	  S"(idw_0 * [0{w,x,y,z}])\
+           \ (idw_0\
+           \  * (idw_0\
+           \     * ({w,x,y,z}) (idw_{w,x,y,z} * idp_1) '{w,x,y,z}')\
+           \     (({w,x,y,z})\
+           \       (idw_{w,x,y,z} * merge_5)\
+           \        ((w/w * idp_1) '{w}'\
+           \         * (idw_0 * idp_1) '{}'\
+           \         * (idw_0 * idp_1) '{}'\
+           \         * (idw_{y,z} * idp_1) '{y,z}'\
+           \         * (x/x * idp_1) '{x}'))\
+           \  [1, 0{w}, 4{x}, 2, 3{y,z}])", "10-1-1"),
+         ("10-2-0: prime product with global inner names",
+          E"NotPrimeable", E"NotPrimeable", "10-2-0"),
+         ("10-2-1: prime product with global inner name clash",
+          E"NotPrimeable", E"NotPrimeable", "10-2-1"),
+         ("10-2-2: prime product with local outer name clash",
+          E"NotPrimeable", E"NotPrimeable", "10-2-2"),
+         ("10-2-3: prime product with local inner name clash",
+          E"NotPrimeable", E"NotPrimeable", "10-2-3"),
+         ("10-2-4: prime product with local/global inner name clash",
+          E"NotPrimeable", E"NotPrimeable", "10-2-4"),
+         ("10-2-5: prime product with local/global outer name clash",
+          E"NotPrimeable", E"NotPrimeable", "10-2-5")
 ]
 
 	val bgvaltests =
@@ -555,15 +658,6 @@ datatype expectedresult = S of string | E of string
 	     ("Singleton parallel product", 
 	      S"'{y4, y5}' * [0{y1, y2}, 1{y3}]",
 	      fn () => Par (2,0) [b1]),
-	     ("Parallel product with shared outer name", 
-	      S"((y4/y4 * y5/{y5_0, y5_1} * y6/y6) * [0, 1{y1, y2}, 2{y3}])\n\
-	      \ (((y4/y4 * y5_1/y5) * [0, 1{y1, y2}, 2{y3}])\n\
-	      \   ('{y4, y5}' * [0{y1, y2}, 1{y3}])\n\
-	      \  * (y5_0/y5 * y6/y6) (y5/{} * y6/y6))",
-	      fn () => Par (3,0) [b1, b2]),
-	     ("Expect error: Parallel product with local outer name clash",
-	      E"NotParallelisable",
-	      fn () => Par (4,0) [p1, p1]),
 	     ("Empty prime product", S"1",
 	      fn () => Pri (1,0) []),
 	     ("Singleton prime product", 
@@ -571,20 +665,7 @@ datatype expectedresult = S of string | E of string
 	       \ (idw_{y1, y2, y3, y4, y5} * merge_3)\n\
 	       \  ((idw_{y4, y5} * '{}' * '{y1, y2}' * '{y3}')\n\
 	       \   ('{y4, y5}' * [0{y1, y2}, 1{y3}]))",
-	      fn () => Pri (2,0) [b1]),
-	     ("Prime product with shared outer name", 
-	      S"({y1, y2, y3})\n\
-	       \ ((y1/y1 * y2/{y2_0, y2_1} * y3/y3 * y4/y4 * y5/{y5_0, y5_1})\n\
-	       \  * merge_4)\n\
-	       \  (((y1/y1 * y2_1/y2 * y3/y3 * y4/y4 * y5_1/y5) * idp_3)\n\
-	       \    (idw_{y4, y5} * '{}' * '{y1, y2}' * '{y3}')\n\
-	       \    ('{y4, y5}' * [0{y1, y2}, 1{y3}])\n\
-	       \   * ((y2_0/y2 * y5_0/y5) * idp_1) (y5/y5 * '{y2}')\n\
-	       \      ({y2})1 * (y2/{} * y5/{}))",
-	      fn () => Pri (3,0) [b1, b4]),
-	     ("Prime product with local/global outer name clash",
-	      E"NotPrimeable",
-	      fn () => Pri (4,0) [p1, b3])]
+	      fn () => Pri (2,0) [b1])]
 	    end
        in
 	 Test.labelTests
