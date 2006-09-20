@@ -43,6 +43,8 @@ struct
   fun width {width, loc, glob} = width
   fun loc {width, loc, glob} = loc
   fun glob {width, loc, glob} = glob
+  fun names {width, loc, glob} =
+      foldl (fn (X, all) => NameSet.union X all) glob loc
 
 
   fun ListPair_allEq p ([], []) = true

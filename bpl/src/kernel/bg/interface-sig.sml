@@ -48,6 +48,8 @@ sig
   val loc : interface -> nameset list
   (** Return the set of global names. *)
   val glob : interface -> nameset
+  (** Return the set of names. *)
+  val names : interface -> nameset
 
   (** Determine interface equality.  Two interfaces are considered
    * equal if they have identical width, their global name sets are
