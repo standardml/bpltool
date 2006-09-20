@@ -42,7 +42,8 @@ structure Flags :> FLAGS = struct
                     val hashVal = HashString.hashString
                     val sameKey = op =)
     exception NotFound
-    val registered = HT.mkTable (37, NotFound)
+    val registered : flag_type flag_info HT.hash_table
+     = HT.mkTable (37, NotFound)
 
     (* creating flags *)
     type 'a mk_flag = 'a flag_info -> 'a ref
@@ -65,7 +66,7 @@ structure Flags :> FLAGS = struct
     fun list_flags () = List.map #2 (HT.listItemsi registered)
 
     fun listDefaults outstream = 
-	let fun f ({name,desc,default,...}) =
+	let fun f ({name,desc,default,...} : flag_type flag_info) =
 		( TextIO.output(outstream, "# " ^ desc ^ "\n")
                 ; TextIO.output(outstream, name ^" = "^ toString default ^ "\n")
                 )
