@@ -5,6 +5,7 @@ argparse-sig:
 argparse: argparse-sig %NODASHSIG
 uref-sig:
 uref: uref-sig %NODASHSIG
+flags-sig:
 flags: /lib/compat/mosml/hash/.
 pos-sig:
 pos: pos-sig %NODASHSIG
