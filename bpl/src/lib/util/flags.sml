@@ -121,7 +121,7 @@ structure Flags :> FLAGS = struct
                          )
 	  | RealFlag r => ( case Dyn.unpack realref_b dref of
 			       NONE => false
-			     | SOME rf => !rf = r
+			     | SOME rf => Real.== (!rf, r)
                          )
 	  | BoolFlag b => ( case Dyn.unpack boolref_b dref of
 			       NONE => false
@@ -136,11 +136,11 @@ structure Flags :> FLAGS = struct
     (* listing flags *)
     fun list_flags () = List.map #2 (HT.listItemsi registered)
     fun only_changed flags = 
-	let fun f (r',info as {default,...}) = not(atDefault r' default)
+	let fun f (r',info as {default,...} : flag_type flag_info) = not(atDefault r' default)
 	in  List.filter f flags
 	end
     fun with_option flags =
-	let fun f (_, {long="",short="",...}) = false
+	let fun f (_, {long="",short="",...} : flag_type flag_info) = false
 	      | f _ = true
 	in  List.filter f flags
 	end
@@ -157,7 +157,7 @@ structure Flags :> FLAGS = struct
     fun listChanged outstream = output outstream (only_changed (list_flags()))
 
     fun usage () =
-	let fun f (_, {short,long,desc,...}) =
+	let fun f (_, {short,long,desc,...} : flag_type flag_info) =
 		  (if short="" then [] else ["-",short])
                 @ (if long=""  then [] else ["--",long])
                 @ [desc,"\n"]
@@ -165,7 +165,7 @@ structure Flags :> FLAGS = struct
 	end
 
     fun toSpect () =
-	let fun f (_, {short,long,desc,...}) =
+	let fun f (_, {short,long,desc,...} : flag_type flag_info) =
 		  (if short="" then [] else [("-"^short,desc)])
                 @ (if long=""  then [] else [("--"^long,desc)])
 	in  List.map f (with_option (list_flags()))
