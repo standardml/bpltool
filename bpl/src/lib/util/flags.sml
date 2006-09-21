@@ -34,7 +34,9 @@ structure Flags :> FLAGS = struct
 	  | BoolFlag b => Bool.toString b
 
     type 'a flag_info 
-      = {name:string,desc:string,short:string,long:string,default:'a}
+      = {name:string,desc:string,
+	 short:string,long:string,arg:string,
+	 default:'a}
 
 
     structure HT 
@@ -47,8 +49,8 @@ structure Flags :> FLAGS = struct
      = HT.mkTable (37, FlagNotFound)
 
     (* creating flags *)
-    fun set_default ({name,desc,short,long,default}:'a flag_info) def =
-	{name=name,desc=desc,short=short,long=long,default=def}
+    fun set_default ({name,desc,short,long,default,arg}:'a flag_info) def =
+	{name=name,desc=desc,short=short,long=long,arg=arg,default=def}
     fun mk (info as {name,...}:'a flag_info) dref def =
 	HT.insert registered (name, (dref, set_default info def))
 
@@ -156,19 +158,56 @@ structure Flags :> FLAGS = struct
     fun listDefaults outstream = output outstream (list_flags())
     fun listChanged outstream = output outstream (only_changed (list_flags()))
 
-    fun usage () =
-	let fun f (_, {short,long,desc,...} : flag_type flag_info) =
-		  (if short="" then [] else ["-",short])
-                @ (if long=""  then [] else ["--",long])
-                @ [desc,"\n"]
-	in  List.map (String.concat o f) (with_option (list_flags()))
+    fun clr r () = r := false
+    fun set r () = r := true
+    fun toSpec dref def =
+	case def of
+	    IntFlag i => ( case Dyn.unpack intref_b dref of
+			       NONE => Util.abort 5540
+			     | SOME rf => ArgParse.Int(fn i => rf := i)
+                         )
+	  | RealFlag r => ( case Dyn.unpack realref_b dref of
+			       NONE => Util.abort 5541
+			     | SOME rf => ArgParse.Real(fn r => rf := r)
+                         )
+	  | BoolFlag b => ( case Dyn.unpack boolref_b dref of
+			       NONE => Util.abort 5542
+			     | SOME rf => ArgParse.Unit(if b then clr rf
+							else set rf)
+                         )
+	  | StringFlag s => ( case Dyn.unpack stringref_b dref of
+				  NONE => Util.abort 5543
+				| SOME rf => ArgParse.String(fn s => rf := s)
+                            )
+
+    fun options () =
+	let fun f (dref, {name,short,long,desc,default,arg}) =
+		( (if short = "" then [] else ["-"^short]) @
+                  (if long  = "" then [] else ["--"^long])
+                , arg
+                , desc
+                , toSpec dref default
+                )
+	in  List.map f (with_option (list_flags()))
 	end
 
-    fun toSpect () =
-	let fun f (_, {short,long,desc,...} : flag_type flag_info) =
-		  (if short="" then [] else [("-"^short,desc)])
-                @ (if long=""  then [] else [("--"^long,desc)])
-	in  List.map f (with_option (list_flags()))
+    fun mk_opt (opts, "", desc, spec) = 
+	(Util.stringSep "" "" ", " (fn s=>s) opts, desc)
+      | mk_opt (opts, arg, desc,spec) = 
+	(Util.stringSep "" "" ", " (fn s=>s^" "^arg) opts, desc)
+
+    fun mk_table opts =
+	let val max = List.foldl (fn ((opt,dsc),m) => if String.size opt > m 
+						      then String.size opt
+						      else m)
+		                 0 opts
+	in  List.map (fn (opt,desc) => StringCvt.padRight #" " (max+2) opt ^ desc)
+	             opts
+	end
+
+    fun usage () =
+	let val opts = options ()
+	in  mk_table (List.map mk_opt opts)
 	end
 
 end (* structure Flags *)

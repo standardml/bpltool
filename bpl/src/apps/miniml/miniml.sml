@@ -203,7 +203,8 @@ struct
 
     val dump_fresh =
 	Flags.makeBoolFlag{name="/dump/fresh",short="",long="dump-alpha",
-			   desc="Dump alpha-renamed MiniML program",default=false}
+			   arg="",desc="Dump alpha-renamed MiniML program",
+			   default=false}
 
     local 
 	val counter = ref 0

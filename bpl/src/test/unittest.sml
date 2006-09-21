@@ -66,11 +66,3 @@ structure Test = struct
 	    List.app run1 tests
 	end
 end
-
-val _ = Flags.listDefaults TextIO.stdOut
-val _ = List.app (fn s => TextIO.print(s^"\n")) (Flags.usage())
-
-val _ = ( Test.run ()
-        ; if !ErrorMsg.anyErrors then OS.Process.exit OS.Process.failure
-	  else print "Test finished.\n"
-        )

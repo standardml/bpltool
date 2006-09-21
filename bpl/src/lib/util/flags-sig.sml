@@ -21,7 +21,9 @@
 signature FLAGS = sig
 
     type 'a flag_info 
-      = {name:string,desc:string,short:string,long:string,default:'a}
+      = {name:string,desc:string,
+	 short:string,long:string,arg:string,
+	 default:'a}
 
     exception FlagNotFound
 

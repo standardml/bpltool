@@ -31,10 +31,12 @@ functor MiniMLToBG(structure BG : BG_ADT
 =  struct
 
     val dump_desugar =
-	Flags.makeBoolFlag{name="/dump/desugar",short="",long="dump-desugar",
+	Flags.makeBoolFlag{name="/dump/desugar",
+			   short="",long="dump-desugar",arg="",
 			   desc="Dump desugared MiniML program",default=false}
     val dump_bgval =
-	Flags.makeBoolFlag{name="/dump/bgval",short="",long="dump-bgval",default=false,
+	Flags.makeBoolFlag{name="/dump/bgval",arg="",
+			   short="",long="dump-bgval",default=false,
 			   desc="Dump BG term prior to normalization"}
 
     exception CompileError of string

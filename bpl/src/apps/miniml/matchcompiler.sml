@@ -212,7 +212,7 @@ structure MatchCompiler :> MATCHCOMPILER = struct
 
     val dump_match_compile =
 	Flags.makeBoolFlag{name="/dump/matchcompiled",short="",default=false,
-			   long="dump-match-compiled",
+			   long="dump-matchcompiled",arg="",
 			   desc="Dump match-compiled MiniML program"}
 
     val compile = fn getpos => fn noinfo => fn prog =>

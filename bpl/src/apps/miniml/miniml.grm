@@ -58,8 +58,9 @@ fun mk_list xs =
 
 
 val native_strings =
-    Flags.makeBoolFlag{name="/codegen/native/strings",short="",long="native-strings",
-		       desc="Use native strings, or a datatype",default=false}
+    Flags.makeBoolFlag{name="/codegen/native/strings",default=false,
+		       short="strings",long="native-strings",arg="",
+		       desc="Use native strings (instead of a datatype)"}
 
 fun mk_string s =
     if !native_strings then A.String s
@@ -70,8 +71,9 @@ fun mk_string s =
 	end
 
 val native_ints =
-    Flags.makeBoolFlag{name="/codegen/native/ints",short="",long="native-ints",
-		       desc="Use native integers, or a datatype",default=false}
+    Flags.makeBoolFlag{name="/codegen/native/ints",default=false,
+		       short="-ints",long="native-ints",arg="",
+		       desc="Use native integers (instead of a datatype)"}
 
 fun mk_int i = 
     if !native_ints then A.Integer i
