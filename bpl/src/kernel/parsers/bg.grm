@@ -34,7 +34,7 @@
                  | permentry 
 		 | permentry, permentrylist
 
-   permentry     = (int,nset)
+   permentry     = int nset
    
    name   = [a-n|p-v|yz]
           | [a-z][A-za-z0-9_]+
@@ -277,7 +277,8 @@ permentrylist : permentry COMMA permentrylist   (permentry :: permentrylist)
 	      | permentry                       ([permentry])
 	      |                                 ([]) 
 
-permentry : LPAREN int COMMA nset RPAREN	((int, nset))
+permentry : int nset				((int, nset))
+	  | int					((int, NameSet.empty))
 
 int : INT                                       (INT)
     | ONE                                       (1)
