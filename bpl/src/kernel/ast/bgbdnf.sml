@@ -935,6 +935,9 @@ struct
               val {idxmerge, Ss} = unmkG G
               val Xss = map (Interface.loc o innerface) Ss
               val {major, minors} = Permutation.split pi Xss
+              handle Permutation.NotRegularisable _ =>
+                raise IrregularBDNF
+                  ("bgbdnf.sml", i, B, "bigraph is irregular")
               val Ss' = map regS (ListPair.zip (Ss, minors))
             in
               Abs (absnames,
@@ -943,21 +946,24 @@ struct
 
         fun regD D =
             let
-              fun regPs [] [] = []
-                | regPs (P_i::Ps) pis =
+              fun regPs [] [] _ = []
+                | regPs (P_i::Ps) pis pi_offset =
                   let
                     val {idxlocsub, N} = unmkP P_i
-                    val m_i  = Interface.width (innerface P_i)
-                    val pi_i = Permutation.make (take (pis, m_i))
+                    val m_i   = Interface.width (innerface P_i)
+                    val pis_i = map
+                                  (fn (j, ns) => (j - pi_offset, ns))
+                                  (take (pis, m_i))
+                    val pi_i  = Permutation.make (pis_i)
                     val pisrest = drop (pis, m_i)
-                    val N'_i = regN N pi_i
+                    val N'_i  = regN N pi_i
                   in
                     Com (idxlocsub, N'_i)
-                    :: (regPs Ps pisrest)
+                    :: (regPs Ps pisrest (pi_offset + m_i))
                   end
-                | regPs [] err2s =
+                | regPs [] err2s _ =
                   raise UnequalLength2 ("bgbdnf.sml", [], err2s,
-                                       "regPs in regularise")
+                                        "regPs in regularise")
 
               val {ren, Ps, perm} = unmkD D
               val pi = case match PPer perm of
@@ -968,7 +974,10 @@ struct
                               "matching perm in regD")
               val pis = Permutation.unmk pi
             in
-              Ten [ren, Ten (regPs Ps pis)]
+              Ten [ren, Ten (regPs Ps pis 0)]
+              handle Permutation.NotPermutation _ =>
+                raise IrregularBDNF
+                  ("bgbdnf.sml", i, B, "bigraph is irregular")
             end
             
       in
