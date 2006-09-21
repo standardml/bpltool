@@ -41,37 +41,135 @@ structure Flags :> FLAGS = struct
       = HashTableFn(type hash_key = string
                     val hashVal = HashString.hashString
                     val sameKey = op =)
-    exception NotFound
-    val registered : flag_type flag_info HT.hash_table
-     = HT.mkTable (37, NotFound)
+
+    exception FlagNotFound
+    val registered : (Dyn.t * flag_type flag_info) HT.hash_table
+     = HT.mkTable (37, FlagNotFound)
 
     (* creating flags *)
-    type 'a mk_flag = 'a flag_info -> 'a ref
     fun set_default ({name,desc,short,long,default}:'a flag_info) def =
 	{name=name,desc=desc,short=short,long=long,default=def}
+    fun mk (info as {name,...}:'a flag_info) dref def =
+	HT.insert registered (name, (dref, set_default info def))
 
+    val intref_b : int ref Dyn.brand = Dyn.make_brand()
+    fun makeIntFlag (info as {default,...}: int flag_info) =
+	let val r : int ref = ref default
+	    val r' = Dyn.pack intref_b r
+	in  r before mk info r' (IntFlag default)
+	end
+
+    val realref_b : real ref Dyn.brand = Dyn.make_brand()
+    fun makeRealFlag (info as {name,default,...}: real flag_info) =
+	let val r : real ref = ref default
+	    val r' = Dyn.pack realref_b r
+	in  r before mk info r' (RealFlag default)
+	end
+
+    val boolref_b : bool ref Dyn.brand = Dyn.make_brand()
     fun makeBoolFlag (info as {name,default,...}: bool flag_info) =
 	let val r : bool ref = ref default
-	in  r before
-	    HT.insert registered (name, set_default info (BoolFlag default))
+	    val r' = Dyn.pack boolref_b r
+	in  r before mk info r' (BoolFlag default)
 	end
 
+    val stringref_b : string ref Dyn.brand = Dyn.make_brand()
     fun makeStringFlag (info as {name,default,...}: string flag_info) =
 	let val r : string ref = ref default
-	in  r before
-	    HT.insert registered (name, set_default info (StringFlag default))
+	    val r' = Dyn.pack stringref_b r
+	in  r before mk info r' (StringFlag default)
 	end
+
+    fun setIntFlag name int =
+	let val (r', info) = HT.lookup registered name
+	    val r = case Dyn.unpack intref_b r' of
+			NONE => Util.abort 98770
+		      | SOME r => r
+	in  r := int
+	end
+
+    fun setRealFlag name real =
+	let val (r', info) = HT.lookup registered name
+	    val r = case Dyn.unpack realref_b r' of
+			NONE => Util.abort 98771
+		      | SOME r => r
+	in  r := real
+	end
+
+    fun setBoolFlag name bool =
+	let val (r', info) = HT.lookup registered name
+	    val r = case Dyn.unpack boolref_b r' of
+			NONE => Util.abort 98772
+		      | SOME r => r
+	in  r := bool
+	end
+
+    fun setStringFlag name str =
+	let val (r', info) = HT.lookup registered name
+	    val r = case Dyn.unpack stringref_b r' of
+			NONE => Util.abort 98773
+		      | SOME r => r
+	in  r := str
+	end
+
+    
+    fun atDefault dref def =
+	case def of
+	    IntFlag i => ( case Dyn.unpack intref_b dref of
+			       NONE => false
+			     | SOME rf => !rf = i
+                         )
+	  | RealFlag r => ( case Dyn.unpack realref_b dref of
+			       NONE => false
+			     | SOME rf => !rf = r
+                         )
+	  | BoolFlag b => ( case Dyn.unpack boolref_b dref of
+			       NONE => false
+			     | SOME rf => !rf = b
+                         )
+	  | StringFlag s => ( case Dyn.unpack stringref_b dref of
+				  NONE => false
+				| SOME rf => !rf = s
+                            )
+
 
     (* listing flags *)
     fun list_flags () = List.map #2 (HT.listItemsi registered)
+    fun only_changed flags = 
+	let fun f (r',info as {default,...}) = not(atDefault r' default)
+	in  List.filter f flags
+	end
+    fun with_option flags =
+	let fun f (_, {long="",short="",...}) = false
+	      | f _ = true
+	in  List.filter f flags
+	end
 
-    fun listDefaults outstream = 
-	let fun f ({name,desc,default,...} : flag_type flag_info) =
+    fun output outstream flags = 
+	let fun f (_,{name,desc,default,...}: flag_type flag_info) =
 		( TextIO.output(outstream, "# " ^ desc ^ "\n")
                 ; TextIO.output(outstream, name ^" = "^ toString default ^ "\n")
                 )
-	in  List.app f (list_flags())
+	in  List.app f flags
+	end
+
+    fun listDefaults outstream = output outstream (list_flags())
+    fun listChanged outstream = output outstream (only_changed (list_flags()))
+
+    fun usage () =
+	let fun f (_, {short,long,desc,...}) =
+		  (if short="" then [] else ["-",short])
+                @ (if long=""  then [] else ["--",long])
+                @ [desc,"\n"]
+	in  List.map (String.concat o f) (with_option (list_flags()))
+	end
+
+    fun toSpect () =
+	let fun f (_, {short,long,desc,...}) =
+		  (if short="" then [] else [("-"^short,desc)])
+                @ (if long=""  then [] else [("--"^long,desc)])
+	in  List.map f (with_option (list_flags()))
 	end
 
 end (* structure Flags *)
-   
+

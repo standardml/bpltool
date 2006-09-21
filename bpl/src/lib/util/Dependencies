@@ -5,11 +5,16 @@ argparse-sig:
 argparse: argparse-sig %NODASHSIG
 uref-sig:
 uref: uref-sig %NODASHSIG
-flags-sig:
-flags: /lib/compat/mosml/hash/.
+dyn-sig:
+dyn: dyn-sig %NODASHSIG
 pos-sig:
 pos: pos-sig %NODASHSIG
-util-sig: /lib/pp/mak/pretty /lib/pp/smlnj/prettyprint
-util: util-sig flags /lib/pp/smlnj/prettyprint /lib/pp/mak/pretty %NODASHSIG
+util-sig:
+util: util-sig %NODASHSIG
+flags-sig:
+flags: flags-sig dyn util /lib/compat/mosml/hash/. %NODASHSIG
+dump-sig: /lib/pp/mak/pretty /lib/pp/smlnj/prettyprint
+dump: dump-sig flags /lib/pp/mak/pretty /lib/pp/smlnj/prettyprint %NODASHSIG
 #errorloc-sig /lib/pp/mak/pretty util
 #errorloc errorloc-sig /lib/pp/mak/pretty util %NODASHSIG
+

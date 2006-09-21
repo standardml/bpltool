@@ -22,11 +22,17 @@ signature FLAGS = sig
 
     type 'a flag_info 
       = {name:string,desc:string,short:string,long:string,default:'a}
-    type 'a mk_flag = 'a flag_info -> 'a ref
 
-    val makeBoolFlag : bool mk_flag
-    val makeStringFlag : string mk_flag
+    exception FlagNotFound
+
+    val makeIntFlag : int flag_info -> int ref
+    val makeRealFlag : real flag_info -> real ref
+    val makeBoolFlag : bool flag_info -> bool ref
+    val makeStringFlag : string flag_info -> string ref
     
     val listDefaults : TextIO.outstream -> unit
+    val listChanged : TextIO.outstream -> unit
+
+    val usage : unit -> string list
 
 end (* signature FLAGS *)

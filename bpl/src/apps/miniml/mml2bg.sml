@@ -57,7 +57,7 @@ functor MiniMLToBG(structure BG : BG_ADT
 
     fun compile infile outfile =
 	let 
-	    val _ = Util.setDumpPrefix infile
+	    val _ = Dump.setPrefix infile
 
             (* Frontend issues: parsing, type inference, match compilation,
                   alpha-renaming
@@ -77,7 +77,7 @@ functor MiniMLToBG(structure BG : BG_ADT
 	    val _ = 
 		if !dump_desugar then
 		    if !MiniML.dump_fresh then ()
-		    else Util.dumpPretty (MiniML.pp MiniML.ppPat) "desugar" ast
+		    else Dump.pretty (MiniML.pp MiniML.ppPat) "desugar" ast
 		else ()
 
             (* Code generation: convert to bgval, then normalize *)
@@ -87,7 +87,7 @@ functor MiniMLToBG(structure BG : BG_ADT
             (* possibly dump bgval term *)
 	    val _ = 
 		if !dump_bgval then
-		    Util.dumpPP BGGen.pp "bgval" bpl
+		    Dump.pp BGGen.pp "bgval" bpl
 		else ()
 	    val bpl = BG.BgBDNF.make bpl
 		        handle exn => handler "Normalization failed" exn

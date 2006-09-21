@@ -218,7 +218,7 @@ structure MatchCompiler :> MATCHCOMPILER = struct
     val compile = fn getpos => fn noinfo => fn prog =>
         let val prog' = compile getpos noinfo prog
 	in  if !dump_match_compile
-	    then Util.dumpPretty (MiniML.pp MiniML.ppPat) "match" prog'
+	    then Dump.pretty (MiniML.pp MiniML.ppPat) "match" prog'
 	    else ()
           ; prog'
 	end
