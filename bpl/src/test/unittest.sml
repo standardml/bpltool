@@ -66,3 +66,5 @@ structure Test = struct
 	    List.app run1 tests
 	end
 end
+
+val _ = Test.run ()

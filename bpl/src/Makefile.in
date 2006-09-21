@@ -66,14 +66,6 @@ CLEANFILES :=
 REALCLEANFILES :=
 DISTCLEANFILES :=
 
-# MLton
-ifeq (,$(MLTON))
-  MLTON_DEPENDS :=
-else
-  MLTON_DEPENDS :=
-#  MLTON_DEPENDS := $(shell $(MLTON) -stop f test/mlton.mlb)
-endif
-
 # Automatic makefil'ing
 .PHONY: ajour
 
@@ -94,6 +86,10 @@ DISTCLEANFILES += config.cache config.log config.status Makefile Makefile.chain 
 
 
 # Parsers and lexers
+GRMFILES := $(shell find . -name '*.grm')
+LEXFILES := $(shell find . -name '*.lex')
+PARSINGFILES := $(patsubst %.grm,%.grm-sig.sml,$(GRMFILES)) $(patsubst %.grm,%.grm.sml,$(GRMFILES)) $(patsubst %.lex,%.lex.sml,$(LEXFILES))
+
 %.lex.sml: %.lex
 	cd $(dir $@) && $(MAKE) $(notdir $@)
 
@@ -147,16 +143,12 @@ test-mosml: unittest
 test-smlnj: smlnj-prepare test.cm
 	echo "CM.make' \"test.cm\";" | $(SMLNJ)
 
-#test-mlton: mlton-prepare $(MLTON_DEPENDS)
-#	mlton test/mlton.mlb
-#	./unittest
+test-mlton: mlton-prepare $(PARSINGFILES)
+	$(MLTON) test/mlton.mlb && test/mlton
 
 .PHONY:	check test test-smlnj test-mosml test-mlton
 
 # Clean up
-GRMFILES := $(shell find . -name '*.grm')
-LEXFILES := $(shell find . -name '*.lex')
-
 clean:
 	$(RM) *~ 
 
@@ -169,10 +161,13 @@ CMDIRS = $(filter-out lib/pp/smlnj,$(MOSMAKEDIRS))
 cmclean:
 	for d in $(CMDIRS); do [ -r $$d/Dependencies ] && $(RM) -f $$d/sources.cm; done
 
-realclean: clean cmclean parsersclean
+mlbclean:
+	$(RM) $(patsubst %/Dependencies,%/mlton.mlb,$(DEPENDENCIES)) 
+
+realclean: clean cmclean mlbclean parsersclean
 
 distclean: realclean
 	$(RM) -rf autom4te.cache
 	$(RM) $(DISTCLEANFILES)
 
-.PHONY: parsersclean cmclean clean realclean distclean
+.PHONY: parsersclean cmclean mlbclean clean realclean distclean
