@@ -160,4 +160,3 @@ sed -n \
  | sort | uniq | grep -v -e "\($excludedirs\)\(/.*\)*/sources.cm" \
  >> $outputfile
 true # exit with status code 0
-# | sed -e "s+^/+$rootdir/+; s+/\\([^/]\\|[^/][^/]\\|[^/]*\\([^./][^/][^/]\\|\\.[^c/][^/]\\|\\.c[^m/]\\)\\)\$+/$sources_cm+" \
