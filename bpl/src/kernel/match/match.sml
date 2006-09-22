@@ -72,6 +72,38 @@ struct
 
   fun unmk m = m
 
+  (* Signals that there are no more new ways of splitting. *)
+	exception NoMoreSplits
+	
+	exception ThisCannotHappen
+
+	(* A split of m elements into n parts is a list of n integers
+	 * whose sum is m, e.g. [m, 0, 0, ..., 0] or [1, 0, 3, ..., 1].
+	 * They can be totally ordered.
+	 *)
+
+  (* Return the first way of splitting m elements into n parts. *)
+  fun firstsplit 0 0 = []
+    | firstsplit x 0 = raise NoMoreSplits
+    | firstsplit m n =
+    let
+      fun zeros 0 = []
+        | zeros n = 0 :: zeros (n - 1)
+    in
+      m :: zeros (n - 1)
+    end
+
+  (* Given a split, return the next way of splitting, i.e., the 
+   * smallest split larger than the given one.
+   *)
+  fun nextsplit [] = raise NoMoreSplits
+    | nextsplit [x] = raise NoMoreSplits
+    | nextsplit (0 :: (xxs as x :: xs)) =
+      (case nextsplit xxs of
+         (x' :: xs') => x' :: 0 :: xs'
+       | [] => raise ThisCannotHappen)
+    | nextsplit (x :: x' :: xs) = x - 1 :: x' + 1 :: xs
+
   fun nextmatch {agent, redex} inf = NONE (* = not yet implemented! *)
 
     (* MAIN MATCHING ALGORITHM HERE! *)

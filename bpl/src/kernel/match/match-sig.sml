@@ -41,6 +41,7 @@ sig
   (** Inference value indicating no inference (yet). *)
   val noinference : inference
   (** Infer the next match of a redex in an agent, following a given inference.
+   * That is, the smallest inference larger than the given one.
    * @params {agent, redex} lastinf
    * @param agent      the bigraph agent in which a match is searched.
    * @param redex      the redex to match.
