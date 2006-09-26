@@ -53,6 +53,7 @@ functor Sugar (type info
 	       sharing type Ion.ion = BgVal.ion
                sharing type Wiring.wiring = BgVal.wiring
                sharing type Permutation.permutation = BgVal.permutation
+               sharing type Permutation.Immutable = BgVal.Immutable
 	       ) :> SUGAR 
 where type bgval = BgVal.bgval =
 struct
@@ -68,7 +69,7 @@ exception WrongArity of string
 val Ion = BgVal.Ion noinfo
 val Mer = BgVal.Mer noinfo
 val Wir = BgVal.Wir noinfo
-val Per = BgVal.Per noinfo
+fun Per x = BgVal.Per noinfo x
 val Con = BgVal.Con noinfo
 val Abs = BgVal.Abs noinfo
 val Ten = BgVal.Ten noinfo

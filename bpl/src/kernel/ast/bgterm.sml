@@ -45,7 +45,8 @@ struct
   type info = info
   type nameset = Wiring.nameset
   type ion = Ion.ion
-  type permutation = Permutation.permutation
+  type Immutable = Permutation.Immutable
+  type 'kind permutation = 'kind Permutation.permutation
   type wiring = Wiring.wiring
   type ppstream = PrettyPrint.ppstream
 
@@ -56,7 +57,7 @@ struct
 	 | Con of nameset * info
 	 | Wir of wiring * info
 	 | Ion of ion * info
-	 | Per of permutation * info
+	 | Per of Immutable permutation * info
 	 | Abs of nameset * bgterm * info
 	 | Ten of bgterm list * info
 	 | Pri of bgterm list * info
@@ -102,7 +103,6 @@ struct
 	fun >> () = end_block pps
 	fun brk () = add_break pps (1, 0)
 	fun brk0 () = add_break pps (0, 0)
-	val show = add_string pps
   (* Pretty print using precedences.  Operator precedences
    * (highest binds tightest):
    *  8 (X) abstraction (only affects expressions to the right)

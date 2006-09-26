@@ -33,7 +33,8 @@ sig
   type info
   type nameset
   type ion
-  type permutation
+  type Immutable
+  type 'kind permutation
   type wiring
   type ppstream
 
@@ -51,7 +52,7 @@ sig
 	 (** K_yX = an ion. *)
 	 | Ion of ion * info
 	 (** pi = a permutation. *)
-	 | Per of permutation * info
+	 | Per of Immutable permutation * info
 	 (** (X)P = an abstraction. *)
 	 | Abs of nameset * bgterm * info
 	 (** b_0 x...x b_n-1 = a tensor product of n bigraphs. *)

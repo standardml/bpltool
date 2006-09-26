@@ -52,6 +52,8 @@ functor BgVal (structure Name : NAME
 	       sharing type Ion.ion = BgTerm.ion
 	       sharing type Permutation.permutation =
 			    BgTerm.permutation
+			   sharing type Permutation.Immutable =
+			    BgTerm.Immutable
 	       sharing type Wiring.wiring = BgTerm.wiring
 	       sharing type Interface.interface =
 			    Permutation.interface
@@ -59,7 +61,8 @@ functor BgVal (structure Name : NAME
 			    BgTerm.ppstream) :> BGVAL 
   where type nameset = NameSet.Set
     and type wiring = Wiring.wiring 
-    and type permutation = Permutation.permutation
+    and type 'kind permutation = 'kind Permutation.permutation
+    and type Immutable = Permutation.Immutable
     and type ion = Ion.ion
     and type interface = Interface.interface 
     and type bgterm = BgTerm.bgterm
@@ -72,7 +75,8 @@ struct
   type nameset = NameSet.Set
   type bgterm = BgTerm.bgterm
   type interface = Interface.interface
-  type permutation = Permutation.permutation
+  type Immutable = Permutation.Immutable
+  type 'kind permutation = 'kind Permutation.permutation
   type ion = Ion.ion
   type wiring = Wiring.wiring
 
@@ -93,7 +97,7 @@ struct
 	 (** K_yX = an ion. *)
 	 | VIon of ion * info
 	 (** pi = a permutation. *)
-	 | VPer of permutation * info
+	 | VPer of Immutable permutation * info
 	 (** (X)P = an abstraction. *)
 	 | VAbs of nameset * bgval * (interface * interface * info)
 	 (** b_1 x...x b_n-1 = a tensor product of n bigraphs. *)
@@ -174,7 +178,7 @@ struct
 		   (map (NameSet.list o #2) o Permutation.unmk) pi,
 		   "Permutation local name sets must be disjoint")
       in
-	VPer (pi, i)
+	VPer (Permutation.unchanged pi, i)
       end
   fun Abs i (X, v) = 
       let
@@ -279,7 +283,7 @@ struct
 	 | MCon of nameset    
 	 | MWir of wiring     
 	 | MIon of ion	      
-	 | MPer of permutation
+	 | MPer of Immutable permutation
 	 | MAbs of nameset * bgmatch
 	 | MTen of bgmatch list
 	 | MTns of bgval list

@@ -58,7 +58,8 @@ sig
   type interface
   type wiring
   type ion
-  type permutation
+  type Immutable
+  type 'kind permutation
   type bgterm
   type ppstream
 
@@ -84,7 +85,7 @@ sig
   (** Construct pi = a permutation.
    * @exception DuplicateNames  if local names are not distinct.
    *)
-  val Per : info -> permutation -> bgval
+  val Per : info -> 'kind permutation -> bgval
   (** Signal that a name is missing from the outer face of a prime
    * that is attempted abstracted. 
    * @params i v errtxt
@@ -188,7 +189,7 @@ sig
 	 | MCon of nameset    
 	 | MWir of wiring     
 	 | MIon of ion	      
-	 | MPer of permutation
+	 | MPer of Immutable permutation
 	 | MAbs of nameset * bgmatch
 	 | MTen of bgmatch list
 	 | MTns of bgval list
