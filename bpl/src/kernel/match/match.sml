@@ -24,51 +24,39 @@
  
 functor Match (
   structure Permutation : PERMUTATION
+  structure Wiring : WIRING
+  structure Interface : INTERFACE
   structure BgBDNF : BGBDNF
+  structure NameSet : MONO_SET
+  structure LazyList : LAZYLIST
   structure PrettyPrint : PRETTYPRINT
-  sharing type BgBDNF.ppstream = PrettyPrint.ppstream
-                               = Permutation.ppstream) :> MATCH 
+  sharing type Permutation.nameset = NameSet.Set
+  sharing type NameSet.Set = Wiring.nameset
+                           = Interface.nameset
+  sharing type Interface.interface = BgBDNF.interface
+  sharing type PrettyPrint.ppstream
+             = BgBDNF.ppstream
+             = Permutation.ppstream
+             = Wiring.ppstream) : MATCH
   where type 'class bgrbdnf  = 'class BgBDNF.bgrbdnf
-    and type B        = BgBDNF.B
-    and type D        = BgBDNF.D
-    and type ppstream = PrettyPrint.ppstream =
+    and type B               = BgBDNF.B
+    and type D               = BgBDNF.D
+    and type nameset         = NameSet.Set
+    and type ppstream        = PrettyPrint.ppstream
+    and type 'a lazylist     = 'a LazyList.lazylist =
 struct
   type 'class bgrbdnf  = 'class BgBDNF.bgrbdnf
   type B        = BgBDNF.B
   type D        = BgBDNF.D
   type ppstream = PrettyPrint.ppstream
-  type permutation = Permutation.permutation
+  type Mutable = Permutation.Mutable
+  type 'kind permutation = 'kind Permutation.permutation
+  type nameset = NameSet.Set
+  open LazyList
   
   type match = {context : B bgrbdnf,
                 redex : B bgrbdnf,
                 parameter : D bgrbdnf}
-
-	(* Inference trees include nondeterministic choices of
-	 * parenthesisation and permutation.
-	 * Arguments parls and merls are lists of non-negative integers
-	 * representing the parenthisation of tensor products in PAR and
-	 * MER rules.  The numbers indicate the number of factors in each
-	 * parenthesised factor.
-	 * pi is the permutation introduced by the MER rule.
-	 *)
-  datatype Dg
-    = SWX of D'g       (* Switch rule *)
-    | PAX              (* Prime axiom *)
-    | MER of Ds list * {parls : int list, merls : int list, pi : permutation}
-                       (* Merge rule *)
-  and D'g
-    = PAX'             (* Prime axiom *)
-    | MER' of D's list * {parls : int list, merls : int list, pi : permutation}
-                       (* Merge rule *)
-  and Ds
-    = SPM of Dg        (* Switch, Prime axiom or Merge *)
-  	| ION of Dg        (* Ion rule *)
-  and D's
-    = PAM' of D'g      (* Prime axiom or Merge *)
-    | ION' of D'g      (* Ion rule *)
-  type inference = (Dg list * int list) option  (* DNF rule *)
-
-  val noinference = NONE
 
   fun unmk m = m
 
@@ -96,32 +84,103 @@ struct
   (* Given a split, return the next way of splitting, i.e., the 
    * smallest split larger than the given one.
    *)
-  fun nextsplit [] = raise NoMoreSplits
-    | nextsplit [x] = raise NoMoreSplits
-    | nextsplit (0 :: (xxs as x :: xs)) =
-      (case nextsplit xxs of
-         (x' :: xs') => x' :: 0 :: xs'
-       | [] => raise ThisCannotHappen)
-    | nextsplit (x :: x' :: xs) = x - 1 :: x' + 1 :: xs
+  fun nextsplit xs =
+      let
+        fun nextsplit' [] = raise NoMoreSplits
+          | nextsplit' [x] = raise NoMoreSplits
+          | nextsplit' (0 :: xs) =
+            (case nextsplit' xs of
+              (x', xs') => (x', 0 :: xs'))
+          | nextsplit' (x :: x' :: xs) = (x - 1, x' + 1 :: xs)
+        val (y, ys) = nextsplit' xs
+      in
+        y :: ys
+      end
 
-  fun nextmatch {agent, redex} inf = NONE (* = not yet implemented! *)
+  (* An ordered permutation is a permutation with additional data that
+   * supports incremental generation of all permutations of this width.
+   *)
+  datatype dir = Left | Right
+  type 'kind operm = int * 'kind permutation * (int * dir) list
+  val toPermutation : 'kind operm -> 'kind permutation = #2
 
-    (* MAIN MATCHING ALGORITHM HERE! *)
+  (* Signals that there are no more new permutations. *)
+  exception NoMorePerms
 
-
-  fun amatch agentredex = nextmatch agentredex noinference
-
-  fun allmatches agentredex = 
-	  let
-	    val nextmatch_aR = nextmatch agentredex
-		  fun iterateall i = case nextmatch_aR i of
-  	  									   SOME {match = m, inf = i} => m :: iterateall i
-    		                 | NONE => []
+  (* Return the first permutation in the ordering. *)
+  fun firstperm names : Mutable operm =
+    let
+    	fun poslist 0 = []
+	      | poslist n = (n - 1, Left) :: poslist (n - 1)
+	    val pi = Permutation.copy (Permutation.id names)
+	    val n = Permutation.width pi
+	  in
+      (n, pi, poslist n)
+    end
+  
+  (* Update _destructively_ permutation p and return it as the next
+   * permutation in the ordering.
+   * This implementation uses the Johnson-Trotter algorithm.
+   *)
+  fun nextperm (n, pi, poss) =
+    let
+      fun np offset i [] = raise NoMorePerms
+        | np offset i [_] = raise NoMorePerms
+        | np offset i ((p, Left) :: ps) =
+          if (p <= 0) then
+            (p, Right) :: np (offset + 1) (i - 1) ps
+          else
+            (Permutation.swap pi (offset + p - 1, offset + p);
+             (p - 1, Left) :: ps)
+        | np offset i ((p, Right) :: ps) =
+          if (p >= i - 1) then
+            (p, Left) :: np offset (i - 1) ps
+          else
+            (Permutation.swap pi (offset + p, offset + p + 1);
+             (p + 1, Right) :: ps)
+      val newposs = np 0 n poss
     in
-			iterateall noinference
-		end
+      (n, pi, newposs)
+    end 
+    
+  fun matches {agent, redex} = lzNil (* = not yet implemented! *)
+
+    (*********************************)
+    (*                               *)
+    (* MAIN MATCHING ALGORITHM HERE! *)
+    (*                               *)
+    (*********************************)
+
+
+  fun amatch agentredex =
+    case lzunmk (matches agentredex) of
+      Nil => NONE
+    | Cons (m, ms) => SOME m
+
+  val allmatches : {agent : B bgrbdnf, redex : B bgrbdnf }
+                 -> match list = lztolist o matches
   
-  fun pp indent pps m = ()
-  
-  fun pp_inference indent pps t = ()
+  fun pp indent pps ({context, redex, parameter} : match) =
+    let
+      open PrettyPrint
+       val show = add_string pps
+       fun << () = begin_block pps CONSISTENT indent
+	     fun >> () = end_block pps
+	     fun brk () = add_break pps (1, 0)
+	     val Z = Interface.glob (BgBDNF.routerface parameter)
+			 val id_Z = Wiring.id_X Z
+    in
+			<<();
+ 			  show "("; BgBDNF.ppr indent pps context; show ")";
+			  brk();
+			  show "o ";
+			  <<();
+			    show "("; Wiring.pp indent pps id_Z;
+			    brk();
+			    show "* "; BgBDNF.ppr indent pps redex; show ")";
+			  >>();
+			  brk();
+			  show "o ("; BgBDNF.ppr indent pps parameter; show ")";
+			>>()
+    end
 end

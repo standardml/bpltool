@@ -2,4 +2,4 @@ sigs = match-sig
 funs = match
 
 match-sig:
-match: + /lib/pp/smlnj/. /lib/coll/pp /kernel/bg/sigs /kernel/ast/sigs
+match: + /lib/pp/smlnj/. /lib/coll/pp /lib/coll/lzlist /lib/coll/set /kernel/bg/sigs /kernel/ast/sigs

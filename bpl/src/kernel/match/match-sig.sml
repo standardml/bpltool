@@ -28,30 +28,20 @@ sig
   type B
   type D
   type ppstream
-  
+  type nameset
+  type 'a lazylist
   
   (** A match type. *)
   type match
-  (** An inference tree type. *)
-  type inference
+
   (** Deconstruct a match. *)
   val unmk : match -> {context : B bgrbdnf,
                        redex : B bgrbdnf,
                        parameter : D bgrbdnf}
-  (** Inference value indicating no inference (yet). *)
-  val noinference : inference
-  (** Infer the next match of a redex in an agent, following a given inference.
-   * That is, the smallest inference larger than the given one.
-   * @params {agent, redex} lastinf
-   * @param agent      the bigraph agent in which a match is searched.
-   * @param redex      the redex to match.
-   * @param lastinf    the last inference tree found.
-   * @return SOME {match, inf} if a new match is found, and
-   *         its inference tree.
-   *)
-  val nextmatch : {agent : B bgrbdnf, redex : B bgrbdnf}
-                -> inference
-                -> {match : match, inf : inference} option
+                       
+  (** Compute a lazy list of matches of a redex in an agent. *)
+  val matches : {agent : B bgrbdnf, redex : B bgrbdnf} -> match lazylist
+
   (** Infer a match of a redex in an agent.
    * @params {agent, redex}
    * @param agent      the bigraph agent in which a match is searched.
@@ -59,6 +49,7 @@ sig
    * @return SOME match if a match is found, NONE otherwise.
    *)
   val amatch : {agent : B bgrbdnf, redex : B bgrbdnf} -> match option
+
   (** Infer all matches of a redex in an agent.
    * @params {agent, redex}
    * @param agent   the bigraph agent in which a match is searched.
@@ -66,6 +57,7 @@ sig
    * @return a list of matches, empty if redex does not match.
    *)
   val allmatches : {agent : B bgrbdnf, redex : B bgrbdnf} -> match list
+
   (** Prettyprint a match
    * @params indent pps m
    * @param indent  Indentation at each block level.
@@ -73,11 +65,4 @@ sig
    * @param m       The match to print.
    *)
   val pp : int -> ppstream -> match -> unit
-  (** Prettyprint an inference tree
-   * @params indent pps t
-   * @param indent  Indentation at each block level.
-   * @param pps     Prettyprint stream on which to output.
-   * @param t       The inference tree to print.
-   *)
-  val pp_inference : int -> ppstream -> inference -> unit
 end
