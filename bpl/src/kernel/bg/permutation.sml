@@ -42,8 +42,11 @@ struct
   type interface = Interface.interface
   type ppstream = PrettyPrint.ppstream
 
+  type Mutable = unit
+  type Immutable = unit
+
   (** The permutation data type uses O(n) space, where n = width. *)
-  type permutation = {width : int,
+  type 'a permutation = {width : int,
 		      pi : (int * nameset) array,
 		      pi_inv : (int * nameset) array}
 
@@ -56,12 +59,12 @@ struct
   val update = Array.update
   fun appi f array 
     = (Array.foldl (fn (x, i) => (f (i, x); i + 1)) 0 array; ())
-  val copy = Array.copy
+  val acopy = Array.copy
 
   (** Determine whether some permutation is a nameless identity in
    * time O(n), where n = width.
    *)
-  fun is_idn ({width, pi, pi_inv} : permutation) =
+  fun is_idn ({width, pi, pi_inv} : 'a permutation) =
       case Array.findi (fn (i, (j, X)) 
 			   => i <> j orelse not (NameSet.isEmpty X)) pi of
 	SOME _ => false
@@ -163,14 +166,26 @@ struct
 	{width = 0, pi = pi, pi_inv = pi} 
       end
 
-  exception Uncomposable of string * permutation * permutation * string
+  fun copy {width, pi, pi_inv}
+    = let
+        val newpi = array (width, (0, NameSet.empty))
+        val newpi_inv = array (width, (0, NameSet.empty))
+        val _ = acopy {src = pi, dst = newpi, di = 0}
+        val _ = acopy {src = pi_inv, dst = newpi_inv, di = 0}
+      in
+        {width = width, pi = newpi, pi_inv = newpi_inv}
+      end
+
+  fun unchanged perm : 'kind permutation = perm
+
+  exception Uncomposable of string * Mutable permutation * Mutable permutation * string
 
   fun compose (perm1 
 		 as {width = width1, pi = pi1, pi_inv = pi_inv1},
 	       perm2
 		 as {width = width2, pi = pi2, pi_inv = pi_inv2}) =
       if width1 <> width2 then
-	raise Uncomposable ("permutation.sml", perm1, perm2,
+	raise Uncomposable ("permutation.sml", copy perm1, copy perm2,
 			    "unequal width in compose")
       else
 	let
@@ -185,7 +200,7 @@ struct
 		   update (pi_inv, j2, (i, X2)))
 		else
 		  raise Uncomposable 
-			("permutation.sml", perm1, perm2,
+			("permutation.sml", copy perm1, copy perm2,
 			 "different local names in compose")
 	      end
 	in
@@ -196,7 +211,7 @@ struct
   (** Return the tensor product of a list of permutations in time O(?),
    * where n is the sum of widths.
    *)
-  fun ** (pis : permutation list) = 
+  fun ** (pis : 'kinda permutation list) = 
       let
 	val width = foldl (fn (pi, n) => n + #width pi) 0 pis
 	val pi = array (width, (~7, NameSet.empty))
@@ -224,8 +239,8 @@ struct
 	val pi = array (width, (~7, NameSet.empty))
 	val pi_inv = array (width, (~8, NameSet.empty))
       in
-	copy {src = pi1, dst = pi, di = 0};
-	copy {src = pi_inv1, dst = pi_inv, di = 0};
+	acopy {src = pi1, dst = pi, di = 0};
+	acopy {src = pi_inv1, dst = pi_inv, di = 0};
 	appi (fn (i2, (j2, X2)) 
 		 => (update (pi, width1 + i2, (width1 + j2, X2));
 		     update (pi_inv, width1 + j2, (width1 + i2, X2))))
@@ -246,7 +261,7 @@ struct
     * @param pi  the permutation.
     * @param Xs  the list of values to permute.
     *)
-  fun permute (perm as {width, pi, pi_inv} : permutation) Xs =
+  fun permute (perm as {width, pi, pi_inv} : 'kind permutation) Xs =
       let
         val permuted = Array.fromList Xs
       in
@@ -261,7 +276,7 @@ struct
    * match the width of the permutation.
    *)
   exception InterfaceMismatch
-	    of string * permutation * nameset list list * string
+	    of string * Mutable permutation * nameset list list * string
   (** Push a permutation through a product of primes in time O(m+n),
    * where m = width and n = length Xss. *)
   (* @params pi Xss
@@ -276,7 +291,7 @@ struct
   fun pushthru (perm as {width, pi, pi_inv}) Xss =
    (* if width <> length Xss then
 	raise InterfaceMismatch
-		("permutation.sml", perm, Xss, "in pushthru")
+		("permutation.sml", copy perm, Xss, "in pushthru")
       else *)
       let
         (* macc_Xs is an array of pairs (macc_i, Xs_i), where macc
@@ -329,7 +344,7 @@ struct
   (** Signal that a permutation is not regularizable relative to a list
    *  of local inner name lists.
    *)
-  exception NotRegularisable of string * permutation * nameset list list
+  exception NotRegularisable of string * Mutable permutation * nameset list list
   (** Split a permutation into one major and a number of minor
    * permutations.
    * @params pi Xss
@@ -337,7 +352,7 @@ struct
    * @exception NotRegularisable  if the permutation cannot be
    *                              regularized.
    *)
-  fun split (perm as {width, pi, pi_inv} : permutation) Xss =
+  fun split (perm as {width, pi, pi_inv} : 'kinda permutation) Xss =
       let
         val k = length Xss
         val major_pi = array (k, (~12, NameSet.empty))
@@ -391,7 +406,7 @@ struct
         in
           val _ = (Array.foldli nlocatedAt (0, ns, 0) nlocated;
                    if #1 (Array.foldli mlocatedAt (0, 0) mlocated) >= k then
-                     raise NotRegularisable ("permutation.sml", perm, Xss)
+                     raise NotRegularisable ("permutation.sml", copy perm, Xss)
                    else
                      ())
         end
@@ -488,10 +503,22 @@ struct
 	{width = width, pi = pi, pi_inv = pi_inv}
       end
 
+  fun swap (perm as {width, pi, pi_inv} : Mutable permutation) (i, j) =
+    let
+      val iimg as (idx, Xi) = pi sub i
+      val jimg as (jdx, Xj) = pi sub j
+      val _ = update (pi, i, jimg)
+      val _ = update (pi, j, iimg)
+      val _ = update (pi_inv, idx, (j, Xi))
+      val _ = update (pi_inv, jdx, (i, Xj))
+    in
+      perm
+    end
+
   (** Determine whether some permutation is the identity in time
    * O(n), where n = width.
    *)
-  fun is_id ({width, pi, pi_inv} : permutation) =
+  fun is_id ({width, pi, pi_inv} : 'kind permutation) =
       case Array.findi (fn (i, (j, _)) => i <> j) pi of
 	SOME _ => false
       | NONE => true
@@ -499,7 +526,7 @@ struct
   (** Determine whether some permutation is the zero identity in
    * time O(1).
    *)
-  fun is_id0 ({width, ...} : permutation) = width = 0
+  fun is_id0 ({width, ...} : 'kind permutation) = width = 0
 
   val op * = x
 

@@ -27,8 +27,12 @@ sig
   type interface
   type ppstream
 
+  (** The mutable kind of permutation. *)
+  type Mutable
+  (** The immutable kind of permutation. *)
+  type Immutable
   (** The permutation data type. *)
-  type permutation
+  type 'kind permutation
   (** Signal a logical error, i.e. an error which "cannot happen" ;-).*)
   exception LogicalError of string * string
   (** Signal incorrect permutation data. *)
@@ -43,44 +47,45 @@ sig
    * @exception NotPermutation  raised if each number is not present
    *            exactly once.
    *)
-  val make : (int * nameset) list -> permutation
+  val make : (int * nameset) list -> 'kind permutation
   (** Deconstruct a permutation. *)
-  val unmk : permutation -> (int * nameset) list
+  val unmk : 'kind permutation -> (int * nameset) list
 
   (** Return the width of a permutation. *)
-  val width : permutation -> int
+  val width : 'kind permutation -> int
   (** Return the inner face of a permutation *)
-  val innerface : permutation -> interface
+  val innerface : 'kind permutation -> interface
   (** Return the outer face of a permutation *)
-  val outerface : permutation -> interface
+  val outerface : 'kind permutation -> interface
 
   (** Return an identity permutation. 
    * The width of the permutation is given by the length of Xs.
    * @params Xs
    * @param Xs  list of local name sets.
    *)
-  val id : nameset list -> permutation
+  val id : nameset list -> Immutable permutation
   (** Return a nameless identity permutation.
    * @params n
    * @param m  width of the permutation.
    *)
-  val id_n : int -> permutation
+  val id_n : int -> Immutable permutation
   (** Return the empty identity permutation. *)
-  val id_0 : permutation
+  val id_0 : Immutable permutation
 
   (** Signal that two permutations cannot be composed. *)
-  exception Uncomposable of string * permutation * permutation * string
+  exception Uncomposable
+    of string * Mutable permutation * Mutable permutation * string
 
   (** Return the composition of two permutations. 
    * @exception Uncomposable raised if the interfaces do not match.
    *)
-  val o : (permutation * permutation) -> permutation
+  val o : ('kinda permutation * 'kindb permutation) -> 'kindc permutation
 
   (** Return the tensor product of two permutations. *)
-  val * : (permutation * permutation) -> permutation
+  val * : ('kinda permutation * 'kindb permutation) -> 'kindc permutation
 
   (** Return the tensor product of a list of permutations. *)
-  val ** : permutation list -> permutation
+  val ** : 'kinda permutation list -> 'kindb permutation
 
   (** Return the inverse of a permutation.
    * @params pi
@@ -88,14 +93,14 @@ sig
    * @return    the inverse of pi.
    *)
   val invert
-      : permutation -> permutation
+      : 'kind permutation -> Immutable permutation
   (** Permute the list of values as described by the permutation.
     * @params pi Xs
     * @param pi  the permutation.
     * @param Xs  the list of values to permute.
     *)
   val permute
-      : permutation -> 'a list -> 'a list
+      : 'kind permutation -> 'a list -> 'a list
   (** Push a permutation through a product of primes.
    * @params pi Xss
    * @param pi   permutation to push through n primes.
@@ -107,12 +112,13 @@ sig
    * @see bigraph literature on the Pushthrough Lemma.
    *)
   val pushthru
-      : permutation -> nameset list list -> permutation
+      : 'kinda permutation -> nameset list list -> 'kindb permutation
 
   (** Signal that a permutation is not regularizable relative to a list
    *  of local inner name lists.
    *)
-  exception NotRegularisable of string * permutation * nameset list list
+  exception NotRegularisable
+    of string * Mutable permutation * nameset list list
   (** Split a permutation into one major and a number of minor
    * permutations.
    * @params pi Xss
@@ -121,8 +127,8 @@ sig
    *                              regularized.
    *)
   val split
-      : permutation -> nameset list list
-        -> {major : permutation, minors : permutation list}
+      : 'kinda permutation -> nameset list list
+        -> {major : 'kindb permutation, minors : 'kindc permutation list}
   (** Compute a permutation for unzipping tensor products.
    * @return a permutation ~pi such that 
    * merge ((X_{i< n} Ai) x X_{i< n} Mi) ~pi = merge X_{i< n} Ai x Mi,
@@ -132,15 +138,27 @@ sig
    * @param U'iss  list of U'is.
    *)
   val unzip 
-      : nameset list list -> nameset list list -> permutation
+      : nameset list list -> nameset list list -> 'kind permutation
+  (* Swap _destructively_ to what pi maps index i and j.
+   * The outer face is preserved, the inner face will change
+   * if the namesets of i and j differ (and i <> j).
+   * @params pi i j
+   * @param pi  The permutation to update.
+   * @returns   The updated pi.
+   *)
+  val swap : Mutable permutation -> int * int -> 'kind permutation
+  (** Return a shallow copy of the permutation. *)
+  val copy : 'kind permutation -> Mutable permutation
+  (** Return the permutation. *)
+  val unchanged : 'kind permutation -> Immutable permutation
   (** Determine whether some permutation is the identity. *)
-  val is_id : permutation -> bool
+  val is_id : 'kind permutation -> bool
   (** Determine whether some permutation is the identity of width 0. *)
-  val is_id0 : permutation -> bool
+  val is_id0 : 'kind permutation -> bool
   (** Prettyprint a permutation.
    * @param indent  Indentation at each block level.
    * @param pps     Prettyprint stream on which to output.
    * @param pi      The permutation to output.
    *)
-  val pp : int -> ppstream -> permutation -> unit
+  val pp : int -> ppstream -> 'kind permutation -> unit
 end
