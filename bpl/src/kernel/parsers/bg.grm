@@ -86,7 +86,7 @@ type link = Link.link
 type nameset = NameSet.Set
 type linkset = LinkSet.Set
 type ion = Ion.ion
-type permutation = Permutation.permutation
+type 'kind permutation = 'kind Permutation.permutation
 
 (** Signal that a set with duplicate names has been encountered. 
  * @params smlfile leftpos rightpos errtxt
@@ -130,7 +130,7 @@ fun nset2idlinkset nset =
 | nset of nameset
 | ctrlid of control
 | link of link
-| perm of permutation
+| perm of Immutable permutation
 | permentrylist of (int * nameset) list
 | permentry of (int * nameset)
 | id of string
@@ -172,6 +172,8 @@ fun nset2idlinkset nset =
 		    sharing type Ion.ion = BgTerm.ion
 		    sharing type Permutation.permutation =
 				 BgTerm.permutation
+		    sharing type Permutation.Immutable =
+		                 BgTerm.Immutable
 		    )
 	)
 
