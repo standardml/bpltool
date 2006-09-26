@@ -3,6 +3,7 @@
 pp  = collectionprettyprint-sig setprettyprint
 set = monoset-sig ordering-sig orderset setcompare-sig setcompare
 map = monofinmap-sig orderfinmap
+lzlist = lazylist-sig lazylist
 collectionprettyprint-sig:
 monoset-sig:
 setprettyprint: collectionprettyprint-sig /lib/pp/smlnj/prettyprint-sig monoset-sig
@@ -12,3 +13,5 @@ setcompare-sig:
 setcompare: monoset-sig ordering-sig
 monofinmap-sig: ordering-sig
 orderfinmap: monofinmap-sig ordering-sig
+lazylist-sig:
+lazylist: + lazylist-sig
