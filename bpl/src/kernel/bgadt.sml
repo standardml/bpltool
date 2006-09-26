@@ -141,6 +141,15 @@ type P = BgBDNF.P
 type M = BgBDNF.M
 type 'class bgbdnf = 'class BgBDNF.bgbdnf
 
+structure Match = Match
+  (structure NameSet = NameSet
+   structure Permutation = Permutation
+   structure Interface = Interface
+   structure Wiring = Wiring
+   structure BgBDNF = BgBDNF
+   structure LazyList = LazyList
+   structure PrettyPrint = PrettyPrint)
+
 val pageWidth = ref 70
 val indent = ref 1
 type ppstream = PrettyPrint.ppstream

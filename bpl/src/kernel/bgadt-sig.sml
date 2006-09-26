@@ -20,6 +20,7 @@ sig
   structure BgTerm : BGTERM
   structure BgVal  : BGVAL
   structure BgBDNF : BGBDNF
+  structure Match  : MATCH
 
   structure Interface   : INTERFACE
   structure Ion         : ION
