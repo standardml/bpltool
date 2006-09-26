@@ -25,6 +25,7 @@ signature BGBDNF =
 sig
   type info
   type nameset
+  type interface
   type bgval
   type bgmatch
   type bgterm
@@ -111,6 +112,19 @@ sig
 
   (** Return the contextual information of a bgbdnf. *)
   val info : 'class bgbdnf -> info
+  
+  (** Return the inner face of a bgbdnf. *)
+  val innerface : 'class bgbdnf -> interface
+  
+  (** Return the outer face of a bgbdnf. *)
+  val outerface : 'class bgbdnf -> interface
+  
+  (** Return the inner face of a bgrbdnf. *)
+  val rinnerface : 'class bgrbdnf -> interface
+  
+  (** Return the outer face of a bgrbdnf. *)
+  val routerface : 'class bgrbdnf -> interface
+  
   (** Signal that a BDNF does not represent a regular bigraph.
    * @params file i b errtxt
    * @param file    the file name in which the exception was raised.
@@ -158,4 +172,11 @@ sig
    * @param t       The bgbdnf to print.
    *)
   val pp : int -> ppstream -> 'class bgbdnf -> unit
+  (** Prettyprint a bgrbdnf without parentheses around it.
+   * @params indent pps t
+   * @param indent  Indentation at each block level.
+   * @param pps     Prettyprint stream on which to output.
+   * @param t       The bgrbdnf to print.
+   *)
+  val ppr : int -> ppstream -> 'class bgrbdnf -> unit
 end

@@ -38,6 +38,8 @@ functor BgBDNF (type info
 		sharing type BgVal.ion = Ion.ion
 		sharing type BgVal.permutation =
 			     Permutation.permutation
+	  sharing type BgVal.Immutable =
+			     Permutation.Immutable
 		sharing type BgVal.wiring = Wiring.wiring
 		sharing type NameSet.Set =
 			     Interface.nameset =
@@ -58,11 +60,12 @@ functor BgBDNF (type info
 			     Wiring.ppstream =
 			     BgVal.ppstream
 			     ) :> BGBDNF 
-  where type nameset = NameSet.Set
-    and type info = BgVal.info 
-    and type bgval = BgVal.bgval 
-    and type bgmatch = BgVal.bgmatch
-    and type ppstream = BgVal.ppstream =
+  where type nameset   = NameSet.Set
+    and type info      = BgVal.info 
+    and type interface = BgVal.interface
+    and type bgval     = BgVal.bgval 
+    and type bgmatch   = BgVal.bgmatch
+    and type ppstream  = BgVal.ppstream =
 struct
   open BgVal
 
@@ -244,6 +247,14 @@ struct
           raise MalformedRBDNF 
                   ("bgbdnf.sml", info D, wrongterm,
                    "matching D in unmkRD")
+
+  fun innerface (b : 'class bgbdnf) = BgVal.innerface b
+
+  fun outerface (b : 'class bgbdnf) = BgVal.outerface b
+
+  fun rinnerface (b : 'class bgrbdnf) = BgVal.innerface b
+
+  fun routerface (b : 'class bgrbdnf) = BgVal.outerface b
 
   fun make v =
       let
@@ -990,4 +1001,6 @@ struct
 
   fun pp indent pps
     = BgVal.pp indent pps o unmk
+
+  fun ppr indent pps = pp indent pps
 end
