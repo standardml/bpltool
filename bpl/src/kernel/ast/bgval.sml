@@ -20,7 +20,7 @@
 
 (** Abstract data type for bigraph values, i.e., well-formed bigraph
  * terms with interfaces.
- * @version $Revision: 1.20 $
+ * @version $LastChangedRevision$
  *)
 functor BgVal (structure Name : NAME
 	       structure NameSet : MONO_SET

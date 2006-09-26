@@ -26,7 +26,7 @@
  * <p>
  * Each constructor takes an info argument that can contain contextual
  * information (e.g., source file location for the term).
- * @version $Revision: 1.19 $
+ * @version $LastChangedRevision$
  *)
 signature BGTERM =
 sig

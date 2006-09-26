@@ -19,7 +19,7 @@
  *)
 
 (** Structure providing comparison of sets.
- * @version $Revision: 1.2 $
+ * @version $LastChangedRevision$
  *)
 functor SetCompare (structure Set : MONO_SET
 		    structure EltOrder : ORDERING

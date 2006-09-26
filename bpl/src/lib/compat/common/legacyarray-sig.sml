@@ -19,7 +19,7 @@
  *)
 
 (** ARRAY signature from the new SML Basis Library
- * @version $Revision: 1.4 $
+ * @version $LastChangedRevision$
  *)
 
 signature ARRAY =

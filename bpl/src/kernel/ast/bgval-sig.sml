@@ -47,7 +47,7 @@
  * match is guaranteed to only return these match constructors in
  * place of a PCns constructor.
  * 
- * @version $Revision: 1.15 $
+ * @version $LastChangedRevision$
  *)
 signature BGVAL =
 sig

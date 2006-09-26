@@ -19,7 +19,7 @@
  *)
 
 (** Abstract data type for modelling names.
- * @version $Revision: 1.6 $
+ * @version $LastChangedRevision$
  *)
 signature NAME =
 sig

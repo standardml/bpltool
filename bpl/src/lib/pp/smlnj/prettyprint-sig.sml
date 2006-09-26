@@ -19,7 +19,7 @@
  *)
 
 (** Prettyprinter signature from SML/NJ
- * @version $Revision: 1.2 $
+ * @version $LastChangedRevision$
  *)
 signature PRETTYPRINT =
 sig

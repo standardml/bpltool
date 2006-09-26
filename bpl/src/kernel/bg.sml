@@ -19,7 +19,7 @@
  *)
 
 (** Main BG module.
- * @version $Revision: 1.17 $
+ * @version $LastChangedRevision$
  *)
 functor BG (PrettyPrint : PRETTYPRINT) : BG =
 struct

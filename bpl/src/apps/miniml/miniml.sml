@@ -19,7 +19,7 @@
  *)
 
 (** Abstract syntax for MiniML terms.
- * @version $Revision: 1.18 $
+ * @version $LastChangedRevision$
  * Modified: $Date: 2006/09/04 20:54:23 $ by: $Author: hniss $
  *)
 

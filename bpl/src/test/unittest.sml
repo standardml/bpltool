@@ -19,7 +19,7 @@
  *)
 
 (** Code for testing BPL under SML/NJ. 
- * @version $Revision: 1.1 $
+ * @version $LastChangedRevision$
  *)
 
 structure Test = struct

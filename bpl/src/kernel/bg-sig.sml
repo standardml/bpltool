@@ -19,7 +19,7 @@
  *)
 
 (** Main BG module.
- * @version $Revision: 1.10 $
+ * @version $LastChangedRevision$
  *)
 signature BG =
 sig

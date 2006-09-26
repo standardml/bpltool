@@ -19,7 +19,7 @@
  *)
 
 (** Abstract data type for modelling wirings.
- * @version $Revision: 1.12 $
+ * @version $LastChangedRevision$
  *)
 functor Wiring (structure Link : LINK
 		structure LinkSet : MONO_SET

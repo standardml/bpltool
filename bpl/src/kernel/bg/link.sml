@@ -19,7 +19,7 @@
  *)
 
 (** Abstract data type for modelling individual links.
- * @version $Revision: 1.4 $
+ * @version $LastChangedRevision$
  *)
 functor Link (structure Name : NAME
 	      structure NameSet : MONO_SET

@@ -19,7 +19,7 @@
  *)
 
 (** Prettyprinter for monomorphic sets
- * @version $Revision: 1.4 $
+ * @version $LastChangedRevision$
  *)
 functor SetPrettyPrint 
 	  (structure Set : MONO_SET

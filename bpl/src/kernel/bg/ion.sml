@@ -19,7 +19,7 @@
  *)
 
 (** Abstract data type for modelling ions.
- * @version $Revision: 1.7 $
+ * @version $LastChangedRevision$
  *)
 
 functor Ion (structure Control : CONTROL

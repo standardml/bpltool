@@ -19,7 +19,7 @@
  *)
 
 (** Testing module for bdnf stuff.
- * @version $Revision: 1.16 $
+ * @version $LastChangedRevision$
  *)
 
 functor BDNFTest (structure BG : BG

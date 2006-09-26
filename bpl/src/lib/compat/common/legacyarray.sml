@@ -21,7 +21,7 @@
 (** Array structure matching the ARRAY signature from
  * the new SML Basis Library, but based on the old
  * SML Basis Library Array structure.
- * @version $Revision: 1.4 $
+ * @version $LastChangedRevision$
  *)
 
 structure Array :> ARRAY =

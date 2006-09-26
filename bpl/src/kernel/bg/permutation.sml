@@ -19,7 +19,7 @@
  *)
 
 (** Abstract data type for modelling bigraph permutations.
- * @version $Revision: 1.14 $
+ * @version $LastChangedRevision$
  *)
 functor Permutation (structure IntSet : MONO_SET
                        where type elt = int

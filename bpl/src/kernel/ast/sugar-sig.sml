@@ -49,7 +49,7 @@
  * end
  *   handle error => (BPL.BGErrorHandler.explain error; raise error);
  * </pre>
- * @version $Revision: 1.6 $
+ * @version $LastChangedRevision$
  *)
 signature SUGAR =
   sig

@@ -19,7 +19,7 @@
  *)
 
 (** Glue to combine lexer and parser.
- * @version $Revision: 1.9 $
+ * @version $LastChangedRevision$
  * Modified: $Date: 2006/09/04 21:48:46 $ by: $Author: hniss $
  *)
 

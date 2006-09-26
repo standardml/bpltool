@@ -19,7 +19,7 @@
  *)
 
 (** Prettyprinter signature for monomorphic collections
- * @version $Revision: 1.1 $
+ * @version $LastChangedRevision$
  *)
 signature COLLECTIONPRETTYPRINT =
 sig

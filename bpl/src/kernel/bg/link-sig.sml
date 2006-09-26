@@ -19,7 +19,7 @@
  *)
 
 (** Abstract data type for modelling individual links.
- * @version $Revision: 1.3 $
+ * @version $LastChangedRevision$
  *)
 signature LINK =
 sig

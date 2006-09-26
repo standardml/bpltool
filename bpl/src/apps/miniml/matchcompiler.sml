@@ -27,7 +27,7 @@
  * with a little help from the Moscow ML sources and K. F. Larsens
  * implementation.
  *
- * @version $Revision: 1.8 $
+ * @version $LastChangedRevision$
  * Modified: $Date: 2006/09/04 20:54:23 $ by: $Author: hniss $
  *)
 

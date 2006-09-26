@@ -19,7 +19,7 @@
  *)
 
 (** Abstract data type for bigraph binding discrete normal forms (BDNF).
- * @version $Revision: 1.8 $
+ * @version $LastChangedRevision$
  *)
 signature BGBDNF =
 sig

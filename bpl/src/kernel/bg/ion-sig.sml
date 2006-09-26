@@ -19,7 +19,7 @@
  *)
 
 (** Abstract data type for modelling ions.
- * @version $Revision: 1.2 $
+ * @version $LastChangedRevision$
  *)
 
 signature ION =

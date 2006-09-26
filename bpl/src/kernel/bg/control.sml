@@ -19,7 +19,7 @@
  *)
 
 (** Abstract data type for modelling controls.
- * @version $Revision: 1.2 $
+ * @version $LastChangedRevision$
  *)
 
 structure Control :> CONTROL =

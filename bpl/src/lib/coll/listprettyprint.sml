@@ -19,7 +19,7 @@
  *)
 
 (** Prettyprinter for monomorphic lists
- * @version $Revision: 1.1 $
+ * @version $LastChangedRevision$
  *)
 functor ListPrettyPrint 
 	  (type elt

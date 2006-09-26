@@ -20,7 +20,7 @@
  *)
 
 (** A lexer for the bg term grammar (see bgterm-sig.sml)
- * @version $Revision: 1.7 $
+ * @version $LastChangedRevision$
  *)
 
 structure Tokens = Tokens

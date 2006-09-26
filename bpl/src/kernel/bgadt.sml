@@ -19,7 +19,7 @@
  *)
 
 (** BG Abstract Data Types module.
- * @version $Revision: 1.5 $
+ * @version $LastChangedRevision$
  *)
 functor BGADT (type info
                 val noinfo : info

@@ -19,7 +19,7 @@
  *)
 
 (** Abstract data type for modelling names.
- * @version $Revision: 1.4 $
+ * @version $LastChangedRevision$
  *)
 structure Name :> NAME =
 struct

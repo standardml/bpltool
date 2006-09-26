@@ -19,7 +19,7 @@
  *)
 
 (** Module for printing friendly error messages, based on exceptions.
- * @version $Revision: 1.5 $
+ * @version $LastChangedRevision$
  *)
 signature BGERRORHANDLER = 
 sig

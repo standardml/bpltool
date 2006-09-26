@@ -19,7 +19,7 @@
  *)
 
 (** Signature for structure providing comparison of sets.
- * @version $Revision: 1.2 $
+ * @version $LastChangedRevision$
  *)
 signature SETCOMPARE =
 sig

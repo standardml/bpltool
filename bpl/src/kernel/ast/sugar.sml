@@ -19,7 +19,7 @@
  *)
 
 (** Syntactic sugar for creating bgvals in SML.
- * @version $Revision: 1.4 $
+ * @version $LastChangedRevision$
  *)
 functor Sugar (type info
 	       val noinfo : info

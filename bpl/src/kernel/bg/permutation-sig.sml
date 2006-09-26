@@ -19,7 +19,7 @@
  *)
 
 (** Abstract data type for modelling bigraph permutations.
- * @version $Revision: 1.6 $
+ * @version $LastChangedRevision$
  *)
 signature PERMUTATION =
 sig

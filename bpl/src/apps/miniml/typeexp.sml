@@ -19,7 +19,7 @@
  *)
 
 (** Type expressions used during type inference.
- * @version $Revision: 1.2 $
+ * @version $LastChangedRevision$
  * Modified: $Date: 2006/06/04 20:13:28 $ by: $Author: hniss $
  *)
 

@@ -19,7 +19,7 @@
  *)
 
 (** Lazy list datatype.
- * @version $LastChangedRevision: 93 $
+ * @version $LastChangedRevision$
  *)
  
  signature LAZYLIST =

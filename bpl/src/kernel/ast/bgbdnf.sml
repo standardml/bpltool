@@ -19,7 +19,7 @@
  *)
 
 (** Abstract data type for bigraph binding discrete normal forms (BDNF).
- * @version $Revision: 1.22 $
+ * @version $LastChangedRevision$
  *)
 functor BgBDNF (type info
 		structure Name : NAME

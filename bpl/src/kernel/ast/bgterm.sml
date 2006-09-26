@@ -26,7 +26,7 @@
  * <p>
  * Each constructor takes an info argument that can contain contextual
  * information (e.g., source file location for the term).
- * @version $Revision: 1.26 $
+ * @version $LastChangedRevision$
  *)
 functor BgTerm (type info
 		structure Ion : ION

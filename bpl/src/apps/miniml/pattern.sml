@@ -20,7 +20,7 @@
 
 (** (Full) patterns used during parsing - later compiled away by
  * match compilation.
- * @version $Revision: 1.1 $
+ * @version $LastChangedRevision$
  * Modified: $Date: 2006/05/31 15:01:26 $ by: $Author: hniss $
  *)
 

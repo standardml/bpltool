@@ -19,7 +19,7 @@
  *)
 
 (** Translation from MiniML to bigraphs.
- * @version $Revision: 1.43 $
+ * @version $LastChangedRevision$
  * Modified: $Date: 2006/09/04 09:31:14 $ by: $Author: hniss $
  *)
 

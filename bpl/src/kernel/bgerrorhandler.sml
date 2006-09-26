@@ -19,7 +19,7 @@
  *)
 
 (** Module for printing friendly error messages, based on exceptions.
- * @version $Revision: 1.10 $
+ * @version $LastChangedRevision$
  *)
 functor BGErrorHandler (structure BgBDNF      : BGBDNF
 			  structure BgVal       : BGVAL

@@ -19,7 +19,7 @@
  *)
 
 (** Abstract data type for modelling bigraph interfaces. 
- * @version $Revision: 1.7 $
+ * @version $LastChangedRevision$
  *)
 functor Interface (structure NameSet : MONO_SET
 		   structure PrettyPrint : PRETTYPRINT

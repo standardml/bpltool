@@ -19,7 +19,7 @@
  *)
 
 (** Match compiler for MiniML.
- * @version $Revision: 1.3 $
+ * @version $LastChangedRevision$
  * Modified: $Date: 2006/05/31 15:01:25 $ by: $Author: hniss $
  *)
 

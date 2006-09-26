@@ -19,7 +19,7 @@
  *)
 
 (** Lexer specification for MiniML terms.
- * @version $Revision: 1.9 $
+ * @version $LastChangedRevision$
  * Modified: $Date: 2006/05/19 20:12:35 $ by: $Author: hniss $
  *)
 

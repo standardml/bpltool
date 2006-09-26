@@ -19,7 +19,7 @@
  *)
 
 (** Abstract data type for modelling bigraph interfaces. 
- * @version $Revision: 1.4 $
+ * @version $LastChangedRevision$
  *)
 signature INTERFACE =
 sig
