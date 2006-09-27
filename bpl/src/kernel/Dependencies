@@ -1,6 +1,7 @@
 # INCLUDE=bg
 # INCLUDE=ast
 # INCLUDE=parsers
+# INCLUDE=match
 # INCLUDE=../lib/coll
 # INCLUDE=../lib/pp/smlnj
 # INCLUDE=../lib/util
