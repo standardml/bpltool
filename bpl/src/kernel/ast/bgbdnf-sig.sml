@@ -50,6 +50,13 @@ sig
   type 'class bgbdnf
   (** The rbgbdnf data type.  'class must be D or B. *)
   type 'class bgrbdnf
+  (** Signal that a BDNF does not represent a regular bigraph.
+   * @params file i b errtxt
+   * @param file    the file name in which the exception was raised.
+   * @param b       the bigraph
+   * @param errtxt  explanatory error text.
+   *)
+  exception IrregularBDNF of string * info * bgval * string
   (** Construct a B bgbdnf from a bgval. *)
   val make : bgval -> B bgbdnf
   (** Deconstruct a bgbdnf. *)
@@ -125,13 +132,6 @@ sig
   (** Return the outer face of a bgrbdnf. *)
   val routerface : 'class bgrbdnf -> interface
   
-  (** Signal that a BDNF does not represent a regular bigraph.
-   * @params file i b errtxt
-   * @param file    the file name in which the exception was raised.
-   * @param b       the bigraph
-   * @param errtxt  explanatory error text.
-   *)
-  exception IrregularBDNF of string * info * bgval * string
   (** Signal that some term was not expected not to be BDNF.
    * @params file i m errtxt
    * @param file    the file name in which the exception was raised.

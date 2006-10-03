@@ -1,0 +1,17 @@
+signature PRETTYPRINT{
+ type ppstream
+ type ppconsumer
+ type break_style
+ val mk_ppstream
+ val dest_ppstream
+ val add_break
+ val add_newline
+ val add_string
+ val begin_block
+ val end_block
+ val clear_ppstream
+ val flush_ppstream
+ val with_pp
+ val pp_to_string
+ exception PP_FAIL
+}

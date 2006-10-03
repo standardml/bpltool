@@ -114,7 +114,7 @@ kernel/$(DOCDIR)/index.html: kernel/smldoc.cfg kernel/overview.html $(CMFILES-ke
 doc-lib:	lib/$(DOCDIR)/index.html
 lib/$(DOCDIR)/index.html: lib/smldoc.cfg lib/overview.html $(CMFILES-lib) $(SMLFILES-lib)
 	test -w lib/$(DOCDIR) || mkdir lib/$(DOCDIR)
-	cd lib && $(SMLDOC) -d $(DOCDIR) $(SMLDOC-FLAGS) $(subst ./lib/,./,$(CMFILES-lib)) pp/smlnj/prettyprint-sig.sml
+	cd lib && $(SMLDOC) -d $(DOCDIR) $(SMLDOC-FLAGS) $(subst ./lib/,./,$(CMFILES-lib))
 
 DIRTREE: $(DESCFILES) $(MKDIRTREE)
 	echo "Directory summary (automatically generated, foolish to edit):" > $@
