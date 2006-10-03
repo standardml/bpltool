@@ -149,7 +149,7 @@ echo "is" >> $outputfile
 sed -n \
 	-e '/^[^:#]*\.\(lex\|grm\)-sig:/  b;' \
 	-e '/^[^:#]*\.\(lex\|grm\):/      { s/:.*//; p; b; }' \
-	-e '/^[^.#]*:/                 { s/:.*/.sml/; p; }' \
+	-e '/^[^.#]*:/                 { s/ *:.*/.sml/; p; }' \
 	< $inputfile >> $outputfile
 echo " " >> $outputfile
 sed -n \
