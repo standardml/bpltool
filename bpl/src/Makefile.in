@@ -51,12 +51,17 @@ MOSMAKE 	= lib/mosmake
 
 DOCDIR		= doc
 SMLDOC		= smldoc
-SMLDOC-FLAGS	= -d $(DOCDIR) --overview=overview.html --argfile=smldoc.cfg
+SMLDOC-FLAGS	= --overview=overview.html --argfile=smldoc.cfg
 
 ROOTDIR		= ..
 THISDIR		= src
 MKDIRTREE	= $(PWD)/mkdirtree
 DESCFILES	= $(shell find . -name .description)
+SMLFILES-kernel	:= $(shell find ./kernel -name CM -prune -a -type f -o -name *.sml)
+SMLFILES-lib	:= $(shell find ./lib -name CM -prune -a -type f -o -name *.sml)
+CMFILES		= $(patsubst %/Dependencies,%/sources.cm,$(DEPENDENCIES))
+CMFILES-kernel	= $(filter ./kernel/%,$(CMFILES))
+CMFILES-lib	= $(filter ./lib/%,$(CMFILES))
 
 include $(MOSMAKE)/Makefile.inc
 
@@ -99,22 +104,26 @@ PARSINGFILES := $(patsubst %.grm,%.grm-sig.sml,$(GRMFILES)) $(patsubst %.grm,%.g
 
 # Documentation
 
-.PHONY:	all doc upload-doc
+.PHONY:	all doc-kernel upload-doc
 
-doc:	$(DOCDIR)/index.html
-$(DOCDIR)/index.html: smldoc.cfg overview.html sources.cm sources-smlnj.cm \
-	bdnf/sources.cm lib/lib.cm bdnf/*.sml lib/*.sml
-	test -w $(DOCDIR) || mkdir $(DOCDIR)
-	$(SMLDOC) $(SMLDOC-FLAGS) sources.cm sources-smlnj.cm \
-	bdnf/sources.cm lib/lib.cm
+doc-kernel:	kernel/$(DOCDIR)/index.html
+kernel/$(DOCDIR)/index.html: kernel/smldoc.cfg kernel/overview.html $(CMFILES-kernel) $(SMLFILES-kernel)
+	test -w kernel/$(DOCDIR) || mkdir kernel/$(DOCDIR)
+	cd kernel && $(SMLDOC) -d $(DOCDIR) $(SMLDOC-FLAGS) $(subst ./kernel/,./,$(CMFILES-kernel))
+
+doc-lib:	lib/$(DOCDIR)/index.html
+lib/$(DOCDIR)/index.html: lib/smldoc.cfg lib/overview.html $(CMFILES-lib) $(SMLFILES-lib)
+	test -w lib/$(DOCDIR) || mkdir lib/$(DOCDIR)
+	cd lib && $(SMLDOC) -d $(DOCDIR) $(SMLDOC-FLAGS) $(subst ./lib/,./,$(CMFILES-lib)) pp/smlnj/prettyprint-sig.sml
 
 DIRTREE: $(DESCFILES) $(MKDIRTREE)
 	echo "Directory summary (automatically generated, foolish to edit):" > $@
 	echo "" >> $@
 	cd $(ROOTDIR) && $(MKDIRTREE) $(THISDIR) >> $(THISDIR)/$@
 
-upload-doc: doc
-	scp doc/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/
+upload-doc: doc-lib doc-kernel
+	scp kernel/doc/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/kernel/
+	scp lib/doc/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/lib/
 
 # SML/NJ
 kernel.cm: kernel.cm.in
@@ -164,7 +173,10 @@ cmclean:
 mlbclean:
 	$(RM) $(patsubst %/Dependencies,%/mlton.mlb,$(DEPENDENCIES)) 
 
-realclean: clean cmclean mlbclean parsersclean
+docclean:
+	$(RM) -r kernel/$(DOCDIR) lib/$(DOCDIR)
+
+realclean: clean cmclean mlbclean parsersclean docclean
 
 distclean: realclean
 	$(RM) -rf autom4te.cache

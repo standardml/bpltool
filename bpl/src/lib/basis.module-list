@@ -1,0 +1,10 @@
+structure TextIO {
+ type instream
+ type outstream
+}
+signature VISCOMP {
+ structure PrettyPrint => structure PrettyPrint
+}
+structure Compiler {
+ structure PrettyPrint => structure PrettyPrint
+}

@@ -1,0 +1,53 @@
+<html>
+<body>
+
+<p>
+The main module is BPL; it binds together all the other modules.
+Utility libraries are documented in the
+<a href="../lib/" target="_top">libraries API doc</a>.
+</p>
+
+<p>
+The BGTERM, BGVAL or BGBDNF modules implement abstract data types for bigraph
+terms (i.e., terms that might not be well-formed), bigraph
+values (i.e., well-formed terms not necessarily in BDNF),
+and BDNF bigraphs.
+</p>
+
+<p>
+Refer to these modules for detailed information on how to
+(de)construct and prettyprint such objects.  In general, for
+construction you must supply the underlying
+wiring / permutation / ion / ... which can be produced by the corresponding
+module.
+</p>
+
+<p>
+For instance, a BDNF wiring can be produced thus:
+<pre>
+structure NameSet = OrderSet (Name.Order)
+structure LinkSet = OrderSet (Link.Order)
+structure BgVal = BgVal (type info = int * int
+                         ...)
+structure BgBDNF = BgBDNF (...)
+structure BDNFErrorHandler = BDNFErrorHandler (...)
+let
+  val [x, y, z] = map Name.make ["x", "y", "z"]
+  val ls = [{outer = SOME x, inner = NameSet.fromList [y, z]},
+            {outer = NONE, inner = NameSet.fromList [y, x]},
+	    {outer = SOME y, inner = NameSet.empty}]
+  val lset = LinkSet.fromList ls
+  val w = Wiring.make lset
+in
+  BgBDNF.make (BgVal.Wir (0,0) w)
+end
+  handle error => (BDNFErrorHandler.explain error; raise error);
+</pre>
+</p>
+
+<p>
+For entering bigraph values directly in ML syntax, refer to the SUGAR
+module.
+</p>
+</body>
+</html>
