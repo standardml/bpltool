@@ -289,10 +289,6 @@ struct
    * @see bigraph literature on the Pushthrough Lemma.
    *)
   fun pushthru (perm as {width, pi, pi_inv}) Xss =
-   (* if width <> length Xss then
-	raise InterfaceMismatch
-		("permutation.sml", copy perm, Xss, "in pushthru")
-      else *)
       let
         (* macc_Xs is an array of pairs (macc_i, Xs_i), where macc
 	 * is the accumulated number of inner name sets (i.e., inner
@@ -301,13 +297,20 @@ struct
 	 * sets of prime P_i.
 	 *)
 	val macc_Xs = array (width, (~9, []))
-	val (_, width')
+	val (i', width')
 	  = (foldl (fn ((m, Xs), (i, m_sum)) 
 		       => (update (macc_Xs, i, (m_sum, Xs)); 
 			   (i + 1, m + m_sum)))
 		   (0, 0)
 	     o map (fn Xs => (length Xs, Xs)))
 	      Xss
+            handle Subscript => (~1, ~1)
+        val _
+          = if width <> i' then
+	      raise InterfaceMismatch
+	        ("permutation.sml", copy perm, Xss, "in pushthru")
+            else ()
+
 	val pi' = array (width', (~10, NameSet.empty))
 	val pi_inv' = array (width', (~11, NameSet.empty))
         (* Given a mapping from pi_inv, j |-> (i, _), addmaps adds
@@ -321,13 +324,6 @@ struct
 	    let
 	      val (moff, Xs) 
 		= macc_Xs sub i
-		  handle e =>
-			 (print ("permutation.sml(pushthru): " ^
-				 exnMessage e ^ " (i = " ^
-				 Int.toString i ^ ", j = " ^
-				 Int.toString j ^ ")\n p = " ^ 
-				 toString perm);
-			  raise e)
 	      fun addmap (X, j')
 		= (update (pi', noff + j', (moff + j', X));
 		   update (pi_inv', moff + j', (noff + j', X));
