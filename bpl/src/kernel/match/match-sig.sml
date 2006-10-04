@@ -24,9 +24,9 @@
  
 signature MATCH =
 sig
-  type 'class bgrbdnf
-  type B
-  type D
+  type 'class bgbdnf
+  type BR
+  type DR
   type ppstream
   type nameset
   type 'a lazylist
@@ -35,12 +35,12 @@ sig
   type match
 
   (** Deconstruct a match. *)
-  val unmk : match -> {context : B bgrbdnf,
-                       redex : B bgrbdnf,
-                       parameter : D bgrbdnf}
+  val unmk : match -> {context : BR bgbdnf,
+                       redex : BR bgbdnf,
+                       parameter : DR bgbdnf}
                        
   (** Compute a lazy list of matches of a redex in an agent. *)
-  val matches : {agent : B bgrbdnf, redex : B bgrbdnf} -> match lazylist
+  val matches : {agent : BR bgbdnf, redex : BR bgbdnf} -> match lazylist
 
   (** Infer a match of a redex in an agent.
    * @params {agent, redex}
@@ -48,7 +48,7 @@ sig
    * @param redex      the redex to match.
    * @return SOME match if a match is found, NONE otherwise.
    *)
-  val amatch : {agent : B bgrbdnf, redex : B bgrbdnf} -> match option
+  val amatch : {agent : BR bgbdnf, redex : BR bgbdnf} -> match option
 
   (** Infer all matches of a redex in an agent.
    * @params {agent, redex}
@@ -56,7 +56,7 @@ sig
    * @param redex   the redex to match.
    * @return a list of matches, empty if redex does not match.
    *)
-  val allmatches : {agent : B bgrbdnf, redex : B bgrbdnf} -> match list
+  val allmatches : {agent : BR bgbdnf, redex : BR bgbdnf} -> match list
 
   (** Prettyprint a match
    * @params indent pps m

@@ -46,7 +46,6 @@ functor BGErrorHandler (structure BgBDNF      : BGBDNF
 	:> BGERRORHANDLER =
 struct
 type 'class bgbdnf = 'class BgBDNF.bgbdnf
-type 'class bgrbdnf = 'class BgBDNF.bgrbdnf
 type bgval = BgVal.bgval
 type bgterm = BgVal.bgterm
 type interface = BgVal.interface

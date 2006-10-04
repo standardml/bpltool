@@ -38,7 +38,7 @@ functor BgBDNF (type info
 		sharing type BgVal.ion = Ion.ion
 		sharing type BgVal.permutation =
 			     Permutation.permutation
-	  sharing type BgVal.Immutable =
+                sharing type BgVal.Immutable =
 			     Permutation.Immutable
 		sharing type BgVal.wiring = Wiring.wiring
 		sharing type NameSet.Set =
@@ -84,18 +84,9 @@ struct
    * B BDNF: Com (Ten [Wir w, Per id_X], D)
    *
    *
-   * The regularized bigraph representation differ only for D RBDNF:
+   * The regularized bigraph representation differ only for DR BDNF:
    *
-   * D RBDNF: Ten [Wir w, Ten [P_0, ..., P_n-1]]
-   *)
-
-  (* FIXME: document representations of notational shorthands
-   *        (e.g. (y)/(X))
-   * 
-   *)
-  (* FIXME: naming conventions should be documented (e.g. vwid_0)
-   * 
-   * 
+   * DR BDNF: Ten [Wir w, Ten [P_0, ..., P_n-1]]
    *)
 
   (** M BDNF molecule class phantom type. *)
@@ -112,10 +103,12 @@ struct
   type D = unit
   (** B BDNF general bigraph class phantom type. *)
   type B = unit
-  (** The bgbdnf data type.  'class must be M, S, G, N, P, D or B. *)
+  (** DR BDNF discrete, regular bigraph class phantom type. *)
+  type DR = unit
+  (** BR BDNF general, regular bigraph class phantom type. *)
+  type BR = unit
+  (** The bgbdnf data type.  'class must be M, S, G, N, P, D, B, DR, or BR. *)
   type 'class bgbdnf = bgval
-  (** The bgrbdnf data type.  'class must be D or B. *)
-  type 'class bgrbdnf = bgval
   (** Sum type for singular top-level nodes. *)
   datatype stlnode =
            SCon of bgval
@@ -230,7 +223,7 @@ struct
                   ("bgbdnf.sml", info M, wrongterm,
                    "matching M in unmkM")
 
-  fun unmkRB B = 
+  fun unmkBR B = 
       case match (PCom (PVar, PVar)) B of
         MCom (MVal wirxid, MVal D) =>
              {wirxid = wirxid, D = D}
@@ -239,7 +232,7 @@ struct
                   ("bgbdnf.sml", info B, wrongterm,
                    "matching B in unmkRB")
 
-  fun unmkRD D =
+  fun unmkDR D =
       case match (PTen [PVar, PTns]) D of
         MTen [MVal ren, MTns Ps] =>
              {ren = ren, Ps = Ps}
@@ -251,10 +244,6 @@ struct
   fun innerface (b : 'class bgbdnf) = BgVal.innerface b
 
   fun outerface (b : 'class bgbdnf) = BgVal.outerface b
-
-  fun rinnerface (b : 'class bgrbdnf) = BgVal.innerface b
-
-  fun routerface (b : 'class bgrbdnf) = BgVal.outerface b
 
   fun make v =
       let
@@ -936,8 +925,12 @@ struct
               
         and regS (S, pi) =
             case unmkS S of
-              (* FIXME: test if pi is an identity permutation *)
-              SCon a => a
+              SCon a =>
+		if Permutation.is_id pi then
+		  a
+		else
+		  raise IrregularBDNF
+                    ("bgbdnf.sml", i, B, "bigraph is irregular")
             | SMol M => regM M pi
             
         and regN N pi =
@@ -1001,6 +994,4 @@ struct
 
   fun pp indent pps
     = BgVal.pp indent pps o unmk
-
-  fun ppr indent pps = pp indent pps
 end

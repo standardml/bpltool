@@ -25,8 +25,6 @@ signature BGERRORHANDLER =
 sig
 (** BDNF type. *)
 type 'class bgbdnf
-(** RBDNF type. *)
-type 'class bgrbdnf
 (** Bigraph value type. *)
 type bgval
 (** Bigraph term type. *)

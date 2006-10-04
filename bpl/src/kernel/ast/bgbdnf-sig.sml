@@ -46,10 +46,12 @@ sig
   type D
   (** B BDNF general bigraph class phantom type. *)
   type B
+  (** DR BDNF discrete, regular bigraph class phantom type. *)
+  type DR
+  (** BR BDNF general, regular bigraph class phantom type. *)
+  type BR
   (** The bgbdnf data type.  'class must be M, S, G, N, P, D, or B. *)
   type 'class bgbdnf
-  (** The rbgbdnf data type.  'class must be D or B. *)
-  type 'class bgrbdnf
   (** Signal that a BDNF does not represent a regular bigraph.
    * @params file i b errtxt
    * @param file    the file name in which the exception was raised.
@@ -66,7 +68,7 @@ sig
    * @param  b the BDNF to reqularize
    * @exception IrregularBDNF  if b is irregular.
    *)
-  val regularize : B bgbdnf -> B bgrbdnf
+  val regularize : B bgbdnf -> BR bgbdnf
 
   (** Sum type for singular top-level nodes. *)
   datatype stlnode =
@@ -107,15 +109,15 @@ sig
    *)
   val unmkM : M bgbdnf -> {idxion : bgval, N : N bgbdnf}
 
-  (** Deconstruct a B bgrbdnf. 
-   * @return (wirxid, D) representing (a wiring x id_(Xs)) and a RDBDNF.
+  (** Deconstruct a BR bgbdnf. 
+   * @return (wirxid, D) representing (a wiring x id_(Xs)) and a DRBDNF.
    *)
-  val unmkRB : B bgrbdnf -> {wirxid : bgval, D : D bgrbdnf}
-  (** Deconstruct a D bgrbdnf. 
+  val unmkBR : BR bgbdnf -> {wirxid : bgval, D : DR bgbdnf}
+  (** Deconstruct a D bgbdnf. 
    * @return (ren, Ps) representing a renaming and a tensor product
    * of PBDNF primes.
    *)
-  val unmkRD : D bgrbdnf -> {ren : bgval, Ps : P bgbdnf list}
+  val unmkDR : DR bgbdnf -> {ren : bgval, Ps : P bgbdnf list}
 
   (** Return the contextual information of a bgbdnf. *)
   val info : 'class bgbdnf -> info
@@ -125,13 +127,7 @@ sig
   
   (** Return the outer face of a bgbdnf. *)
   val outerface : 'class bgbdnf -> interface
-  
-  (** Return the inner face of a bgrbdnf. *)
-  val rinnerface : 'class bgrbdnf -> interface
-  
-  (** Return the outer face of a bgrbdnf. *)
-  val routerface : 'class bgrbdnf -> interface
-  
+    
   (** Signal that some term was not expected not to be BDNF.
    * @params file i m errtxt
    * @param file    the file name in which the exception was raised.
@@ -172,11 +168,4 @@ sig
    * @param t       The bgbdnf to print.
    *)
   val pp : int -> ppstream -> 'class bgbdnf -> unit
-  (** Prettyprint a bgrbdnf without parentheses around it.
-   * @params indent pps t
-   * @param indent  Indentation at each block level.
-   * @param pps     Prettyprint stream on which to output.
-   * @param t       The bgrbdnf to print.
-   *)
-  val ppr : int -> ppstream -> 'class bgrbdnf -> unit
 end

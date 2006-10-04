@@ -38,37 +38,37 @@ functor Match (
              = BgBDNF.ppstream
              = Permutation.ppstream
              = Wiring.ppstream) : MATCH
-  where type 'class bgrbdnf  = 'class BgBDNF.bgrbdnf
-    and type B               = BgBDNF.B
-    and type D               = BgBDNF.D
+  where type 'class bgbdnf   = 'class BgBDNF.bgbdnf
+    and type BR              = BgBDNF.BR
+    and type DR              = BgBDNF.DR
     and type nameset         = NameSet.Set
     and type ppstream        = PrettyPrint.ppstream
     and type 'a lazylist     = 'a LazyList.lazylist =
 struct
-  type 'class bgrbdnf  = 'class BgBDNF.bgrbdnf
-  type B        = BgBDNF.B
-  type D        = BgBDNF.D
+  type 'class bgbdnf  = 'class BgBDNF.bgbdnf
+  type BR       = BgBDNF.BR
+  type DR       = BgBDNF.DR
   type ppstream = PrettyPrint.ppstream
-  type Mutable = Permutation.Mutable
+  type Mutable  = Permutation.Mutable
   type 'kind permutation = 'kind Permutation.permutation
-  type nameset = NameSet.Set
+  type nameset  = NameSet.Set
   open LazyList
   
-  type match = {context : B bgrbdnf,
-                redex : B bgrbdnf,
-                parameter : D bgrbdnf}
+  type match = {context : BR bgbdnf,
+                redex : BR bgbdnf,
+                parameter : DR bgbdnf}
 
   fun unmk m = m
 
   (* Signals that there are no more new ways of splitting. *)
-	exception NoMoreSplits
-	
-	exception ThisCannotHappen
+  exception NoMoreSplits
+  
+  exception ThisCannotHappen
 
-	(* A split of m elements into n parts is a list of n integers
-	 * whose sum is m, e.g. [m, 0, 0, ..., 0] or [1, 0, 3, ..., 1].
-	 * They can be totally ordered.
-	 *)
+  (* A split of m elements into n parts is a list of n integers
+   * whose sum is m, e.g. [m, 0, 0, ..., 0] or [1, 0, 3, ..., 1].
+   * They can be totally ordered.
+   *)
 
   (* Return the first way of splitting m elements into n parts. *)
   fun firstsplit 0 0 = []
@@ -111,10 +111,10 @@ struct
   fun firstperm names : Mutable operm =
     let
     	fun poslist 0 = []
-	      | poslist n = (n - 1, Left) :: poslist (n - 1)
-	    val pi = Permutation.copy (Permutation.id names)
-	    val n = Permutation.width pi
-	  in
+          | poslist n = (n - 1, Left) :: poslist (n - 1)
+        val pi = Permutation.copy (Permutation.id names)
+        val n = Permutation.width pi
+    in
       (n, pi, poslist n)
     end
   
@@ -157,30 +157,30 @@ struct
       Nil => NONE
     | Cons (m, ms) => SOME m
 
-  val allmatches : {agent : B bgrbdnf, redex : B bgrbdnf }
+  val allmatches : {agent : BR bgbdnf, redex : BR bgbdnf }
                  -> match list = lztolist o matches
   
   fun pp indent pps ({context, redex, parameter} : match) =
     let
       open PrettyPrint
-       val show = add_string pps
-       fun << () = begin_block pps CONSISTENT indent
-	     fun >> () = end_block pps
-	     fun brk () = add_break pps (1, 0)
-	     val Z = Interface.glob (BgBDNF.routerface parameter)
-			 val id_Z = Wiring.id_X Z
+      val show = add_string pps
+      fun << () = begin_block pps CONSISTENT indent
+      fun >> () = end_block pps
+      fun brk () = add_break pps (1, 0)
+      val Z = Interface.glob (BgBDNF.outerface parameter)
+      val id_Z = Wiring.id_X Z
     in
-			<<();
- 			  show "("; BgBDNF.ppr indent pps context; show ")";
-			  brk();
-			  show "o ";
-			  <<();
-			    show "("; Wiring.pp indent pps id_Z;
-			    brk();
-			    show "* "; BgBDNF.ppr indent pps redex; show ")";
-			  >>();
-			  brk();
-			  show "o ("; BgBDNF.ppr indent pps parameter; show ")";
-			>>()
+      <<();
+      show "("; BgBDNF.pp indent pps context; show ")";
+      brk();
+      show "o ";
+      <<();
+      show "("; Wiring.pp indent pps id_Z;
+      brk();
+      show "* "; BgBDNF.pp indent pps redex; show ")";
+      >>();
+      brk();
+      show "o ("; BgBDNF.pp indent pps parameter; show ")";
+      >>()
     end
 end
