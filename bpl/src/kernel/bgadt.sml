@@ -135,10 +135,15 @@ type bgterm = BgTerm.bgterm
 
 type bgval = BgVal.bgval
 
-type B = BgBDNF.B
-type D = BgBDNF.D
-type P = BgBDNF.P
 type M = BgBDNF.M
+type S = BgBDNF.S
+type G = BgBDNF.G
+type N = BgBDNF.N
+type P = BgBDNF.P
+type D = BgBDNF.D
+type DR = BgBDNF.DR
+type B = BgBDNF.B
+type BR = BgBDNF.BR
 type 'class bgbdnf = 'class BgBDNF.bgbdnf
 
 structure Match = Match

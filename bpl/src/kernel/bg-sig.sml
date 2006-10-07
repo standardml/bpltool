@@ -18,7 +18,8 @@
  * USA
  *)
 
-(** Main BG module.
+(** Main BG module, including file I/O and parsing.  For just the
+ * BPL data types, see the BG_ADT module.
  * @version $LastChangedRevision$
  *)
 signature BG =
