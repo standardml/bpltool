@@ -2,16 +2,62 @@
 <body>
 
 <p>
-The main module is BPL; it binds together all the other modules.
-Utility libraries are documented in the
-<a href="../lib/" target="_top">libraries API doc</a>.
+The overall structure of the BPL kernel implementation consists of
+the following groups of modules:
 </p>
 
+<table>
+  <tr><th colspan="2" align="left">Organising modules:</th></tr>
+  <tr>
+    <td><a href="SigBG.html">BG</a></td>
+    <td>File I/O and parsing (includes BG_ADT).</td>
+  </tr>
+  <tr>
+    <td><a href="SigBG_ADT.html">BG_ADT</a></td>
+    <td>
+      The main abstract data type module; it binds together all
+      the other kernel modules.
+    </td>
+  </tr>
+  <tr><th colspan="2" align="left">Abstract syntax tree modules:</th></tr>
+  <tr>
+    <td><a href="SigBGTERM.html">BGTERM</a></td>
+    <td>Bigraph terms (possibly not well-formed).</td>
+  </tr>
+  <tr>
+    <td><a href="SigBGVAL.html">BGVAL</a></td>
+    <td>Bigraph values (well-formed, possibly not BDNF).</td>
+  </tr>
+  <tr>
+    <td><a href="SigBGBDNF.html">BGBDNF</a></td>
+    <td>BDNFs (including regular BDNFs).</td>
+  </tr>
+  <tr><th colspan="2" align="left">Elementary bigraph components modules:</th></tr>
+  <tr>
+    <td colspan="2">
+      <a href="SigINTERFACE.html">INTERFACE</a>,
+      <a href="SigION.html">ION</a>,
+      <a href="SigPERMUTATION.html">PERMUTATION</a>,
+      <a href="SigWIRING.html">WIRING</a>,
+      <a href="SigCONTROL.html">CONTROL</a>,
+      <a href="SigLINK.html">LINK</a>,
+      <a href="SigNAME.html">NAME</a>.
+    </td>
+  </tr>
+  <tr><th colspan="2" align="left">Auxiliary modules:</th></tr>
+  <tr>
+    <td><a href="SigBGERRORHANDLER.html">BGERRORHANDLER</a></td>
+    <td>Explaining exceptions raised.</td>
+  </tr>
+  <tr>
+    <td><a href="SigSUGAR.html">SUGAR</a></td>
+    <td>Syntactic sugar for entering bigraph expressions directly in ML.</td>
+  </tr>
+</table>
+
 <p>
-The BGTERM, BGVAL or BGBDNF modules implement abstract data types for bigraph
-terms (i.e., terms that might not be well-formed), bigraph
-values (i.e., well-formed terms not necessarily in BDNF),
-and BDNF bigraphs.
+Utility libraries are documented in the
+<a href="../lib/" target="_top">libraries API doc</a>.
 </p>
 
 <p>
@@ -46,8 +92,8 @@ end
 </p>
 
 <p>
-For entering bigraph values directly in ML syntax, refer to the SUGAR
-module.
+For entering bigraph values directly in ML syntax, refer to the 
+<a href="SigSUGAR.html">SUGAR</a> module.
 </p>
 </body>
 </html>
