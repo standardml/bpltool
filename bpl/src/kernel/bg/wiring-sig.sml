@@ -84,10 +84,45 @@ sig
    * outer name.
    *)
   val restrict_outer : wiring -> nameset -> wiring
+  (** Split wiring into closed and open part, then turn closed edges
+   * into links with fresh names.    Any fresh
+   * names generated will not clash with outer names of w.
+   * @params w usednames
+   * @param w          Wiring to split and open.
+   * @param usednames  Names not to use when generating fresh names.
+   * @return {opened, rest, usednames}  A wiring containing just the
+   *                   opened links, a wiring containing just the
+   *                   original open links, and the set union of the
+   *                   original usednames, and any fresh names.
+   *)
+  val splitopen : nameset -> wiring -> {opened : wiring,
+                                        rest : wiring,
+                                        usednames : nameset}
+  (** Turn closed edges into links with fresh names.  Any fresh
+   * names generated will not clash with outer names of w.
+   * @params w usednames
+   * @param w          Wiring to open.
+   * @param usednames  Names not to use when generating fresh names.
+   * @return {opened, newnames, usednames}
+   *                   A wiring containing just open links,
+   *                   the set of new names added, and the union
+   *                   of the original usednames, and any fresh
+   *                   names.
+   *)
+  val openup : nameset -> wiring -> {opened: wiring,
+                                     newnames : nameset,
+                                     usednames : nameset}
+  (** Close some open links. *)
+  val closelinks : nameset -> wiring -> wiring
   (** Determine whether some wiring is an identity. *)
   val is_id : wiring -> bool
   (** Determine whether some wiring is a zero identity. *)
   val is_id0 : wiring -> bool
+  (** Determine whether some wiring can be written w = id_Y x sigma,
+   * where sigma is a substitution (i.e., no closed links).
+   * @params w Y
+   *)
+  val is_id_x_sigma : nameset -> wiring -> bool
   (** Construct an identity wiring on a set of names. *)
   val id_X : nameset -> wiring
   (** Construct an empty identity wiring. *)

@@ -503,10 +503,10 @@ struct
     let
       val iimg as (idx, Xi) = pi sub i
       val jimg as (jdx, Xj) = pi sub j
-      val _ = update (pi, i, jimg)
-      val _ = update (pi, j, iimg)
-      val _ = update (pi_inv, idx, (j, Xi))
-      val _ = update (pi_inv, jdx, (i, Xj))
+      val _ = update (pi, i, (jdx, Xi))
+      val _ = update (pi, j, (idx, Xj))
+      val _ = update (pi_inv, idx, (j, Xj))
+      val _ = update (pi_inv, jdx, (i, Xi))
     in
       perm
     end

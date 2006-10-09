@@ -237,8 +237,8 @@ struct
   fun matchCLO (w_a : Wiring.wiring) w_R ps Ps = lzmake (fn () =>
     let
       open Wiring
-    	val {opened = s_a', rest = s_a} = splitopen NameSet.empty w_a
-    	val {opened = s_R, newnames = Y_R} = openup NameSet.empty w_R
+    	val {opened = s_a', rest = s_a, usednames} = splitopen NameSet.empty w_a
+    	val {opened = s_R, newnames = Y_R, ...} = openup usednames w_R
 	    val matches = matchPER s_a' s_a s_R ps Ps
 	    val is_id_Y_R_x_sigma = Wiring.is_id_x_sigma Y_R
     	fun toCLO ({s_a'', s_C, Es = Qs, pi, qs}, rest) =

@@ -147,12 +147,14 @@ type BR = BgBDNF.BR
 type 'class bgbdnf = 'class BgBDNF.bgbdnf
 
 structure Match = Match
-  (structure NameSet = NameSet
+  (type      info        = info
+   structure NameSet     = NameSet
    structure Permutation = Permutation
-   structure Interface = Interface
-   structure Wiring = Wiring
-   structure BgBDNF = BgBDNF
-   structure LazyList = LazyList
+   structure Interface   = Interface
+   structure Wiring      = Wiring
+   structure BgVal       = BgVal
+   structure BgBDNF      = BgBDNF
+   structure LazyList    = LazyList
    structure PrettyPrint = PrettyPrint)
 
 val pageWidth = ref 70

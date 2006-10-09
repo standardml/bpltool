@@ -60,12 +60,14 @@ functor BgBDNF (type info
 			     Wiring.ppstream =
 			     BgVal.ppstream
 			     ) :> BGBDNF 
-  where type nameset   = NameSet.Set
-    and type info      = BgVal.info 
-    and type interface = BgVal.interface
-    and type bgval     = BgVal.bgval 
-    and type bgmatch   = BgVal.bgmatch
-    and type ppstream  = BgVal.ppstream =
+  where type nameset        = NameSet.Set
+    and type info           = BgVal.info 
+    and type interface      = BgVal.interface
+    and type wiring         = BgVal.wiring
+    and type 'a permutation = 'a BgVal.permutation
+    and type bgval          = BgVal.bgval 
+    and type bgmatch        = BgVal.bgmatch
+    and type ppstream       = BgVal.ppstream =
 struct
   open BgVal
 
@@ -113,7 +115,41 @@ struct
 
   val take = List.take
   val drop = List.drop
-        
+
+	fun make_B w Xs D =
+	  let
+	    val i = info D
+	    val Wir = Wir i
+	    val Per = Per i
+	    val Ten = Ten i
+	    fun xx (v1, v2) = Ten [v1, v2]  infix 6 xx
+	    val oo = Com i                  infix 7 oo
+	  in
+	    (Wir w xx Per (Permutation.id Xs)) oo D
+	  end
+	val make_BR = make_B
+	fun make_D w Ps pi =
+	  let
+	    val i = case Ps of P :: _ => info P | _ => noinfo
+	    val Wir = Wir i
+	    val Per = Per i
+	    val Ten = Ten i
+	    fun xx (v1, v2) = Ten [v1, v2]  infix 6 xx
+	    val oo = Com i                  infix 7 oo
+	  in
+	     Wir w xx Ten Ps oo Per pi
+	  end
+  fun make_DR w Ps =
+	  let
+	    val i = case Ps of P :: _ => info P | _ => noinfo
+	    val Wir = Wir i
+	    val Ten = Ten i
+	    fun xx (v1, v2) = Ten [v1, v2]  infix 6 xx
+	    val oo = Com i                  infix 7 oo
+	  in
+	     Wir w xx Ten Ps
+	  end
+          
   fun unmkB B = 
       case match (PCom (PVar, PVar)) B of
         MCom (MVal wirxid, MVal D) =>

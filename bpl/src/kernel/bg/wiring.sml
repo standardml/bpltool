@@ -467,6 +467,130 @@ struct
          (new_ls, new_ht))
       end
 
+  fun addto ht names y
+    = NameSet.apply (fn x => NameMap.insert ht (x, y)) names
+
+  fun freshname usednames namebases =
+    let
+      fun try basename i =
+        let
+          val y = Name.make (basename ^ "_" ^ Int.toString i)
+        in
+          if NameSet.member y usednames then
+            try basename (i + 1)
+          else
+            (y, NameSet.insert y usednames)
+        end
+      val basename
+        = Name.unmk (NameSet.foldUntil
+                       (fn x => fn _ => (true, x))
+                       (Name.make "x")
+                       namebases)
+    in
+      try basename 0
+    end
+
+  fun splitopen usednames (w as (ls, ht)) =
+    let
+      val usednames = NameSet.union usednames (outernames w)
+      val ht_open = createNameMap' ()
+      val ht_opened = createNameMap' ()
+      fun addlink (l as {outer, inner}) (ls_open, ls_opened, usednames) =
+        case outer of
+          Name y => (addto ht_open inner outer;
+                     (Link'Set.insert l ls_open,
+                      ls_opened,
+                      usednames))
+        | Closure i =>
+            let
+              val (y, usednames) = freshname usednames inner
+              val newl = {outer = Name y, inner = inner}
+            in
+              addto ht_opened inner (Name y);
+              (ls_open,
+               Link'Set.insert newl ls_opened,
+               usednames)
+            end
+      val (ls_open, ls_opened, usednames)
+        = Link'Set.fold
+            addlink (Link'Set.empty, Link'Set.empty, usednames) ls
+    in
+      {opened    = (ls_opened, ht_opened),
+       rest      = (ls_open, ht_open),
+       usednames = usednames}
+    end
+
+  fun openup usednames (w as (ls, ht)) =
+    let
+      val usednames = NameSet.union usednames (outernames w)
+      val new_ht = NameMap.copy ht
+      fun addlink (l as {outer, inner})
+                  (new_ls, newnames, usednames) =
+        case outer of
+          Name x => (new_ls, newnames, usednames)
+        | Closure i =>
+            let
+              val (y, usednames) = freshname usednames inner
+              val newl = {outer = Name y, inner = inner}
+              val new_ls = Link'Set.remove l new_ls 
+            in
+              addto new_ht inner (Name y);
+              (Link'Set.insert newl new_ls,
+              NameSet.insert y newnames,
+              usednames)
+            end
+      val (new_ls, newnames, usednames)
+        = Link'Set.fold
+            addlink (Link'Set.empty, NameSet.empty, usednames) ls
+    in
+      {opened = (new_ls, new_ht),
+       newnames = newnames,
+       usednames = usednames}
+    end
+
+  fun closelinks Y (ls, ht) =
+    let
+      val new_ht = NameMap.copy ht
+      fun count {outer = Closure i, inner} imax
+        = if i > imax then i else imax
+        | count _ imax = imax
+      val imax = Link'Set.fold count 0 ls
+      fun closelink (l as {outer = Name y, inner}) (new_ls, i)
+        = if NameSet.member y Y then
+            (addto new_ht inner (Closure (i + 1));
+             (Link'Set.insert {outer = Closure (i + 1), inner = inner}
+                              new_ls,
+              i + 1))
+          else
+            (Link'Set.insert l new_ls, i)
+        | closelink l (new_ls, i)
+        = (Link'Set.insert l new_ls, i)
+      val (new_ls, _) = Link'Set.fold closelink (Link'Set.empty, imax) ls
+    in
+      (new_ls, new_ht)
+    end
+
+  fun is_id_x_sigma Y (ls, ht) =
+    let
+      fun testlink {outer = Name y, inner} _ =
+          if NameSet.member y Y then
+            let val OK = NameSet.size inner = 1
+            in (not OK, OK) end
+          else
+            (false, true)
+        | testlink _ _ = (false, true)
+      fun is_id_y y _ =
+        case NameMap.find ht y of
+          SOME (Name y')
+           => let val OK = y' = y
+              in (not OK, OK) end
+        | _ => (true, false)
+    in
+      Link'Set.foldUntil testlink true ls
+      andalso
+      NameSet.foldUntil is_id_y true Y
+    end            
+
   fun id_X X =
       let
 	val ht = createNameMap' ()

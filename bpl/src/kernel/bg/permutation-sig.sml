@@ -94,10 +94,11 @@ sig
    *)
   val invert
       : 'kind permutation -> Immutable permutation
-  (** Permute the list of values as described by the permutation.
+  (** Permute the list of values as described by the permutation.<br />
     * @params pi Xs
     * @param pi  the permutation.
-    * @param Xs  the list of values to permute.
+    * @param Xs  the list of values [x_0, ..., x_{n-1}] to permute.
+    * @return    a list [x_{pi^-1(0)}, ..., x_{pi^-1(n-1)}].
     *)
   val permute
       : 'kind permutation -> 'a list -> 'a list
@@ -140,7 +141,7 @@ sig
   val unzip 
       : nameset list list -> nameset list list -> 'kind permutation
   (* Swap _destructively_ to what pi maps index i and j.
-   * The outer face is preserved, the inner face will change
+   * The inner face is preserved, the outer face will change
    * if the namesets of i and j differ (and i <> j).
    * @params pi i j
    * @param pi  The permutation to update.

@@ -26,6 +26,8 @@ sig
   type info
   type nameset
   type interface
+  type wiring
+  type 'kind permutation
   type bgval
   type bgmatch
   type bgterm
@@ -75,6 +77,20 @@ sig
            SCon of bgval
          | SMol of M bgbdnf
 
+  (** Construct a B bgbdnf from a wiring, nameset list and D bgbdnf. *)
+  val make_B : wiring -> nameset list -> D bgbdnf -> B bgbdnf
+  (** Construct a BR bgbdnf from a wiring, nameset list and DR bgbdnf. *)
+  val make_BR : wiring -> nameset list -> DR bgbdnf -> BR bgbdnf
+  (** Construct a D bgbdnf from a renaming, P bgbdnf list and a permutation.
+	 * @params alpha Ps pi
+   * @exception  NotRenaming if alpha is not a renaming.
+   *)
+  val make_D : wiring -> P bgbdnf list -> 'kind permutation -> D bgbdnf
+  (** Construct a DR bgbdnf from a renaming and a P bgbdnf list.
+	 * @params alpha Ps
+   * @exception  NotRenaming if alpha is not a renaming.
+   *)
+  val make_DR : wiring -> P bgbdnf list -> DR bgbdnf
   (** Deconstruct a B bgbdnf. 
    * @return (wirxid, D) representing (a wiring x id_(Xs)) and a DBDNF.
    *)
