@@ -26,34 +26,45 @@ structure LazyList :> LAZYLIST =
 struct
   exception EmptyList
 
-  datatype 'a lazycell = Nil | Cons of 'a * 'a lazylist
-  and 'a lazylist = Thunk of unit -> 'a lazycell
+  datatype 'a lazycell = Nil | Cons of 'a * (unit -> 'a lazycell)
+  type 'a lazylist = unit -> 'a lazycell
 
-  val lzNil = Thunk (fn () => Nil)
+  val lzNil = fn () => Nil
   
-  fun lzCons f = Thunk (fn () => Cons (f ()))
+  fun lzCons t = fn () => Cons (t ())
 
-  fun lzhd (Thunk t)
-    = case t () of
-        Nil => raise EmptyList
-      | Cons (head, _) => head
+  fun lzhd t = case t () of
+                 Nil => raise EmptyList
+               | Cons (head, _) => head
       
-  fun lztl (Thunk t)
-    = case t () of
-        Nil => raise EmptyList
-      | Cons (_, tail) => tail
+  fun lztl t = case t () of
+                 Nil => raise EmptyList
+               | Cons (_, tail) => tail
 
-  fun lzunmk (Thunk t) = t ()
+  fun lzmake t = t
+
+  fun lzunmk t = t ()
         
-  fun lzmap f (Thunk t)
-    = Thunk (fn () =>
-             case t () of
-               Nil => Nil
-             | Cons (elt, tail)
-                => Cons (f elt, lzmap f tail))
+  fun lzmap f t = fn () => case t () of
+                             Nil => Nil
+                           | Cons (elt, tail)
+                              => Cons (f elt, lzmap f tail)
   
-  fun lztolist (Thunk t)
-    = case t () of
-        Nil => []
-      | Cons (elt, tail) => elt :: lztolist tail
+  fun lzfoldr f init =
+    let
+      fun fold t = case t () of
+                     Nil => init
+                   | Cons (elt, tail)
+                      => f (elt, (fn () => fold tail))
+    in
+      fold
+    end
+  
+  fun lzappend t1 t2 = fn () => case t1 () of
+                                  Nil => t2 ()
+                                | xs => xs
+  
+  fun lztolist t = case t () of
+                     Nil => []
+                   | Cons (elt, tail) => elt :: lztolist tail
 end

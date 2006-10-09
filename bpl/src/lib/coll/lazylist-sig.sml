@@ -42,10 +42,24 @@
    * @exception EmptyList if the list is empty.
    *)
   val lztl : 'a lazylist -> 'a lazylist
+  (** Return a lazy list, given a list producer. *)
+  val lzmake : (unit -> 'a lazycell) -> 'a lazylist
   (** Return head and tail of a lazy list, or Nil if it is empty. *)
   val lzunmk : 'a lazylist -> 'a lazycell
   (** Map a function on all the elements of a lazy list. *)
   val lzmap : ('a -> 'b) -> 'a lazylist -> 'b lazylist
+  (** Fold a function over all the elements of a lazy list.
+   * The result of <br />
+   * lzfoldr op init [x1, x2, ...] is <br />
+   * x1 op' (x2 op' (... op' init)), where x op f = x op' (f ()).
+   * @params f init xs
+   * @param f     function with which to fold.
+   * @param init  result when folding over an empty list.
+   * @param xs    the lazy list over which to fold.
+   *)
+  val lzfoldr : ('a * (unit -> 'b) -> 'b) -> 'b -> 'a lazylist -> 'b
+  (** Append two lazy lists. *)
+  val lzappend : 'a lazylist -> 'a lazylist -> 'a lazylist
   (** Compute all the elements of a lazy list. *)
   val lztolist : 'a lazylist -> 'a list
   (** Compute a lazy list of all matches of a redex in an agent. *)
