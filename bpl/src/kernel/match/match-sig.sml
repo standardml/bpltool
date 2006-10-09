@@ -24,7 +24,9 @@
  
 signature MATCH =
 sig
+  type info
   type 'class bgbdnf
+  type B
   type BR
   type DR
   type ppstream
@@ -35,7 +37,7 @@ sig
   type match
 
   (** Deconstruct a match. *)
-  val unmk : match -> {context : BR bgbdnf,
+  val unmk : match -> {context : B bgbdnf,
                        redex : BR bgbdnf,
                        parameter : DR bgbdnf}
                        
