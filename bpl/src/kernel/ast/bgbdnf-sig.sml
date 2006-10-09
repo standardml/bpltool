@@ -82,13 +82,13 @@ sig
   (** Construct a BR bgbdnf from a wiring, nameset list and DR bgbdnf. *)
   val make_BR : wiring -> nameset list -> DR bgbdnf -> BR bgbdnf
   (** Construct a D bgbdnf from a renaming, P bgbdnf list and a permutation.
+   * NOTE: it is not checked whether alpha is a renaming!
 	 * @params alpha Ps pi
-   * @exception  NotRenaming if alpha is not a renaming.
    *)
   val make_D : wiring -> P bgbdnf list -> 'kind permutation -> D bgbdnf
   (** Construct a DR bgbdnf from a renaming and a P bgbdnf list.
+   * NOTE: it is not checked whether alpha is a renaming!
 	 * @params alpha Ps
-   * @exception  NotRenaming if alpha is not a renaming.
    *)
   val make_DR : wiring -> P bgbdnf list -> DR bgbdnf
   (** Deconstruct a B bgbdnf. 
