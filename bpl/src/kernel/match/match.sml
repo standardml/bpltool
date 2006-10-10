@@ -20,8 +20,8 @@
 
 (** Match datatype and inference.  For theoretical background
  * information, see <ul><li>
- * Birkedal, Damgaard, Glenstrup, and Milner:
- * <em>Matching of bigraphs.</em>
+ * Birkedal, Damgaard, Glenstrup, and Milner: <em>
+ * Matching of bigraphs.</em>
  * In Proceedings of Graph Transformation for Verification and
  * Concurrency Workshop 2006
  * Electronic Notes in Theoretical Computer Science. Elsevier.</li><li>
