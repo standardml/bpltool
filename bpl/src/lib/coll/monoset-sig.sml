@@ -64,7 +64,8 @@ signature MONO_SET =
     val fold : (elt -> 'b -> 'b) -> 'b -> Set -> 'b
 
       (** foldUntil f base s; folds using f over the base element,
-       * returning first time f returns (true, ...).
+       * returning r first time f returns (true, r), or if all elements
+       * have been folded resulting in (..., r).
        *)
     val foldUntil : (elt -> 'b -> bool * 'b) -> 'b -> Set -> 'b
 
