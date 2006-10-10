@@ -60,7 +60,27 @@
   val lzfoldr : ('a * (unit -> 'b) -> 'b) -> 'b -> 'a lazylist -> 'b
   (** Append two lazy lists. *)
   val lzappend : 'a lazylist -> 'a lazylist -> 'a lazylist
+  (** Return a lazy list of the first n elements of a lazy list.
+   * @params xs n
+   * @exception Subscript if n > length xs or n < 0.
+   *)
+  val lztake : 'a lazylist -> int -> 'a lazylist
+  (** Return a lazy list excluding the first n elements of a lazy list.
+   * @params xs n
+   * @exception Subscript if n > length xs or n < 0.
+   *)
+  val lzdrop : 'a lazylist -> int -> 'a lazylist
+  (** Given a list of k lazy lists, return a lazy list of lists
+   * of length k, containing all combinations of picking one
+   * element from each lazy list.
+   * @param xss  [[x_00, x_01, ..., x_0n_0], [x_10, x_11, ..., x_1n_1],
+   *              ..., [x_k0, x_k1, ..., x_kn_k]]
+   * @return [[x_00, x_10, ..., x_k0], [x_01, x_10, ..., x_k0],
+   *          ..., [x_0n_0, x_1n_1, ..., x_kn_k]]
+   *)
+  val lzcombine : 'a lazylist list -> 'a list lazylist
   (** Compute all the elements of a lazy list. *)
   val lztolist : 'a lazylist -> 'a list
-  (** Compute a lazy list of all matches of a redex in an agent. *)
+  (** Print a lazy list lazily. *)
+  val lzprint : ('a -> string) -> 'a lazylist -> unit
 end

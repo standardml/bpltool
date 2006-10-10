@@ -64,7 +64,71 @@ struct
                                   Nil => t2 ()
                                 | xs => xs
   
+  fun lztake t 0 = lzNil
+    | lztake t n = fn () => case t () of
+                              Nil => raise Subscript
+                            | Cons (elt, tail)
+                               => Cons (elt, lztake tail (n - 1))
+                               
+  fun lzdrop t 0 = t
+    | lzdrop t n = fn () => case t () of
+                              Nil => raise Subscript
+                            | Cons (_, tail) => lzdrop tail (n - 1) ()
+  
+  fun lzcombine ts = fn () =>
+      let
+        (* evaleds contains the evaluated values at this level,
+         * notevaleds are remaining thunks to be eval'ed at this level.
+         * nextrest is always called with at least one of these lists empty.
+         * restcombs is a lazy list of combinations of lower levels.
+         * Strategy: For the first element of restcombs, evaluate and add
+         *            in turn each thunk at this level, adding it as the
+         *            head of the first element.
+         *            Save the values to which the thunks evaluated.
+         *           For all following elements of restcomb, add in turn
+         *            each of the saved values as the head of this element.
+         *)
+	      fun nextrest (evaleds : 'a list) (notevaleds : 'a lazylist,
+	                                        restcombs : 'a list lazylist) = fn () =>
+	        case restcombs () of
+	          Nil => Nil
+	        | Cons (restcomb, restcombtail) =>
+	            let
+				        fun addonnotevaled elts t
+				          = case t () of
+				              Nil => if null elts then Nil else nextrest elts (lzNil, restcombtail) ()
+				            | Cons (elt, tail)
+				               => Cons (elt :: restcomb, fn () => addonnotevaled (elt :: elts) tail)
+	              fun addonevaled elts =
+	                let
+						        fun addonevaled' [] = addonnotevaled elts notevaleds
+						          | addonevaled' (elt :: elts')
+						            = Cons (elt :: restcomb, fn () => addonevaled' elts')
+						      in
+						        addonevaled' elts
+						      end
+				      in
+				        addonevaled evaleds
+				      end
+      in
+        lzunmk (foldl (nextrest []) (fn () => Cons ([], lzNil)) ts)
+      end
+
   fun lztolist t = case t () of
                      Nil => []
                    | Cons (elt, tail) => elt :: lztolist tail
+                   
+  fun lzprint toStr t = 
+    let
+      fun printrest first t
+        = case t () of
+            Nil => print "]"
+          | Cons (elt, tail)
+             => (if first then () else print ", ";
+                 print (toStr elt);
+                 printrest false tail)
+    in
+      print "[";
+      printrest true t
+    end
 end
