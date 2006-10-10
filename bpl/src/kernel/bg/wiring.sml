@@ -570,6 +570,12 @@ struct
       (new_ls, new_ht)
     end
 
+  (* ROOM FOR EFFICIENCY IMPROVEMENT: Instead of testing whether all
+   * elements of Y map to themself (is_id_y), remove y's from Y in the
+   * first step (testlink), and then finally check whether Y is empty.
+   * This requires NameSet.remove y Y to signal whether y actually
+   * was present in Y before removing.
+   *)
   fun is_id_x_sigma Y (ls, ht) =
     let
       fun testlink {outer = Name y, inner} _ =
@@ -578,7 +584,7 @@ struct
             in (not OK, OK) end
           else
             (false, true)
-        | testlink _ _ = (false, true)
+        | testlink {outer = Closure _, ...} _ = (true, false)
       fun is_id_y y _ =
         case NameMap.find ht y of
           SOME (Name y')
