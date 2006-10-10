@@ -70,6 +70,7 @@ struct
   type B        = BgBDNF.B
   type BR       = BgBDNF.BR
   type DR       = BgBDNF.DR
+  type P        = BgBDNF.P
   type ppstream = PrettyPrint.ppstream
   type Mutable  = Permutation.Mutable
   type 'kind permutation = 'kind Permutation.permutation
@@ -84,6 +85,7 @@ struct
   val outerface = BgBDNF.outerface
   val width = Interface.width
   val loc = Interface.loc
+  val glob = Interface.glob
   val permute = Permutation.permute
   val pushthru = Permutation.pushthru
 
@@ -142,6 +144,9 @@ struct
   (* Signals that there are no more new permutations. *)
   exception NoMorePerms
 
+  (* Signals that an error during grouping of tensor factors. *)
+  exception GroupError of string * string * P bgbdnf list * int list
+
   (* Returns a mutable copy of a perm. *)
   fun permcopy (n, pi, ps) = (n, Permutation.copy pi, ps)
 
@@ -194,14 +199,78 @@ struct
 
   (* Matching rule functions
    * =======================
-   * All rules except CLO take 4 substitutions s^a', s^a, s^R, s^C
+   * All rules except CLO take 3 substitutions s_a', s_a, s_R
    * as well as other arguments, and return something, as well as 
-   * s^a'', which is an outer-name-renamed version of s^a', i.e.,
-   * s^a'' = alpha s^a'.  The substitution in the theoretical note
-   * is sigma^a = s^a'' x s^a
+   * s_C and s_a'', the latter being an outer-name-extended and renamed
+   * version of s_a', i.e., s_a'' = Y/ x alpha s_a'.
+   * The substitution in the theoretical note is
+   * sigma^a = s_a'' x s_a.
    *)
 
-  fun matchPARe s_a' s_a s_R es Ps = lzNil
+  (* Match a parallel composition:
+   * 1) For each e_i : -> <1,(X_i),X_i + Y_i> determine
+   *    s_a_i = s_a domainrestricted to Y_i
+   *    s_a'_i = s_a' domainrestricted to Y_i.
+   * 2) For each Ps_i : -> <n,\vec X_i,X_i + Y_i> determine
+   *    s_R_i = s_R domainrestricted to Y_i.
+   * 3) Using s_a_i, s_a'_i, s_R_i, e_i, Ps_i, infer premise, 
+   *    yielding s_a''_i, s_C_i, E_i and ps_i.
+   * 4) Compute s_a'', Es and pss by composition.
+   * 5) Determine names Y_a'', Y_a, Y_R
+   *    introduced by s_a'', s_a and s_R, respectively.
+   * 6) If Y_a'' = Y_a = {} and Y_R <> {}, then add a fresh
+   *    name to Y_a'' and its name introduction to s_a''.
+   * 7) Construct sustitution s_I : Y_R -> Y_a'' + Y_a.
+   * 8) Compute s_C by composition of s_C_i's and s_I.
+   * 9) Return s_a'', s_C, Es and pss.
+   *)
+  fun matchPARn s_a' s_a s_R es Pss = lzmake (fn () =>
+    let
+      val s_a's
+        = map (Wiring.restrict s_a' o glob o outerface) es
+      val s_as
+        = map (Wiring.restrict s_a o glob o outerface) es
+      val s_Rs
+        = map (Wiring.restrict s_R
+               o foldr (fn (Y_i, Y) => NameSet.union Y_i Y)
+                       NameSet.empty
+               o map (glob o outerface)) Pss
+      val matches
+        = 0  (* TODO FROM HERE *)
+    in
+      lzunmk lzNil (* DUMMY (WRONG!) VALUE FOR TYPECHECKING *)
+    end)
+
+  fun matchPARe s_a' s_a s_R es Ps = lzmake (fn () =>
+	  let
+	    val n = length es
+	    val m = length Ps
+	    fun group [] [] = []
+	      | group Ps (n :: ns)
+	        = (List.take (Ps, n) :: group (List.drop (Ps, n)) ns
+	           handle Subscript
+	           => raise GroupError ("kernel/match/match.sml", 
+	                               "matchPARe", Ps, n :: ns))
+	      | group Ps []
+	        = raise GroupError ("kernel/match/match.sml", 
+	                               "matchPARe", Ps, [])
+	    fun nextmatch split =
+	      let
+	        val P'ss = group Ps split
+	        fun toPARe {s_a'', s_C, Es, pss}
+	          = {s_a'' = s_a'', s_C = s_C, Es = Es,
+	             qs = List.concat pss}
+    	    val matches
+	          = lzmap toPARe (matchPARn s_a' s_a s_R es P'ss)
+          fun next () = lzunmk (nextmatch
+                                (nextsplit split)
+                                handle NoMoreSplits => lzNil)
+	      in
+	        lzappend matches (lzmake next)
+	      end
+	  in
+	    lzunmk (nextmatch (firstsplit m n))
+	  end)
 
   fun matchPER s_a' s_a s_R es Qs = lzmake (fn () =>
     let
@@ -216,7 +285,7 @@ struct
           val matches
             = lzmap toPER (matchPARe s_a' s_a s_R es Qs')
           fun next () = lzunmk (nextmatch 
-                                (nextperm (perm))
+                                (nextperm perm)
                                 handle NoMorePerms => lzNil)
         in
           lzappend matches (lzmake next)
@@ -230,8 +299,8 @@ struct
    * 2) Open w_R, yielding s_R and fresh outer names Y_R of s_R
    * 3) Using s_a', s_a, s_R, infer premise,
    *    yielding s_a'', s_C, Qs, pi, qs,
-   *    where s_a'' = alpha s_a' has outer names Y_R + Y_C
-   * 4) Check that s_C = id_Y_R x s'_C
+   *    where s_a'' = Y/ x alpha s_a' has outer names Y_R + Y_C
+   * 4) Check that s_C = id_{Y_R} x s'_C
    * 5) Return a new w_C as s'_C where links Y_C are closed.
    *)
   fun matchCLO (w_a : Wiring.wiring) w_R ps Ps = lzmake (fn () =>
