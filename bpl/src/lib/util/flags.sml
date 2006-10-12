@@ -89,6 +89,13 @@ structure Flags :> FLAGS = struct
 		      | SOME r => r
 	in  r := int
 	end
+    fun getIntFlag name =
+	let val (r', info) = HT.lookup registered name
+	    val r = case Dyn.unpack intref_b r' of
+			NONE => Util.abort 99770
+		      | SOME r => r
+	in  !r
+	end
 
     fun setRealFlag name real =
 	let val (r', info) = HT.lookup registered name
@@ -96,6 +103,13 @@ structure Flags :> FLAGS = struct
 			NONE => Util.abort 98771
 		      | SOME r => r
 	in  r := real
+	end
+    fun getRealFlag name =
+	let val (r', info) = HT.lookup registered name
+	    val r = case Dyn.unpack realref_b r' of
+			NONE => Util.abort 99771
+		      | SOME r => r
+	in  !r
 	end
 
     fun setBoolFlag name bool =
@@ -105,6 +119,13 @@ structure Flags :> FLAGS = struct
 		      | SOME r => r
 	in  r := bool
 	end
+    fun getBoolFlag name =
+	let val (r', info) = HT.lookup registered name
+	    val r = case Dyn.unpack boolref_b r' of
+			NONE => Util.abort 99772
+		      | SOME r => r
+	in  !r
+	end
 
     fun setStringFlag name str =
 	let val (r', info) = HT.lookup registered name
@@ -112,6 +133,13 @@ structure Flags :> FLAGS = struct
 			NONE => Util.abort 98773
 		      | SOME r => r
 	in  r := str
+	end
+    fun getStringFlag name =
+	let val (r', info) = HT.lookup registered name
+	    val r = case Dyn.unpack stringref_b r' of
+			NONE => Util.abort 99773
+		      | SOME r => r
+	in  !r
 	end
 
     
@@ -182,8 +210,8 @@ structure Flags :> FLAGS = struct
 
     fun options () =
 	let fun f (dref, {name,short,long,desc,default,arg}) =
-		( (if short = "" then [] else ["-"^short]) @
-                  (if long  = "" then [] else ["--"^long])
+		( if short = "" then NONE else SOME("-"^short)
+                , if long  = "" then NONE else SOME("--"^long)
                 , arg
                 , desc
                 , toSpec dref default
@@ -191,10 +219,11 @@ structure Flags :> FLAGS = struct
 	in  List.map f (with_option (list_flags()))
 	end
 
-    fun mk_opt (opts, "", desc, spec) = 
-	(Util.stringSep "" "" ", " (fn s=>s) opts, desc)
-      | mk_opt (opts, arg, desc,spec) = 
-	(Util.stringSep "" "" ", " (fn s=>s^" "^arg) opts, desc)
+    fun mk_list short long = List.mapPartial (fn x=>x) [short,long]
+    fun mk_opt (short, long, "", desc, spec) = 
+	(Util.stringSep "" "" ", " (fn s=>s) (mk_list short long), desc)
+      | mk_opt (short, long, arg, desc,spec) = 
+	(Util.stringSep "" "" ", " (fn s=>s^" "^arg) (mk_list short long), desc)
 
     fun mk_table opts =
 	let val max = List.foldl (fn ((opt,dsc),m) => if String.size opt > m 
@@ -208,6 +237,13 @@ structure Flags :> FLAGS = struct
     fun usage () =
 	let val opts = options ()
 	in  mk_table (List.map mk_opt opts)
+	end
+
+    fun toSpec () =
+	let val opts = options ()
+	    fun f (short, long, _, _, spec) = List.map (fn opt => (opt, spec))
+					               (mk_list short long)
+	in  List.concat (List.map f opts)
 	end
 
 end (* structure Flags *)

@@ -31,10 +31,21 @@ signature FLAGS = sig
     val makeRealFlag : real flag_info -> real ref
     val makeBoolFlag : bool flag_info -> bool ref
     val makeStringFlag : string flag_info -> string ref
+
+    val setIntFlag : string -> int -> unit
+    val getIntFlag : string -> int
+    val setRealFlag : string -> real -> unit
+    val getRealFlag : string -> real
+    val setBoolFlag : string -> bool -> unit
+    val getBoolFlag : string -> bool
+    val setStringFlag : string -> string -> unit
+    val getStringFlag : string -> string
+
     
     val listDefaults : TextIO.outstream -> unit
     val listChanged : TextIO.outstream -> unit
 
     val usage : unit -> string list
+    val toSpec : unit -> (string * ArgParse.spec) list
 
 end (* signature FLAGS *)
