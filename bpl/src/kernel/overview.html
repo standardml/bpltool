@@ -76,7 +76,7 @@ structure LinkSet = OrderSet (Link.Order)
 structure BgVal = BgVal (type info = int * int
                          ...)
 structure BgBDNF = BgBDNF (...)
-structure BDNFErrorHandler = BDNFErrorHandler (...)
+structure BGErrorHandler = BGErrorHandler (...)
 let
   val [x, y, z] = map Name.make ["x", "y", "z"]
   val ls = [{outer = SOME x, inner = NameSet.fromList [y, z]},
@@ -87,7 +87,7 @@ let
 in
   BgBDNF.make (BgVal.Wir (0,0) w)
 end
-  handle error => (BDNFErrorHandler.explain error; raise error);
+  handle error => (BGErrorHandler.explain error; raise error);
 </pre>
 </p>
 
