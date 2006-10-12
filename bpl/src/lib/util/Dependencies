@@ -11,10 +11,11 @@ pos-sig:
 pos: pos-sig %NODASHSIG
 util-sig:
 util: util-sig %NODASHSIG
-flags-sig:
+flags-sig: argparse
 flags: flags-sig dyn util argparse /lib/compat/mosml/hash/. %NODASHSIG
 dump-sig: /lib/pp/mak/pretty /lib/pp/smlnj/prettyprint
 dump: dump-sig flags /lib/pp/mak/pretty /lib/pp/smlnj/prettyprint %NODASHSIG
 #errorloc-sig /lib/pp/mak/pretty util
 #errorloc errorloc-sig /lib/pp/mak/pretty util %NODASHSIG
-
+timings-sig: 
+timings: timings-sig flags /lib/coll/set /lib/compat/mosml/hash/. %NODASHSIG
