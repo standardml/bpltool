@@ -18,15 +18,16 @@
  * USA
  *)
 
-(** Command-line wrapper for the translation from MiniML to bigraphs.
- * @version $LastChangedRevision: 102 $
- * Modified: $Date: 2006/09/04 20:54:23 $ by: $Author: hniss $
- *)
+signature SOURCELOCATION =
+sig
 
-signature MINIMLTOBG = sig
+    (* report locations in source files *)
+    type device = {name: string, input: unit -> char, seek: int -> unit}
+    val ppSourceLocation' : device -> (int * int)
+			    -> Pretty.style Pretty.pptree list 
+			    -> Pretty.style Pretty.pptree
+    val ppSourceLocation  : string -> (int * int)
+			    -> Pretty.style Pretty.pptree list 
+			    -> Pretty.style Pretty.pptree
 
-    exception CompileError of string * Pretty.style Pretty.pptree
-
-    val compile : string (* input file *) -> string (* output file *) -> unit
-
-end (* signature MINIMLTOBG *)
+end (* signature ErrorLoc *)

@@ -31,7 +31,10 @@ structure MiniMLToBG
          structure BG = BG
 	 structure BGGen = BGGen)
 
-fun say s = TextIO.print(s ^ "\n")
+fun say s = TextIO.output(TextIO.stdErr, s ^ "\n")
+
+fun ppToStdErr pptree =
+    Pretty.ppPrint pptree (Pretty.plainOutput ("(*","*)")) TextIO.stdErr
 
 fun run () =
     let val infile : string option ref = ref NONE
@@ -42,6 +45,8 @@ fun run () =
 	val _ = MiniMLToBG.compile infile "tmp.bg"
     in  ()
     end handle ArgParse.Bad s => (say s; List.app say (Flags.usage()))
-
+	     | MiniMLToBG.CompileError(reason,expl) =>
+	          ( say("Compiler error: " ^ reason)
+                  ; ppToStdErr expl )
 val _ = run()
 

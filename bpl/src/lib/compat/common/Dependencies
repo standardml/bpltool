@@ -1,3 +1,5 @@
 . = legacyarray
-legacyarray:
 legacyarray-sig:
+legacyarray: legacyarray-sig %NODASHSIG
+legacytimer-sig:
+legacytimer: legacytimer-sig %NODASHSIG

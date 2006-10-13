@@ -18,7 +18,7 @@ miniml.grm: miniml.grm-sig miniml pattern
    /lib/ml-yacc/. /lib/compat/mosml/. /lib/util/util /lib/util/flags %NODASHSIG
 minimlparser-sig: pattern miniml
 minimlparser: minimlparser-sig miniml miniml.lex miniml.grm pattern
-   /lib/ml-yacc/. /lib/pp/mak/. %NODASHSIG
+   /lib/util/sourceloc /lib/ml-yacc/. /lib/pp/mak/. %NODASHSIG
 matchcompiler-sig: pattern miniml
 matchcompiler: matchcompiler-sig miniml pattern 
    /lib/pp/mak/. /lib/util/util /lib/coll/set
@@ -37,15 +37,15 @@ bggen-sig: miniml
 bggen: bggen-sig miniml /kernel/bg/name /kernel/bgadt-sig
    /kernel/ast/bgbdnf-sig /lib/pp/smlnj/. /lib/coll/set /lib/coll/map
    /lib/util/util %NODASHSIG
-mml2bg-sig:
+mml2bg-sig: /lib/pp/mak/.
 mml2bg: mml2bg-sig miniml minimlparser pattern matchcompiler typeinference
    typeexp bggen-sig /kernel/bgadt-sig 
-   /lib/pp/smlnj/. /lib/util/flags
+   /lib/pp/smlnj/. /lib/pp/mak/. /lib/util/flags /lib/util/sourceloc
    /lib/util/util /lib/util/dump /lib/util/timings %NODASHSIG
 
 # Main program
 bplc: bggen mml2bg /kernel/bg 
-   /lib/pp/smlnj/. /lib/util/flags /lib/util/argparse
+   /lib/pp/smlnj/. /lib/util/flags /lib/util/argparse /lib/pp/mak/.
    %PROGRAM
 
 # translate  miniml minimlparser pattern matchcompiler typeinference

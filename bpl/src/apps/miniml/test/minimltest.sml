@@ -46,11 +46,7 @@
 *)
 
 functor MiniMLTest(structure BG : BG
-                   structure MiniMLToBG :
-			    sig
-                              exception CompileError of string
-			      val compile : string -> string -> unit
-                            end
+                   structure MiniMLToBG : MINIMLTOBG
                    structure Assert : ASSERT
 		  structure Test :
 			    sig
@@ -78,11 +74,13 @@ struct
 		    val res = BG.bgvalToString(BG.bgvalUsefile'' resfile)
 		    val exp = BG.bgvalToString(BG.bgvalUsefile'' expectedfile)
 		in  Assert.assertEqualString res exp ; ()
-		end handle MiniMLToBG.CompileError reason => Assert.fail reason
+		end handle MiniMLToBG.CompileError (reason, expl)
+			   => Assert.fail (reason ^ Pretty.ppToString expl)
 	    fun test1 infile resfile expectedfile =
 		let val _ = MiniMLToBG.compile infile resfile
 		in  Assert.assertEqualUnit () ()
-		end handle MiniMLToBG.CompileError reason => Assert.fail reason
+		end handle MiniMLToBG.CompileError (reason, expl)
+			   => Assert.fail (reason ^ Pretty.ppToString expl)
 	    fun testfile base =
 		(base, fn () => test1 (base^".mml") (base^".tmp.bpl") (base^".bpl"))
 

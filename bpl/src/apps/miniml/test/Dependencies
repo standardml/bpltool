@@ -1,4 +1,5 @@
 # INCLUDE=../../../kernel
 # INCLUDE=../../../lib/smlunit
+# INCLUDE=..
 
-minimltest: /lib/smlunit/. /kernel/bg-sig
+minimltest: ../mml2bg-sig /lib/pp/mak/. /lib/smlunit/. /kernel/bg-sig

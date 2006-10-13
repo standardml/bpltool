@@ -28,6 +28,7 @@ functor MiniMLToBG(structure BG : BG_ADT
                     structure BGGen : BGGEN
 		        where type ppstream = PrettyPrint.ppstream
 		      sharing type BGGen.bpl = BG.BgVal.bgval = BG.BgBDNF.bgval)
+	: MINIMLTOBG
 =  struct
 
     val dump_desugar =
@@ -39,22 +40,31 @@ functor MiniMLToBG(structure BG : BG_ADT
 			   short="",long="dump-bgval",default=false,
 			   desc="Dump BG term prior to normalization"}
 
-    exception CompileError of string
-
     fun pps os = PrettyPrint.mk_ppstream 
 		     { consumer = fn s => TextIO.output(os, s)
 		     , linewidth = 72
 		     , flush = fn () => TextIO.flushOut(os)
 		     }
 
-    fun explain exn =
+    local open Pretty 
+    in
+    exception CompileError of string * style pptree
+
+    fun explain file exn =
 	case exn of 
-	    Util.ShouldntHappen code => "Internal error; grep for " ^ Int.toString code ^ " in the source"
-	  | TypeInference.TypeError (p, msg) => String.concat("type error\n"::msg)
-	  | exn => BG.BGErrorHandler.explain' exn
+	    Util.ShouldntHappen code => 
+	       ppString("Internal error; grep for "^Int.toString code^" in the source")
+	  | TypeInference.TypeError (p, msg) => 
+	       SourceLocation.ppSourceLocation file p (List.map ppString ("Type error"::msg))
+	  | MatchCompiler.NonExhaustiveMatch p =>
+	       SourceLocation.ppSourceLocation file p [ppString "Non-exhaustive match"]
+	  | exn => 
+	       ppString(BG.BGErrorHandler.explain' exn)
+    end
+
 	
-    fun handler reason exn =
-	( raise CompileError(reason ^ ": " ^ explain exn)
+    fun handler file reason exn =
+	( raise CompileError(reason ^ ": ", explain file exn)
         )
 
     val frontend_timer = 
@@ -80,7 +90,7 @@ functor MiniMLToBG(structure BG : BG_ADT
 		    val ast = MiniML.fresh MiniML.freshPat ast
 		in  ast
 		end)
-		handle exn => handler "Frontend failed" exn
+		handle exn => handler infile "Frontend failed" exn
 
 	    (* possibly dump desugared miniml term *)
 	    val _ = 
@@ -92,14 +102,14 @@ functor MiniMLToBG(structure BG : BG_ADT
             (* Code generation: convert to bgval, then normalize *)
 	    val bpl = case codegen_timer (fn () => BGGen.toBG ast) of
 			  BGGen.Some bpl => bpl
-			| BGGen.None exn => handler "toBG failed" exn
+			| BGGen.None exn => handler infile "toBG failed" exn
             (* possibly dump bgval term *)
 	    val _ = 
 		if !dump_bgval then
 		    Dump.pp BGGen.pp "bgval" bpl
 		else ()
 	    val bpl = normalize_timer (fn () => BG.BgBDNF.make bpl)
-		        handle exn => handler "Normalization failed" exn
+		        handle exn => handler infile "Normalization failed" exn
 
             (* Output result *)
 	    val os = TextIO.openOut outfile

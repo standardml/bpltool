@@ -81,7 +81,9 @@ structure MatchCompiler :> MATCHCOMPILER = struct
 	    val topcon = TupleCon noofpats
 	    val topctx = [(topcon, [])] : context
 
-	    fun fail(dsc, []) = raise NonExhaustiveMatch pos
+	    fun fail(dsc, []) = 
+                ( raise NonExhaustiveMatch pos
+                )
 	      | fail(Pos(_, dscs), (pats1, rhs1) :: rulerest) =
 		succeed(topctx, [(pats1, caseexps, dscs)], rhs1, rulerest)
 	      | fail(_, _) = Util.abort 8765

@@ -56,6 +56,10 @@ fun mk_list xs =
     in  List.foldr f (A.Const("Nil", A.Unit)) xs
     end
 
+fun mk_seq es =
+    let fun f (e, body) = A.Let("_x",e,body)
+    in  List.foldr f A.Unit es
+    end
 
 val native_strings =
     Flags.makeBoolFlag{name="/codegen/native/strings",default=false,
@@ -166,6 +170,7 @@ fun mk_rprim ope e1 e2 =
       |  ExpList of exp list
       |  ExpListOpt of exp list
       |  ParenExpListOpt of exp list
+      |  ExpSemiList of exp list
       
       |  PMatch of (pat * exp) list
       |  BarRuleOpt of (pat * exp) list
@@ -298,18 +303,17 @@ AppExp  : AtExp                         (A.Info((AtExpleft,AtExpright),AtExp))
 
 AtExp   : ID                            (A.Var ID)
         | LET Bindings IN Exp END       (A.mkLet Bindings Exp)
+	| LET Bindings IN ExpSemiList END (A.mkLet Bindings (mk_seq ExpSemiList))
         | LPAREN ExpListOpt RPAREN      (let val (p1,p2) = (LPARENleft,RPARENright)
 					 in  case ExpListOpt of
 						 [] => A.Unit
 					       | [e] => e
 					       | es => A.Tuple es
 					 end)
+        | LPAREN ExpSemiList RPAREN     (mk_seq ExpSemiList)
         | INTLIT                        (mk_int INTLIT)
 	| STRING                        (mk_string STRING)
-	| LBRACKET RBRACKET             (let val i = 
-						 (LBRACKETleft,RBRACKETright)
-					 in  A.Const("Nil", A.Unit)
-					 end)
+	| LBRACKET ExpListOpt RBRACKET  (mk_list ExpListOpt)
 
 ParenExpListOpt:                        ([])
 	| LPAREN ExpListOpt RPAREN      (ExpListOpt)
@@ -319,6 +323,9 @@ ExpListOpt:                             ([])
 
 ExpList : Exp                           ([Exp])
         | Exp COMMA ExpList             (Exp::ExpList)
+
+ExpSemiList : Exp SEMICOLON Exp         ([Exp1,Exp2])
+        | Exp SEMICOLON ExpSemiList     (Exp::ExpSemiList)
 
 (* Function matches *)
 FMatch  : FRule FBarRuleOpt             (FRule :: FBarRuleOpt)

@@ -36,17 +36,17 @@ structure Timings :> TIMINGS = struct
 	timer := Time.+(!timer, spent)
     fun showTimer timer = Time.toString(!timer) ^ " secs"
 *)
-    type timer = {gc: Time.time, sys: Time.time, usr: Time.time}
-    fun timer () = ref {gc=Time.zeroTime, sys=Time.zeroTime, usr=Time.zeroTime}
+    type timer = {sys: Time.time, usr: Time.time}
+    fun timer () = ref {sys=Time.zeroTime, usr=Time.zeroTime}
     val startTimer = Timer.startCPUTimer
     val checkTimer = Timer.checkCPUTimer
-    fun addTimerResult timer {gc,sys,usr} =
-	let val {gc=g,sys=s,usr=u} = !timer
-	in  timer := {gc=Time.+(g,gc),sys=Time.+(s,sys),usr=Time.+(u,usr)}
+    fun addTimerResult timer {sys,usr} =
+	let val {sys=s,usr=u} = !timer
+	in  timer := {sys=Time.+(s,sys),usr=Time.+(u,usr)}
 	end
-    fun showTimer (ref {gc,sys,usr}) =
+    fun showTimer (ref {sys,usr}) =
 	let val s = Time.toString
-	in  String.concat["user: ",s usr,"s (gc: ",s gc,"s), system: ",s sys,"s"]
+	in  String.concat["user: ",s usr,"s, system: ",s sys,"s"]
 	end
 
     structure HT 

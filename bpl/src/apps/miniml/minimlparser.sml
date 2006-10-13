@@ -39,38 +39,15 @@ struct
 		    structure Lex = MiniMLL
 		    structure LrParser = LrParser)
 
-    fun fileDevice filename =
-	let val in_stream = BinIO.openIn filename
-	in  ( (), fn _ => BinIO.closeIn in_stream )
-        end
-(*
-	let val in_stream = Nonstdio.open_in_bin filename
-	in  ( { name = "File \"" ^ filename ^ "\""
-	      , input = fn () => Nonstdio.input_char in_stream
-	      , seek = Nonstdio.seek_in in_stream
-              }
-	    , fn _ => BasicIO.close_in in_stream
-            )
-	end
-*)
-    fun ppToStdErr pptree =
-	Pretty.ppPrint pptree (Pretty.plainOutput ("(*","*)")) TextIO.stdErr
-
-    (* General function for parsing input streams
-     * - used for all the main functions below.
-     *)
-    fun parseStream device stream =
+    fun parseStream printError stream =
 	let val lexarg = {comlevel=ref 0} (* argument for each lex rule *)
-
+(*
 	    fun printError (s, p1, p2) =
 		TextIO.output (TextIO.stdErr,"  Error (" ^ 
 			       Int.toString p1 ^"-"^ Int.toString p2 ^"): "^ 
 			       s ^ "\n")
-(*
-	    fun printError (s, p1, p2) = 
-		ppToStdErr(ErrorLoc.ppErrorLocation' device (p1,p2)
-						     [Pretty.ppString s])
 *)
+
 	    val lexer = 
 		MiniMLP.makeLexer (fn i => TextIO.inputN (stream, i)) 
 		                  lexarg
@@ -83,12 +60,20 @@ struct
 	in
 	    ast
 	end
+    fun ppToStdErr pptree =
+	Pretty.ppPrint pptree (Pretty.plainOutput ("(*","*)")) TextIO.stdErr
+
+    (* General function for parsing input streams
+     * - used for all the main functions below.
+     *)
 
     fun parseFile file =
-	let val (device,close) = fileDevice file
-	    val stream = TextIO.openIn file
-	    val result = parseStream device stream
-	in  result before ( TextIO.closeIn stream ; close() )
+	let val stream = TextIO.openIn file
+	    val pp = SourceLocation.ppSourceLocation file
+	    fun printError (s, p1, p2) = 
+		ppToStdErr(pp (p1,p2) [Pretty.ppString s])
+	    val result = parseStream printError stream
+	in  result before TextIO.closeIn stream
 	end
 (*
     fun parse string =
