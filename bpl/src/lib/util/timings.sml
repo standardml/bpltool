@@ -26,7 +26,7 @@ structure Timings :> TIMINGS = struct
 			   desc="Enable timings"}
 
     (* timers *)
- 
+(* 
     (* for now use real timers - straightforward to change to cpu *)
     type timer = Time.time
     fun timer () = ref Time.zeroTime
@@ -34,7 +34,20 @@ structure Timings :> TIMINGS = struct
     val checkTimer = Timer.checkRealTimer
     fun addTimerResult timer spent =
 	timer := Time.+(!timer, spent)
-    fun showTimer timer = Time.toString(!timer)
+    fun showTimer timer = Time.toString(!timer) ^ " secs"
+*)
+    type timer = {gc: Time.time, sys: Time.time, usr: Time.time}
+    fun timer () = ref {gc=Time.zeroTime, sys=Time.zeroTime, usr=Time.zeroTime}
+    val startTimer = Timer.startCPUTimer
+    val checkTimer = Timer.checkCPUTimer
+    fun addTimerResult timer {gc,sys,usr} =
+	let val {gc=g,sys=s,usr=u} = !timer
+	in  timer := {gc=Time.+(g,gc),sys=Time.+(s,sys),usr=Time.+(u,usr)}
+	end
+    fun showTimer (ref {gc,sys,usr}) =
+	let val s = Time.toString
+	in  String.concat["user time: ", s usr, "s (gc time: ", s gc,"s), system time: ", s sys, "s"]
+	end
 
     structure HT 
       = HashTableFn(type hash_key = string
@@ -64,7 +77,7 @@ structure Timings :> TIMINGS = struct
     fun list0 p =
 	let val ts = List.filter (p o #1) (HT.listItemsi timers)
 	    fun toString (name,{desc,timer}) = 
-		String.concat[desc,": ",showTimer timer," secs"]
+		String.concat[desc,": ",showTimer timer]
 	in  List.map toString ts
 	end
 
