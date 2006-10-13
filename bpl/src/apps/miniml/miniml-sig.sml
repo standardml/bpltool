@@ -91,7 +91,10 @@ sig
     val dump_fresh : bool ref
 
     val ppPat : pat Pretty.pp
-    val ppExp :  'p Pretty.pp -> ('i,'p)  exp Pretty.pp
-    val pp    :  'p Pretty.pp -> ('i,'p) prog Pretty.pp
+    val ppExp : 'i Pretty.pp -> 'p Pretty.pp -> ('i,'p)  exp Pretty.pp
+    val pp    : 'i Pretty.pp -> 'p Pretty.pp -> ('i,'p) prog Pretty.pp
+
+    val ppExp' : 'p Pretty.pp -> ('i,'p)  exp Pretty.pp
+    val pp'    : 'p Pretty.pp -> ('i,'p) prog Pretty.pp
 
 end (* signature AST *)

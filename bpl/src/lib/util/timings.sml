@@ -46,7 +46,7 @@ structure Timings :> TIMINGS = struct
 	end
     fun showTimer (ref {gc,sys,usr}) =
 	let val s = Time.toString
-	in  String.concat["user time: ", s usr, "s (gc time: ", s gc,"s), system time: ", s sys, "s"]
+	in  String.concat["user: ",s usr,"s (gc: ",s gc,"s), system: ",s sys,"s"]
 	end
 
     structure HT 
@@ -76,8 +76,12 @@ structure Timings :> TIMINGS = struct
 
     fun list0 p =
 	let val ts = List.filter (p o #1) (HT.listItemsi timers)
+	    val width = List.foldl (fn ((_,{desc,timer}),m) => 
+				       if size desc > m then size desc else m) 
+				   0 ts
 	    fun toString (name,{desc,timer}) = 
-		String.concat[desc,": ",showTimer timer]
+		String.concat[ StringCvt.padRight #" " width desc,": "
+			     , showTimer timer]
 	in  List.map toString ts
 	end
 

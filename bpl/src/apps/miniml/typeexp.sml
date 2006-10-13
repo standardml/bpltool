@@ -32,63 +32,85 @@ structure TypeExp :> TYPEEXP = struct
     fun min(x,y) = if x < y then x else y
     fun max(x,y) = if x > y then x else y
 
-    (* Marks used during traversals *)
-    fun mark() = ref()
-    val no_mark = mark()
-
-    (* Constructors *)
+    (* Type expressions s *)
     type typename = string
-    type typevar = {id : int, nm : string option}
     datatype typeexp' =
 	     TyVar of typevar
 	   | ArrowTy of typeexp * typeexp
 	   | TupleTy of typeexp list
 	   | TyCon of typename * typeexp list
-    withtype typeexp = {term : typeexp', rank : int ref, mark : unit ref ref} U.uref
+	 and typevar =
+	     V of {id : int, nm : string option, inst: typeexp option ref,
+		   level : int ref, mark : bool ref}
+    withtype typeexp = {term : typeexp'} U.uref
 
-    (* Levels *)
-    fun incr (r as ref n) = r := n+1
-    fun decr (r as ref n) = r := n-1
-    infix ::==
-    infix !!
-    fun arr ::== (i, v) = Array.update(arr, i, v)
-    fun arr !! i = Array.sub(arr, i)
+    fun make {term} = U.uRef{term=term}
+    fun term (tau:typeexp) = #term(U.!! tau)
 
-    val level = ref 0
-    val level_terms : typeexp list array ref = ref(Array.array(2, []))
-    fun resetLevels () = ( level := 1
-			 ; !level_terms ::== (0,[])
-			 ; !level_terms ::== (1,[])
-			 )
-    fun popLevel () = ( !level_terms ::== (!level, [])
-                      ; decr level
-                      )
-    fun pushLevel () =
-	( if Array.length(!level_terms) < !level + 2
-	  then let val new = Array.array(!level + 2, [])
-		   val _ = Array.copy{src = !level_terms, dst = new, di = 0}
-	       in  level_terms := new
-	       end
-	  else ()
-	; incr level
-        )
+    fun var_lt (V v1) (V v2) = #id v1 < #id v2
+    structure VarSet = OrderSet(type T = typevar val lt = var_lt)
 
-    fun make {term} = 
-	let val ty = U.uRef{term=term, rank = ref(!level), mark = ref no_mark}
-	    val _ = !level_terms ::== (!level, ty :: (!level_terms !! !level))
-	in  ty
-	end
-    fun unmake tau = #term((U.!! tau) : {term : typeexp', rank : int ref, mark : unit ref ref})
-    fun sub_types tau =
-	case tau of
+    (* Marks *)
+    fun mark_var   (V{mark,...}) = mark := true
+    fun unmark_var (V{mark,...}) = mark := false
+    fun marked_var (V{mark,...}) = !mark
+
+    (* Primitives on type expressions *)
+    fun subs term =
+	case term of
 	    TyVar _ => []
 	  | ArrowTy(ty1,ty2) => [ty1,ty2]
 	  | TupleTy tys => tys
 	  | TyCon(_,tys) => tys
-			    
+
+    fun free' p (tau, acc) =
+	let val t = U.!! tau
+	in  case #term t of
+		TyVar v => 
+		if marked_var v orelse not(p v) then acc
+		else (mark_var v; v::acc)
+	      | term => List.foldl (free' p) acc (subs term)
+	end
+
+    fun free tau = 
+        let val vs = free' (fn _ => true) (tau, [])
+	in  List.app unmark_var vs ; vs
+	end
+
+
+    (* Levels *)
+    val current_level = ref 0
+    fun pushLevel () = current_level := !current_level + 1
+    fun popLevel  () = current_level := !current_level - 1
+
+    fun var v = make {term = TyVar(V v)}
+    local 
+	val c = ref 0
+    in  
+        fun fresh' name = 
+	    (c := !c + 1; var {id= !c, inst=ref NONE, mark=ref false, nm=name,
+			       level=ref(!current_level)})
+    end
+
+    fun level (V v) = !(#level v)
+    infix ::=
+    fun (V v) ::= l = #level v := l
+
+    fun lower (l:int) {term} =
+	case term of
+	    TyVar v => if level v > l then v ::= l
+		       else ()
+	  | term => List.app (lower l o U.!!) (subs term)
+
+    fun lower_vars (v1,v2) =
+	if level v1 < level v2 then v2 ::= level v1
+	else v1 ::= level v2
+
+
+    (* Pretty printing *)
     open Pretty
-    fun ppVar {id,nm=SOME a} = ppString a
-      | ppVar {id,nm=NONE} = ppString ("'a" ^ Int.toString id)
+    fun ppVar (V{id,nm=SOME a,...}) = ppString ("'a" ^ Int.toString id) ++ ("[" ^+ ppString a +^ "]")
+      | ppVar (V{id,nm=NONE,...}) = ppString ("'a" ^ Int.toString id)
     fun pp tau =
 	let
 	    fun paren my safe tree0 =
@@ -96,30 +118,39 @@ structure TypeExp :> TYPEEXP = struct
 		else tree0
 	    val pptyid = annotate ITALICS o ppString
 	    fun pptexp safe tau =
-		case unmake tau of
+		case term tau of
 		    TyVar v => ppVar v
-		  | ArrowTy(tau1,tau2) => paren 1 safe
-						(ppBinary( pptexp 1 tau1
-							 , "->"
-							 , pptexp 1 tau2 ))
+		  | ArrowTy(tau1,tau2) => 
+		      let val t1 = pptexp 1 tau1
+			  val t2 = pptexp 1 tau2
+		      in  paren 1 safe (ppBinary(t1,"->",t2))
+		      end
 		  | TupleTy [] => pptyid "unit"
 		  | TupleTy [tau] => pptexp safe tau
-		  | TupleTy taus => clist " #* "(pptexp 0) taus
+		  | TupleTy taus => 
+		      let val ts = pptexps taus
+		      in  clist " #* " (fn t=>t) ts
+		      end
 		  | TyCon(T,[]) => pptyid T
-		  | TyCon(T,[tau]) => pptexp 2 tau ++ pptyid T
-		  | TyCon(T,taus) => (ilist ",#" (pptexp 0) taus) ++ pptyid T
-
+		  | TyCon(T,[tau]) => 
+		      let val tree = pptexp 2 tau
+		      in  tree ++ pptyid T
+		      end
+		  | TyCon(T,taus) => 
+		      let val ts = pptexps taus
+		      in  (ilist ",#" (fn t=>t) ts) ++ pptyid T
+		      end
+	    and pptexps taus = List.map (pptexp 0) taus
 	in  pptexp 0 tau
 	end
     val toString = Pretty.ppToString o pp
 
+    fun ppTyScheme ([], tau) = pp tau
+      | ppTyScheme (vars, tau) = "\\/" ^+ (clist " #," ppVar vars  +^ ".") ++ (pp tau)
+
+    val tyschemeToString = Pretty.ppToString o ppTyScheme
+
     (* Constructors *)
-    fun var v = make {term = TyVar v}
-    local 
-	val c = ref 0
-    in  
-        fun fresh' name = (c := !c + 1; var {id = !c, nm = name})
-    end
     fun fresh _ = fresh' NONE
     fun freshVar id = fresh' (SOME id)
 
@@ -133,6 +164,44 @@ structure TypeExp :> TYPEEXP = struct
     fun arrowty (ty1, ty2) = make {term = ArrowTy(ty1, ty2)}
     fun tyconty  (Tn, tys) = make {term = TyCon(Tn, tys)}
 
+    fun constructor term =
+	case term of
+	    ArrowTy _ => (fn [tau1,tau2] => arrowty(tau1,tau2)
+			   | _ => Util.abort 43765)
+	  | TupleTy _ => (fn taus => tuplety taus)
+	  | TyCon(Tn,_) => (fn taus => tyconty (Tn,taus))
+	  | TyVar _ => Util.abort 43766
+
+    (* Type schemes *)
+    type typescheme = typevar list * typeexp
+
+    fun instance ((vars, tau):typescheme) =
+	( app (fn V v => #inst v := SOME(fresh())) vars
+        ; let val tau' = copy tau
+	  in  app (fn V v => #inst v := NONE) vars
+	    ; tau'
+	  end
+        )
+    and copy tau =
+	let val t = U.find tau
+	in  case term t of
+		TyVar(V{inst=ref(SOME tau'),...}) => tau'
+	      | TyVar(V{inst=ref(NONE),...}) => t
+	      | term =>
+		  let val ts = List.foldl (fn (t,ts) => copy t :: ts)
+					  [] (subs term)
+		  in  (constructor term) (rev ts)
+		  end
+	end
+
+    fun promote tau = ([], tau)
+
+    fun generalize tau =
+	let val vars = free' (fn v => level v > !current_level) (tau,[])
+	in  app (fn v => v ::= ~1) vars
+	  ; (vars, tau)
+	end
+
     (* Accessors *)
     datatype view =
 	     Var
@@ -140,7 +209,7 @@ structure TypeExp :> TYPEEXP = struct
 	   | Const of typename
 	   | Arrow
     fun view ty =
-	case unmake ty of
+	case term ty of
 	    TyVar _ => Var
 	  | TupleTy tys => Tuple(List.length tys)
 	  | ArrowTy _ => Arrow
@@ -167,30 +236,27 @@ structure TypeExp :> TYPEEXP = struct
     fun unify taus =
 	let 
 	    fun err reason = raise Unify reason
-	    fun occurs' (v as {id,nm}) t =
+	    fun occurs' (v as (V{id,...})) t =
 		case #term t of
-		    TyVar{id=id',...} => id=id'
+		    TyVar(V{id=id',...}) => id=id'
 		  | ArrowTy(t1,t2) => occurs v t1 orelse occurs v t2
 		  | TyCon(_, ts) => List.exists (occurs v) ts
 		  | _ => false
 	    and occurs v t = occurs' v (U.!! t)
 
 	    fun combine (i, i') =
-		let val (r, r') = (!(#rank i), !(#rank i'))
-		    val m = min(r,r')
-		in  case (#term i, #term i') of
-			(TyVar v, TyVar v') => (# rank i := m; i' )
-		      | (TyVar v, _) => if occurs' v i' then err("circularity")
-					else ( #rank i := m ; i' )
-		      | (_, TyVar v') => if occurs' v' i then err("circularity")
-					 else ( #rank i' := m ; i )
-		      | (c,c') => err("constructor clash")
-		end
+		case (#term i, #term i') of
+		    (TyVar v, TyVar v') => (lower_vars(v,v');i')
+		  | (TyVar v, _)  => if occurs' v i' then err("circularity")
+				     else (lower (level v) i'; i')
+		  | (_, TyVar v') => if occurs' v' i then err("circularity")
+				     else (lower (level v') i; i)
+		  | _ => err("constructor clash")
 
 	    fun unify (t,t') =
 		let val (t, t') = (U.find t, U.find t')
 		in  if U.equal(t, t') then ()
-		    else case (unmake t, unmake t') of
+		    else case (term t, term t') of
 			     (ArrowTy(t1,t2), ArrowTy(t1',t2')) =>
 			       ( U.unify #1 (t, t')
                                ; unify (t1, t1')
@@ -213,110 +279,6 @@ structure TypeExp :> TYPEEXP = struct
 			   | _ => U.unify combine (t,t')
 		end
 	in  unify taus
-	end
-
-    exception Cycle
-    fun occur_check visited =
-	let val visiting = mark()
-	    fun occur_check ty =
-		let val {term,mark,rank} = U.!! ty
-		in  if !mark = visiting then raise Cycle
-		    else if not(!mark = visited) andalso !rank = !level
-		    then let val tys = sub_types term
-			 in  mark := visiting
-			   ; List.app occur_check tys
-			   ; mark := visited
-			 end
-		    else ()
-		end
-	in  occur_check
-	end
-
-    fun propagate_and_realize n fresh visited =
-	let val generic_index = ref 0
-	    val visiting = mark()
-	    fun propagate_realize k ty =
-		let val {rank,mark,term} = U.!! ty
-		in  ( if !mark = visiting then raise Cycle
-		      else if not(!mark = visited)
-		      then ( ( case term of
-				   TyVar _ => rank := min(!rank, k)
-				 | _ => let val tys = sub_types term
-					    val p_r = propagate_realize(min(!rank,k))
-					in  mark := visiting
-					  ; rank := List.foldl (fn (t,k) => max(k,p_r t)) 1 tys
-					end
-			     )
-			   ; mark := visited
-			   ; if !rank = n then rank := (decr generic_index; !generic_index)
-			     else ()
-                           )
-		      else ()
-                    )
-                  ; if !rank < 0 then n else !rank
-		end
-	in  propagate_realize
-	end
-
-    fun generalize ty =
-	let val visited = mark()
-	    val fresh = mark()
-	    val generalize = propagate_and_realize (!level) fresh visited
-	    val occur_check = occur_check visited
-	    val sorted = Array.array(!level+1, [])
-
-	    fun sort ty =
-		let val {term,mark,rank=ref rank} = U.!! ty
-		in  mark := fresh
-		  ; sorted ::== (rank, ty :: (sorted!!rank))
-		end
-	    val _ = List.app sort (!level_terms !! !level)
-
-	    fun loop i = if i <= !level-1 
-			 then (List.map (generalize i) (sorted !! i); loop(i+1); ())
-			 else ()
-	    val _ = loop 0
-
-	    val _ = generalize (!level) ty
-
-	    fun update ty =
-		let val {term,mark,rank=ref rank} = U.!! ty
-		in  if rank = !level then occur_check ty
-		    else if rank < 0 then ()
-		    else !level_terms  ::== (rank, ty :: (!level_terms !! rank))
-		end
-	    fun loop i = if i <= !level
-			 then (List.app update (sorted !! i); loop(i+1))
-			 else ()
-	    val _ = loop 0
-	in  ()
-	end
-
-    fun instance ty =
-	let val {term,mark,rank=ref rank} = U.!! ty 
-	in  if rank >= 0 then ty
-	    else 
-	      let val table = Array.array(~rank, NONE)
-		  fun instance ty =
-		      let val {term,mark,rank=ref rank} = U.!! ty 
-		      in  if rank>= 0 then ty else
-			  case Array.sub(table, ~rank - 1) of
-			      NONE =>
-			      let val ty' = fresh ()
-				  val _ = Array.update(table,~rank - 1,SOME ty')
-				  val new = 
-				      case term of
-					  TyVar v => TyVar v
-					| ArrowTy(ty1,ty2) => ArrowTy(instance ty1, instance ty2)
-					| TupleTy tys => TupleTy(List.map instance tys)
-					| TyCon(Tn, tys) => TyCon(Tn, List.map instance tys)
-				  val _ = U.::=(ty', {term=new,mark=ref no_mark,rank= ref(!level)})
-			      in  ty'
-			      end				  
-			    | SOME ty' => ty'
-		      end
-	      in  instance ty
-	      end
 	end
 
 end (* structure TypeExp *)

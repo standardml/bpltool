@@ -1,8 +1,14 @@
-datatype 'a list = Nil | Cons of 'a * list
-(*val one = Cons( (), Nil)*)
+datatype int = Z | S of int
+fun iplus (i1,i2) =
+    case i1 of
+	Z => i2
+      | S i => S(iplus(i,i2))
+datatype 'a list = Nil | Cons of 'a * 'a list
+(* should check the arity of type constructors, viz, Cons of 'a * list *)
+val l1 = Cons(17, ( Cons(42, Nil) ) )
+val l2 = Cons((), Nil)
 val length = 
   fix l' xs => case xs of
             	 [] => 0
                | y::ys => 1 + l' ys
-(*val len = length one*)
-
+val lens = (length l1, length l2)

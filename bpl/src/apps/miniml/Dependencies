@@ -26,22 +26,28 @@ matchcompiler: matchcompiler-sig miniml pattern
 
 # Type inference
 typeexp-sig: miniml /lib/pp/mak/.
-typeexp: typeexp-sig miniml pattern /lib/util/uref /lib/pp/mak/.
-   /lib/coll/map /lib/compat/common/legacyarray %NODASHSIG
+typeexp: typeexp-sig miniml pattern /lib/util/uref /lib/util/util /lib/pp/mak/.
+   /lib/coll/map /lib/coll/set /lib/compat/common/legacyarray %NODASHSIG
 typeinference-sig: typeexp pattern miniml
 typeinference: typeinference-sig miniml pattern typeexp
-   /lib/coll/set /lib/coll/map /lib/pp/mak/. %NODASHSIG
+   /lib/coll/set /lib/coll/map /lib/pp/mak/. /lib/util/flags /lib/util/dump %NODASHSIG
 
 # Code generation
 bggen-sig: miniml
 bggen: bggen-sig miniml /kernel/bg/name /kernel/bgadt-sig
    /kernel/ast/bgbdnf-sig /lib/pp/smlnj/. /lib/coll/set /lib/coll/map
    /lib/util/util %NODASHSIG
-mml2bg: miniml minimlparser pattern matchcompiler typeinference
-   bggen-sig /kernel/bgadt-sig /lib/pp/smlnj/. /lib/util/flags
-   /lib/util/util /lib/util/dump
+mml2bg-sig:
+mml2bg: mml2bg-sig miniml minimlparser pattern matchcompiler typeinference
+   typeexp bggen-sig /kernel/bgadt-sig 
+   /lib/pp/smlnj/. /lib/util/flags
+   /lib/util/util /lib/util/dump /lib/util/timings %NODASHSIG
 
 # Main program
+bplc: bggen mml2bg /kernel/bg 
+   /lib/pp/smlnj/. /lib/util/flags /lib/util/argparse
+   %PROGRAM
+
 # translate  miniml minimlparser pattern matchcompiler typeinference
 #   bggen /kernel/bgadt /lib/pp/smlnj/. /lib/pp/mak/. /lib/util/util
 #   /lib/compat/mosml/legacyio /lib/util/argparse /lib/util/errorloc

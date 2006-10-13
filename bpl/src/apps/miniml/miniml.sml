@@ -107,7 +107,14 @@ struct
 	
     fun paren my safe t = if my < safe then "(" ^+ t +^ ")" else t
 
-    fun ppExp ppPat exp =
+    fun ppValbind ppBindInfo ppExp (x,e) = 
+	let val (i,e) = case e of
+			    Info(i,e) => (ppBindInfo i,e)
+			  | e => (ppNone(), e)
+	in  (ppKw "val" ++ ppId x ++ i ++ ppString "=") ++ ppExp e
+	end
+
+    fun ppExp ppBindInfo ppPat exp =
 	let fun ppelist front back es
 	      = compose(front ^+ clist "#, " (ppe 1) es,0,2,0,back)
 	    and pperoundlist es = ppelist "(" (ppString ")") es
@@ -154,7 +161,7 @@ struct
 		  | DeRef e => paren 2 safe ("!" ^+ ppe 1 e)
 		  | Assign(e,e') => paren 2 safe (ppe 1 e ++ ppKw ":=" ++ ppe 1 e')
 		  | Info(i,e) => ppe safe e
-	    and ppvalbind (x,e)= ((ppKw "val" ++ ppId x) +^ " =") ++ ppe 1 e
+	    and ppvalbind (x,e) = ppValbind ppBindInfo (ppe 1) (x,e)
 	in  ppe 1 exp
 	end
 
@@ -174,10 +181,9 @@ struct
     fun pptyids [] tycon = tycon
       | pptyids [tyid] tycon = pptyid tyid ++ tycon
       | pptyids tyids tycon = ("(" ^+ ilist "#, " pptyid tyids +^ ")") ++ tycon
-    fun ppb ppPat bind =
+    fun ppb ppBindInfo ppPat bind =
 	case bind of
-	    ValBind(x,e) => 
-	    ((ppKw "val" ++ ppId x) +^ " =") ++ ppExp ppPat e
+	    ValBind(x,e) => ppValbind ppBindInfo (ppExp ppBindInfo ppPat) (x,e)
 	  | DatBind(tname,tids,cons) => 
 	    break(1,0)( "datatype " ^+ pptyids tids (ppString tname)
 		      , "= " ^+ ilist "# | " ppc cons
@@ -190,16 +196,19 @@ struct
     and ppc (Con(C, TyCon([],"unit"))) = ppCtor C
       | ppc (Con(C, t)) = ppCtor C ++ ("of " ^+ ppt t)
 
-    fun pp ppPat prog =
+    fun pp ppBindInfo ppPat prog =
 	case prog of
 	    Prog [] => Util.abort 12354
-	  | Prog[bind] => ppb ppPat bind
+	  | Prog[bind] => ppb ppBindInfo ppPat bind
 	  | Prog(b::bs) =>
-	       let val (b,bs) = (ppb ppPat b, map (ppb ppPat) bs)
+	       let val (b,bs) = (ppb ppBindInfo ppPat b, map (ppb ppBindInfo ppPat) bs)
 	       in  makelist(true,"") (b :: map forcemulti bs)
 	       end
 
     fun ppPat (C,x) = ppCtor C ++ ppId x
+
+    val pp' = fn ppPat => fn prog => pp Pretty.ppNone ppPat prog
+    val ppExp' = fn ppPat => fn exp => ppExp Pretty.ppNone ppPat exp
 
     val dump_fresh =
 	Flags.makeBoolFlag{name="/dump/fresh",short="",long="dump-alpha",

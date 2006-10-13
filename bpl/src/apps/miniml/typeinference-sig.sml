@@ -30,7 +30,7 @@ signature TYPEINFERENCE = sig
 
     type typeexp = TypeExp.typeexp
 
-    val inference : ('info1 -> pos) -> (pos -> typeexp -> 'info2)
+    val inference : 'info1 -> ('info1 -> pos)
 		    -> ('info1, Pattern.pat) MiniML.prog
-		    -> ('info2, Pattern.pat) MiniML.prog
+		    -> ('info1 * typeexp, Pattern.pat) MiniML.prog
 end (* signature TYPEEXP *)

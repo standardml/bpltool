@@ -23,12 +23,13 @@
  * Modified: $Date: 2006/06/04 20:13:28 $ by: $Author: hniss $
  *)
 
-structure TypeInference = struct
+structure TypeInference :> TYPEINFERENCE = struct
 
     structure TE = TypeExp
     structure M  = MiniML
 
     type pos = int * int
+    type typeexp = TE.typeexp
 
     exception TypeError of pos * string list
     fun typeError(pos, tau1, tau2, reason) =
@@ -49,8 +50,8 @@ structure TypeInference = struct
     type constructor = string
 
     type constructorset = StringSet.Set
-    type tynamemap   = (* typename -> *) (constructorset * TE.typevar list) StringMap.map
-    type environment = (* variable -> *) TE.typeexp StringMap.map
+    type tynamemap   = (* typename -> *) constructorset StringMap.map
+    type environment = (* variable -> *) TE.typescheme StringMap.map
     type context     = environment * tynamemap 
 
     val emptyCtx = (StringMap.empty, StringMap.empty)
@@ -60,8 +61,11 @@ structure TypeInference = struct
 	    NONE => raise TypeError(pos, ["Unbound identifier " ^ x])
 	  | SOME sigma => sigma
     fun bind1 ((x,v), (env,tymap)) = 
+	(StringMap.add(x, TE.promote v, env), tymap)
+    fun bind1' ((x,v), (env,tymap)) = 
 	(StringMap.add(x, v, env), tymap)
     fun bind (ctx:context) bnds = List.foldr bind1 ctx bnds
+    fun bind' (ctx:context) bnds = List.foldr bind1' ctx bnds
 
     fun unifyExp pos tau1 tau2 =
 	let (* We need to do this prior to unification, as that
@@ -82,9 +86,8 @@ structure TypeInference = struct
           Let-Polymorphic Type Inference Algorithm'', TOPLAS 98,
           for details.
     *)
-    fun infProg getpos mkinfo (M.Prog binds) = 
-	let 
-	    fun inf' pos (ctx as (env,tymap)) exp exp_tau =
+    fun infProg mkinfo noinfo getpos (M.Prog binds) = 
+	let fun inf' pos (ctx as (env,tymap)) exp exp_tau =
 	    case exp of
 		M.Var x =>
 		    let val tau = TE.instance(var pos ctx x)
@@ -122,9 +125,9 @@ structure TypeInference = struct
 		    let val _ = TE.pushLevel()
 			val x_tau = TE.fresh()
 			val e1' = inf ctx e1 x_tau
-			val _ = TE.generalize x_tau
 			val _ = TE.popLevel()
-			val e2' = inf (bind ctx [(x,x_tau)]) e2 exp_tau
+			val e2' = inf (bind' ctx [(x,TE.generalize  x_tau)]) 
+				      e2 exp_tau
 		    in  M.Let(x,e1',e2')
 		    end
 	      | M.Abs(x, e) =>
@@ -241,10 +244,10 @@ structure TypeInference = struct
 	    and inf ctx (M.Info(info, exp)) exp_tau =
 		let val pos = getpos info
 		    val exp' = inf' (getpos info) ctx exp exp_tau
-		in  M.Info(mkinfo pos exp_tau, exp)
+		in  M.Info(mkinfo info exp_tau, exp')
 		end
 	      | inf ctx exp exp_tau = 
-		( inf ctx (M.Info((0,0), exp)) exp_tau)
+		( inf ctx (M.Info(noinfo, exp)) exp_tau)
 
 	    and infPat pos ctx pat pat_tau =
 		case pat of
@@ -289,14 +292,19 @@ structure TypeInference = struct
 	    fun infDatbind ((Tn, targs, Cs), (env,tynames)) =
 		case StringMap.lookup tynames Tn of
 		    NONE =>
-		      let val targs' = List.map (fn t => (t, TE.freshVar t)) targs
-			  val map = TE.mkMap targs'
-			  val tau = TE.tyconty(Tn, List.map #2 targs')
-			  val cs = StringSet.fromList 
+		      let val cs = StringSet.fromList 
 				       (List.map (fn M.Con(C,_) => C) Cs)
-			  val tynames' = StringMap.add(Tn, (cs,[]), tynames)
+			  val tynames' = StringMap.add(Tn, cs, tynames)
 			  fun f (M.Con(C,ty), ctx) =
-			      bind ctx [(C, TE.arrowty(TE.fromAST map ty,tau))]
+			      let 
+				  val _ = TE.pushLevel()
+				  val alphas = List.map TE.freshVar targs
+				  val map = TE.mkMap (ListPair.zip (targs,alphas))
+				  val tau = TE.tyconty(Tn, alphas)
+				  val c_tau = TE.arrowty(TE.fromAST map ty,tau)
+				  val _ = TE.popLevel()
+			      in  bind' ctx [(C, TE.generalize c_tau)]
+			      end
 			  val ctx' = List.foldl f (env,tynames') Cs
 		      in  ctx'
 		      end
@@ -305,18 +313,34 @@ structure TypeInference = struct
 		
 		
 	    fun infBind (M.ValBind(x,e), (binds,ctx)) =
-		let val alpha = TE.fresh()
+		let val _ = TE.pushLevel()
+		    val alpha = TE.fresh()
 		    val e' = inf ctx e alpha
-		in  (M.ValBind(x,e') :: binds, bind ctx [(x,alpha)])
+		    val _ = TE.popLevel()
+		in  (M.ValBind(x,e') :: binds, bind' ctx [(x,TE.generalize alpha)])
 		end
 	      | infBind (M.DatBind datbind, (binds,ctx)) =
 		let val ctx' = infDatbind (datbind, ctx)
 		in  (M.DatBind datbind :: binds, ctx')
 		end
-	      | infBind (bind, (binds,ctx)) = (bind::binds,ctx)
+	      | infBind (M.TyBind typeabbrev, (binds,ctx)) =
+		(M.TyBind typeabbrev :: binds, ctx)
+
 	in  M.Prog(rev(#1(List.foldl infBind ([],emptyCtx) binds)))
 	end
 
-    val inference = infProg
+    val dump_typed =
+	Flags.makeBoolFlag{name="/dump/typed",short="",default=false,
+			   long="dump-typed",arg="",
+			   desc="Dump MiniML program after type inference"}
+
+    val inference = fn noinfo => fn getpos => fn prog =>
+	let val prog' = infProg (fn i1 => fn tau => (i1,tau)) noinfo getpos prog
+	    fun pp (_,tau) = Pretty.++(Pretty.ppString ":",  TE.pp tau)
+	in  if !dump_typed
+	    then Dump.pretty (MiniML.pp pp Pattern.ppPat) "typed" prog'
+	    else ()
+	  ; prog'
+	end
 
 end (* structure TypeInference *)

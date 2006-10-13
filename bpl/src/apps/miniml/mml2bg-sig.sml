@@ -18,17 +18,13 @@
  * USA
  *)
 
-(** Match compiler for MiniML.
- * @version $LastChangedRevision$
- * Modified: $Date: 2006/05/31 15:01:25 $ by: $Author: hniss $
+(** Command-line wrapper for the translation from MiniML to bigraphs.
+ * @version $LastChangedRevision: 102 $
+ * Modified: $Date: 2006/09/04 20:54:23 $ by: $Author: hniss $
  *)
 
-signature MATCHCOMPILER = sig
+signature MINIMLTOBG = sig
 
-    type pat = Pattern.pat
-    type pos = int * int
-    exception NonExhaustiveMatch of pos
-    val compile : ('info1 -> pos) -> 'info1 -> ('info1 -> ''info2)
-		  -> ('info1,pat) MiniML.prog -> (''info2,string*string) MiniML.prog
+    val compile : string (* input file *) -> string (* output file *) -> unit
 
-end (* signature MATCHCOMPILE *)
+end (* signature MINIMLTOBG *)

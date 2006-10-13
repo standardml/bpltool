@@ -26,11 +26,7 @@
 signature TYPEEXP = sig
 
     type typename = string
-    type typevar
     type typeexp
-
-    val pp : typeexp Pretty.pp
-    val toString : typeexp -> string
 
     val fresh : 'a -> typeexp
     val freshVar : string -> typeexp
@@ -43,6 +39,18 @@ signature TYPEEXP = sig
     val arrowty : typeexp * typeexp -> typeexp
     val tuplety : typeexp list -> typeexp
     val tyconty : typename * typeexp list -> typeexp
+
+    val pp : typeexp Pretty.pp
+    val toString : typeexp -> string
+
+
+    type typescheme
+    val promote : typeexp -> typescheme (* no generalization *)
+    val generalize : typeexp -> typescheme
+    val instance : typescheme -> typeexp
+
+    val ppTyScheme : typescheme Pretty.pp
+    val tyschemeToString : typescheme -> string
 
     type map
     val mkMap : (string * typeexp) list -> map
@@ -59,10 +67,8 @@ signature TYPEEXP = sig
 	   | Arrow
     val view : typeexp -> view
 
-    (* type schemes *)
+    (* Levels *)
     val pushLevel : unit -> unit
     val popLevel  : unit -> unit
-    val generalize : typeexp -> unit
-    val instance   : typeexp -> typeexp
 
 end (* signature TYPEEXP *)

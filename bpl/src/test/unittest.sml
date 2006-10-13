@@ -62,8 +62,12 @@ structure Test = struct
 	    val tests = [ ("kernel/ast/test", BDNFTest.suite)
 			, ("apps/miniml/test", MiniMLTest.suite)
 			]
+	    fun say s = TextIO.print(s^"\n")
 	in
 	    List.app run1 tests
+          ; if Flags.getBoolFlag "/misc/timings"
+	    then List.app say (Timings.listAll ())
+	    else ()
 	end
 end
 

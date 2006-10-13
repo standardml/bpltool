@@ -57,6 +57,13 @@ functor MiniMLToBG(structure BG : BG_ADT
 	( raise CompileError(reason ^ ": " ^ explain exn)
         )
 
+    val frontend_timer = 
+	Timings.add {name="/bplc/1/frontend",desc="Frontend time"}
+    val codegen_timer =
+	Timings.add {name="/bplc/2/codegen",desc="Code generation time"}
+    val normalize_timer =
+	Timings.add {name="/bplc/3/normalize",desc="BgTerm normalization"}
+
     fun compile infile outfile =
 	let 
 	    val _ = Dump.setPrefix infile
@@ -64,26 +71,26 @@ functor MiniMLToBG(structure BG : BG_ADT
             (* Frontend issues: parsing, type inference, match compilation,
                   alpha-renaming
             *)
-	    val ast =
+	    val ast = frontend_timer (fn () =>
 		let 
 		    val ast = MiniMLParser.parseFile infile
-		    val ast = TypeInference.inference 
-				  (fn x => x) (fn pos => fn tau => pos) ast
-		    val ast = MatchCompiler.compile (fn x=>x) (0,0) ast
+		    val ast = TypeInference.inference (0,0) (fn x => x) ast
+		    val ast = MatchCompiler.compile (fn (p,t)=>p) 
+				    ((0,0),TypeExp.unitty()) (fn (p,t)=>p) ast
 		    val ast = MiniML.fresh MiniML.freshPat ast
 		in  ast
-		end
+		end)
 		handle exn => handler "Frontend failed" exn
 
 	    (* possibly dump desugared miniml term *)
 	    val _ = 
 		if !dump_desugar then
 		    if !MiniML.dump_fresh then ()
-		    else Dump.pretty (MiniML.pp MiniML.ppPat) "desugar" ast
+		    else Dump.pretty (MiniML.pp' MiniML.ppPat) "desugar" ast
 		else ()
 
             (* Code generation: convert to bgval, then normalize *)
-	    val bpl = case BGGen.toBG ast of
+	    val bpl = case codegen_timer (fn () => BGGen.toBG ast) of
 			  BGGen.Some bpl => bpl
 			| BGGen.None exn => handler "toBG failed" exn
             (* possibly dump bgval term *)
@@ -91,7 +98,7 @@ functor MiniMLToBG(structure BG : BG_ADT
 		if !dump_bgval then
 		    Dump.pp BGGen.pp "bgval" bpl
 		else ()
-	    val bpl = BG.BgBDNF.make bpl
+	    val bpl = normalize_timer (fn () => BG.BgBDNF.make bpl)
 		        handle exn => handler "Normalization failed" exn
 
             (* Output result *)

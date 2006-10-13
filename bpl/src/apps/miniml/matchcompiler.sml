@@ -147,7 +147,7 @@ structure MatchCompiler :> MATCHCOMPILER = struct
 	in  mk dec
 	end
 
-    fun compile getpos noinfo (M.Prog binds) =
+    fun compile getpos noinfo mkinfo (M.Prog binds) =
       let open Pattern
 	  local 
 	      val counter = ref 0
@@ -187,7 +187,7 @@ structure MatchCompiler :> MATCHCOMPILER = struct
 		| M.Ref e => M.Ref(comp e)
 		| M.DeRef e => M.DeRef(comp e)
 		| M.Assign(e1,e2) => M.Assign(comp e1, comp e2)
-		| M.Info(i,e) => M.Info(i, comp e)
+		| M.Info(i,e) => M.Info(mkinfo i, comp e)
 		| M.Deconst(C, e) => M.Deconst(C, comp e)
 		| M.Switch(e, switch, default) =>
 		  let fun mk1 (C,e) = (C, comp e)
@@ -215,10 +215,10 @@ structure MatchCompiler :> MATCHCOMPILER = struct
 			   long="dump-matchcompiled",arg="",
 			   desc="Dump match-compiled MiniML program"}
 
-    val compile = fn getpos => fn noinfo => fn prog =>
-        let val prog' = compile getpos noinfo prog
+    val compile = fn getpos => fn noinfo => fn mkinfo => fn prog =>
+        let val prog' = compile getpos noinfo mkinfo prog
 	in  if !dump_match_compile
-	    then Dump.pretty (MiniML.pp MiniML.ppPat) "match" prog'
+	    then Dump.pretty (MiniML.pp' MiniML.ppPat) "match" prog'
 	    else ()
           ; prog'
 	end
