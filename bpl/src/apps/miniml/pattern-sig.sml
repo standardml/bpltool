@@ -37,6 +37,7 @@ signature PATTERN = sig
     val arity : con -> int
     val span  : con -> int
 
+    val ppCon : con Pretty.pp
     val ppPat : pat Pretty.pp
 
 end (* signature PATTERN *)

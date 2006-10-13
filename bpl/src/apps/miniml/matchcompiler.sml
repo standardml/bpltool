@@ -72,6 +72,8 @@ structure MatchCompiler :> MATCHCOMPILER = struct
 	builddsc(rest, Pos(con, rev args @ (dsc :: dargs)), work)
       | builddsc _ = Util.abort 97343
 
+    fun show (Pos(c, ts)) =
+      | show (Neg cs) = "{" ^+ (clist "#," Patter.ppCon (ConSet.list cs)) +^"}"
     type pos = int * int
     exception NonExhaustiveMatch of pos
     fun compile1 pos caseexps allmrules =
