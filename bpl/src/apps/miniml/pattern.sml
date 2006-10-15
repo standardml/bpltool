@@ -45,7 +45,7 @@ structure Pattern :> PATTERN = struct
 
     open Pretty
     fun ppCon (TupleCon i) = "(" ^+ ppInt i +^ ")"
-      | ppCon (ConstCon{name,arity,span}) = ppString name
+      | ppCon (ConstCon{name,arity,span}) = ppString name ++ ppInt arity ++ ppInt span
 
     fun ppPat (PVar x) = ppString x
       | ppPat (PCon(con as TupleCon _,pats)) =

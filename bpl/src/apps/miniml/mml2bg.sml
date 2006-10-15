@@ -84,6 +84,7 @@ functor MiniMLToBG(structure BG : BG_ADT
 	    val ast = frontend_timer (fn () =>
 		let 
 		    val ast = MiniMLParser.parseFile infile
+		    val ast = Desugar.desugar ast
 		    val ast = TypeInference.inference (0,0) (fn x => x) ast
 		    val ast = MatchCompiler.compile (fn (p,t)=>p) 
 				    ((0,0),TypeExp.unitty()) (fn (p,t)=>p) ast

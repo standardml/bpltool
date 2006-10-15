@@ -39,6 +39,7 @@ val FALSEcon = mk_const "False" 0 2
 val NILcon   = mk_const "Nil"   0 2
 val CONScon  = mk_const "Cons"  2 2
 val UNITcon  = P.TupleCon 0
+val nullCarg = [P.PVar "_x"]
 
 fun mk_case info eof pnes = A.Info(info, A.Case(eof, pnes))
 
@@ -275,8 +276,8 @@ Exp     : OpExp                         (OpExp)
 					   | es => A.Const(CONS,A.Tuple es)
 					 end)
 	| IF Exp THEN Exp ELSE Exp      (A.Case(Exp1,
-					        [ (P.PCon(TRUEcon,[]), Exp2)
-					        , (P.PCon(FALSEcon,[]), Exp3)
+					        [ (P.PCon(TRUEcon,nullCarg), Exp2)
+					        , (P.PCon(FALSEcon,nullCarg), Exp3)
                                                 ]))
 
 OpExp   : AppExp                        (A.Info((AppExpleft,AppExpright),AppExp))
@@ -344,8 +345,8 @@ BarRuleOpt: BAR PMatch                  (PMatch)
 Rule    : Pattern DARROW Exp            ((Pattern, Exp))
 
 AtPattern: ID                           (P.PVar ID)
-        | CONS                          (P.PCon(mk_const CONS 0 2, []))
-        | LBRACKET RBRACKET             (P.PCon(NILcon,[]))
+        | CONS                          (P.PCon(mk_const CONS 0 2,nullCarg))
+        | LBRACKET RBRACKET             (P.PCon(NILcon,nullCarg))
 	| LPAREN RPAREN                 (P.PCon(UNITcon,[]))
 	| LPAREN PatternList RPAREN     (case PatternList of
 					     [p] => p

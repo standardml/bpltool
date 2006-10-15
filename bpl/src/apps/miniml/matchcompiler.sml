@@ -72,8 +72,6 @@ structure MatchCompiler :> MATCHCOMPILER = struct
 	builddsc(rest, Pos(con, rev args @ (dsc :: dargs)), work)
       | builddsc _ = Util.abort 97343
 
-    fun show (Pos(c, ts)) =
-      | show (Neg cs) = "{" ^+ (clist "#," Patter.ppCon (ConSet.list cs)) +^"}"
     type pos = int * int
     exception NonExhaustiveMatch of pos
     fun compile1 pos caseexps allmrules =
@@ -83,9 +81,7 @@ structure MatchCompiler :> MATCHCOMPILER = struct
 	    val topcon = TupleCon noofpats
 	    val topctx = [(topcon, [])] : context
 
-	    fun fail(dsc, []) = 
-                ( raise NonExhaustiveMatch pos
-                )
+	    fun fail(dsc, []) = raise NonExhaustiveMatch pos
 	      | fail(Pos(_, dscs), (pats1, rhs1) :: rulerest) =
 		succeed(topctx, [(pats1, caseexps, dscs)], rhs1, rulerest)
 	      | fail(_, _) = Util.abort 8765
