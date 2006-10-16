@@ -128,12 +128,15 @@ functor MiniMLToBG(structure BG : BG_ADT
 		  ; PrettyPrint.flush_ppstream ps
 		  ; TextIO.closeOut os
 		end
-	in  List.app print 
+	in ()
+(*
+	    List.app print 
 		     [ "Sizes:\n"
 		     , "MiniML AST : ", Int.toString size_ast, "\n"
 		     , "Bg before normalization : ", Int.toString size_bpl, "\n"
 		     , "Bg after normalization :  ", Int.toString size_bdnf,"\n"
                      ]
+*)
 	end
 
 end (* structure MiniMLToBG *)

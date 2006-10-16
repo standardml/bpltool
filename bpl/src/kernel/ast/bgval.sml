@@ -247,7 +247,7 @@ struct
       val (innf, outf)
 	= foldl addinterf (Interface.zero, Interface.zero) vs
 	  handle 
-	  (DuplicatesRemoved (X, xs))
+	  (DuplicatesRemoved _)
 	  => raise 
 	    NotTensorable
 	      ("bgval.sml", vs,
@@ -552,7 +552,7 @@ fun is_id0 (VMer (1, _))    = false
                   (fn (X, all) => NameSet.union X all)
                   NameSet.empty 
                   (map (Interface.names o innerface) vs)
-	        handle DuplicatesRemoved (X, xs) 
+	        handle DuplicatesRemoved _
 	        => raise 
                      NotParallelisable
                        ("bgval.sml", vs,
@@ -574,7 +574,7 @@ fun is_id0 (VMer (1, _))    = false
                       NameSet.union' Yglob alglobns))
               (NameSet.empty, NameSet.empty, NameSet.empty, NameSet.empty)
               Ys
-              handle DuplicatesRemoved (X, xs) 
+              handle DuplicatesRemoved _
               => raise 
                    NotParallelisable
                      ("bgval.sml", vs,
@@ -654,7 +654,7 @@ fun is_id0 (VMer (1, _))    = false
                              "while computing parallel product in Par"))
                   NameSet.empty 
                   (map innerface vs)
-	        handle DuplicatesRemoved (X, xs) 
+	        handle DuplicatesRemoved _
 	        => raise 
                      NotPrimeable
                        ("bgval.sml", vs,
@@ -675,7 +675,7 @@ fun is_id0 (VMer (1, _))    = false
                       NameSet.union' Yglob alglobns))
               (NameSet.empty, NameSet.empty, NameSet.empty, NameSet.empty)
               Ys
-              handle DuplicatesRemoved (X, xs) 
+              handle DuplicatesRemoved _
               => raise 
 	           NotPrimeable
                      ("bgval.sml", vs,
