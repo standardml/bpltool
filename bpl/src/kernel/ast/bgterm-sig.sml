@@ -76,4 +76,7 @@ sig
    * @param t       The bgterm to print.
    *)
   val pp : int -> ppstream -> bgterm -> unit
+
+  val size : bgterm -> int
+
 end

@@ -320,4 +320,7 @@ sig
    * @param m       The bgmatch to print.
    *)
   val pp_match : int -> ppstream -> bgmatch -> unit
+
+  val size : bgval -> int
+
 end

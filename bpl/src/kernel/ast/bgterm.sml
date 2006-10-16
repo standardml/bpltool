@@ -241,4 +241,19 @@ struct
       in
 	ppp PrMin PrMin PrMax
       end
+
+  fun size bg =
+      case bg of
+	  Mer _ => 1
+	| Con _ => 1
+	| Wir _ => 1
+	| Ion _ => 1
+	| Per _ => 1
+	| Abs(_,b,_) => 1+size b
+	| Ten(bs,_) => 1+sizes bs
+	| Pri(bs,_) => 1+sizes bs
+	| Par(bs,_) => 1+sizes bs
+	| Com(b1,b2,_) => 1+size b1+size b2
+  and sizes bs = List.foldl (fn (b,s) => size b + s) 0 bs
+
 end

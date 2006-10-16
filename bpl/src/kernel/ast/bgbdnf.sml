@@ -1103,4 +1103,7 @@ struct
 
   fun pp indent pps
     = BgVal.pp indent pps o unmk
+
+  val size = BgVal.size o unmk
+
 end

@@ -796,4 +796,6 @@ fun is_id0 (VMer (1, _))    = false
   fun pp indent pps
     = BgTerm.pp indent pps o #1 o unmk (fn _ => BgTerm.noinfo)
 
+  val size = BgTerm.size o #1 o unmk (fn _ => BgTerm.noinfo)
+
 end

@@ -184,4 +184,7 @@ sig
    * @param t       The bgbdnf to print.
    *)
   val pp : int -> ppstream -> 'class bgbdnf -> unit
+
+  val size : 'class bgbdnf -> int
+
 end
