@@ -18,29 +18,26 @@
  * USA
  *)
 
-(** Timer structure matching the TIMER signature from the
- * new SML Basis Library, but based on the old SML Basis
- * Library Timer structure.
- * @version  $LastChangedRevision: 102 $
+(** Substring structure matching the SUBSTRING signature from
+ * the new SML Basis Library, but based on the old
+ * SML Basis Library Substring structure.
+ * @version $LastChangedRevision: 102 $
  *)
 
-structure Timer :> TIMER = struct
-    open Timer
+structure Substring :> SUBSTRING 
+  where type string = String.string
+    and type char = Char.char
+= struct
 
-    fun checkCPUTimes tmr = (* not completely exact, but anyway *)
-	let val {sys,usr,gc} = checkCPUTimer tmr
-	in  { nongc={usr=Time.-(usr,gc),sys=sys}
-            , gc={usr=gc,sys=Time.zeroTime}
-            }
-        end
+    open Substring
 
-    fun checkCPUTimer tmr = (* directly off the Basis spec *)
-	let val {nongc, gc} = checkCPUTimes tmr
-        in { usr = Time.+(#usr nongc, #usr gc)
-           , sys = Time.+(#sys nongc, #sys gc)
-	   }
-	end
+    type char = Char.char
+    type string = String.string
 
-    fun checkGCTime tmr = #usr(#gc(checkCPUTimes tmr))
+    val full = all
 
-end (* structure TIMER *)
+    fun concatWith s subs = raise Fail "Substring.concatWith not implemented"
+    fun isSubstring s sub = raise Fail "Substring.isSubstring not implemented"
+    fun isSuffix s sub    = raise Fail "Substring.isSuffix not implemented"
+
+end (* structure Substring *)

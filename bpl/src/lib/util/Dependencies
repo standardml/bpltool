@@ -36,7 +36,8 @@ flags: flags-sig dyn util argparse /lib/compat/mosml/hash/. %NODASHSIG
 dump-sig: /lib/pp/mak/pretty /lib/pp/smlnj/prettyprint
 dump: dump-sig flags /lib/pp/mak/pretty /lib/pp/smlnj/prettyprint %NODASHSIG
 sourceloc-sig: /lib/pp/mak/pretty util
-sourceloc: sourceloc-sig /lib/pp/mak/pretty util %NODASHSIG
+sourceloc: sourceloc-sig util 
+  /lib/compat/common/legacysubstring /lib/pp/mak/pretty %NODASHSIG
 timings-sig: 
 timings: timings-sig flags util /lib/coll/set 
   /lib/compat/mosml/hash/. /lib/compat/common/legacytimer %NODASHSIG

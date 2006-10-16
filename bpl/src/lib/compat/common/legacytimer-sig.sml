@@ -18,6 +18,9 @@
  * USA
  *)
 
+(** TIMER signature from the new SML Basis Library.
+ * @version  $LastChangedRevision: 102 $
+ *)
 signature TIMER = sig
 
     type cpu_timer
