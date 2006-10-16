@@ -24,4 +24,9 @@ signature UTIL = sig
 
     val stringSep : string -> string -> string (* start, finish, sep *)
 		      -> ('a -> string) -> 'a list -> string
+
+    val curry : ('a * 'b -> 'c) -> 'a -> 'b -> 'c
+
+    structure StringMap : MONO_FINMAP where type dom = string
+    structure StringSet : MONO_SET where type elt = string
 end

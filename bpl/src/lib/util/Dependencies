@@ -10,8 +10,8 @@ dyn-sig:
 dyn: dyn-sig %NODASHSIG
 pos-sig:
 pos: pos-sig %NODASHSIG
-util-sig:
-util: util-sig %NODASHSIG
+util-sig: /lib/coll/map /lib/coll/set
+util: util-sig /lib/coll/map /lib/coll/set %NODASHSIG
 flags-sig: argparse
 flags: flags-sig dyn util argparse /lib/compat/mosml/hash/. %NODASHSIG
 dump-sig: /lib/pp/mak/pretty /lib/pp/smlnj/prettyprint
@@ -19,5 +19,5 @@ dump: dump-sig flags /lib/pp/mak/pretty /lib/pp/smlnj/prettyprint %NODASHSIG
 sourceloc-sig: /lib/pp/mak/pretty util
 sourceloc: sourceloc-sig /lib/pp/mak/pretty util %NODASHSIG
 timings-sig: 
-timings: timings-sig flags /lib/coll/set 
+timings: timings-sig flags util /lib/coll/set 
   /lib/compat/mosml/hash/. /lib/compat/common/legacytimer %NODASHSIG

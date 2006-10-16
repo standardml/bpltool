@@ -36,4 +36,12 @@ struct
     end (* local *)
 
 
+    fun curry f x y = f(x,y)
+
+    structure StringMap = OrderFinMap(type T = string
+                                      val lt = curry String.<)
+
+    structure StringSet = OrderSet(type T = string
+                                   val lt = curry String.<)
+
 end (* structure Util *)

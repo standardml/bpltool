@@ -85,8 +85,7 @@ structure Timings :> TIMINGS = struct
 	in  List.map toString ts
 	end
 
-    structure NameSet
-      = OrderSet(type T = string val lt = fn (s:string) => fn s' => s < s')
+    structure NameSet = Util.StringSet
 
     fun list names =
 	let val ns = NameSet.fromList names
