@@ -216,7 +216,7 @@ structure TypeExp :> TYPEEXP = struct
 	  | TyCon(T,_) => Const T
 
     (* Conversion *)
-    structure Map = OrderFinMap(type T = string fun lt x y = String.<(x,y))
+    structure Map = Util.StringMap
     type map = typeexp Map.map
     val mkMap = Map.fromList
     fun fromAST map astty =

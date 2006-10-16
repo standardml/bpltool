@@ -93,6 +93,8 @@ functor MiniMLToBG(structure BG : BG_ADT
 		end)
 		handle exn => handler infile "Frontend failed" exn
 
+	    val size_ast = MiniML.size ast
+
 	    (* possibly dump desugared miniml term *)
 	    val _ = 
 		if !dump_desugar then
@@ -104,6 +106,9 @@ functor MiniMLToBG(structure BG : BG_ADT
 	    val bpl = case codegen_timer (fn () => BGGen.toBG ast) of
 			  BGGen.Some bpl => bpl
 			| BGGen.None exn => handler infile "toBG failed" exn
+
+	    val size_bpl = BG.BgVal.size bpl
+
             (* possibly dump bgval term *)
 	    val _ = 
 		if !dump_bgval then
@@ -112,12 +117,23 @@ functor MiniMLToBG(structure BG : BG_ADT
 	    val bpl = normalize_timer (fn () => BG.BgBDNF.make bpl)
 		        handle exn => handler infile "Normalization failed" exn
 
+
+	    val size_bdnf = BG.BgBDNF.size bpl
+
             (* Output result *)
-	    val os = TextIO.openOut outfile
-	    val ps = pps os
-	in  BG.BgBDNF.pp 0 ps bpl
-          ; PrettyPrint.flush_ppstream ps
-	  ; TextIO.closeOut os
+	    val _ = 
+		let val os = TextIO.openOut outfile
+		    val ps = pps os
+		in  BG.BgBDNF.pp 0 ps bpl
+		  ; PrettyPrint.flush_ppstream ps
+		  ; TextIO.closeOut os
+		end
+	in  List.app print 
+		     [ "Sizes:\n"
+		     , "MiniML AST : ", Int.toString size_ast, "\n"
+		     , "Bg before normalization : ", Int.toString size_bpl, "\n"
+		     , "Bg after normalization :  ", Int.toString size_bdnf,"\n"
+                     ]
 	end
 
 end (* structure MiniMLToBG *)

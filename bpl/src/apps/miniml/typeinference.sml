@@ -37,12 +37,8 @@ structure TypeInference :> TYPEINFERENCE = struct
 			      "cannot have type","  "^tau2,
 			      "("^reason^")"])
 
-    structure SOrder = struct
-        type T = string
-	fun lt x y = String.<(x,y)
-    end
-    structure StringSet = OrderSet(SOrder)
-    structure StringMap = OrderFinMap(SOrder)
+    structure StringSet = Util.StringSet
+    structure StringMap = Util.StringMap
 
     (* typing contexts *)
     type var         = string

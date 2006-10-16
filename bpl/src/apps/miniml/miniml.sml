@@ -224,20 +224,17 @@ struct
 	      counter := !counter + 1
     end
 
-    fun curry f x y = f(x,y)
-    structure M = OrderFinMap(type T = string
-                              val lt = curry String.<)
-
-    type map = string M.map
+    structure Map = Util.StringMap
+    type map = string Map.map
     type 'pat freshpat = (map->string->(string*map)) -> map -> 'pat -> 'pat * map
     fun addFresh map x =
 	let val x' = fresh x
-	in  (x', M.add(x, x', map))
+	in  (x', Map.add(x, x', map))
 	end
     fun freshExp freshPat map exp =
 	case exp of
 	    Var x =>
-	      ( case M.lookup map x of
+	      ( case Map.lookup map x of
 		    SOME x' => Var x'
 		  | NONE => raise Fail("Fresh: Unbound variable " ^ x)
               )
@@ -272,17 +269,17 @@ struct
 	      Assign(freshExp freshPat map e1, freshExp freshPat map e2)
 	  | Abs(x, e) =>
 	      let val x' = fresh x
-		  val map' = M.add(x, x', map)
+		  val map' = Map.add(x, x', map)
 	      in  Abs(x',freshExp freshPat map' e)
 	      end
 	  | Fix(f, x, e) => 
 	      let val (f',x') = (fresh f, fresh x)
-		  val map' = M.add(x, x', M.add(f, f', map))
+		  val map' = Map.add(x, x', Map.add(f, f', map))
 	      in  Fix(f', x', freshExp freshPat map' e)
 	      end
 	  | Let(x, e1, e2) => 
 	      let val x' = fresh x
-		  val map' = M.add(x, x', map)
+		  val map' = Map.add(x, x', map)
 	      in  Let(x', freshExp freshPat map e1, freshExp freshPat map' e2)
 	      end
 	  | Info(i, e) => Info(i, freshExp freshPat map e)
@@ -291,16 +288,52 @@ struct
 	let fun f (ValBind(x,e),(bs,map)) =
 		let val x' = fresh x
 		    val e' = freshExp freshPat map e
-		in  (ValBind(x',e')::bs, M.add(x,x',map))
+		in  (ValBind(x',e')::bs, Map.add(x,x',map))
 		end
 	      | f (b,(bs,map)) = (b::bs,map)
-	    val (binds',_) = List.foldl f ([],M.empty) binds
+	    val (binds',_) = List.foldl f ([],Map.empty) binds
 	in  Prog(rev binds')
 	end
     val fresh = freshProg
     fun freshPat add map (C,x) = 
 	let val (x',map') = add map x
 	in  ((C,x'), map')
+	end
+
+    fun subExp exp =
+	case exp of
+	    Var _ => []
+	  | Integer _ => []
+	  | String _ => []
+	  | Unit => []
+	  | Const(_, e) => [e]
+	  | Abs(_,e) => [e]
+	  | Fix(_,_,e) => [e]
+	  | Proj(_, e) => [e]
+	  | Ref e => [e]
+	  | DeRef e => [e]
+	  | Info(_,e) => [e]
+	  | Deconst(_,e) => [e]
+	  | Assign(e1,e2) => [e1,e2]
+	  | App(e1,e2) => [e1,e2]
+	  | PrimOp(_,e1,e2) => [e1,e2]
+	  | Let(_,e1,e2) => [e1,e2]
+	  | Case(e,ps) => e :: (List.map (fn(p,e)=>e) ps)
+	  | Switch(e,ps,d) => e :: (List.map (fn(p,e)=>e) ps) @ [d]
+	  | Tuple es => es
+
+    fun max (i1,i2) = if i1 > i2 then i1 else i2
+    fun app1 f (x,y) = (f x, y)
+    fun sizeExp exp =
+	case exp of
+	    Info(_,e) => sizeExp e
+	  | _ => 1 + List.foldl (fn (e,s) => sizeExp e + s) 0 (subExp exp)
+
+    fun size (Prog bs) =
+	let fun sizeBind (ValBind(_,e)) = 1+sizeExp e
+	      | sizeBind (DatBind(t,targs,cbs)) = 1
+	      | sizeBind (TyBind(t,targs,abb)) = 1
+	in  List.foldl (fn (b,s) => sizeBind b + s) 0 bs
 	end
 
 end

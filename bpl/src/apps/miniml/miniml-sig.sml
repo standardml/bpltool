@@ -81,6 +81,9 @@ sig
     type pat = string (* constructor *) * string (* variable *)
     type 'info prog' = ('info, pat) prog
 
+    val size : ('info,'pat) prog -> int
+
+
     val mkLet : ('info,'pat) bind list -> ('info, 'pat) exp 
 		-> ('info, 'pat) exp
 

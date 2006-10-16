@@ -33,11 +33,10 @@ structure Desugar :> DESUGAR = struct
 
     type 'a prog = ('a,Pattern.pat) MiniML.prog
 
-    structure StringMap
-      = OrderFinMap(type T = string val lt = fn (s:string) => fn s' => s < s')
-    val lookup = StringMap.lookup
-    val add = StringMap.add
-    val empty = StringMap.empty
+    structure Map = Util.StringMap
+    val lookup = Map.lookup
+    val add = Map.add
+    val empty = Map.empty
 
 (*
     (* Represent tuples as (e1, (e2, (e3, ... (en-1, en)))). 
@@ -98,8 +97,7 @@ structure Desugar :> DESUGAR = struct
 		    fun ar (M.TyTuple ts) = List.length ts
 		      | ar _ = 1
 		    fun f (M.Con(C, ty), map) = 
-			( print(String.concat[C, ": ", Int.toString sp, " & ", Int.toString(ar ty), "\n"])
-                        ; add(C, {arity=ar ty,span=sp}, map) )
+			add(C, {arity=ar ty,span=sp}, map)
 		    val map = List.foldl f map cbs
 		in  (M.DatBind(t,targs,cbs)::bs, map)
 		end

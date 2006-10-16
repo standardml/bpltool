@@ -43,7 +43,10 @@ fun run () =
 	val infile = valOf(!infile)
 		     handle Option => raise ArgParse.Bad("Missing input file")
 	val _ = MiniMLToBG.compile infile "tmp.bg"
-    in  ()
+    in  print "Compiled\n"
+      ; if Flags.getBoolFlag "/misc/timings"
+	then List.app say (Timings.listAll ())
+	else ()
     end handle ArgParse.Bad s => (say s; List.app say (Flags.usage()))
 	     | MiniMLToBG.CompileError(reason,expl) =>
 	          ( say("Compiler error: " ^ reason)

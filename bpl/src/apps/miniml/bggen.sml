@@ -210,11 +210,16 @@ val APPR = mkctrl "CAPPR"
 val EXP = mkctrl "CEXP"
 val LET = mkctrl "CLET"
 val LETD = mkctrl "CLETD"
+(*
 val PAIR = mkctrl "CPAIR"
 val PAIRL = mkctrl "CPAIRL"
 val PAIRR = mkctrl "CPAIRR"
 val FST = mkctrl "CFST"
 val SND = mkctrl "CSND"
+*)
+val TUPLE = mkctrl "CTUPLE"
+fun COMP (i:int) = mkctrl ("COMP"^Int.toString i)
+fun PROJ (i:int) = mkctrl ("PROJ"^Int.toString i)
 val UNIT = mkatom "CUNIT"
 val REF = mkctrl "CREF"
 val DEREF = mkctrl "CDEREF"
@@ -286,6 +291,7 @@ fun exp2bg (X:nameset) exp =
 	 (((LETD tt id X) oo (exp2bg X e1)) pp
 	  ((LETB x' tt id X) oo (ABS [x'] (exp2bg (x' ++ X) e2))))
 	end
+(*
       | M.Tuple [e1,e2] =>
 	(PAIR tt id X) oo
 	 (((PAIRL tt id X) oo (exp2bg X e1)) pp
@@ -294,6 +300,47 @@ fun exp2bg (X:nameset) exp =
       | M.Proj(1, e) => (FST tt id X) oo (exp2bg X e)
       | M.Proj(2, e) => (SND tt id X) oo (exp2bg X e)
       | M.Proj(i, e) => Util.abort 4
+*)
+
+      (* I changed the encoding of tuples slightly - to allow
+         for more than just pairs. HN
+
+         The idea is that a tuple (e1,e2,...,en) is translated
+         to
+
+             TUPLE ( COMP1([[e1]]) | COMP2(EXP([[e2]])) | ... | COMPn(EXP([[en]])) )
+
+         and a projection #i e is translated to
+
+             PROJi ([[e]])
+
+         We then need to generate rules 
+
+             COMPi(val[0]) | COMPi+1(exp[1]) --> COMPi(val[0]) | COMPi+1([1])
+
+         for i = 1,.., n-1 and rules
+
+             TUPLE( COMP1(val[0]) | COMP2(val[1]) | ... | COMPn(val[n-1]) )
+             --> val (TUPLE (...) )
+
+         --- one for each size of tuple occurring in the program.
+
+         Finally, we need projections (also one for each kind of
+         projection occurring in the program).
+
+             PROJi( TUPLE( COMPi(val[0]) | [1] ) )
+             -->  [0]
+
+      *)
+      | M.Tuple [] => (VAL tt id X) oo (UNIT tt make_onames X)
+      | M.Tuple (e::es) =>
+	let fun f (e, (p,b)) =
+                (p+1, b pp (COMP p tt id X) oo (EXP tt id X) oo (exp2bg X e))
+	in  (TUPLE tt id X) oo
+               (#2(List.foldr f (2,(COMP 1 tt id X) oo (exp2bg X e)) es))
+	end
+      | M.Proj(i, e) => (PROJ i tt id X) oo (exp2bg X e)
+        
       | M.Unit => (VAL tt id X) oo (UNIT tt make_onames X)
       | M.Ref e => (REF tt id X) oo (exp2bg X e)
       | M.DeRef e => (DEREF tt id X) oo (exp2bg X e)
