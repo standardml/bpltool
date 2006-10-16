@@ -154,7 +154,7 @@ functor OrderSet(Order : ORDERING): MONO_SET =
 	f s []
       end
 
-    exception DuplicatesRemoved of Set * elt list
+    exception DuplicatesRemoved
 				   
     (* addList1 (el : elt list) (dupl : elt list) (s : Set) : (Set * elt list) *)
     fun addList1 el dupl s =
@@ -176,19 +176,19 @@ functor OrderSet(Order : ORDERING): MONO_SET =
 	in 
 	  if (length dupl = 0) then
 	    s'
-	  else raise DuplicatesRemoved (s',dupl)
+	  else raise DuplicatesRemoved
 	end
 
     (* TCD: June 05 - recoded s.t duplication removal is signaled *)
     fun fromList (l:elt list) : Set = addList l empty
 
-    (* TCD: June 05 - recoded s.t duplication removal is signaled *)
-    fun union (s1:Set) (s2:Set) : Set =
-  (*    case s2 of
+    fun union0 (s1:Set) (s2:Set) : Set =
+	case s2 of
 	  E => s1
-	| N(i, s3, s4, _) => 
-	  union (union (insert i s1) s3) s4 *)
-	addList (list s1) s2
+	| N(i, s3, s4, _) => union0 (union0 (insert i s1) s3) s4
+    fun union s1 s2 =
+	(union0 s1 s2) 
+	handle AlreadyThere _ => raise DuplicatesRemoved
     fun union' (s1:Set) (s2:Set) : Set = (* HN: added non-exception version *)
 	case s2 of
 	  E => s1

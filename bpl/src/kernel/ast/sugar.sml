@@ -134,7 +134,7 @@ fun =: (K, {freearity, boundarity}) k free bound =
 	       bound 
 	       = map (NameSet.fromList o map Name.make) bound}
 	      handle 
-	      (NameSet.DuplicatesRemoved _)
+	      NameSet.DuplicatesRemoved
 	      => raise DuplicateName 
 			 ("sugar.sml", K, free, bound,
 			  "Duplicate names are not allowed in ions")

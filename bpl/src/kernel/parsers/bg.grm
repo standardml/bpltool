@@ -258,7 +258,7 @@ nsetlist : nset COMMA nsetlist (nset :: nsetlist)
          |		      ([])
 
 nset    : LBRACE nlist RBRACE (NameSet.fromList (nlist)
-			       handle NameSet.DuplicatesRemoved _
+			       handle NameSet.DuplicatesRemoved
 				      => raise 
 					DuplicateNames 
 					  ("bg.grm", (LBRACEleft, RBRACEright),

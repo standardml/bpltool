@@ -20,7 +20,7 @@ signature MONO_SET =
     val member : elt -> Set -> bool
     val eq : Set -> Set -> bool
 
-    exception DuplicatesRemoved of Set * elt list
+    exception DuplicatesRemoved
 
     val list : Set -> elt list
       (** fromList l : Constructs a set containing the elements in l.

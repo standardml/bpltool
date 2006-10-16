@@ -150,12 +150,12 @@ struct
   fun Ion i KyX =
       let
 	val y = Ion.outernames KyX
-	    handle NameSet.DuplicatesRemoved _ =>
+	    handle NameSet.DuplicatesRemoved =>
 		   raise DuplicateNames 
 			   (i, [#free (Ion.unmk KyX)],
 			    "Outer ion names must be distinct")
 	val Xs = Ion.innernames KyX 
-	    handle NameSet.DuplicatesRemoved _ =>
+	    handle NameSet.DuplicatesRemoved =>
 		   raise DuplicateNames 
 			   (i, 
 			    (map NameSet.list o #bound o Ion.unmk) KyX,
@@ -171,7 +171,7 @@ struct
 	      NameSet.empty
 	      (Permutation.unmk pi)
 	      handle 
-	      NameSet.DuplicatesRemoved _ =>
+	      NameSet.DuplicatesRemoved =>
 	      raise 
 		DuplicateNames 
 		  (i, 
@@ -229,14 +229,14 @@ struct
 	    vs
 	val _ = checkface innerface
 	  handle 
-	  (DuplicatesRemoved _)
+	  DuplicatesRemoved
 	  => raise 
 	    NotTensorable
 	      ("bgval.sml", vs,
 	       "Inner name clash for tensor product in Ten")
 	val _ = checkface outerface
 	  handle 
-	  (DuplicatesRemoved _)
+	  DuplicatesRemoved
 	  => raise 
 	    NotTensorable
 	      ("bgval.sml", vs,
@@ -247,7 +247,7 @@ struct
       val (innf, outf)
 	= foldl addinterf (Interface.zero, Interface.zero) vs
 	  handle 
-	  (DuplicatesRemoved _)
+	  DuplicatesRemoved
 	  => raise 
 	    NotTensorable
 	      ("bgval.sml", vs,
@@ -470,13 +470,13 @@ fun is_id0 (VMer (1, _))    = false
 	      (v :: vs, X :: Xs, y :: ys,
 	       NameSet.union X innernames
 	       handle 
-	       DuplicatesRemoved (_, _)
+	       DuplicatesRemoved
 	       => raise NameClash 
 			  (i, X, innernames, 
 			   "inner names in a wide local substitution"),
 	       NameSet.union y outernames
 	       handle 
-	       DuplicatesRemoved (_, _)
+	       DuplicatesRemoved
 	       => raise NameClash 
 			  (i, y, outernames, 
 			   "outer names in a wide local substitution"))
@@ -552,7 +552,7 @@ fun is_id0 (VMer (1, _))    = false
                   (fn (X, all) => NameSet.union X all)
                   NameSet.empty 
                   (map (Interface.names o innerface) vs)
-	        handle DuplicatesRemoved _
+	        handle DuplicatesRemoved
 	        => raise 
                      NotParallelisable
                        ("bgval.sml", vs,
@@ -574,7 +574,7 @@ fun is_id0 (VMer (1, _))    = false
                       NameSet.union' Yglob alglobns))
               (NameSet.empty, NameSet.empty, NameSet.empty, NameSet.empty)
               Ys
-              handle DuplicatesRemoved _
+              handle DuplicatesRemoved
               => raise 
                    NotParallelisable
                      ("bgval.sml", vs,
@@ -654,7 +654,7 @@ fun is_id0 (VMer (1, _))    = false
                              "while computing parallel product in Par"))
                   NameSet.empty 
                   (map innerface vs)
-	        handle DuplicatesRemoved _
+	        handle DuplicatesRemoved
 	        => raise 
                      NotPrimeable
                        ("bgval.sml", vs,
@@ -675,7 +675,7 @@ fun is_id0 (VMer (1, _))    = false
                       NameSet.union' Yglob alglobns))
               (NameSet.empty, NameSet.empty, NameSet.empty, NameSet.empty)
               Ys
-              handle DuplicatesRemoved _
+              handle DuplicatesRemoved
               => raise 
 	           NotPrimeable
                      ("bgval.sml", vs,

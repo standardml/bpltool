@@ -150,7 +150,7 @@ struct
 	       
     fun fileDevice filename =
 	let val is = TextIO.openIn filename
-	    val file  = SS.all(TextIO.inputAll is)
+	    val file  = SS.full(TextIO.inputAll is)
 	    val _ = TextIO.closeIn is
 	    val pos = ref 0 
 	in  { name = "File \"" ^ filename ^ "\""
@@ -173,4 +173,4 @@ struct
 	in  ppSourceLocation' device
 	end
 
-end (* structure ErrorLoc *)
+end (* structure SourceLoc *)
