@@ -66,7 +66,7 @@ struct
                    result.
                 *)
 		[ "id", "id-app" , "k", "fix", "let", 
-                  "unit", "ref", "tuple", "datatype"
+                  "unit", "ref", "tuple", "datatype", "int"
                 ]
 
 	    fun test1 infile resfile expectedfile =

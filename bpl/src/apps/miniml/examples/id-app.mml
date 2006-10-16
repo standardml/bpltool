@@ -1,5 +1,0 @@
-val app1 = (fn x => x) ()
-val app2 = (fn x => x) (fn x => x)
-val app3 = let val id = fn x => x in id id end
-val app4 = let val id = fn x => x in id () end
-

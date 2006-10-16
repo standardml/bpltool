@@ -1,3 +1,0 @@
-let val x = ref ()
-in fn y => let val _ = x := (x,()) in !x end
-end
