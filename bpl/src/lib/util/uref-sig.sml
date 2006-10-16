@@ -18,16 +18,7 @@
  * software or the use or other dealings in the software.
  *)
 
-(* uref-sig.sml
- *
- * Interface to UnionFind package.
- *
- * Author:
- *    Fritz Henglein
- *    DIKU, University of Copenhagen
- *    henglein@diku.dk
- *
- * DESCRIPTION
+(** Interface to UnionFind package.
  *
  * Union/Find data type with ref-like interface.  A Union/Find structure 
  * consists of a type constructor 'a uref with operations for
@@ -35,16 +26,14 @@
  * an element (!!), checking for equality of two elements (equal), and
  * for joining two elements (union).  uref is analogous to ref as
  * expressed in the following table:
- *
- * -------------------------------------------------------------------
- * type                  'a ref                'a uref
- * -------------------------------------------------------------------
- * introduction          ref                   uref
- * elimination           !                     !!
- * equality              =                     equal
- * updating              :=                    ::=
- * unioning                                    link, union, unify
- * -------------------------------------------------------------------
+ * <table>
+ * <th><td>type</td><td>'a ref</td><td>'a uref</td></th>
+ * <tr><td>introduction</td><td>ref</td><td>uref</td></tr>
+ * <tr><td>elimination</td><td>!</td><td>!!</td></tr>
+ * <tr><td>equality</td><td>=</td><td>equal</td></tr>
+ * <tr><td>updating</td><td>:=</td><td>::=</td></tr>
+ * <tr><td>unioning</td><td></td><td>link, union, unify</td></tr>
+ * </table>
  *
  * The main difference between 'a ref and 'a uref is in the union
  * operation.  Without union 'a ref and 'a uref can be used
@@ -60,6 +49,11 @@
  * and union it will be the contents of one of the two unioned elements,
  * in the case of unify the contents is determined by a binary
  * function parameter.
+ *
+ * @author Fritz Henglein, DIKU, University of Copenhagen <henglein@diku.dk>
+ * @author Henning Niss, IT University of Copenhagen (minor modifications) <hniss@itu.dk>
+ *
+ * @version $LastChangedRevision: 129 $
  *)
 
 infix ::=
@@ -67,53 +61,53 @@ infix ::=
 signature URef =
   sig
 
+	(** type of uref-elements with contents of type 'a *)  
     type 'a uref
-	(* type of uref-elements with contents of type 'a *)  
 
       
+	(** uref x creates a new element with contents x *)
     val uRef: 'a -> 'a uref
-	(* uref x creates a new element with contents x *)
 
 
-    val equal: 'a uref * 'a uref -> bool
-	(* equal (e, e') returns true if and only if e and e' are either made by
+	(** equal (e, e') returns true if and only if e and e' are either made by
 	 * the same call to uref or if they have been unioned (see below).
 	 *)
+    val equal: 'a uref * 'a uref -> bool
 
-    val compare: ('a * 'a -> order) -> 'a uref * 'a uref -> order
-        (* compare cmp (e, e') returns EQUAL if and only if equal (e, e')
+        (** compare cmp (e, e') returns EQUAL if and only if equal (e, e')
          * returns true; otherwise return cmp (x, x') where x is the
          * contents of e and x' is the contents of e'.
          *)
+    val compare: ('a * 'a -> order) -> 'a uref * 'a uref -> order
 
-    val !! : 'a uref -> 'a
-	(* !!e returns the contents of e. 
+	(** !!e returns the contents of e. 
 	 * Note: if 'a is an equality type then !!(uref x) = x, and 
 	 * equal(uref (!!x), x) = false.
 	 *)
+    val !! : 'a uref -> 'a
 
     val find : 'a uref -> 'a uref
 
+	(** update(e, x) updates the contents of e to be x *)
     val update : 'a uref * 'a -> unit
     val ::= : 'a uref * 'a -> unit
-	(* update(e, x) updates the contents of e to be x *)
 
-    val unify : ('a * 'a -> 'a) -> 'a uref * 'a uref -> unit
-	(* unify f (e, e') makes e and e' equal; if v and v' are the 
+	(** unify f (e, e') makes e and e' equal; if v and v' are the 
 	 * contents of e and e', respectively, before unioning them, 
 	 * then the contents of the unioned element is f(v,v')
 	 *)
+    val unify : ('a * 'a -> 'a) -> 'a uref * 'a uref -> unit
 
-    val union : 'a uref * 'a uref -> unit
-	(* union (e, e') makes e and e' equal; the contents of the unioned
+	(** union (e, e') makes e and e' equal; the contents of the unioned
 	 * element is the contents of one of e and e' before the union operation.
 	 * After union(e, e') elements e and e' will be congruent in the
 	 * sense that they are interchangeable in any context.
 	 *)
+    val union : 'a uref * 'a uref -> unit
 
-    val link : 'a uref * 'a uref -> unit
-	(* link (e, e') makes e and e' equal; the contents of the linked
+	(** link (e, e') makes e and e' equal; the contents of the linked
 	 * element is the contents of e' before the link operation
 	 *)
+    val link : 'a uref * 'a uref -> unit
 
   end; (* UREF *)

@@ -59,9 +59,11 @@ MKDIRTREE	= $(PWD)/mkdirtree
 DESCFILES	= $(shell find . -name .description)
 SMLFILES-kernel	:= $(shell find ./kernel -name CM -prune -a -type f -o -name *.sml)
 SMLFILES-lib	:= $(shell find ./lib -name CM -prune -a -type f -o -name *.sml)
+SMLFILES-miniml	:= $(shell find ./apps/miniml -name CM -prune -a -type f -o -name *.sml)
 CMFILES		= $(patsubst %/Dependencies,%/sources.cm,$(DEPENDENCIES))
 CMFILES-kernel	= $(filter ./kernel/%,$(CMFILES))
 CMFILES-lib	= $(filter ./lib/%,$(CMFILES))
+CMFILES-miniml	= $(filter ./apps/miniml/%,$(CMFILES))
 
 include $(MOSMAKE)/Makefile.inc
 
@@ -116,14 +118,20 @@ lib/$(DOCDIR)/index.html: lib/smldoc.cfg lib/overview.html $(CMFILES-lib) $(SMLF
 	test -w lib/$(DOCDIR) || mkdir lib/$(DOCDIR)
 	cd lib && $(SMLDOC) -d $(DOCDIR) $(SMLDOC-FLAGS) $(subst ./lib/,./,$(CMFILES-lib))
 
+doc-miniml:	apps/miniml/$(DOCDIR)/index.html
+apps/miniml/$(DOCDIR)/index.html: apps/miniml/smldoc.cfg apps/miniml/overview.html $(CMFILES-miniml) $(SMLFILES-miniml)
+	test -w apps/miniml/$(DOCDIR) || mkdir apps/miniml/$(DOCDIR)
+	cd apps/miniml && $(SMLDOC) -d $(DOCDIR) $(SMLDOC-FLAGS) $(subst ./apps/miniml/,./,$(CMFILES-miniml))
+
 DIRTREE: $(DESCFILES) $(MKDIRTREE)
 	echo "Directory summary (automatically generated, foolish to edit):" > $@
 	echo "" >> $@
 	cd $(ROOTDIR) && $(MKDIRTREE) $(THISDIR) >> $(THISDIR)/$@
 
-upload-doc: doc-lib doc-kernel
+upload-doc: doc-lib doc-kernel doc-miniml
 	scp kernel/doc/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/kernel/
 	scp lib/doc/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/lib/
+	scp apps/miniml/doc/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/miniml/
 
 # SML/NJ
 kernel.cm: kernel.cm.in
