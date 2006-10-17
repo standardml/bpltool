@@ -31,6 +31,11 @@
 
 SHELL		= /bin/bash
 
+prefix		= @prefix@
+srcdir		= @srcdir@
+datadir		= @datadir@
+smldocdir		= @smldocdir@
+
 RM              = rm -f
 
 MOSMLC  	= @MOSMLC@
@@ -44,12 +49,17 @@ MLC		= @MLC@
 MAKEFILE	= Makefile
 EXEEXT		= @EXEEXT@
 
+INSTALL		= @INSTALL@
+INSTALL_DATA= @INSTALL_DATA@
+
 MOSMLFLAGS 	= -liberal
 DEPENDENCIES    := $(shell find . -name Dependencies)
 MOSMAKEDIRS 	:= $(subst ./,, $(patsubst %/Dependencies,%,$(DEPENDENCIES)))
 MOSMAKE 	= lib/mosmake
 
-DOCDIR		= doc
+SVN			= svn
+
+DOCSUBDIR	= doc
 SMLDOC		= smldoc
 SMLDOC-FLAGS	= --overview=overview.html --argfile=smldoc.cfg
 
@@ -103,25 +113,29 @@ PARSINGFILES := $(patsubst %.grm,%.grm-sig.sml,$(GRMFILES)) $(patsubst %.grm,%.g
 %.grm-sig.sml %.grm.sml: %.grm
 	cd $(dir $@) && $(MAKE) $(notdir $@)
 
-
+# SVN
+.PHONY: svn-update
+svn-update:
+	$(SVN) update
+	
 # Documentation
 
-.PHONY:	all doc-kernel upload-doc
+.PHONY:	all doc-kernel doc-lib doc-miniml upload-doc
 
-doc-kernel:	kernel/$(DOCDIR)/index.html
-kernel/$(DOCDIR)/index.html: kernel/smldoc.cfg kernel/overview.html $(CMFILES-kernel) $(SMLFILES-kernel)
-	test -w kernel/$(DOCDIR) || mkdir kernel/$(DOCDIR)
-	cd kernel && $(SMLDOC) -d $(DOCDIR) $(SMLDOC-FLAGS) $(subst ./kernel/,./,$(CMFILES-kernel))
+doc-lib:	lib/$(DOCSUBDIR)/index.html
+lib/$(DOCSUBDIR)/index.html: lib/smldoc.cfg lib/overview.html $(CMFILES-lib) $(SMLFILES-lib)
+	test -w lib/$(DOCSUBDIR) || mkdir lib/$(DOCSUBDIR)
+	cd lib && $(SMLDOC) -d $(DOCSUBDIR) $(SMLDOC-FLAGS) $(subst ./lib/,./,$(CMFILES-lib))
 
-doc-lib:	lib/$(DOCDIR)/index.html
-lib/$(DOCDIR)/index.html: lib/smldoc.cfg lib/overview.html $(CMFILES-lib) $(SMLFILES-lib)
-	test -w lib/$(DOCDIR) || mkdir lib/$(DOCDIR)
-	cd lib && $(SMLDOC) -d $(DOCDIR) $(SMLDOC-FLAGS) $(subst ./lib/,./,$(CMFILES-lib))
+doc-kernel:	kernel/$(DOCSUBDIR)/index.html
+kernel/$(DOCSUBDIR)/index.html: kernel/smldoc.cfg kernel/overview.html $(CMFILES-kernel) $(SMLFILES-kernel)
+	test -w kernel/$(DOCSUBDIR) || mkdir kernel/$(DOCSUBDIR)
+	cd kernel && $(SMLDOC) -d $(DOCSUBDIR) $(SMLDOC-FLAGS) $(subst ./kernel/,./,$(CMFILES-kernel))
 
-doc-miniml:	apps/miniml/$(DOCDIR)/index.html
-apps/miniml/$(DOCDIR)/index.html: apps/miniml/smldoc.cfg apps/miniml/overview.html $(CMFILES-miniml) $(SMLFILES-miniml)
-	test -w apps/miniml/$(DOCDIR) || mkdir apps/miniml/$(DOCDIR)
-	cd apps/miniml && $(SMLDOC) -d $(DOCDIR) $(SMLDOC-FLAGS) $(subst ./apps/miniml/,./,$(CMFILES-miniml))
+doc-miniml:	apps/miniml/$(DOCSUBDIR)/index.html
+apps/miniml/$(DOCSUBDIR)/index.html: apps/miniml/smldoc.cfg apps/miniml/overview.html $(CMFILES-miniml) $(SMLFILES-miniml)
+	test -w apps/miniml/$(DOCSUBDIR) || mkdir apps/miniml/$(DOCSUBDIR)
+	cd apps/miniml && $(SMLDOC) -d $(DOCSUBDIR) $(SMLDOC-FLAGS) $(subst ./apps/miniml/,./,$(CMFILES-miniml))
 
 DIRTREE: $(DESCFILES) $(MKDIRTREE)
 	echo "Directory summary (automatically generated, foolish to edit):" > $@
@@ -132,6 +146,21 @@ upload-doc: doc-lib doc-kernel doc-miniml
 	scp kernel/doc/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/kernel/
 	scp lib/doc/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/lib/
 	scp apps/miniml/doc/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/miniml/
+
+.PHONY: install-doc-kernel install-doc-lib install-doc-miniml install-doc
+install-doc-lib: doc-lib
+install-doc-kernel: installdirs doc-kernel
+	cd kernel/$(DOCSUBDIR) && \
+	find . -type f -exec $(INSTALL) '{}' '$(smldocdir)/kernel/{}' ';'
+install-doc-miniml: doc-miniml
+install-doc: installdirs $(smldocdir)/index.html install-doc-lib install-doc-kernel install-doc-miniml
+$(smldocdir)/index.html: ../www/smldoc-index.html
+	$(INSTALL) $< $@
+# Make sure all installation directories (e.g. $(smldocdir))
+# actually exist by making them if necessary.
+.PHONY: installdirs
+installdirs: mkinstalldirs
+	$(srcdir)/mkinstalldirs $(smldocdir)/lib $(smldocdir)/kernel $(smldocdir)/miniml
 
 # SML/NJ
 kernel.cm: kernel.cm.in
@@ -182,7 +211,7 @@ mlbclean:
 	$(RM) $(patsubst %/Dependencies,%/mlton.mlb,$(DEPENDENCIES)) 
 
 docclean:
-	$(RM) -r kernel/$(DOCDIR) lib/$(DOCDIR)
+	$(RM) -r kernel/$(DOCSUBDIR) lib/$(DOCSUBDIR) apps/miniml/$(DOCSUBDIR)
 
 realclean: clean cmclean mlbclean parsersclean docclean
 

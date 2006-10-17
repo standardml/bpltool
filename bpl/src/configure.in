@@ -8,6 +8,7 @@ AC_INIT(README)
 
 AC_PROG_MAKE_SET
 AC_PROG_CC
+AC_PROG_INSTALL
 AC_EXEEXT
 
 AC_CHECK_PROGS(PERL,perl)
@@ -30,6 +31,13 @@ then
 		MLC="mlton"
 	fi
 fi
+
+AC_CACHE_VAL([bpl_cv_with_smldocdir],[bpl_cv_with_smldocdir=\${datadir}/doc/bpl])
+AC_ARG_WITH([smldocdir],
+            AS_HELP_STRING([--with-smldocdir=DIR],
+                           [directory for API documentation (\$(datadir)/doc/bpl)]),
+            [bpl_cv_with_smldocdir="$withval"])
+AC_SUBST([smldocdir],[$bpl_cv_with_smldocdir])
 
 dnl  Provoke rebuilding of mosmake.dep each time the configuration
 dnl  or the master Makefile changes; such a change may have affected
