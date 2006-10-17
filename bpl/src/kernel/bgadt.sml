@@ -75,7 +75,9 @@ structure Ion
 
 structure Wiring 
   = Wiring 
-      (structure Link        = Link
+      (type      int         = int
+       structure IntSet      = IntSet
+       structure Link        = Link
        structure LinkSet     = LinkSet
        structure Name        = Name
        structure NameSet     = NameSet
@@ -148,7 +150,10 @@ type 'class bgbdnf = 'class BgBDNF.bgbdnf
 
 structure Match = Match
   (type      info        = info
+   structure Name        = Name
+   structure Link        = Link
    structure NameSet     = NameSet
+   structure LinkSet     = LinkSet
    structure Permutation = Permutation
    structure Interface   = Interface
    structure Wiring      = Wiring

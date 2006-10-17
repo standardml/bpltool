@@ -31,6 +31,7 @@
  *)
  
 functor Match (
+  structure Name        : NAME
   structure Link        : LINK
   structure LinkSet     : MONO_SET
   structure Permutation : PERMUTATION
@@ -50,7 +51,8 @@ functor Match (
                            = Wiring.nameset
                            = Interface.nameset
                            = BgBDNF.nameset
-  sharing type Link.name = NameSet.elt
+  sharing type Name.name = Link.name
+                         = NameSet.elt
   sharing type LinkSet.Set = Wiring.linkset
   sharing type LinkSet.elt = Link.link
   sharing type Interface.interface = BgBDNF.interface
@@ -281,7 +283,7 @@ struct
           val Y_a''
             = if Y_a_empty_and_Y_R_nonempty
               andalso NameSet.isEmpty Y_a'' then
-                NameSet.singleton (afreshname ()) 
+                NameSet.singleton (Name.make "x" (* SHOULD BE: afreshname () *)) 
               else
                 Y_a''
           val theoutername
