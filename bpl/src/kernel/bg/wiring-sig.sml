@@ -23,6 +23,7 @@
  *)
 signature WIRING =
 sig
+  type nameedge
   type link
   type linkset
   type nameset
@@ -40,10 +41,18 @@ sig
   (** Deconstruct a wiring. *)
   val unmk : wiring -> linkset
 
+  (** Signal that two wirings cannot be extended due to a link
+   * clash involving an outer name of the second wiring.
+   *)
+  exception CannotExtend of wiring * wiring * nameedge
+
   (** Return the set of inner names of the wiring. *)
   val innernames : wiring -> nameset
   (** Return the set of outer names of the wiring. *)
   val outernames : wiring -> nameset
+
+  (** Return the set of names introduced, i.e., that have no points. *)
+  val introductions : wiring -> nameset
 
   (** Compose two wirings.
    * The inner face of w1 need not match the outer face of w2, in
@@ -68,6 +77,29 @@ sig
    * undefined. 
    *)
   val || : (wiring * wiring) -> wiring
+  (** Make the parallel product of a list of wirings.  Note that disjointness
+   * of inner faces is NOT checked; the result in this case will be
+   * undefined. 
+   *)
+  val ||| : wiring list -> wiring
+  (** Make the extension of two wirings.  Expressing wirings using
+   * substitutions
+   * by w_1 = s || s_1 || /X_1 (s' || s'_1) and
+   *    w_2 = s || s_2 || /X_2 (s' || s'_2) where s_1 and s_2
+   * and s'_1 and s'_2 have disjoint inner name sets, we have
+   * w_1 + w_2 = s || s_1 || s_2 || /(X_1 U X_2) (s' || w'_1 || w'_2).
+   *)
+  val + : (wiring * wiring) -> wiring
+  (** Make the extension of a list of wirings.  For a list of wirings
+   * w_1, ..., w_n that can be written using substitutions as
+   * w_i = s || s_i || /X_i (s' || s'_i), where all s'_i's and s_i's
+   * have disjoint inner name sets, and X_i are the outer names of
+   * s' and s'_i, we have
+   * ++[w_1, ..., w_n] = s || s_1 || ... || s_n
+   *            || /(X_1 U ... U X_n) (s' || s'_1 || ... || s'_n).
+   * ++[] = id_0.
+   *)
+  val ++ : wiring list -> wiring
 
   (** Compute the set of names to which the wiring maps a given set. *)
   val app : wiring -> nameset -> nameset
