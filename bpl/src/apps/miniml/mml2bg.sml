@@ -67,11 +67,11 @@ functor MiniMLToBG(structure BG : BG_ADT
 	( raise CompileError(reason ^ ": ", explain file exn)
         )
 
-    val frontend_timer = 
+    val frontend_timer : (unit -> (MatchCompiler.pos, MiniML.pat) MiniML.prog) -> (MatchCompiler.pos, MiniML.pat) MiniML.prog = 
 	Timings.add {name="/bplc/1/frontend",desc="Frontend time"}
-    val codegen_timer =
+    val codegen_timer : (unit -> BGGen.bpl BGGen.result) -> BGGen.bpl BGGen.result =
 	Timings.add {name="/bplc/2/codegen",desc="Code generation time"}
-    val normalize_timer =
+    val normalize_timer : (unit -> BG.BgBDNF.B BG.BgBDNF.bgbdnf) -> BG.BgBDNF.B BG.BgBDNF.bgbdnf =
 	Timings.add {name="/bplc/3/normalize",desc="BgTerm normalization"}
 
     fun compile infile outfile =
