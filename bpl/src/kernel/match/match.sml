@@ -283,7 +283,7 @@ struct
           val Y_a''
             = if Y_a_empty_and_Y_R_nonempty
               andalso NameSet.isEmpty Y_a'' then
-                NameSet.singleton (Name.make "x" (* SHOULD REALLY BE: afreshname () *)) 
+                NameSet.singleton (Name.make "x" (* SHOULD BE: afreshname () *)) 
               else
                 Y_a''
           val theoutername
