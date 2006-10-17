@@ -116,8 +116,8 @@ PARSINGFILES := $(patsubst %.grm,%.grm-sig.sml,$(GRMFILES)) $(patsubst %.grm,%.g
 # SVN
 .PHONY: svn-update
 svn-update:
-	$(SVN) update
-	
+	cd .. && $(SVN) update
+
 # Documentation
 
 .PHONY:	all doc-kernel doc-lib doc-miniml upload-doc
