@@ -25,8 +25,11 @@ functor Wiring (structure Link : LINK
 		structure LinkSet : MONO_SET
 		structure Name : NAME
 		structure NameSet : MONO_SET
+		structure IntSet : MONO_SET
 		structure PrettyPrint : PRETTYPRINT
 		structure NameSetPP : COLLECTIONPRETTYPRINT
+    type int = int
+		sharing type int = IntSet.elt
 		sharing type Link.link = LinkSet.elt
 		sharing type Name.name = Link.name = NameSet.elt
 		sharing type NameSet.Set = Link.nameset
@@ -214,8 +217,20 @@ struct
 	NameSet.empty
 	ls
 
+  fun introductions (ls, _)
+    = Link'Set.fold
+        (fn {outer = Name y, inner}
+          => if NameSet.isEmpty inner then 
+               NameSet.insert y
+             else
+               (fn Y => Y))
+        NameSet.empty
+        ls
+
   exception InternalError 
 	    of string * nameset NameEdgeMap.hash_table * nameedge * string
+
+  exception CannotExtend of wiring * wiring * nameedge
 
   fun is_id (ls, ht) = 
       let
@@ -378,6 +393,109 @@ struct
 	(map2link'set ht, ht)
       end
   end
+
+  val id_0 : wiring = (Link'Set.empty, createNameMap 1)
+
+  fun ||| [] = id_0
+    | ||| [w] = w
+    | ||| (w :: ws) = || (w, ||| ws)
+
+  fun plus (w1 as (l1s, ht1)) (w2 as (l2s, ht2)) =
+      (* Careful, now.  We must renumber the closure numbers of
+       * (ls2, ht2) so they don't merge with those of (ls1, ht1)
+       * unless they are supposed to do so.
+       *)
+    let
+			val ht = NameMap.copy ht2
+			val imax (* Maximum closure index of w2 *)
+			  = Link'Set.fold
+			      (fn {outer = Closure i, inner} =>
+			         (fn imax => if i > imax then i else imax)
+			        | _ => (fn imax => imax)) ~1 l2s
+			
+			(* Insert link x |-> y1 into ht, return true if merge occurred. *)        
+			fun insertnamelink y1 x merged =
+			  case NameMap.find ht2 x of
+			    SOME (Name y2) =>
+		 	      if Name.== (y1, y2) then
+		 	        true
+		 	      else
+		 	        raise CannotExtend (w1, w2, Name y2)
+		 	  | SOME (Closure i) => raise CannotExtend (w1, w2, Closure i)
+		 	  | NONE => (NameMap.insert ht (x, Name y1); merged)
+
+      (* Merge links  inner |-> y  into lacc, removing it from ls.
+       * Return new lacc and new ls.
+       *)
+      fun mergelinks (l as {outer = Name y, inner}) 
+                     (lacc as {outer = Name yacc, inner = inneracc}, ls)
+        = if Name.== (y, yacc) then
+            ({outer = Name yacc, inner = NameSet.union' inner inneracc},
+             Link'Set.remove l ls)
+          else
+            (lacc, ls)
+        | mergelinks (l as {outer = Closure _, inner}) laccls = laccls
+		
+		  (* Merge the points of every internal edge with an index in is
+		   * into an accumulated set, and remove them from ls.  Return
+		   * the new accumulated set and new ls.
+		   *)
+		  fun mergeedges is i1 (l as {outer = Closure i2, inner})
+		                       (inneracc, ls)
+		    = if IntSet.member i2 is then
+		        (NameSet.union' inner inneracc, Link'Set.remove l ls)
+		      else
+		        (inneracc, ls)
+		    | mergeedges is i (l as {outer = Name _, inner = _})
+		                      inneraccls
+		    = inneraccls
+		  
+		  (* Insert link l into ls, returning an updated version of
+		   * imax and ls.
+		   *)  
+			fun insertlinks (l as {outer = Name y1, inner}) (imax, ls)
+			  = if NameSet.fold (insertnamelink y1) false inner then
+			      let
+			        val (l, ls) = Link'Set.fold mergelinks (l, ls) ls
+			      in
+			        (imax, Link'Set.insert l ls)
+			      end
+			    else
+			      (imax, ls)
+			  | insertlinks {outer = Closure i, inner} (imax, ls)
+			  = let
+			      fun addedgeof x (I, imin)
+			        = case NameMap.find ht2 x of
+			            SOME (Closure i')
+			             => (IntSet.insert' i' I,
+			                 if i' < imin then i' else imin)
+			          | NONE => (I, imin)
+			          | SOME (Name y2) =>
+			              raise CannotExtend (w1, w2, Name y2)
+			      val (is, imin)
+			        = NameSet.fold addedgeof (IntSet.empty, imax + 1) inner
+			    in
+			      (if imin < imax then imax else imin,
+			       if IntSet.isEmpty is then
+			         Link'Set.insert {outer = Closure imin, inner = inner} ls
+			       else
+			         let
+			           val (inner, ls)
+			             = Link'Set.fold (mergeedges is imin) (inner, ls) ls
+			         in
+			           NameSet.apply (fn x => NameMap.insert ht (x, Closure imin)) inner;
+			           Link'Set.insert {outer = Closure imin, inner = inner} ls
+			         end)
+			    end
+			val (_, ls) = Link'Set.fold insertlinks (imax, l2s) l1s
+	  in
+	    (ls, ht)
+	  end
+          
+
+  fun ++ [] = id_0
+    | ++ [w] = w
+    | ++ (w :: ws) = plus w (++ ws)
 
   fun app_x (_, ht) x 
     = case NameMap.find ht x of
@@ -609,8 +727,6 @@ struct
         (NameSet.fold addlink Link'Set.empty X, ht)
       end
 
-  val id_0 : wiring = (Link'Set.empty, createNameMap 1)
-
   fun introduce X =
       let
 	val ht = createNameMap 1
@@ -634,6 +750,8 @@ struct
       end
   
   val op * = x
+
+  fun op + (w1, w2) = plus w1 w2
 
   val ** = foldr x id_0
 
