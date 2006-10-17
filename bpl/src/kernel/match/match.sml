@@ -31,22 +31,28 @@
  *)
  
 functor Match (
+  structure Link        : LINK
+  structure LinkSet     : MONO_SET
   structure Permutation : PERMUTATION
-  structure Wiring : WIRING
-  structure Interface : INTERFACE
-  structure BgVal : BGVAL
-  structure BgBDNF : BGBDNF
-  structure NameSet : MONO_SET
-  structure LazyList : LAZYLIST
+  structure Wiring      : WIRING
+  structure Interface   : INTERFACE
+  structure BgVal       : BGVAL
+  structure BgBDNF      : BGBDNF
+  structure NameSet     : MONO_SET
+  structure LazyList    : LAZYLIST
   structure PrettyPrint : PRETTYPRINT
   type info
   sharing type Permutation.nameset = NameSet.Set
   sharing type Permutation.permutation = BgBDNF.permutation
   sharing type Wiring.wiring = BgVal.wiring
                              = BgBDNF.wiring
-  sharing type NameSet.Set = Wiring.nameset
+  sharing type NameSet.Set = Link.nameset
+                           = Wiring.nameset
                            = Interface.nameset
                            = BgBDNF.nameset
+  sharing type Link.name = NameSet.elt
+  sharing type LinkSet.Set = Wiring.linkset
+  sharing type LinkSet.elt = Link.link
   sharing type Interface.interface = BgBDNF.interface
   sharing type BgVal.bgval = BgBDNF.bgval
   sharing type BgVal.bgmatch = BgBDNF.bgmatch
@@ -147,6 +153,10 @@ struct
   (* Signals that an error during grouping of tensor factors. *)
   exception GroupError of string * string * P bgbdnf list * int list
 
+  (* Signals that a tuple of lists contained lists of unequal length. *)
+  exception UnequalLengths
+   of wiring list * wiring list * wiring list * int * P bgbdnf list list
+
   (* Returns a mutable copy of a perm. *)
   fun permcopy (n, pi, ps) = (n, Permutation.copy pi, ps)
 
@@ -207,6 +217,12 @@ struct
    * sigma^a = s_a'' x s_a.
    *)
 
+  fun matchDS s_a' s_a s_R e Ps = lzNil
+  
+  fun matchDP s_a' s_a s_R e Ps = lzNil
+
+  datatype primetype = DiscretePrime | GlobalDiscretePrime
+
   (* Match a parallel composition:
    * 1) For each e_i : -> <1,(X_i),X_i + Y_i> determine
    *    s_a_i = s_a domainrestricted to Y_i
@@ -215,16 +231,21 @@ struct
    *    s_R_i = s_R domainrestricted to Y_i.
    * 3) Using s_a_i, s_a'_i, s_R_i, e_i, Ps_i, infer premise, 
    *    yielding s_a''_i, s_C_i, E_i and ps_i.
-   * 4) Compute s_a'', Es and pss by composition.
+   * 4) Compute s_a'', Es and pss by product.
    * 5) Determine names Y_a'', Y_a, Y_R
    *    introduced by s_a'', s_a and s_R, respectively.
    * 6) If Y_a'' = Y_a = {} and Y_R <> {}, then add a fresh
    *    name to Y_a'' and its name introduction to s_a''.
-   * 7) Construct sustitution s_I : Y_R -> Y_a'' + Y_a.
-   * 8) Compute s_C by composition of s_C_i's and s_I.
+   * 7) Construct substitution s_I : Y_R -> Y_a'' + Y_a.
+   * 8) Compute s_C as the extension* of s_C_i's and s_I.
    * 9) Return s_a'', s_C, Es and pss.
+   *
+   * *=extension is a parallel product where inner name
+   *   clash is allowed, providing such names map to the
+   *   same link.  Internal edges with identical point
+   *   sets are considered "the same link."
    *)
-  fun matchPARn s_a' s_a s_R es Pss = lzmake (fn () =>
+  fun matchPARn E s_a' s_a s_R es Pss = lzmake (fn () =>
     let
       val s_a's
         = map (Wiring.restrict s_a' o glob o outerface) es
@@ -235,13 +256,63 @@ struct
                o foldr (fn (Y_i, Y) => NameSet.union Y_i Y)
                        NameSet.empty
                o map (glob o outerface)) Pss
+      val match = case E of 
+          DiscretePrime => matchDP
+        | GlobalDiscretePrime => matchDS
+      fun submatches
+          (s_a' :: s_a's) (s_a :: s_as) (s_R :: s_Rs)
+          (e :: es) (Ps :: Pss)
+        = match s_a' s_a s_R e Ps
+           :: submatches s_a's s_as s_Rs es Pss
+        | submatches [] [] [] [] [] = []
+        | submatches s_a's s_as s_Rs es Pss
+        = raise UnequalLengths (s_a's, s_as, s_Rs, length es, Pss)
+      val Y_a = Wiring.introductions s_a
+      val Y_R = Wiring.introductions s_R
+      val Y_a_empty_and_Y_R_nonempty
+        = NameSet.isEmpty Y_a andalso not (NameSet.isEmpty Y_R)
+      fun toPARn (matches : {E : 'a bgbdnf, ps : P bgbdnf list,
+                             s_C : wiring, s_a'' : wiring} list) =
+        let
+          val s_a'' = Wiring.||| (map #s_a'' matches)
+          val Es = map #E matches
+          val pss = map #ps matches
+          val Y_a'' = Wiring.introductions s_a''
+          val Y_a''
+            = if Y_a_empty_and_Y_R_nonempty
+              andalso NameSet.isEmpty Y_a'' then
+                NameSet.singleton (afreshname ()) 
+              else
+                Y_a''
+          val theoutername
+            = case NameSet.foldUntil
+                (fn y => fn NONE => (true, SOME y) | y' => (true, y'))
+                (NameSet.foldUntil 
+                  (fn y => fn NONE => (true, SOME y) | y' => (true, y'))
+                  NONE Y_a'')
+                Y_a of
+                 SOME y => y
+               | NONE => raise ThisCannotHappen (* Y_a'' + Y_a <> {} *)
+          val s_I
+           = Wiring.*
+             (Wiring.make
+                (LinkSet.singleton
+                  (Link.make {outer = SOME theoutername, inner = Y_R})),
+              Wiring.introduce
+                (NameSet.remove
+                   theoutername (NameSet.union Y_a'' Y_a)))
+          val s_C = Wiring.++ (s_I :: map #s_C matches)
+        in
+          {s_a'' = s_a'', s_C = s_C, Es = Es, pss = pss}
+        end
       val matches
-        = 0  (* TODO FROM HERE *)
+        = lzmap toPARn
+            (lzcombine (submatches s_a's s_as s_Rs es Pss))
     in
-      lzunmk lzNil (* DUMMY (WRONG!) VALUE FOR TYPECHECKING *)
+      lzunmk matches
     end)
 
-  fun matchPARe s_a' s_a s_R es Ps = lzmake (fn () =>
+  fun matchPARe E s_a' s_a s_R es Ps = lzmake (fn () =>
 	  let
 	    val n = length es
 	    val m = length Ps
@@ -261,7 +332,7 @@ struct
 	          = {s_a'' = s_a'', s_C = s_C, Es = Es,
 	             qs = List.concat pss}
     	    val matches
-	          = lzmap toPARe (matchPARn s_a' s_a s_R es P'ss)
+	          = lzmap toPARe (matchPARn E s_a' s_a s_R es P'ss)
           fun next () = lzunmk (nextmatch
                                 (nextsplit split)
                                 handle NoMoreSplits => lzNil)
@@ -272,7 +343,7 @@ struct
 	    lzunmk (nextmatch (firstsplit m n))
 	  end)
 
-  fun matchPER s_a' s_a s_R es Qs = lzmake (fn () =>
+  fun matchPER E s_a' s_a s_R es Qs = lzmake (fn () =>
     let
       val Xss = map (loc o innerface) Qs
       fun nextmatch (perm as (_, pi, _) : Mutable operm) =
@@ -283,7 +354,7 @@ struct
             = {s_a'' = s_a'', s_C = s_C, Es = Es, pi = pi,
                qs = permute pibar qs}
           val matches
-            = lzmap toPER (matchPARe s_a' s_a s_R es Qs')
+            = lzmap toPER (matchPARe E s_a' s_a s_R es Qs')
           fun next () = lzunmk (nextmatch 
                                 (nextperm perm)
                                 handle NoMorePerms => lzNil)
@@ -308,7 +379,7 @@ struct
       open Wiring
     	val {opened = s_a', rest = s_a, usednames} = splitopen NameSet.empty w_a
     	val {opened = s_R, newnames = Y_R, ...} = openup usednames w_R
-	    val matches = matchPER s_a' s_a s_R ps Ps
+	    val matches = matchPER DiscretePrime s_a' s_a s_R ps Ps
 	    val is_id_Y_R_x_sigma = Wiring.is_id_x_sigma Y_R
     	fun toCLO ({s_a'', s_C, Es = Qs, pi, qs}, rest) =
     	  if is_id_Y_R_x_sigma s_C then
