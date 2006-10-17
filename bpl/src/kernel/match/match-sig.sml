@@ -46,7 +46,7 @@ sig
 
   (** Infer a match of a redex in an agent.
    * @params {agent, redex}
-   * @param agent      the bigraph agent in which a match is searched.
+   * @paramw agent      the bigraph agent in which a match is searched.
    * @param redex      the redex to match.
    * @return SOME match if a match is found, NONE otherwise.
    *)
