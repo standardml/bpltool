@@ -117,7 +117,7 @@ PARSINGFILES := $(patsubst %.grm,%.grm-sig.sml,$(GRMFILES)) $(patsubst %.grm,%.g
 .PHONY: svn-update
 svn-update:
 	cd .. && $(SVN) update
-
+	
 # Documentation
 
 .PHONY:	all doc-kernel doc-lib doc-miniml upload-doc
@@ -143,16 +143,20 @@ DIRTREE: $(DESCFILES) $(MKDIRTREE)
 	cd $(ROOTDIR) && $(MKDIRTREE) $(THISDIR) >> $(THISDIR)/$@
 
 upload-doc: doc-lib doc-kernel doc-miniml
-	scp kernel/doc/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/kernel/
-	scp lib/doc/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/lib/
-	scp apps/miniml/doc/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/miniml/
+	scp kernel/$(DOCSUBDIR)/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/kernel/
+	scp lib/$(DOCSUBDIR)/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/lib/
+	scp apps/miniml/$(DOCSUBDIR)/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/miniml/
 
 .PHONY: install-doc-kernel install-doc-lib install-doc-miniml install-doc
 install-doc-lib: doc-lib
-install-doc-kernel: installdirs doc-kernel
+	cd lib/$(DOCSUBDIR) && \
+	find . -type f -exec $(INSTALL) '{}' '$(smldocdir)/lib/{}' ';'
+install-doc-kernel: doc-kernel
 	cd kernel/$(DOCSUBDIR) && \
 	find . -type f -exec $(INSTALL) '{}' '$(smldocdir)/kernel/{}' ';'
 install-doc-miniml: doc-miniml
+	cd apps/miniml/$(DOCSUBDIR) && \
+	find . -type f -exec $(INSTALL) '{}' '$(smldocdir)/miniml/{}' ';'
 install-doc: installdirs $(smldocdir)/index.html install-doc-lib install-doc-kernel install-doc-miniml
 $(smldocdir)/index.html: ../www/smldoc-index.html
 	$(INSTALL) $< $@
