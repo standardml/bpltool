@@ -18,6 +18,13 @@
  * software or the use or other dealings in the software.
  *)
 
+(** Parsing of command-line arguments.
+ * @author Peter Sestoft (from the Moscow ML compiler).
+ * @contributor Henning Niss (minor modifications) <hniss@itu.dk>.
+ * @contributor Henning Makholm (minor modifications) <hniss@itu.dk>.
+ * @version $LastChangedRevision: 129 $
+ *)
+
 (* COMMAND-LINE PARSING
  *
  * From the MosML compiler.
