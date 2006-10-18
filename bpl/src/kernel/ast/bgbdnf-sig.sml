@@ -91,6 +91,16 @@ sig
 	 * @params alpha Ps
    *)
   val make_DR : wiring -> P bgbdnf list -> DR bgbdnf
+  (** Construct a P bgbdnf from a substitution and an N bgbdnf.
+   * NOTE: it is not checked whether sigma is a substitution!
+   * @params sigma N
+   *)
+  val make_P : wiring -> N bgbdnf -> P bgbdnf
+  (** Construct an N bgbdnf from a name set and a G bgbdnf.
+   * NOTE: it is not checked whether X is a subset of G's outer names!
+   * @params X G
+   *)
+  val make_N : nameset -> G bgbdnf -> N bgbdnf
   (** Deconstruct a B bgbdnf. 
    * @return (wirxid, D) representing (a wiring x id_(Xs)) and a DBDNF.
    *)
@@ -103,7 +113,9 @@ sig
       : D bgbdnf -> {ren : bgval, Ps : P bgbdnf list, perm : bgval}
   (** Deconstruct a P bgbdnf. 
    * @return (idxlocsub, N) representing (id_Z x a local substitution)
-   * and a NBDNF.
+   * and a NBDNF.  The local substitution is on the form 
+   * (Y)(w x id_1)"X", where w is a wiring and id_1 an identity
+   * permutation.
    *)
   val unmkP : P bgbdnf -> {idxlocsub : bgval, N : N bgbdnf}
   (** Deconstruct a N bgbdnf. 

@@ -149,6 +149,21 @@ struct
 	  in
 	     Wir w xx Ten Ps
 	  end
+	fun make_P s N =
+		let
+	    val Wir = Wir i
+	    val Ten = Ten i
+	    fun xx (v1, v2) = Ten [v1, v2]  infix 6 xx
+	    val oo = Com i                  infix 7 oo
+	    val Z = glob (outerface N)
+	    val Y = outernames s
+	    val X = innernames s
+	    val id_Z = Wiring.id_X Z
+	    val id_1 = Permutation.id_n 1
+		in
+			(Wir id_Z xx Abs (Y, (Wir s xx Per id_1) oo Con X)) oo N
+		end
+	fun make_N X G = Abs (X, G)			
           
   fun unmkB B = 
       case match (PCom (PVar, PVar)) B of
