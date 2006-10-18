@@ -75,8 +75,7 @@ structure Ion
 
 structure Wiring 
   = Wiring 
-      (type      int         = int
-       structure IntSet      = IntSet
+      (structure IntSet      = IntSet
        structure Link        = Link
        structure LinkSet     = LinkSet
        structure Name        = Name
@@ -86,8 +85,7 @@ structure Wiring
 
 structure Permutation
   = Permutation 
-      (type      int         = int
-       structure Name        = Name
+      (structure Name        = Name
        structure NameSet     = NameSet
        structure IntSet      = IntSet
        structure Interface   = Interface

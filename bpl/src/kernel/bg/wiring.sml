@@ -25,11 +25,9 @@ functor Wiring (structure Link : LINK
 		structure LinkSet : MONO_SET
 		structure Name : NAME
 		structure NameSet : MONO_SET
-		structure IntSet : MONO_SET
+		structure IntSet : MONO_SET where type elt = int
 		structure PrettyPrint : PRETTYPRINT
 		structure NameSetPP : COLLECTIONPRETTYPRINT
-    type int = int
-		sharing type int = IntSet.elt
 		sharing type Link.link = LinkSet.elt
 		sharing type Name.name = Link.name = NameSet.elt
 		sharing type NameSet.Set = Link.nameset
