@@ -231,6 +231,7 @@ struct
 		    showlpar();
 		    ppp pal' PrCom PrCom b1;
 		    brk();
+		    show "o ";
 		    ppp PrCom par' prr' b2;
 		    showrpar();
 		    >>()
