@@ -116,6 +116,13 @@ sig
    * outer name.
    *)
   val restrict_outer : wiring -> nameset -> wiring
+  (** Split a wiring into two, one of which maps to a given set of names.
+	 * @params w Y
+	 * @return {inCod, notInCod}
+	 *   Wirings that satisfy w = w_inCod x w_notInCod and
+	 *   w_inCod : X -> Y and w_inCod contains no internal edges. 
+   *)
+  val split_outer : wiring -> nameset -> {inCod : wiring, notInCod : wiring}
   (** Split wiring into closed and open part, then turn closed edges
    * into links with fresh names.    Any fresh
    * names generated will not clash with outer names of w.
@@ -132,9 +139,9 @@ sig
                                         usednames : nameset}
   (** Turn closed edges into links with fresh names.  Any fresh
    * names generated will not clash with outer names of w.
-   * @params w usednames
-   * @param w          Wiring to open.
+   * @params usednames w
    * @param usednames  Names not to use when generating fresh names.
+   * @param w          Wiring to open.
    * @return {opened, newnames, usednames}
    *                   A wiring containing just open links,
    *                   the set of new names added, and the union

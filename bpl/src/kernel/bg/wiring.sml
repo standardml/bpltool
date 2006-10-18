@@ -223,7 +223,8 @@ struct
           => if NameSet.isEmpty inner then 
                NameSet.insert y
              else
-               (fn Y => Y))
+               (fn Y => Y)
+          | _ => (fn Y => Y))
         NameSet.empty
         ls
 
@@ -434,7 +435,7 @@ struct
              Link'Set.remove l ls)
           else
             (lacc, ls)
-        | mergelinks (l as {outer = Closure _, inner}) laccls = laccls
+        | mergelinks _ laccls = laccls
 		
 		  (* Merge the points of every internal edge with an index in is
 		   * into an accumulated set, and remove them from ls.  Return
@@ -559,10 +560,6 @@ struct
 	(invmap2link'set new_ht_inv, invert (NameSet.size X) new_ht_inv)
       end
 
-  (** Restrict a wiring to only map to a given set of names.
-   * The inner face is trimmed to include only names which maps to an
-   * outer name.
-   *)
   fun restrict_outer (ls, ht) Y =
       let
 	val (new_ls, new_ht_size)
@@ -583,6 +580,44 @@ struct
       in
         (Link'Set.apply add_nameedge new_ls;
          (new_ls, new_ht))
+      end
+
+  fun split_outer (ls, ht) Y =
+      let
+				val (ls_inCod, ht_inCod_size, ls_notInCod, ht_notInCod_size)
+            = Link'Set.fold
+                (fn l as {outer = Name n, inner} =>
+                    (fn (ls_inCod, ht_inCod_size,
+                         ls_notInCod, ht_notInCod_size) =>
+	                      if NameSet.member n Y then
+	                        (Link'Set.insert l ls_inCod,
+	                         ht_inCod_size + NameSet.size inner,
+	                         ls_notInCod,
+	                         ht_notInCod_size)
+	                      else
+	                        (ls_inCod,
+	                         ht_inCod_size,
+	                         Link'Set.insert l ls_notInCod,
+	                         ht_notInCod_size + NameSet.size inner))
+	                | l as {outer, inner} => (* internal edges go into notInCod *)
+	                  fn (ls_inCod, ht_inCod_size,
+	                      ls_notInCod, ht_notInCod_size) =>
+                        (ls_inCod,
+                         ht_inCod_size,
+                         Link'Set.insert l ls_notInCod,
+                         ht_notInCod_size + NameSet.size inner))
+	                (Link'Set.empty, 0, Link'Set.empty, 0) ls
+        val ht_inCod = createNameMap ht_inCod_size
+        val ht_notInCod = createNameMap ht_notInCod_size
+        fun add_nameedge ht {outer, inner}
+            = NameSet.apply
+                (fn n => NameMap.insert ht (n, outer))
+                inner
+      in
+        Link'Set.apply (add_nameedge ht_inCod) ls_inCod;
+        Link'Set.apply (add_nameedge ht_notInCod) ls_notInCod;
+        {inCod = (ls_inCod, ht_inCod),
+         notInCod = (ls_notInCod, ht_notInCod)}
       end
 
   fun addto ht names y
