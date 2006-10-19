@@ -18,7 +18,8 @@
  * software or the use or other dealings in the software.
  *)
 
-(** UnionFind package.
+(** 
+ * UnionFind package.
  *
  * @author Fritz Henglein, DIKU, University of Copenhagen <henglein@diku.dk>
  * @contributor Henning Niss, IT University of Copenhagen (minor modifications) <hniss@itu.dk>

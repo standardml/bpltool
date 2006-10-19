@@ -19,9 +19,9 @@
  *)
 
 (** Parsing of command-line arguments.
- * @author Peter Sestoft (from the Moscow ML compiler).
- * @contributor Henning Niss (minor modifications) <hniss@itu.dk>.
- * @contributor Henning Makholm (minor modifications) <hniss@itu.dk>.
+ * @author Peter Sestoft (taken from the Moscow ML compiler).
+ * @contributor Henning Niss (minor modifications) <hniss@itu.dk>.<br/>
+ * @contributor Henning Makholm (minor modifications) <henning@makholm.net>.
  * @version $LastChangedRevision: 129 $
  *)
 

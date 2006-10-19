@@ -2,11 +2,11 @@
  * Implementation of assert functions.
  *
  * @author YAMATODANI Kiyoshi
- * @version $Id: assert.sml,v 1.1 2006/09/02 12:52:34 hniss Exp $
- *
- * Copyright (c) 2006, Tohoku University. All rights reserved.
- * See license.txt (http://www.pllab.riec.tohoku.ac.jp/smlsharp/?SMLSharpLicence) 
+ * @copyright Copyright (c) 2006, Tohoku University. All rights reserved.<br/>
+ * See license.txt 
+ * (or the <a href="http://www.pllab.riec.tohoku.ac.jp/smlsharp/?SMLSharpLicence">SML# web page</a>)
  * for details.
+ * @version $LastChangedRevision: 102 $
  *)
 structure Assert :> ASSERT =
 struct

@@ -37,38 +37,44 @@
  * command line is treated as anonymous arguments even if they
  * start with <code>-</code>.
  *
- * @author Peter Sestoft (from the Moscow ML compiler).
- * @contributor Henning Niss (minor modifications) <hniss@itu.dk>.
+ * @author Peter Sestoft (taken from the Moscow ML compiler).
+ * @contributor Henning Niss (minor modifications) <hniss@itu.dk>.<br/>
+ * @contributor Henning Makholm (minor modifications) <henning@makholm.net>.
 *)
 
 signature ArgParse = (* From the MosML compiler. *)
 sig
 
     datatype spec =
+        (** A string keyword. *)
 	String  of (string -> unit)
+        (** An int keyword. *)
       | Int     of (int -> unit)
+        (** A unit keyword; no argument. *)
       | Unit    of (unit -> unit)
+        (** A real keyword. *)
       | Real    of (real -> unit)
 
    (** Parses the command line or a list of arguments.
-    * <code>parse args speclist anonfun</code> parses the command line
+    * When called,  parses the command line
     * if args is NONE, otherwise the list of arguments supplied in
-    * args, calling the functions in [speclist] whenever appropriate,
-    * and [anonfun] on anonymous arguments.  The functions are called
+    * args, calling the functions in speclist whenever appropriate,
+    * and anonfun on anonymous arguments.  The functions are called
     * in the same order as they appear on the command line.  The
-    * strings in the [(string * spec) list] are keywords and must
-    * start with a [-], else they are ignored. Functions in [speclist]
-    * or [anonfun] can raise [Bad message] to reject invalid
+    * strings in the speclist are keywords and must
+    * start with a <code>-</code>, else they are ignored. Functions in
+    * speclist or anonfun can raise Bad to reject invalid
     * arguments.
     * @params args speclist anonfun
     * @param args NONE to parse the command line, otherwise SOME(argument list)
     * @param speclist list of argument specifications
     * @param anonfun function invoked on anonymous arguments
+    * @exception Bad raised if the command line or the list of arguments cannot be parsed.
     *)
     val parse : string list option
 	      -> (string * spec) list -> (string -> unit) -> unit;
 
-    (** Raised when the list of arguments cannot be parsed.
+    (** Signals that the list of arguments cannot be parsed.
       *)
     exception Bad of string
 

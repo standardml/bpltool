@@ -18,7 +18,8 @@
  * software or the use or other dealings in the software.
  *)
 
-(** Interface to UnionFind package.
+(** 
+ * Interface to UnionFind package.
  * <p>
  * Union/Find data type with ref-like interface.  A Union/Find structure 
  * consists of a type constructor <code>'a uref</code> with operations for
