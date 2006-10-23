@@ -19,9 +19,9 @@
  *)
 
 (** Match datatype and inference.  For theoretical background
- * information, see <ul><li>
- * Birkedal, Damgaard, Glenstrup, and Milner: <em>
- * Matching of bigraphs.</em>
+ * information, see                                          <ul><li>
+ * Birkedal, Damgaard, Glenstrup, and Milner:                    <em>
+ * Matching of bigraphs.                                        </em>
  * In Proceedings of Graph Transformation for Verification and
  * Concurrency Workshop 2006
  * Electronic Notes in Theoretical Computer Science. Elsevier.</li><li>
@@ -216,35 +216,139 @@ struct
 
   (* Matching rule functions
    * =======================
-   * All rules except CLO take a set, usednames, and
-   * 3 substitutions s_a', s_a, s_R
+   *
+   * Non-primed functions implement rules used at or below the SWX
+   * rule, while primed functions implement rules used above it.
+   *
+   * Non-primed functions:
+   * --------------------
+   * All rule functions used in non-prime mode, except CLO, take
+   * some specific arguments, as well as these general ones:
+   * - usednames  a set containing all names that must NOT be used
+   *              as outer names for s_a_e'
+   * - s_a_e      substitution representing agent edge links
+   * - s_a_n      substitution representing agent name links
+   * - s_R_e      substitution representing redex edge links
+   * - s_R_n      substitution representing redex name links
+   *
+   * They must return specific values, as well as
+   * - s_a_e'     substitution representing agent edge links
+   * - s_C        substitution representing context links
+   *
+   * where s_a_e' = Y/ * alpha s_a_e, i.e., s_a_e' must be an
+   * outer-name-extended and renamed version of s_a_e.
+   * Links of s_R_e must only be matched with links of s_a_e.
+   * The substitutions in the theoretical note are
+   * sigma^a = s_a_e' * s_a_n  and  sigma^R = s_R_e * s_R_n.
+   *
+   * Primed functions:
+   * ----------------
+   * All rule functions used in prime mode are used with s_R = id_0
+   * and redex = id, which are therefore not passed as arguments.
+   * They take some
+   * specific arguments, as well as these general ones:
+   * - s_a_e      substitution representing agent edge links
+   * - s_a_n      substitution representing agent name links
+   * - s_C_e      substitution representing (part of) context edge links
+   * - s_C_n      substitution representing (part of) context name links
+   *
+   * They must return specific values, as well as
+   * - s_a_e'     substitution representing agent edge links
+   * - s_C        substitution representing (part of) context edge links
+   *
+   * where s_a_e' = Y/ * alpha s_a_e, i.e., s_a_e' must be an
+   * outer-name-extended and renamed version of s_a_e.
+   * Letting sigma^C represent the context substitution of the
+   * theoretical note, s_C must fulfill
+   * sigma^C = s_C (id * s_C_n) * s_C_e and
+   * links of s_C_e must only be matched with links of s_a_e.
+   
+   OLD SCRAP:
+   * a set, usednames, and 4 substitutions s_a', s_a, s_R', s_R
    * as well as other arguments, and return something, as well as 
    * s_C and s_a'', the latter being an outer-name-extended and renamed
-   * version of s_a', i.e., s_a'' = Y/ x alpha s_a'.
-   * The substitution in the theoretical note is
-   * sigma^a = s_a'' x s_a.
+   * version of s_a', i.e., s_a'' = Y/ * alpha s_a'.
+   * The substitutions in the theoretical note are
+   * sigma^a = s_a'' * s_a  and  sigma^R = s_R' * s_R; the links
+   * of s_R' must be matched with links of s_a' (because
+   * they correspond to the closed edges of the redex).
    * The set usednames contains all names that must NOT be used as
    * outer names for s_a'' (think of them as the outer names of
    * s_a, plus Y_R in the CLO rule).
+   *
+   * All rule functions used in prime mode are used with s_R = id_0,
+   * which is therefore not passed as argument.  These functions
+   * take ... substitutions s_a', s_a, s_C', s_C, as well as
+   * other arguments, and return something, as well as s_C''
+   * and s_a'', the latter being as above, the former being such that
+   * sigma^C = s_C'' (id * s_C' * s_C).  Links of s_C' must be
+   * matched with links of s_a'' (because they correspond to the
+   * closed edges of redex and agent, respectively).
    *)
 
   datatype primetype = DiscretePrime | GlobalDiscretePrime
 
-  fun matchDG usednames s_a' s_a s_R g Ps = lzNil
+  (* Match a global discrete prime using the PAX rule:
+   * Assuming X is a subset of g's outer names,
+   * return s_a_e' = s_a_e, s_C = s_a_n * s_a_e, G = "X", Ps = (X)g
+   *)
+	fun matchPAX {s_a = {s_a_e, s_a_n}, g, X} = lzNil
 
+  (* Match a global discrete prime using the SWX rule:
+   * Assuming Ps = (id_Z * ^s)(W)G,
+   * 1) Let s_C_e = s_R_e, s_C_n = s * s_R_n, and infer premise
+   *    using s_a_e, s_a_n, s_C_e, s_C_n, g, G,
+   *    yielding s_a_e', s_C, and qs
+   * 2) Let Y_C_e = outernames s_C_e
+   * 3) Return s_a_e', s_C := s_C * id_Y_C_e, qs
+	 *)
+	fun matchSWX {s_a = {s_a_e, s_a_n}, s_R = {s_R_e, s_R_n}, g, s, G} = lzNil
+	
+  (* Match a global discrete prime using the MER rule:
+   * 1) ...
+	 *)
+  fun matchMER {s_a, s_R, g, Ps} = lzNil
+  
+  (* Match a global discrete prime using a SWX, PAX or MER rule:
+   * 1) Try using PAX rule if s_R_e = s_R_n = id_0 and
+   *    Ps = id_(X) for some X subset of g's outer names,
+   * 2) Else try using SWX rule if Ps = [P],
+   *    where P = (id_Z * ^s)(W)G,
+   * 3) Else try using MER rule if... 
+   *)
+(* NEW:  fun matchDG {usednames, s_a, s_R = {s_R_e, s_R_n}, g, Ps} = lzNil 
+OLD:*)
+fun matchDG usednames s_a s_a' s_R g Ps = lzNil
+
+  (* Match a global discrete prime using the ION rule, if possible:
+   * 1) Determine how many (top-level) molecules it contains.
+   * 2) If 1 molecule, match an ion:
+   *    2a) For agent ion K_yX, compute the set Y = {vec y}
+   *    2b) Compute s_Y || s_a^new = s_a by domain-restricting
+   *        s_a to Y
+   *    2c) Compute s'_Y || s_a'^new = s_a' by domain-restricting
+   *        s'_a to Y
+   *    2d) Construct p = (id * (vec v)/(vec X))n and infer premise
+   *        using s_a'^new, s_a^new, s_R, p, and Ps, yielding
+   *        s_a''^new, s_C^new, P = (id * (vec v)/(vec Z))N, and qs
+   *    2e) Construct s_C = s_Y || s'_Y || s_C^new
+   *        and     s_a'' = s'_Y || s_a''^new
+   *        and         G = (id * K_vZ)N
+   *    2f) Return s_a'', s_C, G, qs
+   * 3) Otherwise, perform a D_G match
+   *)
   fun matchDS usednames s_a' s_a s_R e Ps = lzNil
   
   
   (* Match an abstraction:
    * 1) Deconstruct p, yielding s_a_L : Z -> W and g.
-   * 2) Compute s_a := s_a_L x s_a and add outer names of s_a_L to usednames.
+   * 2) Compute s_a := s_a_L * s_a and add outer names of s_a_L to usednames.
    * 3) Using usednames, s_a, s_a', s_R, g, Ps, infer premise,
    *    yielding s_a'', s_C, G, qs.
    * 4) Determine s_C_L : U -> W and s_C' by outername restriction
-   *    using W such that s_C' x s_C_L = s_C
-   * 5) Construct and return s_a'', s_C', (id x s_C_L)(U)G, and qs
-   *)
-  
+   *    using W such that s_C' * s_C_L = s_C
+   * 5) Construct and return s_a'', s_C', (id * s_C_L)(U)G, and qs
+   *)  
   fun matchDP usednames s_a' s_a s_R p Ps = lzmake (fn () =>
 		let
 			val {idxlocsub, N = n} = unmkP p
@@ -436,13 +540,13 @@ struct
     end)
 
   (* Match a closure:
-   * 1) Open w_a, yielding s_a' x s_a
+   * 1) Open w_a, yielding s_a' * s_a
    * 2) Open w_R, yielding s_R and fresh outer names Y_R of s_R
-   * 3) Compute usednames as the outer names of s_a' x s_a plus Y_R
+   * 3) Compute usednames as the outer names of s_a' * s_a plus Y_R
    * 4) Using usednames, s_a', s_a, s_R, infer premise,
    *    yielding s_a'', s_C, Qs, pi, qs,
-   *    where s_a'' = Y/ x alpha s_a' has outer names Y_R + Y_C
-   * 5) Check that s_C = id_{Y_R} x s'_C
+   *    where s_a'' = Y/ * alpha s_a' has outer names Y_R + Y_C
+   * 5) Check that s_C = id_{Y_R} * s'_C
    * 6) Return a new w_C as s'_C where links Y_C are closed.
    *)
   fun matchCLO (w_a : Wiring.wiring) w_R ps Ps = lzmake (fn () =>
