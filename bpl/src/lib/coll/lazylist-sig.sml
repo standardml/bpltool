@@ -73,12 +73,21 @@
   (** Given a list of k lazy lists, return a lazy list of lists
    * of length k, containing all combinations of picking one
    * element from each lazy list.
+   * @params xss
    * @param xss  [[x_00, x_01, ..., x_0n_0], [x_10, x_11, ..., x_1n_1],
    *              ..., [x_k0, x_k1, ..., x_kn_k]]
    * @return [[x_00, x_10, ..., x_k0], [x_01, x_10, ..., x_k0],
    *          ..., [x_0n_0, x_1n_1, ..., x_kn_k]]
    *)
   val lzcombine : 'a lazylist list -> 'a list lazylist
+  (** Given a list of lazy lists, return a lazy list merging elements
+   * from alternating lists.  The lists need not have equal lengths,
+   * in which case a nonexistant x_ij is omitted from the returned list.
+   * @params xss  [[x_00, ..., x_0n_0], ..., [x_k0, ..., x_kn_k]]
+   * @return [x_00, x_10, ..., x_k0, x_01, x_11, ..., x_k1, ...,
+   *          x_0n_0, x_1n_1, ..., x_kn_k].
+   *)
+  val lzmerge : 'a lazylist list -> 'a lazylist
   (** Compute all the elements of a lazy list. *)
   val lztolist : 'a lazylist -> 'a list
   (** Print a lazy list lazily. *)

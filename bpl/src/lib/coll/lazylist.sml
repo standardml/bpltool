@@ -114,6 +114,18 @@ struct
         lzunmk (foldl (nextrest []) (fn () => Cons ([], lzNil)) ts)
       end
 
+  fun lzmerge ts = fn () =>
+    let
+      fun lzm [] [] = Nil
+        | lzm [] ts' = lzm (List.rev ts') []
+        | lzm (t :: ts) ts'
+        = case t () of
+            Nil => lzm ts ts'
+          | Cons (elt, tail) => Cons (elt, fn () => lzm ts (tail :: ts'))
+    in
+      lzm ts []
+    end 
+
   fun lztolist t = case t () of
                      Nil => []
                    | Cons (elt, tail) => elt :: lztolist tail
