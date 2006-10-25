@@ -20,9 +20,27 @@
 
 signature TIMINGS = sig
 
+    (** A flag controlling whether to do timings or not.
+      * The flag can also be controlled through the
+      * flag <code>/misc/timings</code> (see 
+      * <a href="SigFLAGS.html">FLAGS</a>).
+      *)
     val do_timings : bool ref
+    (** Create a new timer.
+      * @params name, desc
+      * @param name name of timer
+      * @param desc a short desriptive text for the timer
+      *)
     val add : {name:string,desc:string} -> (unit -> 'a) -> 'a
+    (** Generate a list of timing results.
+      * Only include timers mentioned in the argument.
+      * @params timers
+      * @param timers list of timers to include
+      *)
     val list : string list (* timer names to include *) -> string list
+    (** Generate a list of timing results.
+      * Includes all timers.
+      *)
     val listAll : unit -> string list
 
 end (* structure Timings *)
