@@ -39,15 +39,15 @@ signature DUMP = sig
     (** Dumps pretty printer output. The output is sent to the file
       * <code>! prefix ^ "/" ^ ext</code>.
       * @params pp ext
-      * @params pp pretty printer tree
-      * @params ext filename extension
+      * @param pp pretty printer tree
+      * @param ext filename extension
       *)
     val pretty : 'a Pretty.pp -> string (* extension *) -> 'a -> unit
     (** Dumps pretty printer output. The output is sent to the file
       * <code>! prefix ^ "/" ^ ext</code>.
       * @params pp ext
-      * @params pp function producing pretty printer output
-      * @params ext filename extension
+      * @param pp function producing pretty printer output
+      * @param ext filename extension
       *)
     val pp : (int -> PrettyPrint.ppstream -> 'a -> unit)
                      -> string (* extension *) -> 'a -> unit
