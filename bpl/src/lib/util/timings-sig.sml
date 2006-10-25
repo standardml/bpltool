@@ -27,7 +27,7 @@ signature TIMINGS = sig
       *)
     val do_timings : bool ref
     (** Create a new timer.
-      * @params name, desc
+      * @params name desc
       * @param name name of timer
       * @param desc a short desriptive text for the timer
       *)
