@@ -18,8 +18,9 @@
  * software or the use or other dealings in the software.
  *)
 
-(** 
- * Interface to UnionFind package.
+infix ::=
+
+(** Interface to UnionFind package.
  * <p>
  * Union/Find data type with ref-like interface.  A Union/Find structure 
  * consists of a type constructor <code>'a uref</code> with operations for
@@ -35,7 +36,7 @@
  * <tr><td>updating</td><td>:=</td><td>::=</td></tr>
  * <tr><td>unioning</td><td></td><td>link, union, unify</td></tr>
  * </table>
- *
+ * <p>
  * The main difference between <code>'a ref</code> and <code>'a
  * uref</code> is in the union operation.  Without union <code>'a
  * ref</code> and <code>'a uref</code> can be used interchangebly.  An
@@ -55,11 +56,8 @@
  *
  * @author Fritz Henglein, DIKU, University of Copenhagen <henglein@diku.dk>
  * @contributor Henning Niss, IT University of Copenhagen (minor modifications) <hniss@itu.dk>
- *
  * @version $LastChangedRevision: 129 $
  *)
-
-infix ::=
 
 signature URef =
   sig

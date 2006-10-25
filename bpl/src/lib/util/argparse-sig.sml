@@ -1,3 +1,23 @@
+(*
+ *   Copyright 2001 Henning Makholm
+ *   Copyright 2001 Henning Niss
+ * 
+ * Permission is hereby granted, to anyone and free of charge, to deal
+ * in this software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute,
+ * sublicense, and/or sell copies of the software, provided that
+ * all copies or substantial portions of the software are accompanied
+ * by the above copyright notice and this permission notice.
+ * 
+ * The software is provided "as is", without warranty of any kind, express
+ * or implied, including but not limited to the warranties of
+ * merchantability, fitness for a particular purpose and noninfringement.
+ * In no event shall the above listed copyright holder(s) be liable for any
+ * claim, damages or other liability, whether in an action of contract,
+ * tort or otherwise, arising from, out of or in connection with the
+ * software or the use or other dealings in the software.
+ *)
+
 (** Parsing of command line arguments.
  * <p>
  * This module provides a general mechanism for extracting options and
