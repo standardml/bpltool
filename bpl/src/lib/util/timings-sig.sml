@@ -18,6 +18,11 @@
  * USA
  *)
 
+(** Utilities for timing functions.
+ * @author Henning Niss, IT University of Copenhagen <hniss@itu.dk>
+ * @version $LastChangedRevision: 129 $
+ *)
+
 signature TIMINGS = sig
 
     (** A flag controlling whether to do timings or not.
@@ -27,13 +32,16 @@ signature TIMINGS = sig
       *)
     val do_timings : bool ref
     (** Create a new timer.
-      * @params name desc
+     * @params name desc
       * @param name name of timer
       * @param desc a short desriptive text for the timer
       *)
     val add : {name:string,desc:string} -> (unit -> 'a) -> 'a
     (** Generate a list of timing results.
-      * Only include timers mentioned in the argument.
+      * Only include timers mentioned in the argument. The returned
+      * function can be applied to a function f : <code>unit -> 'a</code> in
+      * which case the time is takes to evaluate f () is added to the
+      * newly created timer.
       * @params timers
       * @param timers list of timers to include
       *)
