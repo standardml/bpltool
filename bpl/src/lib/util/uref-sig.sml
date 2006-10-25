@@ -29,7 +29,7 @@ infix ::=
  * for joining two elements (union).  uref is analogous to ref as
  * expressed in the following table:
  * <table>
- * <th><td>type</td><td>'a ref</td><td>'a uref</td></th>
+ * <tr><th>type</th><th>'a ref</th><th>'a uref</th></tr>
  * <tr><td>introduction</td><td>ref</td><td>uRef</td></tr>
  * <tr><td>elimination</td><td>!</td><td>!!</td></tr>
  * <tr><td>equality</td><td>=</td><td>equal</td></tr>
