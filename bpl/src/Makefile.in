@@ -120,7 +120,9 @@ svn-update:
 	
 # Documentation
 
-.PHONY:	all doc-kernel doc-lib doc-miniml upload-doc
+.PHONY:	all doc doc-kernel doc-lib doc-miniml upload-doc
+
+doc: doc-lib doc-kernel doc-miniml
 
 doc-lib:	lib/$(DOCSUBDIR)/index.html
 lib/$(DOCSUBDIR)/index.html: lib/smldoc.cfg lib/overview.html $(CMFILES-lib) $(SMLFILES-lib)
@@ -142,10 +144,15 @@ DIRTREE: $(DESCFILES) $(MKDIRTREE)
 	echo "" >> $@
 	cd $(ROOTDIR) && $(MKDIRTREE) $(THISDIR) >> $(THISDIR)/$@
 
-upload-doc: doc-lib doc-kernel doc-miniml
-	scp kernel/$(DOCSUBDIR)/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/kernel/
-	scp lib/$(DOCSUBDIR)/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/lib/
-	scp apps/miniml/$(DOCSUBDIR)/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/miniml/
+upload-doc: #doc-lib doc-kernel doc-miniml
+	@echo '**********************************************************'
+	@echo Target `upload-doc' is deprecated.  To update API docs in
+	@echo the BPL web pages, just commit sml files into the SVN repository.
+	@echo To install locally, use `make install-doc'
+	exit 1
+#	scp kernel/$(DOCSUBDIR)/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/kernel/
+#	scp lib/$(DOCSUBDIR)/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/lib/
+#	scp apps/miniml/$(DOCSUBDIR)/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/miniml/
 
 .PHONY: install-doc-kernel install-doc-lib install-doc-miniml install-doc
 install-doc-lib: doc-lib
