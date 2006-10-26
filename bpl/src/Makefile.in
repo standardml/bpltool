@@ -146,10 +146,10 @@ DIRTREE: $(DESCFILES) $(MKDIRTREE)
 
 upload-doc: #doc-lib doc-kernel doc-miniml
 	@echo '**********************************************************'
-	@echo Target `upload-doc' is deprecated.  To update API docs in
+	@echo 'Target `upload-doc'"' is deprecated.  To update API docs in"
 	@echo the BPL web pages, just commit sml files into the SVN repository.
-	@echo To install locally, use `make install-doc'
-	exit 1
+	@echo 'To install locally, use `make install-doc'"'"
+	@exit 1
 #	scp kernel/$(DOCSUBDIR)/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/kernel/
 #	scp lib/$(DOCSUBDIR)/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/lib/
 #	scp apps/miniml/$(DOCSUBDIR)/* ssh.itu.dk:/import/www/research/theory/bpl/doc/ml/doc/miniml/
