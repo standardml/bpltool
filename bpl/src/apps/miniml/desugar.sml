@@ -101,8 +101,8 @@ structure Desugar :> DESUGAR = struct
 		    val map = List.foldl f map cbs
 		in  (M.DatBind(t,targs,cbs)::bs, map)
 		end
-	    val M.Prog bs = prog
-	in  M.Prog(rev(#1(List.foldl loopB ([], empty) bs)))
+	    val M.Export(exports,bs) = prog
+	in  M.Export(exports,rev(#1(List.foldl loopB ([], empty) bs)))
 	end
 
 end (* structure Desuard *)

@@ -147,7 +147,7 @@ structure MatchCompiler :> MATCHCOMPILER = struct
 	in  mk dec
 	end
 
-    fun compile getpos noinfo mkinfo (M.Prog binds) =
+    fun compile getpos noinfo mkinfo (M.Export(exports,binds)) =
       let open Pattern
 	  local 
 	      val counter = ref 0
@@ -207,7 +207,7 @@ structure MatchCompiler :> MATCHCOMPILER = struct
 	fun compilebind (M.ValBind(x,e)) = M.ValBind(x, comp e)
 	  | compilebind (M.DatBind cb) = M.DatBind cb
 	  | compilebind (M.TyBind tb) = M.TyBind tb
-      in  M.Prog(List.map compilebind binds)
+      in  M.Export(exports, List.map compilebind binds)
       end
 
     val dump_match_compile =

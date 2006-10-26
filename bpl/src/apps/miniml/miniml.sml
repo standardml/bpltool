@@ -75,7 +75,7 @@ struct
       | TyBind  of string * string list * tyexp
 
     datatype ('info,'pat) prog = 
-        Prog of ('info,'pat) bind list
+        Export of string list * ('info,'pat) bind list
 
     type pat = string (* constructor *) * string (* variable *)
     type 'info prog' = ('info, pat) prog
@@ -196,15 +196,26 @@ struct
     and ppc (Con(C, TyCon([],"unit"))) = ppCtor C
       | ppc (Con(C, t)) = ppCtor C ++ ("of " ^+ ppt t)
 
-    fun pp ppBindInfo ppPat prog =
-	case prog of
-	    Prog [] => Util.abort 12354
-	  | Prog[bind] => ppb ppBindInfo ppPat bind
-	  | Prog(b::bs) =>
-	       let val (b,bs) = (ppb ppBindInfo ppPat b, map (ppb ppBindInfo ppPat) bs)
-	       in  makelist(true,"") (b :: map forcemulti bs)
-	       end
-
+    fun pp ppBindInfo ppPat (Export(exps, binds)) =
+	let val ppb = ppb ppBindInfo ppPat
+	    fun ppBS [] = Util.abort 12345
+	      | ppBS [bind] = ppb bind
+	      | ppBS (b::bs) =
+		let val (b,bs) = (ppb b, map ppb bs)
+		in  makelist(true,"") (b :: map forcemulti bs)
+		end
+	    val binds = ppBS binds
+	in  case exps of
+		[] => binds
+	      | _ => 
+                compose( break(1,2)
+                            ( compose( ppKw "export" ++ clist "#," ppString exps
+                                     ,1,2,0, ppKw "from")
+                            , binds
+                            )
+                       , 1,2,0,ppKw "end"
+                       )
+	end
     fun ppPat (C,x) = ppCtor C ++ ppId x
 
     val pp' = fn ppPat => fn prog => pp Pretty.ppNone ppPat prog
@@ -284,15 +295,19 @@ struct
 	      end
 	  | Info(i, e) => Info(i, freshExp freshPat map e)
 
-    fun freshProg freshPat (Prog binds) =
+    fun freshProg freshPat (Export(exports, binds)) =
 	let fun f (ValBind(x,e),(bs,map)) =
 		let val x' = fresh x
 		    val e' = freshExp freshPat map e
 		in  (ValBind(x',e')::bs, Map.add(x,x',map))
 		end
 	      | f (b,(bs,map)) = (b::bs,map)
-	    val (binds',_) = List.foldl f ([],Map.empty) binds
-	in  Prog(rev binds')
+	    val (binds',map) = List.foldl f ([],Map.empty) binds
+	    fun g x = case Map.lookup map x of
+			  NONE => Util.abort 67890
+			| SOME y => y
+	    val exports' = List.map g exports
+	in  Export(exports', rev binds')
 	end
     val fresh = freshProg
     fun freshPat add map (C,x) = 
@@ -329,7 +344,7 @@ struct
 	    Info(_,e) => sizeExp e
 	  | _ => 1 + List.foldl (fn (e,s) => sizeExp e + s) 0 (subExp exp)
 
-    fun size (Prog bs) =
+    fun size (Export(_, bs)) =
 	let fun sizeBind (ValBind(_,e)) = 1+sizeExp e
 	      | sizeBind (DatBind(t,targs,cbs)) = 1
 	      | sizeBind (TyBind(t,targs,abb)) = 1

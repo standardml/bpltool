@@ -41,6 +41,13 @@ val CONScon  = mk_const "Cons"  2 2
 val UNITcon  = P.TupleCon 0
 val nullCarg = [P.PVar "_x"]
 
+(* extract a list of bound toplevel value identifiers *)
+fun boundIds bs =
+    let fun f (A.ValBind(x,_), bs) = x::bs
+          | f (_, bs) = bs
+    in  rev(List.foldl f [] bs)
+    end
+
 fun mk_case info eof pnes = A.Info(info, A.Case(eof, pnes))
 
 fun mk_fun info (fmatch as (f,_)::_) =
@@ -149,7 +156,7 @@ fun mk_rprim ope e1 e2 =
       |  IF         |  THEN       |  ELSE
       |  FIX        |  CASE       |  OF
       |  FUN        |  DATATYPE   |  TYPE
-      |  VAL
+      |  VAL        |  EXPORT     |  FROM
 
       |  EOF
 
@@ -160,6 +167,7 @@ fun mk_rprim ope e1 e2 =
          FIX CASE OF
          FUN DATATYPE
          TYPE VAL
+         EXPORT FROM
 
   %nonterm
          IdList of string list
@@ -223,7 +231,7 @@ fun mk_rprim ope e1 e2 =
   %left		PLUS MINUS 
   %left		DIV
 
-  %right         COLONCOLON
+  %right        COLONCOLON
   %left         AT
   %left         HAT
 
@@ -237,8 +245,10 @@ fun mk_rprim ope e1 e2 =
 
 %%
 
-Program : Bindings                      (A.Prog Bindings)
-        | Exp                           (A.Prog([A.ValBind("_", Exp)]))
+Program : Bindings                      (A.Export(boundIds Bindings, Bindings))
+        | Exp                           (A.Export(["_"],[A.ValBind("_", Exp)]))
+        | EXPORT IdList FROM Bindings END  
+                                        (A.Export(IdList, Bindings))
 
 Bindings: Binding SemiOpt               ([Binding])
         | Binding SemiOpt Bindings      (Binding::Bindings)
@@ -372,10 +382,10 @@ Patterns : Pattern                      ([Pattern])
 
 IdListOpt:                              ([])
         | IdList                        (IdList)
-
+*)
 IdList  : ID                            ([ID])
         | ID COMMA IdList               ((ID) :: IdList)
-*)
+
 
 (* Datatypes *)
 DatBind : DATATYPE ID EQ ConBinds       (A.DatBind(ID, [], ConBinds))

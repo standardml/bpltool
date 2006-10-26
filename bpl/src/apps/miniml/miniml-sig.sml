@@ -76,7 +76,7 @@ sig
       | TyBind  of string * string list * tyexp
 
     datatype ('info,'pat) prog = 
-        Prog of ('info,'pat) bind list
+        Export of string list * ('info,'pat) bind list
 
     type pat = string (* constructor *) * string (* variable *)
     type 'info prog' = ('info, pat) prog

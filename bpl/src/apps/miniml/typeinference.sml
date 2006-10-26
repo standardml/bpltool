@@ -82,7 +82,7 @@ structure TypeInference :> TYPEINFERENCE = struct
           Let-Polymorphic Type Inference Algorithm'', TOPLAS 98,
           for details.
     *)
-    fun infProg mkinfo noinfo getpos (M.Prog binds) = 
+    fun infProg mkinfo noinfo getpos (M.Export(exports, binds)) = 
 	let fun inf' pos (ctx as (env,tymap)) exp exp_tau =
 	    case exp of
 		M.Var x =>
@@ -322,7 +322,7 @@ structure TypeInference :> TYPEINFERENCE = struct
 	      | infBind (M.TyBind typeabbrev, (binds,ctx)) =
 		(M.TyBind typeabbrev :: binds, ctx)
 
-	in  M.Prog(rev(#1(List.foldl infBind ([],emptyCtx) binds)))
+	in  M.Export(exports,rev(#1(List.foldl infBind ([],emptyCtx) binds)))
 	end
 
     val dump_typed =

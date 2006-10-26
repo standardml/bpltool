@@ -392,7 +392,7 @@ fun isValBind (M.ValBind _) = true
 val empty = NameSet.empty
 
 datatype 'a result = Some of 'a | None of exn
-fun toBG single (M.Prog binds) =
+fun toBG single (M.Export(exports,binds)) =
     (* for now just test by translating all expressions in
        binds to BG terms *)
     let val binds = List.filter isValBind binds
