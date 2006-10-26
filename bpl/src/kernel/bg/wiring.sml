@@ -646,11 +646,13 @@ struct
       val usednames = NameSet.union usednames (outernames w)
       val ht_open = createNameMap' ()
       val ht_opened = createNameMap' ()
-      fun addlink (l as {outer, inner}) (ls_open, ls_opened, usednames) =
+      fun addlink (l as {outer, inner})
+                  (ls_open, ls_opened, newnames, usednames) =
         case outer of
           Name y => (addto ht_open inner outer;
                      (Link'Set.insert l ls_open,
                       ls_opened,
+                      newnames,
                       usednames))
         | Closure i =>
             let
@@ -660,14 +662,17 @@ struct
               addto ht_opened inner (Name y);
               (ls_open,
                Link'Set.insert newl ls_opened,
+               NameSet.insert y newnames,
                usednames)
             end
-      val (ls_open, ls_opened, usednames)
+      val (ls_open, ls_opened, newnames, usednames)
         = Link'Set.fold
-            addlink (Link'Set.empty, Link'Set.empty, usednames) ls
+            addlink (Link'Set.empty, Link'Set.empty,
+            	       NameSet.empty, usednames) ls
     in
       {opened    = (ls_opened, ht_opened),
        rest      = (ls_open, ht_open),
+       newnames  = newnames,
        usednames = usednames}
     end
 

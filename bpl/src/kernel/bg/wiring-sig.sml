@@ -126,16 +126,18 @@ sig
   (** Split wiring into closed and open part, then turn closed edges
    * into links with fresh names.    Any fresh
    * names generated will not clash with outer names of w.
-   * @params w usednames
-   * @param w          Wiring to split and open.
+   * @params usednames w
    * @param usednames  Names not to use when generating fresh names.
-   * @return {opened, rest, usednames}  A wiring containing just the
+   * @param w          Wiring to split and open.
+   * @return {opened, rest, newnames, usednames}  A wiring containing just the
    *                   opened links, a wiring containing just the
-   *                   original open links, and the set union of the
-   *                   original usednames, and any fresh names.
+   *                   original open links, the set of fresh
+   *                   names, and the set union of the
+   *                   original usednames and fresh names.
    *)
   val splitopen : nameset -> wiring -> {opened : wiring,
                                         rest : wiring,
+                                        newnames : nameset,
                                         usednames : nameset}
   (** Turn closed edges into links with fresh names.  Any fresh
    * names generated will not clash with outer names of w.
@@ -146,7 +148,7 @@ sig
    *                   A wiring containing just open links,
    *                   the set of new names added, and the union
    *                   of the original usednames, and any fresh
-   *                   names.
+   *                   names.  We have w = (id * /newnames) o opened.
    *)
   val openup : nameset -> wiring -> {opened: wiring,
                                      newnames : nameset,
