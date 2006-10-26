@@ -86,7 +86,7 @@
    * @params xss
    * @param xss  [[x_00, ..., x_0n_0], ..., [x_k0, ..., x_kn_k]]
    * @return [x_00, x_10, ..., x_k0, x_01, x_11, ..., x_k1, ...,
-   *          x_0n_0, x_1n_1, ..., x_kn_k].
+   *          x_0n_max, x_1n_max, ..., x_kn_max].
    *)
   val lzmerge : 'a lazylist list -> 'a lazylist
   (** Compute all the elements of a lazy list. *)
