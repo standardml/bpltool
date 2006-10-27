@@ -105,7 +105,7 @@ fun v2n x = BG.Name.make (String.toString x)
 
 fun mk_iface (l:nameset list) (g:nameset) =
     Interface.make {loc = l , glob = g}
-
+(* old code
 local 
     val counter = ref 0
 in
@@ -115,7 +115,7 @@ fun freshname () =
         Name.make("_n" ^ Int.toString(c))
     end
 end (* local *)
-
+*)
 fun namemap2linkset namemap =
     let fun f ((old,new),L) = 
 	    LinkSet.insert (mklink (NameSet.singleton old) new) L
@@ -129,9 +129,11 @@ fun mk_shared_linkset namemap nameset =
 	      | SOME y => LinkSet.insert (mklink (NameSet.fromList [x,y]) x)
     in NameSet.fold f LinkSet.empty nameset end
 
+(*
 fun mk_fresh_namemap shared =
     NameSet.fold (fn x => fn M => NameMap.add(x,freshname(),M)) 
 		 NameMap.empty shared
+*)
 
 fun make_id n = B.Per info (Permutation.id_n n)
 
@@ -141,7 +143,8 @@ infixr pp (* prime product *)
 infixr tt (* tensor product *)
 infixr oo (* composition *)
 infixr ++ (* add a name to a nameset not containing it already *)
-fun (b1:bgval) || (b2:bgval) =
+fun (b1:bgval) || (b2:bgval) = B.Par info [b1,b2]
+(* old code - used to generate fresh names for parallel product
     (* only consider outer faces, inner faces are tensored *)
     let val b1_oface = BgVal.outerface b1
 	val b2_oface = BgVal.outerface b2
@@ -176,7 +179,9 @@ fun (b1:bgval) || (b2:bgval) =
 	val sigma = B.Ten info [sigma', make_id sumwidth]
     (* compose sigma and the tensored "renamed" bgterms *)
     in B.Com info (sigma, g0'_ten_g1') end
-fun (b1:bgval) pp (b2:bgval) =
+*)
+fun (b1:bgval) pp (b2:bgval) = B.Pri info [b1,b2]
+(* old code - uses the parallel comp. from above
     let val b1_oface = BgVal.outerface b1
 	val b2_oface = BgVal.outerface b2
 	val sumwidth = Interface.width b1_oface + Interface.width b2_oface
@@ -187,6 +192,7 @@ fun (b1:bgval) pp (b2:bgval) =
 	val id_names = B.Wir info (Wiring.id_X o_face_names)
     in B.Com info (B.Ten info [B.Mer info sumwidth, id_names], b1 || b2)
     end
+*)
 fun (b1:bgval) tt (b2:bgval) = B.Ten info [b1,b2]
 fun (b1:bgval) oo (b2:bgval) = B.Com info (b1, b2)
 fun (x:name) ++ (X:nameset) = if NameSet.member x X
@@ -249,9 +255,8 @@ fun exp2bg (X:nameset) exp =
 	    else raise Fail ("Unbound variable " ^ x)
 	end
       | M.Integer i => Util.abort 19844
-      | M.String s => Util.abort 19845
       (*(VAL tt id X) oo (INT i tt make_onames X)*)
-
+      | M.String s => Util.abort 19845
       | M.Const(C, e) => (CONST C tt id X) oo (exp2bg X e)
       | M.Abs(x, e) =>
 	let val x' = v2n x in
@@ -339,8 +344,7 @@ fun exp2bg (X:nameset) exp =
 	in  (TUPLE tt id X) oo
                (#2(List.foldr f (2,(COMP 1 tt id X) oo (exp2bg X e)) es))
 	end
-      | M.Proj(i, e) => (PROJ i tt id X) oo (exp2bg X e)
-        
+      | M.Proj(i, e) => (PROJ i tt id X) oo (exp2bg X e)        
       | M.Unit => (VAL tt id X) oo (UNIT tt make_onames X)
       | M.Ref e => (REF tt id X) oo (exp2bg X e)
       | M.DeRef e => (DEREF tt id X) oo (exp2bg X e)
@@ -349,7 +353,6 @@ fun exp2bg (X:nameset) exp =
 	 (((ALOC tt id X) oo (exp2bg X e1)) pp
 	  ((AVAL tt id X) oo (EXP tt id X) oo (exp2bg X e1)))
       | M.Info(_,e) => exp2bg X e
-
       | M.Switch(e, switch, default) =>
         (*
          * [switch e of {C_i => e_i} | _ => e_(n+1)]_X =
