@@ -135,7 +135,7 @@ fun mk_rprim ope e1 e2 =
 
 
   %term  
-         PERIOD     |  COMMA      |  SEMICOLON
+         PERIOD     |  COMMA      |  SEMICOLON | COLON
       |  EQ         |  GE  |  LE  |  GT  |  LT
       |  PLUS       |  MINUS      |  DIV
       |  DARROW     |  BAR        |  HASH
@@ -242,6 +242,7 @@ fun mk_rprim ope e1 e2 =
   %right        ARROW
   %right        ASTERISK (* oops, used for multiplication *and* tuple-types *)
 
+  %left         COLON
 
 %%
 
@@ -262,13 +263,12 @@ SemiOpt :                               ()
         | SEMICOLON                     ()
 
 ValBind : VAL ID EQ Exp                 (A.ValBind(ID,Exp))
+        | VAL ID COLON TyExp EQ Exp     (A.ValBind(ID,Exp))
 
 FunBind : FUN FMatch                    (mk_fun (FUNleft,FMatchright) FMatch)
 
 Exp     : OpExp                         (OpExp)
-(*
-        | LAMBDA ID DARROW Exp          (A.Abs((LAMBDAleft,Expright),ID,Exp))
-*)
+        | Exp COLON TyExp               (Exp)
 	| LAMBDA PMatch                 (case PMatch of
 					     [(P.PVar x,e)] => A.Info((LAMBDAleft,PMatchright), A.Abs(x,e))
 					   | match => A.Abs("_x", mk_case (LAMBDAleft,PMatchright) (A.Var "_x") match)

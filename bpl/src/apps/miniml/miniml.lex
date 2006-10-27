@@ -115,6 +115,7 @@ end (*local*)
 <INITIAL>"."     => (PERIOD(yypos,yypos+1));
 <INITIAL>","     => (COMMA(yypos,yypos+1));
 <INITIAL>";"     => (SEMICOLON(yypos,yypos+1));
+<INITIAL>":"     => (COLON(yypos,yypos+1));
 <INITIAL>"+"     => (PLUS(yypos,yypos+1));
 <INITIAL>"-"     => (MINUS(yypos,yypos+1));
 <INITIAL>"*"     => (ASTERISK(yypos,yypos+1));

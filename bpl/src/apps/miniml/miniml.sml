@@ -209,7 +209,7 @@ struct
 		[] => binds
 	      | _ => 
                 compose( break(1,2)
-                            ( compose( ppKw "export" ++ clist "#," ppString exps
+                            ( compose( ppKw "export" ++ clist "#, " ppString exps
                                      ,1,2,0, ppKw "from")
                             , binds
                             )

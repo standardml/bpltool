@@ -146,7 +146,7 @@ structure TypeExp :> TYPEEXP = struct
     val toString = Pretty.ppToString o pp
 
     fun ppTyScheme ([], tau) = pp tau
-      | ppTyScheme (vars, tau) = "\\/" ^+ (clist " #," ppVar vars  +^ ".") ++ (pp tau)
+      | ppTyScheme (vars, tau) = "\\/" ^+ (clist "#, " ppVar vars  +^ ".") ++ (pp tau)
 
     val tyschemeToString = Pretty.ppToString o ppTyScheme
 

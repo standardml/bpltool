@@ -44,15 +44,15 @@ structure Pattern :> PATTERN = struct
       | arity (ConstCon{arity,...}) = arity
 
     open Pretty
-    fun ppCon (TupleCon i) = "(" ^+ ppInt i +^ ")"
-      | ppCon (ConstCon{name,arity,span}) = ppString name ++ ppInt arity ++ ppInt span
+    fun ppCon (TupleCon i) = Util.abort 24680
+      | ppCon (ConstCon{name,arity,span}) = ppString name
 
     fun ppPat (PVar x) = ppString x
       | ppPat (PCon(con as TupleCon _,pats)) =
 	compose("(" ^+ clist "#, " ppPat pats,0,2,0,ppString ")")
       | ppPat (PCon(con as ConstCon _,[])) = ppCon con
       | ppPat (PCon(con as ConstCon _,pats)) = 
-	compose(break(0,0)((ppCon con +^ "<"),clist "#, " ppPat pats),
-		0,2,0,ppString ">")
+	compose(break(0,0)((ppCon con +^ "("),clist "#, " ppPat pats),
+		0,2,0,ppString ")")
 
 end (* structure Pattern *)
