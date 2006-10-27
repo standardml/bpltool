@@ -1,5 +1,6 @@
 (*
   Ebbe Elsborg and Henning Niss
+
   14/10/2005: Created
    8/11/2005: Slight revision
   17/11/2005: Introduced state and interface to S (s.bpl) and A (a.sml)
@@ -22,15 +23,30 @@
 	      navigation query.
   02/08/2006: Removed 'map',
 	      corrected a comment.
+  27/10/2006: Introduced 'event' as data type,
+	      introduced event loop,
+	      introduced a queue with enqueue and dequeue functions,
+	      redefined 'sobs', 'slost', and 'state'.
+	      COMMENT: Do we also need to export aux. function names?
  
   This is the "location model" part L of a Plato-graphical system;
   C || P || A = C || (S || L) || A.
+
+  The code is kept as simple (not optimised for performance) as possible
+  because the bigraphical image tends to explode sizewise reverting the
+  effect of complicated optimisations.
+
 *)
 
-(* export funs from *)
+(* export enq,sobs,slost from *)
 
+(* consider making these two an abstract type 'Link' *)
 type lid = int
 type dev = int
+
+datatype event =
+	 Observation of dev * lid |
+	 Loss of dev
 
 datatype hierarchy = (* id, devices, sublocations *)
 	 Loc of lid * dev list * hierarchy list
@@ -165,8 +181,53 @@ fun findpath lid1 =
 		   val path1' = rev (ancpath lid1 nearestanc [])
 		   val path2' = tl(ancpath lid2 nearestanc [lid2])
 	       in path1' @ path2' end
-			
+
 (***** Interface begin *****)
+
+fun sobs s =
+    fn d =>
+       fn l =>
+	  let val active' = delete d (#1(s))
+	      val inactive = del_list d (#2(s))
+	      val active = insert d l active'
+	  in (active,inactive) end
+
+fun slost s =
+    fn d =>
+       let val active = delete d (#1(s))
+	   val inactive' = del_list d (#2(s))
+	   val inactive = d::inactive'
+       in (active,inactive) end
+
+fun enq e = queue:=(!queue)@[e]
+
+(***** Interface end *****)
+
+(* Event queue with operations *)
+val queue = ref []
+val state = (Loc(1,[15],
+		 [Loc(2,[10,11],[]),
+		  Loc(3,[],[]),
+		  Loc(4,[],
+		      [Loc(5,[12],[]),
+		       Loc(6,[],
+			   [Loc(7,[],
+				[Loc(8,[13],[]),
+				 Loc(9,[14],[])])])])]) ,
+	     [])
+
+fun deq () =
+    case (!queue) of [] => NONE
+		   | (q::qs) => (queue:=qs ; SOME q)
+
+(* Event loop *)
+fun loop state =
+    case deq () of
+	NONE => loop state
+      | SOME(Observation(d,l)) => loop (sobs state d l)
+      | SOME(Loss(d)) => loop (slost state d)
+
+(* OLD CODE BEGIN
 
 val funs =
     (* initial configuration *)
@@ -206,10 +267,25 @@ val funs =
     (* find nearest neighbour query *)
     in (state,devs,sobserved,slost,awher,afind,arange,anavig) end
 
+OLD CODE END *)
+
 (***** Interface end *****)
 
-(***** testing *****)
+(***** Tests *****)
 
+val q0 = !queue;
+val e1 = enq (Observation(15,6));
+val q1 = !queue;
+val e2 = enq (Loss(12));
+val q2 = !queue;
+val o3 = deq ();
+val q3 = !queue;
+val o4 = deq ();
+val q4 = !queue;
+val o5 = deq ();
+val q5 = !queue;
+
+(*
 (* shorthands *)
 val state = #1(funs)
 val devs = #2(funs)
@@ -239,3 +315,4 @@ val a_findall_l2 = fun4 2
 val a_range_d13_prnt3 = fun5 13 3
 val a_navig_d13_l2 = fun6 13 2
 val a_navig_d14_l7 = fun6 14 7
+*)
