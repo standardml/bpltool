@@ -31,10 +31,10 @@ functor MiniMLToBG(structure BG : BG_ADT
 	: MINIMLTOBG
 =  struct
 
-    val dump_desugar =
-	Flags.makeBoolFlag{name="/dump/desugar",
-			   short="",long="dump-desugar",arg="",
-			   desc="Dump desugared MiniML program",default=false}
+    val dump_frontend =
+	Flags.makeBoolFlag{name="/dump/frontend",
+			   short="",long="dump-frontend",arg="",
+			   desc="Dump frontend compiled MiniML program",default=false}
     val dump_bgval =
 	Flags.makeBoolFlag{name="/dump/bgval",arg="",
 			   short="",long="dump-bgval",default=false,
@@ -95,11 +95,11 @@ functor MiniMLToBG(structure BG : BG_ADT
 
 	    val size_ast = MiniML.size ast
 
-	    (* possibly dump desugared miniml term *)
+	    (* possibly dump frontend compiled miniml term *)
 	    val _ = 
-		if !dump_desugar then
+		if !dump_frontend then
 		    if !MiniML.dump_fresh then ()
-		    else Dump.pretty (MiniML.pp' MiniML.ppPat) "desugar" ast
+		    else Dump.pretty (MiniML.pp' MiniML.ppPat) "frontend" ast
 		else ()
 
             (* Code generation: convert to bgval, then normalize *)

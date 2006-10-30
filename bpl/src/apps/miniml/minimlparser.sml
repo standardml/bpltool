@@ -75,6 +75,22 @@ struct
 	    val result = parseStream printError stream
 	in  result before TextIO.closeIn stream
 	end
+
+
+    val dump_desugar =
+	Flags.makeBoolFlag{name="/dump/desugar",
+			   short="",long="dump-desugar",arg="",
+			   desc="Dump desugared MiniML program",default=false}
+    val parseFile = fn file =>
+        let val ast = parseFile file
+	    val _ = 
+		if !dump_desugar then
+		    Dump.pretty (MiniML.pp' Pattern.ppPat) "desugar" ast
+		else ()
+	in  ast
+	end
+
+
 (*
     fun parse string =
 	let val stream = TextIO.openString string

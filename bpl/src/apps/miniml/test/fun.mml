@@ -1,0 +1,29 @@
+datatype 'a list = Nil | Cons of 'a * 'a list
+datatype 'a option = NONE | SOME of 'a
+datatype bool = True | False
+
+fun hd [] = NONE
+  | hd (x::xs) = SOME(x)
+
+fun map f [] = []
+  | map f (x::xs) = f x :: map f xs
+
+datatype int = Z | S of int
+
+fun iequal (i1,i2) =
+    case i1 of
+      Z => (case i2 of Z => True | S i => False)
+    | S i => (case i2 of Z => False | S i' => iequal(i,i'))
+
+fun iequal2 (Z, Z) = True
+  | iequal2 (Z, S i') = False
+  | iequal2 (S i, Z) = False
+  | iequal2 (S i, S i') = iequal(i, i')
+
+
+datatype foo = Foo of bool
+fun foo_equal b (Foo b') = case (b,b') of
+                             (True,True) => True
+                           | (False,False) => True
+                           | (True,False) => False
+                           | (False,True) => False

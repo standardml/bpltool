@@ -51,11 +51,32 @@ fun boundIds bs =
 fun mk_case info eof pnes = A.Info(info, A.Case(eof, pnes))
 
 fun mk_fun info (fmatch as (f,_)::_) =
-    let val fs = List.map #1 fmatch
-	val _ = case List.filter (fn f' => not(f=f')) fs of 
-		    [] => ()
-		  | _ => raise Fail"different function symbols"
-    in  A.ValBind(f, A.Fix(f, "_x", mk_case info (A.Var"_x") (List.map #2 fmatch)))
+    let (* fmatch is a list of patterns, one list for each defn clause.
+         * function shared extracts initial segments of these list on
+         * which all clauses agree (only PVar's).
+         *)
+	exception NotEqual
+	fun shared (((P.PVar x)::xs) :: ls) =
+	    let fun f ((P.PVar y)::ys) = if x = y then ys else raise NotEqual
+		  | f _ = raise NotEqual
+	    in  (x :: shared (xs::List.map f ls))
+		handle NotEqual => []
+	    end
+	  | shared _ = []
+	val pats = List.map #2 fmatch
+	val sh = shared (List.map #1 pats)
+	val l = List.length sh
+	val cls = List.map (fn (ps,e) => case List.drop(ps,l) of
+			               [p] => (p,e)
+  	                             | _ => raise Fail("Can only handle one pattern")
+                           ) pats
+	val cas = mk_case info (A.Var"_x") cls
+	val (x,sh) = 
+	    case sh of
+		[] => ("_x",[]) (* no PVar pat, use the constr. pat *)
+	      | x::sh => (x,sh@["_x"])
+	val fns = List.foldr (fn (x, rest) => A.Abs(x, rest)) cas sh
+    in  A.ValBind(f, A.Fix(f, x, fns))
     end
   | mk_fun info _ = raise Fail"no match"
 
@@ -185,15 +206,15 @@ fun mk_rprim ope e1 e2 =
       |  BarRuleOpt of (pat * exp) list
       |  Rule of pat * exp
 
-      |  FMatch of (string * (pat * exp)) list
-      |  FBarRuleOpt of (string * (pat * exp)) list
-      |  FRule of string * (pat * exp)
+      |  FMatch of (string * (pat list * exp)) list
+      |  FBarRuleOpt of (string * (pat list * exp)) list
+      |  FRule of string * (pat list * exp)
 
       |  Pattern of pat
       |  AtPattern of pat
       |  PatternList of pat list
       |  PatternListOpt of pat list
-      |  Patterns of pat list
+      |  AtPatterns of pat list
 
       |  TyIds of string list
       |  AtTyExp of MiniML.tyexp
@@ -344,7 +365,7 @@ FMatch  : FRule FBarRuleOpt             (FRule :: FBarRuleOpt)
 FBarRuleOpt: BAR FMatch                 (FMatch)
         | %prec EQ                      ([])
 
-FRule   : ID AtPattern EQ Exp           ((ID,(AtPattern,Exp)))
+FRule   : ID AtPatterns EQ Exp          ((ID,(AtPatterns,Exp)))
 
 (* Pattern matches *)
 PMatch  : Rule BarRuleOpt               (Rule :: BarRuleOpt)
@@ -375,6 +396,10 @@ Pattern : AtPattern                     (AtPattern)
 
 PatternList : Pattern                   ([Pattern])
         | Pattern COMMA PatternList     (Pattern :: PatternList)
+
+AtPatterns : AtPattern                  ([AtPattern])
+        | AtPattern AtPatterns          (AtPattern :: AtPatterns)
+
 
 (*
 Patterns : Pattern                      ([Pattern])

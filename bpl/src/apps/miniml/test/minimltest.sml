@@ -66,7 +66,8 @@ struct
                    result.
                 *)
 		[ "id", "id-app" , "k", "fix", "let", 
-                  "unit", "ref", "tuple", "datatype", "int"
+                  "unit", "ref", "tuple", "datatype", "int",
+                  "fun"
                 ]
 
 	    fun test1 infile resfile expectedfile =
