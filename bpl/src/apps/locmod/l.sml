@@ -1,4 +1,5 @@
 (*
+
   Ebbe Elsborg and Henning Niss
 
   14/10/2005: Created
@@ -28,6 +29,7 @@
 	      introduced a queue with enqueue and dequeue functions,
 	      redefined 'sobs', 'slost', and 'state'.
 	      COMMENT: Do we also need to export aux. function names?
+  30/10/2006: Replaced ~1 with options.
  
   This is the "location model" part L of a Plato-graphical system;
   C || P || A = C || (S || L) || A.
@@ -109,7 +111,9 @@ fun whr dev =
 	   in whr' dev ls end
 
 (* unpack option val, return location identifier of d's location *)
+(*
 fun where'' d = fn h => case whr d h of NONE => ~1 | SOME(i) => i
+*)
 
 (* move a device 'd' to location 'l' in hierarchy 'h'
 fun move d =
@@ -136,17 +140,33 @@ fun prnt i =
        if i<=0 then lid else prnt (i-1) (hd (assoc prntmap lid))
 
 (* find devices in tree-specified range of 'd' excl. 'd' itself *)
+(*
 fun findinrange d =
     fn h =>
        fn i => let val lid = where'' d h
 		   val area = prnt i lid
 		   val devsinrange = flocs (pickloc area h)
 	       in del_list d devsinrange end
+*)
+fun findinrange d =
+    fn h =>
+       fn i => case whr d h of
+		   NONE => NONE
+		 | SOME(l) =>
+		   let val area = prnt i l
+		       val devsinrange = flocs (pickloc area h)
+		   in SOME(del_list d devsinrange)
+		   end
 
 (* find the root of the parent map *)
+(*
 fun findroot map =
     case map of [] => ~1
 	      | ((x,y)::pairs) => if x=y then x else findroot pairs
+*)
+fun findroot map =
+    case map of [] => NONE
+	      | ((x,y)::pairs) => if x=y then SOME x else findroot pairs
 
 (* find a path (list) from loc. 'lid' to its /ancestor/ loc. 'ancid' *)
 fun ancpath lid =
@@ -163,6 +183,7 @@ fun listmember e =
 				 else listmember e xs
 
 (* find the nearest common ancestor of two locations *)
+(*
 fun commonanc p1 =
     fn p2 =>
        case p1 of
@@ -171,8 +192,18 @@ fun commonanc p1 =
 			  [] => ~1
 			| (y::ys) => if listmember x (y::ys) then x
 				     else commonanc xs (y::ys)
+*)
+fun commonanc p1 =
+    fn p2 =>
+       case p1 of
+	   [] => NONE
+	 | (x::xs) => case p2 of
+			  [] => NONE
+			| (y::ys) => if listmember x (y::ys) then SOME x
+				     else commonanc xs (y::ys)
 
 (* find a path from location 'lid1' to location 'lid2' *)
+(*
 fun findpath lid1 =
     fn lid2 => let val root = findroot prntmap
 		   val path1 = rev (ancpath lid1 root [lid1])
@@ -181,6 +212,44 @@ fun findpath lid1 =
 		   val path1' = rev (ancpath lid1 nearestanc [])
 		   val path2' = tl(ancpath lid2 nearestanc [lid2])
 	       in path1' @ path2' end
+*)
+
+(*ARGH...!!! Ballade med SOME(5) vs. 5 af lokationsværdier...*)
+fun findpath l1 =
+    fn lid2 =>
+       case l1 of
+	   NONE => NONE
+	 | SOME(lid1) =>
+	   case findroot prntmap of
+	       NONE => NONE
+	     | SOME(r) =>
+	       let val path1 = rev (ancpath lid1 r [lid1])
+		   val path2 = rev (ancpath lid2 r [lid2])
+		   val nearestanc = commonanc path1 path2
+	       in case nearestanc of
+		      NONE => NONE
+		    | SOME(l) =>
+		      let val path1' = rev (ancpath lid1 l [])
+			  val path2' = tl(ancpath lid2 l [lid2])
+		      in SOME(path1' @ path2') end
+	       end
+
+(* Event queue with operations *)
+val queue = ref []
+val state = (Loc(1,[15],
+		 [Loc(2,[10,11],[]),
+		  Loc(3,[],[]),
+		  Loc(4,[],
+		      [Loc(5,[12],[]),
+		       Loc(6,[],
+			   [Loc(7,[],
+				[Loc(8,[13],[]),
+				 Loc(9,[14],[])])])])]) ,
+	     [])
+
+fun deq () =
+    case (!queue) of [] => NONE
+		   | (q::qs) => (queue:=qs ; SOME q)
 
 (***** Interface begin *****)
 
@@ -203,23 +272,6 @@ fun enq e = queue:=(!queue)@[e]
 
 (***** Interface end *****)
 
-(* Event queue with operations *)
-val queue = ref []
-val state = (Loc(1,[15],
-		 [Loc(2,[10,11],[]),
-		  Loc(3,[],[]),
-		  Loc(4,[],
-		      [Loc(5,[12],[]),
-		       Loc(6,[],
-			   [Loc(7,[],
-				[Loc(8,[13],[]),
-				 Loc(9,[14],[])])])])]) ,
-	     [])
-
-fun deq () =
-    case (!queue) of [] => NONE
-		   | (q::qs) => (queue:=qs ; SOME q)
-
 (* Event loop *)
 fun loop state =
     case deq () of
@@ -227,8 +279,7 @@ fun loop state =
       | SOME(Observation(d,l)) => loop (sobs state d l)
       | SOME(Loss(d)) => loop (slost state d)
 
-(* OLD CODE BEGIN
-
+(* OLD CODE BEGIN *)
 val funs =
     (* initial configuration *)
     let val state =
@@ -243,13 +294,13 @@ val funs =
 				    Loc(9,[14],[])])])])]))
 	val devs = ref []
 	(* interface to S; reconfigurations *)
-	fun sobserved d =
+	fun sobs' d =
 	    fn l =>
 	       let val state' = delete d (!state)
 		   val devs' = del_list d (!devs)
 		   val state'' = insert d l (!state)
 	       in state:=state''; devs:=devs' end
-	fun slost d =
+	fun slost' d =
 	    let val state' = delete d (!state)
 		val devs' = del_list d (!devs)
 		val devs'' = d::devs'
@@ -260,14 +311,17 @@ val funs =
 	       let val state' = move d l (!state) in state:=state' end
 *)
 	(* interface to A; queries *)
-	fun awher d = where'' d (!state)
-	fun afind lname = flocs (pickloc lname (!state))
+	fun awher d = whr d (!state) (* where'' d (!state) *)
+	(* fun afind lname = flocs (pickloc lname (!state)) *)
+	fun afind lname = case (pickloc lname (!state)) of
+			      NONE => NONE
+			    | SOME(h) => SOME(fall h)
 	fun arange d i = findinrange d (!state) i
-	fun anavig d l = findpath (where'' d (!state)) l
+	(* fun anavig d l = findpath (where'' d (!state)) l *)
+	fun anavig d l = findpath (whr d (!state)) l
     (* find nearest neighbour query *)
-    in (state,devs,sobserved,slost,awher,afind,arange,anavig) end
-
-OLD CODE END *)
+    in (state,devs,sobs',slost',awher,afind,arange,anavig) end
+(* OLD CODE END *)
 
 (***** Interface end *****)
 
