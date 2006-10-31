@@ -61,14 +61,11 @@ functor BGGen(structure PrettyPrint : PRETTYPRINT
 structure BgVal   = BG.BgVal
 structure NameSet = BG.NameSet
 structure Ion     = BG.Ion
-structure Interface = BG.Interface
 structure Name    = BG.Name
 structure Control = BG.Control
 structure Wiring  = BG.Wiring
 structure Link    = BG.Link
 structure LinkSet = BG.LinkSet
-structure Permutation = BG.Permutation
-
 structure NameMap = OrderFinMap(Name.Order)
 
 structure M   = MiniML
@@ -103,40 +100,6 @@ fun make_onames (X:nameset) = B.Wir info (Wiring.make (make_olinkset X))
 
 fun v2n x = BG.Name.make (String.toString x)
 
-fun mk_iface (l:nameset list) (g:nameset) =
-    Interface.make {loc = l , glob = g}
-(* old code
-local 
-    val counter = ref 0
-in
-fun freshname () =
-    let val c = !counter in
-        counter := c + 1;
-        Name.make("_n" ^ Int.toString(c))
-    end
-end (* local *)
-*)
-fun namemap2linkset namemap =
-    let fun f ((old,new),L) = 
-	    LinkSet.insert (mklink (NameSet.singleton old) new) L
-    in  NameMap.Fold f LinkSet.empty namemap
-    end
-
-fun mk_shared_linkset namemap nameset =
-    let fun f x = 
-	    case NameMap.lookup namemap x of
-		NONE => LinkSet.insert (mklink (NameSet.singleton x) x)
-	      | SOME y => LinkSet.insert (mklink (NameSet.fromList [x,y]) x)
-    in NameSet.fold f LinkSet.empty nameset end
-
-(*
-fun mk_fresh_namemap shared =
-    NameSet.fold (fn x => fn M => NameMap.add(x,freshname(),M)) 
-		 NameMap.empty shared
-*)
-
-fun make_id n = B.Per info (Permutation.id_n n)
-
 (* operators *)
 infixr || (* parallel product *)
 infixr pp (* prime product *)
@@ -144,55 +107,7 @@ infixr tt (* tensor product *)
 infixr oo (* composition *)
 infixr ++ (* add a name to a nameset not containing it already *)
 fun (b1:bgval) || (b2:bgval) = B.Par info [b1,b2]
-(* old code - used to generate fresh names for parallel product
-    (* only consider outer faces, inner faces are tensored *)
-    let val b1_oface = BgVal.outerface b1
-	val b2_oface = BgVal.outerface b2
-	(* local names are disjointly concatenated so ignore *)
-	val sharednames = NameSet.intersect
-			      (Interface.glob b1_oface)
-			      (Interface.glob b2_oface)
-	val sharedmap = mk_fresh_namemap sharednames
-	(* make bgterm of the tau substitution in Prop. 9.14 *)
-	val g1_only_names = NameSet.difference (Interface.glob b2_oface)
-					       sharednames
-	val g1_only_wir = Wiring.id_X g1_only_names
-	val g1_shared_linkset = namemap2linkset sharedmap
-	val g1_shared_wir = Wiring.make g1_shared_linkset
-	val tau' = B.Wir info (Wiring.*(g1_shared_wir,g1_only_wir))
-	val b2_id = make_id (Interface.width b2_oface)
-	val tau = B.Ten info [tau', b2_id]
-	val g1' = B.Com info (tau, b2)
-	val g0_wir = Wiring.id_X (Interface.glob b1_oface)
-	val b1_id = make_id (Interface.width b1_oface)
-	val g0' = B.Com info (B.Ten info [B.Wir info g0_wir, b1_id], b1)
-	val g0'_ten_g1' = B.Ten info [g0', g1']
-	(* make bgterm of the sigma substitution in Prop. 9.14 *)
-	val sigma_linkset =
-	    mk_shared_linkset sharedmap 
-			      (NameSet.union'
-				   (Interface.glob b1_oface)
-				   (Interface.glob b2_oface))
-	    (* union' does not raise exceptions *)
-	val sigma' = B.Wir info (Wiring.make sigma_linkset)
-	val sumwidth = Interface.width b1_oface + Interface.width b2_oface
-	val sigma = B.Ten info [sigma', make_id sumwidth]
-    (* compose sigma and the tensored "renamed" bgterms *)
-    in B.Com info (sigma, g0'_ten_g1') end
-*)
 fun (b1:bgval) pp (b2:bgval) = B.Pri info [b1,b2]
-(* old code - uses the parallel comp. from above
-    let val b1_oface = BgVal.outerface b1
-	val b2_oface = BgVal.outerface b2
-	val sumwidth = Interface.width b1_oface + Interface.width b2_oface
-	val o_face_names = 
-	    NameSet.union' (Interface.glob b1_oface) (Interface.glob b2_oface)
-	    (* union' does not raise exceptions *)
-	(* need to wire some names through a merge *)
-	val id_names = B.Wir info (Wiring.id_X o_face_names)
-    in B.Com info (B.Ten info [B.Mer info sumwidth, id_names], b1 || b2)
-    end
-*)
 fun (b1:bgval) tt (b2:bgval) = B.Ten info [b1,b2]
 fun (b1:bgval) oo (b2:bgval) = B.Com info (b1, b2)
 fun (x:name) ++ (X:nameset) = if NameSet.member x X
@@ -423,50 +338,4 @@ fun pp indent pps bg =
     ; BG.Interface.pp indent pps (BgVal.outerface bg)
     )
 
-
-(*
-fun normalize bpl = Some(BG.BgBDNF.make bpl)
-		    handle exn => None exn
-
-fun pp' indent pps bg =
-    ( BG.BgBDNF.pp indent pps bg
-(*
-    ; PrettyPrint.add_string pps ": "
-    ; BG.Interface.pp indent pps (BgVal.innerface bg)
-    ; PrettyPrint.add_string pps " -> "
-    ; BG.Interface.pp indent pps (BgVal.outerface bg)
-*)
-    )
-
-fun explain prompt pps exn = 
-    (print prompt; BG.BGErrorHandler.explain exn)
-(*
-    case exn of
-	BgVal.NotComposable(_,bg1,bg2,msg) =>
-	    ( PrettyPrint.begin_block pps PrettyPrint.CONSISTENT 3
-            ; PrettyPrint.add_string pps prompt
-            ; PrettyPrint.add_string pps " "
-            ; PrettyPrint.add_string pps msg
-            ; PrettyPrint.add_newline pps
-            ; pp 2 pps bg1 
-            ; PrettyPrint.add_newline pps
-	    ; PrettyPrint.add_string pps "and"
-            ; PrettyPrint.add_newline pps
-            ; pp 2 pps bg2
-            ; PrettyPrint.end_block pps
-            )
-      | BgVal.NotTensorable(_,bgs,msg) =>
-	    ( PrettyPrint.begin_block pps PrettyPrint.CONSISTENT 3
-            ; PrettyPrint.add_string pps prompt
-            ; PrettyPrint.add_string pps " "
-            ; PrettyPrint.add_string pps msg
-            ; PrettyPrint.add_newline pps
-	    ; PrettyPrint.begin_block pps PrettyPrint.CONSISTENT 0
-            ;   List.app ((fn () => PrettyPrint.add_newline pps) o pp 2 pps) bgs
-            ; PrettyPrint.end_block pps
-            ; PrettyPrint.end_block pps
-            )
-      | _ => (print prompt; print " exception "; print(General.exnMessage exn))
-*)
-*)
 end
