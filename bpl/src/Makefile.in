@@ -210,7 +210,7 @@ clean:
 	$(RM) *~ 
 
 parsersclean:
-	for g in $(GRMFILES); do $(RM) $$g.{desc,sig,-sig.sml,sml}; done
+	for g in $(GRMFILES); do $(RM) $$g{.desc,.sig,-sig.sml,.sml}; done
 	for l in $(LEXFILES); do $(RM) $$l.sml; done
 
 
