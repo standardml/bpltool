@@ -26,6 +26,7 @@ sig
   type info
   type nameset
   type interface
+  type ion
   type wiring
   type 'kind permutation
   type bgval
@@ -101,6 +102,18 @@ sig
    * @params X G
    *)
   val make_N : nameset -> G bgbdnf -> N bgbdnf
+  (** Construct an G bgbdnf from a list of S bgbdnf's.
+   * @params Y Ss
+   *)
+  val make_G : S bgbdnf list -> G bgbdnf
+  (** Construct an S bgbdnf from an stlnode (concretion or molecule).
+   * @params stlnode
+   *)
+  val make_S : stlnode -> S bgbdnf
+  (** Construct an M bgbdnf from an ion and an M bgbdnf.
+   * @params Z KyX N
+   *)
+  val make_M : ion -> N bgbdnf -> M bgbdnf
   (** Deconstruct a B bgbdnf. 
    * @return (wirxid, D) representing (a wiring x id_(Xs)) and a DBDNF.
    *)

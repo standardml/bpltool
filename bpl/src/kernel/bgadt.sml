@@ -154,6 +154,7 @@ structure Match = Match
    structure LinkSet     = LinkSet
    structure Permutation = Permutation
    structure Interface   = Interface
+   structure Ion         = Ion
    structure Wiring      = Wiring
    structure BgVal       = BgVal
    structure BgBDNF      = BgBDNF

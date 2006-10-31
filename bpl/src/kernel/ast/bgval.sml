@@ -63,6 +63,7 @@ functor BgVal (structure Name : NAME
     and type wiring = Wiring.wiring 
     and type 'kind permutation = 'kind Permutation.permutation
     and type Immutable = Permutation.Immutable
+    and type name = Name.name
     and type ion = Ion.ion
     and type interface = Interface.interface 
     and type bgterm = BgTerm.bgterm

@@ -36,6 +36,7 @@ functor Match (
   structure LinkSet     : MONO_SET
   structure Permutation : PERMUTATION
   structure Wiring      : WIRING
+  structure Ion         : ION
   structure Interface   : INTERFACE
   structure BgVal       : BGVAL
   structure BgBDNF      : BGBDNF
@@ -47,15 +48,20 @@ functor Match (
   sharing type Permutation.permutation = BgBDNF.permutation
   sharing type Wiring.wiring = BgVal.wiring
                              = BgBDNF.wiring
+  sharing type Ion.ion = BgVal.ion = BgBDNF.ion
   sharing type NameSet.Set = Link.nameset
                            = Wiring.nameset
                            = Interface.nameset
                            = BgBDNF.nameset
                            = BgVal.nameset
-  sharing type Name.name = Link.name
+                           = Ion.nameset
+  sharing type Name.name = Ion.name
+   											 = Link.name
                          = NameSet.elt
+                         = BgVal.name
   sharing type LinkSet.Set = Wiring.linkset
   sharing type LinkSet.elt = Link.link
+                           = Wiring.link
   sharing type Interface.interface = BgBDNF.interface
   sharing type BgVal.bgval = BgBDNF.bgval
   sharing type BgVal.bgmatch = BgBDNF.bgmatch
@@ -80,20 +86,30 @@ struct
   type BR       = BgBDNF.BR
   type DR       = BgBDNF.DR
   type P        = BgBDNF.P
+  type G        = BgBDNF.G
   type ppstream = PrettyPrint.ppstream
   type Mutable  = Permutation.Mutable
   type 'kind permutation = 'kind Permutation.permutation
   type nameset  = NameSet.Set
+  type link     = Link.link
+  type linkset  = LinkSet.Set
   open LazyList
 
   val bgvalmatch = BgVal.match
   val MalformedBDNF = BgBDNF.MalformedBDNF
   val make_P = BgBDNF.make_P
   val make_N = BgBDNF.make_N
+  val make_G = BgBDNF.make_G
+  val make_S = BgBDNF.make_S
+  val SMol = BgBDNF.SMol
+  val make_M = BgBDNF.make_M
   val unmkBR = BgBDNF.unmkBR
   val unmkDR = BgBDNF.unmkDR
   val unmkP = BgBDNF.unmkP
   val unmkN = BgBDNF.unmkN
+  val unmkG = BgBDNF.unmkG
+  val unmkS = BgBDNF.unmkS
+  val unmkM = BgBDNF.unmkM
   val innerface = BgBDNF.innerface
   val outerface = BgBDNF.outerface
   val width = Interface.width
@@ -112,6 +128,29 @@ struct
   exception NoMoreSplits
   
   exception ThisCannotHappen
+
+  exception AgentNotGround of string * G bgbdnf * string
+
+  exception Unmatchedv of string * link list * linkset * string
+
+  exception NotName of string * link * link list * linkset * string
+
+   (* Apparently the following hash function is advocated by
+   * Knuth - at the very least it actually works in Moscow ML.
+   *)
+  fun stringhash s = 
+      let open Word
+	  fun f (c,h) = 
+	      xorb(xorb(<<(h,0w5),>>(h,0w27)), Word.fromInt (ord c));
+      in  CharVector.foldr f 0w0 s
+      end
+
+  exception NOT_FOUND
+  structure NameMap 
+    = HashTableFn (type hash_key = name
+                   val hashVal = stringhash o Name.unmk
+		   val sameKey = Name.==);
+  fun createNameMap size = NameMap.mkTable (size, NOT_FOUND)
 
   (* A split of m elements into n parts is a list of n integers
    * whose sum is m, e.g. [m, 0, 0, ..., 0] or [1, 0, 3, ..., 1].
@@ -292,9 +331,66 @@ struct
    *    where P = (id_Z * ^s)(W)G,
    * 3) Else try using MER rule if... 
    *)
-  fun matchDG {usednames, s_a, s_R = {s_R_e, s_R_n}, g, Ps} = lzNil 
-  fun matchDGe {usednames, s_a, s_R, e, Ps}
-    = matchDG {usednames = usednames, s_a = s_a, s_R = s_R, g = e, Ps = Ps}
+  fun matchDG {usednames, s_a, s_R = {s_R_e, s_R_n}, e = g, Ps} = lzNil 
+
+  (* fresh returns a name similar to basename, not in usednames. *)
+  local
+    fun fresh' i basename usednames =
+			let
+			  val name = basename ^ Int.toString i
+			  val x = Name.make name
+			in
+			  if NameSet.member x usednames then
+			    fresh' (i + 1) basename usednames
+			  else
+			    x
+			end
+  in
+	  fun freshname basename = fresh' 0 (basename ^ "_")
+  end
+
+  (* makefreshlinks returns a list of links vs/Xs, where vs are
+   * fresh names in descending alphabetical order.
+   *)
+  fun makefreshlinks usednames Xs =
+    let
+      fun freshname' i =	freshname ("v_" ^ Int.toString i)
+    	fun addfreshname (X, (i, vXs, usednames)) =
+    	  let
+    	  	val v = freshname' i usednames
+    	  in
+    	    (i + 1,
+    	     Link.make {outer = SOME v, inner = X} :: vXs,
+    	     NameSet.insert v usednames)
+    	  end
+    in
+      #2 (foldr addfreshname (0, [], usednames) Xs)
+    end
+
+  (* sortlinksby returns vZs sorted using the vs as key, ordering
+   * them as in vXs.
+   *)
+  fun sortlinksby vXs vZs =
+    let
+      val vZs_ht = createNameMap (LinkSet.size vZs)
+      fun addlink vZ
+        = case Link.outername vZ of
+          SOME v => NameMap.insert vZs_ht (v, vZ)
+        | NONE => raise NotName ("match/match.sml", vZ, vXs, vZs,
+                                 "sortlinksby:addlink")
+      fun findZ vX =
+        case Link.outername vX of
+          SOME v =>
+            (case NameMap.find vZs_ht v of
+              SOME vZ => Link.innernames vZ
+            | NONE
+            => raise Unmatchedv ("match/match.sml", vXs, vZs,
+                                 "sortlinksby"))
+        | NONE => raise NotName ("match/match.sml", vX, vXs, vZs,
+                                 "sortlinksby:findvZ")
+    in
+      LinkSet.apply addlink vZs; map findZ vXs
+    end
 
   (* Match a global discrete prime using the ION rule, if possible:
    * 1) Determine how many (top-level) molecules it contains.
@@ -309,11 +405,65 @@ struct
    *        s_a_e'_new, s_C_new, P = (id * (vec v)/(vec Z))N, and qs
    *    2e) Construct s_C = s_Y_n || s_Y_e || s_C_new
    *        and    s_a_e' = s_Y_e || s_a_e'_new
-   *        and         G = (id * K_vZ)N
+   *        and         G = (id * K_yZ)N
    *    2f) Return s_a_e', s_C, G, qs
    * 3) Otherwise, perform a D_G match
    *)
-  fun matchDS {usednames, s_a = {s_a_e, s_a_n}, s_R, e, Ps} = lzNil
+  fun matchDS (args as {usednames, s_a = {s_a_e, s_a_n}, s_R, e = g, Ps})
+    = lzmake (fn () =>
+    case unmkG g of	{idxmerge, Ss = [s]} =>
+    	(case unmkS s of BgBDNF.SMol m =>
+    	  let
+    	    val {idxion, N = n} = unmkM m
+    	  in
+    	    case match (PTen [PWir, PIon]) idxion of
+    	      MTen [MWir id_Z, MIon KyX] =>
+    	      let
+    	        val {ctrl, free = ys, bound = Xs} = Ion.unmk KyX
+    	        val Y = foldr (fn (y, Y) => NameSet.insert y Y) NameSet.empty ys
+    	        val {inDom = s_Y_n, notInDom = s_a_n_new}
+    	          = Wiring.split s_a_n Y
+    	        val {inDom = s_Y_e, notInDom = s_a_e_new}
+    	          = Wiring.split s_a_e Y
+    	        val s_Y = Wiring.|| (s_Y_n, s_Y_e)
+    	        val vXs = makefreshlinks usednames Xs
+    	        val p = make_P (Wiring.make' vXs) n
+    	        fun toDS {s_a_e', s_C, E = P, qs} =
+    	          let
+    	          	val {idxlocsub, N} = unmkP P
+    	         		val vZs =
+			    	       	case match
+			    	       	  (PTen [PWir, PAbs (PCom (PTen [PWir, PPer], PCon))])
+			    	       	  idxlocsub
+			    	       	of
+			    	       		MTen [MWir _,
+			    	       		      MAbs (_, MCom (MTen [MWir vZ, MPer _], MCon _))]
+			    	        => Wiring.unmk vZ
+			    	        | wrongterm
+			    	        => raise MalformedBDNF ("match/match.sml", info idxlocsub,
+			    	        	wrongterm, "matching idxlocsub in matchDS")
+			    	      val Zs = sortlinksby vXs vZs
+			    	      val s_C = Wiring.|| (s_Y, s_C)
+			    	      val s_a_e' = Wiring.|| (s_Y_e, s_a_e')
+			    	      val KyZ = Ion.make {ctrl = ctrl, free = ys, bound = Zs}
+			    	      val G = make_G [make_S (SMol (make_M KyZ N))]
+			    	    in
+			    	    	{s_a_e' = s_a_e', s_C = s_C, G = G, qs = qs}
+    	          end
+    	        val matches
+    	          = lzmap toDS (matchDP {usednames = usednames,
+    	                                 s_a = {s_a_e = s_a_e_new,
+    	                                        s_a_n = s_a_n_new},
+    	                                 s_R = s_R,
+    	                                 e = p,
+    	                                 Ps = Ps})
+    	      in
+    	      	lzunmk matches
+    	      end
+    		 end
+    	 | _ => raise AgentNotGround ("kernel/match/match.sml", g,
+    	 	                            "in matchDS"))
+    | _ => lzunmk (matchDG args))
   
   (* Match an abstraction:
    * 1) Deconstruct p, yielding s_a_L : Z -> W and g.
@@ -324,7 +474,7 @@ struct
    *    using W such that s_C' * s_C_L = s_C
    * 5) Construct and return s_a_e', s_C', (id * s_C_L)(U)G, and qs
    *)  
-  fun matchDP {usednames, s_a = {s_a_e, s_a_n}, s_R as {s_R_e, s_R_n}, p, Ps}
+  and matchDP {usednames, s_a = {s_a_e, s_a_n}, s_R as {s_R_e, s_R_n}, e = p, Ps}
     = lzmake (fn () =>
 		let
 			val {idxlocsub, N = n} = unmkP p
@@ -354,30 +504,11 @@ struct
 			     (matchDG {usednames = usednames,
 			               s_a = {s_a_e = s_a_e, s_a_n = s_a_n_new},
 			               s_R = s_R,
-			               g = g,
+			               e = g,
 			               Ps = Ps})
 		in
 			lzunmk matches
 		end)
-
-  fun matchDPe {usednames, s_a, s_R, e, Ps}
-    = matchDP {usednames = usednames, s_a = s_a, s_R = s_R, p = e, Ps = Ps}
-
-  (* fresh returns a name similar to basename, not in usednames. *)
-  local
-    fun fresh' i basename usednames =
-			let
-			  val name = basename ^ Int.toString i
-			  val x = Name.make name
-			in
-			  if NameSet.member x usednames then
-			    fresh' (i + 1) basename usednames
-			  else
-			    x
-			end
-  in
-	  fun freshname basename = fresh' 0 (basename ^ "_")
-  end
 
   (* Match a parallel composition:
    * 1) For each e_i : -> <1,(X_i),X_i + Y_i> determine
@@ -560,11 +691,13 @@ struct
   fun matchCLO {w_a : Wiring.wiring, w_R, ps, Ps} = lzmake (fn () =>
     let
       open Wiring
-    	val {opened = s_a_e, rest = s_a_n, usednames, ...} = splitopen NameSet.empty w_a
-    	val {opened = s_R_e, rest = s_R_n, newnames = Y_R, usednames} = splitopen usednames w_R
+    	val {opened = s_a_e, rest = s_a_n, usednames, ...}
+    	  = splitopen NameSet.empty w_a
+    	val {opened = s_R_e, rest = s_R_n, newnames = Y_R, usednames}
+    	  = splitopen usednames w_R
     	val usednames = NameSet.union (Wiring.outernames s_a_n) usednames
 	    val matches
-	      = matchPER {matchE = matchDPe,
+	      = matchPER {matchE = matchDP,
 	                  usednames = usednames,
 	                  s_a = {s_a_e = s_a_e, s_a_n = s_a_n},
 	                  s_R = {s_R_e = s_R_e, s_R_n = s_R_n},

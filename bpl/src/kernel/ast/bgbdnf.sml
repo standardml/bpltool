@@ -64,12 +64,14 @@ functor BgBDNF (type info
     and type info           = BgVal.info 
     and type interface      = BgVal.interface
     and type wiring         = BgVal.wiring
+    and type ion            = Ion.ion
     and type 'a permutation = 'a BgVal.permutation
     and type bgval          = BgVal.bgval 
     and type bgmatch        = BgVal.bgmatch
     and type ppstream       = BgVal.ppstream =
 struct
   open BgVal
+  type ion = Ion.ion
 
   (* NOTE: Each BDNF form has a fixed structure (omitting infos and
    * interfaces) except for the SBDNF which has two possible structures:
@@ -168,6 +170,39 @@ struct
 			(Wir id_Z xx Abs (Y, (Wir s xx Per id_1) oo Con X)) oo N
 		end
 	fun make_N X G = Abs (info G) (X, G)
+
+	fun make_G Ss =
+		let
+			val i = case Ss of (S :: _) => info S | [] => noinfo
+	    val Wir = Wir i
+	    val Ten = Ten i
+	    val Mer = Mer i
+	    fun xx (v1, v2) = Ten [v1, v2]  infix 6 xx
+	    val oo = Com i                  infix 7 oo
+			val Y = foldr (fn (X, Y) => NameSet.union X Y) NameSet.empty
+			          (map (Interface.glob o outerface) Ss)
+	    val id_Y = Wiring.id_X Y
+	    val n = length Ss
+		in
+			(Wir id_Y xx Mer n) oo Ten Ss
+		end	
+
+  fun make_S (SCon v) = v
+    | make_S (SMol M) = M
+
+	fun make_M KyX N =
+	  let
+			val i = info N
+	    val Wir = Wir i
+	    val Ten = Ten i
+	    val Ion = Ion i
+	    fun xx (v1, v2) = Ten [v1, v2]  infix 6 xx
+	    val oo = Com i                  infix 7 oo
+			val Z = Interface.glob (outerface N)
+			val id_Z = Wiring.id_X Z
+		in
+			(Wir id_Z xx Ion KyX) oo N
+		end
           
   fun unmkB B = 
       case match (PCom (PVar, PVar)) B of
