@@ -43,7 +43,7 @@ val nullCarg = [P.PVar "_x"]
 
 (* extract a list of bound toplevel value identifiers *)
 fun boundIds bs =
-    let fun f (A.ValBind(x,_), bs) = x::bs
+    let fun f (A.ValBind(x,_), bs) = if List.exists (fn y => x=y) bs then bs else x::bs
           | f (_, bs) = bs
     in  rev(List.foldl f [] bs)
     end

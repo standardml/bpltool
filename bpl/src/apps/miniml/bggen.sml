@@ -72,7 +72,6 @@ structure M   = MiniML
 structure B   = BgVal
 
 (* interface types *)
-type bpl = BgVal.bgval
 type ppstream = PrettyPrint.ppstream
 
 (* aux. stuff *)
@@ -98,6 +97,13 @@ fun make_olinkset (X:nameset) =
 
 fun make_onames (X:nameset) = B.Wir info (Wiring.make (make_olinkset X))
 
+fun make_closure (X:nameset) =
+    B.Wir info (Wiring.make(LinkSet.singleton(
+	Link.make{outer=NONE,inner=X})))
+
+val barren = B.Mer info 0
+val id = B.Per info o BG.Permutation.id_n
+val id1 = id 1
 fun v2n x = BG.Name.make (String.toString x)
 
 (* operators *)
@@ -153,6 +159,8 @@ val SWITCH = mkctrl "SWITCH"
 val SWITCHL = mkctrl "SWITCHL"
 val SWITCHE = mkctrl "SWITCHE"
 val DECONST = mkctrl "DECONST"
+
+fun DEF' (x:name) = makeion "DEF'" [x] []
 
 (* Remark: We do not need to translate configurations <e,sigma>
 because there is no syntactic notion of stores in Miniml, and
@@ -301,15 +309,28 @@ fun exp2bg (X:nameset) exp =
          *)
 	(DECONST tt id X) oo (exp2bg X e)
 
-fun getExp (M.ValBind(x,e)) = SOME(x,e)
-  | getExp _                = NONE
+fun getValBind (M.ValBind(x,e)) = SOME(x,e)
+  | getValBind _                = NONE
 
 fun isValBind (M.ValBind _) = true
   | isValBind _             = false
 
 val empty = NameSet.empty
 
-datatype 'a result = Some of 'a | None of exn
+(* interface *)
+type bg = BgVal.bgval
+
+fun toBG (M.Export(exports,binds)) =
+    let val binds = List.mapPartial getValBind binds
+	val exports = NameSet.fromList(List.map v2n exports)
+	fun gen ((x,e), (X,bg)) = (v2n x ++ X, 
+				   ((DEF' (v2n x) tt id X) oo (exp2bg X e)) pp bg)
+	val (X, bg) = List.foldl gen (empty, barren) binds
+    in  (id1 tt make_closure (NameSet.difference X exports) tt id exports) 
+        oo bg
+    end
+
+(*
 fun toBG single (M.Export(exports,binds)) =
     (* for now just test by translating all expressions in
        binds to BG terms *)
@@ -327,6 +348,7 @@ val toBG = fn binds =>
     case toBG true binds of
 	[(_,res)] => res
       | _ => raise Fail("Shouldn't happen: toBG returned multiple results")
+*)
 
 nonfix pp
 

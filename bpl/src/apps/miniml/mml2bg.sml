@@ -27,7 +27,7 @@ functor MiniMLToBG(structure BG : BG_ADT
 		        where type BgBDNF.ppstream = PrettyPrint.ppstream
                     structure BGGen : BGGEN
 		        where type ppstream = PrettyPrint.ppstream
-		      sharing type BGGen.bpl = BG.BgVal.bgval = BG.BgBDNF.bgval)
+		      sharing type BGGen.bg = BG.BgVal.bgval = BG.BgBDNF.bgval)
 	: MINIMLTOBG
 =  struct
 
@@ -67,11 +67,11 @@ functor MiniMLToBG(structure BG : BG_ADT
 	( raise CompileError(reason ^ ": ", explain file exn)
         )
 
-    val frontend_timer : (unit -> (MatchCompiler.pos, MiniML.pat) MiniML.prog) -> (MatchCompiler.pos, MiniML.pat) MiniML.prog = 
+    val frontend_timer =
 	Timings.add {name="/bplc/1/frontend",desc="Frontend time"}
-    val codegen_timer : (unit -> BGGen.bpl BGGen.result) -> BGGen.bpl BGGen.result =
+    val codegen_timer =
 	Timings.add {name="/bplc/2/codegen",desc="Code generation time"}
-    val normalize_timer : (unit -> BG.BgBDNF.B BG.BgBDNF.bgbdnf) -> BG.BgBDNF.B BG.BgBDNF.bgbdnf =
+    val normalize_timer =
 	Timings.add {name="/bplc/3/normalize",desc="BgTerm normalization"}
 
     fun compile infile outfile =
@@ -103,12 +103,9 @@ functor MiniMLToBG(structure BG : BG_ADT
 		else ()
 
             (* Code generation: convert to bgval, then normalize *)
-	    val bpl = case codegen_timer (fn () => BGGen.toBG ast) of
-			  BGGen.Some bpl => bpl
-			| BGGen.None exn => handler infile "toBG failed" exn
-
+	    val bpl = codegen_timer (fn () => BGGen.toBG ast)
+			handle exn => handler infile "toBG failed" exn
 	    val size_bpl = BG.BgVal.size bpl
-
             (* possibly dump bgval term *)
 	    val _ = 
 		if !dump_bgval then
@@ -116,8 +113,6 @@ functor MiniMLToBG(structure BG : BG_ADT
 		else ()
 	    val bpl = normalize_timer (fn () => BG.BgBDNF.make bpl)
 		        handle exn => handler infile "Normalization failed" exn
-
-
 	    val size_bdnf = BG.BgBDNF.size bpl
 
             (* Output result *)
@@ -128,7 +123,7 @@ functor MiniMLToBG(structure BG : BG_ADT
 		  ; PrettyPrint.flush_ppstream ps
 		  ; TextIO.closeOut os
 		end
-	in ()
+	in  ()
 (*
 	    List.app print 
 		     [ "Sizes:\n"

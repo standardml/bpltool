@@ -25,16 +25,10 @@
 
 signature BGGEN =
 sig
-  type bpl
+  type bg
   type ppstream
 
-  datatype 'a result = Some of 'a | None of exn
-  val toBG : (int*int) MiniML.prog' -> bpl result
-  val pp : int -> ppstream -> bpl -> unit
+  val toBG : (int*int) MiniML.prog' -> bg
+  val pp : int -> ppstream -> bg -> unit
 
-(*
-  val normalize : bpl -> bpl' result
-  val pp' : int -> ppstream -> bpl' -> unit
-  val explain : string (*prompt*) -> ppstream -> exn -> unit
-*)
 end
