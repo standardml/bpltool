@@ -524,39 +524,51 @@ struct
    * hash table.
    *)
   fun restrict (ls, ht) X =
-      let
-	val new_ht_inv = createNameEdgeMap (2 * Link'Set.size ls)
+    let
+			val ht_inv = createNameEdgeMap (2 * Link'Set.size ls)
 
-	fun mapmax_i (_, Closure i, i_max) = Int.max (i, i_max)
-	  | mapmax_i (_, _, i_max) = i_max 
-
-	fun addlink x i =
+			fun addlink x =
 	    (case NameMap.find ht x of
 	       SOME ne
-	       => (case NameEdgeMap.find new_ht_inv ne of
-		     SOME X'
-		     => NameEdgeMap.insert new_ht_inv 
-					   (ne, NameSet.insert x X')
-		   | NONE => 
-		     NameEdgeMap.insert new_ht_inv
-					(ne,NameSet.singleton x);
-				       i)
-	     | NONE => i)
-(* The following code is wrong: It causes the restriction of the
-   empty wiring to become a closure of the name set X.
- 
-	     | NONE =>
-	       (NameEdgeMap.insert new_ht_inv
-				   (Closure (i + 1), NameSet.singleton x);
-				  i + 1))
-*)
-	(* First we determine the maximum i value in closures in ht. *)
-	val i_max = NameMap.foldi mapmax_i 0 ht
-        (* Then we add all the links mapping from X. *)
-	val i_max = NameSet.fold addlink i_max X
-      in
-	(invmap2link'set new_ht_inv, invert (NameSet.size X) new_ht_inv)
-      end
+	       => (case NameEdgeMap.find ht_inv ne of
+		     			SOME X'
+		     			=> NameEdgeMap.insert ht_inv 
+					   			(ne, NameSet.insert x X')
+		   			| NONE => 
+		     			NameEdgeMap.insert ht_inv
+								(ne,NameSet.singleton x))
+	     | NONE => ())
+      (* Add all the links mapping from X. *)
+			val i_max = NameSet.apply addlink X
+    in
+			(invmap2link'set ht_inv, invert (NameSet.size X) ht_inv)
+    end
+
+  fun split (ls, ht) X =
+    let
+      val ht0 = createNameMap (2 * Link'Set.size ls)
+      val ht1 = createNameMap (2 * Link'Set.size ls)
+      val ht0_inv = createNameEdgeMap (2 * Link'Set.size ls)
+      val ht1_inv = createNameEdgeMap (2 * Link'Set.size ls)
+			fun addto htx htx_inv (pair as (x, ne)) =
+			  (NameMap.insert htx pair;
+			  case NameEdgeMap.find htx_inv ne of
+			    SOME X'
+			    => NameEdgeMap.insert htx_inv
+			         (ne, NameSet.insert x X')
+			  | NONE =>
+			       NameEdgeMap.insert htx_inv
+			         (ne, NameSet.singleton x))
+      fun splitter (pair as (x, _))
+        = if NameSet.member x X then
+            addto ht1 ht1_inv pair
+          else
+            addto ht0 ht0_inv pair
+    in
+      NameMap.appi splitter ht;
+      {inDom    = (invmap2link'set ht1_inv, ht1),
+       notInDom = (invmap2link'set ht0_inv, ht0)}
+    end
 
   fun restrict_outer (ls, ht) Y =
       let
