@@ -166,7 +166,7 @@ fun findroot map =
 *)
 fun findroot map =
     case map of [] => NONE
-	      | ((x,y)::pairs) => if x=y then SOME x else findroot pairs
+	      | ((x,y)::pairs) => if x=y then SOME(x) else findroot pairs
 
 (* find a path (list) from loc. 'lid' to its /ancestor/ loc. 'ancid' *)
 fun ancpath lid =
@@ -199,7 +199,7 @@ fun commonanc p1 =
 	   [] => NONE
 	 | (x::xs) => case p2 of
 			  [] => NONE
-			| (y::ys) => if listmember x (y::ys) then SOME x
+			| (y::ys) => if listmember x (y::ys) then SOME(x)
 				     else commonanc xs (y::ys)
 
 (* find a path from location 'lid1' to location 'lid2' *)
@@ -249,7 +249,9 @@ val state = (Loc(1,[15],
 
 fun deq () =
     case (!queue) of [] => NONE
-		   | (q::qs) => (queue:=qs ; SOME q)
+		   | (q::qs) => let val _ = queue:=qs 
+				in  SOME(q)
+				end
 
 (***** Interface begin *****)
 

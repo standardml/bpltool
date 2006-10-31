@@ -23,16 +23,26 @@
  * Modified: $Date: 2006/05/19 20:12:35 $ by: $Author: hniss $
  *)
 
-type pos = int
+fun error (msg, {pos=p1}, {pos=p2}) =
+    let open Pretty
+	val err = SourceLocation.ppSourceLocation "foo" (p1,p2) [ppString msg]
+    in  ppPrint err (plainOutput ("(*","*)")) TextIO.stdErr
+    end
+
+type pos = {pos:int}
 type svalue = Tokens.svalue
 type ('a, 'b) token = ('a, 'b) Tokens.token
 type lexresult = (svalue, pos) token
-type lexarg = {comlevel: int ref}
+type lexarg = {src: Source.src}
 type arg = lexarg
 
 open Tokens
 
-val eof = fn {comlevel} => EOF(0,0)
+val comlevel : int ref = ref 0
+
+fun mkPos arg p = {pos=p}
+fun tok arg token (p1, p2) = token ({pos=p1},{pos=p2})
+val eof = fn arg => tok arg EOF (0,0)
 
 local
     val keywords = 
@@ -63,32 +73,32 @@ local
     val _ = 
 	List.app (fn (s,t) => HT.insert keywords_table (s, t)) keywords
 in
-    fun lookupId(s,pos) =
-	let val epos = pos + String.size s
+    fun lookupId arg (s,p1) =
+	let val p2 = p1 + String.size s
 	in  case HT.find keywords_table s of
-		SOME token => token(pos,epos)
+		SOME token => tok arg token (p1,p2)
 	      | NONE =>
 		if Char.isUpper(String.sub(s,0))
-		then CONS(s,pos,epos)
-		else ID(s,pos,epos)
+		then CONS(s, mkPos arg p1, mkPos arg p2)
+		else ID(s, mkPos arg p1, mkPos arg p2)
 	end
 end (*local*)
 
 local
-    val pos : int ref = ref 0
+    val p : int ref = ref 0
     val current : string list ref = ref []
 in
-    fun resetString p = (current := []; pos := p)
+    fun resetString p' = (current := []; p := p')
     fun addString s = current := s :: !current
-    fun getString () = 
+    fun getString arg = 
 	let val s = String.concat (rev (!current))
-	in  (s, !pos, !pos + String.size s)
+	in  STRING(s, mkPos arg (!p), mkPos arg (!p + String.size s))
 	end
 end (*local*)
 %%
 
 %header (functor MiniMLLexFun(structure Tokens : MiniML_TOKENS));
-%arg ({comlevel});
+%arg (arg);
 
 %s COM STR;
 
@@ -108,49 +118,54 @@ end (*local*)
 
 <INITIAL>{WS}    => (continue ());
 <INITIAL>"\n"    => (continue ());
-<INITIAL>"("     => (LPAREN(yypos,yypos+1));
-<INITIAL>")"     => (RPAREN(yypos,yypos+1));
-<INITIAL>"["     => (LBRACKET(yypos,yypos+1));
-<INITIAL>"]"     => (RBRACKET(yypos,yypos+1));
-<INITIAL>"."     => (PERIOD(yypos,yypos+1));
-<INITIAL>","     => (COMMA(yypos,yypos+1));
-<INITIAL>";"     => (SEMICOLON(yypos,yypos+1));
-<INITIAL>":"     => (COLON(yypos,yypos+1));
-<INITIAL>"+"     => (PLUS(yypos,yypos+1));
-<INITIAL>"-"     => (MINUS(yypos,yypos+1));
-<INITIAL>"*"     => (ASTERISK(yypos,yypos+1));
-<INITIAL>"/"     => (DIV(yypos,yypos+1));
-<INITIAL>"<="    => (LE(yypos,yypos+2));
-<INITIAL>">="    => (GE(yypos,yypos+2));
-<INITIAL>"="     => (EQ(yypos,yypos+1));
-<INITIAL>"<"     => (LT(yypos,yypos+1));
-<INITIAL>">"     => (GT(yypos,yypos+1));
-<INITIAL>"::"    => (COLONCOLON(yypos,yypos+2));
-<INITIAL>"=>"    => (DARROW(yypos,yypos+2));
-<INITIAL>"->"    => (ARROW(yypos,yypos+2));
-<INITIAL>"|"     => (BAR(yypos,yypos+1));
-<INITIAL>"#"     => (HASH(yypos,yypos+1));
-<INITIAL>"!"     => (BANG(yypos,yypos+1));
-<INITIAL>":="    => (ASSIGN(yypos,yypos+2));
-<INITIAL>"@"     => (AT(yypos,yypos+1));
-<INITIAL>"^"     => (HAT(yypos,yypos+1));
+<INITIAL>"("     => (tok arg LPAREN(yypos,yypos+1));
+<INITIAL>")"     => (tok arg RPAREN(yypos,yypos+1));
+<INITIAL>"["     => (tok arg LBRACKET(yypos,yypos+1));
+<INITIAL>"]"     => (tok arg RBRACKET(yypos,yypos+1));
+<INITIAL>"."     => (tok arg PERIOD(yypos,yypos+1));
+<INITIAL>","     => (tok arg COMMA(yypos,yypos+1));
+<INITIAL>";"     => (tok arg SEMICOLON(yypos,yypos+1));
+<INITIAL>":"     => (tok arg COLON(yypos,yypos+1));
+<INITIAL>"+"     => (tok arg PLUS(yypos,yypos+1));
+<INITIAL>"-"     => (tok arg MINUS(yypos,yypos+1));
+<INITIAL>"*"     => (tok arg ASTERISK(yypos,yypos+1));
+<INITIAL>"/"     => (tok arg DIV(yypos,yypos+1));
+<INITIAL>"<="    => (tok arg LE(yypos,yypos+2));
+<INITIAL>">="    => (tok arg GE(yypos,yypos+2));
+<INITIAL>"="     => (tok arg EQ(yypos,yypos+1));
+<INITIAL>"<"     => (tok arg LT(yypos,yypos+1));
+<INITIAL>">"     => (tok arg GT(yypos,yypos+1));
+<INITIAL>"::"    => (tok arg COLONCOLON(yypos,yypos+2));
+<INITIAL>"=>"    => (tok arg DARROW(yypos,yypos+2));
+<INITIAL>"->"    => (tok arg ARROW(yypos,yypos+2));
+<INITIAL>"|"     => (tok arg BAR(yypos,yypos+1));
+<INITIAL>"#"     => (tok arg HASH(yypos,yypos+1));
+<INITIAL>"!"     => (tok arg BANG(yypos,yypos+1));
+<INITIAL>":="    => (tok arg ASSIGN(yypos,yypos+2));
+<INITIAL>"@"     => (tok arg AT(yypos,yypos+1));
+<INITIAL>"^"     => (tok arg HAT(yypos,yypos+1));
 
 <INITIAL>\"      => (resetString yypos; YYBEGIN STR; continue());
 
 <INITIAL>"(*"    => (comlevel := 1; YYBEGIN COM; continue());
 
-<INITIAL>{Identifier} => (lookupId(yytext,yypos));
-<INITIAL>"'"{Identifier} => (TYID(String.extract(yytext,1,NONE),yypos,yypos+size yytext));
-<INITIAL>{Integer} => (case Int.fromString yytext of
-		        SOME i => INTLIT(i, yypos, yypos+size yytext)
-		     |  NONE => (TextIO.print ("Error: illegal integer " ^ yytext ^ "\n");
-				 continue())
-                    );
+<INITIAL>{Identifier} => (lookupId arg (yytext,yypos));
+<INITIAL>"'"{Identifier} => 
+    (TYID(String.extract(yytext,1,NONE),
+	  mkPos arg yypos,mkPos arg (yypos+size yytext)));
+<INITIAL>{Integer} => 
+    (case Int.fromString yytext of
+	 SOME i => INTLIT(i, mkPos arg yypos, mkPos arg (yypos+size yytext))
+       | NONE => (error("Error: illegal integer "^yytext, 
+			mkPos arg yypos, mkPos arg (yypos+size yytext));
+		  continue())
+    );
 
-<INITIAL>.       => (TextIO.print ("Error: unknown character " ^ yytext ^ " / #" ^ 
-				   Int.toString(Char.ord (String.sub(yytext,0))) ^ "\n"); 
+<INITIAL>.       => (error("Error: unknown character " ^ yytext ^ " / #" ^ 
+			   Int.toString(Char.ord (String.sub(yytext,0))),
+			   mkPos arg yypos, mkPos arg (yypos+1));
 		     continue());
-<STR>"\""        => (YYBEGIN INITIAL; STRING(getString()) );
+<STR>"\""        => (YYBEGIN INITIAL; getString arg );
 <STR>"\\\""      => (addString "\""; continue());
 <STR>{NotQuoteBackslash} => (addString yytext; continue());
 

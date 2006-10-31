@@ -33,6 +33,14 @@ type  exp = (info,pat)  MiniML.exp
 type bind = (info,pat) MiniML.bind
 type prog = (info,pat) MiniML.prog
 
+fun error (msg, pos) =
+    let open Pretty
+	val err = SourceLocation.ppSourceLocation "foo" pos [ppString msg]
+    in  ppPrint err (plainOutput ("(*","*)")) TextIO.stdErr
+    end
+
+fun mk_info ({pos=p1},{pos=p2}) = (p1,p2)
+
 fun mk_const name arity span = P.ConstCon({name=name,arity=arity,span=span})
 val TRUEcon  = mk_const "True"  0 2
 val FALSEcon = mk_const "False" 0 2
@@ -48,7 +56,7 @@ fun boundIds bs =
     in  rev(List.foldl f [] bs)
     end
 
-fun mk_case info eof pnes = A.Info(info, A.Case(eof, pnes))
+fun mk_case info eof pnes = A.Info(mk_info info, A.Case(eof, pnes))
 
 fun mk_fun info (fmatch as (f,_)::_) =
     let (* fmatch is a list of patterns, one list for each defn clause.
@@ -66,10 +74,12 @@ fun mk_fun info (fmatch as (f,_)::_) =
 	val pats = List.map #2 fmatch
 	val sh = shared (List.map #1 pats)
 	val l = List.length sh
-	val cls = List.map (fn (ps,e) => case List.drop(ps,l) of
-			               [p] => (p,e)
-  	                             | _ => raise Fail("Can only handle one pattern")
-                           ) pats
+	val cls = List.map (fn (ps,e) => 
+	            case List.drop(ps,l) of
+		      [p] => (p,e)
+  	            | _ => ( error("Can only handle one pattern",mk_info info)
+                           ; (P.PVar "bogus", e) )
+                    ) pats
 	val cas = mk_case info (A.Var"_x") cls
 	val (x,sh) = 
 	    case sh of
@@ -124,7 +134,10 @@ local
 	, ("-",   prim "iminus")
 	, ("*",   prim "itimes")
 	, ("=",   prim "iequal")
+	, ("<",   prim "ilt")
 	, ("<=",  prim "ileq")
+	, (">",   prim "igt")
+	, (">=",  prim "igeq")
 	, ("@",   prim "lappend")
 	, ("^",   prim "sconcat")
 	]
@@ -245,7 +258,7 @@ fun mk_rprim ope e1 e2 =
   %eop EOF
   %noshift EOF
   %verbose
-  %pos int
+  %pos {pos: int}
 
   %left         ASSIGN
   %left		EQ LT GT LE GE
@@ -291,27 +304,24 @@ FunBind : FUN FMatch                    (mk_fun (FUNleft,FMatchright) FMatch)
 Exp     : OpExp                         (OpExp)
         | Exp COLON TyExp               (Exp)
 	| LAMBDA PMatch                 (case PMatch of
-					     [(P.PVar x,e)] => A.Info((LAMBDAleft,PMatchright), A.Abs(x,e))
+					     [(P.PVar x,e)] => A.Info(mk_info (LAMBDAleft,PMatchright), A.Abs(x,e))
 					   | match => A.Abs("_x", mk_case (LAMBDAleft,PMatchright) (A.Var "_x") match)
 					)
 					       
-        | FIX ID LPAREN ID RPAREN DARROW Exp (A.Info((FIXleft,Expright),A.Fix(ID1,ID2,Exp)))
+        | FIX ID LPAREN ID RPAREN DARROW Exp (A.Info(mk_info (FIXleft,Expright),A.Fix(ID1,ID2,Exp)))
 	| FIX ID ID DARROW Exp          (A.Fix(ID1,ID2,Exp))
         | CASE Exp OF PMatch            (mk_case (CASEleft,PMatchright) Exp PMatch)
-        | CONS ParenExpListOpt          (let val (p1,p2,p3) =
-						 (CONSleft,ParenExpListOptleft,
-						  ParenExpListOptright)
-					 in  case ParenExpListOpt of
+        | CONS ParenExpListOpt          (case ParenExpListOpt of
 					     [] => A.Const(CONS,A.Unit)
 					   | [e] => A.Const(CONS,e)
 					   | es => A.Const(CONS,A.Tuple es)
-					 end)
+                                        )
 	| IF Exp THEN Exp ELSE Exp      (A.Case(Exp1,
 					        [ (P.PCon(TRUEcon,nullCarg), Exp2)
 					        , (P.PCon(FALSEcon,nullCarg), Exp3)
                                                 ]))
 
-OpExp   : AppExp                        (A.Info((AppExpleft,AppExpright),AppExp))
+OpExp   : AppExp                        (A.Info(mk_info (AppExpleft,AppExpright),AppExp))
         | OpExp PLUS OpExp              (mk_aprim "+" OpExp1 OpExp2)
         | OpExp MINUS OpExp             (mk_aprim "-" OpExp1 OpExp2)
         | OpExp ASTERISK OpExp          (mk_aprim "*" OpExp1 OpExp2)
@@ -320,6 +330,9 @@ OpExp   : AppExp                        (A.Info((AppExpleft,AppExpright),AppExp)
 *)
         | OpExp EQ OpExp                (mk_rprim "=" OpExp1 OpExp2)
         | OpExp LT OpExp                (mk_rprim "<" OpExp1 OpExp2)
+        | OpExp LE OpExp                (mk_rprim "<=" OpExp1 OpExp2)
+        | OpExp GT OpExp                (mk_rprim "<" OpExp1 OpExp2)
+        | OpExp GE OpExp                (mk_rprim "<=" OpExp1 OpExp2)
         | OpExp HAT OpExp               (mk_aprim "^" OpExp1 OpExp2)
         | OpExp AT OpExp                (mk_aprim "@" OpExp1 OpExp2)
 
@@ -327,7 +340,7 @@ OpExp   : AppExp                        (A.Info((AppExpleft,AppExpright),AppExp)
         | OpExp ASSIGN OpExp            (A.Assign(OpExp1, OpExp2))
 
 
-AppExp  : AtExp                         (A.Info((AtExpleft,AtExpright),AtExp))
+AppExp  : AtExp                         (A.Info(mk_info (AtExpleft,AtExpright),AtExp))
         | AppExp AtExp                  (A.App(AppExp,AtExp))
         | HASH INTLIT AtExp             (A.Proj(INTLIT, AtExp))
         | BANG AtExp                    (A.DeRef AtExp)
@@ -336,12 +349,11 @@ AppExp  : AtExp                         (A.Info((AtExpleft,AtExpright),AtExp))
 AtExp   : ID                            (A.Var ID)
         | LET Bindings IN Exp END       (A.mkLet Bindings Exp)
 	| LET Bindings IN ExpSemiList END (A.mkLet Bindings (mk_seq ExpSemiList))
-        | LPAREN ExpListOpt RPAREN      (let val (p1,p2) = (LPARENleft,RPARENright)
-					 in  case ExpListOpt of
+        | LPAREN ExpListOpt RPAREN      (case ExpListOpt of
 						 [] => A.Unit
 					       | [e] => e
 					       | es => A.Tuple es
-					 end)
+					)
         | LPAREN ExpSemiList RPAREN     (mk_seq ExpSemiList)
         | INTLIT                        (mk_int INTLIT)
 	| STRING                        (mk_string STRING)

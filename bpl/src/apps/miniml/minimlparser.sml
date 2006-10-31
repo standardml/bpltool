@@ -26,6 +26,8 @@
 structure MiniMLParser: MINIML_PARSER =
 struct
 
+    exception ParseError
+
     type pos = int * int
     type prog = (pos,Pattern.pat) MiniML.prog
 
@@ -39,8 +41,8 @@ struct
 		    structure Lex = MiniMLL
 		    structure LrParser = LrParser)
 
-    fun parseStream printError stream =
-	let val lexarg = {comlevel=ref 0} (* argument for each lex rule *)
+    fun parseStream src printError stream =
+	let val lexarg = {src=src}
 (*
 	    fun printError (s, p1, p2) =
 		TextIO.output (TextIO.stdErr,"  Error (" ^ 
@@ -54,9 +56,7 @@ struct
 
 	    val (ast, stream) = 
 		MiniMLP.parse(15, lexer, printError, ())
-	             handle Fail(s) => (printError(s, 0, 0);
-					raise Fail s)
-			  | MiniMLP.ParseError => raise Fail("ParseError")
+	             handle MiniMLP.ParseError => raise ParseError
 	in
 	    ast
 	end
@@ -70,9 +70,9 @@ struct
     fun parseFile file =
 	let val stream = TextIO.openIn file
 	    val pp = SourceLocation.ppSourceLocation file
-	    fun printError (s, p1, p2) = 
+	    fun printError (s, {pos=p1}, {pos=p2}) = 
 		ppToStdErr(pp (p1,p2) [Pretty.ppString s])
-	    val result = parseStream printError stream
+	    val result = parseStream (Source.mk file) printError stream
 	in  result before TextIO.closeIn stream
 	end
 
