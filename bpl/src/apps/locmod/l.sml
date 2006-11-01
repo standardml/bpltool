@@ -30,6 +30,7 @@
 	      redefined 'sobs', 'slost', and 'state'.
 	      COMMENT: Do we also need to export aux. function names?
   30/10/2006: Replaced ~1 with options.
+   1/11/2006: Removed semaphore stuff - done with bigraph rules.
  
   This is the "location model" part L of a Plato-graphical system;
   C || P || A = C || (S || L) || A.
@@ -40,15 +41,15 @@
 
 *)
 
-(* export enq,sobs,slost from *)
+(* export enq from *)
 
 (* consider making these two an abstract type 'Link' *)
 type lid = int
 type dev = int
 
 datatype event =
-	 Observation of dev * lid |
-	 Loss of dev
+	 Observation of dev * lid
+       | Loss of dev
 
 datatype hierarchy = (* id, devices, sublocations *)
 	 Loc of lid * dev list * hierarchy list
@@ -214,7 +215,6 @@ fun findpath lid1 =
 	       in path1' @ path2' end
 *)
 
-(*ARGH...!!! Ballade med SOME(5) vs. 5 af lokationsværdier...*)
 fun findpath l1 =
     fn lid2 =>
        case l1 of
@@ -247,11 +247,35 @@ val state = (Loc(1,[15],
 				 Loc(9,[14],[])])])])]) ,
 	     [])
 
+(*
+(* suspend function call *)
+fun block f = fn () => f
+
+(* resume function call *)
+fun wakeup f = f ()
+
+datatype semaphore = Sem of bool * Calls of 'a list
+val sem = ref(Sem true,[])
+
+(* acquire semaphore *)
+fun wait f s = case #1(!sem) of
+		   false => sem:=(Sem false, f::(#2(!sem))) ; block f
+		 | true => f ; signal (!sem)
+
+(* release semaphore *)
+fun signal s =
+    let val flag = #1(!sem)
+	val calls = #2(!sem)
+    in case calls of [] => (fn x => x) () (* nop *)
+		   | (c:.cs) => sem:=(flag,cs) ; wakeup c
+    end
+*)
+
 fun deq () =
-    case (!queue) of [] => NONE
-		   | (q::qs) => let val _ = queue:=qs 
-				in  SOME(q)
-				end
+    case (!queue) of
+	[] => NONE
+      (* | (q::qs) => (queue:=qs ; SOME q) *)
+      | (q::qs) => let val _ = queue:=qs in SOME(q) end
 
 (***** Interface begin *****)
 
