@@ -29,6 +29,12 @@ structure Test = struct
     structure TextUITestRunner = SMLUnit.TextUITestRunner
     structure BG = BG (PrettyPrint);
 
+    structure BGTest 
+      = BGTest
+	    (structure Assert = Assert
+             structure Test = Test
+	     structure BG = BG)
+
     structure BDNFTest 
       = BDNFTest
 	    (structure Assert = Assert
@@ -59,7 +65,8 @@ structure Test = struct
 		  ; TextUITestRunner.runTest {output = TextIO.stdErr} (suite())
 		  ; OS.FileSys.chDir cwd
 		end
-	    val tests = [ ("kernel/ast/test", BDNFTest.suite)
+	    val tests = [ ("kernel/bg/test",   BGTest.suite)
+			, ("kernel/ast/test",  BDNFTest.suite)
 			, ("apps/miniml/test", MiniMLTest.suite)
 			]
 	    fun say s = TextIO.print(s^"\n")

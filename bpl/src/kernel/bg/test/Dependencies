@@ -1,0 +1,5 @@
+# INCLUDE=../..
+# INCLUDE=../../../lib/util
+# INCLUDE=../../../lib/smlunit
+
+bgTest: /lib/smlunit/. /kernel/bg-sig /lib/util/errormsg
