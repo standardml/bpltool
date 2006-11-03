@@ -1,0 +1,15 @@
+datatype bool = True | False
+
+fun new () = ref False
+
+fun spinlock l =
+    let val t = ref True
+        fun loop () = ( exchange(t,l); if !t = True then loop() else () )
+    in  loop ()
+    end
+
+fun spinunlock l = 
+    let val t = ref False
+    in  exchange(t,l)
+    end
+
