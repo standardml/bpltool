@@ -8,5 +8,5 @@
 
 unittest: /lib/smlunit/. /lib/pp/smlnj/. /lib/util/errormsg /lib/util/flags
    /lib/util/timings /kernel/bg /apps/miniml/bggen /apps/miniml/mml2bg
-   /kernel/bg/test/bgTest /kernel/ast/test/bdnfTest
+   /kernel/bg/test/bgTest /kernel/ast/test/bdnfTest /kernel/match/test/matchTest
    /apps/miniml/test/minimltest %PROGRAM

@@ -41,6 +41,12 @@ structure Test = struct
              structure Test = Test
 	     structure BG = BG)
 
+    structure MatchTest 
+      = MatchTest
+	    (structure Assert = Assert
+             structure Test = Test
+	     structure BG = BG)
+
     structure BGGen
       = BGGen
 	    (structure PrettyPrint = PrettyPrint
