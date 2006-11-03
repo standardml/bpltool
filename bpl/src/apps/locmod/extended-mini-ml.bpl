@@ -227,3 +227,11 @@ rule assign_2 =
   assign(aloc(val(loc_l)) | aval(val([0]))) || store(loc'_l([1]) | [2])
     ->
   val(unit) \o {l} || store(loc'_l(val([0])) | [2])
+
+% make sure to make exchange active to allow the two expressions to be reduced
+rule exchange =
+  exchange(val(loc_l1)|val(loc_l2)) || store(loc'_l1([0])|loc'_l2([1]) | [2])
+    ->
+  val(unit) \o {l1,l2} || store(loc'_l1([1])|loc'_l2([0])|[2])
+
+  
