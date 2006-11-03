@@ -1,6 +1,5 @@
 <?xml version="1.0" ?>
-<r>
-
+<wide><reg>
 <context>
   <positions>
     <pos p1="hilde" p2="itu4"/>
@@ -19,5 +18,4 @@
     </floor>
   </building>
 </context>
-
-</r>
+</reg></wide>
