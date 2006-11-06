@@ -75,45 +75,49 @@ sig
 
   (** Sum type for singular top-level nodes. *)
   datatype stlnode =
-           SCon of bgval
+           SCon of info * wiring
          | SMol of M bgbdnf
+  (** Sum type for singular top-level nodes. *)
+  datatype stlnode' =
+           SCon' of bgval
+         | SMol' of M bgbdnf
 
   (** Construct a B bgbdnf from a wiring, nameset list and D bgbdnf. *)
-  val make_B : wiring -> nameset list -> D bgbdnf -> B bgbdnf
+  val makeB : wiring -> nameset list -> D bgbdnf -> B bgbdnf
   (** Construct a BR bgbdnf from a wiring, nameset list and DR bgbdnf. *)
-  val make_BR : wiring -> nameset list -> DR bgbdnf -> BR bgbdnf
+  val makeBR : wiring -> nameset list -> DR bgbdnf -> BR bgbdnf
   (** Construct a D bgbdnf from a renaming, P bgbdnf list and a permutation.
    * NOTE: it is not checked whether alpha is a renaming!
 	 * @params alpha Ps pi
    *)
-  val make_D : wiring -> P bgbdnf list -> 'kind permutation -> D bgbdnf
+  val makeD : wiring -> P bgbdnf list -> 'kind permutation -> D bgbdnf
   (** Construct a DR bgbdnf from a renaming and a P bgbdnf list.
    * NOTE: it is not checked whether alpha is a renaming!
 	 * @params alpha Ps
    *)
-  val make_DR : wiring -> P bgbdnf list -> DR bgbdnf
+  val makeDR : wiring -> P bgbdnf list -> DR bgbdnf
   (** Construct a P bgbdnf from a substitution and an N bgbdnf.
    * NOTE: it is not checked whether sigma is a substitution!
    * @params sigma N
    *)
-  val make_P : wiring -> N bgbdnf -> P bgbdnf
+  val makeP : wiring -> N bgbdnf -> P bgbdnf
   (** Construct an N bgbdnf from a name set and a G bgbdnf.
    * NOTE: it is not checked whether X is a subset of G's outer names!
    * @params X G
    *)
-  val make_N : nameset -> G bgbdnf -> N bgbdnf
+  val makeN : nameset -> G bgbdnf -> N bgbdnf
   (** Construct an G bgbdnf from a list of S bgbdnf's.
    * @params Y Ss
    *)
-  val make_G : S bgbdnf list -> G bgbdnf
+  val makeG : S bgbdnf list -> G bgbdnf
   (** Construct an S bgbdnf from an stlnode (concretion or molecule).
    * @params stlnode
    *)
-  val make_S : stlnode -> S bgbdnf
+  val makeS : stlnode -> S bgbdnf
   (** Construct an M bgbdnf from an ion and an M bgbdnf.
    * @params Z KyX N
    *)
-  val make_M : ion -> N bgbdnf -> M bgbdnf
+  val makeM : ion -> N bgbdnf -> M bgbdnf
   (** Deconstruct a B bgbdnf. 
    * @return (wirxid, D) representing (a wiring x id_(Xs)) and a DBDNF.
    *)
@@ -124,13 +128,19 @@ sig
    *)
   val unmkD
       : D bgbdnf -> {ren : bgval, Ps : P bgbdnf list, perm : bgval}
-  (** Deconstruct a P bgbdnf. 
+  (** Deconstruct a P bgbdnf, yielding basic elements and a bgbdnf. 
+   * @params P
+   * @param P a prime on the form (id_Z * (Y)(s * id_1)"X") N
+   *)
+  val unmkP : P bgbdnf
+    -> {id_Z : wiring, Y : nameset, s : wiring, X : nameset, N : N bgbdnf}
+  (** Deconstruct a P bgbdnf, yielding a bgval and bgbdnf. 
    * @return (idxlocsub, N) representing (id_Z x a local substitution)
    * and a NBDNF.  The local substitution is on the form 
    * (Y)(w x id_1)"X", where w is a wiring and id_1 an identity
    * permutation.
    *)
-  val unmkP : P bgbdnf -> {idxlocsub : bgval, N : N bgbdnf}
+  val unmkP' : P bgbdnf -> {idxlocsub : bgval, N : N bgbdnf}
   (** Deconstruct a N bgbdnf. 
    * @return (absnames, G) representing an abstraction and a GBDNF.
    *)
@@ -144,11 +154,20 @@ sig
    * @return (stlnode) representing a renaming concretion or a MBDNF.
    *)
   val unmkS : S bgbdnf -> stlnode
+  (** Deconstruct a S bgbdnf. 
+   * @return (stlnode) representing a renaming concretion or a MBDNF.
+   *)
+  val unmkS' : S bgbdnf -> stlnode'
   (** Deconstruct a M bgbdnf. 
    * @return {idxion, N} representing id_Z tensor an ion, and a
    * NBDNF.
    *)
-  val unmkM : M bgbdnf -> {idxion : bgval, N : N bgbdnf}
+  val unmkM : M bgbdnf -> {id_Z : wiring, KyX : ion, N : N bgbdnf}
+  (** Deconstruct a M bgbdnf. 
+   * @return {idxion, N} representing id_Z tensor an ion, and a
+   * NBDNF.
+   *)
+  val unmkM' : M bgbdnf -> {idxion : bgval, N : N bgbdnf}
 
   (** Deconstruct a BR bgbdnf. 
    * @return (wirxid, D) representing (a wiring x id_(Xs)) and a DRBDNF.

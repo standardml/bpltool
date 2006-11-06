@@ -105,8 +105,12 @@ struct
   type 'class bgbdnf = bgval
 
   datatype stlnode =
-           SCon of bgval
+           SCon of info * wiring
          | SMol of M bgbdnf
+
+  datatype stlnode' =
+           SCon' of bgval
+         | SMol' of M bgbdnf
 
   exception IrregularBDNF of string * info * bgval * string
   exception MalformedBDNF of string * info * bgmatch * string
@@ -118,40 +122,40 @@ struct
   val take = List.take
   val drop = List.drop
 
-	fun make_B w Xs D =
+	fun makeB w Xs D =
 	  let
 	    val i = info D
 	    val Wir = Wir i
 	    val Per = Per i
 	    val Ten = Ten i
-	    fun xx (v1, v2) = Ten [v1, v2]  infix 6 xx
+	    fun ** (v1, v2) = Ten [v1, v2]  infix 6 **
 	    val oo = Com i                  infix 7 oo
 	  in
-	    (Wir w xx Per (Permutation.id Xs)) oo D
+	    (Wir w ** Per (Permutation.id Xs)) oo D
 	  end
-	val make_BR = make_B
-	fun make_D w Ps pi =
+	val makeBR = makeB
+	fun makeD w Ps pi =
 	  let
 	    val i = case Ps of P :: _ => info P | _ => noinfo
 	    val Wir = Wir i
 	    val Per = Per i
 	    val Ten = Ten i
-	    fun xx (v1, v2) = Ten [v1, v2]  infix 6 xx
+	    fun ** (v1, v2) = Ten [v1, v2]  infix 6 **
 	    val oo = Com i                  infix 7 oo
 	  in
-	     Wir w xx Ten Ps oo Per pi
+	     Wir w ** Ten Ps oo Per pi
 	  end
-  fun make_DR w Ps =
+  fun makeDR w Ps =
 	  let
 	    val i = case Ps of P :: _ => info P | _ => noinfo
 	    val Wir = Wir i
 	    val Ten = Ten i
-	    fun xx (v1, v2) = Ten [v1, v2]  infix 6 xx
+	    fun ** (v1, v2) = Ten [v1, v2]  infix 6 **
 	    val oo = Com i                  infix 7 oo
 	  in
-	     Wir w xx Ten Ps
+	     Wir w ** Ten Ps
 	  end
-	fun make_P s N =
+	fun makeP s N =
 		let
 			val i = info N
 	    val Wir = Wir i
@@ -159,7 +163,7 @@ struct
 	    val Per = Per i
 	    val Abs = Abs i
 	    val Con = Con i
-	    fun xx (v1, v2) = Ten [v1, v2]  infix 6 xx
+	    fun ** (v1, v2) = Ten [v1, v2]  infix 6 **
 	    val oo = Com i                  infix 7 oo
 	    val Z = Interface.glob (outerface N)
 	    val Y = Wiring.outernames s
@@ -167,41 +171,53 @@ struct
 	    val id_Z = Wiring.id_X Z
 	    val id_1 = Permutation.id_n 1
 		in
-			(Wir id_Z xx Abs (Y, (Wir s xx Per id_1) oo Con X)) oo N
+			(Wir id_Z ** Abs (Y, (Wir s ** Per id_1) oo Con X)) oo N
 		end
-	fun make_N X G = Abs (info G) (X, G)
+	fun makeN X G = Abs (info G) (X, G)
 
-	fun make_G Ss =
+	fun makeG Ss =
 		let
 			val i = case Ss of (S :: _) => info S | [] => noinfo
 	    val Wir = Wir i
 	    val Ten = Ten i
 	    val Mer = Mer i
-	    fun xx (v1, v2) = Ten [v1, v2]  infix 6 xx
+	    fun ** (v1, v2) = Ten [v1, v2]  infix 6 **
 	    val oo = Com i                  infix 7 oo
 			val Y = foldr (fn (X, Y) => NameSet.union X Y) NameSet.empty
 			          (map (Interface.glob o outerface) Ss)
 	    val id_Y = Wiring.id_X Y
 	    val n = length Ss
 		in
-			(Wir id_Y xx Mer n) oo Ten Ss
+			(Wir id_Y ** Mer n) oo Ten Ss
 		end	
 
-  fun make_S (SCon v) = v
-    | make_S (SMol M) = M
+  fun makeS (SCon (i, a)) =
+			let
+		    val Wir = Wir i
+		    val Ten = Ten i
+		    val Per = Per i
+		    val Con = Con i
+		    fun ** (v1, v2) = Ten [v1, v2]  infix 6 **
+		    val oo = Com i                  infix 7 oo
+		    val idp_1 = Permutation.id_n 1
+		    val X = Wiring.innernames a
+		  in
+		  	(Wir a ** Per idp_1) oo Con X
+		  end
+    | makeS (SMol M) = M
 
-	fun make_M KyX N =
+	fun makeM KyX N =
 	  let
 			val i = info N
 	    val Wir = Wir i
 	    val Ten = Ten i
 	    val Ion = Ion i
-	    fun xx (v1, v2) = Ten [v1, v2]  infix 6 xx
+	    fun ** (v1, v2) = Ten [v1, v2]  infix 6 **
 	    val oo = Com i                  infix 7 oo
 			val Z = Interface.glob (outerface N)
 			val id_Z = Wiring.id_X Z
 		in
-			(Wir id_Z xx Ion KyX) oo N
+			(Wir id_Z ** Ion KyX) oo N
 		end
           
   fun unmkB B = 
@@ -222,10 +238,26 @@ struct
                   ("bgbdnf.sml", info D, wrongterm,
                    "matching D in unmkD")
 
-  fun unmkP P =
+  fun unmkP' P =
       case match (PCom (PVar, PVar)) P of
         MCom (MVal idxlocsub, MVal N) =>
           {idxlocsub = idxlocsub, N = N}
+      | wrongterm => 
+          raise MalformedBDNF 
+                  ("bgbdnf.sml", info P, wrongterm,
+                   "matching P in unmkP'")
+
+  fun unmkP P =
+      case match (PCom
+       	           (PTen
+       	             [PWir,
+	  	                PAbs (PCom (PTen [PWir, PPer], PCon))],
+	  	              PVar)) P of
+        MCom
+         (MTen
+           [MWir id_Z, MAbs (Y, MCom (MTen [MWir s, MPer id], MCon X))],
+          MVal N) =>
+          {id_Z = id_Z, Y = Y, s = s, X = X, N = N}
       | wrongterm => 
           raise MalformedBDNF 
                   ("bgbdnf.sml", info P, wrongterm,
@@ -255,7 +287,7 @@ struct
       in
         case match (PCom (PTen [PWir, PCns], PVar)) S of
           (MCom (MTen [MWir a, MPer id_1], MVal concx)) =>
-            SCon (Com i (Ten i [Wir i a, Per i id_1], concx))
+            SCon (i, a)
         | (MCom (MTen [MWir a, MIon KyX], MVal N)) =>
             SMol (Com i (Ten i [Wir i a, Ion i KyX], N))
         | wrongterm =>
@@ -264,14 +296,38 @@ struct
                      "matching S in unmkS")
       end
 
+  fun unmkS' S =
+      let
+        val i = info S
+      in
+        case match (PCom (PTen [PWir, PCns], PVar)) S of
+          (MCom (MTen [MWir a, MPer id_1], MVal concx)) =>
+            SCon' (Com i (Ten i [Wir i a, Per i id_1], concx))
+        | (MCom (MTen [MWir a, MIon KyX], MVal N)) =>
+            SMol' (Com i (Ten i [Wir i a, Ion i KyX], N))
+        | wrongterm =>
+            raise MalformedBDNF 
+                    ("bgbdnf.sml", i, wrongterm,
+                     "matching S in unmkS")
+      end
+
   fun unmkM M =
+      case match (PCom (PTen [PWir, PIon], PVar)) M of
+        MCom (MTen [MWir id_Z, MIon KyX], MVal N) =>
+          {id_Z = id_Z, KyX = KyX, N = N}
+      | wrongterm =>
+          raise MalformedBDNF 
+                  ("bgbdnf.sml", info M, wrongterm,
+                   "matching M in unmkM")
+
+  fun unmkM' M =
       case match (PCom (PVar, PVar)) M of
         MCom (MVal idxion, MVal N) =>
           {idxion = idxion, N = N}
       | wrongterm =>
           raise MalformedBDNF 
                   ("bgbdnf.sml", info M, wrongterm,
-                   "matching M in unmkM")
+                   "matching M in unmkM'")
 
   fun unmkBR B = 
       case match (PCom (PVar, PVar)) B of
@@ -313,8 +369,8 @@ struct
         val WLS = BgVal.WLS i
 
         (* Tensor product of two bgvals, as operator *)
-        fun xx (v1, v2) = Ten [v1, v2]
-        infix 6 xx
+        fun ** (v1, v2) = Ten [v1, v2]
+        infix 6 **
         (* Composition constructor, as operator *)
         val oo = Com
         infix 7 oo
@@ -341,27 +397,27 @@ struct
                                 free  = NameSet.list y',
                                 bound = bound}
               in
-                (Wir wid_Z' xx Ion Ky'X) oo N'
+                (Wir wid_Z' ** Ion Ky'X) oo N'
               end
             | wrongterm => 
               raise MalformedBDNF ("bgbdnf.sml", i, wrongterm,
                                    "matching M in renM")
 
         and renS beta S =
-            case unmkS S of
-              SCon renConc =>
+            case unmkS' S of
+              SCon' renConc =>
             (case match (PCom (PTen [PWir, PVar], PVar))
                     renConc of
                MCom (MTen [MWir a, MVal id_1], MVal concX) =>
                let
                  val a' = Wiring.o (beta, a)
                in
-                 (Wir a' xx id_1) oo concX
+                 (Wir a' ** id_1) oo concX
                end
              | wrongterm => 
                raise MalformedBDNF ("bgbdnf.sml", i, wrongterm,
                                     "matching a in renS"))
-            | SMol M => renM beta M
+            | SMol' M => renM beta M
 
         and renG beta G =
             case match (PCom (PTen [PWir, PVar], PTns)) G of
@@ -380,7 +436,7 @@ struct
                             S)
                         Ss
               in
-                (Wir wid_Y' xx mer_n) oo Ten S's
+                (Wir wid_Y' ** mer_n) oo Ten S's
               end
             | wrongterm => 
               raise MalformedBDNF ("bgbdnf.sml", i, wrongterm,
@@ -404,7 +460,7 @@ struct
                 val Z' = Wiring.app beta Z
                 val wid_Z' = Wiring.id_X Z'
               in
-                (Wir wid_Z' xx locsub) oo N'
+                (Wir wid_Z' ** locsub) oo N'
               end
             | wrongterm => 
               raise MalformedBDNF ("bgbdnf.sml", i, wrongterm,
@@ -431,8 +487,8 @@ struct
         val WLS = BgVal.WLS i
 
         (* Tensor product of two bgvals, as operator *)
-        fun xx (v1, v2) = Ten [v1, v2]
-        infix 6 xx
+        fun ** (v1, v2) = Ten [v1, v2]
+        infix 6 **
         (* Composition constructor, as operator *)
         val oo = Com
         infix 7 oo
@@ -482,7 +538,7 @@ struct
                 MVal barP)
             => (* Rule Mcom *)
             let
-              val (s, N') = bgvalCom2NBDNF ((Wir id_Z xx N) oo barP)
+              val (s, N') = bgvalCom2NBDNF ((Wir id_Z ** N) oo barP)
               val {ctrl = K, free = ys, bound = Xss} = Ion.unmk KyX
   	      val X'ss = map (Wiring.app_inverse s) Xss
               val Z = Wiring.outernames id_Z
@@ -496,7 +552,7 @@ struct
               val KyX'
                   = Ion.make {ctrl = K, free = ys, bound = X'ss}
             in
-              (s', Ten [(Wir id_Z'Y' xx Ion KyX') oo N'])
+              (s', Ten [(Wir id_Z'Y' ** Ion KyX') oo N'])
             end
         | wrongterm =>
             raise MalformedBDNF ("bgbdnf.sml", i, wrongterm,
@@ -530,8 +586,8 @@ struct
             val WLS = BgVal.WLS i
 
             (* Tensor product of two bgvals, as operator *)
-            fun xx (v1, v2) = Ten [v1, v2]
-            infix 6 xx
+            fun ** (v1, v2) = Ten [v1, v2]
+            infix 6 **
             (* Composition constructor, as operator *)
             val oo = Com
             infix 7 oo
@@ -562,7 +618,7 @@ struct
                          NameSet.empty
                          P'i
                    in
-                     ((Wir (Wiring.id_X Zi) xx Si) oo Ten P'i)
+                     ((Wir (Wiring.id_X Zi) ** Si) oo Ten P'i)
                      :: composeprimes Ss Prest
                    end
                  | composeprimes [] err2s =
@@ -598,7 +654,7 @@ struct
             val id_Z'Y' = Wiring.id_X (NameSet.union Z' Y')
             val n' = Interface.width (outerface barS)
           in
-            (s, Abs (X', (Wir id_Z'Y' xx Mer n') oo barS))
+            (s, Abs (X', (Wir id_Z'Y' ** Mer n') oo barS))
           end
       | wrongterm => 
           raise MalformedBDNF ("bgbdnf.sml", BgVal.info v, wrongterm,
@@ -636,8 +692,8 @@ struct
             val WLS = BgVal.WLS i
 
             (* Tensor product of two bgvals, as operator *)
-            fun xx (v1, v2) = Ten [v1, v2]
-            infix 6 xx
+            fun ** (v1, v2) = Ten [v1, v2]
+            infix 6 **
             (* Composition constructor, as operator *)
             val oo = Com
             infix 7 oo
@@ -649,7 +705,7 @@ struct
             val vpid_0 = Per pid_0
             val vpid_1 = Per (Permutation.id_n 1)
  
-            val (s, N') = bgvalCom2NBDNF ((Wir id_Z xx N) oo barP)
+            val (s, N') = bgvalCom2NBDNF ((Wir id_Z ** N) oo barP)
             val Z    = Wiring.outernames id_Z
             val Z'   = Wiring.outernames id_Z'
             val ZZ'  = NameSet.union Z Z'
@@ -666,7 +722,7 @@ struct
                      [] (Wiring.unmk yX))
             val s' = Wiring.restrict_outer s ZZ'
           in
-            (s', (Wir id_W xx LS yX') oo N')
+            (s', (Wir id_W ** LS yX') oo N')
           end
       | wrongterm => 
           raise MalformedBDNF ("bgbdnf.sml", BgVal.info v, wrongterm,
@@ -689,8 +745,8 @@ struct
         val WLS = BgVal.WLS i
 
         (* Tensor product of two bgvals, as operator *)
-        fun xx (v1, v2) = Ten [v1, v2]
-        infix 6 xx
+        fun ** (v1, v2) = Ten [v1, v2]
+        infix 6 **
         (* Composition constructor, as operator *)
         val oo = Com
         infix 7 oo
@@ -707,16 +763,16 @@ struct
           let
             val cs = List.tabulate
                        (n,
-                        (fn _ => (vwid_0 xx vpid_1) 
+                        (fn _ => (vwid_0 ** vpid_1) 
                                    oo Con NameSet.empty))
             val vpid_n = Per (Permutation.id_n n)
             val N = Abs (NameSet.empty,
-                           (vwid_0 xx Mer n)
+                           (vwid_0 ** Mer n)
                              oo Ten cs)
-            val P = (vwid_0 xx LS wid_0) oo N
-            val D = vwid_0 xx Ten [P] oo vpid_n
+            val P = (vwid_0 ** LS wid_0) oo N
+            val D = vwid_0 ** Ten [P] oo vpid_n
           in
-            (vwid_0 xx vpid_1) oo D
+            (vwid_0 ** vpid_1) oo D
           end
       
         | MCon X => (* Rule Bcon *)
@@ -724,12 +780,12 @@ struct
             val vwid_X = Wir (Wiring.id_X X)
             val vpid_X = Per (Permutation.id [X])
             val N = Abs (NameSet.empty,
-                           (vwid_X xx Mer 1)
-                             oo Ten [(vwid_X xx vpid_1) oo Con X])
-            val P = (vwid_X xx LS wid_0) oo N
-            val D = vwid_0 xx Ten [P] oo vpid_X
+                           (vwid_X ** Mer 1)
+                             oo Ten [(vwid_X ** vpid_1) oo Con X])
+            val P = (vwid_X ** LS wid_0) oo N
+            val D = vwid_0 ** Ten [P] oo vpid_X
           in
-            (vwid_X xx vpid_1) oo D
+            (vwid_X ** vpid_1) oo D
           end
       
         | MWir w => (* Rule Bwir *)
@@ -737,7 +793,7 @@ struct
             val X = Wiring.innernames w
             val vwid_X = Wir (Wiring.id_X X)
           in
-            (v xx vpid_0) oo (vwid_X xx Ten [] oo vpid_0)
+            (v ** vpid_0) oo (vwid_X ** Ten [] oo vpid_0)
           end
       
         | MIon KyX => (* Rule Bion *)
@@ -747,17 +803,17 @@ struct
             val vwid_X = Wir (Wiring.id_X X)
             val vwid_Y = Wir (Wiring.id_X Y)
             val vpid_X = Per (Permutation.id [X])
-            val M = (vwid_0 xx v)
+            val M = (vwid_0 ** v)
                       oo Abs (X,
-                              (vwid_X xx Mer 1) 
-                                oo Ten [(vwid_X xx vpid_1)
+                              (vwid_X ** Mer 1) 
+                                oo Ten [(vwid_X ** vpid_1)
                                           oo Con X])
             val N = Abs (NameSet.empty,
-                           (vwid_Y xx Mer 1) oo Ten [M])
-            val P = (vwid_Y xx LS wid_0) oo N
-            val D = vwid_0 xx Ten [P] oo vpid_X
+                           (vwid_Y ** Mer 1) oo Ten [M])
+            val P = (vwid_Y ** LS wid_0) oo N
+            val D = vwid_0 ** Ten [P] oo vpid_X
           in
-            (vwid_Y xx vpid_1) oo D
+            (vwid_Y ** vpid_1) oo D
           end
       
         | MPer pi => (* Rule Bper *)
@@ -767,18 +823,18 @@ struct
                   val wid_Yi  = Wiring.id_X Yi
                   val vwid_Yi = Wir wid_Yi
                   val Ni = Abs (Yi,
-                                (vwid_Yi xx Mer 1)
-                                  oo Ten [(vwid_Yi xx vpid_1)
+                                (vwid_Yi ** Mer 1)
+                                  oo Ten [(vwid_Yi ** vpid_1)
                                            oo Con Yi])
                 in
-                  (vwid_0 xx LS wid_Yi) oo Ni
+                  (vwid_0 ** LS wid_Yi) oo Ni
                 end
             val Ys      = Interface.loc (Permutation.outerface pi)
             val vpid_Ys = Per (Permutation.id Ys)
             val Pis     = map makePi Ys
-            val D       = vwid_0 xx Ten Pis oo Per pi
+            val D       = vwid_0 ** Ten Pis oo Per pi
           in
-            (vwid_0 xx vpid_Ys) oo D
+            (vwid_0 ** vpid_Ys) oo D
           end
       
         | MAbs (X, MVal b) => (* Rule Babs *)
@@ -859,10 +915,10 @@ struct
                      notlinkstoX
                val vwid_WbarX = Wir (Wiring.id_X WbarX)
                val N = Abs (NameSet.union WX W, G)
-               val P = (vwid_WbarX xx LSyzXW') oo N
+               val P = (vwid_WbarX ** LSyzXW') oo N
              in
-               (vwzW' xx vpid_U)
-                 oo (vwid_0 xx Ten [P] oo Per pid_I)
+               (vwzW' ** vpid_U)
+                 oo (vwid_0 ** Ten [P] oo Per pid_I)
              end
            | wrongterm =>
              raise
@@ -962,9 +1018,9 @@ struct
                     unzip
                     (wid_0, pid_0, wid_0, pid_0, [], NameSet.empty)
                     bs
-            val D = Wir a xx Ten Ps oo Per pi
+            val D = Wir a ** Ten Ps oo Per pi
           in
-            (Wir w xx Per pid_Y) oo D
+            (Wir w ** Per pid_Y) oo D
           end
       
         | MCom (MVal b1, MVal b2) => (* Rule Bcom *)
@@ -1005,7 +1061,7 @@ struct
                            P_2is
                      val vwid_Z'_i = Wir (Wiring.id_X Z'_i)
                    in
-                     ((vwid_Z'_i xx P_1i) oo Ten P_2is)
+                     ((vwid_Z'_i ** P_1i) oo Ten P_2is)
                      :: composeprimes P_1s P_2srest
                    end
                  | composeprimes [] err2s =
@@ -1024,7 +1080,7 @@ struct
                val X''ss = map (Interface.loc o innerface) P_2s
                val pi = Permutation.o 
                           (Permutation.pushthru pi_1 X''ss, pi_2)
-               val D = Wir wid_U xx Ten Ps oo Per pi
+               val D = Wir wid_U ** Ten Ps oo Per pi
                val V1 = Interface.glob (outerface (Ten P_1s))
                val wid_V1 = Wiring.id_X V1
                val V2 = Interface.glob (outerface (Ten P_2s))
@@ -1034,7 +1090,7 @@ struct
                val w 
                    = w_1 o (a_1 o w_2 o (a_2 x wid_V2) x wid_V1) o s
              in
-               (Wir w xx Per pid_U1) oo D
+               (Wir w ** Per pid_U1) oo D
              end
            | wrongtermD2 =>
              raise MalformedBDNF ("bgbdnf.sml", i, wrongtermD2,
@@ -1072,29 +1128,29 @@ struct
         val Com = BgVal.Com i
 
         (* Tensor product of two bgvals, as operator *)
-        fun xx (v1, v2) = Ten [v1, v2]
-        infix 6 xx
+        fun ** (v1, v2) = Ten [v1, v2]
+        infix 6 **
         (* Composition constructor, as operator *)
         val oo = Com
         infix 7 oo
 
         fun regM M pi =
             let
-              val {idxion, N} = unmkM M
+              val {idxion, N} = unmkM' M
               val N' = regN N pi
             in
               Com (idxion, N')
             end
               
         and regS (S, pi) =
-            case unmkS S of
-              SCon a =>
+            case unmkS' S of
+              SCon' a =>
 		if Permutation.is_id pi then
 		  a
 		else
 		  raise IrregularBDNF
                     ("bgbdnf.sml", i, B, "bigraph is irregular")
-            | SMol M => regM M pi
+            | SMol' M => regM M pi
             
         and regN N pi =
             let
@@ -1116,7 +1172,7 @@ struct
               fun regPs [] [] _ = []
                 | regPs (P_i::Ps) pis pi_offset =
                   let
-                    val {idxlocsub, N} = unmkP P_i
+                    val {idxlocsub, N} = unmkP' P_i
                     val m_i   = Interface.width (innerface P_i)
                     val pis_i = map
                                   (fn (j, ns) => (j - pi_offset, ns))
