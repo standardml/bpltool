@@ -97,15 +97,17 @@ struct
 
   val bgvalmatch = BgVal.match
   val MalformedBDNF = BgBDNF.MalformedBDNF
-  val make_P = BgBDNF.make_P
-  val make_N = BgBDNF.make_N
-  val make_G = BgBDNF.make_G
-  val make_S = BgBDNF.make_S
+  val makeP = BgBDNF.makeP
+  val makeN = BgBDNF.makeN
+  val makeG = BgBDNF.makeG
+  val makeS = BgBDNF.makeS
   val SMol = BgBDNF.SMol
-  val make_M = BgBDNF.make_M
+  val SCon = BgBDNF.SCon
+  val makeM = BgBDNF.makeM
   val unmkBR = BgBDNF.unmkBR
   val unmkDR = BgBDNF.unmkDR
   val unmkP = BgBDNF.unmkP
+  val unmkP' = BgBDNF.unmkP'
   val unmkN = BgBDNF.unmkN
   val unmkG = BgBDNF.unmkG
   val unmkS = BgBDNF.unmkS
@@ -303,35 +305,84 @@ struct
    * links of s_C_e must only be matched with links of s_a_e.
    *)
 
-  (* Match a global discrete prime using the PAX rule:
-   * Assuming X is a subset of g's outer names,
-   * return s_a_e' = s_a_e, s_C = s_a_n * s_a_e, G = "X", Ps = (X)g
-   *)
-	fun matchPAX {s_a = {s_a_e, s_a_n}, g, X} = lzNil
+  fun matchDG' _ = lzNil
 
   (* Match a global discrete prime using the SWX rule:
-   * Assuming Ps = (id_Z * ^s)(W)G,
+   * If Ps = [P], where P = (id_Z * ^s)(W)G, then
    * 1) Let s_C_e = s_R_e, s_C_n = s * s_R_n, and infer premise
    *    using s_a_e, s_a_n, s_C_e, s_C_n, g, G,
    *    yielding s_a_e', s_C, and qs
    * 2) Let Y_C_e = outernames s_C_e
-   * 3) Return s_a_e', s_C := s_C * id_Y_C_e, qs
+   * 3) Let U = outernames s
+   * 4) Return s_a_e', s_C := s_C * id_Y_C_e, G := "U", qs
 	 *)
-	fun matchSWX {s_a = {s_a_e, s_a_n}, s_R = {s_R_e, s_R_n}, g, s, G} = lzNil
+	fun matchSWX {usednames, s_a = {s_a_e, s_a_n}, 
+	                         s_R = {s_R_e, s_R_n}, e = g, Ps = [P]}
+	  = lzmake (fn () =>
+	  	let
+	  	  val {id_Z, Y = U, s, X = W, N} = unmkP P
+	  	  val {absnames = W, G} = unmkN N
+	  		val s_C_e = s_R_e
+	  		val s_C_n = Wiring.* (s, s_R_n)
+	  		val id_Y_C_e = Wiring.id_X (Wiring.outernames s_C_e)
+	  		val i = BgBDNF.info P
+	  		fun toSWX {s_a_e', s_C, qs} =
+	  			{s_a_e' = s_a_e', s_C = Wiring.* (s_C, id_Y_C_e),
+	  			 G = makeG [makeS (SCon (i, Wiring.id_X U))], qs = qs}
+	  		val matches
+	  		  = lzmap toSWX
+	  		          (matchDG' {s_a = {s_a_e = s_a_e, s_a_n = s_a_n},
+	  		                     s_C = {s_C_e = s_C_e, s_C_n = s_C_n},
+	  		                     g = g, G = G})
+	  	in
+	  		lzunmk matches
+	  	end)
+	  | matchSWX _ = lzNil
 	
-  (* Match a global discrete prime using the MER rule:
-   * 1) ...
-	 *)
-  fun matchMER {s_a, s_R, g, Ps} = lzNil
-  
-  (* Match a global discrete prime using a SWX, PAX or MER rule:
-   * 1) Try using PAX rule if s_R_e = s_R_n = id_0 and
-   *    Ps = id_(X) for some X subset of g's outer names,
-   * 2) Else try using SWX rule if Ps = [P],
-   *    where P = (id_Z * ^s)(W)G,
-   * 3) Else try using MER rule if... 
+  (* Match a global discrete prime using the PAX rule:
+   * If s_R_e = s_R_n = id_0 and
+   * Ps = id_(X) for some X subset of g's outer names, then
+   * return s_a_e' = s_a_e, s_C = s_a_n * s_a_e, G = "X", Ps = (X)g
    *)
-  fun matchDG {usednames, s_a, s_R = {s_R_e, s_R_n}, e = g, Ps} = lzNil 
+	fun matchPAX {usednames, s_a = {s_a_e, s_a_n},
+	                         s_R = {s_R_e, s_R_n}, e = g, Ps = [P]}
+	  = lzmake (fn () =>
+	  	if Wiring.is_id0 s_R_e andalso Wiring.is_id0 s_R_n then
+		  	let
+		  		val {s, N, id_Z, Y = X, ...} = unmkP P
+		  		val {G, ...} = unmkN N
+		  	in
+		  		case unmkG G of
+		  		  {Ss = [S], ...}
+		  	  => (case unmkS S of
+		  	        BgBDNF.SCon (i, a)
+		  	      => if Wiring.is_id0 id_Z then
+		  	      		let
+		  	      			val alpha = Wiring.o (s, a)
+		  	      	 	in
+		  	      	 	  if Wiring.is_id0 alpha then
+		  	      	 	  	let
+		  	      	 	  		val XplusZ = Interface.glob (outerface g)
+		  	      	 	  	in
+			  	      				LazyList.Cons 
+				  	      				({s_a_e' = s_a_e,
+				  	      		 		s_C = Wiring.* (s_a_n, s_a_e),
+				  	      		 		G = makeG [makeS (SCon (i, alpha))],
+				  	      		 		qs = [makeP (Wiring.id_X XplusZ)
+				  	      		 								(makeN X g)]},
+				  	      		 		lzNil)
+				  	      		end
+									 	else
+									   	LazyList.Nil
+								 	end
+								 else
+								 	LazyList.Nil
+							| _ => LazyList.Nil)		  		  
+		  		| _ => LazyList.Nil
+		  	end
+			else
+				LazyList.Nil)
+	  | matchPAX _ = lzNil
 
   (* fresh returns a name similar to basename, not in usednames. *)
   local
@@ -392,78 +443,83 @@ struct
       LinkSet.apply addlink vZs; map findZ vXs
     end
 
-  (* Match a global discrete prime using the ION rule, if possible:
-   * 1) Determine how many (top-level) molecules it contains.
-   * 2) If 1 molecule, match an ion:
-   *    2a) For agent ion K_yX, compute the set Y = {vec y}
-   *    2b) Compute s_Y_n || s_a_n_new = s_a_n by domain-restricting
-   *        s_a_n to Y
-   *    2c) Compute s_Y_e || s_a_e_new = s_a_e by domain-restricting
-   *        s_a_e to Y
-   *    2d) Construct p = (id * (vec v)/(vec X))n and infer premise
-   *        using s_a_e_new, s_a_n_new, s_R, p, and Ps, yielding
-   *        s_a_e'_new, s_C_new, P = (id * (vec v)/(vec Z))N, and qs
-   *    2e) Construct s_C = s_Y_n || s_Y_e || s_C_new
-   *        and    s_a_e' = s_Y_e || s_a_e'_new
-   *        and         G = (id * K_yZ)N
-   *    2f) Return s_a_e', s_C, G, qs
-   * 3) Otherwise, perform a D_G match
+  (* Match a global discrete prime using the MER rule:
+   * 1) ...
+	 *)
+  fun matchMER {usednames, s_a, s_R, e, Ps} = lzNil
+  
+  (* Match a global discrete prime using a SWX, PAX, MER or ION rule:
+   * 1) First return any PAX rule matches,
+   * 2) Then return any SWX rule matches,
+   * 3) Then return any ION rule matches,
+   * 4) Then if the agent contains n > 1 top-level molecules
+   *    (to avoid infinite recursion via MER-PAR-PARe-PARn),
+   *    return any MER rule matches.
    *)
-  fun matchDS (args as {usednames, s_a = {s_a_e, s_a_n}, s_R, e = g, Ps})
+  and matchDG (args as {usednames, s_a, s_R = {s_R_e, s_R_n}, e = g, Ps})
+    = lzappend (matchPAX args)
+    		(lzappend (matchSWX args)
+    			(lzappend (matchION args)
+    				(lzmake (fn () =>
+    					case #Ss (unmkG g) of
+    					  (_ :: _ :: _) => lzunmk (matchMER args)
+    					| _ => LazyList.Nil))))
+
+  (* Match a global discrete prime using the ION rule, if possible:
+   * If it contains 1 top-level molecule, match an ion:
+   * 1) For agent ion K_yX, compute the set Y = {vec y}
+   * 2) Compute s_Y_n || s_a_n_new = s_a_n by domain-restricting
+   *     s_a_n to Y
+   * 3) Compute s_Y_e || s_a_e_new = s_a_e by domain-restricting
+   *     s_a_e to Y
+   * 4) Construct p = (id * (vec v)/(vec X))n and infer premise
+   *     using s_a_e_new, s_a_n_new, s_R, p, and Ps, yielding
+   *     s_a_e'_new, s_C_new, P = (id * (vec v)/(vec Z))N, and qs
+   * 5) Construct s_C = s_Y_n || s_Y_e || s_C_new
+   *     and    s_a_e' = s_Y_e || s_a_e'_new
+   *     and         G = (id * K_yZ)N
+   * 6) Return s_a_e', s_C, G, qs
+   *)
+  and matchION (args as {usednames, s_a = {s_a_e, s_a_n}, s_R, e = g, Ps})
     = lzmake (fn () =>
-    case unmkG g of	{idxmerge, Ss = [s]} =>
+    case unmkG g of	{Ss = [s], ...} =>
     	(case unmkS s of BgBDNF.SMol m =>
     	  let
-    	    val {idxion, N = n} = unmkM m
-    	  in
-    	    case match (PTen [PWir, PIon]) idxion of
-    	      MTen [MWir id_Z, MIon KyX] =>
-    	      let
-    	        val {ctrl, free = ys, bound = Xs} = Ion.unmk KyX
-    	        val Y = foldr (fn (y, Y) => NameSet.insert y Y) NameSet.empty ys
-    	        val {inDom = s_Y_n, notInDom = s_a_n_new}
-    	          = Wiring.split s_a_n Y
-    	        val {inDom = s_Y_e, notInDom = s_a_e_new}
-    	          = Wiring.split s_a_e Y
-    	        val s_Y = Wiring.|| (s_Y_n, s_Y_e)
-    	        val vXs = makefreshlinks usednames Xs
-    	        val p = make_P (Wiring.make' vXs) n
-    	        fun toDS {s_a_e', s_C, E = P, qs} =
-    	          let
-    	          	val {idxlocsub, N} = unmkP P
-    	         		val vZs =
-			    	       	case match
-			    	       	  (PTen [PWir, PAbs (PCom (PTen [PWir, PPer], PCon))])
-			    	       	  idxlocsub
-			    	       	of
-			    	       		MTen [MWir _,
-			    	       		      MAbs (_, MCom (MTen [MWir vZ, MPer _], MCon _))]
-			    	        => Wiring.unmk vZ
-			    	        | wrongterm
-			    	        => raise MalformedBDNF ("match/match.sml", info idxlocsub,
-			    	        	wrongterm, "matching idxlocsub in matchDS")
-			    	      val Zs = sortlinksby vXs vZs
-			    	      val s_C = Wiring.|| (s_Y, s_C)
-			    	      val s_a_e' = Wiring.|| (s_Y_e, s_a_e')
-			    	      val KyZ = Ion.make {ctrl = ctrl, free = ys, bound = Zs}
-			    	      val G = make_G [make_S (SMol (make_M KyZ N))]
-			    	    in
-			    	    	{s_a_e' = s_a_e', s_C = s_C, G = G, qs = qs}
-    	          end
-    	        val matches
-    	          = lzmap toDS (matchDP {usednames = usednames,
-    	                                 s_a = {s_a_e = s_a_e_new,
-    	                                        s_a_n = s_a_n_new},
-    	                                 s_R = s_R,
-    	                                 e = p,
-    	                                 Ps = Ps})
-    	      in
-    	      	lzunmk matches
-    	      end
-    		 end
+    	    val {id_Z, KyX, N = n} = unmkM m
+    	    val {ctrl, free = ys, bound = Xs} = Ion.unmk KyX
+	        val Y = foldr (fn (y, Y) => NameSet.insert y Y) NameSet.empty ys
+	        val {inDom = s_Y_n, notInDom = s_a_n_new}
+	          = Wiring.split s_a_n Y
+	        val {inDom = s_Y_e, notInDom = s_a_e_new}
+	          = Wiring.split s_a_e Y
+	        val s_Y = Wiring.|| (s_Y_n, s_Y_e)
+	        val vXs = makefreshlinks usednames Xs
+	        val p = makeP (Wiring.make' vXs) n
+	        fun toION {s_a_e', s_C, E = P, qs} =
+	          let
+	          	val {s = vZ, N, ...} = unmkP P
+	         		val vZs =  Wiring.unmk vZ
+		    	      val Zs = sortlinksby vXs vZs
+		    	      val s_C = Wiring.|| (s_Y, s_C)
+		    	      val s_a_e' = Wiring.|| (s_Y_e, s_a_e')
+		    	      val KyZ = Ion.make {ctrl = ctrl, free = ys, bound = Zs}
+		    	      val G = makeG [makeS (SMol (makeM KyZ N))]
+		    	    in
+		    	    	{s_a_e' = s_a_e', s_C = s_C, G = G, qs = qs}
+	          end
+	        val matches
+	          = lzmap toION (matchABS {usednames = usednames,
+	                                 s_a = {s_a_e = s_a_e_new,
+	                                        s_a_n = s_a_n_new},
+	                                 s_R = s_R,
+	                                 e = p,
+	                                 Ps = Ps})
+	      in
+	      	lzunmk matches
+	      end
     	 | _ => raise AgentNotGround ("kernel/match/match.sml", g,
     	 	                            "in matchDS"))
-    | _ => lzunmk (matchDG args))
+    	| _ => LazyList.Nil)
   
   (* Match an abstraction:
    * 1) Deconstruct p, yielding s_a_L : Z -> W and g.
@@ -474,33 +530,24 @@ struct
    *    using W such that s_C' * s_C_L = s_C
    * 5) Construct and return s_a_e', s_C', (id * s_C_L)(U)G, and qs
    *)  
-  and matchDP {usednames, s_a = {s_a_e, s_a_n}, s_R as {s_R_e, s_R_n}, e = p, Ps}
+  and matchABS {usednames, s_a = {s_a_e, s_a_n}, s_R as {s_R_e, s_R_n}, e = p, Ps}
     = lzmake (fn () =>
 		let
-			val {idxlocsub, N = n} = unmkP p
+			val {Y = W, s = s_a_L, N = n, ...} = unmkP p
 			val {absnames = Z, G = g} = unmkN n
-			val (s_a_L, W) =
-			  case BgVal.match (PAbs (PCom (PTen [PWir, PPer],
-			                                PCon))) idxlocsub of
-			    MAbs (W, MCom (MTen [MWir s_a_L, MPer id_1], MCon Z))
-			  => (s_a_L, W)
-			  | wrongterm
-			     => raise BgBDNF.MalformedBDNF
-			         ("match/match.sml", info idxlocsub, wrongterm,
-			          "matching idxlocsub in matchDP")
 			val s_a_n_new = Wiring.* (s_a_L, s_a_n)
 			val usednames = NameSet.union W usednames
-			fun toDP {s_a_e', s_C, G, qs} =
+			fun toABS {s_a_e', s_C, G, qs} =
 			  let
 			  	val {inCod = s_C_L, notInCod = s_C'}
 			  	  = Wiring.split_outer s_C W
 			  	val U = Wiring.innernames s_C_L
-			  	val P = make_P s_C_L (make_N U G)
+			  	val P = makeP s_C_L (makeN U G)
 			  in
 			  	{s_a_e' = s_a_e', s_C = s_C', E = P, qs = qs}
 			  end
 			val matches
-			  = lzmap toDP
+			  = lzmap toABS
 			     (matchDG {usednames = usednames,
 			               s_a = {s_a_e = s_a_e, s_a_n = s_a_n_new},
 			               s_R = s_R,
@@ -535,7 +582,7 @@ struct
    *   edges in two factors to merge if they have a point
    *   in common.
    *)
-  fun matchPARn
+  and matchPARn
       {matchE, usednames, s_a = {s_a_e, s_a_n}, s_R as {s_R_e, s_R_n},
       es, Pss} = lzmake (fn () =>
     let
@@ -611,7 +658,7 @@ struct
       lzunmk matches
     end)
 
-  fun matchPARe {matchE, usednames, s_a, s_R, es, Ps}
+  and matchPARe {matchE, usednames, s_a, s_R, es, Ps}
     = lzmake (fn () =>
 	  let
 	    val n = length es
@@ -649,7 +696,7 @@ struct
 	    lzunmk (nextmatch (firstsplit m n))
 	  end)
 
-  fun matchPER {matchE, usednames, s_a, s_R, es, Qs}
+  and matchPER {matchE, usednames, s_a, s_R, es, Qs}
     = lzmake (fn () =>
     let
       val Xss = map (loc o innerface) Qs
@@ -697,7 +744,7 @@ struct
     	  = splitopen usednames w_R
     	val usednames = NameSet.union (Wiring.outernames s_a_n) usednames
 	    val matches
-	      = matchPER {matchE = matchDP,
+	      = matchPER {matchE = matchABS,
 	                  usednames = usednames,
 	                  s_a = {s_a_e = s_a_e, s_a_n = s_a_n},
 	                  s_R = {s_R_e = s_R_e, s_R_n = s_R_n},
@@ -731,9 +778,9 @@ struct
           val Xs = map (hd o loc o outerface) Qs
         in
           {context
-            = BgBDNF.make_B w_C Xs (BgBDNF.make_D Wiring.id_0 Qs pi),
+            = BgBDNF.makeB w_C Xs (BgBDNF.makeD Wiring.id_0 Qs pi),
            redex = redex,
-           parameter = BgBDNF.make_DR Wiring.id_0 qs}
+           parameter = BgBDNF.makeDR Wiring.id_0 qs}
         end
     in
       case bgvalmatch (PTen [PWir, PVar]) w_axid of
