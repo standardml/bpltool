@@ -33,13 +33,13 @@ type  exp = (info,pat)  MiniML.exp
 type bind = (info,pat) MiniML.bind
 type prog = (info,pat) MiniML.prog
 
-fun error (msg, pos) =
+fun error (msg, info as ({pos=p1,src={file=file}},{pos=p2,src=s2})) =
     let open Pretty
-	val err = SourceLocation.ppSourceLocation "foo" pos [ppString msg]
+	val err = SourceLocation.ppSourceLocation file (p1,p2) [ppString msg]
     in  ppPrint err (plainOutput ("(*","*)")) TextIO.stdErr
     end
 
-fun mk_info ({pos=p1},{pos=p2}) = (p1,p2)
+fun mk_info ({pos=p1,src=s1},{pos=p2,src=s2}) = (p1,p2)
 
 fun mk_const name arity span = P.ConstCon({name=name,arity=arity,span=span})
 val TRUEcon  = mk_const "True"  0 2
@@ -77,7 +77,7 @@ fun mk_fun info (fmatch as (f,_)::_) =
 	val cls = List.map (fn (ps,e) => 
 	            case List.drop(ps,l) of
 		      [p] => (p,e)
-  	            | _ => ( error("Can only handle one pattern",mk_info info)
+  	            | _ => ( error("Can only handle one pattern",info)
                            ; (P.PVar "bogus", e) )
                     ) pats
 	val cas = mk_case info (A.Var"_x") cls
@@ -258,7 +258,7 @@ fun mk_rprim ope e1 e2 =
   %eop EOF
   %noshift EOF
   %verbose
-  %pos {pos: int}
+  %pos {pos: int, src: Source.src}
 
   %left         ASSIGN
   %left		EQ LT GT LE GE

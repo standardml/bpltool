@@ -23,13 +23,13 @@
  * Modified: $Date: 2006/05/19 20:12:35 $ by: $Author: hniss $
  *)
 
-fun error (msg, {pos=p1}, {pos=p2}) =
+fun error (msg, {pos=p1,src=s1}, {pos=p2,src=s2}) =
     let open Pretty
 	val err = SourceLocation.ppSourceLocation "foo" (p1,p2) [ppString msg]
     in  ppPrint err (plainOutput ("(*","*)")) TextIO.stdErr
     end
 
-type pos = {pos:int}
+type pos = {pos:int,src:Source.src}
 type svalue = Tokens.svalue
 type ('a, 'b) token = ('a, 'b) Tokens.token
 type lexresult = (svalue, pos) token
@@ -40,8 +40,8 @@ open Tokens
 
 val comlevel : int ref = ref 0
 
-fun mkPos arg p = {pos=p}
-fun tok arg token (p1, p2) = token ({pos=p1},{pos=p2})
+fun mkPos (arg as {src}) p = {pos=p,src=src}
+fun tok arg token (p1, p2) = token (mkPos arg p1, mkPos arg p2)
 val eof = fn arg => tok arg EOF (0,0)
 
 local

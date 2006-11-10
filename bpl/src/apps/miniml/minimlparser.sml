@@ -41,14 +41,13 @@ struct
 		    structure Lex = MiniMLL
 		    structure LrParser = LrParser)
 
-    fun parseStream src printError stream =
+    fun ppToStdErr pptree =
+	Pretty.ppPrint pptree (Pretty.plainOutput ("(*","*)")) TextIO.stdErr
+    fun printError (s, {pos=p1,src={file=file}}, {pos=p2,src=s2}) = 
+	ppToStdErr(SourceLocation.ppSourceLocation file (p1,p2) [Pretty.ppString s])
+
+    fun parseStream src stream =
 	let val lexarg = {src=src}
-(*
-	    fun printError (s, p1, p2) =
-		TextIO.output (TextIO.stdErr,"  Error (" ^ 
-			       Int.toString p1 ^"-"^ Int.toString p2 ^"): "^ 
-			       s ^ "\n")
-*)
 
 	    val lexer = 
 		MiniMLP.makeLexer (fn i => TextIO.inputN (stream, i)) 
@@ -60,8 +59,6 @@ struct
 	in
 	    ast
 	end
-    fun ppToStdErr pptree =
-	Pretty.ppPrint pptree (Pretty.plainOutput ("(*","*)")) TextIO.stdErr
 
     (* General function for parsing input streams
      * - used for all the main functions below.
@@ -69,10 +66,7 @@ struct
 
     fun parseFile file =
 	let val stream = TextIO.openIn file
-	    val pp = SourceLocation.ppSourceLocation file
-	    fun printError (s, {pos=p1}, {pos=p2}) = 
-		ppToStdErr(pp (p1,p2) [Pretty.ppString s])
-	    val result = parseStream (Source.mk file) printError stream
+	    val result = parseStream (Source.mk file) stream
 	in  result before TextIO.closeIn stream
 	end
 
