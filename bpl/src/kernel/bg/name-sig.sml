@@ -27,6 +27,8 @@ sig
   eqtype name
   (** Construct a name. *)
   val make : string -> name
+  (** Construct a fresh name based on the given string. *)
+  val fresh : string -> name
   (** Deconstruct a name. *)
   val unmk : name -> string
  

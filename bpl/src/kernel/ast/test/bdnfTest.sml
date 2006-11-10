@@ -455,23 +455,23 @@ datatype expectedresult = S of string | E of string
            \       o (({})(idw_0 * 1) o idx_0)\
            \       o idp_0)", "08-1-0"),
          ("08-1-1: composition of bigraphs of width >0/>0", 
-	  S"('{x, y}' * /w * K<z><{z}, {u, v}>)\
-	   \ o ((({x, y})L<x, y, w>) * ({u, v, z})M<u, v, z>)", 
+	  S"('{x, y}' * /w * K<z><{z}, {v, u}>)\
+	   \ o ((({x, y})L<x, y, w>) * ({z, v, u})M<u, v, z>)", 
 	  S"((x/x * y/y * z/z * /w) * idp_2)\
            \ o (idw_0\
            \    * ((idw_{w, x, y} * ({})(idw_0 * idp_1) o '{}')\
            \        o (({})\
            \           (idw_{w, x, y} * merge_1)\
-           \            o ((idw_0 * L<w, x, y>)\
+           \            o ((idw_0 * L<x, y, w>)\
            \                o ({})(idw_0 * merge_1)\
            \                       o ((idw_0 * idp_1) o '{}')))\
            \       * (z/z * ({})(idw_0 * idp_1) o '{}')\
            \          o ({})\
            \            (z/z * merge_1)\
-           \             o ((idw_0 * K<z><{z}, {u, v}>)\
-           \                 o ({u, v, z})\
+           \             o ((idw_0 * K<z><{z}, {v, u}>)\
+           \                 o ({z, v, u})\
            \                   (idw_{u, v, z} * merge_1)\
-           \                    o ((idw_0 * M<u, v, z>)\
+           \                    o ((idw_0 * M<z, v, u>)\
            \                        o ({})(idw_0 * merge_1)\
            \                               o ((idw_0 * idp_1) o '{}'))))\
            \       o idp_2)", "08-1-1"),
@@ -570,15 +570,15 @@ datatype expectedresult = S of string | E of string
          ("10-1-0: prime product of bigraphs of width >0/0",
           E"NotPrimeable", E"NotPrimeable", "10-1-0"),
          ("10-1-1: prime product of bigraphs of width >0/>0",
-          S"({w,x,y,z})\
+          S"({x,y,z,w})\
            \(idw_{w,x,y,z} * merge_5)\
            \ o (('{w}'*'{}') o [1, 0{w}]\
            \     * ('{}' * '{y,z}' * '{x}') o [2{x},0,1{y,z}])",
-	  S"(idw_0 * [0{w,x,y,z}])\
+	  S"(idw_0 * [0{x,y,z,w}])\
            \ o (idw_0\
            \    * (idw_0\
-           \       * ({w,x,y,z})(idw_{w,x,y,z} * idp_1) o '{w,x,y,z}')\
-           \       o (({w,x,y,z})\
+           \       * ({x,y,z,w})(idw_{w,x,y,z} * idp_1) o '{x,y,z,w}')\
+           \       o (({x,y,z,w})\
            \          (idw_{w,x,y,z} * merge_5)\
            \           o ((w/w * idp_1) o '{w}'\
            \           * (idw_0 * idp_1) o '{}'\

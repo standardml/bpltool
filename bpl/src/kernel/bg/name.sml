@@ -19,21 +19,72 @@
  *)
 
 (** Abstract data type for modelling names.
+ * 
  * @version $LastChangedRevision$
  *)
 structure Name :> NAME =
 struct
-  type name = string
-  fun make s = s
-  fun unmk x = x
+  (* Names are identified by unique words. *)
+  type name = word * string
+
+  fun == ((id1, _) : name, (id2, _) : name) =
+      id1 = id2
+
+  fun lt ((id1, _) : name, (id2, _) : name) =
+      id1 < id2
+
+  val op < = lt
+
+  (* Keep track of used ids *)
+  val next_id = ref 0w0
+
+  fun fresh s =
+      let
+        val id = !next_id
+      in
+        (next_id := !next_id + 0w1;
+         (id, s))
+      end
+
+  (* make must always return the same name when given the same
+   * string. So we store the returned names in a hash table. *)
+
+  (* Apparently the following hash function is advocated by
+   * Knuth - at the very least it actually works in Moscow ML. *)
+  fun stringhash s = 
+      let
+        open Word
+        fun f (c,h) = 
+            xorb(xorb(<<(h,0w5),>>(h,0w27)), Word.fromInt (ord c))
+      in
+        CharVector.foldr f 0w0 s
+      end
+
+  exception NOT_FOUND
+  structure StringHash =
+      HashTableFn (type hash_key = string
+                   val  hashVal = stringhash
+                   val  sameKey = (op = : string * string -> bool))
+  val name_map =
+      StringHash.mkTable (37, NOT_FOUND) : name StringHash.hash_table
+
+  fun make s =
+      case StringHash.find name_map s of
+        SOME n => n
+      | NONE   =>
+        let
+          val n = fresh s
+        in
+          (StringHash.insert name_map (s, n);
+           n)
+        end
+  fun unmk ((_, s) : name) = s
  
-  val == = op =
-  val op < = (op < : string * string -> bool)
 
   structure Order : ORDERING =
   struct 
     type T = name 
-    fun lt x y = x < y
+    fun lt n1 n2 = n1 < n2
   end
 
 end
