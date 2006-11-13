@@ -53,6 +53,9 @@ structure Desugar :> DESUGAR = struct
 		     else mkProj (i-1) (M.Proj(2,e))
 *)
 
+    fun removeInfo (M.Info(i, e)) = removeInfo e
+      | removeInfo e = (NONE, e)
+
     fun desugar prog =
 	let 
 	    fun mk map (P.TupleCon i) = (P.TupleCon i)
@@ -69,7 +72,24 @@ structure Desugar :> DESUGAR = struct
 	    and loopPs map ps = List.map (loopP map) ps
 	    and loopE map exp =
 		case exp of
-		    M.Var x => M.Var x
+		    (* fn x => case x of y => e  -->  fn y => e *)
+		    M.Abs(x, cas) =>
+		      let val (info, exp) = removeInfo cas
+		      in  case exp of
+			      M.Case(M.Var x', [(P.PVar y,e)]) =>
+			        if x = x' then loopE map (M.Abs(y, e))
+				else M.Abs(x, M.Case(M.Var x',[(P.PVar y, loopE map e)]))
+			    | exp => M.Abs(x, loopE map exp)
+		      end
+		  | M.Fix(f, x, cas) =>
+		      let val (info, exp) = removeInfo cas
+		      in  case exp of
+			      M.Case(M.Var x', [(P.PVar y,e)]) =>
+			        if x = x' then loopE map (M.Fix(f, y, e))
+				else M.Fix(f, x, M.Case(M.Var x',[(P.PVar y, loopE map e)]))
+			    | exp => M.Fix(f, x, loopE map exp)
+		      end
+		  | M.Var x => M.Var x
 		  | M.Integer i => M.Integer i
 		  | M.String s => M.String s
 		  | M.Unit => M.Unit

@@ -28,7 +28,7 @@
 pattern-sig: /lib/coll/set /lib/pp/mak/.
 pattern: pattern-sig /lib/coll/set /lib/pp/mak/. /lib/util/util %NODASHSIG
 miniml-sig: /lib/pp/mak/.
-miniml: miniml-sig /lib/pp/mak/. + /lib/util/util /lib/coll/map
+miniml: miniml-sig pattern /lib/pp/mak/. + /lib/util/util /lib/coll/map
    /lib/util/flags %NODASHSIG
 
 # Parsing / lexing

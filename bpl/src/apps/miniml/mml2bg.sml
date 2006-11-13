@@ -40,6 +40,11 @@ functor MiniMLToBG(structure BG : BG_ADT
 			   short="",long="dump-bgval",default=false,
 			   desc="Dump BG term prior to normalization"}
 
+    val statistics =
+	Flags.makeBoolFlag{name="/compile/stats",arg="",
+			   short="",long="stats",default=false,
+			   desc="Collect statistics (besides timings) of the compilation"}
+
     fun pps os = PrettyPrint.mk_ppstream 
 		     { consumer = fn s => TextIO.output(os, s)
 		     , linewidth = 72
@@ -93,7 +98,8 @@ functor MiniMLToBG(structure BG : BG_ADT
 		end)
 		handle exn => handler infile "Frontend failed" exn
 
-	    val size_ast = MiniML.size ast
+	    val size_ast = if !statistics then MiniML.size ast
+			   else 0
 
 	    (* possibly dump frontend compiled miniml term *)
 	    val _ = 
@@ -113,7 +119,8 @@ functor MiniMLToBG(structure BG : BG_ADT
 		else ()
 	    val bpl = normalize_timer (fn () => BG.BgBDNF.make bpl)
 		        handle exn => handler infile "Normalization failed" exn
-	    val size_bdnf = BG.BgBDNF.size bpl
+	    val size_bdnf = if !statistics then BG.BgBDNF.size bpl
+			    else 0
 
             (* Output result *)
 	    val _ = 
@@ -123,15 +130,15 @@ functor MiniMLToBG(structure BG : BG_ADT
 		  ; PrettyPrint.flush_ppstream ps
 		  ; TextIO.closeOut os
 		end
-	in  ()
-(*
-	    List.app print 
+	in  
+	    if !statistics then
+		List.app print 
 		     [ "Sizes:\n"
 		     , "MiniML AST : ", Int.toString size_ast, "\n"
 		     , "Bg before normalization : ", Int.toString size_bpl, "\n"
 		     , "Bg after normalization :  ", Int.toString size_bdnf,"\n"
                      ]
-*)
+	    else ()
 	end
 
 end (* structure MiniMLToBG *)

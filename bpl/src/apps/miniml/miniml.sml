@@ -26,6 +26,8 @@
 structure MiniML: MINIML =
 struct
 
+    structure P = Pattern
+
     datatype operator = 
 	Arith of string
       | Rel   of string
@@ -351,5 +353,31 @@ struct
 	in  List.foldl (fn (b,s) => sizeBind b + s) 0 bs
 	end
 
+
+    fun simplifyExp exp =
+	case exp of
+            (* fn x => case x of y => e  -->  fn y => e *)
+	    Abs(x, Case(Var x', [(P.PVar y, e)])) => 
+	      if x = x' then simplifyExp (Abs(y, e) )
+	      else Abs(x,Case(Var x',[(P.PVar y, simplifyExp e)]))
+	  | Fix(f, x, Case(Var x', [(P.PVar y, e)])) => 
+	      if x = x' then simplifyExp (Fix(f, y, e))
+	      else Fix(f, x, Case(Var x',[(P.PVar y, simplifyExp e)]))
+	  | Const(c, e) => Const(c, simplifyExp e)
+	  | Abs(x,e) => Abs(x, simplifyExp e)
+	  | Fix(f, x, e) => Fix(f, x, simplifyExp e)
+	  | Proj(i, e) => Proj(i, simplifyExp e)
+	  | Ref e => Ref(simplifyExp e)
+	  | DeRef e => DeRef(simplifyExp e)
+	  | Info(i, e) => Info(i, simplifyExp e)
+	  | Deconst(c, e) => Deconst(c, simplifyExp e)
+	  | Assign(e1,e2) => Assign(simplifyExp e1, simplifyExp e2)
+	  | App(e1,e2) => App(simplifyExp e1, simplifyExp e2)
+	  | PrimOp(ope, e1,e2) => PrimOp(ope,simplifyExp e1, simplifyExp e2)
+	  | Let(x, e1,e2) => Let(x,simplifyExp e1, simplifyExp e2)
+	  | Case(e, ps) => Case(simplifyExp e, List.map (fn(p,e)=>(p,simplifyExp e)) ps)
+	  | Switch(e,ps,d) => Switch(simplifyExp e, List.map (fn(p,e)=>(p,simplifyExp e)) ps, simplifyExp d)
+	  | Tuple es => Tuple(List.map simplifyExp es)
+	  | e => e
 end
 
