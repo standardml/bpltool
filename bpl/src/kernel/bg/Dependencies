@@ -6,7 +6,7 @@ sigs = name-sig link-sig control-sig interface-sig ion-sig
 funs = name interface control link ion wiring permutation 
 
 name-sig: /lib/coll/ordering-sig
-name: /lib/coll/ordering-sig name-sig %NODASHSIG
+name: /lib/coll/ordering-sig name-sig /lib/compat/mosml/hash/. %NODASHSIG
 interface-sig:
 interface: /lib/coll/monoset-sig /lib/coll/pp /lib/pp/smlnj/. name-sig
 link-sig:

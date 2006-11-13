@@ -58,37 +58,53 @@ fun boundIds bs =
 
 fun mk_case info eof pnes = A.Info(mk_info info, A.Case(eof, pnes))
 
+fun mk_tup es =
+    case es of
+	[]  => A.Unit
+      | [e] => e
+      | es  => A.Tuple es
+fun mk_tup_pat ps =
+    case ps of
+	[]  => P.PCon(UNITcon, [])
+      | [p] => p
+      | ps  => P.PCon(P.TupleCon(List.length ps), ps)
+
 fun mk_fun info (fmatch as (f,_)::_) =
-    let (* fmatch is a list of patterns, one list for each defn clause.
-         * function shared extracts initial segments of these list on
-         * which all clauses agree (only PVar's).
-         *)
-	exception NotEqual
-	fun shared (((P.PVar x)::xs) :: ls) =
-	    let fun f ((P.PVar y)::ys) = if x = y then ys else raise NotEqual
-		  | f _ = raise NotEqual
-	    in  (x :: shared (xs::List.map f ls))
-		handle NotEqual => []
-	    end
-	  | shared _ = []
-	val pats = List.map #2 fmatch
-	val sh = shared (List.map #1 pats)
-	val l = List.length sh
-	val cls = List.map (fn (ps,e) => 
-	            case List.drop(ps,l) of
-		      [p] => (p,e)
-  	            | _ => ( error("Can only handle one pattern",info)
-                           ; (P.PVar "bogus", e) )
-                    ) pats
-	val cas = mk_case info (A.Var"_x") cls
-	val (x,sh) = 
-	    case sh of
-		[] => ("_x",[]) (* no PVar pat, use the constr. pat *)
-	      | x::sh => (x,sh@["_x"])
-	val fns = List.foldr (fn (x, rest) => A.Abs(x, rest)) cas sh
+    (* transform
+          fun f p11 ... p1n = e1
+            | f p21 ... p2n = e2
+                 ........
+            | f pm1 ... pmn = em
+       into
+          fix f (fn v1 => fn v2 => ... fn vm =>
+                 case (v1,v2,...,vm) of
+                    (p11, ..., p1n) => e1
+                  | (p21, ..., p2n) => e2
+                  | ...
+                  | (pm1, ..., pmn) => em
+                 )
+    *)
+    let val lens = List.map (List.length o #1 o #2) fmatch
+	fun eq (l, 0) = true
+	  | eq (l, l') = l=l'
+	val len = 
+	    List.foldl 
+	       (fn (pl,l) => 
+		   if eq(pl,l) then pl
+		   else ( error("Different number of arguments in function clauses",info)
+                        ; l)
+               ) 0 lens
+	val args = List.tabulate(len, fn i => "_x"^Int.toString i)
+	val (x,fns) = case args of [] => Util.abort 1111
+				 | (x::args) => (x,args)
+	val cas = 
+	    mk_case info 
+		    (mk_tup (List.map A.Var args))
+		    (List.map (fn (_,(ps,e))=>(mk_tup_pat ps,e)) fmatch)
+	val fns = List.foldr (fn (y,f)=>A.Abs(y,f)) cas fns
     in  A.ValBind(f, A.Fix(f, x, fns))
     end
-  | mk_fun info _ = raise Fail"no match"
+  | mk_fun info _ = Util.abort 11111
 
 fun mk_list xs =
     let fun f (x, xs) = A.Const("Cons", A.Tuple [x,xs])
