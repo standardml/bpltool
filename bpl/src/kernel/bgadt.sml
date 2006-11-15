@@ -189,6 +189,10 @@ structure BGErrorHandler
      structure BgVal         = BgVal
      structure BgTerm        = BgTerm
      structure Interface     = Interface
+     structure Ion           = Ion
+     structure Permutation    = Permutation
+     structure Name          = Name
+     structure NameSet       = NameSet
      structure Sugar         = Sugar
      structure PrettyPrint   = PrettyPrint)
 

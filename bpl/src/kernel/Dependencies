@@ -8,6 +8,7 @@
 
 bgerrorhandler-sig:
 bgerrorhandler: bg/sigs ast/sigs /lib/pp/smlnj/. /lib/util/errormsg
+   /lib/coll/monoset-sig
 bgadt-sig: bg/sigs ast/sigs match/sigs /lib/coll/set bgerrorhandler-sig
 bgadt: bgadt-sig bgerrorhandler bg/funs ast/funs match/funs /lib/pp/smlnj/.
    /lib/coll/set /lib/coll/pp /lib/coll/lzlist %NODASHSIG

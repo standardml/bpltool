@@ -72,11 +72,13 @@ sig
   (** Construct w = a general wiring. *)
   val Wir : info -> wiring -> bgval
   (** Signal duplicate names. 
-   * @params i errtxt
-   * @param i       contextual information.
-   * @param errtxt  text detailing the error.
+   * @params file i namesets errtxt
+   * @param file      File name for the code that detected the problem.
+   * @param i         Contextual information.
+   * @param namesets  The offending namesets.
+   * @param errtxt    Explanatory error text.
    *)
-  exception DuplicateNames of info * name list list * string
+  exception DuplicateNames of string * info * name list list * string
   (** Construct K_yX = an ion.
    * @exception DuplicateNames  if outer or inner names are not
    * distinct.
@@ -88,8 +90,8 @@ sig
   val Per : info -> 'kind permutation -> bgval
   (** Signal that a name is missing from the outer face of a prime
    * that is attempted abstracted. 
-   * @params i v errtxt
-   * @param i       contextual information.
+   * @params file v errtxt
+   * @param file    File name for the code that detected the problem.
    * @param v       The bigraph value.
    * @param errtxt  text detailing the error.
    *)
@@ -133,12 +135,6 @@ sig
    *)
   val Com : info -> bgval * bgval -> bgval
 
-  (** Signal non-well-formed bgterm. 
-   * @params i errtxt
-   * @param i       contextual information.
-   * @param errtxt  text detailing the error.
-   *)
-  exception MalformedBgTerm of info * string
   (** Construct a bgval from a bgterm.  The bgterm is checked
    * internally for interface consistency.
    * @params t2i t
@@ -147,8 +143,6 @@ sig
    *             node.
    * @param t    The bgterm from which the corresponding bgval is
    *             constructed.
-   * @exception MalformedBgTerm  raised if internal interfaces are
-   *                             inconsistent.
    *)
   val make : (bgterm -> info) -> bgterm -> bgval
   (** Deconstruct a bgterm.  Normally, this is not the function you
@@ -225,13 +219,14 @@ sig
    *)
   val match2bgval : info -> bgmatch -> bgval
   (** Signal that name sets in interfaces are not disjoint. 
-   * @params i I1 I2 errtxt
+   * @params file i I1 I2 errtxt
+   * @param file    File name for the code that detected the problem.
    * @param i       Contextual information.
    * @param I1      Interface that clashes with I2.
    * @param I2      Interface that clashes with I1.
    * @param errtxt  Explanatory error text.
    *)
-  exception NameClash of info * nameset * nameset * string
+  exception NameClash of string * info * nameset * nameset * string
   (** Signal that the outer local or inner name sets of a list of bigraphs
    * were not disjoint. 
    * @params i vs errtxt

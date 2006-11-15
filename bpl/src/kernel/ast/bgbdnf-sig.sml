@@ -210,15 +210,12 @@ sig
    * @param errtxt  explanatory error text.
    *)
   exception UnequalLength of string * bgval list * bgval list * string
-  (** Signal that two lists unexpectedly are of unequal length.
-   * @params file l1 l2 errtxt
+  (** Signal a logical error, i.e. an error which "cannot happen" ;-).
+   * @params file errtxt
    * @param file    the file name in which the exception was raised.
-   * @param l1      the first list.
-   * @param l2      the second list.
    * @param errtxt  explanatory error text.
    *)
-  exception UnequalLength2
-    of string * bgval list * (int * nameset) list * string
+  exception LogicalError of string * string
   
 
   (** Prettyprint a bgbdnf without parentheses around it.

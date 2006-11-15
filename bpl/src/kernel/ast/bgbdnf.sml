@@ -116,8 +116,8 @@ struct
   exception MalformedBDNF of string * info * bgmatch * string
   exception MalformedRBDNF of string * info * bgmatch * string
   exception UnequalLength of string * bgval list * bgval list * string
-  exception UnequalLength2
-    of string * bgval list * (int * nameset) list * string
+
+  exception LogicalError of string * string
 
   val take = List.take
   val drop = List.drop
@@ -1185,8 +1185,10 @@ struct
                     :: (regPs Ps pisrest (pi_offset + m_i))
                   end
                 | regPs [] err2s _ =
-                  raise UnequalLength2 ("bgbdnf.sml", [], err2s,
-                                        "regPs in regularise")
+                  raise LogicalError
+                          ("bgbdnf.sml",
+                           "the function regPs in regularize \
+                           \was called with uncomposable arguments")
 
               val {ren, Ps, perm} = unmkD D
               val pi = case match PPer perm of

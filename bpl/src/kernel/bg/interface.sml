@@ -58,8 +58,6 @@ struct
       NameSet.eq glob1 glob2 andalso
       ListPair_allEq (fn (X1, X2) => NameSet.eq X1 X2) (loc1, loc2)
 
-  exception UnequalLengths of NameSet.Set list * NameSet.Set list
-
   fun x ({width = width1, loc = loc1, glob = glob1},
 	 {width = width2, loc = loc2, glob = glob2}) =
       {width = width1 + width2,

@@ -51,7 +51,7 @@ struct
 		      pi_inv : (int * nameset) array}
 
   exception LogicalError of string * string
-  exception NotPermutation of (int * nameset) list
+  exception NotPermutation of string * (int * nameset) list
 
   val array = Array.array
   val sub = Array.sub
@@ -106,7 +106,7 @@ struct
 	    if j < width andalso #1 (pi_inv sub j) = ~1 then
 	      update (pi_inv, j, (i, X))
 	    else
-	      raise NotPermutation Xs
+	      raise NotPermutation ("permutation.sml", Xs)
       in
 	appi addinv pi;
 	{width = width, pi = pi, pi_inv = pi_inv}
@@ -390,7 +390,8 @@ struct
             | nlocatedAt _ =
                 raise LogicalError ("permutation.sml",
                                     "the function nlocatedAt was \
-                                    \called with an empty list")
+                                    \unexpectedly called with an \
+                                    \empty list")
           fun mlocatedAt (j, _, (l, i)) =
               (update (mlocated, j, (l, i));
                if j >= (width - 1)
@@ -440,8 +441,8 @@ struct
       end
 
   exception UnequalLengths 
-	    of string * NameSet.Set list list 
-	       * NameSet.Set list list * string
+	    of string * nameset list list 
+	       * nameset list list * string
 
   (** Compute a permutation for unzipping tensor products
    * in time O(?).
@@ -452,6 +453,7 @@ struct
    * @params Uiss U'iss
    * @param Uiss   list of Uis.
    * @param U'iss  list of U'is.
+   * @exception UnequalLengths  if the lists have different lengths.
    *)
   fun unzip Uiss U'iss =
       let

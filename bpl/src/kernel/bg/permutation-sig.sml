@@ -36,7 +36,7 @@ sig
   (** Signal a logical error, i.e. an error which "cannot happen" ;-).*)
   exception LogicalError of string * string
   (** Signal incorrect permutation data. *)
-  exception NotPermutation of (int * nameset) list
+  exception NotPermutation of string * (int * nameset) list
   (** Construct a permutation.
    * @params Xs
    * @param Xs  list of n pairs, where each of the numbers 0..n-1 must
@@ -130,6 +130,10 @@ sig
   val split
       : 'kinda permutation -> nameset list list
         -> {major : 'kindb permutation, minors : 'kindc permutation list}
+  (** Signal that two lists have different lengths.  *)
+  exception UnequalLengths 
+	    of string * nameset list list 
+	       * nameset list list * string
   (** Compute a permutation for unzipping tensor products.
    * @return a permutation ~pi such that 
    * merge ((X_{i< n} Ai) x X_{i< n} Mi) ~pi = merge X_{i< n} Ai x Mi,
@@ -137,6 +141,7 @@ sig
    * @params Uiss U'iss
    * @param Uiss   list of Uis.
    * @param U'iss  list of U'is.
+   * @exception UnequalLengths  if the lists have different lengths.
    *)
   val unzip 
       : nameset list list -> nameset list list -> 'kind permutation

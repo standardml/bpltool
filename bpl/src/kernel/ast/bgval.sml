@@ -60,10 +60,10 @@ functor BgVal (structure Name : NAME
 	       sharing type PrettyPrint.ppstream =
 			    BgTerm.ppstream) :> BGVAL 
   where type nameset = NameSet.Set
+    and type name = Name.name
     and type wiring = Wiring.wiring 
     and type 'kind permutation = 'kind Permutation.permutation
     and type Immutable = Permutation.Immutable
-    and type name = Name.name
     and type ion = Ion.ion
     and type interface = Interface.interface 
     and type bgterm = BgTerm.bgterm
@@ -72,7 +72,7 @@ functor BgVal (structure Name : NAME
 struct
   type info = info
   type bgterminfo = BgTerm.info
-  type name = Ion.name
+  type name = Name.name
   type nameset = NameSet.Set
   type bgterm = BgTerm.bgterm
   type interface = Interface.interface
@@ -106,7 +106,7 @@ struct
 	 (** b_1 b_2 = a composition of a pair of bigraphs. *)
 	 | VCom of bgval * bgval * (interface * interface * info)
 
-  exception DuplicateNames of info * name list list * string
+  exception DuplicateNames of string * info * name list list * string
 
   exception NameMissing of string * bgval * string
 
@@ -153,12 +153,12 @@ struct
 	val y = Ion.outernames KyX
 	    handle NameSet.DuplicatesRemoved =>
 		   raise DuplicateNames 
-			   (i, [#free (Ion.unmk KyX)],
+			   ("bgval.sml", i, [#free (Ion.unmk KyX)],
 			    "Outer ion names must be distinct")
 	val Xs = Ion.innernames KyX 
 	    handle NameSet.DuplicatesRemoved =>
 		   raise DuplicateNames 
-			   (i, 
+			   ("bgval.sml", i, 
 			    (map NameSet.list o #bound o Ion.unmk) KyX,
 			    "Inner ion names must be distinct")
       in
@@ -175,7 +175,7 @@ struct
 	      NameSet.DuplicatesRemoved =>
 	      raise 
 		DuplicateNames 
-		  (i, 
+		  ("bgval.sml", i, 
 		   (map (NameSet.list o #2) o Permutation.unmk) pi,
 		   "Permutation local name sets must be disjoint")
       in
@@ -264,8 +264,6 @@ struct
 		("bgval.sml", v1, v2, 
 		 "Interface mismatch for composition in Com")
 
-  exception MalformedBgTerm of info * string
-			  
   datatype bgpat =
 	   PVar
 	 | PCns
@@ -452,7 +450,7 @@ fun is_id0 (VMer (1, _))    = false
                       Con i X)))
       end
 
-  exception NameClash of info * nameset * nameset * string
+  exception NameClash of string * info * nameset * nameset * string
 
   fun WLS i ws =
       let
@@ -473,13 +471,13 @@ fun is_id0 (VMer (1, _))    = false
 	       handle 
 	       DuplicatesRemoved
 	       => raise NameClash 
-			  (i, X, innernames, 
+			  ("bgval.sml", i, X, innernames, 
 			   "inner names in a wide local substitution"),
 	       NameSet.union y outernames
 	       handle 
 	       DuplicatesRemoved
 	       => raise NameClash 
-			  (i, y, outernames, 
+			  ("bgval.sml", i, y, outernames, 
 			   "outer names in a wide local substitution"))
 	    end
 	val (vs, Xs, ys, _, _) 
