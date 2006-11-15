@@ -137,20 +137,10 @@ struct
 
   exception NotName of string * link * link list * linkset * string
 
-   (* Apparently the following hash function is advocated by
-   * Knuth - at the very least it actually works in Moscow ML.
-   *)
-  fun stringhash s = 
-      let open Word
-	  fun f (c,h) = 
-	      xorb(xorb(<<(h,0w5),>>(h,0w27)), Word.fromInt (ord c));
-      in  CharVector.foldr f 0w0 s
-      end
-
   exception NOT_FOUND
   structure NameMap 
     = HashTableFn (type hash_key = name
-                   val hashVal = stringhash o Name.unmk
+                   val hashVal = Name.hash
 		   val sameKey = Name.==);
   fun createNameMap size = NameMap.mkTable (size, NOT_FOUND)
 

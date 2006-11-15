@@ -34,7 +34,6 @@ sig
   type bgterm
   type ppstream
 
-
   (** M BDNF molecule class phantom type. *)
   type M 
   (** S BDNF singular top-level node class phantom type. *)
@@ -73,7 +72,8 @@ sig
    *)
   val regularize : B bgbdnf -> BR bgbdnf
 
-  (** Sum type for singular top-level nodes. *)
+  (** Sum type for singular top-level nodes. The renaming concretion is
+      represented by just the renaming. *)
   datatype stlnode =
            SCon of info * wiring
          | SMol of M bgbdnf
@@ -110,7 +110,8 @@ sig
    * @params Y Ss
    *)
   val makeG : S bgbdnf list -> G bgbdnf
-  (** Construct an S bgbdnf from an stlnode (concretion or molecule).
+  (** Construct an S bgbdnf from an stlnode (renaming concretion or molecule).
+   * NOTE: it is not checked whether a given wiring actually is a renaming!
    * @params stlnode
    *)
   val makeS : stlnode -> S bgbdnf

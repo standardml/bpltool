@@ -27,10 +27,14 @@ sig
   eqtype name
   (** Construct a name. *)
   val make : string -> name
-  (** Construct a fresh name based on the given string. *)
-  val fresh : string -> name
+  (** Get the original string used to create a name. *)
+  val ekam : name -> string
+  (** Construct a fresh name possibly based on a string. *)
+  val fresh : string option -> name
   (** Deconstruct a name. *)
   val unmk : name -> string
+  (** Calculate a hash for the given name. *)
+  val hash : name -> word
  
   (** Test for name equality.  Any module implementing this operator
    * must satisfy <code>make x == make x</code> for any valid x.

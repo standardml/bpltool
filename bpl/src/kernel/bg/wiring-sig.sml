@@ -105,6 +105,18 @@ sig
   val app : wiring -> nameset -> nameset
   (** Compute the set of names which the wiring maps to a given set. *)
   val app_inverse : wiring -> nameset -> nameset
+  
+  (** Signal that a wiring is not a renaming.
+   * @params file wiring errtxt
+   * @param file    File name for the code that detected the problem.
+   * @param wiring  The wiring.
+   * @param errtxt  Explanatory error text.
+   *)
+  exception NotARenaming of string * wiring * string
+  (** Create the inverse of a renaming.
+   * @exception NotARenaming if the wiring is not a renaming.
+   *)
+  val invert_renaming : wiring -> wiring
   (** Restrict a wiring to only map a given set of names.
    * The outer face is trimmed to include only names to which some
    * inner name maps.  Each name in the set not mapped by the wiring

@@ -506,28 +506,12 @@ fun is_id0 (VMer (1, _))    = false
 	(NameSet.union locs glob, locs, glob)
       end
 
-  (* fresh returns a name similar to basename, not in usednames. *)
-  local
-    fun fresh' i basename usednames =
-	let
-	  val name = basename ^ Int.toString i
-	  val x = Name.make name
-	in
-	  if NameSet.member x usednames then
-	    fresh' (i + 1) basename usednames
-	  else
-	    x
-	end
-  in
-  fun fresh basename = fresh' 0 (Name.unmk basename ^ "_")
-  end
-
   fun addlink clashnames x (usednames, ls, lsinv) =
       let
 	val (usednames, xnew)
 	  = if NameSet.member x clashnames then
 	      let
-		val xnew = fresh x usednames
+		val xnew = Name.fresh (SOME (Name.unmk x))
 	      in
 		(NameSet.insert xnew usednames,
 		 xnew)
@@ -797,4 +781,117 @@ fun is_id0 (VMer (1, _))    = false
 
   val size = BgTerm.size o #1 o unmk (fn _ => BgTerm.noinfo)
 
+
+  (* Rxxx rules.
+   * NB: We don't keep track of used names, but rely on
+   *     Name.fresh to provide globally fresh names. *)
+  fun rename_internally' alpha (b as VMer _) =
+      (* Rmer rule *)
+      (b, alpha)
+    | rename_internally' alpha (VCon (ns, i)) =
+      (* Rcon rule *)
+      (Con i (Wiring.app alpha ns), alpha)
+    | rename_internally' alpha (VWir (w, i)) =
+      (* Rwir rule *)
+      let
+        val ls = Wiring.unmk w
+        (* Rename inner names with alpha and create a
+           renaming for the outer name if present.    *)
+        fun rename_link l (ls', beta_ls) =
+            case Link.unmk l of
+              {outer = SOME y, inner = X} =>
+                let
+                  val X' = Wiring.app alpha X
+                  val z  = Name.fresh (SOME (Name.unmk y))
+                in
+                  (LinkSet.insert
+                     (Link.make {outer = SOME z, inner = X'}) ls',
+                   LinkSet.insert
+                     (Link.make {outer = SOME z, inner = NameSet.singleton y})
+                     beta_ls)
+                end
+            | {outer = NONE, inner = X} =>
+                (LinkSet.insert
+                   (Link.make {outer = NONE, inner = Wiring.app alpha X}) ls',
+                 beta_ls)
+
+        val (ls', beta_ls)
+            = LinkSet.fold rename_link (LinkSet.empty, LinkSet.empty) ls
+      in
+        (Wir i (Wiring.make ls'), Wiring.make beta_ls)
+      end
+    | rename_internally' alpha (VIon (KyX, i)) =
+      (* Rion rule *)
+      let
+        val {ctrl, free = ys, bound = Xs} = Ion.unmk KyX
+        val X's = map (Wiring.app alpha) Xs
+
+        fun rename (y, (zs, beta_ls)) =
+            let
+              val z = Name.fresh (SOME (Name.unmk y))
+            in
+              (z::zs,
+               LinkSet.insert
+                 (Link.make {outer = SOME z, inner = NameSet.singleton y})
+                 beta_ls)
+            end
+
+        val (zs, beta_ls)
+            = foldr rename ([], LinkSet.empty) ys
+      in
+        (Ion i (Ion.make {ctrl = ctrl, free = zs, bound = X's}),
+         Wiring.make beta_ls)
+      end
+    | rename_internally' alpha (VPer (p, i)) =
+      (* Rper rule *)
+      let
+        fun rename (j, ns) = (j, Wiring.app alpha ns)
+        val p' = Permutation.make (map rename (Permutation.unmk p))
+      in
+        (Per i p', alpha)
+      end
+    | rename_internally' alpha (VAbs (ns, v, (_, _, i))) =
+      (* Rabs rule *)
+      let
+        val (v', beta) = rename_internally' alpha v
+      in
+        (Abs i ((Wiring.app beta ns), v'), beta)
+      end
+    | rename_internally' alpha (VTen (vs, (_, _, i))) =
+      (* Rten rule *)
+      let
+        fun rename (v, (vs', betas)) =
+            let
+              val X = Interface.names (innerface v)
+              val (v', beta) = rename_internally' (Wiring.restrict alpha X) v
+            in
+              (v'::vs', beta::betas)
+            end
+        val (vs', betas) = foldr rename ([], []) vs
+      in
+        (Ten i vs', Wiring.** betas)
+      end
+    | rename_internally' alpha (VCom (v1, v2, (_, _, i))) =
+      (* Rcom rule *)
+      let
+        val (v2', beta1) = rename_internally' alpha v2
+        val (v1', beta2) = rename_internally' beta1 v1
+      in
+        (Com i (v1', v2'), beta2)
+      end
+
+  fun rename_internally b =
+      let
+        val i = info b
+        val X  = Interface.names (innerface b)
+        val (b'', beta) = rename_internally' (Wiring.id_X X) b
+        val beta_inv = Wiring.invert_renaming beta
+        val beta_glob_inv
+            = Wiring.restrict_outer beta_inv (Interface.glob (outerface b))
+        val wls = WLS i (map
+                           (Wiring.restrict_outer beta_inv)
+                           (Interface.loc (outerface b)))
+      in
+        Com i (Ten i [Wir i beta_glob_inv, wls], b'')
+      end
 end

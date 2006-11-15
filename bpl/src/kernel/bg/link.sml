@@ -52,6 +52,6 @@ struct
 	if x1 = x2 then 
 	  NameSetCompare.lt inner1 inner2
 	else
-	  Name.unmk x1 < Name.unmk x2
+	  Name.< (x1, x2)
   end
 end

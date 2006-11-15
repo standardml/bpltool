@@ -54,7 +54,7 @@ struct
   type link' = {outer : nameedge, inner : nameset}
 
   (* Less-than operator on nameedges. *)
-  fun nameedgelt (Name n1)    (Name n2)    = Name.unmk n1 < Name.unmk n2
+  fun nameedgelt (Name n1)    (Name n2)    = Name.< (n1, n2)
     | nameedgelt (Name _)     (Closure _)  = true
     | nameedgelt (Closure _)  (Name _)     = false
     | nameedgelt (Closure i1) (Closure i2) = i1 < i2
@@ -70,37 +70,13 @@ struct
   structure Link'Set = OrderSet (Link'Order)
   type link'set = Link'Set.Set
 
-(*
-  (* Simple hash function for strings "c0 c1 ... cn-1" given by
-   * s[0] * 31^(n-1) + s[1] * 31^(n-2) + ... + s[n-1], where
-   * s[i] = ord(ci).  hash "" = 0.
-   *)
-  val stringhash =
-      let
-	fun hash' h [] = h
-	  | hash' h (c :: cs) = hash' (Word.fromInt(ord (c)) + 0w31 * h) cs
-      in
-	hash' 0w0 o explode
-      end
-*)
-
-  (* Apparently the following hash function is advocated by
-   * Knuth - at the very least it actually works in Moscow ML.
-   *)
-  fun stringhash s = 
-      let open Word
-	  fun f (c,h) = 
-	      xorb(xorb(<<(h,0w5),>>(h,0w27)), Word.fromInt (ord c));
-      in  CharVector.foldr f 0w0 s
-      end
-
-  fun nameedgehash (Name x) = stringhash (Name.unmk x) 
+  fun nameedgehash (Name x) = Name.hash x
     | nameedgehash (Closure i) = Word.fromInt i
 
   exception NOT_FOUND
   structure NameMap 
     = HashTableFn (type hash_key = name
-                   val hashVal = stringhash o Name.unmk
+                   val hashVal = Name.hash
 		   val sameKey = Name.==);
   fun createNameMap size = NameMap.mkTable (size, NOT_FOUND)
   fun createNameMap' () = createNameMap 37
@@ -737,6 +713,33 @@ struct
     in
       (new_ls, new_ht)
     end
+
+  exception NotARenaming of string * wiring * string
+
+  fun invert_renaming (w as (ls, ht)) =
+      let
+        val ht' = createNameMap (NameMap.numItems ht)
+
+        fun invert_link' {outer = Name n, inner = ns} =
+            let
+              val n' = case NameSet.list ns of
+                         [n] => n
+                       | []  => raise NotARenaming ("wiring.sml", w,
+                                "wiring contains a link with no inner names")
+                       | _   => raise NotARenaming ("wiring.sml", w,
+                                "wiring contains a link with multiple inner names")
+              val ne = Name n'
+            in
+	      (NameMap.insert ht' (n, ne);
+               {outer = ne, inner = NameSet.singleton n})
+            end
+          | invert_link' {outer = Closure _, ...} =
+            raise NotARenaming ("wiring.sml", w,
+                                "wiring contains a closed link")
+      in
+        (Link'Set.map invert_link' ls, ht')
+      end
+      
 
   (* ROOM FOR EFFICIENCY IMPROVEMENT: Instead of testing whether all
    * elements of Y map to themself (is_id_y), remove y's from Y in the

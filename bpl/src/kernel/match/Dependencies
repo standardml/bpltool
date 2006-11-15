@@ -8,4 +8,5 @@ funs = match
 
 match-sig:
 match: + match-sig /kernel/bg/sigs /kernel/ast/sigs /lib/compat/mosml/hash/.
-  /lib/pp/smlnj/. /lib/coll/pp /lib/coll/lzlist /lib/coll/set %NODASHSIG
+  /lib/pp/smlnj/. /lib/coll/pp /lib/coll/lzlist /lib/coll/set
+  /lib/compat/mosml/hash/. %NODASHSIG

@@ -38,13 +38,20 @@ struct
   (* Keep track of used ids *)
   val next_id = ref 0w0
 
-  fun fresh s =
+  fun fresh' s =
       let
         val id = !next_id
       in
         (next_id := !next_id + 0w1;
          (id, s))
       end
+
+  fun fresh (SOME s) =
+      fresh' s
+    | fresh NONE =
+      fresh' ""
+
+  fun hash (w, _) = w
 
   (* make must always return the same name when given the same
    * string. So we store the returned names in a hash table. *)
@@ -73,12 +80,13 @@ struct
         SOME n => n
       | NONE   =>
         let
-          val n = fresh s
+          val n = fresh' s
         in
           (StringHash.insert name_map (s, n);
            n)
         end
-  fun unmk ((_, s) : name) = s
+  fun ekam ((_, s) : name) = s
+  fun unmk ((id, s) : name) = s ^ "_" ^ (String.map Char.toLower (Word.toString id))
  
 
   structure Order : ORDERING =

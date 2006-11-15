@@ -129,45 +129,45 @@ datatype expectedresult = S of string | E of string
            \       o (({})(idw_0 * merge_1)\
            \               o ((idw_0 * idp_1) o '{}'))\
            \       o idp_1)", "02-0"),
-         ("02-1: concretion with 1 name", S"'{x}'", 
-	  S"(x/x * idp_1)\
+         ("02-1: concretion with 1 name", S"'{x_a}'", 
+	  S"(x_a/x_a * idp_1)\
            \ o (idw_0\
-           \    * (x/x * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})(x/x * merge_1)\
-           \               o ((x/x * idp_1) o '{x}'))\
-           \       o [0{x}])", "02-1"),
-         ("02-2: concretion with >1 names", S"'{x, y}'", 
-	  S"(idw_{x, y} * idp_1)\
+           \    * (x_a/x_a * ({})(idw_0 * idp_1) o '{}')\
+           \       o (({})(x_a/x_a * merge_1)\
+           \               o ((x_a/x_a * idp_1) o '{x_a}'))\
+           \       o [0{x_a}])", "02-1"),
+         ("02-2: concretion with >1 names", S"'{x_a, y_b}'", 
+	  S"(idw_{x_a, y_b} * idp_1)\
            \ o (idw_0\
-           \    * (idw_{x, y} * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})(idw_{x, y} * merge_1)\
-           \               o ((idw_{x, y} * idp_1) o '{x, y}'))\
-           \       o [0{x, y}])", "02-2"),
+           \    * (idw_{x_a, y_b} * ({})(idw_0 * idp_1) o '{}')\
+           \       o (({})(idw_{x_a, y_b} * merge_1)\
+           \               o ((idw_{x_a, y_b} * idp_1) o '{x_a, y_b}'))\
+           \       o [0{x_a, y_b}])", "02-2"),
          ("02-3: concretion with duplicate name",
           E"DuplicateNames", E"DuplicateNames", "02-3"),
-         ("02-4: concretion composition", S"'{x}' o [0{x}]", 
-	  S"(x/x * idp_1)\
+         ("02-4: concretion composition", S"'{x_a}' o [0{x_a}]", 
+	  S"(x_a/x_a * idp_1)\
            \ o (idw_0\
-           \    * (x/x * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})(x/x * merge_1)\
-           \               o ((x/x * idp_1) o '{x}'))\
-           \       o [0{x}])", "02-4"),
+           \    * (x_a/x_a * ({})(idw_0 * idp_1) o '{}')\
+           \       o (({})(x_a/x_a * merge_1)\
+           \               o ((x_a/x_a * idp_1) o '{x_a}'))\
+           \       o [0{x_a}])", "02-4"),
          ("03-0: wiring with 0/0 names", S"/{}",
           S"(/{} * idp_0) o (idw_0 * idx_0 o idp_0)", "03-0"),
-         ("03-1: wiring with 0/1 name", S"/x",
-          S"(/x * idp_0) o (x/x * idx_0 o idp_0)", "03-1"),
-         ("03-2: wiring with 0/>1 names", S"/{x, y}", 
-	  S"(/{x, y} * idp_0) o (idw_{x, y} * idx_0 o idp_0)", "03-2"),
+         ("03-1: wiring with 0/1 name", S"/x_a",
+          S"(/x_a * idp_0) o (x_a/x_a * idx_0 o idp_0)", "03-1"),
+         ("03-2: wiring with 0/>1 names", S"/{x_a, y_b}", 
+	  S"(/{x_a, y_b} * idp_0) o (idw_{x_a, y_b} * idx_0 o idp_0)", "03-2"),
          ("03-3: wiring with duplicate names",
           E"DuplicateNames", E"DuplicateNames", "03-3"),
-         ("03-4: wiring with 1/0 names", S"y/{}",
-          S"(y/{} * idp_0) o (idw_0 * idx_0 o idp_0)", "03-4"),
-         ("03-5: wiring renaming with 1/1 name", S"y/x",
-          S"(y/x * idp_0) o (x/x * idx_0 o idp_0)", "03-5"),
-         ("03-6: wiring identity", S"x/x",
-          S"(x/x * idp_0) o (x/x * idx_0 o idp_0)", "03-6"),
-         ("03-7: wiring with 1/>1 name", S"y/{x, y}", 
-	  S"(y/{x, y} * idp_0) o (idw_{x, y} * idx_0 o idp_0)", "03-7"),
+         ("03-4: wiring with 1/0 names", S"y_b/{}",
+          S"(y_b/{} * idp_0) o (idw_0 * idx_0 o idp_0)", "03-4"),
+         ("03-5: wiring renaming with 1/1 name", S"y_b/x_a",
+          S"(y_b/x_a * idp_0) o (x_a/x_a * idx_0 o idp_0)", "03-5"),
+         ("03-6: wiring identity", S"x_a/x_a",
+          S"(x_a/x_a * idp_0) o (x_a/x_a * idx_0 o idp_0)", "03-6"),
+         ("03-7: wiring with 1/>1 name", S"y_b/{x_a, y_b}", 
+	  S"(y_b/{x_a, y_b} * idp_0) o (idw_{x_a, y_b} * idx_0 o idp_0)", "03-7"),
          ("03-8: wiring with duplicate name",
           E"DuplicateNames", E"DuplicateNames", "03-8"),
          ("04-0-0: Ion with 0/0 names/sets", S"K", 
@@ -192,27 +192,27 @@ datatype expectedresult = S of string | E of string
            \                (idw_0 * merge_1)\
            \                 o ((idw_0 * idp_1) o '{}')))\
            \       o idp_1)", "04-0-1"),
-         ("04-0-2: ion with 0/1(1) names/sets(elements)", S"K<><{x}>", 
+         ("04-0-2: ion with 0/1(1) names/sets(elements)", S"K<><{x_a}>", 
 	  S"(idw_0 * idp_1)\
            \ o (idw_0\
            \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
            \       o (({})\
            \          (idw_0 * merge_1)\
-           \           o ((idw_0 * K<><{x}>)\
-           \              o ({x})\
-           \                (x/x * merge_1) o ((x/x * idp_1) o '{x}')))\
-           \       o [0{x}])", "04-0-2"),
-         ("04-0-3: ion with 0/1(>1) names/sets(elements)", S"K<><{x, y}>",
+           \           o ((idw_0 * K<><{x_a}>)\
+           \              o ({x_a})\
+           \                (x_a/x_a * merge_1) o ((x_a/x_a * idp_1) o '{x_a}')))\
+           \       o [0{x_a}])", "04-0-2"),
+         ("04-0-3: ion with 0/1(>1) names/sets(elements)", S"K<><{x_a, y_b}>",
 	  S"(idw_0 * idp_1)\
            \ o (idw_0\
            \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
            \       o (({})\
            \          (idw_0 * merge_1)\
-           \           o ((idw_0 * K<><{x, y}>)\
-           \              o ({x, y})\
-           \                (idw_{x, y} * merge_1)\
-           \                 o ((idw_{x, y} * idp_1) o '{x, y}')))\
-           \       o [0{x, y}])", "04-0-3"),
+           \           o ((idw_0 * K<><{x_a, y_b}>)\
+           \              o ({x_a, y_b})\
+           \                (idw_{x_a, y_b} * merge_1)\
+           \                 o ((idw_{x_a, y_b} * idp_1) o '{x_a, y_b}')))\
+           \       o [0{x_a, y_b}])", "04-0-3"),
          ("04-0-4: ion with 0/duplicate names",
           E"DuplicateNames", E"DuplicateNames", "04-0-4"),
          ("04-0-5: ion with 0/>1(0) names/sets(elements)",
@@ -228,55 +228,55 @@ datatype expectedresult = S of string | E of string
            \                  o ((idw_0 * idp_1) o '{}')))\
            \       o idp_1)", "04-0-5"),
          ("04-0-6: ion with 0/>1(>0) names/sets(elements)",
-          S"K<><{x}, {y, z}>", 
+          S"K<><{x_a}, {y_b, z_c}>", 
 	  S"(idw_0 * idp_1)\
            \ o (idw_0\
            \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
            \       o (({})\
            \          (idw_0 * merge_1)\
-           \           o ((idw_0 * K<><{x}, {y, z}>)\
-           \              o ({x, y, z})\
-           \                (idw_{x, y, z} * merge_1)\
-           \                 o ((idw_{x, y, z} * idp_1)\
-           \                     o '{x, y, z}')))\
-           \       o [0{x, y, z}])", "04-0-6"),
+           \           o ((idw_0 * K<><{x_a}, {y_b, z_c}>)\
+           \              o ({x_a, y_b, z_c})\
+           \                (idw_{x_a, y_b, z_c} * merge_1)\
+           \                 o ((idw_{x_a, y_b, z_c} * idp_1)\
+           \                     o '{x_a, y_b, z_c}')))\
+           \       o [0{x_a, y_b, z_c}])", "04-0-6"),
          ("04-0-7: ion with 0/>1(>0) names/sets(duplicate elements)",
           E"DuplicateNames", E"DuplicateNames", "04-0-7"),
-         ("04-1-0: Ion with 1/0 names/sets", S"K<x>", 
-	  S"(x/x * idp_1)\
+         ("04-1-0: Ion with 1/0 names/sets", S"K<x_a>", 
+	  S"(x_a/x_a_16 * idp_1)\
            \ o (idw_0\
-           \    * (x/x * ({})(idw_0 * idp_1) o '{}')\
+           \    * (x_a_16/x_a_16 * ({})(idw_0 * idp_1) o '{}')\
            \       o (({})\
-           \          (x/x * merge_1)\
-           \           o ((idw_0 * K<x>)\
+           \          (x_a_16/x_a_16 * merge_1)\
+           \           o ((idw_0 * K<x_a_16>)\
            \               o ({})\
            \                 (idw_0 * merge_1)\
            \                  o ((idw_0 * idp_1) o '{}')))\
            \       o idp_1)", "04-1-0"),
          ("04-1-1: ion with 1/1(>1) names/sets(elements)",
-          S"K<x><{x, y}>", 
-	  S"(x/x * idp_1)\
+          S"K<x_a><{x_a, y_b}>", 
+	  S"(x_a/x_a_17 * idp_1)\
            \ o (idw_0\
-           \    * (x/x * ({})(idw_0 * idp_1) o '{}')\
+           \    * (x_a_17/x_a_17 * ({})(idw_0 * idp_1) o '{}')\
            \       o (({})\
-           \          (x/x * merge_1)\
-           \           o ((idw_0 * K<x><{x, y}>)\
-           \              o ({x, y})\
-           \                (idw_{x, y} * merge_1)\
-           \                 o ((idw_{x, y} * idp_1) o '{x, y}')))\
-           \       o [0{x, y}])", "04-1-1"),
+           \          (x_a_17/x_a_17 * merge_1)\
+           \           o ((idw_0 * K<x_a_17><{x_a, y_b}>)\
+           \              o ({x_a, y_b})\
+           \                (idw_{x_a, y_b} * merge_1)\
+           \                 o ((idw_{x_a, y_b} * idp_1) o '{x_a, y_b}')))\
+           \       o [0{x_a, y_b}])", "04-1-1"),
          ("04-2-0: ion with >1/>1(>1) names/sets(elements)",
-          S"K<x, y><{y, z}, {}>", 
-	  S"(idw_{x, y} * idp_1)\
+          S"K<x_a, y_b><{y_b, z_c}, {}>", 
+	  S"((x_a/x_a_19 * y_b/y_b_18) * idp_1)\
            \ o (idw_0\
-           \    * (idw_{x, y} * ({})(idw_0 * idp_1) o '{}')\
+           \    * (idw_{y_b_18, x_a_19} * ({})(idw_0 * idp_1) o '{}')\
            \       o (({})\
-           \          (idw_{x, y} * merge_1)\
-           \           o ((idw_0 * K<x, y><{y, z}, {}>)\
-           \               o ({y, z})\
-           \                 (idw_{y, z} * merge_1)\
-           \                  o ((idw_{y, z} * idp_1) o '{y, z}')))\
-           \       o [0{y, z}])", "04-2-0"),
+           \          (idw_{y_b_18, x_a_19} * merge_1)\
+           \           o ((idw_0 * K<x_a_19, y_b_18><{y_b, z_c}, {}>)\
+           \               o ({y_b, z_c})\
+           \                 (idw_{y_b, z_c} * merge_1)\
+           \                  o ((idw_{y_b, z_c} * idp_1) o '{y_b, z_c}')))\
+           \       o [0{y_b, z_c}])", "04-2-0"),
          ("04-2-1: ion with duplicate/>1(?) names/sets(elements)",
           E"DuplicateNames", E"DuplicateNames", "04-2-1"),
          ("05-0-0: Permutation of width 0", S"idp_0",
@@ -287,42 +287,42 @@ datatype expectedresult = S of string | E of string
            \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
            \       o (({})(idw_0 * merge_1) o ((idw_0 * idp_1) o '{}'))\
            \       o idp_1)", "05-1-0"),
-         ("05-1-1: Permutation of width(elements) 1(>0)", S"[0{x}]", 
-	  S"(idw_0 * [0{x}])\
+         ("05-1-1: Permutation of width(elements) 1(>0)", S"[0{x_a}]", 
+	  S"(idw_0 * [0{x_a}])\
            \ o (idw_0\
-           \    * (idw_0 * ({x})(x/x * idp_1) o '{x}')\
-           \       o (({x})(x/x * merge_1) o ((x/x * idp_1) o '{x}'))\
-           \       o [0{x}])", "05-1-1"),
+           \    * (idw_0 * ({x_a})(x_a/x_a * idp_1) o '{x_a}')\
+           \       o (({x_a})(x_a/x_a * merge_1) o ((x_a/x_a * idp_1) o '{x_a}'))\
+           \       o [0{x_a}])", "05-1-1"),
          ("05-2-0: identity Permutation of width(elements) >1(>0)",
-          S"[0{x}, 1, 2{y, z}]", 
-	  S"(idw_0 * [0{x}, 1, 2{y, z}])\
+          S"[0{x_a}, 1, 2{y_b, z_c}]", 
+	  S"(idw_0 * [0{x_a}, 1, 2{y_b, z_c}])\
            \ o (idw_0\
-           \    * ((idw_0 * ({x})(x/x * idp_1) o '{x}')\
-           \        o (({x})(x/x * merge_1) o ((x/x * idp_1) o '{x}'))\
+           \    * ((idw_0 * ({x_a})(x_a/x_a * idp_1) o '{x_a}')\
+           \        o (({x_a})(x_a/x_a * merge_1) o ((x_a/x_a * idp_1) o '{x_a}'))\
            \       * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
            \          o (({})\
            \            (idw_0 * merge_1)\
            \             o ((idw_0 * idp_1) o '{}'))\
-           \       * (idw_0 * ({y, z})(idw_{y, z} * idp_1) o '{y, z}')\
-           \          o ({y, z})\
-           \            (idw_{y, z} * merge_1)\
-           \             o ((idw_{y, z} * idp_1) o '{y, z}'))\
-           \       o [0{x}, 1, 2{y, z}])", "05-2-0"),
+           \       * (idw_0 * ({y_b, z_c})(idw_{y_b, z_c} * idp_1) o '{y_b, z_c}')\
+           \          o ({y_b, z_c})\
+           \            (idw_{y_b, z_c} * merge_1)\
+           \             o ((idw_{y_b, z_c} * idp_1) o '{y_b, z_c}'))\
+           \       o [0{x_a}, 1, 2{y_b, z_c}])", "05-2-0"),
          ("05-2-1: Permutation of width(elements) >1(>0)",
-          S"[2{x}, 0, 1{y, z}]", 
-	  S"(idw_0 * [0, 1{y, z}, 2{x}])\
+          S"[2{x_a}, 0, 1{y_b, z_c}]", 
+	  S"(idw_0 * [0, 1{y_b, z_c}, 2{x_a}])\
            \ o (idw_0\
            \    * ((idw_0 * ({})(idw_0 * idp_1) o '{}')\
            \        o (({})\
            \           (idw_0 * merge_1)\
            \            o ((idw_0 * idp_1) o '{}'))\
-           \       * (idw_0 * ({y, z})(idw_{y, z} * idp_1) o '{y, z}')\
-           \          o (({y, z})\
-           \             (idw_{y, z} * merge_1)\
-           \              o ((idw_{y, z} * idp_1) o '{y, z}'))\
-           \       * (idw_0 * ({x})(x/x * idp_1) o '{x}')\
-           \          o ({x})(x/x * merge_1) o ((x/x * idp_1) o '{x}'))\
-           \       o [2{x}, 0, 1{y, z}])", "05-2-1"),
+           \       * (idw_0 * ({y_b, z_c})(idw_{y_b, z_c} * idp_1) o '{y_b, z_c}')\
+           \          o (({y_b, z_c})\
+           \             (idw_{y_b, z_c} * merge_1)\
+           \              o ((idw_{y_b, z_c} * idp_1) o '{y_b, z_c}'))\
+           \       * (idw_0 * ({x_a})(x_a/x_a * idp_1) o '{x_a}')\
+           \          o ({x_a})(x_a/x_a * merge_1) o ((x_a/x_a * idp_1) o '{x_a}'))\
+           \       o [2{x_a}, 0, 1{y_b, z_c}])", "05-2-1"),
          ("05-2-2: Permutation with duplicate names",
           E"DuplicateNames", E"DuplicateNames", "05-2-2"),
          ("05-2-3: Permutation with duplicate names",
@@ -335,13 +335,13 @@ datatype expectedresult = S of string | E of string
            \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
            \       o (({})(idw_0 * 1) o idx_0)\
            \       o idp_0)", "06-0-0"),
-         ("06-0-1: abstraction of 0 of >0 names", S"({})K<y>", 
-	  S"(y/y * idp_1)\
+         ("06-0-1: abstraction of 0 of >0 names", S"({})K<y_b>", 
+	  S"(y_b/y_b_1a * idp_1)\
            \ o (idw_0\
-           \    * (y/y * ({})(idw_0 * idp_1) o '{}')\
+           \    * (y_b_1a/y_b_1a * ({})(idw_0 * idp_1) o '{}')\
            \       o (({})\
-           \          (y/y * merge_1)\
-           \           o ((idw_0 * K<y>)\
+           \          (y_b_1a/y_b_1a * merge_1)\
+           \           o ((idw_0 * K<y_b_1a>)\
            \               o ({})\
            \                 (idw_0 * merge_1)\
            \                  o ((idw_0 * idp_1) o '{}')))\
@@ -350,17 +350,17 @@ datatype expectedresult = S of string | E of string
           E"NotPrime", E"NotPrime", "06-0-2"),
          ("06-1-0: abstraction of >0 of 0 names",
           E"NameMissing", E"NameMissing", "06-1-0"),
-         ("06-1-1: abstraction of >0 of >0 names", S"({x})'{x, y}'", 
-	  S"(y/y * [0{x}])\
+         ("06-1-1: abstraction of >0 of >0 names", S"({x_a})'{x_a, y_b}'", 
+	  S"(y_b/y_b * [0{x_a}])\
            \ o (idw_0\
-           \    * (y/y * ({x})(x/x * idp_1) o '{x}')\
-           \       o (({x})(idw_{x, y} * merge_1)\
-           \                o ((idw_{x, y} * idp_1) o '{x, y}'))\
-           \       o [0{x, y}])", "06-1-1"),
+           \    * (y_b/y_b * ({x_a})(x_a/x_a * idp_1) o '{x_a}')\
+           \       o (({x_a})(idw_{x_a, y_b} * merge_1)\
+           \                o ((idw_{x_a, y_b} * idp_1) o '{x_a, y_b}'))\
+           \       o [0{x_a, y_b}])", "06-1-1"),
          ("06-1-2: abstraction of bigraph of width 0",
           E"NotPrime", E"NotPrime", "06-1-2"),
          ("06-1-3: abstraction of bigraph of width 1",
-          S"K o L<><{x}>",
+          S"K o L<><{x_a}>",
 	  S"(idw_0 * idp_1)\
 	   \ o (idw_0\
 	   \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
@@ -369,14 +369,14 @@ datatype expectedresult = S of string | E of string
 	   \           o ((idw_0 * K)\
 	   \               o ({})\
 	   \                 (idw_0 * merge_1)\
-	   \                  o ((idw_0 * L<><{x}>)\
-	   \                      o ({x})\
-           \                        (x/x * merge_1)\
-           \                         o ((x/x * idp_1) o '{x}'))))\
-           \       o [0{x}])",
+	   \                  o ((idw_0 * L<><{x_a}>)\
+	   \                      o ({x_a})\
+           \                        (x_a/x_a * merge_1)\
+           \                         o ((x_a/x_a * idp_1) o '{x_a}'))))\
+           \       o [0{x_a}])",
 	  "06-1-3"),
          ("06-1-4: normalisation and composition",
-          S"K<><{x}> o ({x})L * x/{}",
+          S"K<><{x_a}> o ({x_a})L * x_a/{}",
 	  S"(idw_0 * idp_1)\
 	   \ o (idw_0\
 	   \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
@@ -392,46 +392,46 @@ datatype expectedresult = S of string | E of string
 	   \       o idp_1)",
 	  "06-1-4"),
          ("07-0-0: tensor product of bigraphs of width 0/0",
-          S"x/{x, y} * y/z * z/{} * /w", 
-	  S"((x/{x, y} * y/z * z/{} * /w) * idp_0)\
-           \ o (idw_{w, x, y, z} * idx_0 o idp_0)", "07-0-0"),
+          S"x_a/{x_a, y_b} * y_b/z_c * z_c/{} * /w_d", 
+	  S"((x_a/{x_a, y_b} * y_b/z_c * z_c/{} * /w_d) * idp_0)\
+           \ o (idw_{x_a, y_b, z_c, w_d} * idx_0 o idp_0)", "07-0-0"),
          ("07-0-1: tensor product of bigraphs of width 0/>0",
-          S"x/{x, y} * y/z * [1, 0{w}]", 
-	  S"((x/{x, y} * y/z) * [0{w}, 1])\
-           \ o (idw_{x, y, z}\
-           \    * ((idw_0 * ({w})(w/w * idp_1) o '{w}')\
-           \        o (({w})(w/w * merge_1) o ((w/w * idp_1) o '{w}'))\
+          S"x_a/{x_a, y_b} * y_b/z_c * [1, 0{w_d}]", 
+	  S"((x_a/{x_a, y_b} * y_b/z_c) * [0{w_d}, 1])\
+           \ o (idw_{x_a, y_b, z_c}\
+           \    * ((idw_0 * ({w_d})(w_d/w_d * idp_1) o '{w_d}')\
+           \        o (({w_d})(w_d/w_d * merge_1) o ((w_d/w_d * idp_1) o '{w_d}'))\
            \           * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
            \              o ({})(idw_0 * merge_1)\
            \                     o ((idw_0 * idp_1) o '{}'))\
-           \       o [1, 0{w}])", "07-0-1"),
+           \       o [1, 0{w_d}])", "07-0-1"),
          ("07-1-0: tensor product of bigraphs of width >0/0",
-          S"[1, 0{w}] * x/{x, y} * y/z",
-	  S"((x/{x, y} * y/z) * [0{w}, 1])\
-           \ o (idw_{x, y, z}\
-           \    * ((idw_0 * ({w})(w/w * idp_1) o '{w}')\
-           \        o (({w})(w/w * merge_1) o ((w/w * idp_1) o '{w}'))\
+          S"[1, 0{w_d}] * x_a/{x_a, y_b} * y_b/z_c",
+	  S"((x_a/{x_a, y_b} * y_b/z_c) * [0{w_d}, 1])\
+           \ o (idw_{x_a, y_b, z_c}\
+           \    * ((idw_0 * ({w_d})(w_d/w_d * idp_1) o '{w_d}')\
+           \        o (({w_d})(w_d/w_d * merge_1) o ((w_d/w_d * idp_1) o '{w_d}'))\
            \           * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
            \              o ({})(idw_0 * merge_1)\
            \                     o ((idw_0 * idp_1) o '{}'))\
-           \       o [1, 0{w}])", "07-1-0"),
-         ("07-1-1: tensor product of bigraphs of width >0/>0",
-          S"[1, 0{w}] * [2{x}, 0, 1{y, z}]", 
-	  S"(idw_0 * [0{w}, 1, 2, 3{y, z}, 4{x}])\
+           \       o [1, 0{w_d}])", "07-1-0"),
+         ("07-1-1: tensor product of bigraphs of w_didth >0/>0",
+          S"[1, 0{w_d}] * [2{x_a}, 0, 1{y_b, z_c}]", 
+	  S"(idw_0 * [0{w_d}, 1, 2, 3{y_b, z_c}, 4{x_a}])\
            \ o (idw_0\
-           \    * ((idw_0 * ({w})(w/w * idp_1) o '{w}')\
-           \        o (({w})(w/w * merge_1) o ((w/w * idp_1) o '{w}'))\
+           \    * ((idw_0 * ({w_d})(w_d/w_d * idp_1) o '{w_d}')\
+           \        o (({w_d})(w_d/w_d * merge_1) o ((w_d/w_d * idp_1) o '{w_d}'))\
            \       * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
            \          o (({})(idw_0 * merge_1) o ((idw_0 * idp_1) o '{}'))\
            \       * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
            \          o (({})(idw_0 * merge_1) o ((idw_0 * idp_1) o '{}'))\
-           \       * (idw_0 * ({y, z})(idw_{y, z} * idp_1) o '{y, z}')\
-           \          o (({y, z})\
-           \             (idw_{y, z} * merge_1)\
-           \              o ((idw_{y, z} * idp_1) o '{y, z}'))\
-           \       * (idw_0 * ({x})(x/x * idp_1) o '{x}')\
-           \          o ({x})(x/x * merge_1) o ((x/x * idp_1) o '{x}'))\
-           \       o [1, 0{w}, 4{x}, 2, 3{y, z}])", "07-1-1"),
+           \       * (idw_0 * ({y_b, z_c})(idw_{y_b, z_c} * idp_1) o '{y_b, z_c}')\
+           \          o (({y_b, z_c})\
+           \             (idw_{y_b, z_c} * merge_1)\
+           \              o ((idw_{y_b, z_c} * idp_1) o '{y_b, z_c}'))\
+           \       * (idw_0 * ({x_a})(x_a/x_a * idp_1) o '{x_a}')\
+           \          o ({x_a})(x_a/x_a * merge_1) o ((x_a/x_a * idp_1) o '{x_a}'))\
+           \       o [1, 0{w_d}, 4{x_a}, 2, 3{y_b, z_c}])", "07-1-1"),
          ("07-2-0: tensor product with global outer name clash",
           E"NotTensorable", E"NotTensorable", "07-2-0"),
          ("07-2-1: tensor product with global inner name clash",
@@ -445,33 +445,33 @@ datatype expectedresult = S of string | E of string
          ("07-2-5: tensor product with local/global outer name clash",
           E"NotTensorable", E"NotTensorable", "07-2-5"),
          ("08-0-0: composition of bigraphs of width 0/0",
-          S"x/{x, y} o (y/z * x/{})", 
-	  S"(x/z * idp_0) o (z/z * idx_0 o idp_0)", "08-0-0"),
+          S"x_a/{x_a, y_b} o (y_b/z_c * x_a/{})", 
+	  S"(x_a/z_c * idp_0) o (z_c/z_c * idx_0 o idp_0)", "08-0-0"),
          ("08-1-0: composition of bigraphs of width >0/0",
-          S"(1 * x/{y, z}) o (y/z * z/{})", 
-	  S"(x/z * idp_1)\
-           \ o (z/z\
+          S"(1 * x_a/{y_b, z_c}) o (y_b/z_c * z_c/{})", 
+	  S"(x_a/z_c * idp_1)\
+           \ o (z_c/z_c\
            \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
            \       o (({})(idw_0 * 1) o idx_0)\
            \       o idp_0)", "08-1-0"),
          ("08-1-1: composition of bigraphs of width >0/>0", 
-	  S"('{x, y}' * /w * K<z><{z}, {v, u}>)\
-	   \ o ((({x, y})L<x, y, w>) * ({z, v, u})M<u, v, z>)", 
-	  S"((x/x * y/y * z/z * /w) * idp_2)\
+	  S"('{x_a, y_b}' * /w_d * K<z_c><{z_c}, {v_e, u_f}>)\
+	   \ o ((({x_a, y_b})L<x_a, y_b, w_d>) * ({z_c, v_e, u_f})M<u_f, v_e, z_c>)", 
+	  S"((x_a/x_a_2e * y_b/y_b_2d * z_c/z_c_2f * /w_d_2c) * idp_2)\
            \ o (idw_0\
-           \    * ((idw_{w, x, y} * ({})(idw_0 * idp_1) o '{}')\
+           \    * ((idw_{w_d_2c, y_b_2d, x_a_2e} * ({})(idw_0 * idp_1) o '{}')\
            \        o (({})\
-           \           (idw_{w, x, y} * merge_1)\
-           \            o ((idw_0 * L<x, y, w>)\
+           \           (idw_{w_d_2c, y_b_2d, x_a_2e} * merge_1)\
+           \            o ((idw_0 * L<x_a_2e, y_b_2d, w_d_2c>)\
            \                o ({})(idw_0 * merge_1)\
            \                       o ((idw_0 * idp_1) o '{}')))\
-           \       * (z/z * ({})(idw_0 * idp_1) o '{}')\
+           \       * (z_c_2f/z_c_2f * ({})(idw_0 * idp_1) o '{}')\
            \          o ({})\
-           \            (z/z * merge_1)\
-           \             o ((idw_0 * K<z><{z}, {v, u}>)\
-           \                 o ({z, v, u})\
-           \                   (idw_{u, v, z} * merge_1)\
-           \                    o ((idw_0 * M<z, v, u>)\
+           \            (z_c_2f/z_c_2f * merge_1)\
+           \             o ((idw_0 * K<z_c_2f><{z_c_29}, {v_e_2a, u_f_2b}>)\
+           \                 o ({z_c_29, v_e_2a, u_f_2b})\
+           \                   (idw_{z_c_29, v_e_2a, u_f_2b} * merge_1)\
+           \                    o ((idw_0 * M<u_f_2b,v_e_2a,z_c_29>)\
            \                        o ({})(idw_0 * merge_1)\
            \                               o ((idw_0 * idp_1) o '{}'))))\
            \       o idp_2)", "08-1-1"),
@@ -486,9 +486,9 @@ datatype expectedresult = S of string | E of string
            \ o (idw_0\
            \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
            \       o (({})(idw_0 * 1) o idx_0) o idp_0)", "08-1-5"),
-         ("08-2-0: composition with inner/outer local name set sizes 0/>0",
+         ("08-2-0: composition with inner/outer local name set sizces 0/>0",
           E"NotComposable", E"NotComposable", "08-2-0"),
-         ("08-2-1: composition with inner/outer global name set sizes 0/>0",
+         ("08-2-1: composition with inner/outer global name set sizces 0/>0",
           E"NotComposable", E"NotComposable", "08-2-1"),
          ("08-2-2: composition with inner/outer names global/local",
           E"NotComposable", E"NotComposable", "08-2-2"),
@@ -497,56 +497,56 @@ datatype expectedresult = S of string | E of string
          ("08-2-4: composition with inner/outer global name set sizes >0/0",
           E"NotComposable", E"NotComposable", "08-2-4"),
          ("09-0-0: parallel product of bigraphs of width 0/0",
-          S"x/{x, y} * y/z * z/{} * /w", 
-	  S"((x/{x, y} * y/z * z/{} * /w) * idp_0)\
-           \ o (idw_{w, x, y, z} * idx_0 o idp_0)", "09-0-0"),
+          S"x_a/{x_a, y_b} * y_b/z_c * z_c/{} * /w_d", 
+	  S"((x_a/{x_a, y_b} * y_b/z_c * z_c/{} * /w_d) * idp_0)\
+           \ o (idw_{x_a, y_b, z_c, w_d} * idx_0 o idp_0)", "09-0-0"),
          ("09-0-1: parallel product of bigraphs of width 0/>0",
-          S"x/{x, y} * y/z * [1, 0{w}]", 
-	  S"((x/{x, y} * y/z) * [0{w}, 1])\
-           \ o (idw_{x, y, z}\
-           \    * ((idw_0 * ({w})(w/w * idp_1) o '{w}')\
-           \        o (({w})(w/w * merge_1) o ((w/w * idp_1) o '{w}'))\
+          S"x_a/{x_a, y_b} * y_b/z_c * [1, 0{w_d}]", 
+	  S"((x_a/{x_a, y_b} * y_b/z_c) * [0{w_d}, 1])\
+           \ o (idw_{x_a, y_b, z_c}\
+           \    * ((idw_0 * ({w_d})(w_d/w_d * idp_1) o '{w_d}')\
+           \        o (({w_d})(w_d/w_d * merge_1) o ((w_d/w_d * idp_1) o '{w_d}'))\
            \       * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
            \          o ({})(idw_0 * merge_1)\
            \                 o ((idw_0 * idp_1) o '{}'))\
-           \       o [1, 0{w}])", "09-0-1"),
+           \       o [1, 0{w_d}])", "09-0-1"),
          ("09-1-0: parallel product of bigraphs of width >0/0",
-          S"[1, 0{w}] * x/{x, y} * y/z",
-	  S"((x/{x, y} * y/z) * [0{w}, 1])\
-           \ o (idw_{x, y, z}\
-           \    * ((idw_0 * ({w})(w/w * idp_1) o '{w}')\
-           \        o (({w})(w/w * merge_1) o ((w/w * idp_1) o '{w}'))\
+          S"[1, 0{w_d}] * x_a/{x_a, y_b} * y_b/z_c",
+	  S"((x_a/{x_a, y_b} * y_b/z_c) * [0{w_d}, 1])\
+           \ o (idw_{x_a, y_b, z_c}\
+           \    * ((idw_0 * ({w_d})(w_d/w_d * idp_1) o '{w_d}')\
+           \        o (({w_d})(w_d/w_d * merge_1) o ((w_d/w_d * idp_1) o '{w_d}'))\
            \       * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
            \          o ({})(idw_0 * merge_1)\
            \                 o ((idw_0 * idp_1) o '{}'))\
-           \       o [1, 0{w}])", "09-1-0"),
+           \       o [1, 0{w_d}])", "09-1-0"),
          ("09-1-1: parallel product of bigraphs of width >0/>0",
-          S"[1, 0{w}] * [2{x}, 0, 1{y, z}]", 
-	  S"(idw_0 * [0{w}, 1, 2, 3{y, z}, 4{x}])\
+          S"[1, 0{w_d}] * [2{x_a}, 0, 1{y_b, z_c}]", 
+	  S"(idw_0 * [0{w_d}, 1, 2, 3{y_b, z_c}, 4{x_a}])\
            \ o (idw_0\
-           \    * ((idw_0 * ({w})(w/w * idp_1) o '{w}')\
-           \        o (({w})(w/w * merge_1) o ((w/w * idp_1) o '{w}'))\
+           \    * ((idw_0 * ({w_d})(w_d/w_d * idp_1) o '{w_d}')\
+           \        o (({w_d})(w_d/w_d * merge_1) o ((w_d/w_d * idp_1) o '{w_d}'))\
            \       * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
            \          o (({})(idw_0 * merge_1) o ((idw_0 * idp_1) o '{}'))\
            \       * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
            \          o (({})(idw_0 * merge_1) o ((idw_0 * idp_1) o '{}'))\
-           \       * (idw_0 * ({y, z})(idw_{y, z} * idp_1) o '{y, z}')\
-           \          o (({y, z})\
-           \             (idw_{y, z} * merge_1)\
-           \              o ((idw_{y, z} * idp_1) o '{y, z}'))\
-           \       * (idw_0 * ({x})(x/x * idp_1) o '{x}')\
-           \          o ({x})(x/x * merge_1) o ((x/x * idp_1) o '{x}'))\
-           \       o [1, 0{w}, 4{x}, 2, 3{y, z}])", "09-1-1"),
+           \       * (idw_0 * ({y_b, z_c})(idw_{y_b, z_c} * idp_1) o '{y_b, z_c}')\
+           \          o (({y_b, z_c})\
+           \             (idw_{y_b, z_c} * merge_1)\
+           \              o ((idw_{y_b, z_c} * idp_1) o '{y_b, z_c}'))\
+           \       * (idw_0 * ({x_a})(x_a/x_a * idp_1) o '{x_a}')\
+           \          o ({x_a})(x_a/x_a * merge_1) o ((x_a/x_a * idp_1) o '{x_a}'))\
+           \       o [1, 0{w_d}, 4{x_a}, 2, 3{y_b, z_c}])", "09-1-1"),
          ("09-2-0: parallel product with global outer name clash",
-          S"((x/x * y/{y_0,y_1}) * idp_2)\
-           \ o (((x/x * y_1/y) * idp_1) o K<x,y>\
-           \     * (y_0/y * idp_1) o (y/z * merge_1))",
-          S"((x/x * y/{y,z}) * idp_2)\
-           \ o (z/z\
-           \    * ((idw_{x,y} * ({})(idw_0 * idp_1) o '{}')\
+          S"((x_a/x_a * y_b/{y_b_10, y_b_11}) * idp_2)\
+           \ o (((x_a/x_a * y_b_11/y_b) * idp_1) o K<x_a,y_b>\
+           \     * (y_b_10/y_b * idp_1) o (y_b/z_c * merge_1))",
+          S"((x_a/x_a_3c * y_b/{z_c,y_b_3b}) * idp_2)\
+           \ o (z_c/z_c\
+           \    * ((idw_{y_b_3b,x_a_3c} * ({})(idw_0 * idp_1) o '{}')\
            \        o (({})\
-           \           (idw_{x,y} * merge_1)\
-           \            o ((idw_0 * K<x,y>)\
+           \           (idw_{y_b_3b,x_a_3c} * merge_1)\
+           \            o ((idw_0 * K<x_a_3c,y_b_3b>)\
            \               o ({})(idw_0 * merge_1)\
            \                      o ((idw_0 * idp_1) o '{}')))\
            \       * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
@@ -570,22 +570,22 @@ datatype expectedresult = S of string | E of string
          ("10-1-0: prime product of bigraphs of width >0/0",
           E"NotPrimeable", E"NotPrimeable", "10-1-0"),
          ("10-1-1: prime product of bigraphs of width >0/>0",
-          S"({x,y,z,w})\
-           \(idw_{w,x,y,z} * merge_5)\
-           \ o (('{w}'*'{}') o [1, 0{w}]\
-           \     * ('{}' * '{y,z}' * '{x}') o [2{x},0,1{y,z}])",
-	  S"(idw_0 * [0{x,y,z,w}])\
+          S"({x_a,y_b,z_c,w_d})\
+           \(idw_{x_a,y_b,z_c,w_d} * merge_5)\
+           \ o (('{w_d}'*'{}') o [1, 0{w_d}]\
+           \     * ('{}' * '{y_b,z_c}' * '{x_a}') o [2{x_a},0,1{y_b,z_c}])",
+	  S"(idw_0 * [0{x_a,y_b,z_c,w_d}])\
            \ o (idw_0\
            \    * (idw_0\
-           \       * ({x,y,z,w})(idw_{w,x,y,z} * idp_1) o '{x,y,z,w}')\
-           \       o (({x,y,z,w})\
-           \          (idw_{w,x,y,z} * merge_5)\
-           \           o ((w/w * idp_1) o '{w}'\
+           \       * ({x_a,y_b,z_c,w_d})(idw_{x_a,y_b,z_c,w_d} * idp_1) o '{x_a,y_b,z_c,w_d}')\
+           \       o (({x_a,y_b,z_c,w_d})\
+           \          (idw_{x_a,y_b,z_c,w_d} * merge_5)\
+           \           o ((w_d/w_d * idp_1) o '{w_d}'\
            \           * (idw_0 * idp_1) o '{}'\
            \           * (idw_0 * idp_1) o '{}'\
-           \           * (idw_{y,z} * idp_1) o '{y,z}'\
-           \           * (x/x * idp_1) o '{x}'))\
-           \       o [1, 0{w}, 4{x}, 2, 3{y,z}])", "10-1-1"),
+           \           * (idw_{y_b,z_c} * idp_1) o '{y_b,z_c}'\
+           \           * (x_a/x_a * idp_1) o '{x_a}'))\
+           \       o [1, 0{w_d}, 4{x_a}, 2, 3{y_b,z_c}])", "10-1-1"),
          ("10-2-0: prime product with global inner names",
           E"NotPrimeable", E"NotPrimeable", "10-2-0"),
          ("10-2-1: prime product with global inner name clash",
@@ -678,15 +678,15 @@ datatype expectedresult = S of string | E of string
 	    [("Empty parallel product", S"idx_0",
 	      fn () => (startsubsuite (); Par (1,0) [])),
 	     ("Singleton parallel product", 
-	      S"'{y4, y5}' * [0{y1, y2}, 1{y3}]",
+	      S"'{y4_7, y5_8}' * [0{y1_4, y2_5}, 1{y3_6}]",
 	      fn () => Par (2,0) [b1]),
 	     ("Empty prime product", S"1",
 	      fn () => Pri (1,0) []),
 	     ("Singleton prime product", 
-	      S"({y1, y2, y3})\n\
-	       \ (idw_{y1, y2, y3, y4, y5} * merge_3)\n\
-	       \  o ((idw_{y4, y5} * '{}' * '{y1, y2}' * '{y3}')\n\
-	       \     o ('{y4, y5}' * [0{y1, y2}, 1{y3}]))",
+	      S"({y1_4, y2_5, y3_6})\n\
+	       \ (idw_{y1_4, y2_5, y3_6, y4_7, y5_8} * merge_3)\n\
+	       \  o ((idw_{y4_7, y5_8} * '{}' * '{y1_4, y2_5}' * '{y3_6}')\n\
+	       \     o ('{y4_7, y5_8}' * [0{y1_4, y2_5}, 1{y3_6}]))",
 	      fn () => Pri (2,0) [b1])]
 	    end
        in

@@ -351,125 +351,6 @@ struct
 
   fun outerface (b : 'class bgbdnf) = BgVal.outerface b
 
-  (* Rename global outer names in a discrete prime. *)
-  fun renameGlobals beta P =
-      let
-        val i = BgVal.info P
-
-        (* bgval constructors *)
-        val Mer = BgVal.Mer i
-        val Con = BgVal.Con i
-        val Wir = BgVal.Wir i
-        val Ion = BgVal.Ion i
-        val Per = BgVal.Per i
-        val Abs = BgVal.Abs i
-        val Ten = BgVal.Ten i
-        val Com = BgVal.Com i
-        val LS  = BgVal.LS  i
-        val WLS = BgVal.WLS i
-
-        (* Tensor product of two bgvals, as operator *)
-        fun ** (v1, v2) = Ten [v1, v2]
-        infix 6 **
-        (* Composition constructor, as operator *)
-        val oo = Com
-        infix 7 oo
-
-        (* id_0 wirings and bgval wirings *)
-        val wid_0  = Wiring.id_0
-        val vwid_0 = Wir wid_0
-        val pid_0  = Permutation.id_0
-        val vpid_0 = Per pid_0
-        val vpid_1 = Per (Permutation.id_n 1)
- 
-        fun renM beta M =
-            case match (PCom (PTen [PWir, PIon], PVar)) M of
-              MCom (MTen [MWir wid_Z, MIon KyX], MVal N) =>
-              let
-                val Z  = Wiring.outernames wid_Z
-                val Z' = Wiring.app beta Z
-                val wid_Z' = Wiring.id_X Z'
-                val N' = renN (Wiring.restrict beta Z) N
-                val y' = Wiring.app beta (Ion.outernames KyX)
-                val {ctrl, free, bound} = Ion.unmk KyX
-                val Ky'X
-                    = Ion.make {ctrl  = ctrl,
-                                free  = NameSet.list y',
-                                bound = bound}
-              in
-                (Wir wid_Z' ** Ion Ky'X) oo N'
-              end
-            | wrongterm => 
-              raise MalformedBDNF ("bgbdnf.sml", i, wrongterm,
-                                   "matching M in renM")
-
-        and renS beta S =
-            case unmkS' S of
-              SCon' renConc =>
-            (case match (PCom (PTen [PWir, PVar], PVar))
-                    renConc of
-               MCom (MTen [MWir a, MVal id_1], MVal concX) =>
-               let
-                 val a' = Wiring.o (beta, a)
-               in
-                 (Wir a' ** id_1) oo concX
-               end
-             | wrongterm => 
-               raise MalformedBDNF ("bgbdnf.sml", i, wrongterm,
-                                    "matching a in renS"))
-            | SMol' M => renM beta M
-
-        and renG beta G =
-            case match (PCom (PTen [PWir, PVar], PTns)) G of
-              MCom (MTen [MWir wid_Y, MVal mer_n], MTns Ss) =>
-              let
-                val Y  = Wiring.outernames wid_Y
-                val Y' = Wiring.app beta (Y)
-                val wid_Y' = Wiring.id_X Y'
-                val S's
-                    = map
-                        (fn S =>
-                            renS (Wiring.restrict
-                                    beta
-                                    (Interface.glob
-                                       (outerface S)))
-                            S)
-                        Ss
-              in
-                (Wir wid_Y' ** mer_n) oo Ten S's
-              end
-            | wrongterm => 
-              raise MalformedBDNF ("bgbdnf.sml", i, wrongterm,
-                                   "matching G in renG")
-
-        and renN beta N =
-            let
-              val {absnames, G} = unmkN N
-              val beta' = Wiring.* (beta, Wiring.id_X absnames)
-              val G' = renG beta' G
-            in
-              Abs (absnames, G')
-            end
-
-        fun renP beta P =
-            case match (PCom (PTen [PWir, PVar], PVar)) P of
-              MCom (MTen [MWir wid_Z, MVal locsub], MVal N) =>
-              let
-                val N' = renN beta N
-                val Z  = Wiring.outernames wid_Z
-                val Z' = Wiring.app beta Z
-                val wid_Z' = Wiring.id_X Z'
-              in
-                (Wir wid_Z' ** locsub) oo N'
-              end
-            | wrongterm => 
-              raise MalformedBDNF ("bgbdnf.sml", i, wrongterm,
-                                   "matching P in renP")
-              
-      in
-        renP beta P
-      end
-
   fun bgvalCom2SBDNF v = (* SCom rules *)
       let
         val i = BgVal.info v
@@ -927,7 +808,7 @@ struct
       
         | MTns bs => (* Rule Bten *)
           let
-            fun unzip (b_i, (w, pid_Y, a, pi, Ps, X)) =
+            fun unzip (b_i, (w, pid_Y, a, pi, Ps)) =
                 case match (PCom (PTen [PWir, PPer], PVar))
                            (bgval2BBDNF b_i) of
                   MCom (MTen [MWir w_i, MPer pid_Yi], MVal Di) =>
@@ -935,77 +816,12 @@ struct
                   MTen [MWir a_i, MCom (MTns P_ijs, MPer pi_i)]
                   =>
                   let
-                    val Yi
-                        = foldr
-                            (fn (y, Yi) => NameSet.union' y Yi)
-                            NameSet.empty
-                            (Interface.loc
-                               (Permutation.outerface pid_Yi))
-                    val Xi  = NameSet.union' X Yi
-                    val Zi  = Interface.glob (outerface Di)
-  
-                    fun fresh z n X =
-                        let
-                          val z' = Name.make (z ^ (Int.toString n))
-                        in
-                          if NameSet.member z' X then
-                            fresh z (n + 1) X
-                          else
-                            z'
-                        end
-                    fun addRenaming z (beta, beta_inv, X) =
-                        let
-                          val w = fresh (Name.unmk z) 0 X
-                          val X = NameSet.insert' w X
-                          val l 
-                              = Link.make
-                                  {outer = SOME w,
-                                   inner = NameSet.fromList [z]}
-                          val l_inv 
-                              = Link.make
-                                  {outer = SOME z,
-                                   inner = NameSet.fromList [w]}
-                        in
-                          (l :: beta, l_inv :: beta_inv, X)
-                        end
-  
-                    val (ZinXi, ZnotinXi)
-                        = NameSet.partition
-                            (fn n => NameSet.member n Xi)
-                            Zi
-                    val (betainXi, betainXi_inv, X)
-                        = NameSet.fold
-                            addRenaming ([], [], NameSet.union' Xi Zi) ZinXi
-                    val betanotinXi = Wiring.id_X ZnotinXi
-                    val beta
-                        = Wiring.* 
-                            (betanotinXi, Wiring.make' betainXi)
-                    val beta_inv
-                        = Wiring.* 
-                            (betanotinXi, Wiring.make' betainXi_inv)
-  
-                    val Z'_i = Wiring.outernames a_i
-                    val a'_i = Wiring.o
-                                 (Wiring.restrict beta Z'_i, a_i)
-  
-                    val P'_ijs
-                        = map (fn P_ij =>
-                                  renameGlobals
-                                    (Wiring.restrict
-                                       beta
-                                       (Interface.glob
-                                         (outerface P_ij)))
-                                    P_ij)
-                              P_ijs
-  
-                    val w'_i = Wiring.o (w_i, beta_inv)
-  
-                    val w     = Wiring.* (w'_i, w)
-                    val a     = Wiring.* (a'_i, a)
+                    val w     = Wiring.* (w_i, w)
+                    val a     = Wiring.* (a_i, a)
                     val pid_Y = Permutation.* (pid_Yi, pid_Y)
                     val pi    = Permutation.* (pi_i, pi)
                   in
-                    (w, pid_Y, a, pi, P'_ijs @ Ps, X)
+                    (w, pid_Y, a, pi, P_ijs @ Ps)
                   end
                 | wrongterm => raise MalformedBDNF
                      ("bgbdnf.sml", i, wrongterm,
@@ -1013,10 +829,10 @@ struct
                 | wrongterm => raise MalformedBDNF
                      ("bgbdnf.sml", i, wrongterm,
                       "matching b_i in rule Bten") 
-            val (w, pid_Y, a, pi, Ps, _)
+            val (w, pid_Y, a, pi, Ps)
                 = foldr
                     unzip
-                    (wid_0, pid_0, wid_0, pid_0, [], NameSet.empty)
+                    (wid_0, pid_0, wid_0, pid_0, [])
                     bs
             val D = Wir a ** Ten Ps oo Per pi
           in
@@ -1109,7 +925,7 @@ struct
                                "matching in Bxxx rules")
       end
 
-  fun make v = bgval2BBDNF v
+  fun make v = bgval2BBDNF (BgVal.rename_internally v)
 
   fun regularize B =
       let
@@ -1146,7 +962,7 @@ struct
             case unmkS' S of
               SCon' a =>
 		if Permutation.is_id pi then
-		  a
+                  S
 		else
 		  raise IrregularBDNF
                     ("bgbdnf.sml", i, B, "bigraph is irregular")

@@ -159,6 +159,12 @@ sig
   val unmk : (bgval -> bgterminfo) 
 	     -> bgval -> (bgterm * interface * interface)
 
+  (** Replace internal names with fresh names. Replaces as many
+   *  internal names as possible with globally fresh names.
+   *  @params v
+   *  @param v The bgval to rename internally.  *)
+  val rename_internally : bgval -> bgval
+
   (** Pattern datatype for bgvals.
    * @see BGTERM.bgterm
    *)
