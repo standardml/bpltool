@@ -13,6 +13,8 @@
       |  'nset'
       |  name/nset                (and name/name, /name, and /nset)
       |  ctrlid <nlist> <nsetlist>
+      |  ctrlid <nlist>
+      |  ctrlid
       |  [ permentrylist ]
       |  (nset) bg
       |  bg x bg
@@ -35,6 +37,7 @@
 		 | permentry, permentrylist
 
    permentry     = int nset
+                 | int
    
    name   = [a-n|p-v|yz]
           | [a-z][A-za-z0-9_]+
