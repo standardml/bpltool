@@ -29,8 +29,8 @@ sig
   val make : string -> name
   (** Get the original string used to create a name. *)
   val ekam : name -> string
-  (** Construct a fresh name possibly based on a string. *)
-  val fresh : string option -> name
+  (** Construct a fresh name possibly based on another name. *)
+  val fresh : name option -> name
   (** Deconstruct a name. *)
   val unmk : name -> string
   (** Calculate a hash for the given name. *)

@@ -243,36 +243,36 @@ datatype expectedresult = S of string | E of string
          ("04-0-7: ion with 0/>1(>0) names/sets(duplicate elements)",
           E"DuplicateNames", E"DuplicateNames", "04-0-7"),
          ("04-1-0: Ion with 1/0 names/sets", S"K<x_a>", 
-	  S"(x_a/x_a_16 * idp_1)\
+	  S"(x_a/x_16 * idp_1)\
            \ o (idw_0\
-           \    * (x_a_16/x_a_16 * ({})(idw_0 * idp_1) o '{}')\
+           \    * (x_16/x_16 * ({})(idw_0 * idp_1) o '{}')\
            \       o (({})\
-           \          (x_a_16/x_a_16 * merge_1)\
-           \           o ((idw_0 * K<x_a_16>)\
+           \          (x_16/x_16 * merge_1)\
+           \           o ((idw_0 * K<x_16>)\
            \               o ({})\
            \                 (idw_0 * merge_1)\
            \                  o ((idw_0 * idp_1) o '{}')))\
            \       o idp_1)", "04-1-0"),
          ("04-1-1: ion with 1/1(>1) names/sets(elements)",
           S"K<x_a><{x_a, y_b}>", 
-	  S"(x_a/x_a_17 * idp_1)\
+	  S"(x_a/x_17 * idp_1)\
            \ o (idw_0\
-           \    * (x_a_17/x_a_17 * ({})(idw_0 * idp_1) o '{}')\
+           \    * (x_17/x_17 * ({})(idw_0 * idp_1) o '{}')\
            \       o (({})\
-           \          (x_a_17/x_a_17 * merge_1)\
-           \           o ((idw_0 * K<x_a_17><{x_a, y_b}>)\
+           \          (x_17/x_17 * merge_1)\
+           \           o ((idw_0 * K<x_17><{x_a, y_b}>)\
            \              o ({x_a, y_b})\
            \                (idw_{x_a, y_b} * merge_1)\
            \                 o ((idw_{x_a, y_b} * idp_1) o '{x_a, y_b}')))\
            \       o [0{x_a, y_b}])", "04-1-1"),
          ("04-2-0: ion with >1/>1(>1) names/sets(elements)",
           S"K<x_a, y_b><{y_b, z_c}, {}>", 
-	  S"((x_a/x_a_19 * y_b/y_b_18) * idp_1)\
+	  S"((x_a/x_19 * y_b/y_18) * idp_1)\
            \ o (idw_0\
-           \    * (idw_{y_b_18, x_a_19} * ({})(idw_0 * idp_1) o '{}')\
+           \    * (idw_{y_18, x_19} * ({})(idw_0 * idp_1) o '{}')\
            \       o (({})\
-           \          (idw_{y_b_18, x_a_19} * merge_1)\
-           \           o ((idw_0 * K<x_a_19, y_b_18><{y_b, z_c}, {}>)\
+           \          (idw_{y_18, x_19} * merge_1)\
+           \           o ((idw_0 * K<x_19, y_18><{y_b, z_c}, {}>)\
            \               o ({y_b, z_c})\
            \                 (idw_{y_b, z_c} * merge_1)\
            \                  o ((idw_{y_b, z_c} * idp_1) o '{y_b, z_c}')))\
@@ -336,12 +336,12 @@ datatype expectedresult = S of string | E of string
            \       o (({})(idw_0 * 1) o idx_0)\
            \       o idp_0)", "06-0-0"),
          ("06-0-1: abstraction of 0 of >0 names", S"({})K<y_b>", 
-	  S"(y_b/y_b_1a * idp_1)\
+	  S"(y_b/y_1a * idp_1)\
            \ o (idw_0\
-           \    * (y_b_1a/y_b_1a * ({})(idw_0 * idp_1) o '{}')\
+           \    * (y_1a/y_1a * ({})(idw_0 * idp_1) o '{}')\
            \       o (({})\
-           \          (y_b_1a/y_b_1a * merge_1)\
-           \           o ((idw_0 * K<y_b_1a>)\
+           \          (y_1a/y_1a * merge_1)\
+           \           o ((idw_0 * K<y_1a>)\
            \               o ({})\
            \                 (idw_0 * merge_1)\
            \                  o ((idw_0 * idp_1) o '{}')))\
@@ -457,21 +457,21 @@ datatype expectedresult = S of string | E of string
          ("08-1-1: composition of bigraphs of width >0/>0", 
 	  S"('{x_a, y_b}' * /w_d * K<z_c><{z_c}, {v_e, u_f}>)\
 	   \ o ((({x_a, y_b})L<x_a, y_b, w_d>) * ({z_c, v_e, u_f})M<u_f, v_e, z_c>)", 
-	  S"((x_a/x_a_2e * y_b/y_b_2d * z_c/z_c_2f * /w_d_2c) * idp_2)\
+	  S"((x_a/x_2e * y_b/y_2d * z_c/z_2f * /w_2c) * idp_2)\
            \ o (idw_0\
-           \    * ((idw_{w_d_2c, y_b_2d, x_a_2e} * ({})(idw_0 * idp_1) o '{}')\
+           \    * ((idw_{w_2c, y_2d, x_2e} * ({})(idw_0 * idp_1) o '{}')\
            \        o (({})\
-           \           (idw_{w_d_2c, y_b_2d, x_a_2e} * merge_1)\
-           \            o ((idw_0 * L<x_a_2e, y_b_2d, w_d_2c>)\
+           \           (idw_{w_2c, y_2d, x_2e} * merge_1)\
+           \            o ((idw_0 * L<x_2e, y_2d, w_2c>)\
            \                o ({})(idw_0 * merge_1)\
            \                       o ((idw_0 * idp_1) o '{}')))\
-           \       * (z_c_2f/z_c_2f * ({})(idw_0 * idp_1) o '{}')\
+           \       * (z_2f/z_2f * ({})(idw_0 * idp_1) o '{}')\
            \          o ({})\
-           \            (z_c_2f/z_c_2f * merge_1)\
-           \             o ((idw_0 * K<z_c_2f><{z_c_29}, {v_e_2a, u_f_2b}>)\
-           \                 o ({z_c_29, v_e_2a, u_f_2b})\
-           \                   (idw_{z_c_29, v_e_2a, u_f_2b} * merge_1)\
-           \                    o ((idw_0 * M<u_f_2b,v_e_2a,z_c_29>)\
+           \            (z_2f/z_2f * merge_1)\
+           \             o ((idw_0 * K<z_2f><{z_29}, {v_2a, u_2b}>)\
+           \                 o ({z_29, v_2a, u_2b})\
+           \                   (idw_{z_29, v_2a, u_2b} * merge_1)\
+           \                    o ((idw_0 * M<u_2b,v_2a,z_29>)\
            \                        o ({})(idw_0 * merge_1)\
            \                               o ((idw_0 * idp_1) o '{}'))))\
            \       o idp_2)", "08-1-1"),
@@ -538,15 +538,15 @@ datatype expectedresult = S of string | E of string
            \          o ({x_a})(x_a/x_a * merge_1) o ((x_a/x_a * idp_1) o '{x_a}'))\
            \       o [1, 0{w_d}, 4{x_a}, 2, 3{y_b, z_c}])", "09-1-1"),
          ("09-2-0: parallel product with global outer name clash",
-          S"((x_a/x_a * y_b/{y_b_10, y_b_11}) * idp_2)\
-           \ o (((x_a/x_a * y_b_11/y_b) * idp_1) o K<x_a,y_b>\
-           \     * (y_b_10/y_b * idp_1) o (y_b/z_c * merge_1))",
-          S"((x_a/x_a_3c * y_b/{z_c,y_b_3b}) * idp_2)\
+          S"((x_a/x_a * y_b/{y_10, y_11}) * idp_2)\
+           \ o (((x_a/x_a * y_11/y_b) * idp_1) o K<x_a,y_b>\
+           \     * (y_10/y_b * idp_1) o (y_b/z_c * merge_1))",
+          S"((x_a/x_3c * y_b/{z_c,y_3b}) * idp_2)\
            \ o (z_c/z_c\
-           \    * ((idw_{y_b_3b,x_a_3c} * ({})(idw_0 * idp_1) o '{}')\
+           \    * ((idw_{y_3b,x_3c} * ({})(idw_0 * idp_1) o '{}')\
            \        o (({})\
-           \           (idw_{y_b_3b,x_a_3c} * merge_1)\
-           \            o ((idw_0 * K<x_a_3c,y_b_3b>)\
+           \           (idw_{y_3b,x_3c} * merge_1)\
+           \            o ((idw_0 * K<x_3c,y_3b>)\
            \               o ({})(idw_0 * merge_1)\
            \                      o ((idw_0 * idp_1) o '{}')))\
            \       * (idw_0 * ({})(idw_0 * idp_1) o '{}')\

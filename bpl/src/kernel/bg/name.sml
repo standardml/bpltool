@@ -49,7 +49,7 @@ struct
          (id, s))
       end
 
-  fun fresh (SOME s) =
+  fun fresh (SOME (_, s)) =
       fresh' s
     | fresh NONE =
       fresh' ""

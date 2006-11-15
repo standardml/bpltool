@@ -511,7 +511,7 @@ fun is_id0 (VMer (1, _))    = false
 	val (usednames, xnew)
 	  = if NameSet.member x clashnames then
 	      let
-		val xnew = Name.fresh (SOME (Name.unmk x))
+		val xnew = Name.fresh (SOME x)
 	      in
 		(NameSet.insert xnew usednames,
 		 xnew)
@@ -802,7 +802,7 @@ fun is_id0 (VMer (1, _))    = false
               {outer = SOME y, inner = X} =>
                 let
                   val X' = Wiring.app alpha X
-                  val z  = Name.fresh (SOME (Name.unmk y))
+                  val z  = Name.fresh (SOME y)
                 in
                   (LinkSet.insert
                      (Link.make {outer = SOME z, inner = X'}) ls',
@@ -828,7 +828,7 @@ fun is_id0 (VMer (1, _))    = false
 
         fun rename (y, (zs, beta_ls)) =
             let
-              val z = Name.fresh (SOME (Name.unmk y))
+              val z = Name.fresh (SOME y)
             in
               (z::zs,
                LinkSet.insert
