@@ -32,7 +32,8 @@ type info = info
 val noinfo = noinfo
 
 structure Name    = Name
-structure NameSet = OrderSet (Name.Order)
+(*structure NameSet = OrderSet (Name.Order)*)
+structure NameSet = Name.NameSet
 structure NameSetCompare 
   = SetCompare 
       (structure Set       = NameSet

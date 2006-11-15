@@ -74,6 +74,8 @@ depend:
 	$(PERL) $(MOSMAKE)/cooker.pl $(MOSMAKE.in) > mosmake.dep
 mosmake.dep: $(MOSMAKE)/cooker.pl $(MOSMAKE.in)
 	$(PERL) $(MOSMAKE)/cooker.pl $(MOSMAKE.in) > $@
+testbasis.mlb: $(MOSMAKE)/mltoncooker.pl $(MOSMAKE.in)
+	$(PERL) $(MOSMAKE)/mltoncooker.pl $(MOSMAKE.in) > $@
 
 ############################################################
 #    Variables used the the generated rules

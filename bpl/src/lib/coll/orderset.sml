@@ -1,9 +1,8 @@
 (* Finite sets using balanced AVL trees *)
 (* TCD: Modified to make insert (and derived functions) signal insertion of 
  *      duplicates. 
- *	- exception AlreadyThere of elt - raised by insert
- *      - exception DuplicatesRemoved of Set * elt list - raised by
- *        addList, fromList and union 
+ *      - exception DuplicatesRemoved - raised by
+ *        addList, fromList, union, and insert
  * April 2006: Arne John Glenstrup: Added foldUntil function.
  *) 
 
@@ -65,12 +64,12 @@ functor OrderSet(Order : ORDERING): MONO_SET =
 	eq' s1
       end
 
-    exception AlreadyThere of elt
+    exception DuplicatesRemoved
     fun insert k0 t =
       let
 	fun ins E = (true, N(k0, E, E, B))
 	  | ins (N(k, l, r, bal)) = 
-	    if k0 == k then raise AlreadyThere(k0)
+	    if k0 == k then raise DuplicatesRemoved
 	    else if k0 < k then
 	      let 
 		val (higher, l') = ins l
@@ -140,10 +139,10 @@ functor OrderSet(Order : ORDERING): MONO_SET =
 		    end
 	      end
       in
-	#2(ins t) (* handle AlreadyThere( e ) => t *)
+	#2(ins t) (* handle DuplicatesRemoved => t *)
       end  (* insert *)
 
-    fun insert' k0 t = insert k0 t handle AlreadyThere _ => t
+    fun insert' k0 t = insert k0 t handle DuplicatesRemoved => t
 
     fun list (s:Set) : elt list =
       let
@@ -154,8 +153,7 @@ functor OrderSet(Order : ORDERING): MONO_SET =
 	f s []
       end
 
-    exception DuplicatesRemoved
-				   
+(*   
     (* addList1 (el : elt list) (dupl : elt list) (s : Set) : (Set * elt list) *)
     fun addList1 el dupl s =
 	case el of
@@ -165,7 +163,7 @@ functor OrderSet(Order : ORDERING): MONO_SET =
 	    val (iset, dupl') = addList1 is dupl s
 	  in
 	    (insert i iset, dupl')
-	    handle AlreadyThere (e) => (iset, e::dupl') (* e = i, of course *)
+	    handle AlreadyThrere (e) => (iset, e::dupl') (* e = i, of course *)
 	  end
 
     (* TCD: June 05 - recoded s.t duplication removal is signaled *)
@@ -178,6 +176,8 @@ functor OrderSet(Order : ORDERING): MONO_SET =
 	    s'
 	  else raise DuplicatesRemoved
 	end
+*)
+    fun addList es s = List.foldl (fn (e,s) => insert e s) s es
 
     (* TCD: June 05 - recoded s.t duplication removal is signaled *)
     fun fromList (l:elt list) : Set = addList l empty
@@ -186,9 +186,8 @@ functor OrderSet(Order : ORDERING): MONO_SET =
 	case s2 of
 	  E => s1
 	| N(i, s3, s4, _) => union0 (union0 (insert i s1) s3) s4
-    fun union s1 s2 =
-	(union0 s1 s2) 
-	handle AlreadyThere _ => raise DuplicatesRemoved
+    fun union s1 s2 = union0 s1 s2
+
     fun union' (s1:Set) (s2:Set) : Set = (* HN: added non-exception version *)
 	case s2 of
 	  E => s1

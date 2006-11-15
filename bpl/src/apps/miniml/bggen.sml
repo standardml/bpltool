@@ -117,7 +117,7 @@ fun (b1:bgval) pp (b2:bgval) = B.Pri info [b1,b2]
 fun (b1:bgval) tt (b2:bgval) = B.Ten info [b1,b2]
 fun (b1:bgval) oo (b2:bgval) = B.Com info (b1, b2)
 fun (x:name) ++ (X:nameset) = if NameSet.member x X
-			      then raise NameSet.AlreadyThere x
+			      then raise NameSet.DuplicatesRemoved
 			      else NameSet.insert x X
 
 (* Generate bgterms from abstract Miniml syntax - see miniml-sig.sml. *)

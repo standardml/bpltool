@@ -1,7 +1,7 @@
 (* Modified version of the MONO_SET signature given in the Edinburgh
    library. *)
 (* TCD: Modified to make insert (and derived functions) signal insertion of 
- *      duplicates. (exception AlreadyThere of elt)
+ *      duplicates.
  * April 2006: Arne John Glenstrup: Added foldUntil function.
  *) 
 
@@ -9,8 +9,6 @@ signature MONO_SET =
   sig
     type elt
     type Set
-
-    exception AlreadyThere of elt
 
     val empty : Set
     val singleton : elt -> Set
@@ -28,7 +26,9 @@ signature MONO_SET =
        * twice.
        *)
     val fromList : elt list -> Set 
+(*
     val addList1 : elt list -> elt list -> Set -> Set * elt list
+*)
       (** addList l s : Add elements in list l to s. 
        * Raises DuplicatesRemoved if a an element of the list l is already
        * in the set s.
@@ -36,11 +36,11 @@ signature MONO_SET =
     val addList : elt list -> Set -> Set
 
       (** insert a s : Add the element a to s.
-       * Raises AlreadyThere if a is already in the set.
+       * Raises DuplicatesRemoved if a is already in the set.
        *)
     val insert : elt -> Set -> Set
       (** insert' a s : Add the element a to s
-       * (does not raise AlreadyThere).
+       * (does not raise DuplicatesRemoved).
        *)
     val insert' : elt -> Set -> Set
     val remove : elt -> Set -> Set
