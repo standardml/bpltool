@@ -13,6 +13,8 @@
 
 (* use "l.sml"; *)
 
+val read = fn () => TextIO.inputLine(TextIO.stdIn)
+
 datatype attraction = Att of
 	 string (* name *) * string (* info *) * string (* more info *)
 
