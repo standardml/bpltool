@@ -75,6 +75,8 @@ signature MONO_SET =
       (** apply f s; applies f to each element of s (in order) *)
     val apply : (elt -> unit) -> Set -> unit
 
+    val compare : Set * Set -> order
+
     type StringTree
 
     val layoutSet : {start: string, sep: string, finish: string} ->

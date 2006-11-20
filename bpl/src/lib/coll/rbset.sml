@@ -2,15 +2,13 @@
 (* Ken Friis Larsen <kfl@it.edu>                                *)
 (* Various extensions, and test: sestoft@dina.kvl.dk * 2001-10-21 *)
 
-functor Rbset(structure Order : sig type t
-                                    val compare : t * t -> order
-                                end
+functor Rbset(type t
+              val compare : t * t -> order
              ) : MONO_SET =
 struct
 
-  type item = Order.t
+  type item = t
   type elt = item
-  val compare = Order.compare
 
   datatype tree = LEAF
                 | RED   of item * tree * tree
@@ -32,8 +30,8 @@ struct
 
   fun singleton x = (BLACK(x, LEAF, LEAF), 1)
 
-  fun isEmpty ( LEAF, _) = true
-    | isEmpty _          = false
+  fun isEmpty (LEAF, _) = true
+    | isEmpty _         = false
 
   fun member elm (tree, n) =
       let fun memShared x left right =
@@ -165,7 +163,7 @@ struct
 
   fun revapp f = appAll getMax f
 
-  fun find p (compare, tree, n) =
+  fun find p (tree, n) =
       let fun loop stack = 
               getMin stack (fn x => fn stack => 
                                        if p x then SOME x else loop stack) NONE

@@ -42,6 +42,9 @@ sig
   val == : name * name -> bool
   (** Compare names in a total order. *)
   val < : name * name -> bool
+  (** Compare names in a total order. *)
+  val compare : name * name -> order
+
   structure Order : ORDERING where type T = name
   structure NameSet : MONO_SET where type elt = name
 end

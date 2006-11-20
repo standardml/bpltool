@@ -399,6 +399,8 @@ functor OrderSet(Order : ORDERING): MONO_SET =
 	appl s
       end
 
+    fun compare _ = raise Fail("Not implemented: OrderSet.compare")
+
     type StringTree = PP.StringTree
 
     fun layoutSet {start, sep, finish} layoutItem s =

@@ -97,47 +97,6 @@ struct
     type T = name 
     fun lt n1 n2 = n1 < n2
   end
-(*
-  structure NameSet : MONO_SET =
-  struct
-    type elt = name
-    type Set = elt Rbset.set
-    val empty : Set = Rbset.empty compare
-    val singleton = Rbset.singleton compare
-    val size = Rbset.numItems
-    val isEmpty = Rbset.isEmpty
-    fun member n ns = Rbset.member(ns,n)
-    fun eq s1 s2 = Rbset.equal(s1,s2)
-    exception DuplicatesRemoved = Rbset.AlreadyThere
-    val list = Rbset.listItems
-    fun addList ns s = Rbset.addList(s,ns)
-    fun fromList ns = addList ns empty
-    fun insert n ns = Rbset.add(ns,n)
-    fun insert' n ns = Rbset.add'(ns,n)
-    fun remove n ns = Rbset.delete(ns,n)
-    fun difference s1 s2 = Rbset.difference(s1,s2)
-    fun intersect s1 s2 = Rbset.intersection(s1,s2)
-    fun union s1 s2 = Rbset.union(s1,s2)
-    fun union' s1 s2 = Rbset.union'(s1,s2)
-    fun partition f s = raise Fail("Not implemented: partition")
-    fun subst (a,b) s = raise Fail("Not implemented: subst")
-    fun fold f = Rbset.foldl (fn(e,b)=>f e b)
-    fun foldUntil f = Rbset.foldlUntil (fn(e,b)=>f e b)
-    fun map f = Rbset.map(f,compare)
-    val apply = Rbset.app
 
-    type StringTree = EdLibPrettyPrint.StringTree
-    fun layoutSet {start, sep, finish} layoutItem s =
-      EdLibPrettyPrint.NODE {start=start,
-			     finish=finish,
-			     indent=3,
-			     childsep=EdLibPrettyPrint.RIGHT sep,
-			     children=List.map layoutItem (list s)}
-
-  end
-*)
-  structure NameSet = Rbset(structure Order = struct
-			      type t = name
-                              val compare = compare
-                            end)
+  structure NameSet = Rbset(type t = name val compare = compare)
 end
