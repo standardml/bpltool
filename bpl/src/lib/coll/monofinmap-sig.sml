@@ -1,4 +1,4 @@
-(* Finite maps with explicit domain type *)
+(** Finite maps with explicit domain type *)
 
 signature MONO_FINMAP =
   sig
