@@ -60,6 +60,10 @@
   val lzfoldr : ('a * (unit -> 'b) -> 'b) -> 'b -> 'a lazylist -> 'b
   (** Append two lazy lists. *)
   val lzappend : 'a lazylist -> 'a lazylist -> 'a lazylist
+	(** Concatenate a lazy list of lazy lists. *)
+	val lzconcat : 'a lazylist lazylist -> 'a lazylist
+	(** Concatenate a list of lazy lists. *)
+	val lzconcatlists : 'a lazylist list -> 'a lazylist
   (** Return a lazy list of the first n elements of a lazy list.
    * @params xs n
    * @exception Subscript if n > length xs or n < 0.

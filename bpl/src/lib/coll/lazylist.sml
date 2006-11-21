@@ -48,14 +48,14 @@ struct
   fun lzmap f t = fn () => case t () of
                              Nil => Nil
                            | Cons (elt, tail)
-                              => Cons (f elt, lzmap f tail)
+                           => Cons (f elt, lzmap f tail)
   
   fun lzfoldr f init =
     let
       fun fold t = case t () of
                      Nil => init
                    | Cons (elt, tail)
-                      => f (elt, (fn () => fold tail))
+                   => f (elt, fn () => fold tail)
     in
       fold
     end
@@ -63,12 +63,27 @@ struct
   fun lzappend t1 t2 = fn () => case t1 () of
                                   Nil => t2 ()
                                 | xs => xs
+
+  fun lzconcat' (t, ts) = case t () of
+                             Nil => lzconcat ts ()
+                           | Cons (elt, tail)
+                           => Cons (elt, fn () => lzconcat' (tail, ts))
+
+  and lzconcat ts = fn () => case ts () of
+                               Nil => Nil
+                             | Cons p => lzconcat' p
+  
+  fun lzconcatlists (t :: ts) = (fn () => case t () of
+                                            Nil => lzconcatlists ts ()
+                                          | Cons (elt, tail)
+                                          => Cons (elt, lzconcatlists (tail :: ts)))
+    | lzconcatlists [] = fn () => Nil
   
   fun lztake t 0 = lzNil
     | lztake t n = fn () => case t () of
                               Nil => raise Subscript
                             | Cons (elt, tail)
-                               => Cons (elt, lztake tail (n - 1))
+                            => Cons (elt, lztake tail (n - 1))
                                
   fun lzdrop t 0 = t
     | lzdrop t n = fn () => case t () of
