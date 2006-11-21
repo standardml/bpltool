@@ -13,8 +13,6 @@
 
 (* use "l.sml"; *)
 
-val read = fn () => TextIO.inputLine(TextIO.stdIn)
-
 datatype attraction = Att of
 	 string (* name *) * string (* info *) * string (* more info *)
 
@@ -23,54 +21,30 @@ fun deattract (Att tup) = tup
 (* Attractions *)
 (* begin popular *)
 val castle = Att("Lancaster Castle","info","more-info")
-
 val williamson = Att("Williamson Park and the Ashton Memorial","info","more-info")
-
 val queenvic = Att("Queen Victoria monument","info","more-info")
-
 val seagull = Att("Saltayre Seagull Colony","info","more-info")
-
 val halfmoon = Att("Half Moon Bay","info","more-info")
-
 val market = Att("Farmers Street Market","info","more-info")
-
 val canal = Att("Lancaster Canal","info","more-info")
-
 val nightingale = Att("Lancashire Witches","info","more-info")
-
 val spooky = Att("Spooky Paths","info","more-info")
-
 val ruxton = Att("Dr. Buck Ruxton's House","info","more-info")
-
 val priory = Att("Lancaster Priory","info","more-info")
-
 (* end popular *)
 val merchants = Att("J Atkinson & Co, Tea & Coffee Merchants","info","more-info")
-
 val humbug = Att("Humbugs Sweetshop","info","more-info")
-
 val cemetery = Att("Lancaster Cemetery","info","more-info")
-
 val museum = Att("City Museum and The King's Own Museum","info","more-info")
-
 val cottage = Att("Cottage Museum + Roman Bath-House","info","more-info")
-
 val meetinghouse = Att("Friends Meeting House","info","more-info")
-
 val theatre = Att("The Grand Theatre","info","more-info")
-
 val judges = Att("Judges Lodgings + Doll Museum","info","more-info")
-
 val maritime = Att("Maritime Museum","info","more-info")
-
 val leisure = Att("Lancaster Leisure Park","info","more-info")
-
 val millenium = Att("Lancaster Millenium Bridge and River Lune Millennium Park","info","more-info")
-
 val music = Att("The Music Room","info","more-info")
-
 val stpeters = Att("St Peters RC Cathedral","info","more-info")
-
 val townhall = Att("Lancaster Town Hall","info","more-info")
 
 (* Auxiliary functions *)
@@ -107,7 +81,7 @@ fun printLocList [] x = print "\n"
 fun printAttList [] att = print "\n"
   | printAttList (Att(n,i,m)::t) (att as Att(x,i',m')) =
     if x=n then ( print ("* " ^ n) ; printAttList t att )
-    else ( print n ; printAttList t att )
+    else ( print (n ^ " ") ; printAttList t att )
 
 type link = string
 type device = link
@@ -150,7 +124,6 @@ val our_grp : group ref = ref ["d1","d2","d3"]
 type state = string * attraction list * string * string list 
 	     * (btnid*string) list * bool * location list 
 	     * attraction * string
-
 val cur_disp : display ref = ref ""
 val cur_atts : attraction list ref = ref []
 val cur_loc : location ref = ref ""
@@ -179,12 +152,38 @@ fun guiAddButton (btn_id, btn_txt) =
 fun guiRemoveButton btn_id =
     cur_btns := filter (fn b => not(#1(b) = btn_id)) (!cur_btns)
 
-fun guiShow () =
-    ( print(!cur_disp)
+fun printDisp () =
+    print("GUIDE: " ^ !cur_disp ^ "\n\n")
+
+fun printAtts () =
+    ( print "Attractions: "
     ; printAttList (!cur_atts) (!hilite_att)
-    ; print(!cur_loc)
-    ; app print (!cur_msgs)
-    ; app (print o #2) (!cur_btns)
+    )
+
+fun printCurLoc () =
+    print("Location: Device " ^ !our_id ^ " is in " ^ !cur_loc ^ "\n")
+
+fun printBtns () =
+    ( print "Buttons: "
+    ; app (print o (fn s => s ^ "   ") o #2) (!cur_btns)
+    ; print "\n"
+    )
+
+fun printMsgs () =
+    ( print "Messages: "
+    ; if !cur_msgs = [] then print "No messages."
+      else app (print o (fn s => s ^ " ")) (!cur_msgs)
+    ; print "\n"
+    )
+
+fun guiShow () =
+    ( print "----------------------------------------------------------\n"
+    ; printDisp()
+    ; printAtts()
+    ; printCurLoc()
+    ; printMsgs()
+    ; printBtns()
+    ; print "----------------------------------------------------------\n"
     )
 
 fun locShow () =
@@ -281,20 +280,20 @@ fun locatorClicked () =
     ( cur_disp := "Please select one of the following locations."
     ; if !hilite_loc = hd locs then
 	  ( saveState()
-	  ; cur_btns := [("select","Select"),
+	  ; cur_btns := [("select-loc","Select"),
 			 ("next-loc","Next"),
 			 ("back","Back"),
 			 ("quit","Quit")]
 	  )
       else if !hilite_loc = last locs then
 	  ( saveState()
-	  ; cur_btns := [("select","Select"),
+	  ; cur_btns := [("select-loc","Select"),
 			 ("previous-loc","Previous"),
 			 ("back","Back"),
 			 ("quit","Quit")]
 	  )
       else ( saveState()
-	   ; cur_btns := [("select","Select"),
+	   ; cur_btns := [("select-loc","Select"),
 			  ("previous-loc","Previous"),
 			  ("next-loc","Next"),
 			  ("back","Back"),
@@ -337,7 +336,7 @@ val button_clicks =
      ("locator", locatorClicked),
      ("message",messageClicked),
      ("tour",tourClicked),
-     ("select",selectLocClicked),
+     ("select-loc",selectLocClicked),
      ("select-att",selectAttClicked),
      ("previous-loc",previousLocClicked),
      ("next-loc",nextLocClicked)]
@@ -360,7 +359,7 @@ fun handleEvent event =
                true
        *)
 
-(* Event queue operations, visible from L *)
+(* Event queue operations, 'enq' is visible from L *)
 fun enq e = queue := (!queue)@[e]
 
 fun deq () =
@@ -374,8 +373,16 @@ fun eventLoop () =
       | SOME e => if handleEvent e then eventLoop()
 		  else () (* halt *)
 
+(* I/O *)
+fun read () = 
+    let val inline = TextIO.inputLine(TextIO.stdIn) in
+	if exists (fn (n,f) => (n^"\n") = inline) (!cur_btns)
+	then ( enq(ButtonClicked inline) ; read() )
+	else print "Invalid input. Please try again.\n"
+    end
+
 (* this function must be supplied by L *)
-fun whereIs d = d ^ " is in some_location"
+fun whereIs d = "dummy_location"
 
 fun main () =
     (* what goes on here...?
@@ -390,9 +397,11 @@ fun main () =
 	   )
      *)
     (* initialise gui *)
-    ( cur_disp := "Welcome to Lancaster"
+    ( cur_disp := "Welcome to Lancaster\nPlease press a button."
     ; cur_loc := whereIs(!our_id)
     ; cur_msgs := [] (* no messages *)
     ; cur_btns := std_btns
     ; guiShow()
+    ; read()
+    ; eventLoop()
     )
