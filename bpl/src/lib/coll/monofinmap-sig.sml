@@ -22,20 +22,20 @@ signature MONO_FINMAP =
     val Fold       : (((dom * 'b) * 'c) -> 'c)-> 'c -> 'b map -> 'c
     val filter     : (dom * 'b -> bool) -> 'b map -> 'b map
 
+    (** addList l m; adds a list of associations to a map. *)
     val addList : (dom * 'b) list -> 'b map -> 'b map
-      (* addList l m; adds a list of associations to a map. *)
 
+    (** mergeMap f m1 m2; merges two finite maps, with a composition 
+       function to apply to the codomains of domains which clash. *)
     val mergeMap : (('b * 'b) -> 'b) -> 'b map -> 'b map -> 'b map
-      (* mergeMap f m1 m2; merges two finite maps, with a composition 
-         function to apply to the codomains of domains which clash. *)
 
     exception Restrict of string
+    (** @exception Restrict if an element
+       of the list is not in the domain of the map. *)
     val restrict : (dom -> string) * 'b map * dom list -> 'b map
-      (* raises exception Restrict if an element
-         of the list is not in the domain of the map. *)
 
+    (** enrich en (A, B) returns true if for all a and b 
+       such that b \in B and a \in (A \restrict dom(B)) 
+	     we have en(a,b). *)
     val enrich : ('b * 'b -> bool) -> ('b map * 'b map) -> bool
-      (* enrich en (A, B) returns true if for all a and b 
-         such that b \in B and a \in (A \restrict dom(B)) 
-	 we have en(a,b). *)
   end
