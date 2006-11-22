@@ -12,8 +12,8 @@
 *)
 
 (* use "l.sml"; *)
-
 open TextIO;
+open List;
 
 datatype attraction = Att of
 	 string (* name *) * string (* info *) * string (* more info *)
@@ -56,6 +56,11 @@ fun app f [] = ()
 fun lookup map x =
     let fun loop [] = NONE
 	  | loop ((l,a)::m) = if l = x then SOME a else loop m
+    in loop map end
+
+fun lookupBtn map x =
+    let fun loop [] = NONE
+	  | loop ((l,a)::m) = if l = x then SOME l else loop m
     in loop map end
 
 fun first [] = []
@@ -124,13 +129,13 @@ val our_grp : group ref = ref ["d1","d2","d3"]
 
 (* State *)
 type state = string * attraction list * string * string list 
-	     * (btnid*string) list * bool * location list 
+	     * (btnid * string) list * bool * location list 
 	     * attraction * string
 val cur_disp : display ref = ref ""
 val cur_atts : attraction list ref = ref []
 val cur_loc : location ref = ref ""
 val cur_msgs : string list ref = ref []
-val cur_btns : (btnid*string) list ref = ref []
+val cur_btns : (btnid * string) list ref = ref []
 val on_tour : bool ref = ref false
 val tour_path : location list ref = ref []
 val hilite_att : attraction ref = ref(Att("","",""))
@@ -140,6 +145,42 @@ val cur_state = ref (!cur_disp, !cur_atts, !cur_loc, !cur_msgs,
 		     !hilite_att, !hilite_loc)
 val queue : queue ref = ref []
 val stack : state stack ref = ref []
+
+(* State stack operations *)
+fun push s = stack := s::(!stack)
+
+fun pop () =
+    case (!stack) of
+	[] => NONE
+      | (e::es) => let val _ = stack := es in SOME(e) end
+
+(* State operations *)
+fun saveState () =
+    push (!cur_disp, !cur_atts, !cur_loc,
+	  !cur_msgs, !cur_btns, !on_tour,
+	  !tour_path, !hilite_att, !hilite_loc)
+
+fun setState s =
+    let val (d,a,l,m,b,t,p,ha,hl) = s in
+	( cur_disp := d
+	; cur_atts := a
+	; cur_loc := l
+	; cur_msgs := m
+	; cur_btns := b
+	; on_tour := t
+	; tour_path := p
+	; hilite_att := ha
+	; hilite_loc := hl
+	)
+    end
+
+(* Event queue operations, 'enq' is visible from L *)
+fun enq e = queue := (!queue)@[e]
+
+fun deq () =
+    case (!queue) of
+	[] => NONE
+      | (e::es) => let val _ = queue := es in SOME(e) end
 
 (* gui *)
 val std_btns = [("locator","Locator"),
@@ -178,8 +219,15 @@ fun printMsgs () =
     ; print "\n"
     )
 
+fun locShow () =
+    ( print(!cur_disp)
+    ; printLocList locs (!hilite_loc)
+    ; print(!cur_loc)
+    ; app (print o #2) (!cur_btns)
+    )
+
 fun guiShow () =
-    ( print "----------------------------------------------------------\n"
+    ( print "\n----------------------------------------------------------\n"
     ; printDisp()
     ; printAtts()
     ; printCurLoc()
@@ -188,15 +236,7 @@ fun guiShow () =
     ; print "----------------------------------------------------------\n"
     )
 
-fun locShow () =
-    ( print(!cur_disp)
-    ; printLocList locs (!hilite_loc)
-    ; print(!cur_loc)
-    (* leave out messages here *)
-    ; app (print o #2) (!cur_btns)
-    )
-
-(* location event *)
+(* Location events *)
 fun deviceObserved loc =
     if loc = !cur_loc then guiShow() (* still here *)
     else ( cur_loc := loc
@@ -223,33 +263,6 @@ fun deviceObserved loc =
 	       ; guiShow()
 	       )
          )
-
-(* State stack operations *)
-fun push s = stack := s::(!stack)
-
-fun pop () =
-    case (!stack) of
-	[] => NONE
-      | (e::es) => let val _ = stack := es in SOME(e) end
-
-fun saveState () =
-    push (!cur_disp, !cur_atts, !cur_loc,
-	  !cur_msgs, !cur_btns, !on_tour,
-	  !tour_path, !hilite_att, !hilite_loc)
-
-fun setState s =
-    let val (d,a,l,m,b,t,p,ha,hl) = s in
-	( cur_disp := d
-	; cur_atts := a
-	; cur_loc := l
-	; cur_msgs := m
-	; cur_btns := b
-	; on_tour := t
-	; tour_path := p
-	; hilite_att := ha
-	; hilite_loc := hl
-	)
-    end
 
 (* Button events *)
 fun quitClicked () = false
@@ -363,46 +376,36 @@ fun handleEvent event =
                true
        *)
 
-(* Event queue operations, 'enq' is visible from L *)
-fun enq e = queue := (!queue)@[e]
+(* I/O *)
+fun errmsg () =
+    ( output(stdOut, "Unavailable button. Please try again.\n")
+    ; flushOut stdOut
+    )
 
-fun deq () =
-    case (!queue) of
-	[] => NONE
-      | (e::es) => let val _ = queue := es in SOME(e) end
+fun peel s =
+    if String.size s <= 0 then ""
+    else String.substring(s, 0, (String.size s)-1)
 
+fun read () =
+    case lookupBtn (!cur_btns) (peel (inputLine stdIn)) of
+	NONE => ( errmsg() ; read() )
+      | SOME(b) => ( enq(ButtonClicked b)
+		   (* test code begin *)
+		   ; output(stdOut, "ButtonClick queued...\n")
+		   ; if handleEvent(ButtonClicked b)
+			andalso not (b = "quit")
+		     then ( guiShow() ; read() )
+		     else () (* halt *)
+		   (* test code end *)
+		   (*; read()*)
+		   )
+
+(* Event loop *)
 fun eventLoop () =
     case deq() of
 	NONE => eventLoop()
       | SOME e => if handleEvent e then eventLoop()
 		  else () (* halt *)
-
-(* I/O *)
-fun errmsg () =
-    ( output(stdOut, "Invalid input. Please try again.\n")
-    ; flushOut stdOut
-    )
-
-fun read () = 
-    let val inline = inputLine stdIn in
-	if inline = "quit\n" then print "Goodbye"
-	else
-	    if exists (fn (n,f) => (n^"\n") = inline) (!cur_btns)
-	    then ( enq(ButtonClicked inline) ; write() )
-	    else ( errmsg() ; read() )
-    end
-
-and write () =
-    ( output(stdOut,"write() called...\n")
-    ; flushOut stdOut
-    ; read()
-    )
-
-fun io () =
-    ( output(stdOut,"Please press a button\n")
-    ; flushOut stdOut
-    ; read()
-    )
 
 (* this function must be supplied by L *)
 fun whereIs d = "dummy_location"
@@ -425,6 +428,6 @@ fun main () =
     ; cur_msgs := [] (* no messages *)
     ; cur_btns := std_btns
     ; guiShow()
-    ; io()
-    (*eventLoop()*)
+    ; read()
+    (*; eventLoop()*)
     )
