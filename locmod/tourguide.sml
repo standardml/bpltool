@@ -13,6 +13,8 @@
 
 (* use "l.sml"; *)
 
+open TextIO;
+
 datatype attraction = Att of
 	 string (* name *) * string (* info *) * string (* more info *)
 
@@ -259,7 +261,8 @@ fun backClicked () =
 
 fun infoClicked () =
     ( saveState()
-    ; cur_disp := (#1(deattract(!hilite_att))) ^ "\n" ^ (#2(deattract(!hilite_att)))
+    ; cur_disp := (#1(deattract(!hilite_att))) ^ "\n" ^
+		  (#2(deattract(!hilite_att)))
     ; cur_btns := std_btns
     ; guiAddButton ("more-info","More info")
     ; guiAddButton ("back","Back")
@@ -269,7 +272,8 @@ fun infoClicked () =
 
 fun moreInfoClicked () =
     ( saveState()
-    ; cur_disp := (#1(deattract(!hilite_att))) ^ "\n" ^ (#3(deattract(!hilite_att)))
+    ; cur_disp := (#1(deattract(!hilite_att))) ^ "\n" ^
+		  (#3(deattract(!hilite_att)))
     ; cur_btns := std_btns
     ; guiAddButton ("back","Back")
     ; guiShow()
@@ -374,12 +378,31 @@ fun eventLoop () =
 		  else () (* halt *)
 
 (* I/O *)
+fun errmsg () =
+    ( output(stdOut, "Invalid input. Please try again.\n")
+    ; flushOut stdOut
+    )
+
 fun read () = 
-    let val inline = TextIO.inputLine(TextIO.stdIn) in
-	if exists (fn (n,f) => (n^"\n") = inline) (!cur_btns)
-	then ( enq(ButtonClicked inline) ; read() )
-	else print "Invalid input. Please try again.\n"
+    let val inline = inputLine stdIn in
+	if inline = "quit\n" then print "Goodbye"
+	else
+	    if exists (fn (n,f) => (n^"\n") = inline) (!cur_btns)
+	    then ( enq(ButtonClicked inline) ; write() )
+	    else ( errmsg() ; read() )
     end
+
+and write () =
+    ( output(stdOut,"write() called...\n")
+    ; flushOut stdOut
+    ; read()
+    )
+
+fun io () =
+    ( output(stdOut,"Please press a button\n")
+    ; flushOut stdOut
+    ; read()
+    )
 
 (* this function must be supplied by L *)
 fun whereIs d = "dummy_location"
@@ -402,6 +425,6 @@ fun main () =
     ; cur_msgs := [] (* no messages *)
     ; cur_btns := std_btns
     ; guiShow()
-    ; read()
-    ; eventLoop()
+    ; io()
+    (*eventLoop()*)
     )
