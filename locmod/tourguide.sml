@@ -34,7 +34,7 @@ datatype event =
 	 DeviceObserved of device * location
        | ButtonClicked of btnid
 
-type state = display * attraction list * location * message list 
+type state = display * location * attraction list * message list 
 	     * (btnid * string) list * bool * location list 
 	     * attraction * location
 type Queue = event list
@@ -71,14 +71,14 @@ val townhall = Att("Lancaster Town Hall","info","more-info")
 fun app f [] = ()
   | app f (x::xs) = ( f x ; app f xs )
 
-fun lookup map x =
-    let fun loop [] = NONE
-	  | loop ((l,a)::m) = if l = x then SOME a else loop m
-    in loop map end
-
-fun lookupBtn map x =
+fun lookup1 map x =
     let fun loop [] = NONE
 	  | loop ((l,a)::m) = if l = x then SOME l else loop m
+    in loop map end
+
+fun lookup2 map x =
+    let fun loop [] = NONE
+	  | loop ((l,a)::m) = if l = x then SOME a else loop m
     in loop map end
 
 fun first [] = []
@@ -114,7 +114,8 @@ val popular : attraction list = [castle,williamson,queenvic,seagull,halfmoon,mar
 val location_attractions : (location * attraction list) list ref =
     (* attractions are assumed to be ordered spatially wrt. closeness,
      the first attraction in the list is closest *)
-    ref [("l1", [castle]),
+    ref [("TIC", []),
+	 ("l1", [castle]),
  	 ("l2", [williamson]),
 	 ("l3", [queenvic]),
  	 ("l4", [seagull]),
@@ -127,18 +128,18 @@ val location_attractions : (location * attraction list) list ref =
  	 ("l11", [priory])]
 
 val locs = first (!location_attractions)
+val init_loc = case locs of [] => "" | (l::ls) => l
 
 (* State *)
 val cur_disp : display ref = ref ""
-val cur_atts : attraction list ref = ref []
 val cur_loc : location ref = ref ""
+val cur_atts : attraction list ref = ref []
 val cur_msgs : message list ref = ref []
 val cur_btns : (btnid * string) list ref = ref []
 val on_tour : bool ref = ref false
 val tour_path : location list ref = ref []
 val hilite_att : attraction ref = ref(Att("","",""))
-val hilite_loc : location ref = case locs of [] => ref ""
-					   | (l::ls) => ref l
+val hilite_loc : location ref = ref init_loc
 
 (* Constants *)
 val our_id : device ref = ref "ab:cd:ef:gh:ij:kl"
@@ -150,23 +151,23 @@ val stack : Stack ref = ref []
 fun push s = stack := s::(!stack)
 
 fun pop () =
-    case (!stack) of
-	[] => NONE
+    case (!stack)
+     of [] => NONE
       | (e::es) => let val _ = stack := es in SOME(e) end
 
 (* State operations *)
 fun saveState () =
 ( print "saveState()\n" ;
-    push (!cur_disp, !cur_atts, !cur_loc,
+    push (!cur_disp, !cur_loc, !cur_atts,
 	  !cur_msgs, !cur_btns, !on_tour,
 	  !tour_path, !hilite_att, !hilite_loc)
 )
 
 fun setState s =
-    let val (d,a,l,m,b,t,p,ha,hl) = s in
+    let val (d,l,a,m,b,t,p,ha,hl) = s in
 	( cur_disp := d
-	; cur_atts := a
 	; cur_loc := l
+	; cur_atts := a
 	; cur_msgs := m
 	; cur_btns := b
 	; on_tour := t
@@ -182,14 +183,16 @@ val queue : Queue ref = ref []
 fun enq e = queue := (!queue)@[e]
 
 fun deq () =
-    case (!queue) of
-	[] => NONE
+    case (!queue)
+     of [] => NONE
       | (e::es) => let val _ = queue := es in SOME(e) end
 
 (* gui *)
 val std_btns = [("locator","Locator"),
 		("tour","Follow A Tour"),
+(*
 		("msg","Message"),
+*)
 		("quit","Quit")]
 
 fun guiAddButton (btn_id, btn_txt) =
@@ -228,8 +231,8 @@ fun printMsgs () =
 fun printState () =
     ( print("State...\n")
     ; printDisp()
-    ; printAtts()
     ; printCurLoc()
+    ; printAtts()
 (*    ; printMsgs()*)
     ; printBtns()
 (*    ; print("ontour: " ^ Bool.toString(!on_tour) ^ "\n")
@@ -257,9 +260,9 @@ fun locShow () =
 fun guiShow () =
     ( print "\n----------------------------------------------------------\n"
     ; printDisp()
-    ; printAtts()
     ; printCurLoc()
-    ; printMsgs()
+    ; printAtts()
+    (*; printMsgs()*)
     ; printBtns()
     ; print "\nPlease press a button.\n"
     ; print "----------------------------------------------------------\n"
@@ -269,8 +272,8 @@ fun guiShow () =
 fun deviceObserved loc =
     if loc = !cur_loc then guiShow() (* still here *)
     else ( cur_loc := loc
-         ; case lookup (!location_attractions) loc of
-	       NONE =>
+         ; case lookup2 (!location_attractions) loc
+	    of NONE =>
 	       ( cur_atts := []
 	       ; if !on_tour then
 		     (* recalc. tour_path in this branch? *)
@@ -294,16 +297,15 @@ fun deviceObserved loc =
          )
 
 (* Button events *)
-val flag = ref true
+val flag = ref true (* false: locatorClicked() added a state to stack *)
 
 fun quitClicked () = false
 
-(* check this function! *)
 fun backClicked () =
 (
  print "backClicked()\n";
-      case pop() of
-	  NONE => ( print "empty stack\n" ; guiShow() ; true )
+      case pop()
+       of NONE => ( print "empty stack\n" ; guiShow() ; true )
 	| SOME(s) => ( setState s
 		     ; printState() (* test code *)
 		     ; flag := true
@@ -313,7 +315,10 @@ fun backClicked () =
 )
 
 fun infoClicked () =
+(
+print "infoClicked()\n";
     ( saveState()
+    ; printState() (* test code *)
     ; cur_disp := (#1(deattract(!hilite_att))) ^ "\n" ^
 		  (#2(deattract(!hilite_att)))
     ; cur_btns := std_btns
@@ -322,9 +327,11 @@ fun infoClicked () =
     ; guiShow()
     ; true
     )
+)
 
 fun moreInfoClicked () =
     ( saveState()
+    ; printState() (* test code *)
     ; cur_disp := (#1(deattract(!hilite_att))) ^ "\n" ^
 		  (#3(deattract(!hilite_att)))
     ; cur_btns := std_btns
@@ -369,21 +376,38 @@ fun messageClicked () = ( guiShow() ; true )
 
 fun tourClicked () = ( guiShow() ; true )
 
-fun selectAttClicked () = ( guiShow() ; true )
-
 fun selectLocClicked () =
 (
-    print "selectLocClicked\n";
-    case pop() of
-	NONE => ( print "damn" ; flag := true ; true ) (* shouldn't happen *)
-      | SOME(s) => let val (d,a,l,m,b,t,p,ha,hl) = s in
-		       ( setState (d,a,!hilite_loc,m,b,t,p,ha,!hilite_loc)
-		       ; printState() (* test code *)
-		       ; flag := true
-		       ; guiShow()
-		       ; true
-		       )
-		   end
+print "selectLocClicked\n";
+      let val tmp = lookup2 (!location_attractions) (!hilite_loc) in
+	  case pop()
+	   of NONE => ( print "empty stack"
+		      ; flag := true
+		      ; true
+		      ) (* shouldn't happen *)
+	    | SOME(s) =>
+	      let val (d,l,a,m,b,t,p,ha,hl) = s
+		  val new_a =
+		      case tmp
+		       of NONE => []
+			| SOME(a) => a
+		  val new_ha =
+		      case new_a
+		       of [] => Att("","","")
+			| (att::atts) => att
+		  val new_b = if new_a = []
+				 orelse exists (fn (b,_) => b = "info") b
+			      then b
+			      else b @ [("info","Info")]
+	      in ( setState (d,!hilite_loc,new_a,m,new_b,
+			     t,p,new_ha,!hilite_loc)
+		 ; printState() (* test code *)
+		 ; flag := true
+		 ; guiShow()
+		 ; true
+	         )
+	      end
+      end
 )
 
 fun previousLocClicked () =
@@ -408,7 +432,6 @@ val button_clicks =
      ("message",messageClicked),
      ("tour",tourClicked),
      ("select-loc",selectLocClicked),
-     ("select-att",selectAttClicked),
      ("previous-loc",previousLocClicked),
      ("next-loc",nextLocClicked)]
 
@@ -418,8 +441,8 @@ fun handleEvent event =
 	if dev = !our_id then ( deviceObserved(loc) ; true )
         else true (* not about us, ignore *)
       | ButtonClicked btn =>
-        ( case lookup button_clicks btn of
-	      NONE => true (* unknown button, ignore *)
+        ( case lookup2 button_clicks btn
+	   of NONE => true (* unknown button, ignore *)
             | SOME f => f ()
 	)
       (* delete this?
@@ -441,7 +464,7 @@ fun peel s =
     else String.substring(s, 0, (String.size s)-1)
 
 fun read () =
-    case lookupBtn (!cur_btns) (peel (inputLine stdIn)) of
+    case lookup1 (!cur_btns) (peel (inputLine stdIn)) of
 	NONE => ( errmsg() ; read() )
       | SOME(b) => ( enq(ButtonClicked b)
 		   (* test code begin *)
@@ -456,8 +479,8 @@ fun read () =
 
 (* Event loop *)
 fun eventLoop () =
-    case deq() of
-	NONE => eventLoop()
+    case deq()
+     of NONE => eventLoop()
       | SOME e => if handleEvent e then eventLoop()
 		  else () (* halt *)
 
@@ -465,20 +488,12 @@ fun eventLoop () =
 fun whereIs d = "dummy_location"
 
 fun main () =
-    (* what goes on here...?
-    ( guiRegisterButtonHandler
-          (fn button_id => enq(ButtonClicked button_id))
-    ; locRegisterHandler
-	  (fn dev => fn loc => enq(DeviceObserved(dev,loc))) (!our_id)
-    ; dbRegisterResponseHandler
-          (fn (request,response) =>
-	      enq((eventTypeOf(request))(artifactOf(request)),
-		  response)
-	   )
-     *)
     (* initialise gui *)
     ( cur_disp := "Welcome to Lancaster\n"
-    ; cur_loc := whereIs(!our_id)
+    ; cur_loc := init_loc (* whereIs(!our_id) *)
+    ; case lookup2 (!location_attractions) (!cur_loc)
+       of NONE => cur_atts := []
+	| SOME(a) => cur_atts := a
     ; cur_msgs := [] (* no messages *)
     ; cur_btns := std_btns
     ; guiShow()
