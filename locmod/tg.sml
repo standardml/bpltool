@@ -14,7 +14,7 @@
 (* use "l.sml"; *)
 open TextIO;
 open List;
-open Bool;
+(*open Bool;*)
 
 (* Basic entities *)
 datatype attraction =
@@ -69,6 +69,29 @@ val music = Att("The Music Room","info","more-info")
 val stpeters = Att("St Peters RC Cathedral","info","more-info")
 val townhall = Att("Lancaster Town Hall","info","more-info")
 
+(* Popular attractions and location-attraction relationship *)
+val popular : attraction list = [castle,williamson,queenvic,seagull,halfmoon,market,canal,nightingale,spooky,ruxton,priory]
+
+val location_attractions : (location * attraction list) list ref =
+    (* attractions are assumed to be ordered spatially wrt. closeness,
+     the first attraction in the list is closest *)
+    ref [("TIC", []),
+	 ("l1", [castle,Att("Dummy","info","moreinfo")]),
+ 	 ("l2", [williamson]),
+	 ("l3", [queenvic]),
+ 	 ("l4", [seagull]),
+ 	 ("l5", [halfmoon]),
+ 	 ("l6", [market]),
+ 	 ("l7", [canal]),
+ 	 ("l8", [nightingale]),
+ 	 ("l9", [spooky]),
+ 	 ("l10", [ruxton]),
+ 	 ("l11", [priory])]
+
+(* Constants *)
+val our_id : device ref = ref "ab:cd:ef:gh:ij:kl"
+val our_grp : group ref = ref ["d1","d2","d3"]
+
 (* Auxiliary functions *)
 fun app f [] = ()
   | app f (x::xs) = ( f x ; app f xs )
@@ -86,48 +109,54 @@ fun lookup2 map x =
 fun first [] = []
   | first ((l,a)::m) = l :: first m
 
-(*
-fun second [] = []
-  | second ((l,a)::m) = a :: second m
-*)
-
 fun exists p [] = false
   | exists p (x::xs) = p x orelse exists p xs
 
 fun filter p [] = []
   | filter p (x::xs) = if p x then x :: filter p xs else filter p xs
 
-val last = hd o rev
+fun last x = (hd o rev) x
 
-fun findNextLoc [] x = x
-	  | findNextLoc [l] x = l
-	  | findNextLoc (l::l'::m) x =
-	    if x=l then l'
-	    else findNextLoc (l'::m) x
+fun findNextElm [] x = x
+	  | findNextElm [e] x = e
+	  | findNextElm (e::e'::m) x =
+	    if x=e then e' else findNextElm (e'::m) x
 
-(* Popular attractions and location-attraction relationship *)
-val popular : attraction list = [castle,williamson,queenvic,seagull,halfmoon,market,canal,nightingale,spooky,ruxton,priory]
-
-val location_attractions : (location * attraction list) list ref =
-    (* attractions are assumed to be ordered spatially wrt. closeness,
-     the first attraction in the list is closest *)
-    ref [("TIC", []),
-	 ("l1", [castle]),
- 	 ("l2", [williamson]),
-	 ("l3", [queenvic]),
- 	 ("l4", [seagull]),
- 	 ("l5", [halfmoon]),
- 	 ("l6", [market]),
- 	 ("l7", [canal]),
- 	 ("l8", [nightingale]),
- 	 ("l9", [spooky]),
- 	 ("l10", [ruxton]),
- 	 ("l11", [priory])]
-
-(* Constants *)
-val our_id : device ref = ref "ab:cd:ef:gh:ij:kl"
-val our_grp : group ref = ref ["d1","d2","d3"]
 val locs = first (!location_attractions)
+
+fun whichBtns hl =
+    if hl = hd locs
+    then [("select-loc","Select"),
+	  ("next-loc","Next"),
+	  ("back","Back"),
+	  ("quit","Quit")]
+    else if hl = last locs
+    then [("select-loc","Select"),
+	  ("previous-loc","Previous"),
+	  ("back","Back"),
+	  ("quit","Quit")]
+    else [("select-loc","Select"),
+	  ("previous-loc","Previous"),
+	  ("next-loc","Next"),
+	  ("back","Back"),
+	  ("quit","Quit")]
+
+fun whichBtns' a ha =
+    if deattract ha = deattract(hd a)
+    then [("info","Info"),
+	  ("next-att","Next"),
+	  ("back","Back"),
+	  ("quit","Quit")]
+    else if deattract ha = deattract(last a)
+    then [("info","Info"),
+	  ("previous-att","Previous"),
+	  ("back","Back"),
+	  ("quit","Quit")]
+    else [("info","Info"),
+	  ("previous-att","Previous"),
+	  ("next-att","Next"),
+	  ("back","Back"),
+	  ("quit","Quit")]
 
 (* State stack with operations *)
 val stack : Stack ref = ref []
@@ -289,23 +318,6 @@ fun moreInfoClicked (d,l,a,m,b,t,p,hl,ha) =
     end
 ) 
 
-fun whichBtns hl =
-    if hl = hd locs
-    then [("select-loc","Select"),
-	  ("next-loc","Next"),
-	  ("back","Back"),
-	  ("quit","Quit")]
-    else if hl = last locs
-    then [("select-loc","Select"),
-	  ("previous-loc","Previous"),
-	  ("back","Back"),
-	  ("quit","Quit")]
-    else [("select-loc","Select"),
-	  ("previous-loc","Previous"),
-	  ("next-loc","Next"),
-	  ("back","Back"),
-	  ("quit","Quit")]
-
 fun locatorClicked (d,l,a,m,b,t,p,hl,ha) =
 ( print "locatorClicked()\n"
 ; print("stacksize: " ^ Int.toString(stackSize(!stack)));
@@ -331,10 +343,12 @@ fun selectLocClicked (d,l,a,m,b,t,p,hl,ha) =
     | SOME(d',l',a',m',b',t',p',hl',ha') =>
       let val a'' = case lookup2 (!location_attractions) hl
 		     of NONE => [] | SOME(a) => a
-	  val ha'' = case a'' of [] => VoidAtt
-			       | (att::atts) => att
+	  val ha'' = case a'' of [] => VoidAtt | (att::atts) => att
 	  val b'' = if a'' = [] then std_btns
-		    else std_btns @ [("info","Info")]
+		    else
+			if length(a'') = 1 then std_btns @ [("info","Info")]
+			else std_btns @ [("info","Info"),
+					 ("next-att","Next")]
       in ( push(d',hl,a'',m',b'',t',p',hl,ha'')
 	 ; guiShow()
 	 ; true
@@ -345,7 +359,7 @@ fun selectLocClicked (d,l,a,m,b,t,p,hl,ha) =
 fun previousLocClicked (d,l,a,m,b,t,p,hl,ha) =
 ( print "previousLocClicked()\n"
 ; print("stacksize: " ^ Int.toString(stackSize(!stack)));
-    let val hl' = findNextLoc (rev locs) hl
+    let val hl' = findNextElm (rev locs) hl
 	val b' = whichBtns hl'
     in ( push(d,l,a,m,b',t,p,hl',ha) ; locShow() ; true ) end
 )
@@ -353,9 +367,25 @@ fun previousLocClicked (d,l,a,m,b,t,p,hl,ha) =
 fun nextLocClicked (d,l,a,m,b,t,p,hl,ha) =
 ( print "nextLocClicked()\n"
 ; print("stacksize: " ^ Int.toString(stackSize(!stack)));
-    let val hl' = findNextLoc locs hl
+    let val hl' = findNextElm locs hl
 	val b' = whichBtns hl'
     in ( push(d,l,a,m,b',t,p,hl',ha) ; locShow() ; true ) end
+)
+
+fun previousAttClicked (d,l,a,m,b,t,p,hl,ha) =
+( print "previousAttClicked()\n"
+; print("stacksize: " ^ Int.toString(stackSize(!stack)));
+    let val ha' = findNextElm (rev a) ha
+	val b' = whichBtns' a ha'
+    in ( push(d,l,a,m,b',t,p,hl,ha') ; guiShow() ; true ) end
+)
+
+fun nextAttClicked (d,l,a,m,b,t,p,hl,ha) =
+( print "nextAttClicked()\n"
+; print("stacksize: " ^ Int.toString(stackSize(!stack)));
+    let val ha' = findNextElm a ha
+	val b' = whichBtns' a ha'
+    in ( push(d,l,a,m,b',t,p,hl,ha') ; guiShow() ; true ) end
 )
 
 val button_clicks =
@@ -368,7 +398,9 @@ val button_clicks =
      ("tour",tourClicked),
      ("select-loc",selectLocClicked),
      ("previous-loc",previousLocClicked),
-     ("next-loc",nextLocClicked)]
+     ("next-loc",nextLocClicked),
+     ("previous-att",previousAttClicked),
+     ("next-att",nextAttClicked)]
 
 fun handleEvent event s =
     case event of
