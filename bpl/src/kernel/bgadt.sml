@@ -38,7 +38,8 @@ structure NameSetCompare
   = SetCompare 
       (structure Set       = NameSet
        structure EltOrder  = Name.Order)
-      
+structure NameMap = OrderFinMap (Name.Order)
+
 structure IntOrder = struct type T = int fun lt i j = i < j end
 structure IntSet = OrderSet (IntOrder)
 		   
@@ -150,6 +151,7 @@ type 'class bgbdnf = 'class BgBDNF.bgbdnf
 structure Match = Match
   (type      info        = info
    structure Name        = Name
+   structure NameMap     = NameMap
    structure Link        = Link
    structure NameSet     = NameSet
    structure LinkSet     = LinkSet
