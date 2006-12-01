@@ -22,8 +22,11 @@
  * 
  * @version $LastChangedRevision$
  *)
-structure Name :> NAME =
+functor Name (structure PrettyPrint : PRETTYPRINT)
+ :> NAME where type ppstream = PrettyPrint.ppstream =
 struct
+  type ppstream = PrettyPrint.ppstream
+
   (* Names are identified by unique words. *)
   type name = word * string
 
@@ -89,8 +92,10 @@ struct
            n)
         end
   fun ekam ((_, s) : name) = s
-  fun unmk ((id, s) : name) = s ^ "_" ^ (String.map Char.toLower (Word.toString id))
+  fun unmk ((id, s) : name) =
+      s ^ "_" ^ (String.map Char.toLower (Word.toString id))
  
+  fun pp indent pps n = PrettyPrint.add_string pps (unmk n)
 
   structure Order : ORDERING =
   struct 

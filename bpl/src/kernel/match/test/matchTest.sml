@@ -23,7 +23,6 @@
  *)
 
 functor MatchTest (structure BG : BG
-                  where type BgVal.info = int * int
                     sharing type BG.Name.name =
 				 BG.NameSet.elt =
 				 BG.Link.name =

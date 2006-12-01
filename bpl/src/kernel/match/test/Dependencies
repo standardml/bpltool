@@ -3,3 +3,4 @@
 # INCLUDE=../../../lib/smlunit
 
 matchTest: /lib/smlunit/. /kernel/bg-sig /lib/util/errormsg
+   /lib/util/origin-sig

@@ -7,10 +7,14 @@ bgterm-sig:
 bgterm: + /lib/pp/smlnj/. /lib/coll/pp /kernel/bg/sigs
 bgval-sig:
 bgval: + /lib/pp/smlnj/. /lib/coll/monoset-sig /lib/coll/pp
-   bgterm-sig /kernel/bg/sigs
+   bgterm-sig /kernel/bg/sigs /lib/util/errorhandler-sig
+   /lib/util/origin-sig /lib/util/debug
 bgbdnf-sig:
 bgbdnf: + /lib/coll/monoset-sig /lib/coll/pp /kernel/bg/sigs
-   bgval-sig /lib/pp/smlnj/.
+   bgval-sig /lib/pp/smlnj/. /lib/util/errorhandler-sig
+   /lib/util/origin-sig /lib/util/debug
 #ppbg bgterm-sig /lib/pp/smlnj/. %NODASHSIG
 sugar-sig:
 sugar: + /lib/coll/monoset-sig /lib/coll/pp /kernel/bg/sigs bgval-sig
+   /lib/util/errorhandler-sig /lib/util/origin-sig /lib/util/debug
+   /lib/pp/smlnj/.

@@ -55,12 +55,12 @@ sig
   (** The bgbdnf data type.  'class must be M, S, G, N, P, D, or B. *)
   type 'class bgbdnf
   (** Signal that a BDNF does not represent a regular bigraph.
-   * @params file i b errtxt
-   * @param file    the file name in which the exception was raised.
+   * @params i b errtxt
+   * @param i       bigraph info
    * @param b       the bigraph
    * @param errtxt  explanatory error text.
    *)
-  exception IrregularBDNF of string * info * bgval * string
+  exception IrregularBDNF of info * bgval * string
   (** Construct a B bgbdnf from a bgval. *)
   val make : bgval -> B bgbdnf
   (** Deconstruct a bgbdnf. *)
@@ -190,33 +190,31 @@ sig
   val outerface : 'class bgbdnf -> interface
     
   (** Signal that some term was not expected not to be BDNF.
-   * @params file i m errtxt
-   * @param file    the file name in which the exception was raised.
+   * @params i m errtxt
+   * @param i       bigraph info
    * @param m       the match that caused the error.
    * @param errtxt  explanatory error text.
    *)
-  exception MalformedBDNF of string * info * bgmatch * string
+  exception MalformedBDNF of info * bgmatch * string
   (** Signal that some term was not expected not to be RBDNF.
-   * @params file i m errtxt
-   * @param file    the file name in which the exception was raised.
+   * @params i m errtxt
+   * @param i       bigraph info
    * @param m       the match that caused the error.
    * @param errtxt  explanatory error text.
    *)
-  exception MalformedRBDNF of string * info * bgmatch * string
+  exception MalformedRBDNF of info * bgmatch * string
   (** Signal that two lists unexpectedly are of unequal length.
-   * @params file l1 l2 errtxt
-   * @param file    the file name in which the exception was raised.
+   * @params l1 l2 errtxt
    * @param l1      the first list.
    * @param l2      the second list.
    * @param errtxt  explanatory error text.
    *)
-  exception UnequalLength of string * bgval list * bgval list * string
+  exception UnequalLength of bgval list * bgval list * string
   (** Signal a logical error, i.e. an error which "cannot happen" ;-).
-   * @params file errtxt
-   * @param file    the file name in which the exception was raised.
+   * @params errtxt
    * @param errtxt  explanatory error text.
    *)
-  exception LogicalError of string * string
+  exception LogicalError of string
   
 
   (** Prettyprint a bgbdnf without parentheses around it.

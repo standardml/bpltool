@@ -6,7 +6,8 @@ map = monofinmap-sig orderfinmap
 lzlist = lazylist-sig lazylist
 collectionprettyprint-sig:
 monoset-sig:
-setprettyprint: collectionprettyprint-sig /lib/pp/smlnj/prettyprint-sig monoset-sig
+setprettyprint: collectionprettyprint-sig /lib/pp/smlnj/prettyprint-sig
+   monoset-sig
 ordering-sig:
 orderset:   monoset-sig ordering-sig /lib/pp/edlib/edlibprettyprint
 setcompare-sig:

@@ -22,8 +22,8 @@
  * @version $LastChangedRevision$
  *)
 
-functor BDNFTest (structure BG : BG
-                   where type BgVal.info = int * int
+functor BDNFTest (structure ErrorHandler : ERRORHANDLER
+                  structure BG : BG
                     sharing type BG.Name.name =
 				 BG.NameSet.elt =
 				 BG.Link.name =
@@ -619,25 +619,25 @@ datatype expectedresult = S of string | E of string
 	      val Y34 = NameSet.fromList [y3, y4]
 	      val Y45 = NameSet.fromList [y4, y5]
 	      val Y56 = NameSet.fromList [y5, y6]
-	      val p1 = Per (0,0) (Permutation.id [Y12, Y3])
-	      val b1 = Ten (0,1) [Con (0,2) Y45, p1]
-	      val b2 = Wir (0,3) 
+	      val p1 = Per noinfo (Permutation.id [Y12, Y3])
+	      val b1 = Ten noinfo [Con noinfo Y45, p1]
+	      val b2 = Wir noinfo 
 			   (Wiring.make
 			      (LinkSet.fromList 
 			      [Link.make {outer = SOME y5, 
 					  inner = NameSet.empty},
 			       Link.make {outer = SOME y6, 
 					  inner = NameSet.singleton y6}]))
-	      val b3 = Wir (0,4)
+	      val b3 = Wir noinfo
 			   (Wiring.make
 			      (LinkSet.fromList
 				 [Link.make {outer = SOME y2, 
 					     inner = NameSet.empty}]))
-	      val b4 = Abs (0,5) 
+	      val b4 = Abs noinfo
 			   (NameSet.singleton y2,
-			    Ten (0,6) 
-				[Mer (0,7) 0,
-				 Wir (0,8)
+			    Ten noinfo 
+				[Mer noinfo 0,
+				 Wir noinfo
 				     (Wiring.make
 					(LinkSet.fromList 
 					   [Link.make 
@@ -648,7 +648,7 @@ datatype expectedresult = S of string | E of string
 						 inner = NameSet.empty}]))])
 	      fun bgvalToString' f () =
 		  bgvalToString (f ())
-		  handle e => (BGErrorHandler.explain' e; raise e)
+		  handle e => (ErrorHandler.explain e; raise e)
 	      fun assertEqualExpected (S expstr) f () =
 		  assertEqualString expstr (f ())
 		| assertEqualExpected (E expexn) f () =
@@ -676,18 +676,18 @@ datatype expectedresult = S of string | E of string
 		      => (t, ignore o assertEqualExpected expected
 			      (bgvalToString' f)))
 	    [("Empty parallel product", S"idx_0",
-	      fn () => (startsubsuite (); Par (1,0) [])),
+	      fn () => (startsubsuite (); Par noinfo [])),
 	     ("Singleton parallel product", 
 	      S"'{y4_7, y5_8}' * [0{y1_4, y2_5}, 1{y3_6}]",
-	      fn () => Par (2,0) [b1]),
+	      fn () => Par noinfo [b1]),
 	     ("Empty prime product", S"1",
-	      fn () => Pri (1,0) []),
+	      fn () => Pri noinfo []),
 	     ("Singleton prime product", 
 	      S"({y1_4, y2_5, y3_6})\n\
 	       \ (idw_{y1_4, y2_5, y3_6, y4_7, y5_8} * merge_3)\n\
 	       \  o ((idw_{y4_7, y5_8} * '{}' * '{y1_4, y2_5}' * '{y3_6}')\n\
 	       \     o ('{y4_7, y5_8}' * [0{y1_4, y2_5}, 1{y3_6}]))",
-	      fn () => Pri (2,0) [b1])]
+	      fn () => Pri noinfo [b1])]
 	    end
        in
 	 Test.labelTests

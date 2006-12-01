@@ -65,10 +65,6 @@ Notes:
 -  Tensor product XX is parsed as if it was a binary operator
    (as are prime product and parallel product)
 -  Nice-to-have extended forms : 
-     ctrlid fports => ctrlid fports <>
-     ctrlid        => ctrlid <> <>
-     id_INT        => id on placegraph - e.g. id_2 is currently 
-                       written "'{}' x '{}'" !!!
      id_iface      =>  id on iface - iface
      id		   =>  (not only grammar issue) 
 			- id that can be instatiated to 
@@ -76,10 +72,6 @@ Notes:
 *)
 
 (* Position info stuff - below *)
-(* NOTE: No position info added currently...; 
-   mainly because I haven't bothered to abstract datatype bg as 'info bg. 
-   I'll add this, if it is found necessary.
-*)
 
 open BgTerm
 
@@ -101,6 +93,10 @@ type 'kind permutation = 'kind Permutation.permutation
 exception DuplicateNames of string * (int * int) * string
 
 fun warning str v = (print ("Parser warning: "^str^"\n"); v)
+
+fun mk_origin p1 p2 = Origin.mk_file_origin (!ErrorMsg.fileName) (Origin.POS (ErrorMsg.toCoords p1 p2))
+
+val mk_info = mk_origin
 
 fun nset2idlinkset nset =
     NameSet.fold 
@@ -157,8 +153,8 @@ fun nset2idlinkset nset =
 		    structure Wiring : WIRING
 		    structure Ion : ION
 		    structure Permutation : PERMUTATION
+		    structure Origin : ORIGIN
 		    structure BgTerm : BGTERM
-                      where type info = int*int
 		    sharing type Control.control = Ion.control
 		    sharing type Name.name = 
 				 NameSet.elt = 
@@ -177,6 +173,8 @@ fun nset2idlinkset nset =
 				 BgTerm.permutation
 		    sharing type Permutation.Immutable =
 		                 BgTerm.Immutable
+                    sharing type Origin.origin =
+                                 BgTerm.info
 		    )
 	)
 
@@ -195,23 +193,23 @@ prog   	: dec   	      (dec)
 dec	: bg                  (bg)
 
 bg : altbg                    (altbg)
-   | bg XX bg                 (Ten ([bg1, bg2], (bg1left, bg2right)))
-   | bg PRI bg                (Pri ([bg1, bg2], (bg1left, bg2right)))
-   | bg PAR bg                (Par ([bg1, bg2], (bg1left, bg2right)))
-   | bg OO bg                 (Com (bg1, bg2, (bg1left, bg2right)))
+   | bg XX bg                 (Ten ([bg1, bg2], mk_info bg1left bg2right))
+   | bg PRI bg                (Pri ([bg1, bg2], mk_info bg1left bg2right))
+   | bg PAR bg                (Par ([bg1, bg2], mk_info bg1left bg2right))
+   | bg OO bg                 (Com (bg1, bg2, mk_info bg1left bg2right))
 
-altbg : LPAREN RPAREN         (Mer (0, (LPARENleft, RPARENright)))
-   | IDX0                     (Ten ([], (IDX0left, IDX0right)))
-   | IDBB0                    (Par ([], (IDBB0left, IDBB0right)))
-   | MERGEn                   (Mer (MERGEn, (MERGEnleft, MERGEnright)))
-   | ONE                      (Mer (0, (ONEright, ONEleft)))
-   | QUOTE nset QUOTE         (Con (nset, (QUOTE1left, QUOTE2right)))
+altbg : LPAREN RPAREN         (Mer (0, mk_info LPARENleft RPARENright))
+   | IDX0                     (Ten ([], mk_info IDX0left IDX0right))
+   | IDBB0                    (Par ([], mk_info IDBB0left IDBB0right))
+   | MERGEn                   (Mer (MERGEn, mk_info MERGEnleft MERGEnright))
+   | ONE                      (Mer (0, mk_info ONEright ONEleft))
+   | QUOTE nset QUOTE         (Con (nset, mk_info QUOTE1left QUOTE2right))
    | link                     (Wir (Wiring.make 
 				      (LinkSet.singleton link), 
-				      (linkleft, linkright)))
+				      mk_info linkleft linkright))
    | IDW nset                 (Wir (Wiring.make (nset2idlinkset nset),
-				    (IDWleft, IDWright)))
-   | IDW0                     (Wir (Wiring.id_0, (IDW0left, IDW0right)))
+				    mk_info IDWleft IDWright))
+   | IDW0                     (Wir (Wiring.id_0, mk_info IDW0left IDW0right))
    | ctrlid fports bports     (let 
 				 val fp = fports
 				 val bp = bports
@@ -220,7 +218,7 @@ altbg : LPAREN RPAREN         (Mer (0, (LPARENleft, RPARENright)))
 					({ctrl = ctrlid, 
 					  free = fports,
 					  bound = bports}),
-					(ctrlidleft, bportsright))
+					mk_info ctrlidleft bportsright)
 			       end)
    | ctrlid fports            (let 
 				 val fp = fports
@@ -229,16 +227,16 @@ altbg : LPAREN RPAREN         (Mer (0, (LPARENleft, RPARENright)))
 					({ctrl = ctrlid, 
 					  free = fports,
 					  bound = []}),
-					(ctrlidleft, fportsright))
+					mk_info ctrlidleft fportsright)
 			       end)
    | ctrlid                   (Ion (Ion.make 
 					({ctrl = ctrlid, 
 					  free = [],
 					  bound = []}),
-					(ctrlidleft, ctrlidright)))
-   | perm                     (Per (perm, (permleft, permright)))
-   | IDPn                     (Per (Permutation.id_n IDPn, (IDPnleft, IDPnright)))
-   | LPAREN nset RPAREN bg    (Abs (nset, bg, (LPARENleft, bgright)))
+					mk_info ctrlidleft ctrlidright))
+   | perm                     (Per (perm, mk_info permleft permright))
+   | IDPn                     (Per (Permutation.id_n IDPn, mk_info IDPnleft IDPnright))
+   | LPAREN nset RPAREN bg    (Abs (nset, bg, mk_info LPARENleft bgright))
    | LPAREN bg RPAREN         (bg)
 
 fports	: LT nlist GT         (nlist)

@@ -34,9 +34,9 @@ sig
   (** The permutation data type. *)
   type 'kind permutation
   (** Signal a logical error, i.e. an error which "cannot happen" ;-).*)
-  exception LogicalError of string * string
+  exception LogicalError of string
   (** Signal incorrect permutation data. *)
-  exception NotPermutation of string * (int * nameset) list
+  exception NotPermutation of (int * nameset) list
   (** Construct a permutation.
    * @params Xs
    * @param Xs  list of n pairs, where each of the numbers 0..n-1 must
@@ -74,7 +74,7 @@ sig
 
   (** Signal that two permutations cannot be composed. *)
   exception Uncomposable
-    of string * Mutable permutation * Mutable permutation * string
+    of Mutable permutation * Mutable permutation * string
 
   (** Return the composition of two permutations. 
    * @exception Uncomposable raised if the interfaces do not match.
@@ -118,8 +118,7 @@ sig
   (** Signal that a permutation is not regularizable relative to a list
    *  of local inner name lists.
    *)
-  exception NotRegularisable
-    of string * Mutable permutation * nameset list list
+  exception NotRegularisable of Mutable permutation * nameset list list
   (** Split a permutation into one major and a number of minor
    * permutations.
    * @params pi Xss
@@ -132,8 +131,7 @@ sig
         -> {major : 'kindb permutation, minors : 'kindc permutation list}
   (** Signal that two lists have different lengths.  *)
   exception UnequalLengths 
-	    of string * nameset list list 
-	       * nameset list list * string
+	    of nameset list list * nameset list list * string
   (** Compute a permutation for unzipping tensor products.
    * @return a permutation ~pi such that 
    * merge ((X_{i< n} Ai) x X_{i< n} Mi) ~pi = merge X_{i< n} Ai x Mi,

@@ -18,29 +18,13 @@
  * USA
  *)
 
-(** Module for printing friendly error messages, based on exceptions.
- * @version $LastChangedRevision$
+(** Module with exception related utility functions.
  *)
-signature BGERRORHANDLER = 
-sig
-(** BDNF type. *)
-type 'class bgbdnf
-(** Bigraph value type. *)
-type bgval
-(** Bigraph term type. *)
-type bgterm
-(** Interface type. *)
-type interface
-(** Display a friendly error message on stdout. 
- * Raises exception  e if the exception is unknown.
- * @params e
- * @param e  The exception that was thrown when the error was detected.
- *)
-val explain : exn -> unit
-(** Return a friendly error message. 
- * Raises exception  e if the exception is unknown.
- * @params e
- * @param e  The exception that was thrown when the error was detected.
- *)
-val explain' : exn -> string
+structure Exception : EXCEPTION where type event = string =
+struct
+  type event = string
+
+  fun event2string e = e
+
+  fun history e = SMLofNJ.exnHistory e
 end

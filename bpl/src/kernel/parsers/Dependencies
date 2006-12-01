@@ -7,4 +7,5 @@
 bg.grm-sig: /lib/ml-yacc/.
 bg.lex: /lib/util/errormsg /lib/compat/mosml/. bg.grm-sig
 bg.grm: /lib/ml-yacc/.  /lib/coll/monoset-sig bg.grm-sig
-   /kernel/bg/sigs /kernel/ast/sigs /lib/util/errormsg %NODASHSIG
+   /kernel/bg/sigs /kernel/ast/sigs /lib/util/errormsg
+   /lib/util/origin-sig %NODASHSIG

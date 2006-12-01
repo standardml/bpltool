@@ -29,6 +29,8 @@ sig
   type info
   type ppstream
 
+  val noinfo : info
+
   (** Page width used by bdnfToString. *)
   val pageWidth : int ref
   (** Block indentation used by bdnfToString. *)
@@ -77,6 +79,5 @@ sig
   structure Link : LINK
 
   structure Sugar : SUGAR
-  structure BGErrorHandler : BGERRORHANDLER
 
 end

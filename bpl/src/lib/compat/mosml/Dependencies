@@ -18,6 +18,7 @@
 # USA
 #
 
-. = unsafe legacyio hash/. word32/.
+. = unsafe legacyio hash/. word32/. exception/.
 unsafe:
+
 legacyio:

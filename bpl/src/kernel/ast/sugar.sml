@@ -33,6 +33,10 @@ functor Sugar (type info
 	       structure Wiring : WIRING
 	       structure Permutation : PERMUTATION
 	       structure BgVal : BGVAL
+	       structure Origin : ORIGIN
+	       structure ErrorHandler : ERRORHANDLER
+	       structure PrettyPrint : PRETTYPRINT
+	       structure NameSetPP : COLLECTIONPRETTYPRINT
 	       sharing type info = BgVal.info
                sharing type Name.name = 
 			    NameSet.elt =
@@ -54,6 +58,14 @@ functor Sugar (type info
                sharing type Wiring.wiring = BgVal.wiring
                sharing type Permutation.permutation = BgVal.permutation
                sharing type Permutation.Immutable = BgVal.Immutable
+               sharing type Origin.origin =
+			    ErrorHandler.origin
+	       sharing type NameSet.Set = NameSetPP.collection
+               sharing type PrettyPrint.ppstream =
+		            Name.ppstream =
+		            NameSetPP.ppstream =
+			    Origin.ppstream =
+			    ErrorHandler.ppstream
 	       ) :> SUGAR 
 where type bgval = BgVal.bgval =
 struct
@@ -64,7 +76,21 @@ type bgval = BgVal.bgval
 type arities = {boundarity : int, freearity : int}
 type mapinfo = int * nameset
 type absinfo = nameset
+
+open Debug
+open ErrorHandler
+
+val file_origin = Origin.mk_file_origin
+                    "$BPL/src/kernel/ast/sugar.sml"
+                    Origin.NOPOS
+fun mk_explainer errtitle (explainer : exn -> explanation list) e =
+    Exp (LVL_USER, Origin.unknown_origin, mk_string_pp errtitle, explainer e)
+
 exception WrongArity of string
+fun explain_WrongArity (WrongArity msg) =
+    Exp (LVL_USER, Origin.unknown_origin, mk_string_pp msg,
+         [Exp (LVL_LOW, file_origin, pp_nothing, [])])
+val _ = add_explainer explain_WrongArity
 
 val Ion = BgVal.Ion noinfo
 val Mer = BgVal.Mer noinfo
@@ -100,8 +126,38 @@ fun atomic0 K
   = Com (Ion (Ion.make {ctrl = Control.make K, free = [], bound = []}), 
 	 Mer 0)
 
-exception DuplicateName of
-	  string * string * name list * name list list * string
+exception DuplicateName of string * name list * name list list * string
+fun explain_DuplicateName (DuplicateName (K, ys, Xs, errtxt)) =
+    let
+      fun pp_ion indent pps =
+          let
+            open PrettyPrint
+            fun string_pp indent pps s = add_string pps s
+            fun << () = begin_block pps CONSISTENT indent
+            fun >> () = end_block pps
+            fun brk () = add_break pps (0, 0)
+          in
+            <<();
+            add_string pps K;
+            case Xs of
+              [] =>
+              (case ys of
+                 [] => ()
+               | _  => mk_list_pp' "<" ">" ", " string_pp indent pps ys)
+            | _ =>
+              (brk();
+               mk_list_pp' "<" ">" ", " string_pp indent pps ys;
+               brk();
+               mk_list_pp' "<" ">" ", "
+                           (mk_list_pp' "{" "}" ", " string_pp) indent pps Xs);
+            >>()
+          end
+    in
+      [Exp (LVL_USER, Origin.unknown_origin, pp_ion, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    end
+val _ = add_explainer
+          (mk_explainer "duplicate name in ion" explain_DuplicateName)
 
 fun listToString printfun ns =
     "[" 
@@ -136,7 +192,7 @@ fun =: (K, {freearity, boundarity}) k free bound =
 	      handle 
 	      NameSet.DuplicatesRemoved
 	      => raise DuplicateName 
-			 ("sugar.sml", K, free, bound,
+			 (K, free, bound,
 			  "Duplicate names are not allowed in ions")
       in
 	k (Ion ion)

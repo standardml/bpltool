@@ -2,7 +2,7 @@ structure Dump :> DUMP = struct
 
     val prefix =
 	Flags.makeStringFlag{name="/dump/prefix",default="",
-			     short="d",long="dump-prefix",arg="FILE",
+			     short="dump",long="dump-prefix",arg="FILE",
 			     desc="Set filename prefix for dumps to FILE"}
     fun setPrefix filename =
 	let open OS.Path

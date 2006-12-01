@@ -971,11 +971,11 @@ struct
                (matchCLO {w_a = w_a, w_R = w_R, ps = ps, Ps = Ps}))
          | wrongterm => 
             raise MalformedBDNF
-                    ("match.sml", BgVal.info w_Rxid, wrongterm,
+                    (BgVal.info w_Rxid, wrongterm,
                      "matching w_Rxid in matches"))
       | wrongterm => 
          raise MalformedBDNF
-                 ("match.sml", BgVal.info w_axid, wrongterm,
+                 (BgVal.info w_axid, wrongterm,
                   "matching w_axid in matches")
     end)
     

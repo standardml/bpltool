@@ -23,6 +23,8 @@
  *)
 signature NAME =
 sig
+  (** Prettyprinter stream. *)
+  type ppstream
   (** The link data type. *)
   eqtype name
   (** Construct a name. *)
@@ -44,6 +46,9 @@ sig
   val < : name * name -> bool
   (** Compare names in a total order. *)
   val compare : name * name -> order
+
+  (** Prettyprint a name. *)
+  val pp : int -> ppstream -> name -> unit
 
   structure Order : ORDERING where type T = name
   structure NameSet : MONO_SET where type elt = name

@@ -41,3 +41,14 @@ sourceloc: sourceloc-sig util
 timings-sig: 
 timings: timings-sig flags util /lib/coll/set 
   /lib/compat/mosml/hash/. /lib/compat/common/legacytimer %NODASHSIG
+debug-sig:
+debug: + debug-sig flags %NODASHSIG
+origin-sig:
+origin: + origin-sig /lib/pp/smlnj/prettyprint-sig %NODASHSIG
+baseerrorhandler-sig: debug
+baseerrorhandler: + baseerrorhandler-sig debug origin-sig 
+   /lib/pp/smlnj/prettyprint-sig %NODASHSIG
+errorhandler-sig: baseerrorhandler-sig
+printerrorhandler: + baseerrorhandler errorhandler-sig origin-sig
+   debug /lib/compat/mosml/exception/.
+   /lib/pp/smlnj/prettyprint-sig %NODASHSIG

@@ -21,25 +21,35 @@
 (** Main BG module.
  * @version $LastChangedRevision$
  *)
-functor BG (PrettyPrint : PRETTYPRINT) : BG =
+functor BG (structure Origin       : ORIGIN
+	    structure PrettyPrint  : PRETTYPRINT
+	    structure ErrorHandler : ERRORHANDLER
+            sharing type Origin.origin =
+		         ErrorHandler.origin
+            sharing type PrettyPrint.ppstream =
+		         Origin.ppstream =
+		         ErrorHandler.ppstream)
+  : BG =
 struct
 
-type info = int * int
-val noinfo = (~99, ~99)
-fun bgvalinfo2pos beginxend = beginxend
+type info = Origin.origin
+val noinfo = Origin.unknown_origin
+fun info2origin i = i
 
 structure BGADT
   = BGADT (type info = info
-            val noinfo = noinfo
-	    val bgvalinfo2pos = bgvalinfo2pos
-	    structure PrettyPrint = PrettyPrint)
+           val noinfo = noinfo
+	   val info2origin = info2origin
+           structure Origin = Origin
+	   structure PrettyPrint = PrettyPrint
+           structure ErrorHandler = ErrorHandler)
 open BGADT
 		   
 structure Token = LrParser.Token
 	   
 structure BgTermLrVals
   = BgTermLrVals
-      (type      info        = info
+      (structure Origin      = Origin
        structure Token       = Token
        structure Control     = Control
        structure Name        = Name
@@ -90,7 +100,7 @@ fun bgvalUsefile'' filename =
 fun bgvalUsefile' filename =
     bgvalUsefile'' filename
       handle BgTermParser.ParseError => raise ErrorMsg.Error
-	   | error => (BGErrorHandler.explain error; raise ErrorMsg.Error)
+	   | error => (ErrorHandler.explain error; raise ErrorMsg.Error)
 
 fun usefile'' filename = 
     let
@@ -107,7 +117,7 @@ fun usefile' filename =
     in
       bgbdnf
     end
-      handle error => (BGErrorHandler.explain error; raise ErrorMsg.Error)
+      handle error => (ErrorHandler.explain error; raise ErrorMsg.Error)
 
 fun usefile filename =
     let

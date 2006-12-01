@@ -14,6 +14,7 @@ sig
     val lineNum : int ref
     val linePos : int list ref
     val sourceStream : TextIO.instream ref
+    val toCoords : int -> int -> ((int * int) * (int * int))
     val error : int -> int -> string -> unit
     exception Error
     val impossible : string -> 'a   (* raises Error *)
@@ -32,24 +33,17 @@ struct
 		 linePos:=[1];
 		 sourceStream:=TextIO.stdIn)
   exception Error
-  fun error leftpos rightpos (msg:string) =
-      let fun print s = TextIO.output(TextIO.stdErr, s) (* Henning *)
-	  fun lookleft (rightline, rightcol) =
+  (* Translates 1D character positions to 2D ditto. *)
+  fun toCoords leftpos rightpos =
+      let fun lookleft (rightline, rightcol) =
 	      let
 		fun lookleft' (a :: rest, n) =
 		    if a < leftpos then
-		      (app print [":",
-				  Int.toString n,
-				  ".",
-				  Int.toString (leftpos - a),
-				  "-"];
-		       app print [Int.toString rightline, "."];
-		       print (Int.toString rightcol))
+		      ((n, leftpos - a), (rightline, rightcol))
 		    else 
 		      lookleft' (rest, n - 1)
 		  | lookleft' _
-		    = app print [Int.toString rightline, ".",
-				 Int.toString rightcol]
+		    = ((~1,~1), (rightline, rightcol))
 	      in
 		lookleft'
 	      end
@@ -58,10 +52,27 @@ struct
 		  lookleft (n, rightpos - a) (a :: rest, n)
 		else 
 		  look (rest, n - 1)
-	    | look _ = print ":0.0"
+	    | look _ = ((~1,~1), (~1,~1))
+      in
+	look(!linePos,!lineNum)
+      end
+  fun error leftpos rightpos (msg:string) =
+      let fun print s = TextIO.output(TextIO.stdErr, s) (* Henning *)
+	  fun printPos () =
+              case toCoords leftpos rightpos of
+                ((~1, ~1), _) => print ":0.0"
+              | ((leftline, leftcol), (rightline, rightcol)) =>
+                  app print [":",
+                             Int.toString leftline,
+                             ".",
+                             Int.toString leftcol,
+                             "-",
+                             Int.toString rightline,
+                             ".",
+                             Int.toString rightcol]
        in anyErrors := true;
 	  print (!fileName);
-	  look(!linePos,!lineNum);
+          printPos();
 	  print " Error: ";
 	  print msg;
 	  print "\n"

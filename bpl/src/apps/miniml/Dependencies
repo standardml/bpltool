@@ -72,4 +72,4 @@ mml2bg: mml2bg-sig miniml minimlparser pattern desugar matchcompiler
 # Main program
 bplc: bggen mml2bg /kernel/bg 
    /lib/pp/smlnj/. /lib/util/flags /lib/util/argparse /lib/pp/mak/.
-   /lib/util/timings %PROGRAM
+   /lib/util/timings /lib/util/origin /lib/util/printerrorhandler %PROGRAM

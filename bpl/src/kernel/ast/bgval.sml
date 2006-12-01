@@ -31,9 +31,10 @@ functor BgVal (structure Name : NAME
 	       structure Wiring : WIRING
 	       structure Interface : INTERFACE
 	       structure BgTerm : BGTERM
+	       structure Origin : ORIGIN
+	       structure ErrorHandler : ERRORHANDLER
 	       structure PrettyPrint : PRETTYPRINT
-	       type info
-	       val noinfo : info
+	       structure NameSetPP : COLLECTIONPRETTYPRINT
 	       sharing type Name.name = 
 			    NameSet.elt = 
 			    Link.name =
@@ -44,7 +45,8 @@ functor BgVal (structure Name : NAME
 			    Permutation.nameset =
 			    Wiring.nameset =
 			    Interface.nameset =
-			    BgTerm.nameset
+			    BgTerm.nameset =
+                            NameSetPP.collection
                sharing type Link.link = 
 			    LinkSet.elt =
 			    Wiring.link
@@ -52,13 +54,23 @@ functor BgVal (structure Name : NAME
 	       sharing type Ion.ion = BgTerm.ion
 	       sharing type Permutation.permutation =
 			    BgTerm.permutation
-			   sharing type Permutation.Immutable =
+	       sharing type Permutation.Immutable =
 			    BgTerm.Immutable
 	       sharing type Wiring.wiring = BgTerm.wiring
 	       sharing type Interface.interface =
 			    Permutation.interface
+               sharing type Origin.origin =
+			    ErrorHandler.origin
 	       sharing type PrettyPrint.ppstream =
-			    BgTerm.ppstream) :> BGVAL 
+			    Name.ppstream =
+			    BgTerm.ppstream =
+			    Origin.ppstream =
+			    ErrorHandler.ppstream =
+			    NameSetPP.ppstream
+	       type info
+	       val noinfo : info
+               val bgvalinfo2origin : info -> Origin.origin
+			    ) :> BGVAL 
   where type nameset = NameSet.Set
     and type name = Name.name
     and type wiring = Wiring.wiring 
@@ -80,11 +92,21 @@ struct
   type 'kind permutation = 'kind Permutation.permutation
   type ion = Ion.ion
   type wiring = Wiring.wiring
-
   type ppstream = PrettyPrint.ppstream
+
+  open Debug
+  open ErrorHandler
 
   val noinfo = noinfo
 
+  val file_origin = Origin.mk_file_origin
+                      "$BPL/src/kernel/ast/bgval.sml"
+                      Origin.NOPOS
+  fun mk_explainer errtitle (explainer : exn -> explanation list) e =
+      Exp (LVL_USER, Origin.unknown_origin, mk_string_pp errtitle,
+           explainer e)
+
+  (* just a shorthand (never raised) *)
   exception DuplicatesRemoved = NameSet.DuplicatesRemoved
 
   (** The bgval data type. *)
@@ -106,15 +128,99 @@ struct
 	 (** b_1 b_2 = a composition of a pair of bigraphs. *)
 	 | VCom of bgval * bgval * (interface * interface * info)
 
-  exception DuplicateNames of string * info * name list list * string
+  fun info (VMer (_, i))            = i
+    | info (VCon (_, i))            = i
+    | info (VWir (_, i))            = i
+    | info (VIon (_, i))            = i
+    | info (VPer (_, i))            = i
+    | info (VAbs (_, _, (_, _, i))) = i 
+    | info (VTen (_, (_, _, i)))    = i
+    | info (VCom (_, _, (_, _, i))) = i
 
-  exception NameMissing of string * bgval * string
+  fun unmk v2i =
+      let
+	fun unmk' (v as (VMer (n, i)))
+	    = (BgTerm.Mer (n, (v2i v)), Interface.m n, Interface.one)
+	  | unmk' (v as (VCon (X, i)))
+	    = (BgTerm.Con (X, (v2i v)), 
+	       Interface.make {loc = [X], 
+			       glob = NameSet.empty},
+	       Interface.make {loc = [NameSet.empty], glob = X})
+	  | unmk' (v as (VWir (w, i)))
+	    = (BgTerm.Wir (w, (v2i v)),
+	       Interface.X (Wiring.innernames w),
+	       Interface.X (Wiring.outernames w))
+	  | unmk' (v as (VIon (KyX, i)))
+	    = (BgTerm.Ion (KyX, (v2i v)),
+	       Interface.make {loc = [Ion.innernames KyX],
+			       glob = NameSet.empty},
+	       Interface.make {loc = [], glob = Ion.outernames KyX})
+	  | unmk' (v as (VPer (pi, i)))
+	    = (BgTerm.Per (pi, (v2i v)), 
+	       Permutation.innerface pi,
+	       Permutation.outerface pi)
+	  | unmk' (v as (VAbs (X, v', (innf, outf, i)))) 
+	    = (BgTerm.Abs (X, #1 (unmk' v'), (v2i v)), innf, outf)
+	  | unmk' (v as (VTen (vs, (innf, outf, i)))) 
+	    = (BgTerm.Ten (List.map (#1 o unmk') vs, (v2i v)), innf, outf)
+	  | unmk' (v as (VCom (v1, v2, (innf, outf, i)))) 
+	    = (BgTerm.Com (#1 (unmk' v1), #1 (unmk' v2), (v2i v)),
+	       innf,
+	       outf)
+      in
+	unmk'
+      end
 
-  exception NotPrime of string * bgval * string
+  fun pp indent pps
+    = BgTerm.pp indent pps o #1 o unmk (fn _ => BgTerm.noinfo)
 
-  exception NotComposable of string * bgval * bgval * string
+  val size = BgTerm.size o #1 o unmk (fn _ => BgTerm.noinfo)
 
-  exception NotTensorable of string * bgval list * string
+  exception DuplicateNames of info * name list list * string
+  fun explain_DuplicateNames (DuplicateNames (i, nss, errtxt)) =
+      Exp (LVL_USER, bgvalinfo2origin i, pp_nothing,
+           map (fn ns => Exp (LVL_USER, Origin.unknown_origin,
+                              mk_list_pp "{" "}" ", " Name.pp ns, []))
+               nss)
+      :: [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  val _ = add_explainer
+            (mk_explainer "duplicate names" explain_DuplicateNames)
+
+  exception NameMissing of bgval * string
+  fun explain_NameMissing (NameMissing (v, errtxt)) =
+      [Exp (LVL_USER, bgvalinfo2origin (info v), pack_pp_with_data pp v, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  val _ = add_explainer
+            (mk_explainer "bgval abstraction failed because a \
+                          \name is missing in the outer face"
+                          explain_NameMissing)
+
+  exception NotPrime of bgval * string
+  fun explain_NotPrime (NotPrime (v, errtxt)) =
+      [Exp (LVL_USER, bgvalinfo2origin (info v), pack_pp_with_data pp v, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  val _ = add_explainer
+            (mk_explainer "bgval to be abstracted must be prime"
+                          explain_NotPrime)
+
+  exception NotComposable of bgval * bgval * string
+  fun explain_NotComposable (NotComposable (v1, v2, errtxt)) =
+      [Exp (LVL_USER, bgvalinfo2origin (info v1), pack_pp_with_data pp v1, []),
+       Exp (LVL_USER, bgvalinfo2origin (info v2), pack_pp_with_data pp v2, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  val _ = add_explainer
+            (mk_explainer "bgvals are not composable"
+                          explain_NotComposable)
+
+  exception NotTensorable of bgval list * string
+  fun explain_NotTensorable (NotTensorable (vs, errtxt)) =
+      map (fn v => Exp (LVL_USER, bgvalinfo2origin (info v),
+                        pack_pp_with_data pp v, [])) vs
+      @ [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  val _ = add_explainer
+            (mk_explainer "bgvals are not tensorable, due \
+                          \to inner or outer name clash"
+                          explain_NotTensorable)
 
   fun innerface (VMer (n, i))   = Interface.m n
     | innerface (VCon (X, i)) 
@@ -151,15 +257,14 @@ struct
   fun Ion i KyX =
       let
 	val y = Ion.outernames KyX
-	    handle NameSet.DuplicatesRemoved =>
+	    handle DuplicatesRemoved =>
 		   raise DuplicateNames 
-			   ("bgval.sml", i, [#free (Ion.unmk KyX)],
+			   (i, [#free (Ion.unmk KyX)],
 			    "Outer ion names must be distinct")
 	val Xs = Ion.innernames KyX 
-	    handle NameSet.DuplicatesRemoved =>
+	    handle DuplicatesRemoved =>
 		   raise DuplicateNames 
-			   ("bgval.sml", i, 
-			    (map NameSet.list o #bound o Ion.unmk) KyX,
+			   (i, (map NameSet.list o #bound o Ion.unmk) KyX,
 			    "Inner ion names must be distinct")
       in
 	VIon (KyX, i)
@@ -172,11 +277,10 @@ struct
 	      NameSet.empty
 	      (Permutation.unmk pi)
 	      handle 
-	      NameSet.DuplicatesRemoved =>
+	      DuplicatesRemoved =>
 	      raise 
 		DuplicateNames 
-		  ("bgval.sml", i, 
-		   (map (NameSet.list o #2) o Permutation.unmk) pi,
+		  (i, (map (NameSet.list o #2) o Permutation.unmk) pi,
 		   "Permutation local name sets must be disjoint")
       in
 	VPer (Permutation.unchanged pi, i)
@@ -209,13 +313,11 @@ struct
 	    end
 	  | SOME x => 
 	    raise NameMissing
-		    ("bgval.sml", v, 
-		     "Cannot abstract name `" ^ Name.unmk x
-		     ^ "': it is absent from the set of global \
-		       \names of the prime outer face. (in Abs)")
+		    (v, "Cannot abstract name `" ^ Name.unmk x
+		        ^ "': it is absent from the set of global \
+		          \names of the prime outer face. (in Abs)")
 	else 
-	  raise NotPrime ("bgval.sml", v, 
-			  "Cannot abstract a non-prime (in Abs)")
+	  raise NotPrime (v, "Cannot abstract a non-prime (in Abs)")
       end
   fun Ten i vs =
       let
@@ -233,15 +335,13 @@ struct
 	  DuplicatesRemoved
 	  => raise 
 	    NotTensorable
-	      ("bgval.sml", vs,
-	       "Inner name clash for tensor product in Ten")
+	      (vs, "Inner name clash for tensor product in Ten")
 	val _ = checkface outerface
 	  handle 
 	  DuplicatesRemoved
 	  => raise 
 	    NotTensorable
-	      ("bgval.sml", vs,
-	       "Outer name clash for tensor product in Ten")
+	      (vs, "Outer name clash for tensor product in Ten")
       val x = Interface.*  infix 6 x
       fun addinterf (v1, (innf, outf)) 
 	= (innf x innerface v1, outf x outerface v1)
@@ -251,8 +351,7 @@ struct
 	  DuplicatesRemoved
 	  => raise 
 	    NotTensorable
-	      ("bgval.sml", vs,
-	       "Inner or outer name clash for tensor product in Ten")
+	      (vs, "Inner or outer name clash for tensor product in Ten")
     in
       VTen (vs, (innf, outf, i))
     end
@@ -261,8 +360,7 @@ struct
 	VCom (v1, v2, (innerface v2, outerface v1, i))
       else
 	raise NotComposable 
-		("bgval.sml", v1, v2, 
-		 "Interface mismatch for composition in Com")
+		(v1, v2, "Interface mismatch for composition in Com")
 
   datatype bgpat =
 	   PVar
@@ -387,16 +485,14 @@ struct
       in
 	pp
       end
-  fun info (VMer (_, i))            = i
-    | info (VCon (_, i))            = i
-    | info (VWir (_, i))            = i
-    | info (VIon (_, i))            = i
-    | info (VPer (_, i))            = i
-    | info (VAbs (_, _, (_, _, i))) = i 
-    | info (VTen (_, (_, _, i)))    = i
-    | info (VCom (_, _, (_, _, i))) = i
 
-exception NotImplemented of string * bgval * string
+exception NotImplemented of bgval * string
+fun explain_NotImplemented (NotImplemented (v, errtxt)) =
+    [Exp (LVL_USER, bgvalinfo2origin (info v), pack_pp_with_data pp v, []),
+     Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+val _ = add_explainer
+          (mk_explainer "feature not implemented"
+                        explain_NotImplemented)
 
 (* Determine whether a (X)v is the identity. *)
 fun is_concretion_of X (VMer (1, _))     = NameSet.isEmpty X
@@ -411,8 +507,7 @@ fun is_concretion_of X (VMer (1, _))     = NameSet.isEmpty X
   | is_concretion_of X (VTen ([v], _))   = is_concretion_of X v
   | is_concretion_of _ (VTen _)          = false
   | is_concretion_of X (v as (VCom _))          
-    = raise NotImplemented ("bgval.sml", v, 
-			    "is_concretion_of for composition")
+    = raise NotImplemented (v, "is_concretion_of for composition")
 
 fun is_id (VMer (1, _))    = true
   | is_id (VMer _)         = false
@@ -423,8 +518,7 @@ fun is_id (VMer (1, _))    = true
   | is_id (VAbs (X, v, _)) = is_concretion_of X v
   | is_id (VTen (vs, _))   = List.all is_id vs
   | is_id (v as (VCom _))  = raise NotImplemented
-				 ("bgval.sml", v,
-				  "is_id for composition")
+				 (v, "is_id for composition")
 
 fun is_id0 (VMer (1, _))    = false
   | is_id0 (VMer _)         = false
@@ -435,8 +529,7 @@ fun is_id0 (VMer (1, _))    = false
   | is_id0 (VAbs (X, v, _)) = false
   | is_id0 (VTen (vs, _))   = List.all is_id0 vs
   | is_id0 (v as (VCom _))  = raise NotImplemented
-				 ("bgval.sml", v,
-				  "is_id for composition")
+				 (v, "is_id for composition")
 
   fun LS i w =
       let
@@ -450,7 +543,15 @@ fun is_id0 (VMer (1, _))    = false
                       Con i X)))
       end
 
-  exception NameClash of string * info * nameset * nameset * string
+  exception NameClash of info * nameset * nameset * string
+  fun explain_NameClash (NameClash (i, ns1, ns2, errtxt)) =
+      Exp (LVL_USER, bgvalinfo2origin i, pp_nothing,
+           map (fn ns => Exp (LVL_USER, Origin.unknown_origin,
+                              pack_pp_with_data NameSetPP.pp ns, []))
+               [ns1, ns2])
+      :: [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  val _ = add_explainer
+            (mk_explainer "name clash" explain_NameClash)
 
   fun WLS i ws =
       let
@@ -471,13 +572,13 @@ fun is_id0 (VMer (1, _))    = false
 	       handle 
 	       DuplicatesRemoved
 	       => raise NameClash 
-			  ("bgval.sml", i, X, innernames, 
+			  (i, X, innernames, 
 			   "inner names in a wide local substitution"),
 	       NameSet.union y outernames
 	       handle 
 	       DuplicatesRemoved
 	       => raise NameClash 
-			  ("bgval.sml", i, y, outernames, 
+			  (i, y, outernames, 
 			   "outer names in a wide local substitution"))
 	    end
 	val (vs, Xs, ys, _, _) 
@@ -488,9 +589,26 @@ fun is_id0 (VMer (1, _))    = false
 	       Interface.make {loc = ys, glob = NameSet.empty}, i))
       end
 
-  exception NotParallelisable of string * bgval list * string
+  exception NotParallelisable of bgval list * string
+  fun explain_NotParallelisable (NotParallelisable (vs, errtxt)) =
+      map (fn v => Exp (LVL_USER, bgvalinfo2origin (info v),
+                        pack_pp_with_data pp v, [])) vs
+      @ [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  val _ = add_explainer
+            (mk_explainer "cannot make the parallel product of bgvals, \
+                          \due to outer local or inner name clash"
+                          explain_NotParallelisable)
 
-  exception NotPrimeable of string * bgval list * string
+  exception NotPrimeable of bgval list * string
+  fun explain_NotPrimeable (NotPrimeable (vs, errtxt)) =
+      map (fn v => Exp (LVL_USER, bgvalinfo2origin (info v),
+                        pack_pp_with_data pp v, [])) vs
+      @ [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  val _ = add_explainer
+            (mk_explainer "cannot make the prime product of bgvals, \
+                          \due to outer local or inner name clash, or \
+                          \nonlocal inner faces"
+                          explain_NotPrimeable)
 
   (* locglobnames returns a tuple (Y, Yloc, Yglob), where Y is a set of
    * all local and global names, Yloc is a set of all local
@@ -538,8 +656,7 @@ fun is_id0 (VMer (1, _))    = false
 	        handle DuplicatesRemoved
 	        => raise 
                      NotParallelisable
-                       ("bgval.sml", vs,
-                        "while computing parallel product in Par")
+                       (vs, "while computing parallel product in Par")
 
 	(* Ys is a list of pairs of (outer, outer local) name sets. *)
 	val Ys = map (locglobnames o outerface) vs
@@ -560,14 +677,12 @@ fun is_id0 (VMer (1, _))    = false
               handle DuplicatesRemoved
               => raise 
                    NotParallelisable
-                     ("bgval.sml", vs,
-                      "while computing parallel product in Par")
+                     (vs, "while computing parallel product in Par")
         val _ = if not (NameSet.isEmpty
                   (NameSet.intersect alllocnames allglobnames)) then
                     raise 
                       NotParallelisable
-                        ("bgval.sml", vs,
-                         "while computing parallel product in Par")
+                        (vs, "while computing parallel product in Par")
                 else ()
       in
         if NameSet.isEmpty clashnames then
@@ -633,15 +748,13 @@ fun is_id0 (VMer (1, _))    = false
                       else
                         raise 
                           NotPrimeable
-                            ("bgval.sml", vs,
-                             "while computing parallel product in Par"))
+                            (vs, "while computing parallel product in Par"))
                   NameSet.empty 
                   (map innerface vs)
 	        handle DuplicatesRemoved
 	        => raise 
                      NotPrimeable
-                       ("bgval.sml", vs,
-                        "while computing parallel product in Par")
+                       (vs, "while computing parallel product in Par")
 	(* Ys is a list of pairs of (outer, outer local) name sets. *)
 	val Ys = map (locglobnames o outerface) vs
 	(* clashnames are names in 2 or more interfaces, allnames
@@ -661,14 +774,12 @@ fun is_id0 (VMer (1, _))    = false
               handle DuplicatesRemoved
               => raise 
 	           NotPrimeable
-                     ("bgval.sml", vs,
-                      "while computing prime product in Pri")
+                     (vs, "while computing prime product in Pri")
         val _ = if not (NameSet.isEmpty
                           (NameSet.intersect alllocnames allglobnames))
                 then
                     raise NotPrimeable
-                            ("bgval.sml", vs,
-                             "while computing prime product in Pri")
+                            (vs, "while computing prime product in Pri")
                 else ()
 
 	(* Given a bgval, used names set, a list of local link sets,
@@ -742,44 +853,6 @@ fun is_id0 (VMer (1, _))    = false
       in
 	make'
       end
-  fun unmk v2i =
-      let
-	fun unmk' (v as (VMer (n, i)))
-	    = (BgTerm.Mer (n, (v2i v)), Interface.m n, Interface.one)
-	  | unmk' (v as (VCon (X, i)))
-	    = (BgTerm.Con (X, (v2i v)), 
-	       Interface.make {loc = [X], 
-			       glob = NameSet.empty},
-	       Interface.make {loc = [NameSet.empty], glob = X})
-	  | unmk' (v as (VWir (w, i)))
-	    = (BgTerm.Wir (w, (v2i v)),
-	       Interface.X (Wiring.innernames w),
-	       Interface.X (Wiring.outernames w))
-	  | unmk' (v as (VIon (KyX, i)))
-	    = (BgTerm.Ion (KyX, (v2i v)),
-	       Interface.make {loc = [Ion.innernames KyX],
-			       glob = NameSet.empty},
-	       Interface.make {loc = [], glob = Ion.outernames KyX})
-	  | unmk' (v as (VPer (pi, i)))
-	    = (BgTerm.Per (pi, (v2i v)), 
-	       Permutation.innerface pi,
-	       Permutation.outerface pi)
-	  | unmk' (v as (VAbs (X, v', (innf, outf, i)))) 
-	    = (BgTerm.Abs (X, #1 (unmk' v'), (v2i v)), innf, outf)
-	  | unmk' (v as (VTen (vs, (innf, outf, i)))) 
-	    = (BgTerm.Ten (List.map (#1 o unmk') vs, (v2i v)), innf, outf)
-	  | unmk' (v as (VCom (v1, v2, (innf, outf, i)))) 
-	    = (BgTerm.Com (#1 (unmk' v1), #1 (unmk' v2), (v2i v)),
-	       innf,
-	       outf)
-      in
-	unmk'
-      end
-
-  fun pp indent pps
-    = BgTerm.pp indent pps o #1 o unmk (fn _ => BgTerm.noinfo)
-
-  val size = BgTerm.size o #1 o unmk (fn _ => BgTerm.noinfo)
 
 
   (* Rxxx rules.

@@ -6,14 +6,12 @@
 # INCLUDE=../lib/pp/smlnj
 # INCLUDE=../lib/util
 
-bgerrorhandler-sig:
-bgerrorhandler: bg/sigs ast/sigs /lib/pp/smlnj/. /lib/util/errormsg
-   /lib/coll/monoset-sig
-bgadt-sig: bg/sigs ast/sigs match/sigs /lib/coll/set bgerrorhandler-sig
-bgadt: bgadt-sig bgerrorhandler bg/funs ast/funs match/funs /lib/pp/smlnj/.
-   /lib/coll/set /lib/coll/pp /lib/coll/lzlist %NODASHSIG
-bg-sig: bgadt-sig ast/sugar-sig bgerrorhandler-sig parsers/.
+bgadt-sig: bg/sigs ast/sigs match/sigs /lib/coll/set
+bgadt: bgadt-sig bg/funs ast/funs match/funs /lib/pp/smlnj/.
+   /lib/coll/set /lib/coll/pp /lib/coll/lzlist /lib/util/errorhandler-sig
+   /lib/util/origin-sig %NODASHSIG
+bg-sig: bgadt-sig ast/sugar-sig parsers/.
    /lib/coll/monoset-sig /lib/ml-yacc/.
-bg: bgadt ast/sugar bgerrorhandler parsers/. bg-sig
+bg: bgadt ast/sugar parsers/. bg-sig
    /lib/coll/set /lib/pp/smlnj/. /lib/ml-yacc/. /lib/util/errormsg
-   %NODASHSIG
+   /lib/util/errorhandler-sig  /lib/util/origin-sig %NODASHSIG

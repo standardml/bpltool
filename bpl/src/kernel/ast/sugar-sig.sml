@@ -62,15 +62,14 @@ signature SUGAR =
     type absinfo
 
     (** Singal detection of an ion with duplicate names.
-     * @params i K ys Xs errtxt
-     * @param i       Contextual information.
+     * @params K ys Xs errtxt
      * @param K       The ion control.
      * @param ys      The ions free names. 
      * @param Xs      The ions bound name sets.
      * @param errtxt  Text detailing the error
      *)
     exception DuplicateName of 
-	      string * string * name list * name list list * string
+	      string * name list * name list list * string
     (** Signal detection of arity mismatch in control application.
      * @params errtxt
      * @param errtxt  Text detailing the error

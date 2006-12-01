@@ -1,0 +1,2 @@
+. = exception
+exception: /lib/compat/common/exception-sig %NODASHSIG

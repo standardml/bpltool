@@ -26,11 +26,17 @@ functor Permutation (structure IntSet : MONO_SET
 		     structure NameSet : MONO_SET
 		     structure Name : NAME
 		     structure Interface : INTERFACE
+		     structure Origin : ORIGIN
+		     structure ErrorHandler : ERRORHANDLER
 		     structure PrettyPrint : PRETTYPRINT
 		     structure NameSetPP : COLLECTIONPRETTYPRINT
 		     sharing type Interface.nameset = NameSet.Set
+		     sharing type Origin.origin =
+		                  ErrorHandler.origin
                      sharing type PrettyPrint.ppstream =
-				  NameSetPP.ppstream
+				  NameSetPP.ppstream =
+				  Origin.ppstream =
+				  ErrorHandler.ppstream
 		     sharing type NameSet.Set = NameSetPP.collection
 	             sharing type Name.name = NameSet.elt)
 	:> PERMUTATION 
@@ -45,13 +51,43 @@ struct
   type Mutable = unit
   type Immutable = unit
 
+  open Debug
+  open ErrorHandler
+
+  val file_origin = Origin.mk_file_origin
+                      "$BPL/src/kernel/bg/permutation.sml"
+                      Origin.NOPOS
+  fun mk_explainer errtitle (explainer : exn -> explanation list) e =
+      Exp (LVL_USER, Origin.unknown_origin, mk_string_pp errtitle,
+           explainer e)
+
   (** The permutation data type uses O(n) space, where n = width. *)
   type 'a permutation = {width : int,
 		      pi : (int * nameset) array,
 		      pi_inv : (int * nameset) array}
 
-  exception LogicalError of string * string
-  exception NotPermutation of string * (int * nameset) list
+  exception LogicalError of string
+  fun explain_LogicalError (LogicalError errtxt) =
+      [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  val _ = add_explainer
+            (mk_explainer
+               "an internal error occurred"
+               explain_LogicalError)
+
+  exception NotPermutation of (int * nameset) list
+  fun explain_NotPermutation (NotPermutation p) =
+      let
+        fun pp_elm indent pps (i, ns) =
+            (PrettyPrint.add_string pps (Int.toString i);
+             if NameSet.isEmpty ns then ()
+             else NameSetPP.pp indent pps ns)
+      in
+        [Exp (LVL_USER, Origin.unknown_origin,
+              mk_list_pp "[" "]" ", " pp_elm p, []),
+         Exp (LVL_LOW, file_origin, pp_nothing, [])]
+      end
+  val _ = add_explainer
+            (mk_explainer "not a permutation" explain_NotPermutation)
 
   val array = Array.array
   val sub = Array.sub
@@ -106,7 +142,7 @@ struct
 	    if j < width andalso #1 (pi_inv sub j) = ~1 then
 	      update (pi_inv, j, (i, X))
 	    else
-	      raise NotPermutation ("permutation.sml", Xs)
+	      raise NotPermutation (Xs)
       in
 	appi addinv pi;
 	{width = width, pi = pi, pi_inv = pi_inv}
@@ -178,14 +214,20 @@ struct
 
   fun unchanged perm : 'kind permutation = perm
 
-  exception Uncomposable of string * Mutable permutation * Mutable permutation * string
+  exception Uncomposable of Mutable permutation * Mutable permutation * string
+  fun explain_Uncomposable (Uncomposable (p1, p2, errtxt)) =
+      map (fn p => Exp (LVL_USER, Origin.unknown_origin,
+                        pack_pp_with_data pp p, [])) [p1, p2]
+      @ [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  val _ = add_explainer
+            (mk_explainer "permutations are not composable" explain_Uncomposable)
 
   fun compose (perm1 
 		 as {width = width1, pi = pi1, pi_inv = pi_inv1},
 	       perm2
 		 as {width = width2, pi = pi2, pi_inv = pi_inv2}) =
       if width1 <> width2 then
-	raise Uncomposable ("permutation.sml", copy perm1, copy perm2,
+	raise Uncomposable (copy perm1, copy perm2,
 			    "unequal width in compose")
       else
 	let
@@ -200,7 +242,7 @@ struct
 		   update (pi_inv, j2, (i, X2)))
 		else
 		  raise Uncomposable 
-			("permutation.sml", copy perm1, copy perm2,
+			(copy perm1, copy perm2,
 			 "different local names in compose")
 	      end
 	in
@@ -340,7 +382,17 @@ struct
   (** Signal that a permutation is not regularizable relative to a list
    *  of local inner name lists.
    *)
-  exception NotRegularisable of string * Mutable permutation * nameset list list
+  exception NotRegularisable of Mutable permutation * nameset list list
+  fun explain_NotRegularisable (NotRegularisable (p, nsss)) =
+      [Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data pp p, []),
+       Exp (LVL_USER, Origin.unknown_origin,
+            mk_list_pp "{" "}" ", " (mk_list_pp' "{" "}" ", " NameSetPP.pp) nsss,
+            []),
+       Exp (LVL_LOW, file_origin, pp_nothing, [])]
+  val _ = add_explainer
+            (mk_explainer "permutation is not regularisable"
+                          explain_NotRegularisable)
+
   (** Split a permutation into one major and a number of minor
    * permutations.
    * @params pi Xss
@@ -388,8 +440,7 @@ struct
                   nlocatedAt (j, x, (l + 1, ns, n + sumns))
               end
             | nlocatedAt _ =
-                raise LogicalError ("permutation.sml",
-                                    "the function nlocatedAt was \
+                raise LogicalError ("the function nlocatedAt was \
                                     \unexpectedly called with an \
                                     \empty list")
           fun mlocatedAt (j, _, (l, i)) =
@@ -403,7 +454,7 @@ struct
         in
           val _ = (Array.foldli nlocatedAt (0, ns, 0) nlocated;
                    if #1 (Array.foldli mlocatedAt (0, 0) mlocated) >= k then
-                     raise NotRegularisable ("permutation.sml", copy perm, Xss)
+                     raise NotRegularisable (copy perm, Xss)
                    else
                      ())
         end
@@ -440,9 +491,17 @@ struct
           minors = Array.foldr (op ::) [] minors})
       end
 
-  exception UnequalLengths 
-	    of string * nameset list list 
-	       * nameset list list * string
+  exception UnequalLengths of nameset list list * nameset list list * string
+  fun explain_UnequalLengths (UnequalLengths (nsss1, nsss2, errtxt)) =
+      [Exp (LVL_USER, Origin.unknown_origin,
+            mk_list_pp "{" "}" ", " (mk_list_pp' "{" "}" ", " NameSetPP.pp) nsss1,
+            []),
+       Exp (LVL_USER, Origin.unknown_origin,
+            mk_list_pp "{" "}" ", " (mk_list_pp' "{" "}" ", " NameSetPP.pp) nsss2,
+            []),
+       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  val _ = add_explainer 
+            (mk_explainer "lists of unequal length" explain_UnequalLengths)
 
   (** Compute a permutation for unzipping tensor products
    * in time O(?).
@@ -494,8 +553,7 @@ struct
 	      addmapss Uss U'ss (accl + li) (accl' + l'i)
 	    end	    
 	  | addmapss Uss U'ss _ _ = 
-	    raise UnequalLengths ("permutation.sml", Uss, U'ss,
-				  "in addmapss")
+	    raise UnequalLengths (Uss, U'ss, "in addmapss")
       in
 	addmapss Uiss U'iss 0 0;
 	{width = width, pi = pi, pi_inv = pi_inv}

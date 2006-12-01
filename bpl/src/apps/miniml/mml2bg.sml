@@ -63,8 +63,7 @@ functor MiniMLToBG(structure BG : BG_ADT
 	       SourceLocation.ppSourceLocation file p (List.map ppString ("Type error"::msg))
 	  | MatchCompiler.NonExhaustiveMatch p =>
 	       SourceLocation.ppSourceLocation file p [ppString "Non-exhaustive match"]
-	  | exn => 
-	       ppString(BG.BGErrorHandler.explain' exn)
+	  | exn => raise exn
     end
 
 	

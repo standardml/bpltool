@@ -31,6 +31,8 @@ functor BgBDNF (type info
 		structure Link : LINK
 		structure Wiring : WIRING
 		structure BgVal : BGVAL
+		structure Origin : ORIGIN
+		structure ErrorHandler : ERRORHANDLER
 		structure PrettyPrint : PRETTYPRINT
 		sharing type BgVal.interface = 
 			     Interface.interface =
@@ -56,9 +58,14 @@ functor BgBDNF (type info
 		sharing type NameSet.elt =
                              Name.name =
                              Ion.name
+                sharing type Origin.origin =
+			     ErrorHandler.origin
                 sharing type PrettyPrint.ppstream =
 			     Wiring.ppstream =
-			     BgVal.ppstream
+			     BgVal.ppstream =
+			     Origin.ppstream =
+			     ErrorHandler.ppstream
+                val bgvalinfo2origin : BgVal.info -> Origin.origin
 			     ) :> BGBDNF 
   where type nameset        = NameSet.Set
     and type info           = BgVal.info 
@@ -72,6 +79,8 @@ functor BgBDNF (type info
 struct
   open BgVal
   type ion = Ion.ion
+  open Debug
+  open ErrorHandler
 
   (* NOTE: Each BDNF form has a fixed structure (omitting infos and
    * interfaces) except for the SBDNF which has two possible structures:
@@ -112,12 +121,65 @@ struct
            SCon' of bgval
          | SMol' of M bgbdnf
 
-  exception IrregularBDNF of string * info * bgval * string
-  exception MalformedBDNF of string * info * bgmatch * string
-  exception MalformedRBDNF of string * info * bgmatch * string
-  exception UnequalLength of string * bgval list * bgval list * string
+  val file_origin = Origin.mk_file_origin
+                      "$BPL/src/kernel/ast/bgbdnf.sml"
+                      Origin.NOPOS
+  fun mk_explainer errtitle (explainer : exn -> explanation list) e =
+      Exp (LVL_USER, Origin.unknown_origin, mk_string_pp errtitle,
+           explainer e)
 
-  exception LogicalError of string * string
+  exception IrregularBDNF of info * bgval * string
+  fun explain_IrregularBDNF (IrregularBDNF (i, b, errtxt)) =
+      [Exp (LVL_USER, bgvalinfo2origin i, pack_pp_with_data BgVal.pp b, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  val _ = add_explainer
+            (mk_explainer "bigraph is not regular" explain_IrregularBDNF)
+
+  exception MalformedBDNF of info * bgmatch * string
+  fun explain_MalformedBDNF (MalformedBDNF (i, b, errtxt)) =
+      [Exp (LVL_USER, bgvalinfo2origin i,
+            pack_pp_with_data BgVal.pp_match b, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  val _ = add_explainer
+            (mk_explainer
+               "bgval is not on an appropriate BDNF form"
+               explain_MalformedBDNF)
+
+  exception MalformedRBDNF of info * bgmatch * string
+  fun explain_MalformedRBDNF (MalformedRBDNF (i, b, errtxt)) =
+      [Exp (LVL_USER, bgvalinfo2origin i,
+            pack_pp_with_data BgVal.pp_match b, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  val _ = add_explainer
+            (mk_explainer
+               "bgval is not on an appropriate RBDNF form"
+               explain_MalformedRBDNF)
+
+  exception UnequalLength of bgval list * bgval list * string
+  fun explain_UnequalLength (UnequalLength (vs1, vs2, errtxt)) =
+      let
+        fun bgval2exp v =
+            Exp (LVL_USER, bgvalinfo2origin (BgVal.info v),
+                 pack_pp_with_data BgVal.pp v, [])
+      in
+        [Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "vs1",
+              map bgval2exp vs1),
+         Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "vs2",
+              map bgval2exp vs2),
+         Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+      end
+  val _ = add_explainer
+            (mk_explainer
+               "bgval lists of unequal length"
+               explain_UnequalLength)
+
+  exception LogicalError of string
+  fun explain_LogicalError (LogicalError errtxt) =
+      [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  val _ = add_explainer
+            (mk_explainer
+               "an internal error occurred"
+               explain_LogicalError)
 
   val take = List.take
   val drop = List.drop
@@ -183,8 +245,8 @@ struct
 	    val Mer = Mer i
 	    fun ** (v1, v2) = Ten [v1, v2]  infix 6 **
 	    val oo = Com i                  infix 7 oo
-			val Y = foldr (fn (X, Y) => NameSet.union X Y) NameSet.empty
-			          (map (Interface.glob o outerface) Ss)
+            val Y = foldr (fn (X, Y) => NameSet.union X Y) NameSet.empty
+                          (map (Interface.glob o outerface) Ss)
 	    val id_Y = Wiring.id_X Y
 	    val n = length Ss
 		in
@@ -226,8 +288,7 @@ struct
              {wirxid = wirxid, D = D}
       | wrongterm => 
           raise MalformedBDNF 
-                  ("bgbdnf.sml", info B, wrongterm,
-                   "matching B in unmkB")
+                  (info B, wrongterm, "matching B in unmkB")
 
   fun unmkD D =
       case match (PTen [PVar, PCom (PTns, PPer)]) D of
@@ -235,8 +296,7 @@ struct
              {ren = ren, Ps = Ps, perm = Per (info D) pi}
       | wrongterm => 
           raise MalformedBDNF 
-                  ("bgbdnf.sml", info D, wrongterm,
-                   "matching D in unmkD")
+                  (info D, wrongterm, "matching D in unmkD")
 
   fun unmkP' P =
       case match (PCom (PVar, PVar)) P of
@@ -244,15 +304,14 @@ struct
           {idxlocsub = idxlocsub, N = N}
       | wrongterm => 
           raise MalformedBDNF 
-                  ("bgbdnf.sml", info P, wrongterm,
-                   "matching P in unmkP'")
+                  (info P, wrongterm, "matching P in unmkP'")
 
   fun unmkP P =
       case match (PCom
        	           (PTen
        	             [PWir,
-	  	                PAbs (PCom (PTen [PWir, PPer], PCon))],
-	  	              PVar)) P of
+                      PAbs (PCom (PTen [PWir, PPer], PCon))],
+                            PVar)) P of
         MCom
          (MTen
            [MWir id_Z, MAbs (Y, MCom (MTen [MWir s, MPer id], MCon X))],
@@ -260,8 +319,7 @@ struct
           {id_Z = id_Z, Y = Y, s = s, X = X, N = N}
       | wrongterm => 
           raise MalformedBDNF 
-                  ("bgbdnf.sml", info P, wrongterm,
-                   "matching P in unmkP")
+                  (info P, wrongterm, "matching P in unmkP")
 
   fun unmkN N =
       case match (PAbs (PVar)) N of
@@ -269,8 +327,7 @@ struct
           {absnames = absnames, G = G}
       | wrongterm => 
           raise MalformedBDNF 
-                  ("bgbdnf.sml", info N, wrongterm,
-                   "matching N in unmkN")
+                  (info N, wrongterm, "matching N in unmkN")
 
   fun unmkG G =
       case match (PCom (PVar, PTns)) G of
@@ -278,8 +335,7 @@ struct
           {idxmerge = idxmerge, Ss = Ss}
       | wrongterm =>
           raise MalformedBDNF 
-                  ("bgbdnf.sml", info G, wrongterm,
-                   "matching G in unmkG")
+                  (info G, wrongterm, "matching G in unmkG")
 
   fun unmkS S =
       let
@@ -292,8 +348,7 @@ struct
             SMol (Com i (Ten i [Wir i a, Ion i KyX], N))
         | wrongterm =>
             raise MalformedBDNF 
-                    ("bgbdnf.sml", i, wrongterm,
-                     "matching S in unmkS")
+                    (i, wrongterm, "matching S in unmkS")
       end
 
   fun unmkS' S =
@@ -307,8 +362,7 @@ struct
             SMol' (Com i (Ten i [Wir i a, Ion i KyX], N))
         | wrongterm =>
             raise MalformedBDNF 
-                    ("bgbdnf.sml", i, wrongterm,
-                     "matching S in unmkS")
+                    (i, wrongterm, "matching S in unmkS")
       end
 
   fun unmkM M =
@@ -317,8 +371,7 @@ struct
           {id_Z = id_Z, KyX = KyX, N = N}
       | wrongterm =>
           raise MalformedBDNF 
-                  ("bgbdnf.sml", info M, wrongterm,
-                   "matching M in unmkM")
+                  (info M, wrongterm, "matching M in unmkM")
 
   fun unmkM' M =
       case match (PCom (PVar, PVar)) M of
@@ -326,8 +379,7 @@ struct
           {idxion = idxion, N = N}
       | wrongterm =>
           raise MalformedBDNF 
-                  ("bgbdnf.sml", info M, wrongterm,
-                   "matching M in unmkM'")
+                  (info M, wrongterm, "matching M in unmkM'")
 
   fun unmkBR B = 
       case match (PCom (PVar, PVar)) B of
@@ -335,8 +387,7 @@ struct
              {wirxid = wirxid, D = D}
       | wrongterm => 
           raise MalformedRBDNF 
-                  ("bgbdnf.sml", info B, wrongterm,
-                   "matching B in unmkRB")
+                  (info B, wrongterm, "matching B in unmkRB")
 
   fun unmkDR D =
       case match (PTen [PVar, PTns]) D of
@@ -344,8 +395,7 @@ struct
              {ren = ren, Ps = Ps}
       | wrongterm => 
           raise MalformedRBDNF 
-                  ("bgbdnf.sml", info D, wrongterm,
-                   "matching D in unmkRD")
+                  (info D, wrongterm, "matching D in unmkRD")
 
   fun innerface (b : 'class bgbdnf) = BgVal.innerface b
 
@@ -412,7 +462,7 @@ struct
                    (s, barS)
                  end
              | wrongterm =>
-                 raise MalformedBDNF ("bgbdnf.sml", i, wrongterm,
+                 raise MalformedBDNF (i, wrongterm,
                           "matching barP in Ccom rule"))
         | MCom (MTen [MWir id_Z,
                       MCom (MTen [MWir id_Y, MIon KyX], MVal N)],
@@ -436,8 +486,7 @@ struct
               (s', Ten [(Wir id_Z'Y' ** Ion KyX') oo N'])
             end
         | wrongterm =>
-            raise MalformedBDNF ("bgbdnf.sml", i, wrongterm,
-                                 "in Scom rules")
+            raise MalformedBDNF (i, wrongterm, "in Scom rules")
       end
 
   and bgvalCom2NBDNF v = (* Ncom rule *)
@@ -504,8 +553,7 @@ struct
                    end
                  | composeprimes [] err2s =
                    raise UnequalLength 
-                           ("bgbdnf.sml", [], err2s,
-                            "composeprimes in rule Ncom")
+                           ([], err2s, "composeprimes in rule Ncom")
             (* Concat the tensor products barS_i and tensor the
              * substitutions s_i resulting from the normalization
              * of each of the S_i compositions.
@@ -519,8 +567,7 @@ struct
                          | wrongterm =>
                              raise
                                MalformedBDNF
-                                 ("bgbdnf.sml", i,
-                                  wrongterm,
+                                 (i, wrongterm,
                                   "matching barSi in Ncom rule"))
                       (Wiring.id_0, [])
                       (map
@@ -538,8 +585,7 @@ struct
             (s, Abs (X', (Wir id_Z'Y' ** Mer n') oo barS))
           end
       | wrongterm => 
-          raise MalformedBDNF ("bgbdnf.sml", BgVal.info v, wrongterm,
-                               "in Ncom rule")
+          raise MalformedBDNF (BgVal.info v, wrongterm, "in Ncom rule")
 
   fun bgval2PBDNF v = (* Pcom rule *)
       case match (PCom (PTen [PWir,
@@ -606,8 +652,7 @@ struct
             (s', (Wir id_W ** LS yX') oo N')
           end
       | wrongterm => 
-          raise MalformedBDNF ("bgbdnf.sml", BgVal.info v, wrongterm,
-                               "in Pcom rule")
+          raise MalformedBDNF (BgVal.info v, wrongterm, "in Pcom rule")
 
   fun bgval2BBDNF v = (* Bxxx rules *)
       let
@@ -803,8 +848,7 @@ struct
              end
            | wrongterm =>
              raise
-               MalformedBDNF ("bgbdnf.sml", i, wrongterm,
-                               "matching b in rule Babs"))
+               MalformedBDNF (i, wrongterm, "matching b in rule Babs"))
       
         | MTns bs => (* Rule Bten *)
           let
@@ -824,11 +868,9 @@ struct
                     (w, pid_Y, a, pi, P_ijs @ Ps)
                   end
                 | wrongterm => raise MalformedBDNF
-                     ("bgbdnf.sml", i, wrongterm,
-                      "matching Di in rule Bten"))
+                     (i, wrongterm, "matching Di in rule Bten"))
                 | wrongterm => raise MalformedBDNF
-                     ("bgbdnf.sml", i, wrongterm,
-                      "matching b_i in rule Bten") 
+                     (i, wrongterm, "matching b_i in rule Bten") 
             val (w, pid_Y, a, pi, Ps)
                 = foldr
                     unzip
@@ -882,8 +924,7 @@ struct
                    end
                  | composeprimes [] err2s =
                    raise UnequalLength 
-                           ("bgbdnf.sml", [], err2s,
-                            "composeprimes in rule Bcom")
+                           ([], err2s, "composeprimes in rule Bcom")
                val (ss, Ps)
                  = ListPair.unzip
                      (map bgval2PBDNF 
@@ -909,20 +950,15 @@ struct
                (Wir w ** Per pid_U1) oo D
              end
            | wrongtermD2 =>
-             raise MalformedBDNF ("bgbdnf.sml", i, wrongtermD2,
-                                   "matching D2 in rule Bcom"))
+             raise MalformedBDNF (i, wrongtermD2, "matching D2 in rule Bcom"))
            | wrongtermD1 =>
-             raise MalformedBDNF ("bgbdnf.sml", i, wrongtermD1,
-                                   "matching D1 in rule Bcom"))
+             raise MalformedBDNF (i, wrongtermD1, "matching D1 in rule Bcom"))
            | wrongtermb2 =>
-             raise MalformedBDNF ("bgbdnf.sml", i, wrongtermb2,
-                                   "matching b2 in rule Bcom"))
+             raise MalformedBDNF (i, wrongtermb2, "matching b2 in rule Bcom"))
            | wrongtermb1 =>
-             raise MalformedBDNF ("bgbdnf.sml", i, wrongtermb1,
-                                   "matching b1 in rule Bcom"))
+             raise MalformedBDNF (i, wrongtermb1, "matching b1 in rule Bcom"))
         | wrongtermB =>
-          raise MalformedBDNF ("bgbdnf.sml", i, wrongtermB,
-                               "matching in Bxxx rules")
+          raise MalformedBDNF (i, wrongtermB, "matching in Bxxx rules")
       end
 
   fun make v = bgval2BBDNF (BgVal.rename_internally v)
@@ -965,7 +1001,7 @@ struct
                   S
 		else
 		  raise IrregularBDNF
-                    ("bgbdnf.sml", i, B, "bigraph is irregular")
+                    (i, B, "bigraph is irregular")
             | SMol' M => regM M pi
             
         and regN N pi =
@@ -976,7 +1012,7 @@ struct
               val {major, minors} = Permutation.split pi Xss
               handle Permutation.NotRegularisable _ =>
                 raise IrregularBDNF
-                  ("bgbdnf.sml", i, B, "bigraph is irregular")
+                  (i, B, "bigraph is irregular")
               val Ss' = map regS (ListPair.zip (Ss, minors))
             in
               Abs (absnames,
@@ -1002,8 +1038,7 @@ struct
                   end
                 | regPs [] err2s _ =
                   raise LogicalError
-                          ("bgbdnf.sml",
-                           "the function regPs in regularize \
+                          ("the function regPs in regularize \
                            \was called with uncomposable arguments")
 
               val {ren, Ps, perm} = unmkD D
@@ -1011,14 +1046,13 @@ struct
                          MPer pi => pi
                        | wrongterm =>
                            raise MalformedBDNF 
-                             ("bgbdnf.sml", info perm, wrongterm,
-                              "matching perm in regD")
+                             (info perm, wrongterm, "matching perm in regD")
               val pis = Permutation.unmk pi
             in
               Ten [ren, Ten (regPs Ps pis 0)]
               handle Permutation.NotPermutation _ =>
                 raise IrregularBDNF
-                  ("bgbdnf.sml", i, B, "bigraph is irregular")
+                  (i, B, "bigraph is irregular")
             end
             
       in

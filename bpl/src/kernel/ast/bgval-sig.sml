@@ -72,13 +72,12 @@ sig
   (** Construct w = a general wiring. *)
   val Wir : info -> wiring -> bgval
   (** Signal duplicate names. 
-   * @params file i namesets errtxt
-   * @param file      File name for the code that detected the problem.
+   * @params i namesets errtxt
    * @param i         Contextual information.
    * @param namesets  The offending namesets.
    * @param errtxt    Explanatory error text.
    *)
-  exception DuplicateNames of string * info * name list list * string
+  exception DuplicateNames of info * name list list * string
   (** Construct K_yX = an ion.
    * @exception DuplicateNames  if outer or inner names are not
    * distinct.
@@ -90,19 +89,17 @@ sig
   val Per : info -> 'kind permutation -> bgval
   (** Signal that a name is missing from the outer face of a prime
    * that is attempted abstracted. 
-   * @params file v errtxt
-   * @param file    File name for the code that detected the problem.
+   * @params v errtxt
    * @param v       The bigraph value.
    * @param errtxt  text detailing the error.
    *)
-  exception NameMissing of string * bgval * string
+  exception NameMissing of bgval * string
   (** Signal that a bigraph to be abstracted was not prime. 
-   * @params file v errtxt
-   * @param file    File name for the code that detected the problem.
+   * @params v errtxt
    * @param v       The bigraph value.
    * @param errtxt  Explanatory error text.
    *)
-  exception NotPrime of string * bgval * string
+  exception NotPrime of bgval * string
   (** Construct (X)P = an abstraction.
    * @exception NotPrime     i P is not prime.
    * @exception NameMissing  if X is not a subset of P's global outer
@@ -111,24 +108,22 @@ sig
   val Abs : info -> nameset * bgval -> bgval
   (** Signal that the inner or outer name sets of a list of bigraphs
    * were not disjoint. 
-   * @params i vs errtxt
-   * @param i       Contextual information.
+   * @params vs errtxt
    * @param vs      The list of values.
    * @param errtxt  Explanatory error text.
    *)
-  exception NotTensorable of string * bgval list * string
+  exception NotTensorable of bgval list * string
   (** Construct b_1 x...x b_n-1 = a tensor product of n bigraphs.
    * @exception NotTensorable  if inner or outer names clash.
    *)
   val Ten : info -> bgval list -> bgval
   (** Signal that the interfaces of two bigraphs were not compatible. 
-   * @params i v1 v2 errtxt
-   * @param i       Contextual information.
+   * @params v1 v2 errtxt
    * @param v1      The first value.
    * @param v2      The second value.
    * @param errtxt  Explanatory error text.
    *)
-  exception NotComposable of string * bgval * bgval * string
+  exception NotComposable of bgval * bgval * string
   (** Construct b_1 b_2 = a composition of a pair of bigraphs. 
    * @exception NotComposable  if the inner face of b_1 is different
    *                           from outer face of b_2.
@@ -225,30 +220,27 @@ sig
    *)
   val match2bgval : info -> bgmatch -> bgval
   (** Signal that name sets in interfaces are not disjoint. 
-   * @params file i I1 I2 errtxt
-   * @param file    File name for the code that detected the problem.
+   * @params i I1 I2 errtxt
    * @param i       Contextual information.
    * @param I1      Interface that clashes with I2.
    * @param I2      Interface that clashes with I1.
    * @param errtxt  Explanatory error text.
    *)
-  exception NameClash of string * info * nameset * nameset * string
+  exception NameClash of info * nameset * nameset * string
   (** Signal that the outer local or inner name sets of a list of bigraphs
    * were not disjoint. 
-   * @params i vs errtxt
-   * @param i       Contextual information.
+   * @params vs errtxt
    * @param vs      The list of values.
    * @param errtxt  Explanatory error text.
    *)
-  exception NotParallelisable of string * bgval list * string
+  exception NotParallelisable of bgval list * string
   (** Signal that the outer local and outer global name sets of a list
    * of bigraphs were not disjoint. 
-   * @params i vs errtxt
-   * @param i       Contextual information.
+   * @params vs errtxt
    * @param vs      The list of values.
    * @param errtxt  Explanatory error text.
    *)
-  exception NotPrimeable of string * bgval list * string
+  exception NotPrimeable of bgval list * string
   (** Construct a local substitution.
    *)
   val LS : info -> wiring -> bgval
@@ -289,12 +281,11 @@ sig
    *)
   val Pri : info -> bgval list -> bgval
   (** Signal that some operation on a bgval is not implemented.
-   * @params file v errtxt
-   * @param file    File name for the code that detected the problem.
+   * @params v errtxt
    * @param v       The bigraph value.
    * @param errtxt  Explanatory error text.
    *)
-  exception NotImplemented of string * bgval * string
+  exception NotImplemented of bgval * string
   (** Determine whether a bgval is an identity.  NOTE: An
    * implementation is not required to implement this for bgvals
    * containing compositions. 

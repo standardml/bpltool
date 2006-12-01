@@ -27,7 +27,15 @@ structure Test = struct
     structure Assert           = SMLUnit.Assert
     structure Test             = SMLUnit.Test
     structure TextUITestRunner = SMLUnit.TextUITestRunner
-    structure BG = BG (PrettyPrint);
+    structure Origin = Origin(structure PrettyPrint = PrettyPrint)
+
+    structure ErrorHandler 
+      = PrintErrorHandler (structure PrettyPrint = PrettyPrint
+                           structure Origin      = Origin)
+
+    structure BG = BG (structure Origin       = Origin
+                       structure PrettyPrint  = PrettyPrint
+                       structure ErrorHandler = ErrorHandler);
 
     structure BGTest 
       = BGTest
@@ -37,7 +45,8 @@ structure Test = struct
 
     structure BDNFTest 
       = BDNFTest
-	    (structure Assert = Assert
+	    (structure ErrorHandler = ErrorHandler
+             structure Assert = Assert
              structure Test = Test
 	     structure BG = BG)
 
