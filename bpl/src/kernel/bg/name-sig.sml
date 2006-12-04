@@ -25,7 +25,7 @@ signature NAME =
 sig
   (** Prettyprinter stream. *)
   type ppstream
-  (** The link data type. *)
+  (** The name data type. *)
   eqtype name
   (** Construct a name. *)
   val make : string -> name
