@@ -609,87 +609,60 @@ struct
   fun addto ht names y
     = NameSet.apply (fn x => NameMap.insert ht (x, y)) names
 
-  fun freshname usednames namebases =
+  fun splitopen (w as (ls, ht)) =
     let
-      fun try basename i =
-        let
-          val y = Name.make (basename ^ "_" ^ Int.toString i)
-        in
-          if NameSet.member y usednames then
-            try basename (i + 1)
-          else
-            (y, NameSet.insert y usednames)
-        end
-      val basename
-        = Name.unmk (NameSet.foldUntil
-                       (fn x => fn _ => (true, x))
-                       (Name.make "x")
-                       namebases)
-    in
-      try basename 0
-    end
-
-  fun splitopen usednames (w as (ls, ht)) =
-    let
-      val usednames = NameSet.union usednames (outernames w)
       val ht_open = createNameMap' ()
       val ht_opened = createNameMap' ()
       fun addlink (l as {outer, inner})
-                  (ls_open, ls_opened, newnames, usednames) =
+                  (ls_open, ls_opened, newnames) =
         case outer of
           Name y => (addto ht_open inner outer;
                      (Link'Set.insert l ls_open,
                       ls_opened,
-                      newnames,
-                      usednames))
+                      newnames))
         | Closure i =>
             let
-              val (y, usednames) = freshname usednames inner
+              val y = Name.fresh NONE
               val newl = {outer = Name y, inner = inner}
             in
               addto ht_opened inner (Name y);
               (ls_open,
                Link'Set.insert newl ls_opened,
-               NameSet.insert y newnames,
-               usednames)
+               NameSet.insert y newnames)
             end
-      val (ls_open, ls_opened, newnames, usednames)
+      val (ls_open, ls_opened, newnames)
         = Link'Set.fold
             addlink (Link'Set.empty, Link'Set.empty,
-            	       NameSet.empty, usednames) ls
+            	       NameSet.empty) ls
     in
       {opened    = (ls_opened, ht_opened),
        rest      = (ls_open, ht_open),
-       newnames  = newnames,
-       usednames = usednames}
+       newnames  = newnames}
     end
 
-  fun openup usednames (w as (ls, ht)) =
+  fun openup (w as (ls, ht)) =
     let
-      val usednames = NameSet.union usednames (outernames w)
       val new_ht = NameMap.copy ht
       fun addlink (l as {outer, inner})
-                  (new_ls, newnames, usednames) =
+                  (new_ls, newnames) =
         case outer of
-          Name x => (new_ls, newnames, usednames)
+          Name x => (new_ls, newnames)
         | Closure i =>
             let
-              val (y, usednames) = freshname usednames inner
+              val y = Name.fresh NONE
               val newl = {outer = Name y, inner = inner}
               val new_ls = Link'Set.remove l new_ls 
             in
               addto new_ht inner (Name y);
               (Link'Set.insert newl new_ls,
-              NameSet.insert y newnames,
-              usednames)
+              NameSet.insert y newnames)
             end
-      val (new_ls, newnames, usednames)
+      val (new_ls, newnames)
         = Link'Set.fold
-            addlink (Link'Set.empty, NameSet.empty, usednames) ls
+            addlink (Link'Set.empty, NameSet.empty) ls
     in
       {opened = (new_ls, new_ht),
-       newnames = newnames,
-       usednames = usednames}
+       newnames = newnames}
     end
 
   fun closelinks Y (ls, ht) =

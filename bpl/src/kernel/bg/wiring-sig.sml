@@ -148,33 +148,26 @@ sig
   (** Split wiring into closed and open part, then turn closed edges
    * into links with fresh names.    Any fresh
    * names generated will not clash with outer names of w.
-   * @params usednames w
-   * @param usednames  Names not to use when generating fresh names.
+   * @params w
    * @param w          Wiring to split and open.
-   * @return {opened, rest, newnames, usednames}  A wiring containing just the
+   * @return {opened, rest, newnames}  A wiring containing just the
    *                   opened links, a wiring containing just the
-   *                   original open links, the set of fresh
-   *                   names, and the set union of the
-   *                   original usednames and fresh names.
+   *                   original open links, the set of fresh names.
    *)
-  val splitopen : nameset -> wiring -> {opened : wiring,
-                                        rest : wiring,
-                                        newnames : nameset,
-                                        usednames : nameset}
+  val splitopen : wiring -> {opened : wiring,
+                             rest : wiring,
+                             newnames : nameset}
   (** Turn closed edges into links with fresh names.  Any fresh
    * names generated will not clash with outer names of w.
-   * @params usednames w
-   * @param usednames  Names not to use when generating fresh names.
+   * @params w
    * @param w          Wiring to open.
-   * @return {opened, newnames, usednames}
+   * @return {opened, newnames}
    *                   A wiring containing just open links,
-   *                   the set of new names added, and the union
-   *                   of the original usednames, and any fresh
+   *                   the set of new names added, and any fresh
    *                   names.  We have w = (id * /newnames) o opened.
    *)
-  val openup : nameset -> wiring -> {opened: wiring,
-                                     newnames : nameset,
-                                     usednames : nameset}
+  val openup : wiring -> {opened: wiring,
+                          newnames : nameset}
   (** Close some open links. *)
   val closelinks : nameset -> wiring -> wiring
   (** Determine whether some wiring is an identity. *)

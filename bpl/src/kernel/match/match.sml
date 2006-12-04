@@ -58,7 +58,7 @@ functor Match (
                            = BgVal.nameset
                            = Ion.nameset
   sharing type Name.name = Ion.name
-   											 = Link.name
+                          = Link.name
                          = NameSet.elt
                          = BgVal.name
   sharing type NameMap.dom = Name.name
@@ -144,7 +144,7 @@ struct
   structure NameHashMap 
     = HashTableFn (type hash_key = name
                    val hashVal = Name.hash
-		   val sameKey = Name.==);
+       val sameKey = Name.==);
   fun createNameHashMap size = NameHashMap.mkTable (size, NOT_FOUND)
 
   (* A split of m elements into n parts is a list of n integers
@@ -204,7 +204,7 @@ struct
   (* Return the first permutation in the ordering. *)
   fun firstperm names : Mutable operm =
     let
-    	fun poslist 0 = []
+      fun poslist 0 = []
         | poslist n = (n - 1, Left) :: poslist (n - 1)
       val pi = Permutation.copy (Permutation.id names)
       val n = Permutation.width pi
@@ -215,7 +215,7 @@ struct
   (* Return the first permutation in the ordering. *)
   fun firstperm_n n : Mutable operm =
     let
-    	fun poslist 0 = []
+      fun poslist 0 = []
         | poslist n = (n - 1, Left) :: poslist (n - 1)
       val pi = Permutation.copy (Permutation.id_n n)
     in
@@ -258,8 +258,6 @@ struct
    * --------------------
    * All rule functions used in non-prime mode, except CLO, take
    * some specific arguments, as well as these general ones:
-   * - usednames  a set containing all names that must NOT be used
-   *              as outer names for ename'
    * - ename      finite map, renaming some of s_a_e's outer names
    * - s_a_e      substitution representing agent edge links
    * - s_a_n      substitution representing agent name links
@@ -267,7 +265,7 @@ struct
    * - s_R_n      substitution representing redex name links
    *
    * They must return specific values, as well as
-	 * - ename'     extension of ename, renaming some of s_a_e's outer names
+   * - ename'     extension of ename, renaming some of s_a_e's outer names
    * - Y          set of names to add as introductions to s_a_e
    * - s_C        substitution representing context links
    *
@@ -288,7 +286,7 @@ struct
    * - s_C_n      substitution representing (part of) context name links
    *
    * They must return specific values, as well as
-	 * - ename'     extension of ename, renaming some of s_a_e's outer names
+   * - ename'     extension of ename, renaming some of s_a_e's outer names
    * - s_C'       substitution representing (part of) context edge links
    *
    * Letting sigma^C represent the context substitution of the
@@ -299,77 +297,77 @@ struct
 
   (* Signal that no match of links between s_a and s_C exists. *)
   exception NoMatch
-	(* Match up links of points for two substitutions pairwise.
-	 * The links of a list of points [y0, ..., yn] of s_a must be matched with
-	 * those of corresponding points [u0, ..., un] of s_C.
-	 * Matched link sets of s_a_e are moved to s_a_n, and copied to s_a_e'', and
-	 * matched link sets of s_C_e are moved to s_C_n, and copied to s_C_e''.
-	 * Updated copies of s_a, s_a'', s_C, s_C'' are returned.
-	 * If no match exists, a NoMatch exception is raised.
-	 * 1) Make copies of s_a_e, s_a_n, s_C_e, s_C_n, as the following
-	 *    operations are destructive.
-	 * 2) For each (yi, ui),
-	 *    if yi is a point of s_a_n then
-	 *      if ui is a point of s_C_n then
-	 *        if s_a_n(yi) <> s_C_n(ui) then return NO MATCH
-	 *      else
-	 *        move linkset s_C_e(ui) to s_C_n, renaming it to s_a_n(yi),
-	 *        and copy it to s_C_e''
+  (* Match up links of points for two substitutions pairwise.
+   * The links of a list of points [y0, ..., yn] of s_a must be matched with
+   * those of corresponding points [u0, ..., un] of s_C.
+   * Matched link sets of s_a_e are moved to s_a_n, and copied to s_a_e'', and
+   * matched link sets of s_C_e are moved to s_C_n, and copied to s_C_e''.
+   * Updated copies of s_a, s_a'', s_C, s_C'' are returned.
+   * If no match exists, a NoMatch exception is raised.
+   * 1) Make copies of s_a_e, s_a_n, s_C_e, s_C_n, as the following
+   *    operations are destructive.
+   * 2) For each (yi, ui),
+   *    if yi is a point of s_a_n then
+   *      if ui is a point of s_C_n then
+   *        if s_a_n(yi) <> s_C_n(ui) then return NO MATCH
+   *      else
+   *        move linkset s_C_e(ui) to s_C_n, renaming it to s_a_n(yi),
+   *        and copy it to s_C_e''
    *    else
    *      if ui is a point of s_C_e then
    *        move linkset s_C_e(ui) to s_C_n, 
    *        and copy it to s_C_e''
    *      move linkset s_a_e(yi) to s_a_n, renaming it to s_C_n(ui),
    *      and copy it to s_a_e''
-	 *    remove yi from s_a_n and ui from s_C_n.
-	*)
-	fun matchpoints {ys, us, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}} =
-	  (print "match/match.sml: matchpoints not implemented yet!\n";
-	   raise NoMatch;
-		 {s_a = s_a, s_C = s_C, s_a_e'' = s_a_e, s_C_e'' = s_C_e})							 
+   *    remove yi from s_a_n and ui from s_C_n.
+  *)
+  fun matchpoints {ys, us, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}} =
+    (print "match/match.sml: matchpoints not implemented yet!\n";
+     raise NoMatch;
+     {s_a = s_a, s_C = s_C, s_a_e'' = s_a_e, s_C_e'' = s_C_e})               
 
-	(* Match a global discrete prime g to a context G using the PAX rule:
-	 * 1) Deconstruct context G = "alpha" : (X) -> Y.
-	 * 2) Compute X, Y, and Z = dom(g) \ X.
-	 * 3) Let ename' = ename, s_C' = {}.
-	 * 4) For each x in Y + Z, 
-	 *    4a) If x in Y then x' = alpha^-1(x) else x' = x.
-	 *    4b) If x in dom(s_C_e) then
-	 *          check/adjust ename' so that ename' s_a_e(x') = s_C_e(x)
-	 *        else
-	 *          if x in dom(s_C_n) then x'' = s_C_n(x) else x'' = x
-	 *          if x in dom(s_a_e) then
-	 *            check/adjust ename' and s_C' so that
-	 *              ename' s_a_e(x') = s_C'(x'')
-	 *          else
-	 *            check/adjust s_C' so that s_a_n(x') = s_C'(x'').
-	 * 5) Return ename', s_C', qs = (X)g.
-	 *)
-  fun matchPAX' {usednames, ename, s_a, s_C, g, G} = lzNil
+  (* Match a global discrete prime g to a context G using the PAX rule:
+   * 1) Deconstruct context G = "alpha" : (X) -> Y.
+   * 2) Compute X, Y, and Z = dom(g) \ X.
+   * 3) Let ename' = ename, s_C' = {}.
+   * 4) For each x in Y + Z, 
+   *    4a) If x in Y then x' = alpha^-1(x) else x' = x.
+   *    4b) If x in dom(s_C_e) then
+   *          check/adjust ename' so that ename' s_a_e(x') = s_C_e(x)
+   *        else
+   *          if x in dom(s_C_n) then x'' = s_C_n(x) else x'' = x
+   *          if x in dom(s_a_e) then
+   *            check/adjust ename' and s_C' so that
+   *              ename' s_a_e(x') = s_C'(x'')
+   *          else
+   *            check/adjust s_C' so that s_a_n(x') = s_C'(x'').
+   * 5) Return ename', s_C', qs = (X)g.
+   *)
+  fun matchPAX' {ename, s_a, s_C, g, G} = lzNil
   
-  and matchMER' {usednames, ename, s_a, s_C, g, G} = lzNil
+  and matchMER' {ename, s_a, s_C, g, G} = lzNil
 
-	(* Match a global discrete prime to a context using the ION rule:
-	 * 1) Deconstruct agent g = id * K_y(X) and context G = i * L_u(Z).
-	 * 2) If ctrl(K) <> ctrl (L) return NO MATCH.
-	 * 3) Let ename'' = ename.
-	 * 4) For each (yi, ui),
-	 *      if ui in dom(s_C_e) then
-	 *        check/update ename'' so that ename'' s_a_e(yi) = s_C_e(ui).
+  (* Match a global discrete prime to a context using the ION rule:
+   * 1) Deconstruct agent g = id * K_y(X) and context G = i * L_u(Z).
+   * 2) If ctrl(K) <> ctrl (L) return NO MATCH.
+   * 3) Let ename'' = ename.
+   * 4) For each (yi, ui),
+   *      if ui in dom(s_C_e) then
+   *        check/update ename'' so that ename'' s_a_e(yi) = s_C_e(ui).
    * 5) Construct (v)/(X) and (v)/(Z) for some fresh v.
    * 6) Using ename'', s_a, s_C, etc., infer premise,
    *    yielding ename', s_C', qs.
-	 * 7) For each (yi, ui),
-	 *      if ui notin dom(s_C_e) then
-	 *        if ui in dom(s_C_n) then u' = s_C_n(u) else u' = ui
-	 *        if yi in dom(s_a_e) then
-	 *          check/update ename' and s_C' so that
-	 *            ename' s_a_e(yi) = s_C'(u')
+   * 7) For each (yi, ui),
+   *      if ui notin dom(s_C_e) then
+   *        if ui in dom(s_C_n) then u' = s_C_n(u) else u' = ui
+   *        if yi in dom(s_a_e) then
+   *          check/update ename' and s_C' so that
+   *            ename' s_a_e(yi) = s_C'(u')
    *        else
    *          check/update s_C' so that s_a_n(yi) = s_C'(u').
    * 8) Return ename', s_C', qs.
-	 *)
-  and matchION' {usednames, ename, s_a, s_C, g, G} = lzNil
+   *)
+  and matchION' {ename, s_a, s_C, g, G} = lzNil
 
   (* Match a global discrete prime using a PAX, MER or ION rule:
    * 1) First return any PAX rule matches,
@@ -378,51 +376,51 @@ struct
    *    (to avoid infinite recursion via MER-PAR-PARe-PARn),
    *    return any MER rule matches.
    *)
-  and matchDG' (args as {usednames, ename, s_a, s_C, g, G})
+  and matchDG' (args as {ename, s_a, s_C, g, G})
     = lzappend (matchPAX' args)
-    		(lzappend (matchION' args)
-    			(lzmake (fn () =>
-    				case #Ss (unmkG g) of
-    				  (_ :: _ :: _) => lzunmk (matchMER' args)
-    				| _ => LazyList.Nil)))
+        (lzappend (matchION' args)
+          (lzmake (fn () =>
+            case #Ss (unmkG g) of
+              (_ :: _ :: _) => lzunmk (matchMER' args)
+            | _ => LazyList.Nil)))
 
-	(* Match a prime to a context using the ABS rule:
-	 * 1) Deconstruct agent p = (id * ^s_a_L)(Z)g and
-	 *    context P = (id * ^s_C_L)(U)G.
-	 * 2) Compute s_a_n' = s_a_n * s_a_L
-	 *    and s_C_n' = s_C_n * s_C_L.
-	 * 3) Using ename, s_a = {s_a_e, s_a_n'}, s_C = {s_C_e, s_C_n'},
-	 *    infer premise, yielding ename', s_C', qs.
-	 * 4) Let W = outernames(s_C_L).
-	 * 5) Restrict s_C' by removing inner points that are in W.
-	 * 6) Return ename', s_C', qs.
-	 *)
-	and matchABS' {usednames, ename, s_a, s_C, p, P} = lzNil
-	
-	(* Match a parallel composition to a context using the PARn rule:
-	 * 1) Let ename_0 = ename.
-	 * 2) Using ename_i, s_a, s_C, ei, Ei, infer premise i, yielding
-	 *    ename_i+1, s_C'i, qs_i.
-	 * 3) Compute s_C' by merging s_C'is using extension,
-	 *      returning NOMATCH if impossible.
-	 * 4) Return ename' = ename_n, s_C', qss = [qs_0, ..., qs_n-1]
-	 *)
-	and matchPARn' {usednames, ename, s_a, s_C, es, Es} = lzNil
-	
-	(* Match a tensor product to a context using the PARe rule:
-	 * 1) Infer premise, yielding ename', s_C', qss.
-	 * 2) Let qs = concat qss.
-	 * 3) Return ename', s_C', qs.
-	 *)
-	and matchPARe' {usednames, ename, s_a, s_C, es, Es} = lzNil
-	
-	(* Match a tensor product to a context permutation:
-	 * 1) Infer premise, yielding ename', s_C', qs.
-	 * 2) Permute qs by pi, yielding qs' so that qs'_i = qs_pi(i).
-	 * 3) Return ename', s_C, qs'.
-	 *)
-	and matchPER' {usednames, ename, s_a, s_C, es, Es, pi} = lzNil
-	
+  (* Match a prime to a context using the ABS rule:
+   * 1) Deconstruct agent p = (id * ^s_a_L)(Z)g and
+   *    context P = (id * ^s_C_L)(U)G.
+   * 2) Compute s_a_n' = s_a_n * s_a_L
+   *    and s_C_n' = s_C_n * s_C_L.
+   * 3) Using ename, s_a = {s_a_e, s_a_n'}, s_C = {s_C_e, s_C_n'},
+   *    infer premise, yielding ename', s_C', qs.
+   * 4) Let W = outernames(s_C_L).
+   * 5) Restrict s_C' by removing inner points that are in W.
+   * 6) Return ename', s_C', qs.
+   *)
+  and matchABS' {ename, s_a, s_C, p, P} = lzNil
+  
+  (* Match a parallel composition to a context using the PARn rule:
+   * 1) Let ename_0 = ename.
+   * 2) Using ename_i, s_a, s_C, ei, Ei, infer premise i, yielding
+   *    ename_i+1, s_C'i, qs_i.
+   * 3) Compute s_C' by merging s_C'is using extension,
+   *      returning NOMATCH if impossible.
+   * 4) Return ename' = ename_n, s_C', qss = [qs_0, ..., qs_n-1]
+   *)
+  and matchPARn' {ename, s_a, s_C, es, Es} = lzNil
+  
+  (* Match a tensor product to a context using the PARe rule:
+   * 1) Infer premise, yielding ename', s_C', qss.
+   * 2) Let qs = concat qss.
+   * 3) Return ename', s_C', qs.
+   *)
+  and matchPARe' {ename, s_a, s_C, es, Es} = lzNil
+  
+  (* Match a tensor product to a context permutation:
+   * 1) Infer premise, yielding ename', s_C', qs.
+   * 2) Permute qs by pi, yielding qs' so that qs'_i = qs_pi(i).
+   * 3) Return ename', s_C, qs'.
+   *)
+  and matchPER' {ename, s_a, s_C, es, Es, pi} = lzNil
+  
   (* Match a global discrete prime using the SWX rule:
    * If Ps = [P], where P = (id_Z * ^s)(W)G, then
    * 1) Let s_C_e = s_R_e, s_C_n = s * s_R_n, and infer premise
@@ -431,113 +429,89 @@ struct
    * 2) Let Y_C_e = outernames s_C_e
    * 3) Let U = outernames s
    * 4) Return s_a_e', s_C := s_C * id_Y_C_e, G := "U", qs
-	 *)
-	fun matchSWX {usednames, ename, 
-								s_a = {s_a_e, s_a_n}, 
-	              s_R = {s_R_e, s_R_n}, e = g, Ps = [P]}
-	  = lzmake (fn () =>
-	  	let
-	  	  val {id_Z, Y = U, s, X = W, N} = unmkP P
-	  	  val {absnames = W, G} = unmkN N
-	  		val s_C_e = s_R_e
-	  		val s_C_n = Wiring.* (s, s_R_n)
-	  		val id_Y_C_e = Wiring.id_X (Wiring.outernames s_C_e)
-	  		val i = BgBDNF.info P
-	  		fun toSWX {ename', s_C, qs} =
-	  			{ename' = ename', s_C = Wiring.* (s_C, id_Y_C_e),
-	  			 G = makeG [makeS (SCon (i, Wiring.id_X U))], qs = qs}
-	  		val matches
-	  		  = lzmap toSWX
-	  		          (matchDG' {usednames = usednames,
-	  		                     ename = ename,
-	  		                     s_a = {s_a_e = s_a_e,
-	  		                            s_a_n = s_a_n},
-	  		                     s_C = {s_C_e = s_C_e, s_C_n = s_C_n},
-	  		                     g = g, G = G})
-	  	in
-	  		lzunmk matches
-	  	end)
-	  | matchSWX _ = lzNil
-	
+   *)
+  fun matchSWX {ename, 
+                s_a = {s_a_e, s_a_n}, 
+                s_R = {s_R_e, s_R_n}, e = g, Ps = [P]}
+    = lzmake (fn () =>
+      let
+        val {id_Z, Y = U, s, X = W, N} = unmkP P
+        val {absnames = W, G} = unmkN N
+        val s_C_e = s_R_e
+        val s_C_n = Wiring.* (s, s_R_n)
+        val id_Y_C_e = Wiring.id_X (Wiring.outernames s_C_e)
+        val i = BgBDNF.info P
+        fun toSWX {ename', s_C, qs} =
+          {ename' = ename', s_C = Wiring.* (s_C, id_Y_C_e),
+           G = makeG [makeS (SCon (i, Wiring.id_X U))], qs = qs}
+        val matches
+          = lzmap toSWX
+                  (matchDG' {ename = ename,
+                             s_a = {s_a_e = s_a_e,
+                                    s_a_n = s_a_n},
+                             s_C = {s_C_e = s_C_e, s_C_n = s_C_n},
+                             g = g, G = G})
+      in
+        lzunmk matches
+      end)
+    | matchSWX _ = lzNil
+  
   (* Match a global discrete prime using the PAX rule:
    * If s_R_e = s_R_n = id_0 and
    * Ps = id_(X) for some X subset of g's outer names, then
    * return s_a_e' = s_a_e, s_C = s_a_n * s_a_e, G = "X", Ps = (X)g
    *)
-	fun matchPAX {usednames, ename,
-	              s_a = {s_a_e, s_a_n},
-	              s_R = {s_R_e, s_R_n}, e = g, Ps = [P]}
-	  = lzmake (fn () =>
-	  	if Wiring.is_id0 s_R_e andalso Wiring.is_id0 s_R_n then
-		  	let
-		  		val {s, N, id_Z, Y = X, ...} = unmkP P
-		  		val {G, ...} = unmkN N
-		  	in
-		  		case unmkG G of
-		  		  {Ss = [S], ...}
-		  	  => (case unmkS S of
-		  	        BgBDNF.SCon (i, a)
-		  	      => if Wiring.is_id0 id_Z then
-		  	      		let
-		  	      			val alpha = Wiring.o (s, a)
-		  	      	 	in
-		  	      	 	  if Wiring.is_id0 alpha then
-		  	      	 	  	let
-		  	      	 	  		val XplusZ = Interface.glob (outerface g)
-		  	      	 	  	in
-			  	      				LazyList.Cons 
-				  	      				({ename' = ename (* REVISE! *),
-				  	      		 		s_C = Wiring.* (s_a_n, s_a_e),
-				  	      		 		G = makeG [makeS (SCon (i, alpha))],
-				  	      		 		qs = [makeP (Wiring.id_X XplusZ)
-				  	      		 								(makeN X g)]},
-				  	      		 		lzNil)
-				  	      		end
-									 	else
-									   	LazyList.Nil
-								 	end
-								 else
-								 	LazyList.Nil
-							| _ => LazyList.Nil)		  		  
-		  		| _ => LazyList.Nil
-		  	end
-			else
-				LazyList.Nil)
-	  | matchPAX _ = lzNil
-
-  (* fresh returns a name similar to basename, not in usednames. *)
-  local
-    fun fresh' i basename usednames =
-			let
-			  val name = basename ^ Int.toString i
-			  val x = Name.make name
-			in
-			  if NameSet.member x usednames then
-			    fresh' (i + 1) basename usednames
-			  else
-			    x
-			end
-  in
-	  fun freshname basename = fresh' 0 (basename ^ "_")
-  end
+  fun matchPAX {ename,
+                s_a = {s_a_e, s_a_n},
+                s_R = {s_R_e, s_R_n}, e = g, Ps = [P]}
+    = lzmake (fn () =>
+      if Wiring.is_id0 s_R_e andalso Wiring.is_id0 s_R_n then
+        let
+          val {s, N, id_Z, Y = X, ...} = unmkP P
+          val {G, ...} = unmkN N
+        in
+          case unmkG G of
+            {Ss = [S], ...}
+          => (case unmkS S of
+                BgBDNF.SCon (i, a)
+              => if Wiring.is_id0 id_Z then
+                  let
+                    val alpha = Wiring.o (s, a)
+                   in
+                     if Wiring.is_id0 alpha then
+                       let
+                         val XplusZ = Interface.glob (outerface g)
+                       in
+                        LazyList.Cons 
+                          ({ename' = ename (* REVISE! *),
+                           s_C = Wiring.* (s_a_n, s_a_e),
+                           G = makeG [makeS (SCon (i, alpha))],
+                           qs = [makeP (Wiring.id_X XplusZ)
+                                       (makeN X g)]},
+                           lzNil)
+                      end
+                     else
+                       LazyList.Nil
+                   end
+                 else
+                   LazyList.Nil
+              | _ => LazyList.Nil)            
+          | _ => LazyList.Nil
+        end
+      else
+        LazyList.Nil)
+    | matchPAX _ = lzNil
 
   (* makefreshlinks returns a list of links vs/Xs, where vs are
-   * fresh names in descending alphabetical order.
+   * fresh names.
    *)
-  fun makefreshlinks usednames Xs =
-    let
-      fun freshname' i =	freshname ("v_" ^ Int.toString i)
-    	fun addfreshname (X, (i, vXs, usednames)) =
-    	  let
-    	  	val v = freshname' i usednames
-    	  in
-    	    (i + 1,
-    	     Link.make {outer = SOME v, inner = X} :: vXs,
-    	     NameSet.insert v usednames)
-    	  end
-    in
-      #2 (foldr addfreshname (0, [], usednames) Xs)
-    end
+  fun makefreshlinks Xs =
+      let
+        fun addfreshname X =
+            Link.make {outer = SOME (Name.fresh NONE), inner = X}
+      in
+        map addfreshname Xs
+      end
 
   (* sortlinksby returns vZs sorted using the vs as key, ordering
    * them as in vXs.
@@ -566,8 +540,8 @@ struct
 
   (* Match a global discrete prime using the MER rule:
    * 1) ...
-	 *)
-  fun matchMER {usednames, ename, s_a, s_R, e, Ps} = lzNil
+   *)
+  fun matchMER {ename, s_a, s_R, e, Ps} = lzNil
   
   (* Match a global discrete prime using the ION rule, if possible:
    * If it contains 1 top-level molecule, match an ion:
@@ -584,48 +558,48 @@ struct
    *     and         G = (id * K_yZ)N
    * 6) Return s_a_e', s_C, G, qs
    *)
-  and matchION (args as {usednames, ename, 
+  and matchION (args as {ename, 
                          s_a = {s_a_e, s_a_n}, s_R, e = g, Ps})
     = lzmake (fn () =>
-    case unmkG g of	{Ss = [s], ...} =>
-    	(case unmkS s of BgBDNF.SMol m =>
-    	  let
-    	    val {id_Z, KyX, N = n} = unmkM m
-    	    val {ctrl, free = ys, bound = Xs} = Ion.unmk KyX
-	        val Y = foldr (fn (y, Y) => NameSet.insert y Y) NameSet.empty ys
-	        val {inDom = s_Y_n, notInDom = s_a_n_new}
-	          = Wiring.split s_a_n Y
-	        val {inDom = s_Y_e, notInDom = s_a_e_new}
-	          = Wiring.split s_a_e Y
-	        val s_Y = Wiring.|| (s_Y_n, s_Y_e)
-	        val vXs = makefreshlinks usednames Xs
-	        val p = makeP (Wiring.make' vXs) n
-	        fun toION {ename', s_C, E = P, qs} =
-	          let
-	          	val {s = vZ, N, ...} = unmkP P
-	         		val vZs =  Wiring.unmk vZ
-		    	      val Zs = sortlinksby vXs vZs
-		    	      val s_C = Wiring.|| (s_Y, s_C)
-		    	      val s_a_e' = Wiring.id_0 (* REVISE! *)
-		    	      val KyZ = Ion.make {ctrl = ctrl, free = ys, bound = Zs}
-		    	      val G = makeG [makeS (SMol (makeM KyZ N))]
-		    	    in
-		    	    	{ename' = ename' (* REVISE! *), s_C = s_C, G = G, qs = qs}
-	          end
-	        val matches
-	          = lzmap toION (matchABS {usednames = usednames,
+    case unmkG g of  {Ss = [s], ...} =>
+      (case unmkS s of BgBDNF.SMol m =>
+        let
+          val {id_Z, KyX, N = n} = unmkM m
+          val {ctrl, free = ys, bound = Xs} = Ion.unmk KyX
+          val Y = foldr (fn (y, Y) => NameSet.insert y Y) NameSet.empty ys
+          val {inDom = s_Y_n, notInDom = s_a_n_new}
+            = Wiring.split s_a_n Y
+          val {inDom = s_Y_e, notInDom = s_a_e_new}
+            = Wiring.split s_a_e Y
+          val s_Y = Wiring.|| (s_Y_n, s_Y_e)
+          val vXs = makefreshlinks Xs
+          val p = makeP (Wiring.make' vXs) n
+          fun toION {ename', s_C, E = P, qs} =
+            let
+              val {s = vZ, N, ...} = unmkP P
+               val vZs =  Wiring.unmk vZ
+                val Zs = sortlinksby vXs vZs
+                val s_C = Wiring.|| (s_Y, s_C)
+                val s_a_e' = Wiring.id_0 (* REVISE! *)
+                val KyZ = Ion.make {ctrl = ctrl, free = ys, bound = Zs}
+                val G = makeG [makeS (SMol (makeM KyZ N))]
+              in
+                {ename' = ename' (* REVISE! *), s_C = s_C, G = G, qs = qs}
+            end
+          val matches
+            = lzmap toION (matchABS {
 (*REVISE THIS LINE: *)               ename = ename,
-	                                 s_a = {s_a_e = s_a_e_new,
-	                                        s_a_n = s_a_n_new},
-	                                 s_R = s_R,
-	                                 e = p,
-	                                 Ps = Ps})
-	      in
-	      	lzunmk matches
-	      end
-    	 | _ => raise AgentNotGround ("kernel/match/match.sml", g,
-    	 	                            "in matchDS"))
-    	| _ => LazyList.Nil)
+                                   s_a = {s_a_e = s_a_e_new,
+                                          s_a_n = s_a_n_new},
+                                   s_R = s_R,
+                                   e = p,
+                                   Ps = Ps})
+        in
+          lzunmk matches
+        end
+       | _ => raise AgentNotGround ("kernel/match/match.sml", g,
+                                     "in matchDS"))
+      | _ => LazyList.Nil)
   
   (* Match a global discrete prime using a SWX, PAX, MER or ION rule:
    * 1) First return any PAX rule matches,
@@ -635,52 +609,50 @@ struct
    *    (to avoid infinite recursion via MER-PAR-PARe-PARn),
    *    return any MER rule matches.
    *)
-  and matchDG (args as {usednames, ename, s_a, s_R, e = g, Ps})
+  and matchDG (args as {ename, s_a, s_R, e = g, Ps})
     = lzappend (matchPAX args)
-    		(lzappend (matchSWX args)
-    			(lzappend (matchION args)
-    				(lzmake (fn () =>
-    					case #Ss (unmkG g) of
-    					  (_ :: _ :: _) => lzunmk (matchMER args)
-    					| _ => LazyList.Nil))))
+        (lzappend (matchSWX args)
+          (lzappend (matchION args)
+            (lzmake (fn () =>
+              case #Ss (unmkG g) of
+                (_ :: _ :: _) => lzunmk (matchMER args)
+              | _ => LazyList.Nil))))
 
   (* Match an abstraction:
    * 1) Deconstruct p, yielding s_a_L : Z -> W and g.
-   * 2) Compute s_a_n_new = s_a_L * s_a_n and add outer names of s_a_L to usednames.
-   * 3) Using usednames, s_a_n_new, s_a_e, s_R, g, Ps, infer premise,
+   * 2) Compute s_a_n_new = s_a_L * s_a_n.
+   * 3) Using s_a_n_new, s_a_e, s_R, g, Ps, infer premise,
    *    yielding s_a_e', s_C, G, qs.
    * 4) Determine s_C_L : U -> W and s_C' by outername restriction
    *    using W such that s_C' * s_C_L = s_C
    * 5) Construct and return s_a_e', s_C', (id * s_C_L)(U)G, and qs
    *)  
-  and matchABS {usednames, ename,
+  and matchABS {ename,
                 s_a = {s_a_e, s_a_n}, s_R as {s_R_e, s_R_n}, e = p, Ps}
     = lzmake (fn () =>
-		let
-			val {Y = W, s = s_a_L, N = n, ...} = unmkP p
-			val {absnames = Z, G = g} = unmkN n
-			val s_a_n_new = Wiring.* (s_a_L, s_a_n)
-			val usednames = NameSet.union W usednames
-			fun toABS {ename', s_C, G, qs} =
-			  let
-			  	val {inCod = s_C_L, notInCod = s_C'}
-			  	  = Wiring.split_outer s_C W
-			  	val U = Wiring.innernames s_C_L
-			  	val P = makeP s_C_L (makeN U G)
-			  in
-			  	{ename' = ename', s_C = s_C', E = P, qs = qs}
-			  end
-			val matches
-			  = lzmap toABS
-			     (matchDG {usednames = usednames,
-			               ename = ename,
-			               s_a = {s_a_e = s_a_e, s_a_n = s_a_n_new},
-			               s_R = s_R,
-			               e = g,
-			               Ps = Ps})
-		in
-			lzunmk matches;Nil  (* REVISE! *)
-		end)
+    let
+      val {Y = W, s = s_a_L, N = n, ...} = unmkP p
+      val {absnames = Z, G = g} = unmkN n
+      val s_a_n_new = Wiring.* (s_a_L, s_a_n)
+      fun toABS {ename', s_C, G, qs} =
+        let
+          val {inCod = s_C_L, notInCod = s_C'}
+            = Wiring.split_outer s_C W
+          val U = Wiring.innernames s_C_L
+          val P = makeP s_C_L (makeN U G)
+        in
+          {ename' = ename', s_C = s_C', E = P, qs = qs}
+        end
+      val matches
+        = lzmap toABS
+           (matchDG {ename = ename,
+                     s_a = {s_a_e = s_a_e, s_a_n = s_a_n_new},
+                     s_R = s_R,
+                     e = g,
+                     Ps = Ps})
+    in
+      lzunmk matches;Nil  (* REVISE! *)
+    end)
 
   (* Match a parallel composition:
    * 1) For each e_i : -> <1,(X_i),X_i + Y_i> determine
@@ -689,7 +661,7 @@ struct
    * 2) For each Ps_i : -> <n,\vec X_i,X_i + Y_i> determine
    *    s_R_n_i = s_R_n domainrestricted to Y_i.
    *    s_R_e_i = s_R_e domainrestricted to Y_i.
-   * 3) Using usednames, s_a_n_i, s_a_e_i, s_R_n_i, s_R_e_i,
+   * 3) Using s_a_n_i, s_a_e_i, s_R_n_i, s_R_e_i,
    *    e_i, Ps_i, infer premise, 
    *    yielding s_a_e'_i, s_C_i, E_i and ps_i.
    * 4) Compute s_a_e', Es and pss by product.
@@ -725,7 +697,7 @@ struct
    
    *)
   and matchPARn
-      {matchE, usednames, ename, 
+      {matchE, ename, 
        s_a = {s_a_e, s_a_n}, s_R as {s_R_e, s_R_n},
        es, Pss} = lzmake (fn () =>
     let
@@ -745,16 +717,14 @@ struct
            e = e, Ps = Ps} :: zipup ses sns Res Rns es Pss
         | zipup ses sns Res Rns es Pss
         = raise UnequalLengths (ses, sns, Res, Rns, length es, Pss) 
-			val sRePss = zipup s_a_es s_a_ns s_R_es s_R_ns es Pss
-      val y = freshname "PARnE" usednames
-      val usednames = NameSet.insert y usednames
+      val sRePss = zipup s_a_es s_a_ns s_R_es s_R_ns es Pss
+      val y = Name.fresh NONE
       fun submatches mslz ({s_a = {s_a_e, s_a_n},
                             s_R = {s_R_e, s_R_n}, e, Ps} :: rest)
         = let
             fun tosubmatches (ms, ename') =
               let
-                val mlz = matchE {usednames = usednames,
-                        ename = ename',
+                val mlz = matchE {ename = ename',
                         s_a = {s_a_e = s_a_e, s_a_n = s_a_n},
                         s_R = {s_R_e = s_R_e, s_R_n = s_R_n},
                         e = e,
@@ -765,7 +735,7 @@ struct
                 lzmap addms mlz
               end
           in
-						submatches (lzconcat (lzmap tosubmatches mslz)) rest 
+            submatches (lzconcat (lzmap tosubmatches mslz)) rest 
           end
         | submatches mslz [] = mslz
       val mslz
@@ -776,7 +746,7 @@ struct
       val Y_R_n = Wiring.introductions s_R_n
       val Y_a_n_empty_and_Y_R_nonempty
         = NameSet.isEmpty Y_a_n andalso
-        	 not (NameSet.isEmpty Y_R_e andalso NameSet.isEmpty Y_R_n)
+           not (NameSet.isEmpty Y_R_e andalso NameSet.isEmpty Y_R_n)
       fun toPARn (matches : {E : 'a bgbdnf, qs : P bgbdnf list,
                              s_C : wiring} list, ename) =
         let
@@ -818,60 +788,59 @@ struct
       lzunmk matches
     end)
 
-	(* Match a tensor product as a product of tensor products:
-	 * 1) Compute lengths n and m of agent and redex products.
-	 * 2) For each split of m into n parts, group Ps accordingly.
-	 * 3) Infer premise using the grouped Ps, yielding parameter
-	 *    lists of lists qss, etc.
-	 * 4) Concatenate the resulting qss and return the result.
-	 *)
-  and matchPARe {matchE, usednames, ename, s_a, s_R, es, Ps}
+  (* Match a tensor product as a product of tensor products:
+   * 1) Compute lengths n and m of agent and redex products.
+   * 2) For each split of m into n parts, group Ps accordingly.
+   * 3) Infer premise using the grouped Ps, yielding parameter
+   *    lists of lists qss, etc.
+   * 4) Concatenate the resulting qss and return the result.
+   *)
+  and matchPARe {matchE, ename, s_a, s_R, es, Ps}
     = lzmake (fn () =>
-	  let
-	    val n = length es
-	    val m = length Ps
-	    fun group [] [] = []
-	      | group Ps (n :: ns)
-	        = (List.take (Ps, n) :: group (List.drop (Ps, n)) ns
-	           handle Subscript
-	           => raise GroupError ("kernel/match/match.sml", 
-	                               "matchPARe", Ps, n :: ns))
-	      | group Ps []
-	        = raise GroupError ("kernel/match/match.sml", 
-	                               "matchPARe", Ps, [])
-	    fun nextmatch split =
-	      let
-	        val P'ss = group Ps split
-	        fun toPARe {ename', Y, s_C, Es, qss}
-	          = {ename' = ename', Y = Y, s_C = s_C, Es = Es,
-	             qs = List.concat qss}
-    	    val matches
-	          = lzmap toPARe
-	             (matchPARn {matchE = matchE,
-	                         usednames = usednames,
-	                         ename = ename,
-	                         s_a = s_a,
-	                         s_R = s_R,
-	                         es = es,
-	                         Pss = P'ss})
+    let
+      val n = length es
+      val m = length Ps
+      fun group [] [] = []
+        | group Ps (n :: ns)
+          = (List.take (Ps, n) :: group (List.drop (Ps, n)) ns
+             handle Subscript
+             => raise GroupError ("kernel/match/match.sml", 
+                                 "matchPARe", Ps, n :: ns))
+        | group Ps []
+          = raise GroupError ("kernel/match/match.sml", 
+                                 "matchPARe", Ps, [])
+      fun nextmatch split =
+        let
+          val P'ss = group Ps split
+          fun toPARe {ename', Y, s_C, Es, qss}
+            = {ename' = ename', Y = Y, s_C = s_C, Es = Es,
+               qs = List.concat qss}
+          val matches
+            = lzmap toPARe
+               (matchPARn {matchE = matchE,
+                           ename = ename,
+                           s_a = s_a,
+                           s_R = s_R,
+                           es = es,
+                           Pss = P'ss})
           fun next () = lzunmk (nextmatch
                                 (nextsplit split)
                                 handle NoMoreSplits => lzNil)
-	      in
-	        lzappend matches (lzmake next)
-	      end
-	  in
-	    lzunmk (nextmatch (firstsplit m n))
-	  end)
+        in
+          lzappend matches (lzmake next)
+        end
+    in
+      lzunmk (nextmatch (firstsplit m n))
+    end)
 
-	(* Match a context permutation:
-	 * 1) Compute the local inner faces Xss of the redex primes Qs.
-	 * 2) For each permutation pi of the redex primes Qs',
-	 *    2a) Push pi through Qs, yielding pibar.
-	 *    2b) Infer premise, yielding parameter list qs etc.
-	 *    2c) Permute qs by pibar and return the result.
-	 *)
-  and matchPER {matchE, usednames, ename, s_a, s_R, es, Qs}
+  (* Match a context permutation:
+   * 1) Compute the local inner faces Xss of the redex primes Qs.
+   * 2) For each permutation pi of the redex primes Qs',
+   *    2a) Push pi through Qs, yielding pibar.
+   *    2b) Infer premise, yielding parameter list qs etc.
+   *    2c) Permute qs by pibar and return the result.
+   *)
+  and matchPER {matchE, ename, s_a, s_R, es, Qs}
     = lzmake (fn () =>
     let
       val Xss = map (loc o innerface) Qs
@@ -885,7 +854,6 @@ struct
           val matches
             = lzmap toPER
                (matchPARe {matchE = matchE,
-                           usednames = usednames,
                            ename = ename,
                            s_a = s_a,
                            s_R = s_R,
@@ -905,36 +873,33 @@ struct
   (* Match a closure:
    * 1) Open w_a, yielding s_a = s_a_e * s_a_n
    * 2) Open w_R, yielding s_R = s_R_e * s_R_n and fresh outer names Y_R of s_R_e
-   * 3) Compute usednames as the outer names of s_a_e * s_a_n plus Y_R
-   * 4) Using usednames, s_a, s_R, infer premise,
+   * 3) Using s_a, s_R, infer premise,
    *    yielding ename', Y, s_C, Qs, pi, qs,
    *    where ename' maps to range Y_R + Y_C
-   * 5) Check that s_C = id_{Y_R} * s'_C
-   * 6) Return a new w_C as s'_C where links Y_C are closed.
+   * 4) Check that s_C = id_{Y_R} * s'_C
+   * 5) Return a new w_C as s'_C where links Y_C are closed.
    *)
   fun matchCLO {w_a : Wiring.wiring, w_R, ps, Ps} = lzmake (fn () =>
     let
       open Wiring
-    	val {opened = s_a_e, rest = s_a_n, usednames, ...}
-    	  = splitopen NameSet.empty w_a
-    	val {opened = s_R_e, rest = s_R_n, newnames = Y_R, usednames}
-    	  = splitopen usednames w_R
-    	val usednames = NameSet.union (Wiring.outernames s_a_n) usednames
-	    val matches
-	      = matchPER {matchE = matchABS,
-	                  usednames = usednames,
-	                  ename = NameMap.empty,
-	                  s_a = {s_a_e = s_a_e, s_a_n = s_a_n},
-	                  s_R = {s_R_e = s_R_e, s_R_n = s_R_n},
-	                  es = ps,
-	                  Qs = Ps}
-	    val is_id_Y_R_x_sigma = Wiring.is_id_x_sigma Y_R
-    	fun toCLO ({ename', Y, s_C, Es = Qs, pi, qs}, rest) =
-    	  if is_id_Y_R_x_sigma s_C then
-     	    let
-     	      val Y_C = NameSet.difference 
-     	      					(NameSet.fromList (NameMap.range ename')) Y_R
-    	      val w_C = closelinks Y_C s_C
+      val {opened = s_a_e, rest = s_a_n, ...}
+        = splitopen w_a
+      val {opened = s_R_e, rest = s_R_n, newnames = Y_R}
+        = splitopen w_R
+      val matches
+        = matchPER {matchE = matchABS,
+                    ename = NameMap.empty,
+                    s_a = {s_a_e = s_a_e, s_a_n = s_a_n},
+                    s_R = {s_R_e = s_R_e, s_R_n = s_R_n},
+                    es = ps,
+                    Qs = Ps}
+      val is_id_Y_R_x_sigma = Wiring.is_id_x_sigma Y_R
+      fun toCLO ({ename', Y, s_C, Es = Qs, pi, qs}, rest) =
+        if is_id_Y_R_x_sigma s_C then
+           let
+             val Y_C = NameSet.difference 
+                       (NameSet.fromList (NameMap.range ename')) Y_R
+            val w_C = closelinks Y_C s_C
           in
             lzCons
               (fn () =>
