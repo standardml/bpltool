@@ -344,6 +344,24 @@ struct
    * 5) Return ename', s_C', qs = (X)g.
    *)
   fun matchPAX' {ename, s_a, s_C, g, G} = lzNil
+      lzmake (fn () =>
+      case #Ss (unmkG G) of
+        [S] =>
+      (case unmkS S of
+        SCon (i, a) =>
+        let
+          val X = Wiring.innernames a
+          val Y = Wiring.outernames a
+          val Z = NameSet.difference (Interface.glob (outerface g)) X
+          (*FIXME finish*)
+        in lsNil
+(*FIXME
+          {ename' = ename,
+           s_C' = ,
+           qs = [makeP (Wiring.id_X X) (makeN X g)]}*)
+        end
+      | _ => lsNil)
+      | _ => lsNil)
   
   and matchMER' {ename, s_a, s_C, g, G} = lzNil
 
@@ -441,8 +459,8 @@ struct
         val s_C_n = Wiring.* (s, s_R_n)
         val id_Y_C_e = Wiring.id_X (Wiring.outernames s_C_e)
         val i = BgBDNF.info P
-        fun toSWX {ename', s_C, qs} =
-          {ename' = ename', s_C = Wiring.* (s_C, id_Y_C_e),
+        fun toSWX {ename', s_C', qs} =
+          {ename' = ename', s_C = Wiring.* (s_C', id_Y_C_e),
            G = makeG [makeS (SCon (i, Wiring.id_X U))], qs = qs}
         val matches
           = lzmap toSWX
