@@ -642,9 +642,9 @@ struct
    * 1) Deconstruct p, yielding s_a_L : Z -> W and g.
    * 2) Compute s_a_n_new = s_a_L * s_a_n.
    * 3) Using s_a_n_new, s_a_e, s_R, g, Ps, infer premise,
-   *    yielding s_a_e', s_C, G, qs.
+   *    yielding ename', s_C'new, G, qs.
    * 4) Determine s_C_L : U -> W and s_C' by outername restriction
-   *    using W such that s_C' * s_C_L = s_C
+   *    using W such that s_C' * s_C_L = s_C'new
    * 5) Construct and return s_a_e', s_C', (id * s_C_L)(U)G, and qs
    *)  
   and matchABS {ename,
@@ -671,7 +671,7 @@ struct
                      e = g,
                      Ps = Ps})
     in
-      lzunmk matches;Nil  (* REVISE! *)
+      lzunmk matches
     end)
 
   (* Match a parallel composition:
