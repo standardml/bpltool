@@ -886,8 +886,7 @@ struct
           lzappend matches (lzmake next)
         end
     in
-      lzunmk (nextmatch (firstperm (map (hd o loc o outerface) Qs)));
-      Nil (* REVISE! *)
+      lzunmk (nextmatch (firstperm (map (hd o loc o outerface) Qs)))
     end)
 
   (* Match a closure:
@@ -914,12 +913,12 @@ struct
                     es = ps,
                     Qs = Ps}
       val is_id_Y_R_x_sigma = Wiring.is_id_x_sigma Y_R
-      fun toCLO ({ename', Y, s_C, Es = Qs, pi, qs}, rest) =
-        if is_id_Y_R_x_sigma s_C then
+      fun toCLO ({ename', Y, s_C', Es = Qs, pi, qs}, rest) =
+        if is_id_Y_R_x_sigma s_C' then
            let
              val Y_C = NameSet.difference 
                        (NameSet.fromList (NameMap.range ename')) Y_R
-            val w_C = closelinks Y_C s_C
+            val w_C = closelinks Y_C s_C'
           in
             lzCons
               (fn () =>
