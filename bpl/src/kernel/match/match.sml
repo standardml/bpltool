@@ -443,10 +443,10 @@ struct
    * If Ps = [P], where P = (id_Z * ^s)(W)G, then
    * 1) Let s_C_e = s_R_e, s_C_n = s * s_R_n, and infer premise
    *    using s_a_e, s_a_n, s_C_e, s_C_n, g, G,
-   *    yielding s_a_e', s_C, and qs
+   *    yielding ename', s_C', and qs
    * 2) Let Y_C_e = outernames s_C_e
    * 3) Let U = outernames s
-   * 4) Return s_a_e', s_C := s_C * id_Y_C_e, G := "U", qs
+   * 4) Return ename', s_C' := s_C' * id_Y_C_e, G := "U", qs
    *)
   fun matchSWX {ename, 
                 s_a = {s_a_e, s_a_n}, 
@@ -477,7 +477,10 @@ struct
   (* Match a global discrete prime using the PAX rule:
    * If s_R_e = s_R_n = id_0 and
    * Ps = id_(X) for some X subset of g's outer names, then
-   * return s_a_e' = s_a_e, s_C = s_a_n * s_a_e, G = "X", Ps = (X)g
+   * 1) Let X+Z = outernames (g)
+   * 2) Inner-name restrict s_a to X+Z
+   * 3) Let s_C = s_a_n * s_a_e
+   * 4) Return ename' = ename, s_C, G = "X", Ps = (X)g
    *)
   fun matchPAX {ename,
                 s_a = {s_a_e, s_a_n},
@@ -501,8 +504,9 @@ struct
                          val XplusZ = Interface.glob (outerface g)
                        in
                         LazyList.Cons 
-                          ({ename' = ename (* REVISE! *),
-                           s_C = Wiring.* (s_a_n, s_a_e),
+                          ({ename' = ename,
+                           s_C = Wiring.* (Wiring.restrict s_a_n XplusZ,
+                                           Wiring.restrict s_a_e XplusZ),
                            G = makeG [makeS (SCon (i, alpha))],
                            qs = [makeP (Wiring.id_X XplusZ)
                                        (makeN X g)]},
@@ -569,12 +573,12 @@ struct
    * 3) Compute s_Y_e || s_a_e_new = s_a_e by domain-restricting
    *     s_a_e to Y
    * 4) Construct p = (id * (vec v)/(vec X))n and infer premise
-   *     using s_a_e_new, s_a_n_new, s_R, p, and Ps, yielding
-   *     s_a_e'_new, s_C_new, P = (id * (vec v)/(vec Z))N, and qs
-   * 5) Construct s_C = s_Y_n || s_Y_e || s_C_new
-   *     and    s_a_e' = s_Y_e || s_a_e'_new
+   *     using s_a, s_R, p, and Ps, yielding
+   *     ename', s_C', P = (id * (vec v)/(vec Z))N, and qs
+   * 5) Construct s_C' = s_Y_n || s_Y_e || s_C'
+   *     and    ename' = ename' + {y |-> y | y in Y}
    *     and         G = (id * K_yZ)N
-   * 6) Return s_a_e', s_C, G, qs
+   * 6) Return ename', s_C', G, qs
    *)
   and matchION (args as {ename, 
                          s_a = {s_a_e, s_a_n}, s_R, e = g, Ps})
@@ -585,33 +589,29 @@ struct
           val {id_Z, KyX, N = n} = unmkM m
           val {ctrl, free = ys, bound = Xs} = Ion.unmk KyX
           val Y = foldr (fn (y, Y) => NameSet.insert y Y) NameSet.empty ys
-          val {inDom = s_Y_n, notInDom = s_a_n_new}
-            = Wiring.split s_a_n Y
-          val {inDom = s_Y_e, notInDom = s_a_e_new}
-            = Wiring.split s_a_e Y
+          val s_Y_n = Wiring.restrict s_a_n Y
+          val s_Y_e = Wiring.restrict s_a_e Y
           val s_Y = Wiring.|| (s_Y_n, s_Y_e)
           val vXs = makefreshlinks Xs
           val p = makeP (Wiring.make' vXs) n
-          fun toION {ename', s_C, E = P, qs} =
+          fun toION {ename', s_C', E = P, qs} =
             let
               val {s = vZ, N, ...} = unmkP P
-               val vZs =  Wiring.unmk vZ
-                val Zs = sortlinksby vXs vZs
-                val s_C = Wiring.|| (s_Y, s_C)
-                val s_a_e' = Wiring.id_0 (* REVISE! *)
-                val KyZ = Ion.make {ctrl = ctrl, free = ys, bound = Zs}
-                val G = makeG [makeS (SMol (makeM KyZ N))]
-              in
-                {ename' = ename' (* REVISE! *), s_C = s_C, G = G, qs = qs}
+              val vZs =  Wiring.unmk vZ
+              val Zs = sortlinksby vXs vZs
+              val s_C' = Wiring.|| (s_Y, s_C')
+              val ename' = Wiring.* (Wiring.id_X Y, ename')
+              val KyZ = Ion.make {ctrl = ctrl, free = ys, bound = Zs}
+              val G = makeG [makeS (SMol (makeM KyZ N))]
+            in
+              {ename' = ename', s_C' = s_C', G = G, qs = qs}
             end
           val matches
-            = lzmap toION (matchABS {
-(*REVISE THIS LINE: *)               ename = ename,
-                                   s_a = {s_a_e = s_a_e_new,
-                                          s_a_n = s_a_n_new},
-                                   s_R = s_R,
-                                   e = p,
-                                   Ps = Ps})
+            = lzmap toION (matchABS {ename = ename,
+                                     s_a = s_a,
+                                     s_R = s_R,
+                                     e = p,
+                                     Ps = Ps})
         in
           lzunmk matches
         end
