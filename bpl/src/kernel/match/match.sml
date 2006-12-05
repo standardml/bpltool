@@ -460,7 +460,7 @@ struct
         val id_Y_C_e = Wiring.id_X (Wiring.outernames s_C_e)
         val i = BgBDNF.info P
         fun toSWX {ename', s_C', qs} =
-          {ename' = ename', s_C = Wiring.* (s_C', id_Y_C_e),
+          {ename' = ename', s_C' = Wiring.* (s_C', id_Y_C_e),
            G = makeG [makeS (SCon (i, Wiring.id_X U))], qs = qs}
         val matches
           = lzmap toSWX
@@ -505,8 +505,8 @@ struct
                        in
                         LazyList.Cons 
                           ({ename' = ename,
-                           s_C = Wiring.* (Wiring.restrict s_a_n XplusZ,
-                                           Wiring.restrict s_a_e XplusZ),
+                           s_C' = Wiring.* (Wiring.restrict s_a_n XplusZ,
+                                            Wiring.restrict s_a_e XplusZ),
                            G = makeG [makeS (SCon (i, alpha))],
                            qs = [makeP (Wiring.id_X XplusZ)
                                        (makeN X g)]},
@@ -581,7 +581,7 @@ struct
    * 6) Return ename', s_C', G, qs
    *)
   and matchION (args as {ename, 
-                         s_a = {s_a_e, s_a_n}, s_R, e = g, Ps})
+                         s_a as {s_a_e, s_a_n}, s_R, e = g, Ps})
     = lzmake (fn () =>
     case unmkG g of  {Ss = [s], ...} =>
       (case unmkS s of BgBDNF.SMol m =>
@@ -600,7 +600,9 @@ struct
               val vZs =  Wiring.unmk vZ
               val Zs = sortlinksby vXs vZs
               val s_C' = Wiring.|| (s_Y, s_C')
-              val ename' = Wiring.* (Wiring.id_X Y, ename')
+              val ename'
+                = NameSet.fold (fn y => fn ename => NameMap.add (y, y, ename))
+                  ename' Y
               val KyZ = Ion.make {ctrl = ctrl, free = ys, bound = Zs}
               val G = makeG [makeS (SMol (makeM KyZ N))]
             in
@@ -652,14 +654,14 @@ struct
       val {Y = W, s = s_a_L, N = n, ...} = unmkP p
       val {absnames = Z, G = g} = unmkN n
       val s_a_n_new = Wiring.* (s_a_L, s_a_n)
-      fun toABS {ename', s_C, G, qs} =
+      fun toABS {ename', s_C', G, qs} =
         let
           val {inCod = s_C_L, notInCod = s_C'}
-            = Wiring.split_outer s_C W
+            = Wiring.split_outer s_C' W
           val U = Wiring.innernames s_C_L
           val P = makeP s_C_L (makeN U G)
         in
-          {ename' = ename', s_C = s_C', E = P, qs = qs}
+          {ename' = ename', s_C' = s_C', E = P, qs = qs}
         end
       val matches
         = lzmap toABS
@@ -747,8 +749,8 @@ struct
                         s_R = {s_R_e = s_R_e, s_R_n = s_R_n},
                         e = e,
                         Ps = Ps}
-                fun addms {E, qs, s_C, ename'}
-                  = ({E = E, qs = qs, s_C = s_C} :: ms, ename')
+                fun addms {E, qs, s_C', ename'}
+                  = ({E = E, qs = qs, s_C' = s_C'} :: ms, ename')
               in
                 lzmap addms mlz
               end
@@ -766,7 +768,7 @@ struct
         = NameSet.isEmpty Y_a_n andalso
            not (NameSet.isEmpty Y_R_e andalso NameSet.isEmpty Y_R_n)
       fun toPARn (matches : {E : 'a bgbdnf, qs : P bgbdnf list,
-                             s_C : wiring} list, ename) =
+                             s_C' : wiring} list, ename) =
         let
           val matches = rev matches
           val s_a_e' = Wiring.id_0 (* REVISE! *)
@@ -797,9 +799,9 @@ struct
               Wiring.introduce
                 (NameSet.remove
                    theoutername (NameSet.union Y_a_e' Y_a_n)))
-          val s_C = Wiring.++ (s_I :: map #s_C matches)
+          val s_C' = Wiring.++ (s_I :: map #s_C' matches)
         in
-          {ename' = ename, Y = NameSet.empty (* REVISE! Y *), s_C = s_C, Es = Es, qss = qss}
+          {ename' = ename, Y = NameSet.empty (* REVISE! Y *), s_C' = s_C', Es = Es, qss = qss}
         end
       val matches = lzmap toPARn mslz
     in
@@ -830,8 +832,8 @@ struct
       fun nextmatch split =
         let
           val P'ss = group Ps split
-          fun toPARe {ename', Y, s_C, Es, qss}
-            = {ename' = ename', Y = Y, s_C = s_C, Es = Es,
+          fun toPARe {ename', Y, s_C', Es, qss}
+            = {ename' = ename', Y = Y, s_C' = s_C', Es = Es,
                qs = List.concat qss}
           val matches
             = lzmap toPARe
@@ -866,8 +868,8 @@ struct
         let
           val Qs' = permute pi Qs
           val pibar = pushthru pi Xss
-          fun toPER {ename', Y, s_C, Es, qs}
-            = {ename' = ename', Y = Y, s_C = s_C, Es = Es, pi = pi,
+          fun toPER {ename', Y, s_C', Es, qs}
+            = {ename' = ename', Y = Y, s_C' = s_C', Es = Es, pi = pi,
                qs = permute pibar qs}
           val matches
             = lzmap toPER
