@@ -343,25 +343,25 @@ struct
    *            check/adjust s_C' so that s_a_n(x') = s_C'(x'').
    * 5) Return ename', s_C', qs = (X)g.
    *)
-  fun matchPAX' {ename, s_a, s_C, g, G} = lzNil
+  fun matchPAX' {ename, s_a, s_C, g, G} =
       lzmake (fn () =>
       case #Ss (unmkG G) of
         [S] =>
       (case unmkS S of
-        SCon (i, a) =>
+        BgBDNF.SCon (i, a) =>
         let
           val X = Wiring.innernames a
           val Y = Wiring.outernames a
           val Z = NameSet.difference (Interface.glob (outerface g)) X
           (*FIXME finish*)
-        in lsNil
+        in lzunmk lzNil
 (*FIXME
           {ename' = ename,
            s_C' = ,
            qs = [makeP (Wiring.id_X X) (makeN X g)]}*)
         end
-      | _ => lsNil)
-      | _ => lsNil)
+      | _ => lzunmk lzNil)
+      | _ => lzunmk lzNil)
   
   and matchMER' {ename, s_a, s_C, g, G} = lzNil
 
