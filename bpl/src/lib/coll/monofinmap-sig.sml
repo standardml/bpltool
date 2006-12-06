@@ -5,11 +5,22 @@ signature MONO_FINMAP =
     type dom
     type 'b map
 
+    (** Signal that an insert changed the data of an existing key. *)
+    exception DATACHANGED
+
     val empty      : 'b map
     val singleton  : dom * 'b -> 'b map
     val isEmpty    : 'b map -> bool
     val lookup     : 'b map -> dom -> 'b option
+    (** Add a key-data pair k0 |-> d0.  Any existing key-data
+     * pair k0 |-> d1 will silently be overwritten. 
+     *)
     val add        : dom * 'b * 'b map -> 'b map
+		(** Add a key-data pair k0 |-> d0.
+		 *  @exception DATACHANGED  If a pair k0 |-> d1
+		 *                          already exists with d0 <> d1.
+		 *)
+    val add'       : dom * ''b * ''b map -> ''b map
     val plus       : 'b map * 'b map -> 'b map
     val remove     : dom * 'b map -> 'b map option      
     val dom        : 'b map -> dom list

@@ -41,6 +41,8 @@ functor OrderFinMap(Order : ORDERING): MONO_FINMAP =
     exception Impossible of string
     fun impossible s = raise (Impossible ("OrderFinMap" ^ s))
 
+    exception DATACHANGED
+
     local
       exception ALREADYTHERE
       fun insert((k0, d0), t) =
@@ -130,10 +132,27 @@ functor OrderFinMap(Order : ORDERING): MONO_FINMAP =
             repl t
         end
 
+      fun update'((k0, d0), t) =
+        let fun repl E = impossible "AVLupdate.repl"
+              | repl (N(k,d,l,r,b)) =
+                  if k0 < k then N(k,d,repl l, r, b)
+                  else if k < k0 then N(k,d,l,repl r, b)
+                  else (* k = k0 *)
+                    if d = d0 then
+                      N(k,d0,l,r,b)
+                    else
+                      raise DATACHANGED
+        in
+            repl t
+        end
+
     in
       fun add (k0:dom, d0:'b, t:'b map) : 'b map =
 	insert((k0, d0), t) 
 	handle ALREADYTHERE => update ((k0, d0), t)
+      fun add' (k0:dom, d0:''b, t:''b map) : ''b map =
+	insert((k0, d0), t)
+	handle ALREADYTHERE => update' ((k0, d0), t)
     end
 
     fun plus (t1:'b map, t2:'b map) : 'b map =
