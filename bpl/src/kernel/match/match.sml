@@ -446,7 +446,7 @@ struct
    *    yielding ename', s_C', and qs
    * 2) Let Y_C_e = outernames s_C_e
    * 3) Let U = outernames s
-   * 4) Return ename', s_C := s_C' * id_Y_C_e, G := "U", qs
+   * 4) Return ename', Y = {}, s_C := s_C' * id_Y_C_e, G := "U", qs
    *)
   fun matchSWX {ename, 
                 s_a = {s_a_e, s_a_n}, 
@@ -460,8 +460,11 @@ struct
         val id_Y_C_e = Wiring.id_X (Wiring.outernames s_C_e)
         val i = BgBDNF.info P
         fun toSWX {ename', s_C', qs} =
-          {ename' = ename', s_C = Wiring.* (s_C', id_Y_C_e),
-           G = makeG [makeS (SCon (i, Wiring.id_X U))], qs = qs}
+          {ename' = ename',
+           Y = NameSet.empty,
+           s_C = Wiring.* (s_C', id_Y_C_e),
+           G = makeG [makeS (SCon (i, Wiring.id_X U))],
+           qs = qs}
         val matches
           = lzmap toSWX
                   (matchDG' {ename = ename,
@@ -480,7 +483,7 @@ struct
    * 1) Let X+Z = outernames (g)
    * 2) Inner-name restrict s_a to X+Z
    * 3) Let s_C = s_a_n * s_a_e
-   * 4) Return ename' = ename, s_C, G = "X", Ps = (X)g
+   * 4) Return ename' = ename, Y = {}, s_C, G = "X", Ps = (X)g
    *)
   fun matchPAX {ename,
                 s_a = {s_a_e, s_a_n},
@@ -507,6 +510,7 @@ struct
                           ({ename' = ename,
                            s_C = Wiring.* (Wiring.restrict s_a_n XplusZ,
                                             Wiring.restrict s_a_e XplusZ),
+                           Y = NameSet.empty,
                            G = makeG [makeS (SCon (i, alpha))],
                            qs = [makeP (Wiring.id_X XplusZ)
                                        (makeN X g)]},
@@ -574,11 +578,11 @@ struct
    *     s_a_e to Y
    * 4) Construct p = (id * (vec v)/(vec X))n and infer premise
    *     using s_a, s_R, p, and Ps, yielding
-   *     ename', s_C, P = (id * (vec v)/(vec Z))N, and qs
+   *     ename', Y', s_C, P = (id * (vec v)/(vec Z))N, and qs
    * 5) Construct s_C = s_Y_n || s_Y_e || s_C
    *     and    ename' = ename' + {s_Y_e(y) |-> s_Y_e(y) | y in Y}
    *     and         G = (id * K_yZ)N
-   * 6) Return ename', s_C, G, qs
+   * 6) Return ename', Y', s_C, G, qs
    *)
   and matchION (args as {ename, 
                          s_a as {s_a_e, s_a_n}, s_R, e = g, Ps})
@@ -594,7 +598,7 @@ struct
           val s_Y = Wiring.|| (s_Y_n, s_Y_e)
           val vXs = makefreshlinks Xs
           val p = makeP (Wiring.make' vXs) n
-          fun toION ({ename', s_C, E = P, qs}, lzms) =
+          fun toION ({ename', Y = Y', s_C, E = P, qs}, lzms) =
             let
               val {s = vZ, N, ...} = unmkP P
               val vZs =  Wiring.unmk vZ
@@ -608,7 +612,7 @@ struct
             in
               lzCons
                 (fn () =>
-                 ({ename' = ename', s_C = s_C, G = G, qs = qs},
+                 ({ename' = ename', Y = Y', s_C = s_C, G = G, qs = qs},
                   lzms ()))
             end
             handle NameMap.DATACHANGED => lzms ()
@@ -646,10 +650,10 @@ struct
    * 1) Deconstruct p, yielding s_a_L : Z -> W and g.
    * 2) Compute s_a_n_new = s_a_L * s_a_n.
    * 3) Using s_a_n_new, s_a_e, s_R, g, Ps, infer premise,
-   *    yielding ename', s_Cnew, G, qs.
+   *    yielding ename', Y, s_Cnew, G, qs.
    * 4) Determine s_C_L : U -> W and s_C by outername restriction
    *    using W such that s_C * s_C_L = s_Cnew
-   * 5) Construct and return s_a_e', s_C, (id * s_C_L)(U)G, and qs
+   * 5) Construct and return ename', Y, s_C, (id * s_C_L)(U)G, and qs
    *)  
   and matchABS {ename,
                 s_a = {s_a_e, s_a_n}, s_R as {s_R_e, s_R_n}, e = p, Ps}
@@ -658,14 +662,14 @@ struct
       val {Y = W, s = s_a_L, N = n, ...} = unmkP p
       val {absnames = Z, G = g} = unmkN n
       val s_a_n_new = Wiring.* (s_a_L, s_a_n)
-      fun toABS {ename', s_C, G, qs} =
+      fun toABS {ename', Y, s_C, G, qs} =
         let
           val {inCod = s_C_L, notInCod = s_C}
             = Wiring.split_outer s_C W
           val U = Wiring.innernames s_C_L
           val P = makeP s_C_L (makeN U G)
         in
-          {ename' = ename', s_C = s_C, E = P, qs = qs}
+          {ename' = ename', Y = Y, s_C = s_C, E = P, qs = qs}
         end
       val matches
         = lzmap toABS
@@ -679,46 +683,43 @@ struct
     end)
 
   (* Match a parallel composition:
-   * 1) For each e_i : -> <1,(X_i),X_i + Y_i> determine
-   *    s_a_n_i = s_a_n domainrestricted to Y_i
-   *    s_a_e_i = s_a_e domainrestricted to Y_i.
-   * 2) For each Ps_i : -> <n,\vec X_i,X_i + Y_i> determine
-   *    s_R_n_i = s_R_n domainrestricted to Y_i.
-   *    s_R_e_i = s_R_e domainrestricted to Y_i.
-   * 3) Using s_a_n_i, s_a_e_i, s_R_n_i, s_R_e_i,
-   *    e_i, Ps_i, infer premise, 
-   *    yielding s_a_e'_i, s_C_i, E_i and ps_i.
-   * 4) Compute s_a_e', Es and pss by product.
-   * 5) Determine names Y_a_e', Y_a_n, Y_R_e, Y_R_n
-   *    introduced by s_a_e', s_a_n, s_R_e, and s_R_n, respectively.
-   * 6) If Y_a_e' = Y_a_n = {} and Y_R_e + Y_R_n <> {}, then add a
-   *    fresh name to Y_a_e' and its name introduction to s_a_e'.
-   * 7) Construct substitution s_I : Y_R_e + Y_R_n -> Y_a_e' + Y_a_n.
-   * 8) Compute s_C as the extension* of s_C_i's and s_I.
-   * 9) Return s_a_e', s_C, Es and pss.
+   *  1) For each e_i : -> <1,(X_i),X_i + Y_i> determine
+   *     s_a_n_i = s_a_n domainrestricted to Y_i
+   *     s_a_e_i = s_a_e domainrestricted to Y_i.
+   *  2) For each Ps_i : -> <n,\vec X_i,X_i + Y_i> determine
+   *     s_R_n_i = s_R_n domainrestricted to Y_i.
+   *     s_R_e_i = s_R_e domainrestricted to Y_i.
+   *  3) Let ename_0 = ename.
+   *  4) Using ename_i, s_a_n_i, s_a_e_i, s_R_n_i, s_R_e_i,
+   *     e_i, Ps_i, infer premise, 
+   *     yielding ename_i+1, Y_i, s_C_i, E_i and ps_i.
+   *  5) Let ename' = ename_n, compute Y by union and Es and pss by product.
+   *  6) Determine names Y_a_e, Y_a_n, Y_R_e, Y_R_n
+   *     introduced by (ename' s_a_e), s_a_n, s_R_e, and s_R_n, respectively.
+   *  7) If Y = Y_a_e = Y_a_n = {} and Y_R_e + Y_R_n <> {}, then add a
+   *     fresh name to Y.
+   *  8) Construct substitution s_I : Y_R_e + Y_R_n -> Y_a_e' + Y_a_n + Y.
+   *  9) Compute s_C as the extension* of s_C_i's and s_I.
+   * 10) Return ename', Y, s_C, Es and pss.
    *
    * *=extension is a parallel product where inner name
    *   clash is allowed, providing such names map to the
    *   same link.  Internal edges are all "identical", causing
    *   edges in two factors to merge if they have a point
    *   in common.
-   
-   NOTE: THIS FUNCTION NEEDS REVISING to handle the case (1)
-   
-    a = /e e/{e1, e2} (K[e1] * L[e2])
-    R = /f f/{f1, f2} (K[f1] * L[f2])
-   
-   (which it does now) but not the case (2)
-   
-    a = /e e/{e1, e2}            (K[e1] * L[e2])
-    R = /{f1,f2} (f1/f1 * f2/f2) (K[f1] * L[f2]).
-      
-   Currently, the problem is that e in case (2) is renamed to 
-   f1 when recursing into K[f1] and to f2 when recursing into
-   L[f2].  The name must be the same, so after recursing into
-   K[f1], which renames e to f1, e (now f1) must not be renamed
-   to anything else when recursing into L[f2].   
-   
+   *
+   * NOTE: This function allows matching
+   *
+   *  a = /e e/{e1, e2} (K[e1] * L[e2])
+   *  R = /f f/{f1, f2} (K[f1] * L[f2])
+   *
+   * (which should be allowed) but not
+   *
+   *  a = /e e/{e1, e2}            (K[e1] * L[e2])
+   *  R = /{f1,f2} (f1/f1 * f2/f2) (K[f1] * L[f2])
+   *
+   * (which should not be allowed) due to the threading of ename through
+   * recursive calls.
    *)
   and matchPARn
       {matchE, ename, 
@@ -753,8 +754,8 @@ struct
                         s_R = {s_R_e = s_R_e, s_R_n = s_R_n},
                         e = e,
                         Ps = Ps}
-                fun addms {E, qs, s_C, ename'}
-                  = ({E = E, qs = qs, s_C = s_C} :: ms, ename')
+                fun addms {E, qs, s_C, Y, ename'}
+                  = ({E = E, qs = qs, s_C = s_C, Y = Y} :: ms, ename')
               in
                 lzmap addms mlz
               end
@@ -768,44 +769,52 @@ struct
       val Y_a_n = Wiring.introductions s_a_n
       val Y_R_e = Wiring.introductions s_R_e
       val Y_R_n = Wiring.introductions s_R_n
+      val Y_R_empty = NameSet.isEmpty Y_R_e andalso NameSet.isEmpty Y_R_n
       val Y_a_n_empty_and_Y_R_nonempty
-        = NameSet.isEmpty Y_a_n andalso
-           not (NameSet.isEmpty Y_R_e andalso NameSet.isEmpty Y_R_n)
+        = NameSet.isEmpty Y_a_n andalso not Y_R_empty
       fun toPARn (matches : {E : 'a bgbdnf, qs : P bgbdnf list,
-                             s_C : wiring} list, ename) =
+                             s_C : wiring, Y : nameset} list, ename') =
         let
           val matches = rev matches
-          val s_a_e' = Wiring.id_0 (* REVISE! *)
           val Es = map #E matches
           val qss = map #qs matches
-          val Y_a_e' = Wiring.introductions s_a_e'
-          val Y_a_e'
+          val Y = (foldr (fn (Y_i, Y) => NameSet.union Y_i Y) NameSet.empty
+                   o map #Y)
+                  matches
+          val Y
             = if Y_a_n_empty_and_Y_R_nonempty
-              andalso NameSet.isEmpty Y_a_e' then
+              andalso NameSet.isEmpty Y then
                 NameSet.singleton y
               else
-                Y_a_e'
-          val theoutername
-            = case NameSet.foldUntil
-                (fn y => fn NONE => (true, SOME y) | y' => (true, y'))
-                (NameSet.foldUntil 
-                  (fn y => fn NONE => (true, SOME y) | y' => (true, y'))
-                  NONE Y_a_e')
-                Y_a_n of
-                 SOME y => y
-               | NONE => raise ThisCannotHappen (* as Y_a_e' + Y_a_n <> {} *)
+                Y
           val s_I
-           = Wiring.*
-             (Wiring.make
-                (LinkSet.singleton
-                  (Link.make {outer = SOME theoutername,
-                              inner = NameSet.union Y_R_e Y_R_n})),
-              Wiring.introduce
-                (NameSet.remove
-                   theoutername (NameSet.union Y_a_e' Y_a_n)))
+            = if Y_R_empty then
+                Wiring.id_0
+              else
+                let
+				          (* Pick an outer name from Y + Y_a_n *)
+				          val theoutername
+				            = case NameSet.foldUntil
+				                (fn y => fn NONE => (true, SOME y) | y' => (true, y'))
+				                (NameSet.foldUntil 
+				                  (fn y => fn NONE => (true, SOME y) | y' => (true, y'))
+				                  NONE Y)
+				                Y_a_n of
+				                 SOME y => y
+				               | NONE => raise ThisCannotHappen (* as Y + Y_a_n <> {} *)
+				        in
+		              Wiring.*
+		              (Wiring.make
+		                (LinkSet.singleton
+		                  (Link.make {outer = SOME theoutername,
+		                              inner = NameSet.union Y_R_e Y_R_n})),
+		               Wiring.introduce
+		                 (NameSet.remove
+		                   theoutername (NameSet.union Y Y_a_n)))
+		            end
           val s_C = Wiring.++ (s_I :: map #s_C matches)
         in
-          {ename' = ename, Y = NameSet.empty (* REVISE! Y *), s_C = s_C, Es = Es, qss = qss}
+          {ename' = ename, Y = Y, s_C = s_C, Es = Es, qss = qss}
         end
       val matches = lzmap toPARn mslz
     in
