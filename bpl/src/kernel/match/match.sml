@@ -463,7 +463,7 @@ struct
           {ename' = ename',
            Y = NameSet.empty,
            s_C = Wiring.* (s_C', id_Y_C_e),
-           G = makeG [makeS (SCon (i, Wiring.id_X U))],
+           E = makeG [makeS (SCon (i, Wiring.id_X U))],
            qs = qs}
         val matches
           = lzmap toSWX
@@ -511,7 +511,7 @@ struct
                            s_C = Wiring.* (Wiring.restrict s_a_n XplusZ,
                                             Wiring.restrict s_a_e XplusZ),
                            Y = NameSet.empty,
-                           G = makeG [makeS (SCon (i, alpha))],
+                           E = makeG [makeS (SCon (i, alpha))],
                            qs = [makeP (Wiring.id_X XplusZ)
                                        (makeN X g)]},
                            lzNil)
@@ -564,124 +564,6 @@ struct
       LinkSet.apply addlink vZs; map findZ vXs
     end
 
-  (* Match a global discrete prime using the MER rule:
-   * 1) ...
-   *)
-  fun matchMER {ename, s_a, s_R, e, Ps} = lzNil
-  
-  (* Match a global discrete prime using the ION rule, if possible:
-   * If it contains 1 top-level molecule, match an ion:
-   * 1) For agent ion K_yX, compute the set Y = {vec y}
-   * 2) Compute s_Y_n || s_a_n_new = s_a_n by domain-restricting
-   *     s_a_n to Y
-   * 3) Compute s_Y_e || s_a_e_new = s_a_e by domain-restricting
-   *     s_a_e to Y
-   * 4) Construct p = (id * (vec v)/(vec X))n and infer premise
-   *     using s_a, s_R, p, and Ps, yielding
-   *     ename', Y', s_C, P = (id * (vec v)/(vec Z))N, and qs
-   * 5) Construct s_C = s_Y_n || s_Y_e || s_C
-   *     and    ename' = ename' + {s_Y_e(y) |-> s_Y_e(y) | y in Y}
-   *     and         G = (id * K_yZ)N
-   * 6) Return ename', Y', s_C, G, qs
-   *)
-  and matchION (args as {ename, 
-                         s_a as {s_a_e, s_a_n}, s_R, e = g, Ps})
-    = lzmake (fn () =>
-    case unmkG g of  {Ss = [s], ...} =>
-      (case unmkS s of BgBDNF.SMol m =>
-        let
-          val {id_Z, KyX, N = n} = unmkM m
-          val {ctrl, free = ys, bound = Xs} = Ion.unmk KyX
-          val Y = foldr (fn (y, Y) => NameSet.insert y Y) NameSet.empty ys
-          val s_Y_n = Wiring.restrict s_a_n Y
-          val s_Y_e = Wiring.restrict s_a_e Y
-          val s_Y = Wiring.|| (s_Y_n, s_Y_e)
-          val vXs = makefreshlinks Xs
-          val p = makeP (Wiring.make' vXs) n
-          fun toION ({ename', Y = Y', s_C, E = P, qs}, lzms) =
-            let
-              val {s = vZ, N, ...} = unmkP P
-              val vZs =  Wiring.unmk vZ
-              val Zs = sortlinksby vXs vZs
-              val s_C = Wiring.|| (s_Y, s_C)
-              val ename'
-                = NameSet.fold (fn y => fn ename => NameMap.add' (y, y, ename))
-                  ename' (Wiring.app s_Y_e Y)
-              val KyZ = Ion.make {ctrl = ctrl, free = ys, bound = Zs}
-              val G = makeG [makeS (SMol (makeM KyZ N))]
-            in
-              lzCons
-                (fn () =>
-                 ({ename' = ename', Y = Y', s_C = s_C, G = G, qs = qs},
-                  lzms ()))
-            end
-            handle NameMap.DATACHANGED => lzms ()
-          val matches
-            = lzfoldr toION lzNil (matchABS {ename = ename,
-                                     s_a = s_a,
-                                     s_R = s_R,
-                                     e = p,
-                                     Ps = Ps})
-        in
-          lzunmk matches
-        end
-       | _ => raise AgentNotGround ("kernel/match/match.sml", g,
-                                     "in matchDS"))
-      | _ => LazyList.Nil)
-  
-  (* Match a global discrete prime using a SWX, PAX, MER or ION rule:
-   * 1) First return any PAX rule matches,
-   * 2) Then return any SWX rule matches,
-   * 3) Then return any ION rule matches,
-   * 4) Then if the agent contains n > 1 top-level molecules
-   *    (to avoid infinite recursion via MER-PAR-PARe-PARn),
-   *    return any MER rule matches.
-   *)
-  and matchDG (args as {ename, s_a, s_R, e = g, Ps})
-    = lzappend (matchPAX args)
-        (lzappend (matchSWX args)
-          (lzappend (matchION args)
-            (lzmake (fn () =>
-              case #Ss (unmkG g) of
-                (_ :: _ :: _) => lzunmk (matchMER args)
-              | _ => LazyList.Nil))))
-
-  (* Match an abstraction:
-   * 1) Deconstruct p, yielding s_a_L : Z -> W and g.
-   * 2) Compute s_a_n_new = s_a_L * s_a_n.
-   * 3) Using s_a_n_new, s_a_e, s_R, g, Ps, infer premise,
-   *    yielding ename', Y, s_Cnew, G, qs.
-   * 4) Determine s_C_L : U -> W and s_C by outername restriction
-   *    using W such that s_C * s_C_L = s_Cnew
-   * 5) Construct and return ename', Y, s_C, (id * s_C_L)(U)G, and qs
-   *)  
-  and matchABS {ename,
-                s_a = {s_a_e, s_a_n}, s_R as {s_R_e, s_R_n}, e = p, Ps}
-    = lzmake (fn () =>
-    let
-      val {Y = W, s = s_a_L, N = n, ...} = unmkP p
-      val {absnames = Z, G = g} = unmkN n
-      val s_a_n_new = Wiring.* (s_a_L, s_a_n)
-      fun toABS {ename', Y, s_C, G, qs} =
-        let
-          val {inCod = s_C_L, notInCod = s_C}
-            = Wiring.split_outer s_C W
-          val U = Wiring.innernames s_C_L
-          val P = makeP s_C_L (makeN U G)
-        in
-          {ename' = ename', Y = Y, s_C = s_C, E = P, qs = qs}
-        end
-      val matches
-        = lzmap toABS
-           (matchDG {ename = ename,
-                     s_a = {s_a_e = s_a_e, s_a_n = s_a_n_new},
-                     s_R = s_R,
-                     e = g,
-                     Ps = Ps})
-    in
-      lzunmk matches
-    end)
-
   (* Match a parallel composition:
    *  1) For each e_i : -> <1,(X_i),X_i + Y_i> determine
    *     s_a_n_i = s_a_n domainrestricted to Y_i
@@ -721,7 +603,7 @@ struct
    * (which should not be allowed) due to the threading of ename through
    * recursive calls.
    *)
-  and matchPARn
+  fun matchPARn
       {matchE, ename, 
        s_a = {s_a_e, s_a_n}, s_R as {s_R_e, s_R_n},
        es, Pss} = lzmake (fn () =>
@@ -772,11 +654,10 @@ struct
       val Y_R_empty = NameSet.isEmpty Y_R_e andalso NameSet.isEmpty Y_R_n
       val Y_a_n_empty_and_Y_R_nonempty
         = NameSet.isEmpty Y_a_n andalso not Y_R_empty
-      fun toPARn (matches : {E : 'a bgbdnf, qs : P bgbdnf list,
-                             s_C : wiring, Y : nameset} list, ename') =
+      fun toPARn (matches, ename') =
         let
           val matches = rev matches
-          val Es = map #E matches
+          val Es = map (fn {s_C, Y, E, qs} => E) matches
           val qss = map #qs matches
           val Y = (foldr (fn (Y_i, Y) => NameSet.union Y_i Y) NameSet.empty
                    o map #Y)
@@ -828,7 +709,7 @@ struct
    *    lists of lists qss, etc.
    * 4) Concatenate the resulting qss and return the result.
    *)
-  and matchPARe {matchE, ename, s_a, s_R, es, Ps}
+  fun matchPARe {matchE, ename, s_a, s_R, es, Ps}
     = lzmake (fn () =>
     let
       val n = length es
@@ -873,7 +754,7 @@ struct
    *    2b) Infer premise, yielding parameter list qs etc.
    *    2c) Permute qs by pibar and return the result.
    *)
-  and matchPER {matchE, ename, s_a, s_R, es, Qs}
+  fun matchPER {matchE, ename, s_a, s_R, es, Qs}
     = lzmake (fn () =>
     let
       val Xss = map (loc o innerface) Qs
@@ -902,6 +783,143 @@ struct
       lzunmk (nextmatch (firstperm (map (hd o loc o outerface) Qs)))
     end)
 
+
+  val warninggiven = ref false
+  (* Match a global discrete prime using the MER rule:
+   * 1) ...
+   *
+   * THE FOLLOWING IS A DUMMY IMPLEMENTATION:
+   *)
+  fun matchMER (args as {ename, s_a, s_R, e = g, Ps}) =
+    let
+      fun toMER {ename', Y, s_C, Es, pi, qs} =
+        {ename' = ename', Y = Y, s_C = s_C,
+         E = makeG (List.concat (map (#Ss o unmkG) Es)),
+         qs = qs}
+    in
+      if !warninggiven then
+        () 
+      else
+        print "kernel/match/match.sml: matchMER not implemented!\n";
+      warninggiven := true;
+  	  lzmap toMER
+        (matchPER {ename = ename, matchE = matchDG,
+                   s_a = s_a, s_R = s_R, es = [g], Qs = Ps})
+    end
+
+  (* Match a global discrete prime using the ION rule, if possible:
+   * If it contains 1 top-level molecule, match an ion:
+   * 1) For agent ion K_yX, compute the set Y = {vec y}
+   * 2) Compute s_Y_n || s_a_n_new = s_a_n by domain-restricting
+   *     s_a_n to Y
+   * 3) Compute s_Y_e || s_a_e_new = s_a_e by domain-restricting
+   *     s_a_e to Y
+   * 4) Construct p = (id * (vec v)/(vec X))n and infer premise
+   *     using s_a, s_R, p, and Ps, yielding
+   *     ename', Y', s_C, P = (id * (vec v)/(vec Z))N, and qs
+   * 5) Construct s_C = s_Y_n || s_Y_e || s_C
+   *     and    ename' = ename' + {s_Y_e(y) |-> s_Y_e(y) | y in Y}
+   *     and         G = (id * K_yZ)N
+   * 6) Return ename', Y', s_C, G, qs
+   *)
+  and matchION (args as {ename, 
+                         s_a as {s_a_e, s_a_n}, s_R, e = g, Ps})
+    = lzmake (fn () =>
+    case unmkG g of  {Ss = [s], ...} =>
+      (case unmkS s of BgBDNF.SMol m =>
+        let
+          val {id_Z, KyX, N = n} = unmkM m
+          val {ctrl, free = ys, bound = Xs} = Ion.unmk KyX
+          val Y = foldr (fn (y, Y) => NameSet.insert y Y) NameSet.empty ys
+          val s_Y_n = Wiring.restrict s_a_n Y
+          val s_Y_e = Wiring.restrict s_a_e Y
+          val s_Y = Wiring.|| (s_Y_n, s_Y_e)
+          val vXs = makefreshlinks Xs
+          val p = makeP (Wiring.make' vXs) n
+          fun toION ({ename', Y = Y', s_C, E = P, qs}, lzms) =
+            let
+              val {s = vZ, N, ...} = unmkP P
+              val vZs =  Wiring.unmk vZ
+              val Zs = sortlinksby vXs vZs
+              val s_C = Wiring.|| (s_Y, s_C)
+              val ename'
+                = NameSet.fold (fn y => fn ename => NameMap.add' (y, y, ename))
+                  ename' (Wiring.app s_Y_e Y)
+              val KyZ = Ion.make {ctrl = ctrl, free = ys, bound = Zs}
+              val G = makeG [makeS (SMol (makeM KyZ N))]
+            in
+              lzCons
+                (fn () =>
+                 ({ename' = ename', Y = Y', s_C = s_C, E = G, qs = qs},
+                  lzms ()))
+            end
+            handle NameMap.DATACHANGED => lzms ()
+          val matches
+            = lzfoldr toION lzNil (matchABS {ename = ename,
+                                     s_a = s_a,
+                                     s_R = s_R,
+                                     e = p,
+                                     Ps = Ps})
+        in
+          lzunmk matches
+        end
+       | _ => raise AgentNotGround ("kernel/match/match.sml", g,
+                                     "in matchDS"))
+      | _ => LazyList.Nil)
+  
+  (* Match a global discrete prime using a SWX, PAX, MER or ION rule:
+   * 1) First return any PAX rule matches,
+   * 2) Then return any SWX rule matches,
+   * 3) Then return any ION rule matches,
+   * 4) Then if the agent contains n > 1 top-level molecules
+   *    (to avoid infinite recursion via MER-PAR-PARe-PARn),
+   *    return any MER rule matches.
+   *)
+  and matchDG (args as {ename, s_a, s_R, e = g, Ps}) =
+	    lzappend (matchPAX args)
+	    (lzappend (matchSWX args)
+	      (lzappend (matchION args)
+	        (lzmake (fn () =>
+	          case #Ss (unmkG g) of
+	            (_ :: _ :: _) => lzunmk (matchMER args)
+	          | _ => LazyList.Nil))))
+
+  (* Match an abstraction:
+   * 1) Deconstruct p, yielding s_a_L : Z -> W and g.
+   * 2) Compute s_a_n_new = s_a_L * s_a_n.
+   * 3) Using s_a_n_new, s_a_e, s_R, g, Ps, infer premise,
+   *    yielding ename', Y, s_Cnew, G, qs.
+   * 4) Determine s_C_L : U -> W and s_C by outername restriction
+   *    using W such that s_C * s_C_L = s_Cnew
+   * 5) Construct and return ename', Y, s_C, (id * s_C_L)(U)G, and qs
+   *)  
+  and matchABS {ename,
+                s_a = {s_a_e, s_a_n}, s_R as {s_R_e, s_R_n}, e = p, Ps}
+    = lzmake (fn () =>
+    let
+      val {Y = W, s = s_a_L, N = n, ...} = unmkP p
+      val {absnames = Z, G = g} = unmkN n
+      val s_a_n_new = Wiring.* (s_a_L, s_a_n)
+      fun toABS {ename', Y, s_C, E = G, qs} =
+        let
+          val {inCod = s_C_L, notInCod = s_C}
+            = Wiring.split_outer s_C W
+          val U = Wiring.innernames s_C_L
+          val P = makeP s_C_L (makeN U G)
+        in
+          {ename' = ename', Y = Y, s_C = s_C, E = P, qs = qs}
+        end
+      val matches
+        = lzmap toABS
+           (matchDG {ename = ename,
+                     s_a = {s_a_e = s_a_e, s_a_n = s_a_n_new},
+                     s_R = s_R,
+                     e = g,
+                     Ps = Ps})
+    in
+      lzunmk matches
+    end)
+
   (* Match a closure:
    * 1) Open w_a, yielding s_a = s_a_e * s_a_n
    * 2) Open w_R, yielding s_R = s_R_e * s_R_n and fresh outer names Y_R of s_R_e
@@ -911,7 +929,7 @@ struct
    * 4) Check that s_C = id_{Y_R} * s'_C
    * 5) Return a new w_C as s'_C where links Y_C are closed.
    *)
-  fun matchCLO {w_a : Wiring.wiring, w_R, ps, Ps} = lzmake (fn () =>
+  fun matchCLO {w_a, w_R, ps, Ps} = lzmake (fn () =>
     let
       open Wiring
       val {opened = s_a_e, rest = s_a_n, ...}
