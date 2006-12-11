@@ -40,7 +40,7 @@ sig
    * disjoint, outer names need not be.
    *)
   val make' : link list -> wiring
-  (** Construct a renamin from a map from outer names to inner names.
+  (** Construct a renaming from a map from outer names to inner names.
    * Inner names must be disjoint, outer names need not be.
    *)
   val make_ren : name namemap -> wiring
@@ -181,11 +181,15 @@ sig
    * @exception NotARenaming if the wiring is not a renaming.
    *)
   val app_renaming_inverse_x : wiring -> name -> name
-  
   (** Create the inverse of a renaming.
    * @exception NotARenaming if the wiring is not a renaming.
    *)
   val invert_renaming : wiring -> wiring
+  (** Deconstruct a renaming.
+   * @exception NotARenaming if the wiring is not a renaming.
+   *)
+  val unmk_ren : wiring -> name namemap
+
   (** Restrict a wiring to only map a given set of names.
    * The outer face is trimmed to include only names to which some
    * inner name maps.  Each name in the set not mapped by the wiring

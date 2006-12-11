@@ -24,7 +24,7 @@
 
 signature ION =
 sig
-  type control
+  eqtype control
   type name
   type nameset
   type ppstream

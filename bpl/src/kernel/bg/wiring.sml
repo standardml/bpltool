@@ -555,6 +555,18 @@ struct
 
   exception NotARenaming of string * wiring * string
 
+  fun unmk_ren (w as (link'set, _)) = 
+      let
+	fun insertlink {outer = Name y, inner} nm =
+	      (case NameSet.list inner of
+                 [x] => NameMap.add (x, y, nm)
+               | _   => raise NotARenaming ("wiring.sml", w, "in unmk_ren"))
+	  | insertlink {outer = Closure _, ...} _ =
+	      raise NotARenaming ("wiring.sml", w, "in unmk_ren")
+      in
+	Link'Set.fold insertlink NameMap.empty link'set
+      end
+
   fun app_renaming_x w x =
       case app_x w x of
         SOME y => y

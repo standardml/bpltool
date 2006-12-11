@@ -25,7 +25,7 @@
 signature CONTROL =
 sig
   (** The control data type. *)
-  type control
+  eqtype control
   (** Construct a control. *)
   val make : string -> control
   (** Deconstruct a control. *)

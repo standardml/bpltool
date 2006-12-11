@@ -326,7 +326,40 @@ struct
   fun matchpoints {ys, us, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}} =
     (print "match/match.sml: matchpoints not implemented yet!\n";
      raise NoMatch;
-     {s_a = s_a, s_C = s_C, s_a_e'' = s_a_e, s_C_e'' = s_C_e})               
+     {s_a = s_a, s_C = s_C, s_a_e'' = s_a_e, s_C_e'' = s_C_e})
+
+  (*FIXME move to proper module...*)
+  (*FIXME comment...*)
+  fun in_domain n m =
+      case NameMap.lookup m n of
+        NONE => false
+      | _    => true
+  fun lookup m n =
+      case NameMap.lookup m n of
+        SOME n' => n'
+      | NONE => raise ThisCannotHappen
+
+  (*FIXME comment...*)
+  fun check_adjust e s x x' =
+      (case (in_domain x e, in_domain x' s) of
+         (true, true)
+         => if (lookup e x) = (lookup s x') then
+              (e, s)
+            else
+              raise NoMatch
+       | (true, false)
+         => (e, NameMap.add (x', lookup e x, s))
+       | (false, true)
+         => (NameMap.add (x, lookup s x', e), s)
+       | (false, false)
+         => let
+              val fresh = Name.fresh NONE
+            in
+              (NameMap.add (x, fresh, e), NameMap.add (x', fresh, s))
+            end)
+  fun check_adjust' s x x' =
+      #1 (check_adjust s (NameMap.fromList [(x',x')]) x x')
+
 
   (* Match a global discrete prime g to a context G using the PAX rule:
    * 1) Deconstruct context G = "alpha" : (X) -> Y.
@@ -355,37 +388,6 @@ struct
           val X = Wiring.innernames a
           val Y = Wiring.outernames a
           val Z = NameSet.difference (Interface.glob (outerface g)) X
-
-          (*FIXME move to proper module...*)
-          fun in_domain n m =
-              case NameMap.lookup m n of
-                NONE => false
-              | _    => true
-          fun lookup m n =
-              case NameMap.lookup m n of
-                SOME n' => n'
-              | NONE => raise ThisCannotHappen
-
-          fun check_adjust e s x x' =
-              (case (in_domain x e, in_domain x' s) of
-                 (true, true)
-                 => if (lookup e x) = (lookup s x') then
-                      (e, s)
-                    else
-                      raise NoMatch
-               | (true, false)
-                 => (e, NameMap.add (x', lookup e x, s))
-               | (false, true)
-                 => (NameMap.add (x, lookup s x', e), s)
-               | (false, false)
-                 => let
-                      val fresh = Name.fresh NONE
-                    in
-                      (NameMap.add (x, fresh, e), NameMap.add (x', fresh, s))
-                    end)
-
-          fun check_adjust' s x x' =
-              #1 (check_adjust s (NameMap.fromList [(x',x')]) x x')
 
           fun match_name isinY x (ename', s_C') =
               let
@@ -450,7 +452,90 @@ struct
    *          check/update s_C' so that s_a_n(yi) = s_C'(u').
    * 8) Return ename', s_C', qs.
    *)
-  and matchION' {ename, s_a, s_C, g, G} = lzNil
+  and matchION' {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, g, G} =
+      lzmake (fn () =>
+      case #Ss (unmkG g) of
+        [s] =>
+      (case unmkS s of
+        BgBDNF.SMol m =>
+      (case #Ss (unmkG G) of
+        [S] =>
+      (case unmkS S of
+        BgBDNF.SMol M =>
+        let
+          val {id_Z = _, KyX = KyX, N = n} = unmkM m
+          val {id_Z = _, KyX = LuZ, N = N} = unmkM M
+          val {ctrl = K, free = ys, bound = Xs} = Ion.unmk KyX
+          val {ctrl = L, free = us, bound = Zs} = Ion.unmk LuZ
+
+          val _ = if K <> L then raise NoMatch else ()
+
+          val ename''
+            = ListPair.foldl
+                (fn (yi, ui, ename'') =>
+                    if Wiring.in_domain ui s_C_e then
+                      check_adjust'
+                        ename''
+                        (Wiring.app_renaming_x s_a_e yi)
+                        (Wiring.app_renaming_x s_C_e ui)
+                    else
+                      ename'')
+                ename (ys, us)
+          
+          val (vX, vZ)
+            = (fn (vXl, vZl) => (Wiring.make' vXl, Wiring.make' vZl))
+              (ListPair.foldr
+                 (fn (Xi, Zi, (vXl, vZl)) =>
+                     let
+                       val vi = SOME (Name.fresh NONE)
+                     in
+                       ((Link.make {outer = vi, inner = Xi}) :: vXl,
+                        (Link.make {outer = vi, inner = Zi}) :: vZl)
+                     end)
+                 ([], []) (Xs, Zs))
+
+          val premise_matches = matchABS' {ename = ename'',
+                                           s_a = s_a, s_C = s_C,
+                                           p = BgBDNF.makeP vX n,
+                                           P = BgBDNF.makeP vZ N}
+
+          fun make_match {ename', s_C', qs} =
+              let
+                val (ename', s_C')
+                  = ListPair.foldl
+                      (fn (yi, ui, (ename', s_C')) =>
+                          if not (Wiring.in_domain ui s_C_e) then
+                            let
+                              val u' = if Wiring.in_domain ui s_C_n then
+                                         Wiring.app_renaming_x s_C_n ui
+                                       else
+                                         ui
+                            in
+                              if Wiring.in_domain yi s_a_e then
+                                check_adjust
+                                  ename' s_C'
+                                  (Wiring.app_renaming_x s_a_e yi) u'
+                              else
+                                (ename',
+                                 check_adjust'
+                                   s_C' u' (Wiring.app_renaming_x s_a_n yi))
+                            end
+                          else
+                            (ename', s_C'))
+                      (ename', Wiring.unmk_ren s_C') (ys, us)
+              in
+                {ename' = ename',
+                 s_C' = Wiring.make_ren s_C',
+                 qs = qs}
+              end
+        in
+          lzunmk (lzmap make_match premise_matches)
+        end
+        handle NoMatch => lzunmk lzNil
+      | _ => lzunmk lzNil)
+      | _ => lzunmk lzNil)
+      | _ => lzunmk lzNil)
+      | _ => lzunmk lzNil)
 
   (* Match a global discrete prime using a PAX, MER or ION rule:
    * 1) First return any PAX rule matches,
