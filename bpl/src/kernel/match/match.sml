@@ -58,10 +58,12 @@ functor Match (
                            = BgVal.nameset
                            = Ion.nameset
   sharing type Name.name = Ion.name
-                          = Link.name
+                         = Link.name
+                         = Wiring.name
                          = NameSet.elt
                          = BgVal.name
   sharing type NameMap.dom = Name.name
+  sharing type NameMap.map = Wiring.namemap
   sharing type LinkSet.Set = Wiring.linkset
   sharing type LinkSet.elt = Link.link
                            = Wiring.link
@@ -343,7 +345,7 @@ struct
    *            check/adjust s_C' so that s_a_n(x') = s_C'(x'').
    * 5) Return ename', s_C', qs = (X)g.
    *)
-  fun matchPAX' {ename, s_a, s_C, g, G} =
+  fun matchPAX' {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, g, G} =
       lzmake (fn () =>
       case #Ss (unmkG G) of
         [S] =>
@@ -353,13 +355,76 @@ struct
           val X = Wiring.innernames a
           val Y = Wiring.outernames a
           val Z = NameSet.difference (Interface.glob (outerface g)) X
-          (*FIXME finish*)
-        in lzunmk lzNil
-(*FIXME
-          {ename' = ename,
-           s_C' = ,
-           qs = [makeP (Wiring.id_X X) (makeN X g)]}*)
+
+          (*FIXME move to proper module...*)
+          fun in_domain n m =
+              case NameMap.lookup m n of
+                NONE => false
+              | _    => true
+          fun lookup m n =
+              case NameMap.lookup m n of
+                SOME n' => n'
+              | NONE => raise ThisCannotHappen
+
+          fun check_adjust e s x x' =
+              (case (in_domain x e, in_domain x' s) of
+                 (true, true)
+                 => if (lookup e x) = (lookup s x') then
+                      (e, s)
+                    else
+                      raise NoMatch
+               | (true, false)
+                 => (e, NameMap.add (x', lookup e x, s))
+               | (false, true)
+                 => (NameMap.add (x, lookup s x', e), s)
+               | (false, false)
+                 => let
+                      val fresh = Name.fresh NONE
+                    in
+                      (NameMap.add (x, fresh, e), NameMap.add (x', fresh, s))
+                    end)
+
+          fun check_adjust' s x x' =
+              #1 (check_adjust s (NameMap.fromList [(x',x')]) x x')
+
+          fun match_name isinY x (ename', s_C') =
+              let
+                val x' = if isinY then Wiring.app_renaming_inverse_x a x else x
+              in
+                if Wiring.in_domain x s_C_e then
+                  (check_adjust'
+                     ename'
+                     (Wiring.app_renaming_x s_a_e x') 
+                     (Wiring.app_renaming_x s_C_e x),
+                   s_C')
+                else
+                  let
+                    val x'' = if Wiring.in_domain x s_C_n then
+                                Wiring.app_renaming_x s_C_n x
+                              else
+                                x
+                  in
+                    if Wiring.in_domain x s_a_e then
+                      check_adjust
+                        ename' s_C' (Wiring.app_renaming_x s_a_e x') x''
+                    else
+                      (ename',
+                       check_adjust' s_C' x'' (Wiring.app_renaming_x s_a_n x'))
+                  end
+              end
+
+          val (ename', s_C')
+            = NameSet.fold
+                (match_name false)
+                (NameSet.fold (match_name true) (ename, NameMap.empty) Y)
+                Z
+        in 
+          LazyList.Cons
+            ({ename' = ename',
+              s_C' = Wiring.make_ren s_C',
+              qs = [makeP (Wiring.id_X X) (makeN X g)]}, lzNil)
         end
+        handle NoMatch => lzunmk lzNil
       | _ => lzunmk lzNil)
       | _ => lzunmk lzNil)
   

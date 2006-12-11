@@ -25,26 +25,45 @@ functor Wiring (structure Link : LINK
 		structure LinkSet : MONO_SET
 		structure Name : NAME
 		structure NameSet : MONO_SET
+		structure NameMap : MONO_FINMAP
 		structure IntSet : MONO_SET where type elt = int
+		structure Origin : ORIGIN
+		structure ErrorHandler : ERRORHANDLER
 		structure PrettyPrint : PRETTYPRINT
 		structure NameSetPP : COLLECTIONPRETTYPRINT
 		sharing type Link.link = LinkSet.elt
-		sharing type Name.name = Link.name = NameSet.elt
+		sharing type Name.name = Link.name = NameSet.elt = NameMap.dom
 		sharing type NameSet.Set = Link.nameset
+                sharing type Origin.origin =
+			     ErrorHandler.origin
                 sharing type PrettyPrint.ppstream =
-			     NameSetPP.ppstream
+			     Name.ppstream =
+			     NameSetPP.ppstream =
+			     Origin.ppstream =
+			     ErrorHandler.ppstream
 		sharing type NameSet.Set = NameSetPP.collection) :> WIRING 
-                where type link    = Link.link
-		  and type linkset = LinkSet.Set 
-		  and type nameset = NameSet.Set
-                  and type ppstream =
-			   PrettyPrint.ppstream =
+                where type link       = Link.link
+		  and type linkset    = LinkSet.Set 
+                  and type name       = Name.name
+		  and type nameset    = NameSet.Set
+                  and type 'a namemap = 'a NameMap.map
+                  and type ppstream   = PrettyPrint.ppstream =
 struct
   type link = Link.link
   type linkset = LinkSet.Set
   type nameset = NameSet.Set
+  type 'a namemap = 'a NameMap.map
   type name = NameSet.elt
   type ppstream = PrettyPrint.ppstream
+  open Debug
+  open ErrorHandler
+
+  val file_origin = Origin.mk_file_origin
+                      "$BPL/src/kernel/bg/wiring.sml"
+                      Origin.NOPOS
+  fun mk_explainer errtitle (explainer : exn -> explanation list) e =
+      Exp (LVL_USER, Origin.unknown_origin, mk_string_pp errtitle,
+           explainer e)
 
   (* A nameedge is either an outer name or an internal edge. *)
   datatype nameedge = Name of name | Closure of int
@@ -74,12 +93,12 @@ struct
     | nameedgehash (Closure i) = Word.fromInt i
 
   exception NOT_FOUND
-  structure NameMap 
+  structure NameHashMap 
     = HashTableFn (type hash_key = name
                    val hashVal = Name.hash
 		   val sameKey = Name.==);
-  fun createNameMap size = NameMap.mkTable (size, NOT_FOUND)
-  fun createNameMap' () = createNameMap 37
+  fun createNameHashMap size = NameHashMap.mkTable (size, NOT_FOUND)
+  fun createNameHashMap' () = createNameHashMap 37
 
   structure NameEdgeMap
     = HashTableFn (type hash_key = nameedge
@@ -91,7 +110,7 @@ struct
   (* The wiring representation used by this Wiring module is a double
    * representation, allowing faster composition.
    *)
-  type wiring = link'set * nameedge NameMap.hash_table
+  type wiring = link'set * nameedge NameHashMap.hash_table
 
   (* Convert an inverted map, mapping nameedges to name sets,
    * into a link'set. 
@@ -106,7 +125,7 @@ struct
       let
 	val invmap = createNameEdgeMap'()
       in
-	NameMap.appi
+	NameHashMap.appi
 	    (fn (x,ne) => 
 		case NameEdgeMap.find invmap ne of
 		    SOME xs
@@ -121,8 +140,8 @@ struct
    *)
   fun invert mapsize invmap =
       let
-	val newmap = createNameMap mapsize
-	fun entername ne x _ = NameMap.insert newmap (x, ne)
+	val newmap = createNameHashMap mapsize
+	fun entername ne x _ = NameHashMap.insert newmap (x, ne)
       in
 	NameEdgeMap.appi 
 	    (fn (ne, xs) => NameSet.fold (entername ne) () xs)
@@ -168,6 +187,14 @@ struct
       end
 
   fun make ls = make' (LinkSet.list ls)
+
+  (*FIXME not necessarily the most efficient way to do it... *)
+  fun make_ren nm =
+      make' (NameMap.Fold
+               (fn ((y, x), ls) =>
+                   (Link.make {outer = SOME y, inner = NameSet.singleton x})
+                   :: ls)
+               [] nm)
 	      
   fun unmk (link'set, _) = 
       let
@@ -303,7 +330,7 @@ struct
 
 	fun addlink {outer = (Name v), inner = X} (i, innsz) =
 	    (* Step 2a *)
-	    ((case NameMap.find ht1 v of
+	    ((case NameHashMap.find ht1 v of
 		SOME ne
 		=> ((case NameEdgeMap.find w_inv ne of
 		       SOME X' (* Step 2a.I+II *)
@@ -333,16 +360,16 @@ struct
        * (ls2, ht2) so they don't merge with those of (ls1, ht1).
        *)
       let
-	val ht = createNameMap (Link'Set.size l1s + Link'Set.size l2s)
+	val ht = createNameHashMap (Link'Set.size l1s + Link'Set.size l2s)
 	val i_max = ref ~1
 	fun insertlinkinht offset (innername, nameedge as (Name n)) =
-	    NameMap.insert ht (innername, nameedge)
+	    NameHashMap.insert ht (innername, nameedge)
 	  | insertlinkinht offset (innername, Closure i) =
 	    ((if !i_max < i then i_max := i else ());
-	     NameMap.insert ht (innername, Closure (offset + i)))
-	val _ = NameMap.appi (insertlinkinht 0) ht1
+	     NameHashMap.insert ht (innername, Closure (offset + i)))
+	val _ = NameHashMap.appi (insertlinkinht 0) ht1
 	val i2_offset = !i_max + 1
-	val _ = NameMap.appi (insertlinkinht i2_offset) ht2;
+	val _ = NameHashMap.appi (insertlinkinht i2_offset) ht2;
       in
 	(i2_offset, ht)
       end
@@ -369,7 +396,7 @@ struct
       end
   end
 
-  val id_0 : wiring = (Link'Set.empty, createNameMap 1)
+  val id_0 : wiring = (Link'Set.empty, createNameHashMap 1)
 
   fun ||| [] = id_0
     | ||| [w] = w
@@ -381,7 +408,7 @@ struct
        * unless they are supposed to do so.
        *)
     let
-			val ht = NameMap.copy ht2
+			val ht = NameHashMap.copy ht2
 			val imax (* Maximum closure index of w2 *)
 			  = Link'Set.fold
 			      (fn {outer = Closure i, inner} =>
@@ -390,14 +417,14 @@ struct
 			
 			(* Insert link x |-> y1 into ht, return true if merge occurred. *)        
 			fun insertnamelink y1 x merged =
-			  case NameMap.find ht2 x of
+			  case NameHashMap.find ht2 x of
 			    SOME (Name y2) =>
 		 	      if Name.== (y1, y2) then
 		 	        true
 		 	      else
 		 	        raise CannotExtend (w1, w2, Name y2)
 		 	  | SOME (Closure i) => raise CannotExtend (w1, w2, Closure i)
-		 	  | NONE => (NameMap.insert ht (x, Name y1); merged)
+		 	  | NONE => (NameHashMap.insert ht (x, Name y1); merged)
 
       (* Merge links  inner |-> y  into lacc, removing it from ls.
        * Return new lacc and new ls.
@@ -440,7 +467,7 @@ struct
 			  | insertlinks {outer = Closure i, inner} (imax, ls)
 			  = let
 			      fun addedgeof x (I, imin)
-			        = case NameMap.find ht2 x of
+			        = case NameHashMap.find ht2 x of
 			            SOME (Closure i')
 			             => (IntSet.insert' i' I,
 			                 if i' < imin then i' else imin)
@@ -458,7 +485,7 @@ struct
 			           val (inner, ls)
 			             = Link'Set.fold (mergeedges is imin) (inner, ls) ls
 			         in
-			           NameSet.apply (fn x => NameMap.insert ht (x, Closure imin)) inner;
+			           NameSet.apply (fn x => NameHashMap.insert ht (x, Closure imin)) inner;
 			           Link'Set.insert {outer = Closure imin, inner = inner} ls
 			         end)
 			    end
@@ -472,10 +499,32 @@ struct
     | ++ [w] = w
     | ++ (w :: ws) = plus w (++ ws)
 
-  fun app_x (_, ht) x 
-    = case NameMap.find ht x of
+  exception NotInDomain of wiring * name * string
+  fun explain_NotInDomain (NotInDomain (w, x, errtxt)) =
+      [Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data pp w, []),
+       Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data Name.pp x, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  val _ = add_explainer
+            (mk_explainer "the name is not in the domain of the wiring"
+                          explain_NotInDomain)
+  exception NotInCodomain of wiring * nameset * string
+  fun explain_NotInCodomain (NotInCodomain (w, X, errtxt)) =
+      [Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data pp w, []),
+       Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data NameSetPP.pp X, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  val _ = add_explainer
+            (mk_explainer "the names are not in the codomain of the wiring"
+                          explain_NotInCodomain)
+
+  fun in_domain x (_, ht) =
+      case NameHashMap.find ht x of _ => true
+      handle NOT_FOUND => false
+
+  fun app_x (w as (_, ht)) x =
+      case NameHashMap.find ht x of
 	SOME (Name n) => SOME n
       | _ => NONE 
+      handle NOT_FOUND => raise NotInDomain (w, x, "in app_x")
 
   fun app w X =
       NameSet.fold ((fn (SOME n) => (fn Y => NameSet.insert n Y) 
@@ -483,15 +532,46 @@ struct
 		    o app_x w)
 		   NameSet.empty
 		   X
+      handle NotInDomain (w, x, _) => raise NotInDomain (w, x, "in app")
 
-  fun app_inverse (ls, _) Y =
-      Link'Set.fold (fn {outer = Name y, inner} =>
-                          (fn X => if NameSet.member y Y then
-                                     NameSet.union X inner
-                                   else
-                                     X)
-                      | _ => fn X => X)
-                    NameSet.empty ls
+  fun app_inverse (w as (ls, _)) Y =
+      let
+        val (wY', Y')
+          = Link'Set.fold
+              (fn {outer = Name y, inner} =>
+                  (fn (wY', Y') =>
+                      if NameSet.member y Y then
+                        (NameSet.union wY' inner, NameSet.insert' y Y')
+                      else
+                        (wY', Y'))
+                | _ => fn X => X)
+              (NameSet.empty, NameSet.empty) ls
+      in
+        if NameSet.eq Y Y' then
+          wY'
+        else
+          raise NotInCodomain (w, NameSet.difference Y Y', "in app_inverse")
+      end
+
+  exception NotARenaming of string * wiring * string
+
+  fun app_renaming_x w x =
+      case app_x w x of
+        SOME y => y
+      | NONE   => raise NotARenaming ("wiring.sml", w, "in app_renaming_x")
+
+  fun app_renaming_inverse_x w y =
+      (*FIXME innefficient...*)
+      let
+        val X = app_inverse w (NameSet.singleton y)
+      in
+        if NameSet.size X = 1 then
+          hd (NameSet.list X)
+        else
+          raise NotARenaming ("wiring.sml", w, "in app_renaming_x")
+      end
+      handle NotInCodomain (w, Y, _)
+             => raise NotInCodomain (w, Y, "in app_renaming_inverse_x")
 
   (* Algorithm for restricting a wiring:
    * Construct an inverse hash table (mapping nameedges to
@@ -504,7 +584,7 @@ struct
 			val ht_inv = createNameEdgeMap (2 * Link'Set.size ls)
 
 			fun addlink x =
-	    (case NameMap.find ht x of
+	    (case NameHashMap.find ht x of
 	       SOME ne
 	       => (case NameEdgeMap.find ht_inv ne of
 		     			SOME X'
@@ -522,12 +602,12 @@ struct
 
   fun split (ls, ht) X =
     let
-      val ht0 = createNameMap (2 * Link'Set.size ls)
-      val ht1 = createNameMap (2 * Link'Set.size ls)
+      val ht0 = createNameHashMap (2 * Link'Set.size ls)
+      val ht1 = createNameHashMap (2 * Link'Set.size ls)
       val ht0_inv = createNameEdgeMap (2 * Link'Set.size ls)
       val ht1_inv = createNameEdgeMap (2 * Link'Set.size ls)
 			fun addto htx htx_inv (pair as (x, ne)) =
-			  (NameMap.insert htx pair;
+			  (NameHashMap.insert htx pair;
 			  case NameEdgeMap.find htx_inv ne of
 			    SOME X'
 			    => NameEdgeMap.insert htx_inv
@@ -541,7 +621,7 @@ struct
           else
             addto ht0 ht0_inv pair
     in
-      NameMap.appi splitter ht;
+      NameHashMap.appi splitter ht;
       {inDom    = (invmap2link'set ht1_inv, ht1),
        notInDom = (invmap2link'set ht0_inv, ht0)}
     end
@@ -558,10 +638,10 @@ struct
                                     (new_ls, new_ht_size))
                               | _ => fn new => new)
                             (Link'Set.empty, 0) ls
-        val new_ht = createNameMap new_ht_size
+        val new_ht = createNameHashMap new_ht_size
         fun add_nameedge {outer, inner}
             = NameSet.apply
-                (fn n => NameMap.insert new_ht (n, outer))
+                (fn n => NameHashMap.insert new_ht (n, outer))
                 inner
       in
         (Link'Set.apply add_nameedge new_ls;
@@ -593,11 +673,11 @@ struct
                          Link'Set.insert l ls_notInCod,
                          ht_notInCod_size + NameSet.size inner))
 	                (Link'Set.empty, 0, Link'Set.empty, 0) ls
-        val ht_inCod = createNameMap ht_inCod_size
-        val ht_notInCod = createNameMap ht_notInCod_size
+        val ht_inCod = createNameHashMap ht_inCod_size
+        val ht_notInCod = createNameHashMap ht_notInCod_size
         fun add_nameedge ht {outer, inner}
             = NameSet.apply
-                (fn n => NameMap.insert ht (n, outer))
+                (fn n => NameHashMap.insert ht (n, outer))
                 inner
       in
         Link'Set.apply (add_nameedge ht_inCod) ls_inCod;
@@ -607,12 +687,12 @@ struct
       end
 
   fun addto ht names y
-    = NameSet.apply (fn x => NameMap.insert ht (x, y)) names
+    = NameSet.apply (fn x => NameHashMap.insert ht (x, y)) names
 
   fun splitopen (w as (ls, ht)) =
     let
-      val ht_open = createNameMap' ()
-      val ht_opened = createNameMap' ()
+      val ht_open = createNameHashMap' ()
+      val ht_opened = createNameHashMap' ()
       fun addlink (l as {outer, inner})
                   (ls_open, ls_opened, newnames) =
         case outer of
@@ -642,7 +722,7 @@ struct
 
   fun openup (w as (ls, ht)) =
     let
-      val new_ht = NameMap.copy ht
+      val new_ht = NameHashMap.copy ht
       fun addlink (l as {outer, inner})
                   (new_ls, newnames) =
         case outer of
@@ -667,7 +747,7 @@ struct
 
   fun closelinks Y (ls, ht) =
     let
-      val new_ht = NameMap.copy ht
+      val new_ht = NameHashMap.copy ht
       fun count {outer = Closure i, inner} imax
         = if i > imax then i else imax
         | count _ imax = imax
@@ -687,11 +767,9 @@ struct
       (new_ls, new_ht)
     end
 
-  exception NotARenaming of string * wiring * string
-
   fun invert_renaming (w as (ls, ht)) =
       let
-        val ht' = createNameMap (NameMap.numItems ht)
+        val ht' = createNameHashMap (NameHashMap.numItems ht)
 
         fun invert_link' {outer = Name n, inner = ns} =
             let
@@ -703,7 +781,7 @@ struct
                                 "wiring contains a link with multiple inner names")
               val ne = Name n'
             in
-	      (NameMap.insert ht' (n, ne);
+	      (NameHashMap.insert ht' (n, ne);
                {outer = ne, inner = NameSet.singleton n})
             end
           | invert_link' {outer = Closure _, ...} =
@@ -730,7 +808,7 @@ struct
             (false, true)
         | testlink {outer = Closure _, ...} _ = (true, false)
       fun is_id_y y _ =
-        case NameMap.find ht y of
+        case NameHashMap.find ht y of
           SOME (Name y')
            => let val OK = y' = y
               in (not OK, OK) end
@@ -743,9 +821,9 @@ struct
 
   fun id_X X =
       let
-	val ht = createNameMap' ()
+	val ht = createNameHashMap' ()
 	fun addlink x ls =
-	    (NameMap.insert ht (x, Name x);
+	    (NameHashMap.insert ht (x, Name x);
 	     Link'Set.insert
 	       {outer = Name x, inner = NameSet.singleton x}
 	       ls)
@@ -755,7 +833,7 @@ struct
 
   fun introduce X =
       let
-	val ht = createNameMap 1
+	val ht = createNameHashMap 1
 	fun addlink x ls =
 	    Link'Set.insert {outer = Name x, inner = NameSet.empty} ls
       in
@@ -764,9 +842,9 @@ struct
 
   fun close X =
       let
-	val ht = createNameMap (2 * NameSet.size X)
+	val ht = createNameHashMap (2 * NameSet.size X)
 	fun addlink x (ls, i) =
-	    (NameMap.insert ht (x, Closure i);
+	    (NameHashMap.insert ht (x, Closure i);
 	     (Link'Set.insert
 	       {outer = Closure i, inner = NameSet.singleton x}
 	       ls,

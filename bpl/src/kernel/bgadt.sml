@@ -85,13 +85,16 @@ structure Ion
 
 structure Wiring 
   = Wiring 
-      (structure IntSet      = IntSet
-       structure Link        = Link
-       structure LinkSet     = LinkSet
-       structure Name        = Name
-       structure NameSet     = NameSet
-       structure NameSetPP   = NameSetPP
-       structure PrettyPrint = PrettyPrint)
+      (structure IntSet       = IntSet
+       structure Link         = Link
+       structure LinkSet      = LinkSet
+       structure Name         = Name
+       structure NameMap      = NameMap
+       structure NameSet      = NameSet
+       structure NameSetPP    = NameSetPP
+       structure PrettyPrint  = PrettyPrint
+       structure Origin       = Origin
+       structure ErrorHandler = ErrorHandler)
 
 structure Permutation
   = Permutation 

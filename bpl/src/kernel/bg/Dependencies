@@ -15,6 +15,7 @@ link: /lib/coll/set /lib/coll/pp + name-sig
 wiring-sig:
 wiring: + /lib/pp/smlnj/. /lib/coll/set /lib/coll/pp
    /lib/compat/mosml/hash/. link-sig name-sig
+   /lib/util/errorhandler-sig /lib/util/origin-sig /lib/util/debug
 permutation-sig:
 permutation: + /lib/compat/common/legacyarray /lib/coll/set
    /lib/coll/pp /lib/pp/smlnj/. interface-sig name-sig

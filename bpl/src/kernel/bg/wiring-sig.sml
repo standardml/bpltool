@@ -23,10 +23,12 @@
  *)
 signature WIRING =
 sig
+  type name
   type nameedge
+  type nameset
+  type 'a namemap
   type link
   type linkset
-  type nameset
   type ppstream
 
   (** The wiring data type. *)
@@ -38,6 +40,10 @@ sig
    * disjoint, outer names need not be.
    *)
   val make' : link list -> wiring
+  (** Construct a renamin from a map from outer names to inner names.
+   * Inner names must be disjoint, outer names need not be.
+   *)
+  val make_ren : name namemap -> wiring
   (** Deconstruct a wiring. *)
   val unmk : wiring -> linkset
 
@@ -101,11 +107,53 @@ sig
    *)
   val ++ : wiring list -> wiring
 
-  (** Compute the set of names to which the wiring maps a given set. *)
+  (** Signal that a name is not in the domain of a wiring.
+   * @params wiring name errtxt
+   * @param wiring  The wiring.
+   * @param name    The name not in the domain of the wiring.
+   * @param errtxt  Explanatory error text.
+   *)
+  exception NotInDomain of wiring * name * string
+  (** Signal that some names are not in the codomain of a wiring.
+   * @params wiring names errtxt
+   * @param wiring  The wiring.
+   * @param names   The names not in the codomain of the wiring.
+   * @param errtxt  Explanatory error text.
+   *)
+  exception NotInCodomain of wiring * nameset * string
+
+  (** Determine whether the name is in the domain of wiring
+   *  (i.e. it is an inner name).
+   * @params name wiring
+   * @param name    The name.
+   * @param wiring  The wiring.
+   *)
+  val in_domain : name -> wiring -> bool
+
+  (** Compute the set of names to which the wiring maps a given set.
+   * @params wiring X
+   * @param wiring  The wiring.
+   * @param X       The set of names.
+   * @exception NotInDomain if X contains a name which is not in
+   *                        the domain of the wiring.
+   *)
   val app : wiring -> nameset -> nameset
-  (** Compute the set of names which the wiring maps to a given set. *)
+  (** Compute the name to which the wiring maps a given name.
+   * @params wiring x
+   * @param wiring  The wiring.
+   * @param X       The name.
+   * @exception NotInDomain if x is not in the domain of the wiring.
+   *)
+  val app_x : wiring -> name -> name option
+  (** Compute the set of names which the wiring maps to a given set.
+   * @params wiring X
+   * @param wiring  The wiring.d
+   * @param X       The set of names.
+   * @exception NotInCodomain if X contains a name which is not in
+   *                          the codomain of the wiring.
+   *)
   val app_inverse : wiring -> nameset -> nameset
-  
+
   (** Signal that a wiring is not a renaming.
    * @params file wiring errtxt
    * @param file    File name for the code that detected the problem.
@@ -113,6 +161,27 @@ sig
    * @param errtxt  Explanatory error text.
    *)
   exception NotARenaming of string * wiring * string
+  (** Compute the name to which the wiring maps a given name.
+   * It is not checked that the wiring is a renaming - only that if the 
+   * name is in the domain, then it is mapped to a name in the codomain.
+   * @params wiring x
+   * @param wiring  The wiring.
+   * @param x       The name.
+   * @exception NotInDomain if x is not in the domain of the renaming.
+   * @exception NotARenaming if the wiring is not a renaming.
+   *)
+  val app_renaming_x : wiring -> name -> name
+  (** Compute the name which the renaming maps to a name.
+   * It is not checked that the wiring is a renaming - only that if the
+   * name is in the codomain, then precisely one name maps to it.
+   * @params wiring x
+   * @param wiring  The wiring.
+   * @param x       The name.
+   * @exception NotInCodomain if x is not in the domain of the renaming.
+   * @exception NotARenaming if the wiring is not a renaming.
+   *)
+  val app_renaming_inverse_x : wiring -> name -> name
+  
   (** Create the inverse of a renaming.
    * @exception NotARenaming if the wiring is not a renaming.
    *)
