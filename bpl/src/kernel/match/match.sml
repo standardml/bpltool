@@ -563,7 +563,34 @@ struct
    * 5) Restrict s_C' by removing inner points that are in W.
    * 6) Return ename', s_C', qs.
    *)
-  and matchABS' {ename, s_a, s_C, p, P} = lzNil
+  and matchABS' {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, p, P} =
+      lzmake (fn () =>
+      let
+        val {s = s_a_L, N = n, ...} = BgBDNF.unmkP p
+        val {s = s_C_L, N = N, ...} = BgBDNF.unmkP P
+        val {absnames = Z, G = g} = BgBDNF.unmkN n
+        val {absnames = U, G = G} = BgBDNF.unmkN N
+
+        val s_a_n' = Wiring.* (s_a_n, s_a_L)
+        val s_C_n' = Wiring.* (s_C_n, s_C_L)
+
+        val premise_matches = matchDG' {ename = ename,
+                                        s_a = {s_a_e = s_a_e, s_a_n = s_a_n'},
+                                        s_C = {s_C_e = s_C_e, s_C_n = s_C_n'},
+                                        g = g, G = G}
+
+        fun make_match {ename', s_C', qs} =
+            {ename' = ename',
+             s_C' = Wiring.restrict s_C' (*FIXME be smarter...*)
+                      (NameSet.difference
+                         (Wiring.innernames s_C')
+                         (Wiring.outernames s_C_L)),
+             qs = qs}
+      in
+        lzunmk (lzmap make_match premise_matches)
+      end
+      handle NoMatch => lzunmk lzNil
+      | _ => lzunmk lzNil)
   
   (* Match a parallel composition to a context using the PARn rule:
    * 1) Let ename_0 = ename.
