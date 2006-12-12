@@ -20,9 +20,9 @@
 
 (** Syntactic sugar for creating bgvals in SML.  For example:
  * <pre>
- * (print o BPL.bgvalToString)
+ * (print o BG.bgvalToString)
  * let
- *   open BPL.Sugar
+ *   open BG.Sugar
  *   infix 7 /   infix 7 //
  *   infix 6 o
  *   infix 5 *   infix 5 ||   infix 5 <|>
@@ -47,7 +47,7 @@
  *               *  M[][[x]]  *  N1 o merge(3)  *  N2  *  N3))
  *    o (@@[1&[y,z], 2&[], 0&[]]  *  @[1,2,0]  *  -/w)
  * end
- *   handle error => (BPL.BGErrorHandler.explain error; raise error);
+ *   handle error => (ErrorHandler.explain error; raise error);
  * </pre>
  * @version $LastChangedRevision$
  *)
