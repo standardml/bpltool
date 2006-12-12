@@ -183,6 +183,7 @@ struct
                               mk_list_pp "{" "}" ", " Name.pp ns, []))
                nss)
       :: [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_DuplicateNames _ = raise Match
   val _ = add_explainer
             (mk_explainer "duplicate names" explain_DuplicateNames)
 
@@ -190,6 +191,7 @@ struct
   fun explain_NameMissing (NameMissing (v, errtxt)) =
       [Exp (LVL_USER, bgvalinfo2origin (info v), pack_pp_with_data pp v, []),
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_NameMissing _ = raise Match
   val _ = add_explainer
             (mk_explainer "bgval abstraction failed because a \
                           \name is missing in the outer face"
@@ -199,6 +201,7 @@ struct
   fun explain_NotPrime (NotPrime (v, errtxt)) =
       [Exp (LVL_USER, bgvalinfo2origin (info v), pack_pp_with_data pp v, []),
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_NotPrime _ = raise Match
   val _ = add_explainer
             (mk_explainer "bgval to be abstracted must be prime"
                           explain_NotPrime)
@@ -208,6 +211,7 @@ struct
       [Exp (LVL_USER, bgvalinfo2origin (info v1), pack_pp_with_data pp v1, []),
        Exp (LVL_USER, bgvalinfo2origin (info v2), pack_pp_with_data pp v2, []),
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_NotComposable _ = raise Match
   val _ = add_explainer
             (mk_explainer "bgvals are not composable"
                           explain_NotComposable)
@@ -217,6 +221,7 @@ struct
       map (fn v => Exp (LVL_USER, bgvalinfo2origin (info v),
                         pack_pp_with_data pp v, [])) vs
       @ [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_NotTensorable _ = raise Match
   val _ = add_explainer
             (mk_explainer "bgvals are not tensorable, due \
                           \to inner or outer name clash"
@@ -490,6 +495,7 @@ exception NotImplemented of bgval * string
 fun explain_NotImplemented (NotImplemented (v, errtxt)) =
     [Exp (LVL_USER, bgvalinfo2origin (info v), pack_pp_with_data pp v, []),
      Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  | explain_NotImplemented _ = raise Match
 val _ = add_explainer
           (mk_explainer "feature not implemented"
                         explain_NotImplemented)
@@ -529,7 +535,7 @@ fun is_id0 (VMer (1, _))    = false
   | is_id0 (VAbs (X, v, _)) = false
   | is_id0 (VTen (vs, _))   = List.all is_id0 vs
   | is_id0 (v as (VCom _))  = raise NotImplemented
-				 (v, "is_id for composition")
+				 (v, "is_id0 for composition")
 
   fun LS i w =
       let
@@ -550,6 +556,7 @@ fun is_id0 (VMer (1, _))    = false
                               pack_pp_with_data NameSetPP.pp ns, []))
                [ns1, ns2])
       :: [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_NameClash _ = raise Match
   val _ = add_explainer
             (mk_explainer "name clash" explain_NameClash)
 
@@ -594,6 +601,7 @@ fun is_id0 (VMer (1, _))    = false
       map (fn v => Exp (LVL_USER, bgvalinfo2origin (info v),
                         pack_pp_with_data pp v, [])) vs
       @ [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_NotParallelisable _ = raise Match
   val _ = add_explainer
             (mk_explainer "cannot make the parallel product of bgvals, \
                           \due to outer local or inner name clash"
@@ -604,6 +612,7 @@ fun is_id0 (VMer (1, _))    = false
       map (fn v => Exp (LVL_USER, bgvalinfo2origin (info v),
                         pack_pp_with_data pp v, [])) vs
       @ [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_NotPrimeable _ = raise Match
   val _ = add_explainer
             (mk_explainer "cannot make the prime product of bgvals, \
                           \due to outer local or inner name clash, or \
@@ -854,6 +863,174 @@ fun is_id0 (VMer (1, _))    = false
 	make'
       end
 
+
+  fun simplify (VAbs (X, v, ioi as (_, _, i))) = 
+    (* ({})P -> P
+     * (X)(X')P -> (X u X')P
+     * (X)"X" -> id_(X)
+     *)
+    if NameSet.isEmpty X then
+      v
+    else
+	  	(case simplify v of
+	  	   VAbs (X', v', ioi') => VAbs (NameSet.union X X', v', ioi)
+	  	 | v' as (VCon (X', i'))
+	  	 => if NameSet.eq X X' then
+	  	      VPer (Permutation.id [X], i)
+	  	    else
+	  	      VAbs (X, v', ioi)
+	  	 | v' => VAbs (X, v', ioi))
+	  | simplify (VTen (vs, ioi as (_, _, i))) =
+	  (* vsl * id_0 * vsr -> vsl * vsr
+	   * vs0 * w1 * vs1 * w2 * ... * wn * vsn
+	   *  -> [[w1 * ... * wn]] * vs0 * ... * vsn
+	   * vsl * pi1 * pi2 * vsr -> vsl * [[pi1 * pi2]] * vsr
+     * Ten [v] -> v
+	   *)
+	    let
+	      val vs = map simplify vs
+	      val vs = List.filter (not o is_id0) vs
+	      fun extractwiring [] = (Wiring.id_0, NONE, [])
+	        | extractwiring (v :: vs) =
+	          let
+	            val (w', i', vs') = extractwiring vs
+	          in
+	            case v of
+	              VWir (w, i'')
+	            => (Wiring.* (w, w'),
+	                SOME (case i' of SOME _ => i | NONE => i''),
+	                vs')
+	            | v => (w', i', v :: vs)
+	          end
+	      val (w, iw, vs) = extractwiring vs
+	      val vs
+	       = if Wiring.is_id0 w then
+	           vs
+	         else
+	           VWir (w, case iw of SOME i' => i' | NONE => i) :: vs
+	      fun mergepis [] = []
+	        | mergepis ((v as (VPer (pi, i))) :: vs) =
+	          (case mergepis vs of
+	             (VPer (pi', i') :: vs') => (VPer (Permutation.* (pi, pi'), i) :: vs')
+	           | vs' => v :: vs')
+	        | mergepis (v :: vs) = v :: mergepis vs
+	      val vs = mergepis vs
+	    in
+	      case vs of
+	        [v] => v
+	      | vs => VTen (vs, ioi)
+	    end
+	  | simplify (VCom (v1, v2, ioi as (_, _, i))) =
+	  (* "X"(X)P -> P
+	   * w1 w2 -> [[w1 w2]]
+	   * pi1 pi2 -> [[pi1 pi2]]
+	   * id v -> v
+	   * v id -> v
+	   * (v1 * v2)(v1' * v2') -> v1 v1' * v2 v2', if vi : Ii ->, vi' : -> Ii
+	   *)
+	    let
+	      val v1' = simplify v1
+	      val v2' = simplify v2
+	    in
+	      if is_id v1' then
+	        v2'
+	      else if is_id v2' then
+	        v1'
+	      else case (v1', v2') of
+	        (VCon (X, _), VAbs (X', v, _))
+	      => if NameSet.eq X X' then v else VCom (v1', v2', ioi)
+	      | (VWir (w1, _), VWir (w2, _)) => VWir (Wiring.o (w1, w2), i)
+	      | (VPer (pi1, _), VPer (pi2, _))
+	      => VPer (Permutation.o (pi1, pi2), i)
+	      | (VTen (vs1, _), VTen (vs2, _)) =>
+	        let
+	          fun mkiface is = foldr Interface.* Interface.zero (rev is)
+            fun mkinterface face = foldr Interface.* Interface.zero o map face 
+            fun add (vs1, is1, os1) (vs2, is2, os2) rest =
+              let
+                val i2 = mkiface is2
+                val o1 = mkiface os1
+              in
+                simplify
+                  (VCom (VTen (rev vs1, (mkiface is1, o1, i)),
+                         VTen (rev vs2, (i2, mkiface os2, i)),
+                         (i2, o1,i)))
+                :: rest
+              end
+	          fun distrib first (vs1, _, is1, os1) (vs2, _, is2, os2) [] []
+		          = let
+		              val i2 = mkiface is2
+		              val o1 = mkiface os1
+		            in
+		              (if first then (fn x => x) else simplify) (* avoid looping *)
+		              (VCom (VTen (rev vs1, (mkiface is1, o1, i)),
+		                     VTen (rev vs2, (i2, mkiface os2, i)),
+		                     (i2, o1, i)))
+		              :: []
+		            end
+	            | distrib _ (vs1, m1, is1, os1) (vs2, m2, is2, os2)
+	                        (v1 :: vs1') (v2 :: vs2')
+	            = let
+	                val iface1' = innerface v1
+	                val oface2' = outerface v2
+	                val m1' = Interface.width (iface1')
+	                val m2' = Interface.width (oface2')
+	              in
+	                if m1 + m1' < m2 then
+	                  distrib false 
+	                    (v1 :: vs1, m1 + m1', iface1' :: is1, outerface v1 :: os1)
+	                    (vs2, m2, is2, os2) vs1' (v2 :: vs2')
+	                else if m1 + m1' = m2 then
+	                  add (v1 :: vs1, iface1' :: is1, outerface v1 :: os1)
+	                      (vs2, is2, os2) 
+	                      (distrib false ([], 0, [], []) ([], 0, [], []) vs1' (v2 :: vs2'))
+	                else if m2 + m2' < m1 then
+	                  distrib false 
+	                    (vs1, m1, is1, os1)
+	                    (v2 :: vs2, m2 + m2', innerface v2 :: is2, oface2' :: os2)
+	                    (v1 :: vs1') vs2'
+	                else if m2 + m2' = m1 then
+	                  add (vs1, is1, os1)
+	                      (v2 :: vs2, innerface v2 :: is2, oface2' :: os2)
+	                      (distrib false ([], 0, [], []) ([], 0, [], []) (v1 :: vs1') vs2')
+	                else if m2 + m2' = m1 + m1' then
+	                  add (v1 :: vs1, iface1' :: is1, outerface v1 :: os1)
+	                      (v2 :: vs2, innerface v2 :: is2, oface2' :: os2)
+	                      (distrib false ([], 0, [], []) ([], 0, [], []) vs1' vs2')
+	                else
+	                  distrib false
+	                    (v1 :: vs1, m1 + m1', iface1' :: is1, outerface v1 :: os1)
+	                    (v2 :: vs2, m2 + m2', innerface v2 :: is2, oface2' :: os2)
+	                    vs1' vs2'
+                end
+	            | distrib _ (vs1, _, is1, os1) (vs2, _, is2, os2) [] vs2'
+	            = let
+	                val iface2' = mkinterface innerface vs2'    
+	                val oface2' = mkinterface outerface vs2'
+	              in
+                  add (vs1, is1, os1)
+                      (rev vs2' @ vs2, iface2' :: is2, oface2' :: os2)
+                      []
+                end
+	            | distrib _ (vs1, _, is1, os1) (vs2, _, is2, os2) vs1' []
+	            = let
+	                val iface1' = mkinterface innerface vs1'
+	                val oface1' = mkinterface outerface vs1'
+	              in
+                  add (rev vs1' @ vs1, iface1' :: is1, oface1' :: os1)
+                      (vs2, is2, os2)
+                      []
+                end
+            val vs = distrib true ([], 0, [], []) ([], 0, [], []) vs1 vs2
+	        in
+	          simplify (* Does this loop??? *)
+	            (VTen (vs, (mkinterface innerface vs,
+	                        mkinterface outerface vs,
+                          i)))
+	        end
+	      | (v1', v2') => VCom (v1', v2', ioi)
+	    end                 
+    | simplify v = v
 
   (* Rxxx rules.
    * NB: We don't keep track of used names, but rely on
