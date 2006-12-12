@@ -21,8 +21,8 @@ open List;
 datatype attraction =
 	 Att of string (* name *) * string (* info *) * string (* more info *)
 
-val voidLoc = "void"
-val voidAtt = Att("void","","")
+val voidLoc = "voidLoc"
+val voidAtt = Att("voidAtt","","")
 fun deattract (Att tup) = tup
 
 type link = string
@@ -33,7 +33,7 @@ type btnid = string
 type btnval = string
 type message = string
 type tourflag = bool
-type path = (location * attraction list) list
+type path = (location * attraction) list
 type group = device list
 
 type state = display * location * attraction list * message list 
@@ -75,12 +75,7 @@ val stpeters = Att("St Peters RC Cathedral","info","more-info")
 val townhall = Att("Lancaster Town Hall","info","more-info")
 
 (* Popular attractions and location-attraction relationship *)
-(*
 val popular : attraction list = [castle,williamson,queenvic,seagull,halfmoon,market,canal,nightingale,spooky,ruxton,priory]
-*)
-
-(* temp. code *)
-val popular : attraction list = [castle,williamson,queenvic]
 
 val locAtts : (location * attraction list) list =
     [("TIC", []),
@@ -139,58 +134,86 @@ fun remDubs [] = []
     if exists (fn y => y = x) xs then remDubs xs else x :: remDubs xs
 
 fun remBtn b [] = []
-  | remBtn b ((i,n)::m) =
-    if b = i then remBtn b m else (i,n) :: remBtn b m
+  | remBtn b ((i,n)::m) = if b = i then m else (i,n) :: remBtn b m
 
 fun remBtns x [] = []
   | remBtns [] x = x
   | remBtns (b::bs) x = remBtn b x @ remBtns bs x
 
-(*
-fun mergeDubs [] = []
-  | mergeDubs ((l,a)::m) =
-    case find (fn x => #1(x) = l) m
-     of NONE => (l,a) :: mergeDubs m
-      | SOME(x) => [x] (*(l,a@[#2(x)]) :: mergeDubs m*)
-*)
+(*fun addBtn b l = if exists (fn x => x = b) l then l else l @ [b]*)
 
-fun mergeDubs l = l (* temp code *)
-
-fun findNextElm [] x = x
-	  | findNextElm [e] x = e
+fun findNextElm [] x = NONE
+	  | findNextElm [e] x = SOME e
 	  | findNextElm (e::e'::m) x =
-	    if x = e then e' else findNextElm (e'::m) x
+	    if x = e then SOME e' else findNextElm (e'::m) x
+
+fun findPrevElm [] x = NONE
+  | findPrevElm (e::es) x = findNextElm (rev (e::es)) x
 
 val locs = first locAtts
 val atts = second locAtts
 
-fun whichBtns hl =
-    if hl = hd locs
-    then [("select-loc","Select"),
-	  ("next-loc","Next"),
-	  ("back","Back"),
-	  ("quit","Quit")]
-    else if hl = last locs
-    then [("select-loc","Select"),
-	  ("previous-loc","Previous"),
-	  ("back","Back"),
-	  ("quit","Quit")]
-    else [("select-loc","Select"),
-	  ("previous-loc","Previous"),
-	  ("next-loc","Next"),
-	  ("back","Back"),
-	  ("quit","Quit")]
+val std_btns = [("locator","Locator"),
+		("tour","Follow A Tour"),
+		("message","Message"),
+		("quit","Quit")]
 
-fun whichBtns' a ha =
-    if ha = hd a
-    then [("select-att","Select"),
-	  ("next-att","Next")]
-    else if ha = last a
-    then [("select-att","Select"),
-	  ("previous-att","Previous")]
-    else [("select-att","Select"),
-	  ("previous-att","Previous"),
-	  ("next-att","Next")]
+val tour_btns = [("message","Message"),
+		 ("back","Back"),
+		 ("quit","Quit")]
+
+fun whichLocBtns hl =
+    case locs
+     of [] => []
+      | (l::ls) =>
+	if ls = [] then [("select-loc","Select")]
+	else
+	    if hl = l
+	    then [("select-loc","Select"),
+		  ("next-loc","Next"),
+		  ("back","Back"),
+		  ("quit","Quit")]
+	    else
+		if hl = last ls
+		then [("select-loc","Select"),
+		      ("previous-loc","Previous"),
+		      ("back","Back"),
+		      ("quit","Quit")]
+		else [("select-loc","Select"),
+		      ("previous-loc","Previous"),
+		      ("next-loc","Next"),
+		      ("back","Back"),
+		      ("quit","Quit")]
+
+fun whichSelBtns [] ha = []
+  | whichSelBtns [x] ha = [("select-att","Select")]
+  | whichSelBtns (x::xs) ha =
+    if ha = x then [("select-att","Select"),
+		    ("next-tour","Next")]
+    else
+	if ha = last xs
+	then [("select-att","Select"),
+	      ("previous-tour","Previous")]
+	else [("select-att","Select"),
+	      ("previous-tour","Previous"),
+	      ("next-tour","Next")]
+
+fun whichInfoBtns [] ha = []
+  | whichInfoBtns [x] ha = [("info","Info")]
+  | whichInfoBtns (x::xs) ha =
+    if ha = x then [("info","Info"),
+		    ("next-att","Next")]
+    else
+	if ha = last xs
+	then [("info","Info"),
+	      ("previous-att","Previous")]
+	else [("info","Info"),
+	      ("previous-att","Previous"),
+	      ("next-att","Next")]
+
+fun whichTourBtns [] = []
+  | whichTourBtns [b] = [("end","End")]
+  | whichTourBtns (b::bs) = [("cont","Continue")]
 
 (* State stack with operations *)
 val stack : Stack ref = ref []
@@ -215,16 +238,6 @@ fun deq () =
       | (e::es) => let val _ = queue := es in SOME(e) end
 
 (* gui *)
-val std_btns = [("locator","Locator"),
-		("tour","Follow A Tour"),
-		("message","Message"),
-		("quit","Quit")]
-
-val tour_btns = [("locator","Locator"),
-		 ("message","Message"),
-		 ("back","Back"),
-		 ("quit","Quit")]
-
 fun printDisp d = print("GUIDE: " ^ d ^ "\n")
 
 fun printLocs (locs,hl) =
@@ -234,12 +247,12 @@ fun printLocs (locs,hl) =
 	    else ( print(l ^ "  ") ; printLocList ls x )
     in ( print "Locations: " ; printLocList locs hl ) end
 
-fun printAtts (atts,ha) =
+fun printAtts (alist,ha) =
     let fun printAttList [] att = print "\n"
 	  | printAttList (Att(n,i,m)::t) (att as Att(x,i',m')) =
 	    if x=n then ( print("*" ^ n ^ "  ") ; printAttList t att )
 	    else ( print(n ^ "  ") ; printAttList t att )
-    in ( print "Attractions: " ; printAttList atts ha ) end
+    in ( print "Attractions: " ; printAttList alist ha ) end
 
 fun printCurLoc l =
     print("Location: Device " ^ !our_id ^ " is in " ^ l ^ "\n")
@@ -258,22 +271,21 @@ fun printMsgs m =
 val pathflag = ref true (* elminate ref? *)
 
 fun printPath p =
-    let fun printAttList [] = ()
+    let (*fun printAttList [] = ()
 	  | printAttList (Att(n,i,m)::t) =
-	    ( print(" " ^ n) ; printAttList t )
-	fun printPathList [] = print "\n"
-	  | printPathList ((l,a)::m) =
-	    if !pathflag
-	    then ( pathflag := false;
-		   print("*" ^ "(" ^ l ^ ",");
-		   printAttList a;
+	    ( print(" " ^ n) ; printAttList t )*)
+	fun printPathList [] flag = print "\n"
+	  | printPathList ((l,Att(n,i,m))::t) flag =
+	    if flag
+	    then ( print("#" ^ "(" ^ l ^ ",");
+		   print(" " ^ n); (*printAttList a;*)
 		   print ")";
-		   printPathList m )
+		   printPathList t false )
 	    else ( print(" -> " ^ "(" ^ l ^ ",");
-		   printAttList a;
+		   print(" " ^ n); (*printAttList a;*)
 		   print ")";
-		   printPathList m )
-    in ( print "Path: " ; printPathList p ; pathflag := true ) end
+		   printPathList t false )
+    in ( print "Path: " ; printPathList p true ; pathflag := true ) end
 
 (* temp code begin *)
 fun printStackSize s =
@@ -291,13 +303,7 @@ fun printStack s =
 	      printTour(t);
 	      printPath(p);
 	      print("hl: " ^ hl ^ "\n");
-	      let val ha1 = #1(deattract(ha))
-		  val ha2 = #2(deattract(ha))
-		  val ha3 = #3(deattract(ha))
-	      in ( print "ha: ";
-		   map (fn x => print(x ^ " ")) [ha1,ha2,ha3];
-		   print "\n\n" )
-	      end )
+	      print("ha: " ^ #1(deattract(ha)) ^ "\n\n") )
 	fun pip s = case s
 		      of [] => print "\n"
 		       | (e::es) => ( printElm e ; pip es )
@@ -340,8 +346,6 @@ fun tourShow () =
     ; print "\nPlease press a button.\n"
     ; print "----------------------------------------------------------\n"
     )
-
-(* HERE! Need to calc path from one loc to the next in path...*)
 
 fun guiShow () =
     ( print "\n----------------------------------------------------------\n"
@@ -401,11 +405,12 @@ fun backClicked (d,l,a,m,b,t,p,hl,ha) =
 
 fun infoClicked (d,l,a,m,b,t,p,hl,ha) =
 ( print "infoClicked()\n";
-    let val d' = (#1(deattract ha)) ^ "\n" ^ (#2(deattract ha))
+    let val ha' = if t then #2(hd p) else ha
+	val d' = (#1(deattract ha')) ^ "\n" ^ (#2(deattract ha'))
 	val b' = std_btns @ [("more-info","More info"),
 			     ("back","Back")]
     in ( push(d,l,a,m,b,t,p,hl,ha);
-	 push(d',l,a,m,b',t,p,hl,ha);
+	 push(d',l,a,m,b',t,p,hl,ha');
 	 guiShow();
 	 true )
     end
@@ -413,10 +418,11 @@ fun infoClicked (d,l,a,m,b,t,p,hl,ha) =
 
 fun moreInfoClicked (d,l,a,m,b,t,p,hl,ha) =
 ( print "moreInfoClicked()\n";
-    let val d' = (#1(deattract ha)) ^ "\n" ^ (#3(deattract ha))
+    let val ha' = if t then #2(hd p) else ha
+	val d' = (#1(deattract ha')) ^ "\n" ^ (#3(deattract ha'))
 	val b' = std_btns @ [("back","Back")]
     in ( push(d,l,a,m,b,t,p,hl,ha);
-	 push(d',l,a,m,b',t,p,hl,ha);
+	 push(d',l,a,m,b',t,p,hl,ha');
 	 guiShow();
 	 true )
     end
@@ -425,7 +431,7 @@ fun moreInfoClicked (d,l,a,m,b,t,p,hl,ha) =
 fun locatorClicked (d,l,a,m,b,t,p,hl,ha) =
 ( print "locatorClicked()\n";
     let val d' = "Please select one of the following locations:\n"
-	val b' = whichBtns hl
+	val b' = whichLocBtns hl
     in ( push(d,l,a,m,b,t,p,hl,ha);
 	 push(d',l,a,m,b',t,p,hl,ha);
 	 locShow();
@@ -444,15 +450,16 @@ fun selectLocClicked (d,l,a,m,b,t,p,hl,ha) =
   case pop()
    of NONE => ( print "empty stack\n" ; false )
     | SOME(d',l',a',m',b',t',p',hl',ha') =>
-      let val a'' = case lookup2 locAtts hl
-		     of NONE => [] | SOME(a) => a
-	  val ha'' = case a'' of [] => voidAtt | (att::atts) => att
-	  val b'' = if a'' = [] then std_btns
-		    else
-			if length(a'') = 1
-			then std_btns @ [("info","Info")]
-			else std_btns @ [("info","Info"),("next-att","Next")]
-      in ( push(d',hl,a'',m',b'',t',p',hl,ha'); (*ha''?*)
+      let val new_atts = case lookup2 locAtts hl of NONE => [] | SOME x => x
+	  val (a'',ha'') = if new_atts = [] then ([],voidAtt)
+			   else
+			       if t' then (new_atts,voidAtt)
+			       else (new_atts,hd new_atts)
+	  val b'' = if t' (* implies length(p')>0 *)
+		    then if length p' = 1 then std_btns @ [("end","End")]
+			 else std_btns @ [("cont","Continue")]
+		    else std_btns @ (whichInfoBtns a'' ha'')
+      in ( push(d',hl,a'',m',b'',t',p',hl,ha'');
 	   guiShow();
 	   true )
       end
@@ -460,56 +467,64 @@ fun selectLocClicked (d,l,a,m,b,t,p,hl,ha) =
 
 fun previousLocClicked (d,l,a,m,b,t,p,hl,ha) =
 ( print "previousLocClicked()\n";
-    let val hl' = findNextElm (rev locs) hl
-	val b' = whichBtns hl'
+    let val hl' = case findPrevElm locs hl
+		   of NONE => voidLoc | SOME loc => loc
+	val b' = whichLocBtns hl'
     in ( push(d,l,a,m,b',t,p,hl',ha) ; locShow() ; true ) end
 )
 
 fun nextLocClicked (d,l,a,m,b,t,p,hl,ha) =
 ( print "nextLocClicked()\n";
-    let val hl' = findNextElm locs hl
-	val b' = whichBtns hl'
+    let val hl' = case findNextElm locs hl
+		   of NONE => voidLoc | SOME loc => loc
+	val b' = whichLocBtns hl'
     in ( push(d,l,a,m,b',t,p,hl',ha) ; locShow() ; true ) end
+)
+
+fun previousTourAttClicked (d,l,a,m,b,t,p,hl,ha) =
+( print "previousTourAttClicked()\n";
+    let val ha' = case findPrevElm a ha
+		   of NONE => voidAtt | SOME att => att
+	val b' = remDubs (tour_btns @ [("pop","Popular")]
+			  @ (whichSelBtns a ha') @ [("done","Done")])
+    in ( push(d,l,a,m,b',t,p,hl,ha') ; tourShow() ; true ) end
 )
 
 fun previousAttClicked (d,l,a,m,b,t,p,hl,ha) =
 ( print "previousAttClicked()\n";
-    let val ha' = findNextElm (rev a) ha
-	val b' = remDubs (b @ (whichBtns' a ha'))
+    let val ha' = case findPrevElm a ha
+		   of NONE => voidAtt | SOME att => att
+	val tmp_b = std_btns @ (whichInfoBtns a ha')
+	val b' = if t then tmp_b @ (whichTourBtns p) else tmp_b
+    in ( push(d,l,a,m,b',t,p,hl,ha') ; guiShow() ; true ) end
+)
+
+fun nextTourAttClicked (d,l,a,m,b,t,p,hl,ha) =
+( print "nextTourAttClicked()\n";
+    let val ha' = case findNextElm a ha
+		   of NONE => voidAtt | SOME att => att
+	val b' = remDubs (tour_btns @ [("pop","Popular")]
+			  @ (whichSelBtns a ha') @ [("done","Done")])
     in ( push(d,l,a,m,b',t,p,hl,ha') ; tourShow() ; true ) end
 )
 
 fun nextAttClicked (d,l,a,m,b,t,p,hl,ha) =
 ( print "nextAttClicked()\n";
-    let val ha' = findNextElm a ha
-	val b' = remDubs (b @ (whichBtns' a ha'))
-    in ( push(d,l,a,m,b',t,p,hl,ha') ; tourShow() ; true ) end
+    let val ha' = case findNextElm a ha
+		   of NONE => voidAtt | SOME att => att
+	val tmp_b = std_btns @ (whichInfoBtns a ha')
+	val b' = if t then tmp_b @ (whichTourBtns p) else tmp_b
+    in ( push(d,l,a,m,b',t,p,hl,ha') ; guiShow() ; true ) end
 )
 
 fun tourClicked (d,l,a,m,b,t,p,hl,ha) =
 ( print "tourClicked()\n";
     let	val d' = "Please select a subset of the following attractions, one at a time.\n"
 	val a' = atts
-	val b' =
-	    if a' = [] then tour_btns
-	    else
-		if length(a') = 1
-		then tour_btns @ [("select-att","Select")]
-		else let val btns = tour_btns @ [("pop","Popular")]
-		     in if ha = hd a' orelse ha = voidAtt
-			then btns @ [("select-att","Select"),
-				     ("next-att","Next")]
-			else
-			    if ha = last a'
-			    then btns @ [("select-att","Select"),
-					 ("previous-att","Previous")]
-			    else btns @ [("select-att","Select"),
-					 ("previous-att","Previous"),
-					 ("next-att","Next")]
-		     end
+	val b' = tour_btns @ [("pop","Popular")] @ (whichSelBtns a' ha)
 	val t' = true
 	val p' = []
-	val ha' = case a' of [] => voidAtt | (att::atts) => att
+	val ha' = case a' of [] => voidAtt | (x::xs) => x
     in ( push(d,l,a,m,b,t,p,hl,ha);
 	 push(d',l,a',m,b',t',p',hl,ha');
 	 tourShow();
@@ -519,17 +534,17 @@ fun tourClicked (d,l,a,m,b,t,p,hl,ha) =
 
 fun popularClicked (d,l,a,m,b,t,p,hl,ha) =
 ( print "popularClicked()\n";
-    let val d' = "You chose the popular tour. Please proceed to the first tour location, marked with '*'.\n"
+    let val d' = "You chose the popular tour. Please proceed to the first tour location, marked with '#'.\n"
+	val a' = case lookup2 locAtts l of NONE => [] | SOME x => x
+	val ha' = voidAtt
 	val b' = std_btns @ [("cont","Continue")]
 	val getLocs =
-	    fn a => case findLoc locAtts a
-		     of NONE => (voidLoc,[a]) | SOME(l) => (l,[a])
+	    fn att => case findLoc locAtts att
+		       of NONE => (voidLoc,att) | SOME loc => (loc,att)
 	val locatts = map getLocs popular
 	val pred = fn (x,y) => not(x = voidLoc)
-	val p' = (calcPath o mergeDubs o filter) pred locatts
-	val ha' = voidAtt
-    in ( (*push(d,l,a,m,b,t,p,hl,ha); allows Back, desirable? *)
-         push(d',l,a,m,b',t,p',hl,ha');
+	val p' = (calcPath o filter) pred locatts
+    in ( push(d',l,a',m,b',t,p',hl,ha');
 	 tourShow();
 	 true )
     end
@@ -538,17 +553,14 @@ fun popularClicked (d,l,a,m,b,t,p,hl,ha) =
 fun selectAttClicked (d,l,a,m,b,t,p,hl,ha) =
 ( print "selectAttClicked()\n";
     let val a' = filter (fn x => not(x = ha)) a
-	val b' = if exists (fn btn => #1(btn) = "done") b then b
-		 else b @ [("done","Done")]
 	val p' = case findLoc locAtts ha
-		  of NONE => []
-		   | SOME(loc) =>
-		     if exists (fn x => x = loc) (first p)
-		     then (calcPath o mergeDubs) (p @ [(loc,[ha])])
-		     else calcPath (p @ [(loc,[ha])])
-	val ha' = case a' of [] => voidAtt | (att::atts) => att
-    in ( (*push(d,l,a,m,b,t,p,hl,ha);*)
-	 push(d,l,a',m,b',t,p',hl,ha');
+		  of NONE => [] | SOME loc => calcPath (p @ [(loc,ha)])
+	val ha' = case findPrevElm a' ha
+		   of NONE => voidAtt | SOME att => att
+	val tmp_b = tour_btns @ [("pop","Popular")]
+		    @ (whichSelBtns a' ha') @ [("done","Done")]
+	val b' = remDubs tmp_b
+    in ( push(d,l,a',m,b',t,p',hl,ha');
 	 tourShow();
 	 true )
     end
@@ -559,13 +571,11 @@ fun doneClicked (d,l,a,m,b,t,p,hl,ha) =
   case pop()
    of NONE => ( print "empty stack\n" ; false )
     | SOME(d',l',a',m',b',t',p',hl',ha') =>
-      let val d'' = "You have confirmed your tour. Please proceed to the first tour location, marked with '*'.\n"
-	  val a'' = second p
-	  val b'' = if length p = 1 then tour_btns @ [("end","End")]
-		    else tour_btns @ [("cont","Continue")] (* p>1 *)
-	  val ha'' = voidAtt
-      in ( push(d',l',a',m',b',t',p',hl',ha'); (* put init. display *)
-	   push(d'',l,a'',m,b'',t',p,hl,ha'');
+      let val d'' = "You have confirmed your tour. Please proceed to the first tour location, marked with '#'.\n"
+	  val b'' = if length p = 1 then b' @ [("end","End")]
+		    else b' @ [("cont","Continue")] (* p>1 *)
+      in ( push(d',l',a',m',b',t',p',hl',ha'); (* init. display *)
+	   push(d'',l,a',m,b'',t,p,hl,ha');
 	   tourShow();
 	   true )
       end
@@ -573,7 +583,7 @@ fun doneClicked (d,l,a,m,b,t,p,hl,ha) =
 
 fun continueClicked (d,l,a,m,b,t,p,hl,ha) =
 ( print "continueClicked()\n";
-  let val d' = "Please proceed to the next tour location, marked with '*'.\n"
+  let val d' = "Please proceed to the next tour location, marked with '#'.\n"
       val b' = if length p = 2
 	       then (remBtn "cont" b) @ [("end","End")]
 	       else b (* p>2 *)
@@ -589,8 +599,8 @@ fun endClicked (d,l,a,m,b,t,p,hl,ha) =
   case pop()
    of NONE => ( print "empty stack\n" ; false )
     | SOME(d',l',a',m',b',t',p',hl',ha') =>
-      let val loc = #1(hd p)
-      in ( push(d',loc,a',m',b',t',p',hl',ha');
+      let val t'' = false
+      in ( push(d',l,a',m',b',t'',p',hl',ha');
 	   guiShow();
 	   true )
       end
@@ -609,6 +619,8 @@ val button_clicks =
      ("next-loc", nextLocClicked),
      ("previous-att", previousAttClicked),
      ("next-att", nextAttClicked),
+     ("previous-tour", previousTourAttClicked),
+     ("next-tour", nextTourAttClicked),
      ("select-att", selectAttClicked),
      ("done", doneClicked),
      ("pop", popularClicked),
