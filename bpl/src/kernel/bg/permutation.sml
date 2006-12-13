@@ -83,7 +83,7 @@ struct
              else NameSetPP.pp indent pps ns)
       in
         [Exp (LVL_USER, Origin.unknown_origin,
-              mk_list_pp "[" "]" ", " pp_elm p, []),
+              mk_list_pp "[" "]" "," pp_elm p, []),
          Exp (LVL_LOW, file_origin, pp_nothing, [])]
       end
   val _ = add_explainer
@@ -386,7 +386,7 @@ struct
   fun explain_NotRegularisable (NotRegularisable (p, nsss)) =
       [Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data pp p, []),
        Exp (LVL_USER, Origin.unknown_origin,
-            mk_list_pp "{" "}" ", " (mk_list_pp' "{" "}" ", " NameSetPP.pp) nsss,
+            mk_list_pp "{" "}" "," (mk_list_pp' "{" "}" "," NameSetPP.pp) nsss,
             []),
        Exp (LVL_LOW, file_origin, pp_nothing, [])]
   val _ = add_explainer
@@ -494,10 +494,10 @@ struct
   exception UnequalLengths of nameset list list * nameset list list * string
   fun explain_UnequalLengths (UnequalLengths (nsss1, nsss2, errtxt)) =
       [Exp (LVL_USER, Origin.unknown_origin,
-            mk_list_pp "{" "}" ", " (mk_list_pp' "{" "}" ", " NameSetPP.pp) nsss1,
+            mk_list_pp "{" "}" "," (mk_list_pp' "{" "}" "," NameSetPP.pp) nsss1,
             []),
        Exp (LVL_USER, Origin.unknown_origin,
-            mk_list_pp "{" "}" ", " (mk_list_pp' "{" "}" ", " NameSetPP.pp) nsss2,
+            mk_list_pp "{" "}" "," (mk_list_pp' "{" "}" "," NameSetPP.pp) nsss2,
             []),
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
   val _ = add_explainer 

@@ -292,12 +292,21 @@ sig
    * @exception NotImplemented  if the bgval passed contains compositions.
    *)
   val is_id : bgval -> bool
+  (** If true is returned, the bgval is an identity.  NOTE: the
+   * bgval might be an identity even if false is returned.
+   *)
+  val is_id' : bgval -> bool
   (** Determine whether a bgval is the zero identity.  NOTE: An
    * implementation is not required to implement this for bgvals
    * containing compositions. 
    * @exception NotImplemented  if the bgval passed contains compositions.
    *)
   val is_id0 : bgval -> bool
+  (** If true is returned, the bgval is the zero identity.  NOTE:
+   * the bgval might be the zero identity even if false is 
+   * returned.
+   *)
+  val is_id0' : bgval -> bool
   (** Simplify a bgval by heuristically removing id_0, composition
    * with id, etc.
    *)

@@ -144,13 +144,13 @@ fun explain_DuplicateName (DuplicateName (K, ys, Xs, errtxt)) =
               [] =>
               (case ys of
                  [] => ()
-               | _  => mk_list_pp' "<" ">" ", " string_pp indent pps ys)
+               | _  => mk_list_pp' "<" ">" "," string_pp indent pps ys)
             | _ =>
               (brk();
-               mk_list_pp' "<" ">" ", " string_pp indent pps ys;
+               mk_list_pp' "<" ">" "," string_pp indent pps ys;
                brk();
-               mk_list_pp' "<" ">" ", "
-                           (mk_list_pp' "{" "}" ", " string_pp) indent pps Xs);
+               mk_list_pp' "<" ">" ","
+                           (mk_list_pp' "{" "}" "," string_pp) indent pps Xs);
             >>()
           end
     in
@@ -187,10 +187,9 @@ fun =: (K, {freearity, boundarity}) k free bound =
       let
 	val ion 
 	  = Ion.make
-	      {ctrl = Control.make K, 
-	       free = map Name.make free, 
-	       bound 
-	       = map (NameSet.fromList o map Name.make) bound}
+	      {ctrl  = Control.make K, 
+	       free  = map Name.make free, 
+	       bound = map (NameSet.fromList o map Name.make) bound}
 	      handle 
 	      NameSet.DuplicatesRemoved
 	      => raise DuplicateName 

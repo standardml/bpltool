@@ -68,14 +68,17 @@ struct
 
   fun mk_list_pp ldelim rdelim sep pp list indent pps =
       (PrettyPrint.add_string pps ldelim;
+       PrettyPrint.begin_block pps PrettyPrint.INCONSISTENT 0;
        (case list of
           []    => ()
         | e::es =>
-          pp indent pps e;
-          app (fn e => (PrettyPrint.add_string pps sep;
-                        pp indent pps e))
-              list);
-       PrettyPrint.add_string pps rdelim)
+          (pp indent pps e;
+           app (fn e => (PrettyPrint.add_string pps sep;
+                         PrettyPrint.add_break pps (1, 0);
+                         pp indent pps e))
+              es));
+       PrettyPrint.add_string pps rdelim;
+       PrettyPrint.end_block pps)
 
   fun mk_list_pp' ldelim rdelim sep pp indent pps list =
       mk_list_pp  ldelim rdelim sep pp list indent pps

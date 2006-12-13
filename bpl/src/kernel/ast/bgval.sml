@@ -180,7 +180,7 @@ struct
   fun explain_DuplicateNames (DuplicateNames (i, nss, errtxt)) =
       Exp (LVL_USER, bgvalinfo2origin i, pp_nothing,
            map (fn ns => Exp (LVL_USER, Origin.unknown_origin,
-                              mk_list_pp "{" "}" ", " Name.pp ns, []))
+                              mk_list_pp "{" "}" "," Name.pp ns, []))
                nss)
       :: [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
     | explain_DuplicateNames _ = raise Match
@@ -526,6 +526,8 @@ fun is_id (VMer (1, _))    = true
   | is_id (v as (VCom _))  = raise NotImplemented
 				 (v, "is_id for composition")
 
+fun is_id' v = is_id v handle NotImplemented _ => false
+
 fun is_id0 (VMer (1, _))    = false
   | is_id0 (VMer _)         = false
   | is_id0 (VCon (X, _))    = false
@@ -536,6 +538,8 @@ fun is_id0 (VMer (1, _))    = false
   | is_id0 (VTen (vs, _))   = List.all is_id0 vs
   | is_id0 (v as (VCom _))  = raise NotImplemented
 				 (v, "is_id0 for composition")
+
+fun is_id0' v = is_id0 v handle NotImplemented _ => false
 
   fun LS i w =
       let
@@ -870,7 +874,7 @@ fun is_id0 (VMer (1, _))    = false
      * (X)"X" -> id_(X)
      *)
     if NameSet.isEmpty X then
-      v
+      simplify v
     else
 	  	(case simplify v of
 	  	   VAbs (X', v', ioi') => VAbs (NameSet.union X X', v', ioi)
@@ -889,7 +893,7 @@ fun is_id0 (VMer (1, _))    = false
 	   *)
 	    let
 	      val vs = map simplify vs
-	      val vs = List.filter (not o is_id0) vs
+	      val vs = List.filter (not o is_id0') vs
 	      fun extractwiring [] = (Wiring.id_0, NONE, [])
 	        | extractwiring (v :: vs) =
 	          let
@@ -932,9 +936,9 @@ fun is_id0 (VMer (1, _))    = false
 	      val v1' = simplify v1
 	      val v2' = simplify v2
 	    in
-	      if is_id v1' then
+	      if is_id' v1' then
 	        v2'
-	      else if is_id v2' then
+	      else if is_id' v2' then
 	        v1'
 	      else case (v1', v2') of
 	        (VCon (X, _), VAbs (X', v, _))
