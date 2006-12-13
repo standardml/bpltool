@@ -90,6 +90,7 @@ exception WrongArity of string
 fun explain_WrongArity (WrongArity msg) =
     Exp (LVL_USER, Origin.unknown_origin, mk_string_pp msg,
          [Exp (LVL_LOW, file_origin, pp_nothing, [])])
+  | explain_WrongArity _ = raise Match
 val _ = add_explainer explain_WrongArity
 
 val Ion = BgVal.Ion noinfo
@@ -156,6 +157,7 @@ fun explain_DuplicateName (DuplicateName (K, ys, Xs, errtxt)) =
       [Exp (LVL_USER, Origin.unknown_origin, pp_ion, []),
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
     end
+  | explain_DuplicateName _ = raise Match
 val _ = add_explainer
           (mk_explainer "duplicate name in ion" explain_DuplicateName)
 

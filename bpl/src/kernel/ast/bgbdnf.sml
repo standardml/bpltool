@@ -132,6 +132,7 @@ struct
   fun explain_IrregularBDNF (IrregularBDNF (i, b, errtxt)) =
       [Exp (LVL_USER, bgvalinfo2origin i, pack_pp_with_data BgVal.pp b, []),
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_IrregularBDNF _ = raise Match
   val _ = add_explainer
             (mk_explainer "bigraph is not regular" explain_IrregularBDNF)
 
@@ -140,6 +141,7 @@ struct
       [Exp (LVL_USER, bgvalinfo2origin i,
             pack_pp_with_data BgVal.pp_match b, []),
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_MalformedBDNF _ = raise Match
   val _ = add_explainer
             (mk_explainer
                "bgval is not on an appropriate BDNF form"
@@ -150,6 +152,7 @@ struct
       [Exp (LVL_USER, bgvalinfo2origin i,
             pack_pp_with_data BgVal.pp_match b, []),
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_MalformedRBDNF _ = raise Match
   val _ = add_explainer
             (mk_explainer
                "bgval is not on an appropriate RBDNF form"
@@ -168,6 +171,7 @@ struct
               map bgval2exp vs2),
          Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
       end
+    | explain_UnequalLength _ = raise Match
   val _ = add_explainer
             (mk_explainer
                "bgval lists of unequal length"
@@ -176,6 +180,7 @@ struct
   exception LogicalError of string
   fun explain_LogicalError (LogicalError errtxt) =
       [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_LogicalError _ = raise Match
   val _ = add_explainer
             (mk_explainer
                "an internal error occurred"

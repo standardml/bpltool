@@ -942,92 +942,95 @@ fun is_id0 (VMer (1, _))    = false
 	      | (VWir (w1, _), VWir (w2, _)) => VWir (Wiring.o (w1, w2), i)
 	      | (VPer (pi1, _), VPer (pi2, _))
 	      => VPer (Permutation.o (pi1, pi2), i)
-	      | (VTen (vs1, _), VTen (vs2, _)) =>
-	        let
-	          fun mkiface is = foldr Interface.* Interface.zero (rev is)
-            fun mkinterface face = foldr Interface.* Interface.zero o map face 
-            fun add (vs1, is1, os1) (vs2, is2, os2) rest =
-              let
-                val i2 = mkiface is2
-                val o1 = mkiface os1
-              in
-                simplify
-                  (VCom (VTen (rev vs1, (mkiface is1, o1, i)),
-                         VTen (rev vs2, (i2, mkiface os2, i)),
-                         (i2, o1,i)))
-                :: rest
-              end
-	          fun distrib first (vs1, _, is1, os1) (vs2, _, is2, os2) [] []
-		          = let
-		              val i2 = mkiface is2
-		              val o1 = mkiface os1
-		            in
-		              (if first then (fn x => x) else simplify) (* avoid looping *)
-		              (VCom (VTen (rev vs1, (mkiface is1, o1, i)),
-		                     VTen (rev vs2, (i2, mkiface os2, i)),
-		                     (i2, o1, i)))
-		              :: []
-		            end
-	            | distrib _ (vs1, m1, is1, os1) (vs2, m2, is2, os2)
-	                        (v1 :: vs1') (v2 :: vs2')
-	            = let
-	                val iface1' = innerface v1
-	                val oface2' = outerface v2
-	                val m1' = Interface.width (iface1')
-	                val m2' = Interface.width (oface2')
+	      | (VTen (vs1, (innf1, _, _)), VTen (vs2, _)) =>
+	        if NameSet.isEmpty (Interface.glob innf1) then
+		        let
+		          fun mkiface is = foldr Interface.* Interface.zero (rev is)
+	            fun mkinterface face = foldr Interface.* Interface.zero o map face 
+	            fun add (vs1, is1, os1) (vs2, is2, os2) rest =
+	              let
+	                val i2 = mkiface is2
+	                val o1 = mkiface os1
 	              in
-	                if m1 + m1' < m2 then
-	                  distrib false 
-	                    (v1 :: vs1, m1 + m1', iface1' :: is1, outerface v1 :: os1)
-	                    (vs2, m2, is2, os2) vs1' (v2 :: vs2')
-	                else if m1 + m1' = m2 then
-	                  add (v1 :: vs1, iface1' :: is1, outerface v1 :: os1)
-	                      (vs2, is2, os2) 
-	                      (distrib false ([], 0, [], []) ([], 0, [], []) vs1' (v2 :: vs2'))
-	                else if m2 + m2' < m1 then
-	                  distrib false 
-	                    (vs1, m1, is1, os1)
-	                    (v2 :: vs2, m2 + m2', innerface v2 :: is2, oface2' :: os2)
-	                    (v1 :: vs1') vs2'
-	                else if m2 + m2' = m1 then
+	                simplify
+	                  (VCom (VTen (rev vs1, (mkiface is1, o1, i)),
+	                         VTen (rev vs2, (i2, mkiface os2, i)),
+	                         (i2, o1,i)))
+	                :: rest
+	              end
+		          fun distrib first (vs1, _, is1, os1) (vs2, _, is2, os2) [] []
+			          = let
+			              val i2 = mkiface is2
+			              val o1 = mkiface os1
+			            in
+			              (if first then (fn x => x) else simplify) (* avoid looping *)
+			              (VCom (VTen (rev vs1, (mkiface is1, o1, i)),
+			                     VTen (rev vs2, (i2, mkiface os2, i)),
+			                     (i2, o1, i)))
+			              :: []
+			            end
+		            | distrib _ (vs1, m1, is1, os1) (vs2, m2, is2, os2)
+		                        (v1 :: vs1') (v2 :: vs2')
+		            = let
+		                val iface1' = innerface v1
+		                val oface2' = outerface v2
+		                val m1' = Interface.width (iface1')
+		                val m2' = Interface.width (oface2')
+		              in
+		                if m1 + m1' < m2 then
+		                  distrib false 
+		                    (v1 :: vs1, m1 + m1', iface1' :: is1, outerface v1 :: os1)
+		                    (vs2, m2, is2, os2) vs1' (v2 :: vs2')
+		                else if m1 + m1' = m2 then
+		                  add (v1 :: vs1, iface1' :: is1, outerface v1 :: os1)
+		                      (vs2, is2, os2) 
+		                      (distrib false ([], 0, [], []) ([], 0, [], []) vs1' (v2 :: vs2'))
+		                else if m2 + m2' < m1 then
+		                  distrib false 
+		                    (vs1, m1, is1, os1)
+		                    (v2 :: vs2, m2 + m2', innerface v2 :: is2, oface2' :: os2)
+		                    (v1 :: vs1') vs2'
+		                else if m2 + m2' = m1 then
+		                  add (vs1, is1, os1)
+		                      (v2 :: vs2, innerface v2 :: is2, oface2' :: os2)
+		                      (distrib false ([], 0, [], []) ([], 0, [], []) (v1 :: vs1') vs2')
+		                else if m2 + m2' = m1 + m1' then
+		                  add (v1 :: vs1, iface1' :: is1, outerface v1 :: os1)
+		                      (v2 :: vs2, innerface v2 :: is2, oface2' :: os2)
+		                      (distrib false ([], 0, [], []) ([], 0, [], []) vs1' vs2')
+		                else
+		                  distrib false
+		                    (v1 :: vs1, m1 + m1', iface1' :: is1, outerface v1 :: os1)
+		                    (v2 :: vs2, m2 + m2', innerface v2 :: is2, oface2' :: os2)
+		                    vs1' vs2'
+	                end
+		            | distrib _ (vs1, _, is1, os1) (vs2, _, is2, os2) [] vs2'
+		            = let
+		                val iface2' = mkinterface innerface vs2'    
+		                val oface2' = mkinterface outerface vs2'
+		              in
 	                  add (vs1, is1, os1)
-	                      (v2 :: vs2, innerface v2 :: is2, oface2' :: os2)
-	                      (distrib false ([], 0, [], []) ([], 0, [], []) (v1 :: vs1') vs2')
-	                else if m2 + m2' = m1 + m1' then
-	                  add (v1 :: vs1, iface1' :: is1, outerface v1 :: os1)
-	                      (v2 :: vs2, innerface v2 :: is2, oface2' :: os2)
-	                      (distrib false ([], 0, [], []) ([], 0, [], []) vs1' vs2')
-	                else
-	                  distrib false
-	                    (v1 :: vs1, m1 + m1', iface1' :: is1, outerface v1 :: os1)
-	                    (v2 :: vs2, m2 + m2', innerface v2 :: is2, oface2' :: os2)
-	                    vs1' vs2'
-                end
-	            | distrib _ (vs1, _, is1, os1) (vs2, _, is2, os2) [] vs2'
-	            = let
-	                val iface2' = mkinterface innerface vs2'    
-	                val oface2' = mkinterface outerface vs2'
-	              in
-                  add (vs1, is1, os1)
-                      (rev vs2' @ vs2, iface2' :: is2, oface2' :: os2)
-                      []
-                end
-	            | distrib _ (vs1, _, is1, os1) (vs2, _, is2, os2) vs1' []
-	            = let
-	                val iface1' = mkinterface innerface vs1'
-	                val oface1' = mkinterface outerface vs1'
-	              in
-                  add (rev vs1' @ vs1, iface1' :: is1, oface1' :: os1)
-                      (vs2, is2, os2)
-                      []
-                end
-            val vs = distrib true ([], 0, [], []) ([], 0, [], []) vs1 vs2
-	        in
-	          simplify (* Does this loop??? *)
-	            (VTen (vs, (mkinterface innerface vs,
-	                        mkinterface outerface vs,
-                          i)))
-	        end
+	                      (rev vs2' @ vs2, iface2' :: is2, oface2' :: os2)
+	                      []
+	                end
+		            | distrib _ (vs1, _, is1, os1) (vs2, _, is2, os2) vs1' []
+		            = let
+		                val iface1' = mkinterface innerface vs1'
+		                val oface1' = mkinterface outerface vs1'
+		              in
+	                  add (rev vs1' @ vs1, iface1' :: is1, oface1' :: os1)
+	                      (vs2, is2, os2)
+	                      []
+	                end
+	            val vs = distrib true ([], 0, [], []) ([], 0, [], []) vs1 vs2
+		        in
+		          simplify (* Does this loop??? *)
+		            (VTen (vs, (mkinterface innerface vs,
+		                        mkinterface outerface vs,
+	                          i)))
+		        end
+	        else
+	          VCom (v1', v2', ioi)
 	      | (v1', v2') => VCom (v1', v2', ioi)
 	    end                 
     | simplify v = v

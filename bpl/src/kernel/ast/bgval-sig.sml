@@ -298,6 +298,10 @@ sig
    * @exception NotImplemented  if the bgval passed contains compositions.
    *)
   val is_id0 : bgval -> bool
+  (** Simplify a bgval by heuristically removing id_0, composition
+   * with id, etc.
+   *)
+  val simplify : bgval -> bgval
   (** Prettyprint a bgval without parentheses around it.
    * @params indent pps t
    * @param indent  Indentation at each block level.
