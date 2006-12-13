@@ -831,6 +831,19 @@ struct
       NameSet.foldUntil is_id_y true Y
     end            
 
+  fun is_renaming (ls, ht) =
+    let
+      fun isSingleton X
+        = NameSet.foldUntil (fn _ => fn i => (i >= 1, i + 1)) 0 X
+          = 1
+      fun testlink {outer = Name y, inner} _
+        = let val OK = isSingleton inner
+          in (not OK, OK) end
+        | testlink {outer = Closure _, inner} _ = (true, false)
+    in
+      Link'Set.foldUntil testlink true ls
+    end
+
   fun id_X X =
       let
 	val ht = createNameHashMap' ()

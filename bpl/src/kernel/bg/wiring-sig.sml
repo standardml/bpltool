@@ -252,6 +252,8 @@ sig
    * @params w Y
    *)
   val is_id_x_sigma : nameset -> wiring -> bool
+  (** Determine whether some wiring is a renaming. *)
+  val is_renaming : wiring -> bool
   (** Construct an identity wiring on a set of names. *)
   val id_X : nameset -> wiring
   (** Construct an empty identity wiring. *)

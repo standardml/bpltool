@@ -38,7 +38,8 @@ functor BgVal (structure Name : NAME
 	       sharing type Name.name = 
 			    NameSet.elt = 
 			    Link.name =
-			    Ion.name
+			    Ion.name =
+			    Wiring.name
 	       sharing type NameSet.Set =
 			    Link.nameset =
 			    Ion.nameset =
@@ -931,6 +932,8 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	   * id v -> v
 	   * v id -> v
 	   * (v1 * v2)(v1' * v2') -> v1 v1' * v2 v2', if vi : Ii ->, vi' : -> Ii
+		 * (alpha * id_1) K_y(X) -> K_{alpha(y)}(X)
+		 * (alpha * id_1) (beta * K_y(X)) -> alpha' beta * K_{alpha(y)}(X)
 	   *)
 	    let
 	      val v1' = simplify v1
@@ -1035,6 +1038,18 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 		        end
 	        else
 	          VCom (v1', v2', ioi)
+	      | (VTen ([VWir (w, _), v], _), VIon (KyX, _))
+	      => if is_id v andalso Wiring.is_renaming w then
+	           let
+	             val {ctrl, free, bound} = Ion.unmk KyX
+	             val free = map (Option.valOf o Wiring.app_x w) free
+	             val KyX
+	               = Ion.make {ctrl = ctrl, free = free, bound = bound}
+	           in
+	             VIon (KyX, i)
+	           end
+	         else
+	           VCom (v1', v2', ioi)
 	      | (v1', v2') => VCom (v1', v2', ioi)
 	    end                 
     | simplify v = v
