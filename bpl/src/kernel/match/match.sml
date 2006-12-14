@@ -328,37 +328,41 @@ struct
      raise NoMatch;
      {s_a = s_a, s_C = s_C, s_a_e'' = s_a_e, s_C_e'' = s_C_e})
 
-  (*FIXME move to proper module...*)
-  (*FIXME comment...*)
-  fun in_domain n m =
-      case NameMap.lookup m n of
-        NONE => false
-      | _    => true
-  fun lookup m n =
-      case NameMap.lookup m n of
-        SOME n' => n'
-      | NONE => raise ThisCannotHappen
-
-  (*FIXME comment...*)
-  fun check_adjust e s x x' =
-      (case (in_domain x e, in_domain x' s) of
-         (true, true)
-         => if (lookup e x) = (lookup s x') then
-              (e, s)
-            else
-              raise NoMatch
-       | (true, false)
-         => (e, NameMap.add (x', lookup e x, s))
-       | (false, true)
-         => (NameMap.add (x, lookup s x', e), s)
-       | (false, false)
-         => let
-              val fresh = Name.fresh NONE
-            in
-              (NameMap.add (x, fresh, e), NameMap.add (x', fresh, s))
-            end)
-  fun check_adjust' s x x' =
-      #1 (check_adjust s (NameMap.fromList [(x',x')]) x x')
+  (* Checks that e(x) = s(x') and -- if necessary -- adjusts e and s
+   * to make it true. The (possibly) changed e and s are returned.
+   * If  x \in dom(e)  and  x' \in dom(s)  and  e(x) <> s(x')
+   * then NoMatch is raised.
+   *)
+  local
+    fun lookup m n =
+        case NameMap.lookup m n of
+          SOME n' => n'
+        | NONE => raise ThisCannotHappen
+  in
+    fun check_adjust e s x x' =
+        (case (NameMap.inDomain x e, NameMap.inDomain x' s) of
+           (true, true)
+           => if (lookup e x) = (lookup s x') then
+                (e, s)
+              else
+                raise NoMatch
+         | (true, false)
+           => (e, NameMap.add (x', lookup e x, s))
+         | (false, true)
+           => (NameMap.add (x, lookup s x', e), s)
+         | (false, false)
+           => let
+                val fresh = Name.fresh NONE
+              in
+                (NameMap.add (x, fresh, e), NameMap.add (x', fresh, s))
+              end)
+  end
+  (* Checks that e(x) = x' and -- if necessary -- adjusts e
+   * to make it true. The (possibly) changed e is returned.
+   * If  x \in dom(e)  and  e(x) <> x'  then NoMatch is raised.
+   *)
+  fun check_adjust' e x x' =
+      #1 (check_adjust e (NameMap.fromList [(x',x')]) x x')
 
 
   (* Match a global discrete prime g to a context G using the PAX rule:
@@ -592,6 +596,7 @@ struct
         lzunmk (lzmap make_match premise_matches)
       end)
 
+  (*FIXME should this be implemented or is it combined with matchDG' ? *)
   and matchDS' {ename, s_a, s_C, g, G} = lzNil
   
   (* Match a parallel composition to a context using the PARn rule:
@@ -608,10 +613,10 @@ struct
         fun build_matches [] [] result  = lzmake (fn () => Cons (result, lzNil))
           | build_matches _ [] _ = raise NoMatch
           | build_matches [] _ _ = raise NoMatch
-          | build_matches (e::es) (E::Es) {ename' = ename_i, s_C' = s_C'_i, qss} =
+          | build_matches (e_i::es) (E_i::Es) {ename' = ename_i, s_C' = s_C'_i, qss} =
             let
               val premise_matches
-                = matchDS' {ename = ename_i, s_a = s_a, s_C = s_C, g = e, G = E}
+                = matchDS' {ename = ename_i, s_a = s_a, s_C = s_C, g = e_i, G = E_i}
 
               fun extend_result {ename', s_C', qs} =
                   {ename' = ename', s_C' = s_C', qss = qs :: qss}
