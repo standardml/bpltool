@@ -45,6 +45,7 @@ type state = display * location * attraction list * message list
 
 datatype event =
 	 DeviceObserved of device * location
+       | DeviceLost of device
        | ButtonClicked of btnid
 
 type Queue = event list
@@ -78,7 +79,10 @@ val stpeters = Att("St Peters RC Cathedral","info","more-info")
 val townhall = Att("Lancaster Town Hall","info","more-info")
 
 (* Popular attractions and location-attraction relationship *)
+(*
 val popular : attraction list = [castle,williamson,queenvic,seagull,halfmoon,market,canal,nightingale,spooky,ruxton,priory]
+*)
+val popular : attraction list = [castle,williamson,queenvic] (*temp code*)
 
 val locAtts : (location * attraction list) list =
     [("TIC", []),
@@ -126,11 +130,16 @@ fun findLoc map a =
 	    if exists (fn x => a = x) a' then SOME l else loop m
     in loop map end
 
+fun getAtts l = case lookup2 locAtts l of NONE => [] | SOME x => x
+
 fun first [] = []
   | first ((l,a)::m) = l :: first m
 
 fun second [] = []
   | second ((l,a)::m) = a @ second m
+
+fun remElm e [] = []
+  | remElm e (x::xs) = if e = x then xs else x :: remElm e xs
 
 fun remDubs [] = []
   | remDubs (x::xs) =
@@ -157,7 +166,7 @@ val locs = first locAtts
 val atts = second locAtts
 
 val std_btns = [("locator","Locator"),
-		("tour","Follow A Tour"),
+		("tour","Tour"),
 		("message","Message"),
 		("quit","Quit")]
 
@@ -258,7 +267,7 @@ fun printAtts (alist,ha) =
     in ( print "Attractions: " ; printAttList alist ha ) end
 
 fun printCurLoc l =
-    print("Location: Device " ^ !our_id ^ " is in " ^ l ^ "\n")
+    print("Location: Device " ^ !our_id ^ " is in " ^ l ^ ".\n")
 
 fun printBtns b =
     ( print "Buttons: ";
@@ -288,7 +297,8 @@ fun printPath p =
 		   printPathList t false )
     in ( print "Path: " ; printPathList p true ) end
 
-fun printCon c = if c then print "c: true\n" else print "c: false\n"
+fun printCon c = if c then print "Connector: Connected.\n"
+		 else print "Connector: Not connected.\n"
 
 (* temp code begin *)
 fun printStackSize s =
@@ -317,7 +327,7 @@ fun printStack s =
 (* maybe do something intelligent later, e.g. find all-pairs shortest
 path, but this requires a parent map to be retrieved from the location
 model *)
-fun calcPath l = l
+fun calcPath path = path
 
 fun locShow () =
     ( print "\n----------------------------------------------------------\n";
@@ -329,14 +339,13 @@ fun locShow () =
 	    printCurLoc(l);
 	    printCon(c);
 	    printBtns(b);
-	    printCon(c);
 	    push(d,l,a,m,b,t,p,hl,ha,c) );
 	  print "\nPlease press a button.\n";
 	  print "----------------------------------------------------------\n" )
 
 fun tourShow () =
-    ( print "\n----------------------------------------------------------\n"
-    ; case pop()
+    ( print "\n----------------------------------------------------------\n";
+      case pop()
        of NONE => print "tourShow(): empty stack\n"
 	| SOME(d,l,a,m,b,t,p,hl,ha,c) =>
 	  ( printDisp(d);
@@ -351,8 +360,8 @@ fun tourShow () =
 	  print "----------------------------------------------------------\n" )
 
 fun guiShow () =
-    ( print "\n----------------------------------------------------------\n"
-    ; case pop()
+    ( print "\n----------------------------------------------------------\n";
+      case pop()
        of NONE => print "guiShow(): empty stack\n"
 	| SOME(d,l,a,m,b,t,p,hl,ha,c) =>
 	  ( printDisp(d);
@@ -367,35 +376,29 @@ fun guiShow () =
 	  print "----------------------------------------------------------\n" )
 
 (* Location events *)
-(*
-fun deviceObserved loc = loc
-    if loc = !cur_loc then guiShow() (* still here *)
-    else () (* temporary code *)
-	( cur_loc := loc
-         ; case lookup2 locAtts loc
-	    of NONE =>
-	       ( cur_atts := []
-	       ; if !on_tour then
-		     (* recalc. tour_path in this branch? *)
-		     ( cur_disp := "You are at location "
-		       ^ loc ^ ".\n" ^ "The next tour location is "
-		       ^ hd(!tour_path) ^ "."
-		     ; cur_btns := [("locator","Locator"),
-				    ("message","Message"),
-				    ("quit","Quit")]
-		     ; guiShow()
-		     )
-		 else guiShow()
-	       )
-	     | SOME(atts) =>
-	       ( cur_disp := "The following attraction(s) are near to you now."
-	       ; cur_atts := atts
-	       ; cur_btns := std_btns
-	       (*if !on_tour then guiRemoveButton "tour" else ()*)
-	       ; guiShow()
-	       )
-         )
-*)
+fun deviceObserved loc (d,l,a,m,b,t,p,hl,ha,c) =
+( print("deviceObserved(" ^ loc ^ ")\n");
+    ( if loc = l then push(d,l,a,m,b,t,p,hl,ha,c)
+      else let val new_atts = getAtts loc
+	       val (a',ha') = if new_atts = [] then ([],voidAtt)
+			      else (new_atts,hd new_atts)
+	       val tmp_b = [("locator","Locator")] @ tour_btns
+	       val tmp_info = (whichInfoBtns a' ha')
+	       val pred = fn (x,y) => not(x = loc)
+	       val p' = if t then (calcPath o filter) pred p else p
+	       val b' = if t then
+			    if length p = 1 then
+				tmp_b @ tmp_info @ [("end","End")]
+			    else tmp_b @ tmp_info @ [("cont","Continue")]
+			else std_btns @ tmp_info
+	   in push(d,loc,a',m,b',t,p',hl,ha',c) end );
+    guiShow() ; true
+)
+
+fun deviceLost (d,l,a,m,b,t,p,hl,ha,c) =
+( print "deviceLost()\n";
+  deviceObserved "an unknown location" (d,l,a,m,b,t,p,hl,ha,c)
+)
 
 (* Button events *)
 fun quitClicked (d,l,a,m,b,t,p,hl,ha,c) = false
@@ -407,12 +410,11 @@ fun backClicked (d,l,a,m,b,t,p,hl,ha,c) =
 
 fun infoClicked (d,l,a,m,b,t,p,hl,ha,c) =
 ( print "infoClicked()\n";
-    let val ha' = if t then #2(hd p) else ha
-	val d' = (#1(deattract ha')) ^ "\n" ^ (#2(deattract ha'))
+    let val d' = (#1(deattract ha)) ^ "\n" ^ (#2(deattract ha))
 	val b' = std_btns @ [("more-info","More info"),
 			     ("back","Back")]
     in ( push(d,l,a,m,b,t,p,hl,ha,c);
-	 push(d',l,a,m,b',t,p,hl,ha',c);
+	 push(d',l,a,m,b',t,p,hl,ha,c);
 	 guiShow();
 	 true )
     end
@@ -420,11 +422,10 @@ fun infoClicked (d,l,a,m,b,t,p,hl,ha,c) =
 
 fun moreInfoClicked (d,l,a,m,b,t,p,hl,ha,c) =
 ( print "moreInfoClicked()\n";
-    let val ha' = if t then #2(hd p) else ha
-	val d' = (#1(deattract ha')) ^ "\n" ^ (#3(deattract ha'))
+    let val d' = (#1(deattract ha)) ^ "\n" ^ (#3(deattract ha))
 	val b' = std_btns @ [("back","Back")]
     in ( push(d,l,a,m,b,t,p,hl,ha,c);
-	 push(d',l,a,m,b',t,p,hl,ha',c);
+	 push(d',l,a,m,b',t,p,hl,ha,c);
 	 guiShow();
 	 true )
     end
@@ -452,16 +453,19 @@ fun selectLocClicked (d,l,a,m,b,t,p,hl,ha,c) =
   case pop()
    of NONE => ( print "empty stack\n" ; false )
     | SOME(d',l',a',m',b',t',p',hl',ha',c') =>
-      let val new_atts = case lookup2 locAtts hl of NONE => [] | SOME x => x
+      let val new_atts = getAtts hl
 	  val (a'',ha'') = if new_atts = [] then ([],voidAtt)
-			   else
-			       if t' then (new_atts,voidAtt)
-			       else (new_atts,hd new_atts)
-	  val b'' = if t' (* implies length(p')>0 *)
-		    then if length p' = 1 then std_btns @ [("end","End")]
-			 else std_btns @ [("cont","Continue")]
-		    else std_btns @ (whichInfoBtns a'' ha'')
-      in ( push(d',hl,a'',m',b'',t',p',hl,ha'',c);
+			   else (new_atts,hd new_atts)
+	  val tmp_b = [("locator","Locator")] @ tour_btns
+	  val tmp_info = (whichInfoBtns a'' ha'')
+	  val pred = fn (x,y) => not(x = hl)
+	  val p'' = if t' then (calcPath o filter) pred p' else p'
+	  val b'' = if t' then
+			if length p'' = 1 then
+			    tmp_b @ tmp_info @ [("end","End")]
+			else tmp_b @ tmp_info @ [("cont","Continue")]
+		    else std_btns @ tmp_info
+      in ( push(d',hl,a'',m',b'',t',p'',hl,ha'',c);
 	   guiShow();
 	   true )
       end
@@ -523,10 +527,10 @@ fun tourClicked (d,l,a,m,b,t,p,hl,ha,c) =
 ( print "tourClicked()\n";
     let	val d' = "Please select a subset of the following attractions, one at a time.\n"
 	val a' = atts
-	val b' = tour_btns @ [("pop","Popular")] @ (whichSelBtns a' ha)
 	val t' = true
 	val p' = []
 	val ha' = case a' of [] => voidAtt | (x::xs) => x
+	val b' = tour_btns @ [("pop","Popular")] @ (whichSelBtns a' ha')
     in ( push(d,l,a,m,b,t,p,hl,ha,c);
 	 push(d',l,a',m,b',t',p',hl,ha',c);
 	 tourShow();
@@ -536,10 +540,11 @@ fun tourClicked (d,l,a,m,b,t,p,hl,ha,c) =
 
 fun popularClicked (d,l,a,m,b,t,p,hl,ha,c) =
 ( print "popularClicked()\n";
-    let val d' = "You chose the popular tour. Please proceed to the first tour location, marked with '#'.\n"
-	val a' = case lookup2 locAtts l of NONE => [] | SOME x => x
-	val ha' = voidAtt
-	val b' = std_btns @ [("cont","Continue")]
+    let val d' = "You chose the popular tour. Please proceed to the tour location marked with '#'.\n"
+	val new_atts = getAtts l
+	val (a',ha') = if new_atts = [] then ([],voidAtt)
+		       else (new_atts,hd new_atts)
+	val b' = std_btns @ (whichInfoBtns a' ha') @ [("cont","Continue")]
 	val getLocs =
 	    fn att => case findLoc locAtts att
 		       of NONE => (voidLoc,att) | SOME loc => (loc,att)
@@ -573,10 +578,10 @@ fun doneClicked (d,l,a,m,b,t,p,hl,ha,c) =
   case pop()
    of NONE => ( print "empty stack\n" ; false )
     | SOME(d',l',a',m',b',t',p',hl',ha',c') =>
-      let val d'' = "You have confirmed your tour. Please proceed to the first tour location, marked with '#'.\n"
+      let val d'' = "You have confirmed your tour. Please proceed to the tour location marked with '#'.\n"
 	  val b'' = if length p = 1 then b' @ [("end","End")]
 		    else b' @ [("cont","Continue")] (* p>1 *)
-      in ( push(d',l',a',m',b',t',p',hl',ha',c'); (* init. display *)
+      in ( push(d',l',a',m',b',t',p',hl',ha',c');
 	   push(d'',l,a',m,b'',t,p,hl,ha',c);
 	   tourShow();
 	   true )
@@ -601,8 +606,11 @@ fun endClicked (d,l,a,m,b,t,p,hl,ha,c) =
   case pop()
    of NONE => ( print "empty stack\n" ; false )
     | SOME(d',l',a',m',b',t',p',hl',ha',c') =>
-      let val t'' = false
-      in ( push(d',l,a',m',b',t'',p',hl',ha',c');
+      let val (a'',ha'') =
+	      case getAtts l of [] => ([],voidAtt) | (x::xs) => (x::xs,x)
+	  val b'' = std_btns @ (whichInfoBtns a ha)
+	  val t'' = false
+      in ( push(d',l,a'',m',b'',t'',p',hl',ha'',c');
 	   guiShow();
 	   true )
       end
@@ -631,23 +639,22 @@ val button_clicks =
 
 fun handleEvent event s =
     case event of
-	DeviceObserved(dev,loc) => true (* temp. code *)
-(*
-	if dev = !our_id then ( deviceObserved(loc) ; true )
-        else true (* not about us, ignore *)
-*)
-      | ButtonClicked btn =>
-        ( case lookup2 button_clicks btn
-	   of NONE => true (* unknown button, ignore *)
-            | SOME f => f s
-	)
+	DeviceObserved(dev,loc) =>
+	if dev = !our_id then deviceObserved loc s
+	else (push s ; true ) (* not about us, ignore *)
+      | DeviceLost(dev) =>
+	if dev = !our_id then deviceLost s
+	else (push s ; true) (* not about us, ignore *)
+      | ButtonClicked(bid) =>
+        ( case lookup2 button_clicks bid
+	   of NONE => ( push s ; true ) (* unknown button, ignore *)
+            | SOME f => f s )
       (* delete this?
       | ShortestPath(from,to,path) =>
           if from = !current_location then displayPath path
           else (* perhaps do something intelligent when we
                   are on the path, for now just ignore *)
-               true
-       *)
+               true *)
 
 (* I/O *)
 fun errmsg () =
@@ -659,9 +666,7 @@ fun peel s =
     else String.substring(s, 0, (String.size s)-1)
 
 fun read () =
-(*
-( printStackSize(!stack); printStack(!stack);
-*)
+(*( printStackSize(!stack); printStack(!stack);*)
     case pop()
      of NONE => print "read(): empty stack\n"
       | SOME(s) =>
@@ -669,48 +674,71 @@ fun read () =
 	  in case lookup1 b (peel (inputLine stdIn)) of
 		 NONE => ( errmsg() ; push(s) ; read() )
 	       | SOME(btn) => ( enq(ButtonClicked btn);
-				(* test code begin *)
 				if not (btn = "quit") andalso
 				   handleEvent(ButtonClicked btn) s
 				then read()
-				else ()
-				     (* test code end *)
-				     (*; read()*)
-				     )
-	  end
-	      )
-(*
-)
-*)
+				else () )
+	  end )
+(*)*)
 
-(* Event loop
+(* Event loop *)
 fun eventLoop () =
     case deq()
      of NONE => eventLoop()
-      | SOME e => if handleEvent e then eventLoop()
-		  else () (* halt *)
- *)
+      | SOME e => case pop()
+		   of NONE => print "eventLoop(): empty stack\n"
+		    | SOME s =>
+		      if handleEvent e s then
+			  let val _ = inputLine stdIn (*temp code*)
+			  in eventLoop() end
+	 	      else () (* halt *)
 
 (* this function must be supplied by L *)
 fun whereIs d = "dummy_location"
 
+val init_events = [ButtonClicked("tour"),
+		   ButtonClicked("select-att"),
+		   ButtonClicked("next-tour"),
+		   ButtonClicked("locator"),
+		   ButtonClicked("next-loc"),
+		   ButtonClicked("previous-loc"),
+		   ButtonClicked("back"),
+		   ButtonClicked("next-tour"),
+		   ButtonClicked("select-att"),
+		   ButtonClicked("next-tour"),
+		   ButtonClicked("select-att"),
+		   ButtonClicked("done"),
+		   DeviceObserved("ab:cd:ef:gh:ij:kl","l1"),
+		   ButtonClicked("info"),
+		   ButtonClicked("more-info"),
+		   ButtonClicked("back"),
+		   ButtonClicked("back"),
+		   DeviceObserved("ab:cd:ef:gh:ij:kl","l8"),
+		   ButtonClicked("locator"),
+		   ButtonClicked("next-loc"),
+		   ButtonClicked("next-loc"),
+		   ButtonClicked("select-loc"),
+		   ButtonClicked("tour"),
+		   ButtonClicked("pop"),
+		   DeviceLost("ab:cd:ef:gh:ij:kl"),
+		   ButtonClicked("quit")]
+
+val BTN_TEST = false (* test button events or location events *)
+
 fun main () =
     ( let val disp = "Welcome to Lancaster\n"
-	  val loc = case first locAtts
-		     of [] => "" | (l::ls) => l
-	  val atts = case lookup2 locAtts loc
-		      of NONE => [] | SOME(a) => a
+	  val loc = case first locAtts of [] => "" | (l::ls) => l
+	  val atts = getAtts loc
 	  val msgs = []
 	  val btns = std_btns
 	  val on_tour = false
 	  val tour_path = []
 	  val hilite_loc = loc
-	  val hilite_att =
-	      case atts of [] => voidAtt | (att::atts) => att
+	  val hilite_att = case atts of [] => voidAtt | (x::xs) => x
 	  val con = true
-      in push(disp,loc,atts,msgs,btns,on_tour,
-	      tour_path,hilite_loc,hilite_att,con) end
-    ; guiShow()
-    ; read()
-    (*; eventLoop()*)
-    )
+      in ( push(disp,loc,atts,msgs,btns,on_tour,
+		tour_path,hilite_loc,hilite_att,con);
+	   queue := init_events;
+	   guiShow();
+	   if BTN_TEST then read() else eventLoop() )
+      end )
