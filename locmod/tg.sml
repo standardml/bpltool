@@ -79,10 +79,8 @@ val stpeters = Att("St Peters RC Cathedral","info","more-info")
 val townhall = Att("Lancaster Town Hall","info","more-info")
 
 (* Popular attractions and location-attraction relationship *)
-(*
+
 val popular : attraction list = [castle,williamson,queenvic,seagull,halfmoon,market,canal,nightingale,spooky,ruxton,priory]
-*)
-val popular : attraction list = [castle,williamson,queenvic] (*temp code*)
 
 val locAtts : (location * attraction list) list =
     [("TIC", []),
@@ -382,7 +380,8 @@ fun deviceObserved loc (d,l,a,m,b,t,p,hl,ha,c) =
       else let val new_atts = getAtts loc
 	       val (a',ha') = if new_atts = [] then ([],voidAtt)
 			      else (new_atts,hd new_atts)
-	       val tmp_b = [("locator","Locator")] @ tour_btns
+	       val tmp_b = remBtn "back"
+				  ([("locator","Locator")] @ tour_btns)
 	       val tmp_info = (whichInfoBtns a' ha')
 	       val pred = fn (x,y) => not(x = loc)
 	       val p' = if t then (calcPath o filter) pred p else p
@@ -456,7 +455,8 @@ fun selectLocClicked (d,l,a,m,b,t,p,hl,ha,c) =
       let val new_atts = getAtts hl
 	  val (a'',ha'') = if new_atts = [] then ([],voidAtt)
 			   else (new_atts,hd new_atts)
-	  val tmp_b = [("locator","Locator")] @ tour_btns
+	  val tmp_b = remBtn "back"
+			     ([("locator","Locator")] @ tour_btns)
 	  val tmp_info = (whichInfoBtns a'' ha'')
 	  val pred = fn (x,y) => not(x = hl)
 	  val p'' = if t' then (calcPath o filter) pred p' else p'
