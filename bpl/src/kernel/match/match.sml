@@ -420,15 +420,14 @@ struct
                 (match_name false)
                 (NameSet.fold (match_name true) (ename, NameMap.empty) Y)
                 Z
-        in 
-          LazyList.Cons
-            ({ename' = ename',
-              s_C' = Wiring.make_ren s_C',
-              qs = [makeP (Wiring.id_X X) (makeN X g)]}, lzNil)
+        in
+          Cons ({ename' = ename',
+                 s_C' = Wiring.make_ren s_C',
+                 qs = [makeP (Wiring.id_X X) (makeN X g)]}, lzNil)
         end
-        handle NoMatch => lzunmk lzNil
-      | _ => lzunmk lzNil)
-      | _ => lzunmk lzNil)
+        handle NoMatch => Nil
+      | _ => Nil)
+      | _ => Nil)
   
   and matchMER' {ename, s_a, s_C, g, G} = lzNil
 
@@ -471,7 +470,7 @@ struct
           val _ = if K <> L then raise NoMatch else ()
 
           val ename''
-            = ListPair.foldl
+            = ListPair.foldlEq
                 (fn (yi, ui, ename'') =>
                     if Wiring.in_domain ui s_C_e then
                       check_adjust'
@@ -481,10 +480,11 @@ struct
                     else
                       ename'')
                 ename (ys, us)
+              handle ListPair.UnequalLengths => raise NoMatch
           
           val (vX, vZ)
             = (fn (vXl, vZl) => (Wiring.make' vXl, Wiring.make' vZl))
-              (ListPair.foldr
+              (ListPair.foldrEq
                  (fn (Xi, Zi, (vXl, vZl)) =>
                      let
                        val vi = SOME (Name.fresh NONE)
@@ -493,6 +493,7 @@ struct
                         (Link.make {outer = vi, inner = Zi}) :: vZl)
                      end)
                  ([], []) (Xs, Zs))
+              handle ListPair.UnequalLengths => raise NoMatch
 
           val premise_matches = matchABS' {ename = ename'',
                                            s_a = s_a, s_C = s_C,
@@ -502,7 +503,7 @@ struct
           fun make_match {ename', s_C', qs} =
               let
                 val (ename', s_C')
-                  = ListPair.foldl
+                  = ListPair.foldlEq
                       (fn (yi, ui, (ename', s_C')) =>
                           if not (Wiring.in_domain ui s_C_e) then
                             let
@@ -523,6 +524,7 @@ struct
                           else
                             (ename', s_C'))
                       (ename', Wiring.unmk_ren s_C') (ys, us)
+                    handle ListPair.UnequalLengths => raise NoMatch
               in
                 {ename' = ename',
                  s_C' = Wiring.make_ren s_C',
@@ -531,11 +533,11 @@ struct
         in
           lzunmk (lzmap make_match premise_matches)
         end
-        handle NoMatch => lzunmk lzNil
-      | _ => lzunmk lzNil)
-      | _ => lzunmk lzNil)
-      | _ => lzunmk lzNil)
-      | _ => lzunmk lzNil)
+        handle NoMatch => Nil
+      | _ => Nil)
+      | _ => Nil)
+      | _ => Nil)
+      | _ => Nil)
 
   (* Match a global discrete prime using a PAX, MER or ION rule:
    * 1) First return any PAX rule matches,
@@ -550,7 +552,7 @@ struct
           (lzmake (fn () =>
             case #Ss (unmkG g) of
               (_ :: _ :: _) => lzunmk (matchMER' args)
-            | _ => LazyList.Nil)))
+            | _ => Nil)))
 
   (* Match a prime to a context using the ABS rule:
    * 1) Deconstruct agent p = (id * ^s_a_L)(Z)g and
@@ -588,9 +590,9 @@ struct
              qs = qs}
       in
         lzunmk (lzmap make_match premise_matches)
-      end
-      handle NoMatch => lzunmk lzNil
-      | _ => lzunmk lzNil)
+      end)
+
+  and matchDS' {ename, s_a, s_C, g, G} = lzNil
   
   (* Match a parallel composition to a context using the PARn rule:
    * 1) Let ename_0 = ename.
@@ -600,8 +602,29 @@ struct
    *      returning NOMATCH if impossible.
    * 4) Return ename' = ename_n, s_C', qss = [qs_0, ..., qs_n-1]
    *)
-  and matchPARn' {ename, s_a, s_C, es, Es} = lzNil
-  
+  and matchPARn' {ename, s_a, s_C, es, Es} = 
+      lzmake (fn () =>
+      let
+        fun build_matches [] [] result  = lzmake (fn () => Cons (result, lzNil))
+          | build_matches _ [] _ = raise NoMatch
+          | build_matches [] _ _ = raise NoMatch
+          | build_matches (e::es) (E::Es) {ename' = ename_i, s_C' = s_C'_i, qss} =
+            let
+              val premise_matches
+                = matchDS' {ename = ename_i, s_a = s_a, s_C = s_C, g = e, G = E}
+
+              fun extend_result {ename', s_C', qs} =
+                  {ename' = ename', s_C' = s_C', qss = qs :: qss}
+            in
+              lzconcat
+                (lzmap (build_matches es Es o extend_result) premise_matches)
+            end
+      in
+        lzunmk
+          (build_matches es Es {ename' = ename, s_C' = Wiring.id_0, qss = []})
+      end
+      handle NoMatch => Nil)
+
   (* Match a tensor product to a context using the PARe rule:
    * 1) Infer premise, yielding ename', s_C', qss.
    * 2) Let qs = concat qss.
