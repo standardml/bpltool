@@ -12,6 +12,7 @@ signature MONO_FINMAP =
     val singleton  : dom * 'b -> 'b map
     val isEmpty    : 'b map -> bool
     val lookup     : 'b map -> dom -> 'b option
+    val inDomain   : dom -> 'b map -> bool
     (** Add a key-data pair k0 |-> d0.  Any existing key-data
      * pair k0 |-> d1 will silently be overwritten. 
      *)

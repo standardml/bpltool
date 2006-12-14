@@ -38,6 +38,11 @@ functor OrderFinMap(Order : ORDERING): MONO_FINMAP =
 	search t 
       end
 
+    fun inDomain key t =
+        case lookup t key of
+          NONE => false
+        | _    => true
+
     exception Impossible of string
     fun impossible s = raise (Impossible ("OrderFinMap" ^ s))
 
