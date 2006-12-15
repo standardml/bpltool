@@ -67,4 +67,7 @@ sig
    * @param m       The match to print.
    *)
   val pp : int -> ppstream -> match -> unit
+
+  (** Return a prettyprinted string representation of a match. *)
+  val toString : match -> string
 end

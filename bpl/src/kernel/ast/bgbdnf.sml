@@ -1071,6 +1071,25 @@ struct
   fun pp indent pps
     = BgVal.pp indent pps o unmk
 
+  val _ = Flags.makeIntFlag
+            {name = "/misc/linewidth",
+             default = 72,
+             short = "w", long = "line-width",
+             arg = "W",
+             desc = "Set line width to W characters"}
+    
+  val _ = Flags.makeIntFlag
+            {name = "/misc/indent",
+             default = 2,
+             short = "", long = "indent",
+             arg = "N",
+             desc = "Set extra indentation at each level when prettyprinting to N"}
+             
+  val toString
+    = PrettyPrint.pp_to_string
+        (Flags.getIntFlag "/misc/linewidth") 
+        (pp (Flags.getIntFlag "/misc/indent"))
+
   val size = BgVal.size o unmk
 
 end

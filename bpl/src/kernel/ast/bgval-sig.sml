@@ -326,6 +326,9 @@ sig
    *)
   val pp_match : int -> ppstream -> bgmatch -> unit
 
+  (** Return a prettyprinted string representation of a bgval. *)
+  val toString : bgval -> string
+
   val size : bgval -> int
 
 end

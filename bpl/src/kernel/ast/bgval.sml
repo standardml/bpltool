@@ -67,7 +67,8 @@ functor BgVal (structure Name : NAME
 			    BgTerm.ppstream =
 			    Origin.ppstream =
 			    ErrorHandler.ppstream =
-			    NameSetPP.ppstream
+			    NameSetPP.ppstream =
+			    Interface.ppstream
 	       type info
 	       val noinfo : info
                val bgvalinfo2origin : info -> Origin.origin
@@ -175,6 +176,40 @@ struct
   fun pp indent pps
     = BgTerm.pp indent pps o #1 o unmk (fn _ => BgTerm.noinfo)
 
+  fun ppWithIface (indent:int) pps v =
+    let
+      val (t, iface, oface) = unmk (fn _ => BgTerm.noinfo) v
+    in
+      PrettyPrint.begin_block pps PrettyPrint.CONSISTENT indent;
+    	BgTerm.pp indent pps t;
+    	PrettyPrint.add_break pps (1, 0);
+    	PrettyPrint.add_string pps ": ";
+    	Interface.pp indent pps iface;
+    	PrettyPrint.add_break pps (1, 0);
+    	PrettyPrint.add_string pps "-> ";
+    	Interface.pp indent pps oface;
+    	PrettyPrint.end_block pps
+    end
+
+  val _ = Flags.makeIntFlag
+            {name = "/misc/linewidth",
+             default = 72,
+             short = "w", long = "line-width",
+             arg = "W",
+             desc = "Set line width to W characters"}
+    
+  val _ = Flags.makeIntFlag
+            {name = "/misc/indent",
+             default = 2,
+             short = "", long = "indent",
+             arg = "N",
+             desc = "Set extra indentation at each level when prettyprinting to N"}
+             
+  val toString
+    = PrettyPrint.pp_to_string
+        (Flags.getIntFlag "/misc/linewidth") 
+        (pp (Flags.getIntFlag "/misc/indent"))
+
   val size = BgTerm.size o #1 o unmk (fn _ => BgTerm.noinfo)
 
   exception DuplicateNames of info * name list list * string
@@ -209,8 +244,8 @@ struct
 
   exception NotComposable of bgval * bgval * string
   fun explain_NotComposable (NotComposable (v1, v2, errtxt)) =
-      [Exp (LVL_USER, bgvalinfo2origin (info v1), pack_pp_with_data pp v1, []),
-       Exp (LVL_USER, bgvalinfo2origin (info v2), pack_pp_with_data pp v2, []),
+      [Exp (LVL_USER, bgvalinfo2origin (info v1), pack_pp_with_data ppWithIface v1, []),
+       Exp (LVL_USER, bgvalinfo2origin (info v2), pack_pp_with_data ppWithIface v2, []),
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
     | explain_NotComposable _ = raise Match
   val _ = add_explainer

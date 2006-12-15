@@ -225,6 +225,9 @@ sig
    *)
   val pp : int -> ppstream -> 'class bgbdnf -> unit
 
+  (** Return a prettyprinted string representation of a bgbdnf. *)
+  val toString : 'class bgbdnf -> string
+
   val size : 'class bgbdnf -> int
 
 end
