@@ -39,6 +39,8 @@ struct
 type info = info
 val noinfo = noinfo
 
+structure ErrorHandler = ErrorHandler
+
 structure Name    = Name (structure PrettyPrint = PrettyPrint)
 (*structure NameSet = OrderSet (Name.Order)*)
 structure NameSet = Name.NameSet

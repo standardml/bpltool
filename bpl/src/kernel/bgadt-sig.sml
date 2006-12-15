@@ -80,4 +80,5 @@ sig
 
   structure Sugar : SUGAR
 
+  structure ErrorHandler : ERRORHANDLER
 end
