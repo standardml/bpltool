@@ -72,7 +72,7 @@ functor BgVal (structure Name : NAME
 	       type info
 	       val noinfo : info
                val bgvalinfo2origin : info -> Origin.origin
-			    ) :> BGVAL 
+			    ) : BGVAL 
   where type nameset = NameSet.Set
     and type name = Name.name
     and type wiring = Wiring.wiring 

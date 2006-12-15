@@ -1213,30 +1213,25 @@ struct
   val allmatches : {agent : BR bgbdnf, redex : BR bgbdnf }
                  -> match list = lztolist o matches
   
-  fun pp indent pps ({context, redex, parameter} : match) =
+  fun pp' ppBBDNF ppDRBDNF indent pps ({context, redex, parameter} : match) =
     let
       open PrettyPrint
       val show = add_string pps
       fun << () = begin_block pps CONSISTENT indent
       fun >> () = end_block pps
       fun brk () = add_break pps (1, 0)
-      val Z = Interface.glob (BgBDNF.outerface parameter)
-      val id_Z = Wiring.id_X Z
     in
       <<();
-      show "("; BgBDNF.pp indent pps context; show ")";
+      show "{context"; brk(); show "= ";
+      ppBBDNF indent pps context; show ",";
       brk();
-      show "o ";
-      <<();
-      show "("; Wiring.pp indent pps id_Z;
-      brk();
-      show "* "; BgBDNF.pp indent pps redex; show ")";
-      >>();
-      brk();
-      show "o ("; BgBDNF.pp indent pps parameter; show ")";
+      show "parameter"; brk(); show "= ";
+      ppDRBDNF indent pps parameter; show "}";
       >>()
     end
-    
+
+  val pp = pp' BgBDNF.pp BgBDNF.pp
+
   val _ = Flags.makeIntFlag
             {name = "/misc/linewidth",
              default = 72,
@@ -1255,4 +1250,9 @@ struct
     = PrettyPrint.pp_to_string
         (Flags.getIntFlag "/misc/linewidth") 
         (pp (Flags.getIntFlag "/misc/indent"))
+
+  fun toString' ppBBDNF ppDRBDNF
+    = PrettyPrint.pp_to_string
+        (Flags.getIntFlag "/misc/linewidth") 
+        (pp' ppBBDNF ppDRBDNF (Flags.getIntFlag "/misc/indent"))
 end

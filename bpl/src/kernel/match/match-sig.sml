@@ -68,6 +68,24 @@ sig
    *)
   val pp : int -> ppstream -> match -> unit
 
+  (** Prettyprint a match using a specific prettyprinter for bgbdnf's.
+   * @params ppBDNF indent pps m
+   * @param ppBDNF  Prettyprinter to use on bgbdnf's.
+   * @param indent  Indentation at each block level.
+   * @param pps     Prettyprint stream on which to output.
+   * @param m       The match to print.
+   *)
+  val pp' : (int -> ppstream -> B bgbdnf -> unit)
+          ->(int -> ppstream -> DR bgbdnf -> unit)
+          -> int -> ppstream -> match -> unit
+
   (** Return a prettyprinted string representation of a match. *)
   val toString : match -> string
+
+  (** Return a prettyprinted string representation of a match,
+   * using a specific prettyprinter for bgbdnf's.
+   *)
+  val toString' : (int -> ppstream -> B bgbdnf -> unit)
+                ->(int -> ppstream -> DR bgbdnf -> unit)
+                -> match -> string
 end
