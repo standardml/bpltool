@@ -29,7 +29,6 @@ sig
   type B
   type BR
   type DR
-  type ppstream
   type nameset
   type 'a lazylist
   
@@ -66,7 +65,7 @@ sig
    * @param pps     Prettyprint stream on which to output.
    * @param m       The match to print.
    *)
-  val pp : int -> ppstream -> match -> unit
+  val pp : int -> PrettyPrint.ppstream -> match -> unit
 
   (** Prettyprint a match using a specific prettyprinter for bgbdnf's.
    * @params ppBDNF indent pps m
@@ -75,9 +74,9 @@ sig
    * @param pps     Prettyprint stream on which to output.
    * @param m       The match to print.
    *)
-  val pp' : (int -> ppstream -> B bgbdnf -> unit)
-          ->(int -> ppstream -> DR bgbdnf -> unit)
-          -> int -> ppstream -> match -> unit
+  val pp' : (int -> PrettyPrint.ppstream -> B bgbdnf -> unit)
+          ->(int -> PrettyPrint.ppstream -> DR bgbdnf -> unit)
+          -> int -> PrettyPrint.ppstream -> match -> unit
 
   (** Return a prettyprinted string representation of a match. *)
   val toString : match -> string
@@ -85,7 +84,7 @@ sig
   (** Return a prettyprinted string representation of a match,
    * using a specific prettyprinter for bgbdnf's.
    *)
-  val toString' : (int -> ppstream -> B bgbdnf -> unit)
-                ->(int -> ppstream -> DR bgbdnf -> unit)
+  val toString' : (int -> PrettyPrint.ppstream -> B bgbdnf -> unit)
+                ->(int -> PrettyPrint.ppstream -> DR bgbdnf -> unit)
                 -> match -> string
 end

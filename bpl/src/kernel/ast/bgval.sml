@@ -22,7 +22,8 @@
  * terms with interfaces.
  * @version $LastChangedRevision$
  *)
-functor BgVal (structure Name : NAME
+functor BgVal (structure Info : INFO
+	       structure Name : NAME
 	       structure NameSet : MONO_SET
 	       structure Link : LINK
 	       structure LinkSet : MONO_SET
@@ -31,10 +32,12 @@ functor BgVal (structure Name : NAME
 	       structure Wiring : WIRING
 	       structure Interface : INTERFACE
 	       structure BgTerm : BGTERM
-	       structure Origin : ORIGIN
 	       structure ErrorHandler : ERRORHANDLER
-	       structure PrettyPrint : PRETTYPRINT
+                 where type ppstream    = PrettyPrint.ppstream
+                   and type break_style = PrettyPrint.break_style
+                   and type origin      = Origin.origin
 	       structure NameSetPP : COLLECTIONPRETTYPRINT
+                 where type ppstream    = PrettyPrint.ppstream
 	       sharing type Name.name = 
 			    NameSet.elt = 
 			    Link.name =
@@ -60,18 +63,8 @@ functor BgVal (structure Name : NAME
 	       sharing type Wiring.wiring = BgTerm.wiring
 	       sharing type Interface.interface =
 			    Permutation.interface
-               sharing type Origin.origin =
-			    ErrorHandler.origin
-	       sharing type PrettyPrint.ppstream =
-			    Name.ppstream =
-			    BgTerm.ppstream =
-			    Origin.ppstream =
-			    ErrorHandler.ppstream =
-			    NameSetPP.ppstream =
-			    Interface.ppstream
-	       type info
-	       val noinfo : info
-               val bgvalinfo2origin : info -> Origin.origin
+               sharing type Info.info =
+                            BgTerm.info
 			    ) : BGVAL 
   where type nameset = NameSet.Set
     and type name = Name.name
@@ -81,11 +74,9 @@ functor BgVal (structure Name : NAME
     and type ion = Ion.ion
     and type interface = Interface.interface 
     and type bgterm = BgTerm.bgterm
-    and type info = info
-    and type ppstream = PrettyPrint.ppstream = 
+    and type info = Info.info =
 struct
-  type info = info
-  type bgterminfo = BgTerm.info
+  type info = Info.info
   type name = Name.name
   type nameset = NameSet.Set
   type bgterm = BgTerm.bgterm
@@ -94,12 +85,9 @@ struct
   type 'kind permutation = 'kind Permutation.permutation
   type ion = Ion.ion
   type wiring = Wiring.wiring
-  type ppstream = PrettyPrint.ppstream
 
   open Debug
   open ErrorHandler
-
-  val noinfo = noinfo
 
   val file_origin = Origin.mk_file_origin
                       "$BPL/src/kernel/ast/bgval.sml"
@@ -139,34 +127,34 @@ struct
     | info (VTen (_, (_, _, i)))    = i
     | info (VCom (_, _, (_, _, i))) = i
 
-  fun unmk v2i =
+  val unmk =
       let
 	fun unmk' (v as (VMer (n, i)))
-	    = (BgTerm.Mer (n, (v2i v)), Interface.m n, Interface.one)
+	    = (BgTerm.Mer (n, (info v)), Interface.m n, Interface.one)
 	  | unmk' (v as (VCon (X, i)))
-	    = (BgTerm.Con (X, (v2i v)), 
+	    = (BgTerm.Con (X, (info v)), 
 	       Interface.make {loc = [X], 
 			       glob = NameSet.empty},
 	       Interface.make {loc = [NameSet.empty], glob = X})
 	  | unmk' (v as (VWir (w, i)))
-	    = (BgTerm.Wir (w, (v2i v)),
+	    = (BgTerm.Wir (w, (info v)),
 	       Interface.X (Wiring.innernames w),
 	       Interface.X (Wiring.outernames w))
 	  | unmk' (v as (VIon (KyX, i)))
-	    = (BgTerm.Ion (KyX, (v2i v)),
+	    = (BgTerm.Ion (KyX, (info v)),
 	       Interface.make {loc = [Ion.innernames KyX],
 			       glob = NameSet.empty},
 	       Interface.make {loc = [], glob = Ion.outernames KyX})
 	  | unmk' (v as (VPer (pi, i)))
-	    = (BgTerm.Per (pi, (v2i v)), 
+	    = (BgTerm.Per (pi, (info v)), 
 	       Permutation.innerface pi,
 	       Permutation.outerface pi)
 	  | unmk' (v as (VAbs (X, v', (innf, outf, i)))) 
-	    = (BgTerm.Abs (X, #1 (unmk' v'), (v2i v)), innf, outf)
+	    = (BgTerm.Abs (X, #1 (unmk' v'), (info v)), innf, outf)
 	  | unmk' (v as (VTen (vs, (innf, outf, i)))) 
-	    = (BgTerm.Ten (List.map (#1 o unmk') vs, (v2i v)), innf, outf)
+	    = (BgTerm.Ten (List.map (#1 o unmk') vs, (info v)), innf, outf)
 	  | unmk' (v as (VCom (v1, v2, (innf, outf, i)))) 
-	    = (BgTerm.Com (#1 (unmk' v1), #1 (unmk' v2), (v2i v)),
+	    = (BgTerm.Com (#1 (unmk' v1), #1 (unmk' v2), (info v)),
 	       innf,
 	       outf)
       in
@@ -174,11 +162,11 @@ struct
       end
 
   fun pp indent pps
-    = BgTerm.pp indent pps o #1 o unmk (fn _ => BgTerm.noinfo)
+    = BgTerm.pp indent pps o #1 o unmk
 
   fun ppWithIface (indent:int) pps v =
     let
-      val (t, iface, oface) = unmk (fn _ => BgTerm.noinfo) v
+      val (t, iface, oface) = unmk v
     in
       PrettyPrint.begin_block pps PrettyPrint.CONSISTENT indent;
     	BgTerm.pp indent pps t;
@@ -210,11 +198,11 @@ struct
         (Flags.getIntFlag "/misc/linewidth") 
         (pp (Flags.getIntFlag "/misc/indent"))
 
-  val size = BgTerm.size o #1 o unmk (fn _ => BgTerm.noinfo)
+  val size = BgTerm.size o #1 o unmk
 
   exception DuplicateNames of info * name list list * string
   fun explain_DuplicateNames (DuplicateNames (i, nss, errtxt)) =
-      Exp (LVL_USER, bgvalinfo2origin i, pp_nothing,
+      Exp (LVL_USER, Info.origin i, pp_nothing,
            map (fn ns => Exp (LVL_USER, Origin.unknown_origin,
                               mk_list_pp "{" "}" "," Name.pp ns, []))
                nss)
@@ -225,7 +213,7 @@ struct
 
   exception NameMissing of bgval * string
   fun explain_NameMissing (NameMissing (v, errtxt)) =
-      [Exp (LVL_USER, bgvalinfo2origin (info v), pack_pp_with_data pp v, []),
+      [Exp (LVL_USER, Info.origin (info v), pack_pp_with_data pp v, []),
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
     | explain_NameMissing _ = raise Match
   val _ = add_explainer
@@ -235,7 +223,7 @@ struct
 
   exception NotPrime of bgval * string
   fun explain_NotPrime (NotPrime (v, errtxt)) =
-      [Exp (LVL_USER, bgvalinfo2origin (info v), pack_pp_with_data pp v, []),
+      [Exp (LVL_USER, Info.origin (info v), pack_pp_with_data pp v, []),
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
     | explain_NotPrime _ = raise Match
   val _ = add_explainer
@@ -244,8 +232,8 @@ struct
 
   exception NotComposable of bgval * bgval * string
   fun explain_NotComposable (NotComposable (v1, v2, errtxt)) =
-      [Exp (LVL_USER, bgvalinfo2origin (info v1), pack_pp_with_data ppWithIface v1, []),
-       Exp (LVL_USER, bgvalinfo2origin (info v2), pack_pp_with_data ppWithIface v2, []),
+      [Exp (LVL_USER, Info.origin (info v1), pack_pp_with_data ppWithIface v1, []),
+       Exp (LVL_USER, Info.origin (info v2), pack_pp_with_data ppWithIface v2, []),
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
     | explain_NotComposable _ = raise Match
   val _ = add_explainer
@@ -254,7 +242,7 @@ struct
 
   exception NotTensorable of bgval list * string
   fun explain_NotTensorable (NotTensorable (vs, errtxt)) =
-      map (fn v => Exp (LVL_USER, bgvalinfo2origin (info v),
+      map (fn v => Exp (LVL_USER, Info.origin (info v),
                         pack_pp_with_data pp v, [])) vs
       @ [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
     | explain_NotTensorable _ = raise Match
@@ -529,7 +517,7 @@ struct
 
 exception NotImplemented of bgval * string
 fun explain_NotImplemented (NotImplemented (v, errtxt)) =
-    [Exp (LVL_USER, bgvalinfo2origin (info v), pack_pp_with_data pp v, []),
+    [Exp (LVL_USER, Info.origin (info v), pack_pp_with_data pp v, []),
      Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
   | explain_NotImplemented _ = raise Match
 val _ = add_explainer
@@ -591,7 +579,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 
   exception NameClash of info * nameset * nameset * string
   fun explain_NameClash (NameClash (i, ns1, ns2, errtxt)) =
-      Exp (LVL_USER, bgvalinfo2origin i, pp_nothing,
+      Exp (LVL_USER, Info.origin i, pp_nothing,
            map (fn ns => Exp (LVL_USER, Origin.unknown_origin,
                               pack_pp_with_data NameSetPP.pp ns, []))
                [ns1, ns2])
@@ -638,7 +626,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 
   exception NotParallelisable of bgval list * string
   fun explain_NotParallelisable (NotParallelisable (vs, errtxt)) =
-      map (fn v => Exp (LVL_USER, bgvalinfo2origin (info v),
+      map (fn v => Exp (LVL_USER, Info.origin (info v),
                         pack_pp_with_data pp v, [])) vs
       @ [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
     | explain_NotParallelisable _ = raise Match
@@ -649,7 +637,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 
   exception NotPrimeable of bgval list * string
   fun explain_NotPrimeable (NotPrimeable (vs, errtxt)) =
-      map (fn v => Exp (LVL_USER, bgvalinfo2origin (info v),
+      map (fn v => Exp (LVL_USER, Info.origin (info v),
                         pack_pp_with_data pp v, [])) vs
       @ [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
     | explain_NotPrimeable _ = raise Match

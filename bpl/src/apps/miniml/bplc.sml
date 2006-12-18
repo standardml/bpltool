@@ -18,15 +18,7 @@
  * USA
  *)
 
-structure Origin = Origin(structure PrettyPrint = PrettyPrint)
-
-structure ErrorHandler 
-  = PrintErrorHandler (structure PrettyPrint = PrettyPrint
-                       structure Origin      = Origin)
-
-structure BG = BG (structure Origin       = Origin
-                   structure PrettyPrint  = PrettyPrint
-		   structure ErrorHandler = ErrorHandler);
+structure BG = BG (structure ErrorHandler = PrintErrorHandler);
 
 structure BGGen
   = BGGen

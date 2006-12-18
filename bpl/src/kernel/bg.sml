@@ -21,35 +21,21 @@
 (** Main BG module.
  * @version $LastChangedRevision$
  *)
-functor BG (structure Origin       : ORIGIN
-	    structure PrettyPrint  : PRETTYPRINT
-	    structure ErrorHandler : ERRORHANDLER
-            sharing type Origin.origin =
-		         ErrorHandler.origin
-            sharing type PrettyPrint.ppstream =
-		         Origin.ppstream =
-		         ErrorHandler.ppstream)
-  : BG =
+functor BG (structure ErrorHandler : ERRORHANDLER
+              where type ppstream    = PrettyPrint.ppstream
+                and type break_style = PrettyPrint.break_style
+                and type origin      = Origin.origin)
+  :> BG =
 struct
 
-type info = Origin.origin
-val noinfo = Origin.unknown_origin
-fun info2origin i = i
-
-structure BGADT
-  = BGADT (type info = info
-           val noinfo = noinfo
-	   val info2origin = info2origin
-           structure Origin = Origin
-	   structure PrettyPrint = PrettyPrint
-           structure ErrorHandler = ErrorHandler)
+structure BGADT = BGADT (structure ErrorHandler = ErrorHandler)
 open BGADT
 		   
 structure Token = LrParser.Token
 	   
 structure BgTermLrVals
   = BgTermLrVals
-      (structure Origin      = Origin
+      (structure Info        = Info
        structure Token       = Token
        structure Control     = Control
        structure Name        = Name

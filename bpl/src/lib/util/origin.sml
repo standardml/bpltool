@@ -22,10 +22,7 @@
  * @version $LastChangedRevision: 121 $
  *)
  
-functor Origin(structure PrettyPrint : PRETTYPRINT)
-  :> ORIGIN
-     where type ppstream = PrettyPrint.ppstream
-  =
+structure Origin :> ORIGIN where type ppstream = PrettyPrint.ppstream =
 struct
   type ppstream = PrettyPrint.ppstream
 

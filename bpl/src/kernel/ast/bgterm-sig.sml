@@ -36,10 +36,6 @@ sig
   type Immutable
   type 'kind permutation
   type wiring
-  type ppstream
-
-  (** Default empty contextual information. *)
-  val noinfo : info
 
   (** The bgterm data type. *)
   datatype bgterm = 
@@ -75,7 +71,7 @@ sig
    * @param pps     Prettyprint stream on which to output.
    * @param t       The bgterm to print.
    *)
-  val pp : int -> ppstream -> bgterm -> unit
+  val pp : int -> PrettyPrint.ppstream -> bgterm -> unit
 
   val size : bgterm -> int
 

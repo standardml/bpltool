@@ -52,7 +52,6 @@
 signature BGVAL =
 sig
   type info
-  type bgterminfo
   type name
   type nameset
   type interface
@@ -61,7 +60,6 @@ sig
   type Immutable
   type 'kind permutation
   type bgterm
-  type ppstream
 
   (** The bgval data type. *)
   type bgval
@@ -145,14 +143,11 @@ sig
    * the way down the syntax tree.  Instead match on the result of a call
    * to match.
    * @params v2ti v
-   * @param v2ti     Function that, given a bgval, returns the
-   *                 corresponding bgterm contextual information.
    * @param v        The bgval to deconstruct.
    * @return (t, inner, outer)  t is a bgterm with the given inner and
    *                            outer faces. 
    *)
-  val unmk : (bgval -> bgterminfo) 
-	     -> bgval -> (bgterm * interface * interface)
+  val unmk : bgval -> (bgterm * interface * interface)
 
   (** Replace internal names with fresh names. Replaces as many
    *  internal names as possible with globally fresh names.
@@ -211,8 +206,6 @@ sig
   val outerface : bgval -> interface
   (** Return the contextual information of a bgval. *)
   val info : bgval -> info
-  (** The default empty contextual information. *)
-  val noinfo : info
   (** Convert a bgmatch to a bgval. 
    * @params i m
    * @param i  Contextual information for matched nodes. 
@@ -317,21 +310,21 @@ sig
    * @param pps     Prettyprint stream on which to output.
    * @param t       The bgval to print.
    *)
-  val pp : int -> ppstream -> bgval -> unit
+  val pp : int -> PrettyPrint.ppstream -> bgval -> unit
   (** Prettyprint a bgval with interfaces, without parentheses around it.
    * @params indent pps t
    * @param indent  Indentation at each block level.
    * @param pps     Prettyprint stream on which to output.
    * @param t       The bgval to print.
    *)
-  val ppWithIface : int -> ppstream -> bgval -> unit
+  val ppWithIface : int -> PrettyPrint.ppstream -> bgval -> unit
   (** Prettyprint a bgmatch.
    * @params indent pps m
    * @param indent  Indentation at each block level.
    * @param pps     Prettyprint stream on which to output.
    * @param m       The bgmatch to print.
    *)
-  val pp_match : int -> ppstream -> bgmatch -> unit
+  val pp_match : int -> PrettyPrint.ppstream -> bgmatch -> unit
 
   (** Return a prettyprinted string representation of a bgval. *)
   val toString : bgval -> string

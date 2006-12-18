@@ -25,7 +25,6 @@ signature PERMUTATION =
 sig
   type nameset
   type interface
-  type ppstream
 
   (** The mutable kind of permutation. *)
   type Mutable
@@ -164,5 +163,5 @@ sig
    * @param pps     Prettyprint stream on which to output.
    * @param pi      The permutation to output.
    *)
-  val pp : int -> ppstream -> 'kind permutation -> unit
+  val pp : int -> PrettyPrint.ppstream -> 'kind permutation -> unit
 end

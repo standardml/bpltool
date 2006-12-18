@@ -29,7 +29,6 @@ sig
   type 'a namemap
   type link
   type linkset
-  type ppstream
 
   (** The wiring data type. *)
   type wiring
@@ -267,5 +266,5 @@ sig
    * @param pps     Prettyprint stream on which to output.
    * @param w       The wiring to output.
    *)
-  val pp : int -> ppstream -> wiring -> unit
+  val pp : int -> PrettyPrint.ppstream -> wiring -> unit
 end

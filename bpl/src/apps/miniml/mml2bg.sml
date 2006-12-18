@@ -24,7 +24,6 @@
  *)
 
 functor MiniMLToBG(structure BG : BG_ADT
-		        where type BgBDNF.ppstream = PrettyPrint.ppstream
                     structure BGGen : BGGEN
 		        where type ppstream = PrettyPrint.ppstream
 		      sharing type BGGen.bg = BG.BgVal.bgval = BG.BgBDNF.bgval)

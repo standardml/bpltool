@@ -42,11 +42,12 @@ sig
   (** Read a BG expression from a file, return it as a bgval. *)
   val bgvalUsefile'' : string -> bgval
   (** Prettyprinter for bigraphs. *)
-  val pp : ppstream -> 'class bgbdnf -> unit
+  val pp : PrettyPrint.ppstream -> 'class bgbdnf -> unit
   (** Return string representation of a normal form bigraph. *)
   val toString : 'class bgbdnf -> string
   (** Return string representation of a bigraph value. *)
   val bgvalToString : bgval -> string
 
   structure BgTermParser : PARSER
+
 end

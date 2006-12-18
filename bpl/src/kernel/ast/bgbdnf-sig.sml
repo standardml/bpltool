@@ -31,8 +31,6 @@ sig
   type 'kind permutation
   type bgval
   type bgmatch
-  type bgterm
-  type ppstream
 
   (** M BDNF molecule class phantom type. *)
   type M 
@@ -223,7 +221,7 @@ sig
    * @param pps     Prettyprint stream on which to output.
    * @param t       The bgbdnf to print.
    *)
-  val pp : int -> ppstream -> 'class bgbdnf -> unit
+  val pp : int -> PrettyPrint.ppstream -> 'class bgbdnf -> unit
 
   (** Prettyprint a bgbdnf with interfaces, without parentheses around it.
    * @params indent pps t
@@ -231,7 +229,7 @@ sig
    * @param pps     Prettyprint stream on which to output.
    * @param t       The bgbdnf to print.
    *)
-  val ppWithIface : int -> ppstream -> 'class bgbdnf -> unit
+  val ppWithIface : int -> PrettyPrint.ppstream -> 'class bgbdnf -> unit
 
   (** Return a prettyprinted string representation of a bgbdnf. *)
   val toString : 'class bgbdnf -> string

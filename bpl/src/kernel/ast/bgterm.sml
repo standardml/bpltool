@@ -28,29 +28,21 @@
  * information (e.g., source file location for the term).
  * @version $LastChangedRevision$
  *)
-functor BgTerm (type info
+functor BgTerm (structure Info : INFO
 		structure Ion : ION
 		structure Wiring : WIRING
 		structure Permutation : PERMUTATION
-		structure PrettyPrint : PRETTYPRINT
 		structure NameSetPP : COLLECTIONPRETTYPRINT
-		val noinfo : info
-                sharing type PrettyPrint.ppstream =
-			     Ion.ppstream =
-			     Wiring.ppstream =
-			     Permutation.ppstream =
-			     NameSetPP.ppstream
-		sharing type Wiring.nameset = NameSetPP.collection) : BGTERM =
+                  where type ppstream    = PrettyPrint.ppstream
+		sharing type Wiring.nameset = NameSetPP.collection)
+      : BGTERM where type info = Info.info =
 struct
-  type info = info
+  type info = Info.info
   type nameset = Wiring.nameset
   type ion = Ion.ion
   type Immutable = Permutation.Immutable
   type 'kind permutation = 'kind Permutation.permutation
   type wiring = Wiring.wiring
-  type ppstream = PrettyPrint.ppstream
-
-  val noinfo = noinfo
 
   datatype bgterm = 
 	   Mer of int * info

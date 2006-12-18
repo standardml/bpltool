@@ -26,11 +26,6 @@
  
 signature BG_ADT =
 sig
-  type info
-  type ppstream
-
-  val noinfo : info
-
   (** Page width used by bdnfToString. *)
   val pageWidth : int ref
   (** Block indentation used by bdnfToString. *)
@@ -61,6 +56,7 @@ sig
   (** Bigraphs on {M,S,G,N,P,D,DR,B,BR} BDNF form. *)
   type 'class bgbdnf
 
+  structure Info   : INFO
   structure BgTerm : BGTERM
   structure BgVal  : BGVAL
   structure BgBDNF : BGBDNF
@@ -81,4 +77,92 @@ sig
   structure Sugar : SUGAR
 
   structure ErrorHandler : ERRORHANDLER
+
+
+  sharing type BgBDNF.M =
+               M
+
+  sharing type BgBDNF.S =
+               S
+
+  sharing type BgBDNF.G =
+               G
+
+  sharing type BgBDNF.N =
+               N
+
+  sharing type BgBDNF.P =
+               P
+
+  sharing type BgBDNF.D =
+               D
+
+  sharing type BgBDNF.B =
+               B
+
+  sharing type BgBDNF.DR =
+               DR
+
+  sharing type BgBDNF.BR =
+               BR
+
+  sharing type BgBDNF.bgbdnf =
+               bgbdnf
+
+  sharing type Info.info =
+               BgTerm.info =
+               BgVal.info =
+               BgBDNF.info =
+               Match.info
+
+  sharing type bgterm =
+               BgTerm.bgterm =
+               BgVal.bgterm
+
+  sharing type bgval =
+               BgVal.bgval =
+               BgBDNF.bgval
+
+  sharing type Interface.interface =
+               BgVal.interface
+
+  sharing type Control.control =
+               Ion.control
+
+  sharing type Ion.ion =
+               BgTerm.ion =
+               BgVal.ion
+
+  sharing type Permutation.permutation =
+               BgTerm.permutation =
+               BgVal.permutation
+
+  sharing type Permutation.Immutable =
+               BgTerm.Immutable
+
+  sharing type Wiring.wiring =
+               BgVal.wiring
+
+  sharing type Name.name =
+               Link.name =
+               Ion.name =
+               NameSet.elt
+
+  sharing type NameSet.Set =
+               Permutation.nameset =
+               Ion.nameset =
+               Interface.nameset =
+               Link.nameset =
+               Wiring.nameset =
+               BgTerm.nameset =
+               BgVal.nameset
+
+  sharing type Wiring.wiring =
+               BgTerm.wiring
+
+  sharing type LinkSet.Set =
+               Wiring.linkset
+
+  sharing type Link.link =
+               LinkSet.elt
 end

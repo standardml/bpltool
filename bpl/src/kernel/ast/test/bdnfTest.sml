@@ -59,6 +59,7 @@ struct
 		
 open BG
 open Assert
+val noinfo = BG.Info.noinfo
      
 datatype expectedresult = S of string | E of string
 

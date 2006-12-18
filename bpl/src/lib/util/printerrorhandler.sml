@@ -22,19 +22,13 @@
  * @version $LastChangedRevision: 121 $
  *)
  
-functor PrintErrorHandler
-  (structure PrettyPrint : PRETTYPRINT
-   structure Origin      : ORIGIN
-   sharing type PrettyPrint.ppstream =
-                Origin.ppstream)
+structure PrintErrorHandler
   :> ERRORHANDLER
      where type origin      = Origin.origin
        and type ppstream    = PrettyPrint.ppstream
+       and type break_style = PrettyPrint.break_style
   =
 struct
-  structure BaseErrorHandler =
-    BaseErrorHandler(structure PrettyPrint = PrettyPrint
-                     structure Origin      = Origin)
   open BaseErrorHandler
   open Debug
 

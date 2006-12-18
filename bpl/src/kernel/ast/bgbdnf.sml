@@ -21,7 +21,7 @@
 (** Abstract data type for bigraph binding discrete normal forms (BDNF).
  * @version $LastChangedRevision$
  *)
-functor BgBDNF (type info
+functor BgBDNF (structure Info : INFO
 		structure Name : NAME
 		structure NameSet : MONO_SET
 		structure LinkSet : MONO_SET
@@ -31,9 +31,10 @@ functor BgBDNF (type info
 		structure Link : LINK
 		structure Wiring : WIRING
 		structure BgVal : BGVAL
-		structure Origin : ORIGIN
 		structure ErrorHandler : ERRORHANDLER
-		structure PrettyPrint : PRETTYPRINT
+                  where type ppstream    = PrettyPrint.ppstream
+                    and type break_style = PrettyPrint.break_style
+                    and type origin      = Origin.origin
 		sharing type BgVal.interface = 
 			     Interface.interface =
 			     Permutation.interface
@@ -58,29 +59,23 @@ functor BgBDNF (type info
 		sharing type NameSet.elt =
                              Name.name =
                              Ion.name
-                sharing type Origin.origin =
-			     ErrorHandler.origin
-                sharing type PrettyPrint.ppstream =
-			     Wiring.ppstream =
-			     BgVal.ppstream =
-			     Origin.ppstream =
-			     ErrorHandler.ppstream
-                val bgvalinfo2origin : BgVal.info -> Origin.origin
+                sharing type Info.info =
+                             BgVal.info
 			     ) : BGBDNF 
   where type nameset        = NameSet.Set
-    and type info           = BgVal.info 
+    and type info           = Info.info 
     and type interface      = BgVal.interface
     and type wiring         = BgVal.wiring
     and type ion            = Ion.ion
     and type 'a permutation = 'a BgVal.permutation
     and type bgval          = BgVal.bgval 
-    and type bgmatch        = BgVal.bgmatch
-    and type ppstream       = BgVal.ppstream =
+    and type bgmatch        = BgVal.bgmatch = 
 struct
   open BgVal
   type ion = Ion.ion
   open Debug
   open ErrorHandler
+  val noinfo = Info.noinfo
 
   (* NOTE: Each BDNF form has a fixed structure (omitting infos and
    * interfaces) except for the SBDNF which has two possible structures:
@@ -130,7 +125,7 @@ struct
 
   exception IrregularBDNF of info * bgval * string
   fun explain_IrregularBDNF (IrregularBDNF (i, b, errtxt)) =
-      [Exp (LVL_USER, bgvalinfo2origin i, pack_pp_with_data BgVal.pp b, []),
+      [Exp (LVL_USER, Info.origin i, pack_pp_with_data BgVal.pp b, []),
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
     | explain_IrregularBDNF _ = raise Match
   val _ = add_explainer
@@ -138,7 +133,7 @@ struct
 
   exception MalformedBDNF of info * bgmatch * string
   fun explain_MalformedBDNF (MalformedBDNF (i, b, errtxt)) =
-      [Exp (LVL_USER, bgvalinfo2origin i,
+      [Exp (LVL_USER, Info.origin i,
             pack_pp_with_data BgVal.pp_match b, []),
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
     | explain_MalformedBDNF _ = raise Match
@@ -149,7 +144,7 @@ struct
 
   exception MalformedRBDNF of info * bgmatch * string
   fun explain_MalformedRBDNF (MalformedRBDNF (i, b, errtxt)) =
-      [Exp (LVL_USER, bgvalinfo2origin i,
+      [Exp (LVL_USER, Info.origin i,
             pack_pp_with_data BgVal.pp_match b, []),
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
     | explain_MalformedRBDNF _ = raise Match
@@ -162,7 +157,7 @@ struct
   fun explain_UnequalLength (UnequalLength (vs1, vs2, errtxt)) =
       let
         fun bgval2exp v =
-            Exp (LVL_USER, bgvalinfo2origin (BgVal.info v),
+            Exp (LVL_USER, Info.origin (BgVal.info v),
                  pack_pp_with_data BgVal.pp v, [])
       in
         [Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "vs1",

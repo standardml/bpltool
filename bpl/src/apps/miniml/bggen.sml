@@ -23,8 +23,7 @@
  * Modified: $Date: 2006/09/04 09:31:14 $ by: $Author: hniss $
  *)
 
-functor BGGen(structure PrettyPrint : PRETTYPRINT
-               structure BG: BG_ADT
+functor BGGen(structure BG: BG_ADT
   	         sharing type BG.Control.control = BG.Ion.control
   	         sharing type BG.Ion.ion = BG.BgVal.ion
   	         sharing type BG.Wiring.wiring = BG.BgVal.wiring
@@ -45,9 +44,6 @@ functor BGGen(structure PrettyPrint : PRETTYPRINT
 		 sharing type BG.Interface.interface =
 			      BG.BgVal.interface
 		 sharing type BG.BgVal.bgval = BG.BgBDNF.bgval
-		 sharing type PrettyPrint.ppstream = 
-			      BG.Interface.ppstream =
-			      BG.BgVal.ppstream
               ) : BGGEN = struct
 
 (*
@@ -75,7 +71,7 @@ structure B   = BgVal
 type ppstream = PrettyPrint.ppstream
 
 (* aux. stuff *)
-val info = B.noinfo
+val info = BG.Info.noinfo
 type bgval = B.bgval
 type name = BG.Name.name
 type nameset = NameSet.Set

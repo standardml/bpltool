@@ -25,21 +25,17 @@
 functor Ion (structure Control : CONTROL
 	     structure Name : NAME
 	     structure NameSet : MONO_SET
-	     structure PrettyPrint : PRETTYPRINT
 	     structure NameSetPP : COLLECTIONPRETTYPRINT
-             sharing type PrettyPrint.ppstream =
-			  NameSetPP.ppstream
+               where type ppstream = PrettyPrint.ppstream
 	     sharing type Name.name = NameSet.elt
 	     sharing type NameSet.Set = NameSetPP.collection) :> ION 
 	     where type control  = Control.control
 	       and type name     = Name.name
- 	       and type nameset  = NameSet.Set 
-               and type ppstream = PrettyPrint.ppstream =
+ 	       and type nameset  = NameSet.Set =
 struct
   type control  = Control.control
   type name     = Name.name
   type nameset  = NameSet.Set
-  type ppstream = PrettyPrint.ppstream
 
   type ion = {ctrl : control, free : name list, bound : nameset list}
   fun make x = x

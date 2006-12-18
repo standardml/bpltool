@@ -96,7 +96,7 @@ fun warning str v = (print ("Parser warning: "^str^"\n"); v)
 
 fun mk_origin p1 p2 = Origin.mk_file_origin (!ErrorMsg.fileName) (Origin.POS (ErrorMsg.toCoords p1 p2))
 
-val mk_info = mk_origin
+fun mk_info p1 p2 = Info.make (mk_origin p1 p2)
 
 fun nset2idlinkset nset =
     NameSet.fold 
@@ -144,7 +144,8 @@ fun nset2idlinkset nset =
 %name BgTerm
 
 %header (functor BgTermLrVals
-		   (structure Token : TOKEN
+		   (structure Info : INFO
+		    structure Token : TOKEN
 		    structure Control : CONTROL
 		    structure Name : NAME
 		    structure NameSet : MONO_SET
@@ -153,7 +154,6 @@ fun nset2idlinkset nset =
 		    structure Wiring : WIRING
 		    structure Ion : ION
 		    structure Permutation : PERMUTATION
-		    structure Origin : ORIGIN
 		    structure BgTerm : BGTERM
 		    sharing type Control.control = Ion.control
 		    sharing type Name.name = 
@@ -173,7 +173,7 @@ fun nset2idlinkset nset =
 				 BgTerm.permutation
 		    sharing type Permutation.Immutable =
 		                 BgTerm.Immutable
-                    sharing type Origin.origin =
+                    sharing type Info.info =
                                  BgTerm.info
 		    )
 	)

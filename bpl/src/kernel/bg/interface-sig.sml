@@ -24,7 +24,6 @@
 signature INTERFACE =
 sig
   type nameset
-  type ppstream
 
   (** The interface data type. *)
   type interface
@@ -72,5 +71,5 @@ sig
    * @param pps     Prettyprint stream on which to output.
    * @param I       The interface to output.
    *)
-  val pp : int -> ppstream -> interface -> unit
+  val pp : int -> PrettyPrint.ppstream -> interface -> unit
 end

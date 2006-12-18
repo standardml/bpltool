@@ -22,18 +22,12 @@
  * @version $LastChangedRevision$
  *)
 functor Interface (structure NameSet : MONO_SET
-		   structure PrettyPrint : PRETTYPRINT
 		   structure NameSetPP : COLLECTIONPRETTYPRINT
-                   sharing type PrettyPrint.ppstream =
-				NameSetPP.ppstream
+                     where type ppstream    = PrettyPrint.ppstream
 		   sharing type NameSet.Set = NameSetPP.collection)
-	:> INTERFACE
-		   where type nameset = NameSet.Set
-                     and type ppstream =
-			      PrettyPrint.ppstream =
+	:> INTERFACE where type nameset = NameSet.Set =
 struct
   type nameset = NameSet.Set
-  type ppstream = PrettyPrint.ppstream
 
   type interface = {width : int, loc : nameset list, glob : nameset}
 

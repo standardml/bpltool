@@ -27,34 +27,28 @@ functor Wiring (structure Link : LINK
 		structure NameSet : MONO_SET
 		structure NameMap : MONO_FINMAP
 		structure IntSet : MONO_SET where type elt = int
-		structure Origin : ORIGIN
 		structure ErrorHandler : ERRORHANDLER
-		structure PrettyPrint : PRETTYPRINT
+                  where type ppstream    = PrettyPrint.ppstream
+                    and type break_style = PrettyPrint.break_style
+                    and type origin      = Origin.origin
 		structure NameSetPP : COLLECTIONPRETTYPRINT
+                  where type ppstream    = PrettyPrint.ppstream
 		sharing type Link.link = LinkSet.elt
 		sharing type Name.name = Link.name = NameSet.elt = NameMap.dom
-		sharing type NameSet.Set = Link.nameset
-                sharing type Origin.origin =
-			     ErrorHandler.origin
-                sharing type PrettyPrint.ppstream =
-			     Name.ppstream =
-			     NameSetPP.ppstream =
-			     Origin.ppstream =
-			     ErrorHandler.ppstream
-		sharing type NameSet.Set = NameSetPP.collection) :> WIRING 
+		sharing type NameSet.Set =
+                             Link.nameset =
+		             NameSetPP.collection) :> WIRING 
                 where type link       = Link.link
 		  and type linkset    = LinkSet.Set 
                   and type name       = Name.name
 		  and type nameset    = NameSet.Set
-                  and type 'a namemap = 'a NameMap.map
-                  and type ppstream   = PrettyPrint.ppstream =
+                  and type 'a namemap = 'a NameMap.map =
 struct
   type link = Link.link
   type linkset = LinkSet.Set
   type nameset = NameSet.Set
   type 'a namemap = 'a NameMap.map
   type name = NameSet.elt
-  type ppstream = PrettyPrint.ppstream
   open Debug
   open ErrorHandler
 

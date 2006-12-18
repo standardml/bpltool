@@ -26,27 +26,21 @@ functor Permutation (structure IntSet : MONO_SET
 		     structure NameSet : MONO_SET
 		     structure Name : NAME
 		     structure Interface : INTERFACE
-		     structure Origin : ORIGIN
 		     structure ErrorHandler : ERRORHANDLER
-		     structure PrettyPrint : PRETTYPRINT
+                       where type ppstream    = PrettyPrint.ppstream
+                         and type break_style = PrettyPrint.break_style
+                         and type origin      = Origin.origin
 		     structure NameSetPP : COLLECTIONPRETTYPRINT
+                       where type ppstream = PrettyPrint.ppstream
 		     sharing type Interface.nameset = NameSet.Set
-		     sharing type Origin.origin =
-		                  ErrorHandler.origin
-                     sharing type PrettyPrint.ppstream =
-				  NameSetPP.ppstream =
-				  Origin.ppstream =
-				  ErrorHandler.ppstream
 		     sharing type NameSet.Set = NameSetPP.collection
 	             sharing type Name.name = NameSet.elt)
 	:> PERMUTATION 
 	   where type nameset = NameSet.Set
-             and type ppstream = PrettyPrint.ppstream
              and type interface = Interface.interface =
 struct
   type nameset = NameSet.Set
   type interface = Interface.interface
-  type ppstream = PrettyPrint.ppstream
 
   type Mutable = unit
   type Immutable = unit

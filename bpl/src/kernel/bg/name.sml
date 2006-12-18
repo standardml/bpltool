@@ -22,11 +22,8 @@
  * 
  * @version $LastChangedRevision$
  *)
-functor Name (structure PrettyPrint : PRETTYPRINT)
- :> NAME where type ppstream = PrettyPrint.ppstream =
+structure Name :> NAME =
 struct
-  type ppstream = PrettyPrint.ppstream
-
   (* Names are identified by unique words. *)
   type name = word * string
 

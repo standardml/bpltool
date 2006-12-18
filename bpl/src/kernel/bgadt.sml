@@ -21,27 +21,18 @@
 (** BG Abstract Data Types module.
  * @version $LastChangedRevision$
  *)
-functor BGADT (structure Origin       : ORIGIN
-	       structure PrettyPrint  : PRETTYPRINT
-	       structure ErrorHandler : ERRORHANDLER
-               type info
-               val noinfo             : info
-               val info2origin        : info -> Origin.origin
-	       sharing type Origin.origin =
-	       	            ErrorHandler.origin
-               sharing type PrettyPrint.ppstream =
-			    Origin.ppstream =
-			    ErrorHandler.ppstream
-              ) 
-	: BG_ADT =
+functor BGADT (structure ErrorHandler : ERRORHANDLER
+                 where type ppstream    = PrettyPrint.ppstream
+                   and type break_style = PrettyPrint.break_style
+                   and type origin      = Origin.origin) 
+  :> BG_ADT =
 struct
-
-type info = info
-val noinfo = noinfo
 
 structure ErrorHandler = ErrorHandler
 
-structure Name    = Name (structure PrettyPrint = PrettyPrint)
+structure Info = Info
+
+structure Name    = Name
 (*structure NameSet = OrderSet (Name.Order)*)
 structure NameSet = Name.NameSet
 structure NameSetCompare 
@@ -64,8 +55,7 @@ structure NameSetPP
 structure Interface 
   = Interface 
       (structure NameSet     = NameSet
-       structure NameSetPP   = NameSetPP
-       structure PrettyPrint = PrettyPrint)
+       structure NameSetPP   = NameSetPP)
 
 structure Control = Control
 
@@ -82,8 +72,7 @@ structure Ion
       (structure Control     = Control
        structure Name        = Name
        structure NameSet     = NameSet
-       structure NameSetPP   = NameSetPP
-       structure PrettyPrint = PrettyPrint)
+       structure NameSetPP   = NameSetPP)
 
 structure Wiring 
   = Wiring 
@@ -94,8 +83,6 @@ structure Wiring
        structure NameMap      = NameMap
        structure NameSet      = NameSet
        structure NameSetPP    = NameSetPP
-       structure PrettyPrint  = PrettyPrint
-       structure Origin       = Origin
        structure ErrorHandler = ErrorHandler)
 
 structure Permutation
@@ -105,25 +92,19 @@ structure Permutation
        structure IntSet       = IntSet
        structure Interface    = Interface
        structure NameSetPP    = NameSetPP
-       structure PrettyPrint  = PrettyPrint
-       structure Origin       = Origin
        structure ErrorHandler = ErrorHandler)
 
 structure BgTerm
   = BgTerm 
-      (type      info        = info
-       val       noinfo      = noinfo
+      (structure Info        = Info
        structure Ion         = Ion
        structure Wiring      = Wiring
        structure Permutation = Permutation
-       structure NameSetPP   = NameSetPP
-       structure PrettyPrint = PrettyPrint)
+       structure NameSetPP   = NameSetPP)
 
 structure BgVal 
   = BgVal
-      (type      info             = info
-       val       noinfo           = noinfo
-       val       bgvalinfo2origin = info2origin
+      (structure Info             = Info
        structure Name             = Name
        structure NameSet          = NameSet
        structure Link             = Link
@@ -134,14 +115,11 @@ structure BgVal
        structure Permutation      = Permutation
        structure BgTerm           = BgTerm
        structure NameSetPP        = NameSetPP
-       structure Origin           = Origin
-       structure ErrorHandler     = ErrorHandler
-       structure PrettyPrint      = PrettyPrint)
+       structure ErrorHandler     = ErrorHandler)
       
 structure BgBDNF 
   = BgBDNF
-      (type      info             = info
-       val       bgvalinfo2origin = info2origin
+      (structure Info             = Info
        structure Link             = Link
        structure Name             = Name
        structure NameSet          = NameSet
@@ -151,9 +129,7 @@ structure BgBDNF
        structure Wiring           = Wiring
        structure Permutation      = Permutation
        structure BgVal            = BgVal
-       structure Origin           = Origin
-       structure ErrorHandler     = ErrorHandler
-       structure PrettyPrint      = PrettyPrint)
+       structure ErrorHandler     = ErrorHandler)
 
 type bgterm = BgTerm.bgterm
 
@@ -171,7 +147,7 @@ type BR = BgBDNF.BR
 type 'class bgbdnf = 'class BgBDNF.bgbdnf
 
 structure Match = Match
-  (type      info        = info
+  (structure Info        = Info
    structure Name        = Name
    structure NameMap     = NameMap
    structure Link        = Link
@@ -183,17 +159,14 @@ structure Match = Match
    structure Wiring      = Wiring
    structure BgVal       = BgVal
    structure BgBDNF      = BgBDNF
-   structure LazyList    = LazyList
-   structure PrettyPrint = PrettyPrint)
+   structure LazyList    = LazyList)
 
 val pageWidth = ref 70
 val indent = ref 1
-type ppstream = PrettyPrint.ppstream
 
 structure Sugar 
   = Sugar 
-      (type      info         = info
-       val       noinfo       = noinfo
+      (structure Info         = Info
        structure Control      = Control
        structure Name         = Name
        structure NameSet      = NameSet
@@ -205,8 +178,6 @@ structure Sugar
        structure Wiring       = Wiring
        structure Permutation  = Permutation
        structure BgVal        = BgVal
-       structure Origin       = Origin
-       structure ErrorHandler = ErrorHandler
-       structure PrettyPrint  = PrettyPrint)
+       structure ErrorHandler = ErrorHandler)
 
 end

@@ -15,8 +15,7 @@ Notes:
 - Just noticed - might as use layoutSet fun in MonoSet-sig...
 *)
 
-functor PPBg ( structure PrettyPrint : PRETTYPRINT
-	       structure BgTerm : BGTERM )
+functor PPBg ( structure BgTerm : BGTERM )
 	: sig
 	  val maxDepth : int ref
 	  val PP_iface : BgTerm.I.iface -> PrettyPrint.StringTree

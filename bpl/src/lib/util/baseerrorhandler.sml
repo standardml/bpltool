@@ -22,12 +22,7 @@
  * @version $LastChangedRevision: 121 $
  *)
  
-functor BaseErrorHandler
-  (structure PrettyPrint : PRETTYPRINT
-   structure Origin      : ORIGIN
-   sharing type PrettyPrint.ppstream =
-                Origin.ppstream
-)
+structure BaseErrorHandler
   :> BASEERRORHANDLER
      where type origin      = Origin.origin
        and type ppstream    = PrettyPrint.ppstream

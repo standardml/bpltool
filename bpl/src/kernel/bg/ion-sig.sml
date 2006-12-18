@@ -27,7 +27,6 @@ sig
   eqtype control
   type name
   type nameset
-  type ppstream
 
   (** The ion data type. *)
   type ion
@@ -54,5 +53,5 @@ sig
    * @param pps     Prettyprint stream on which to output.
    * @param KyX     The ion to output.
    *)
-  val pp : int -> ppstream -> ion -> unit
+  val pp : int -> PrettyPrint.ppstream -> ion -> unit
 end

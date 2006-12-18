@@ -21,8 +21,7 @@
 (** Syntactic sugar for creating bgvals in SML.
  * @version $LastChangedRevision$
  *)
-functor Sugar (type info
-	       val noinfo : info
+functor Sugar (structure Info : INFO
 	       structure Name : NAME
 	       structure NameSet : MONO_SET
 	       structure Interface : INTERFACE
@@ -33,11 +32,13 @@ functor Sugar (type info
 	       structure Wiring : WIRING
 	       structure Permutation : PERMUTATION
 	       structure BgVal : BGVAL
-	       structure Origin : ORIGIN
 	       structure ErrorHandler : ERRORHANDLER
-	       structure PrettyPrint : PRETTYPRINT
+                 where type ppstream    = PrettyPrint.ppstream
+                   and type break_style = PrettyPrint.break_style
+                   and type origin      = Origin.origin
 	       structure NameSetPP : COLLECTIONPRETTYPRINT
-	       sharing type info = BgVal.info
+                 where type ppstream = PrettyPrint.ppstream
+	       sharing type Info.info = BgVal.info
                sharing type Name.name = 
 			    NameSet.elt =
 			    Link.name =
@@ -58,14 +59,7 @@ functor Sugar (type info
                sharing type Wiring.wiring = BgVal.wiring
                sharing type Permutation.permutation = BgVal.permutation
                sharing type Permutation.Immutable = BgVal.Immutable
-               sharing type Origin.origin =
-			    ErrorHandler.origin
 	       sharing type NameSet.Set = NameSetPP.collection
-               sharing type PrettyPrint.ppstream =
-		            Name.ppstream =
-		            NameSetPP.ppstream =
-			    Origin.ppstream =
-			    ErrorHandler.ppstream
 	       ) :> SUGAR 
 where type bgval = BgVal.bgval =
 struct
@@ -93,16 +87,16 @@ fun explain_WrongArity (WrongArity msg) =
   | explain_WrongArity _ = raise Match
 val _ = add_explainer explain_WrongArity
 
-val Ion = BgVal.Ion noinfo
-val Mer = BgVal.Mer noinfo
-val Wir = BgVal.Wir noinfo
-fun Per x = BgVal.Per noinfo x
-val Con = BgVal.Con noinfo
-val Abs = BgVal.Abs noinfo
-val Ten = BgVal.Ten noinfo
-val Par = BgVal.Par noinfo
-val Pri = BgVal.Pri noinfo
-val Com = BgVal.Com noinfo
+val Ion = BgVal.Ion Info.noinfo
+val Mer = BgVal.Mer Info.noinfo
+val Wir = BgVal.Wir Info.noinfo
+fun Per x = BgVal.Per Info.noinfo x
+val Con = BgVal.Con Info.noinfo
+val Abs = BgVal.Abs Info.noinfo
+val Ten = BgVal.Ten Info.noinfo
+val Par = BgVal.Par Info.noinfo
+val Pri = BgVal.Pri Info.noinfo
+val Com = BgVal.Com Info.noinfo
 
 fun active f = f (fn v => v)
 fun active0 K

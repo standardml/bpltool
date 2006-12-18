@@ -32,6 +32,7 @@
  *)
  
 functor Match (
+  structure Info        : INFO
   structure Name        : NAME
   structure NameMap     : MONO_FINMAP
   structure Link        : LINK
@@ -44,8 +45,6 @@ functor Match (
   structure BgBDNF      : BGBDNF
   structure NameSet     : MONO_SET
   structure LazyList    : LAZYLIST
-  structure PrettyPrint : PRETTYPRINT
-  type info
   sharing type Permutation.nameset = NameSet.Set
   sharing type Permutation.permutation = BgBDNF.permutation
   sharing type Wiring.wiring = BgVal.wiring
@@ -70,29 +69,24 @@ functor Match (
   sharing type Interface.interface = BgBDNF.interface
   sharing type BgVal.bgval = BgBDNF.bgval
   sharing type BgVal.bgmatch = BgBDNF.bgmatch
-  sharing type PrettyPrint.ppstream
-             = BgBDNF.ppstream
-             = Permutation.ppstream
-             = Wiring.ppstream
-  sharing type info = BgBDNF.info
-                    = BgVal.info) :> MATCH
-  where type info            = info
+  sharing type Info.info =
+               BgBDNF.info =
+               BgVal.info) :> MATCH
+  where type info            = Info.info
     and type 'class bgbdnf   = 'class BgBDNF.bgbdnf
     and type BR              = BgBDNF.BR
     and type DR              = BgBDNF.DR
     and type nameset         = NameSet.Set
-    and type ppstream        = PrettyPrint.ppstream
     and type 'a lazylist     = 'a LazyList.lazylist =
 struct
   open BgVal
-  type info = info
+  type info = Info.info
   type 'class bgbdnf  = 'class BgBDNF.bgbdnf
   type B        = BgBDNF.B
   type BR       = BgBDNF.BR
   type DR       = BgBDNF.DR
   type P        = BgBDNF.P
   type G        = BgBDNF.G
-  type ppstream = PrettyPrint.ppstream
   type Mutable  = Permutation.Mutable
   type 'kind permutation = 'kind Permutation.permutation
   type nameset  = NameSet.Set
@@ -388,7 +382,7 @@ struct
         [S] =>
       (case unmkS S of
         BgBDNF.SCon (i, a) =>
-        let
+        (let
           val X = Wiring.innernames a
           val Y = Wiring.outernames a
           val Z = NameSet.difference (Interface.glob (outerface g)) X
@@ -429,7 +423,7 @@ struct
                  s_C' = Wiring.make_ren s_C',
                  qs = [makeP (Wiring.id_X X) (makeN X g)]}, lzNil)
         end
-        handle NoMatch => Nil
+        handle NoMatch => Nil)
       | _ => Nil)
       | _ => Nil)
   
@@ -465,7 +459,7 @@ struct
         [S] =>
       (case unmkS S of
         BgBDNF.SMol M =>
-        let
+        (let
           val {id_Z = _, KyX = KyX, N = n} = unmkM m
           val {id_Z = _, KyX = LuZ, N = N} = unmkM M
           val {ctrl = K, free = ys, bound = Xs} = Ion.unmk KyX
@@ -537,7 +531,7 @@ struct
         in
           lzunmk (lzmap make_match premise_matches)
         end
-        handle NoMatch => Nil
+        handle NoMatch => Nil)
       | _ => Nil)
       | _ => Nil)
       | _ => Nil)

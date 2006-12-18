@@ -67,22 +67,17 @@ module.
 <p>
 For instance, a BDNF wiring can be produced thus:
 <pre>
-structure Origin       = Origin(...)
-structure ErrorHandler = PrintErrorHandler (...)
-structure NameSet      = Name.NameSet
-structure LinkSet      = OrderSet (Link.Order)
-structure BgVal        = BgVal (type info = Origin.origin
-                                ...)
-structure BgBDNF       = BgBDNF (...)
+open BPL;
 let
   val [x, y, z] = map Name.make ["x", "y", "z"]
-  val ls = [{outer = SOME x, inner = NameSet.fromList [y, z]},
-            {outer = NONE, inner = NameSet.fromList [y, x]},
-	    {outer = SOME y, inner = NameSet.empty}]
+  val ls = map Link.make
+             [{outer = SOME x, inner = NameSet.fromList [y, z]},
+              {outer = NONE, inner = NameSet.fromList [x]},
+              {outer = SOME y, inner = NameSet.empty}]
   val lset = LinkSet.fromList ls
   val w = Wiring.make lset
 in
-  BgBDNF.make (BgVal.Wir Origin.unknown_origin w)
+  BgBDNF.make (BgVal.Wir Info.noinfo w)
 end
   handle error => (ErrorHandler.explain error; raise error);
 </pre>
