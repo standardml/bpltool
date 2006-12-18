@@ -144,7 +144,7 @@ struct
 	    = (BgTerm.Ion (KyX, (info v)),
 	       Interface.make {loc = [Ion.innernames KyX],
 			       glob = NameSet.empty},
-	       Interface.make {loc = [], glob = Ion.outernames KyX})
+	       Interface.make {loc = [NameSet.empty], glob = Ion.outernames KyX})
 	  | unmk' (v as (VPer (pi, i)))
 	    = (BgTerm.Per (pi, (info v)), 
 	       Permutation.innerface pi,
