@@ -25,7 +25,7 @@ functor BG (structure ErrorHandler : ERRORHANDLER
               where type ppstream    = PrettyPrint.ppstream
                 and type break_style = PrettyPrint.break_style
                 and type origin      = Origin.origin)
-  :> BG =
+  : BG where type 'a Match.lazylist = 'a LazyList.lazylist =
 struct
 
 structure BGADT = BGADT (structure ErrorHandler = ErrorHandler)

@@ -45,6 +45,7 @@ functor Match (
   structure BgBDNF      : BGBDNF
   structure NameSet     : MONO_SET
   structure LazyList    : LAZYLIST
+  structure ErrorHandler : ERRORHANDLER where type origin = Origin.origin where type ppstream = PrettyPrint.ppstream
   sharing type Permutation.nameset = NameSet.Set
   sharing type Permutation.permutation = BgBDNF.permutation
   sharing type Wiring.wiring = BgVal.wiring
@@ -71,7 +72,8 @@ functor Match (
   sharing type BgVal.bgmatch = BgBDNF.bgmatch
   sharing type Info.info =
                BgBDNF.info =
-               BgVal.info) :> MATCH
+               BgVal.info
+  ) :> MATCH
   where type info            = Info.info
     and type 'class bgbdnf   = 'class BgBDNF.bgbdnf
     and type BR              = BgBDNF.BR
@@ -79,6 +81,16 @@ functor Match (
     and type nameset         = NameSet.Set
     and type 'a lazylist     = 'a LazyList.lazylist =
 struct
+  open Debug
+  open ErrorHandler
+
+  val file_origin = Origin.mk_file_origin
+                      "$BPL/src/kernel/match/match.sml"
+                      Origin.NOPOS
+  fun mk_explainer errtitle (explainer : exn -> explanation list) e =
+      Exp (LVL_USER, Origin.unknown_origin, mk_string_pp errtitle,
+           explainer e)
+
   open BgVal
   type info = Info.info
   type 'class bgbdnf  = 'class BgBDNF.bgbdnf
@@ -130,7 +142,14 @@ struct
   
   exception ThisCannotHappen
 
-  exception AgentNotGround of string * G bgbdnf * string
+  exception AgentNotGround of G bgbdnf * string
+  fun explain_AgentNotGround (AgentNotGround (g, rule)) =
+      Exp (LVL_USER, Info.origin (BgBDNF.info g),
+           fn i => fn pps => BgBDNF.ppWithIface i pps g, [])
+      :: [Exp (LVL_LOW, file_origin, mk_string_pp rule, [])]
+    | explain_AgentNotGround _ = raise Match
+  val _ = add_explainer
+            (mk_explainer "agent not ground" explain_AgentNotGround)
 
   exception Unmatchedv of string * link list * linkset * string
 
@@ -1062,8 +1081,7 @@ struct
         in
           lzunmk matches
         end
-       | _ => raise AgentNotGround ("kernel/match/match.sml", g,
-                                     "in matchDS"))
+       | _ => raise AgentNotGround (g, "in matchDS"))
       | _ => LazyList.Nil)
   
   (* Match a global discrete prime using a SWX, PAX, MER or ION rule:

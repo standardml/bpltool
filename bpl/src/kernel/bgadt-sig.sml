@@ -104,10 +104,12 @@ sig
                DR
 
   sharing type BgBDNF.BR =
-               BR
+               BR =
+               Match.BR
 
   sharing type BgBDNF.bgbdnf =
-               bgbdnf
+               bgbdnf =
+               Match.bgbdnf
 
   sharing type Info.info =
                BgTerm.info =
@@ -121,7 +123,8 @@ sig
 
   sharing type bgval =
                BgVal.bgval =
-               BgBDNF.bgval
+               BgBDNF.bgval =
+               Sugar.bgval
 
   sharing type Interface.interface =
                BgVal.interface

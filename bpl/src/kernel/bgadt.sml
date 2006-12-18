@@ -25,7 +25,7 @@ functor BGADT (structure ErrorHandler : ERRORHANDLER
                  where type ppstream    = PrettyPrint.ppstream
                    and type break_style = PrettyPrint.break_style
                    and type origin      = Origin.origin) 
-  :> BG_ADT =
+  : BG_ADT where type 'a Match.lazylist = 'a LazyList.lazylist =
 struct
 
 structure ErrorHandler = ErrorHandler
@@ -147,19 +147,20 @@ type BR = BgBDNF.BR
 type 'class bgbdnf = 'class BgBDNF.bgbdnf
 
 structure Match = Match
-  (structure Info        = Info
-   structure Name        = Name
-   structure NameMap     = NameMap
-   structure Link        = Link
-   structure NameSet     = NameSet
-   structure LinkSet     = LinkSet
-   structure Permutation = Permutation
-   structure Interface   = Interface
-   structure Ion         = Ion
-   structure Wiring      = Wiring
-   structure BgVal       = BgVal
-   structure BgBDNF      = BgBDNF
-   structure LazyList    = LazyList)
+  (structure Info         = Info
+   structure Name         = Name
+   structure NameMap      = NameMap
+   structure Link         = Link
+   structure NameSet      = NameSet
+   structure LinkSet      = LinkSet
+   structure Permutation  = Permutation
+   structure Interface    = Interface
+   structure Ion          = Ion
+   structure Wiring       = Wiring
+   structure BgVal        = BgVal
+   structure BgBDNF       = BgBDNF
+   structure LazyList     = LazyList
+   structure ErrorHandler = ErrorHandler)
 
 val pageWidth = ref 70
 val indent = ref 1

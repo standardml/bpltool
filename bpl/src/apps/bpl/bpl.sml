@@ -24,15 +24,9 @@
  *)
 
 local
-  structure Origin : ORIGIN = Origin(structure PrettyPrint = PrettyPrint)
-
-  structure ErrorHandler : ERRORHANDLER
-    = PrintErrorHandler (structure PrettyPrint = PrettyPrint
-                         structure Origin      = Origin)
+  structure ErrorHandler : ERRORHANDLER = PrintErrorHandler
 in
-  structure BG = BG (structure Origin       = Origin
-                     structure PrettyPrint  = PrettyPrint
-                     structure ErrorHandler = ErrorHandler);
+  structure BG = BG (structure ErrorHandler = ErrorHandler)
 end
 
 fun help _ = print
