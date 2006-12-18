@@ -66,7 +66,7 @@ functor BgBDNF (type info
 			     Origin.ppstream =
 			     ErrorHandler.ppstream
                 val bgvalinfo2origin : BgVal.info -> Origin.origin
-			     ) :> BGBDNF 
+			     ) : BGBDNF 
   where type nameset        = NameSet.Set
     and type info           = BgVal.info 
     and type interface      = BgVal.interface
@@ -1070,6 +1070,9 @@ struct
 
   fun pp indent pps
     = BgVal.pp indent pps o unmk
+
+  fun ppWithIface indent pps
+    = BgVal.ppWithIface indent pps o unmk
 
   val _ = Flags.makeIntFlag
             {name = "/misc/linewidth",

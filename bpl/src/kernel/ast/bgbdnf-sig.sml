@@ -225,6 +225,14 @@ sig
    *)
   val pp : int -> ppstream -> 'class bgbdnf -> unit
 
+  (** Prettyprint a bgbdnf with interfaces, without parentheses around it.
+   * @params indent pps t
+   * @param indent  Indentation at each block level.
+   * @param pps     Prettyprint stream on which to output.
+   * @param t       The bgbdnf to print.
+   *)
+  val ppWithIface : int -> ppstream -> 'class bgbdnf -> unit
+
   (** Return a prettyprinted string representation of a bgbdnf. *)
   val toString : 'class bgbdnf -> string
 

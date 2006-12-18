@@ -31,9 +31,11 @@ CM.make' "../../kernel/sources.cm";
 use "bpl.sml";
 
 local
-  val _ = Compiler.PPTable.install_pp
-            ["BG","BgVal","bgval"]
-            (BG.BgVal.ppWithIface (Flags.getIntFlag "/misc/indent"));
+  fun ipp typename pp
+    = Compiler.PPTable.install_pp
+        typename
+        (pp (Flags.getIntFlag "/misc/indent"))
+  val _ = ipp ["BG","BgVal","bgval"] BG.BgVal.ppWithIface
   val BPL_REVISION_STR
     = String.extract ("$LastChangedRevision: 315", 22, NONE)
 in
