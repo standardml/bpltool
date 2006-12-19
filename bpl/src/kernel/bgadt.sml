@@ -52,6 +52,10 @@ structure NameSetPP
        structure Set         = NameSet
        structure PrettyPrint = PrettyPrint)
 
+structure ListPP
+  = PolyListPrettyPrint
+      (structure PrettyPrint = PrettyPrint)
+
 structure Interface 
   = Interface 
       (structure NameSet     = NameSet
@@ -129,7 +133,9 @@ structure BgBDNF
        structure Wiring           = Wiring
        structure Permutation      = Permutation
        structure BgVal            = BgVal
-       structure ErrorHandler     = ErrorHandler)
+       structure ErrorHandler     = ErrorHandler
+       structure NameSetPP        = NameSetPP
+       structure ListPP           = ListPP)
 
 type bgterm = BgTerm.bgterm
 
