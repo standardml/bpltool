@@ -1,6 +1,6 @@
 # INCLUDE=../pp/smlnj
 # INCLUDE=../pp/edlib
-pp  = collectionprettyprint-sig setprettyprint
+pp  = collectionprettyprint-sig setprettyprint listprettyprint
 set = monoset-sig ordering-sig orderset rbset setcompare-sig setcompare
 map = monofinmap-sig orderfinmap
 lzlist = lazylist-sig lazylist
@@ -8,6 +8,7 @@ collectionprettyprint-sig:
 monoset-sig:
 setprettyprint: collectionprettyprint-sig /lib/pp/smlnj/prettyprint-sig
    monoset-sig
+listprettyprint: collectionprettyprint-sig /lib/pp/smlnj/prettyprint-sig
 ordering-sig:
 orderset:   monoset-sig ordering-sig /lib/pp/edlib/edlibprettyprint
 setcompare-sig:

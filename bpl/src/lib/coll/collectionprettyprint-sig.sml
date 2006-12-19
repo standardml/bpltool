@@ -18,7 +18,7 @@
  * USA
  *)
 
-(** Prettyprinter signature for monomorphic collections
+(** Prettyprinter signature for mono- and polymorphic collections
  * @version $LastChangedRevision$
  *)
 signature COLLECTIONPRETTYPRINT =
@@ -39,4 +39,26 @@ sig
    * @param S       The collection to print.
    *)
   val ppbr : int -> string -> string -> ppstream -> collection -> unit
+end
+
+signature POLYCOLLECTIONPRETTYPRINT =
+sig
+  type 'a collection
+  type ppstream
+  (** Prettyprint a given collection.
+   * @params indent S
+   * @param indent  Indentation to use at each block level.
+   * @param S       The collection to print.
+   *)
+  val pp : (int -> ppstream -> 'a -> unit)
+			     -> int -> ppstream -> 'a collection -> unit
+  (** Prettyprint a given collection with specific surrounding braces.
+   * @params indent leftb rightb S
+   * @param indent  Indentation to use at each block level.
+   * @param leftb   Left brace.
+   * @param rightb  Right brace.
+   * @param S       The collection to print.
+   *)
+  val ppbr : (int -> ppstream -> 'a -> unit)
+			     -> int -> string -> string -> ppstream -> 'a collection -> unit
 end

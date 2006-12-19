@@ -18,7 +18,7 @@
  * USA
  *)
 
-(** Prettyprinter for monomorphic lists
+(** Prettyprinter for mono- and polymorphic lists
  * @version $LastChangedRevision$
  *)
 functor ListPrettyPrint 
@@ -52,3 +52,33 @@ struct
       end
   fun pp indent = ppbr indent "[" "]"
 end
+
+functor PolyListPrettyPrint 
+	  (structure PrettyPrint : PRETTYPRINT) :> POLYCOLLECTIONPRETTYPRINT
+  where type ppstream = PrettyPrint.ppstream 
+    and type 'a collection = 'a list =
+struct
+  type 'a collection = 'a list
+  type ppstream = PrettyPrint.ppstream
+  (** Prettyprint a given list.
+   * @params indent xs
+   * @param indent  Indentation to use at each block level.
+   * @param xs       The list to print.
+   *)
+  fun ppbr pp_elt indent leftb rightb pps xs =
+      let
+	open PrettyPrint
+	val show = add_string pps
+	fun << () = begin_block pps INCONSISTENT indent
+	fun >> () = end_block pps
+	fun brk () = add_break pps (1, 0)
+	fun pp_e (e, notfirst) =
+	    (if notfirst then (show ","; brk()) else ();
+	     pp_elt indent pps e;
+	     true)
+      in
+	<<(); show leftb; foldl pp_e false xs; show rightb; >>()
+      end
+  fun pp pp_elt indent = ppbr pp_elt indent "[" "]"
+end
+
