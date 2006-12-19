@@ -35,6 +35,12 @@ functor BgBDNF (structure Info : INFO
                   where type ppstream    = PrettyPrint.ppstream
                     and type break_style = PrettyPrint.break_style
                     and type origin      = Origin.origin
+		structure NameSetPP : COLLECTIONPRETTYPRINT
+                  where type ppstream    = PrettyPrint.ppstream
+    structure ListPP : POLYCOLLECTIONPRETTYPRINT
+                  where type ppstream      = PrettyPrint.ppstream
+                    and type 'a collection = 'a list
+		sharing type NameSet.Set = NameSetPP.collection
 		sharing type BgVal.interface = 
 			     Interface.interface =
 			     Permutation.interface
@@ -67,11 +73,13 @@ functor BgBDNF (structure Info : INFO
     and type interface      = BgVal.interface
     and type wiring         = BgVal.wiring
     and type ion            = Ion.ion
+    and type Immutable      = BgVal.Immutable
     and type 'a permutation = 'a BgVal.permutation
     and type bgval          = BgVal.bgval 
     and type bgmatch        = BgVal.bgmatch = 
 struct
   open BgVal
+  type Immutable = BgVal.Immutable
   type ion = Ion.ion
   open Debug
   open ErrorHandler
@@ -123,10 +131,21 @@ struct
       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp errtitle,
            explainer e)
 
-  exception IrregularBDNF of info * bgval * string
-  fun explain_IrregularBDNF (IrregularBDNF (i, b, errtxt)) =
+  exception IrregularBDNF of info * bgval * Immutable permutation
+                             * nameset list list * string
+  fun explain_IrregularBDNF (IrregularBDNF (i, b, pi, Xss, errtxt)) =
       [Exp (LVL_USER, Info.origin i, pack_pp_with_data BgVal.pp b, []),
-       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+       Exp (LVL_LOW, file_origin, mk_string_pp errtxt,
+            [Exp (LVL_LOW, Origin.unknown_origin,
+                  pack_pp_with_data Permutation.pp pi, []),
+             Exp (LVL_LOW, Origin.unknown_origin,
+                  mk_string_pp "Xss = ",
+                  map (fn Xs =>
+                       Exp (LVL_LOW, Origin.unknown_origin,
+                            pack_pp_with_data 
+                            (fn indent =>
+                             ListPP.pp NameSetPP.pp indent)
+                            Xs, [])) Xss)])]
     | explain_IrregularBDNF _ = raise Match
   val _ = add_explainer
             (mk_explainer "bigraph is not regular" explain_IrregularBDNF)
@@ -1001,7 +1020,7 @@ struct
                   S
 		else
 		  raise IrregularBDNF
-                    (i, B, "bigraph is irregular")
+                    (i, B, pi, [], "irregular bigraph detected in regS")
             | SMol' M => regM M pi
             
         and regN N pi =
@@ -1012,7 +1031,7 @@ struct
               val {major, minors} = Permutation.split pi Xss
               handle Permutation.NotRegularisable _ =>
                 raise IrregularBDNF
-                  (i, B, "bigraph is irregular")
+                  (i, B, pi, Xss, "irregular bigraph detected in regN")
               val Ss' = map regS (ListPair.zip (Ss, minors))
             in
               Abs (absnames,
@@ -1031,10 +1050,10 @@ struct
                                   (take (pis, m_i))
                     val pi_i  = Permutation.make (pis_i)
                     val pisrest = drop (pis, m_i)
-                    val N'_i  = regN N pi_i
+                    val N'_i  = regN N pi_i handle e => raise e
                   in
-                    Com (idxlocsub, N'_i)
-                    :: (regPs Ps pisrest (pi_offset + m_i))
+                    ((Com (idxlocsub, N'_i) handle e => raise e)
+                    :: (regPs Ps pisrest (pi_offset + m_i)) )handle e => raise e
                   end
                 | regPs [] err2s _ =
                   raise LogicalError
@@ -1052,7 +1071,7 @@ struct
               Ten [ren, Ten (regPs Ps pis 0)]
               handle Permutation.NotPermutation _ =>
                 raise IrregularBDNF
-                  (i, B, "bigraph is irregular")
+                  (i, B, pi, [], "irregular bigraph detected in regD")
             end
             
       in

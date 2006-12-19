@@ -28,6 +28,7 @@ sig
   type interface
   type ion
   type wiring
+  type Immutable
   type 'kind permutation
   type bgval
   type bgmatch
@@ -58,7 +59,8 @@ sig
    * @param b       the bigraph
    * @param errtxt  explanatory error text.
    *)
-  exception IrregularBDNF of info * bgval * string
+  exception IrregularBDNF
+   of info * bgval * Immutable permutation * nameset list list * string
   (** Construct a B bgbdnf from a bgval. *)
   val make : bgval -> B bgbdnf
   (** Deconstruct a bgbdnf. *)
