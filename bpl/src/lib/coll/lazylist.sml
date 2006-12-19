@@ -62,7 +62,8 @@ struct
   
   fun lzappend t1 t2 = fn () => case t1 () of
                                   Nil => t2 ()
-                                | xs => xs
+                                | Cons (elt, tail)
+                                => Cons (elt, lzappend tail t2)
 
   fun lzconcat' (t, ts) = case t () of
                              Nil => lzconcat ts ()
