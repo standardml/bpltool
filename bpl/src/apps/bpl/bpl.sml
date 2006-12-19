@@ -69,19 +69,23 @@ fun help _ = print
   \  o                         Composition (strongest)\n\
   \  *, ||, <|>                Product, left associative\n\
   \  <[x,...]> P               Abstraction (weakest)\n\n\
-  \Operations (B : 'a bgbdnf, a,R : bgval, e : exn):\n\
-  \  toBDNF v                  Normalise v\n\
-  \  toRBDNF v                 Normalise and regularise v\n\
-  \  regularize B              Regularise B\n\
-  \  matches {agent = a,\n\
-  \           redex = R}       Match R in a, returning a lazy list of matches\n\
-  \  simplify v                Attempt to simplify v\n\
-  \  valToString v             Return v as a string\n\
-  \  bdnfToString B            Return B as a string\n\
-  \  printVal v                Print v\n\
-  \  printBDNF B               Print B\n\
-  \  printMatches              Print a lazy list of matches\n\
-  \  printMatches'             Print a lazy list of matches simplified\n\
+  \Operations (A,B,R : 'a bgbdnf, a,r,v : bgval, e : exn):\n\
+  \  denorm_b B                De-normalise B\n\
+  \  regl_b B                  Regularise B\n\
+  \  simpl_b B                 Attempt to simplify B\n\
+  \  match_b {agent = A,\n\
+  \           redex = R}       Match R in A, returning a lazy list of matches\n\
+  \  str_b B                   Return B as a string\n\
+  \  print_b B                 Print B\n\
+  \  norm_v v                  Normalise v\n\
+  \  regl_v v                  Normalise and regularise v\n\
+  \  simpl_v v                 Attempt to simplify v\n\
+  \  match_v {agent = a,\n\
+  \           redex = r}       Match r in a, returning a lazy list of matches\n\
+  \  str_v v                   Return v as a string\n\
+  \  print_v v                 Print v to stdOut\n\
+  \  print_m mz                Print a lazy list of matches\n\
+  \  print_m' mz               Print a lazy list of matches simplified\n\
   \  explain e                 Explain exception e in detail\n\
   \Example:\n\
   \  let val K = active   (\"K\" =: 2 --> 1)\n\
@@ -107,22 +111,27 @@ type B = BG.BgBDNF.B
 type BR = BG.BgBDNF.BR
 type 'class bgbdnf = 'class BG.BgBDNF.bgbdnf
 type match = BG.Match.match
-val toBDNF = BG.BgBDNF.make
-val regularize = BG.BgBDNF.regularize
-fun toRBDNF v = regularize (toBDNF v)
-fun matches {agent, redex}
-  = BG.Match.matches {agent = toRBDNF agent, redex = toRBDNF redex}
-val simplify = BG.BgVal.simplify
-val bdnfToString = BG.BgBDNF.toString
-val valToString = BG.BgVal.toString
-fun printBDNF b = print (bdnfToString b)
-fun printVal v = print (valToString v)
-fun printMatches mz
+val norm_v = BG.BgBDNF.make
+val denorm_b = BG.BgBDNF.unmk
+val regl_b = BG.BgBDNF.regularize
+fun regl_v v = regl_b (norm_v v)
+val match_rbdnf = BG.Match.matches
+fun match_b {agent, redex}
+  = match_rbdnf {agent = regl_b agent, redex = regl_b redex}
+fun match_v {agent, redex}
+  = match_rbdnf {agent = regl_v agent, redex = regl_v redex}
+val simplify_v = BG.BgVal.simplify
+fun simplify_b b = simplify_v (denorm_b b) 
+val str_b = BG.BgBDNF.toString
+val str_v = BG.BgVal.toString
+fun print_b b = print (str_b b)
+fun print_v v = print (str_v v)
+fun print_m mz
   = (LazyList.lzprint BG.Match.toString mz; print "\n")
-fun printMatches' mz =
+fun print_m' mz =
   let
     fun ppBDNF indent pps B
-      = BG.BgVal.pp indent pps (simplify (BG.BgBDNF.unmk B))
+      = BG.BgVal.pp indent pps (simplify_b B)
   in
     LazyList.lzprint (BG.Match.toString' ppBDNF ppBDNF) mz;
     print "\n"
