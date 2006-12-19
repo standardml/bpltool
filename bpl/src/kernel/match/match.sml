@@ -396,7 +396,7 @@ struct
    * 5) Return ename', s_C', qs = (X)g.
    *)
   fun matchPAX' {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, g, G} =
-      lzmake (fn () =>
+      lzmake (fn () => ((*print "PAX' ";*)
       case #Ss (unmkG G) of
         [S] =>
       (case unmkS S of
@@ -444,7 +444,7 @@ struct
         end
         handle NoMatch => Nil)
       | _ => Nil)
-      | _ => Nil)
+      | _ => Nil))
   
   and matchMER' {ename, s_a, s_C, g, G} = lzNil
 
@@ -669,7 +669,7 @@ struct
   fun matchSWX {ename, 
                 s_a = {s_a_e, s_a_n}, 
                 s_R = {s_R_e, s_R_n}, e = g, Ps = [P]}
-    = lzmake (fn () =>
+    = lzmake (fn () => ((*print "SWX ";*)
       let
         val {id_Z, Y = U, s, X = W, N} = unmkP P
         val {absnames = W, G} = unmkN N
@@ -692,7 +692,7 @@ struct
                              g = g, G = G})
       in
         lzunmk matches
-      end)
+      end))
     | matchSWX _ = lzNil
   
   (* Match a global discrete prime using the PAX rule:
@@ -706,7 +706,7 @@ struct
   fun matchPAX {ename,
                 s_a = {s_a_e, s_a_n},
                 s_R = {s_R_e, s_R_n}, e = g, Ps = [P]}
-    = lzmake (fn () =>
+    = lzmake (fn () => ((*print "PAX ";*)
       if Wiring.is_id0 s_R_e andalso Wiring.is_id0 s_R_n then
         let
           val {s, N, id_Z, Y = X, ...} = unmkP P
@@ -743,7 +743,7 @@ struct
           | _ => LazyList.Nil
         end
       else
-        LazyList.Nil)
+        LazyList.Nil))
     | matchPAX _ = lzNil
 
   (* makefreshlinks returns a list of links vs/Xs, where vs are
@@ -824,7 +824,7 @@ struct
   fun matchPARn
       {matchE, ename, 
        s_a = {s_a_e, s_a_n}, s_R as {s_R_e, s_R_n},
-       es, Pss} = lzmake (fn () =>
+       es, Pss} = lzmake (fn () => ((*print "PARn ";*)
     let
       val Ys = map (glob o outerface) es
       val s_a_es = map (Wiring.restrict s_a_e) Ys
@@ -918,7 +918,7 @@ struct
       val matches = lzmap toPARn mslz
     in
       lzunmk matches
-    end)
+    end))
 
   (* Match a tensor product as a product of tensor products:
    * 1) Compute lengths n and m of agent and redex products.
@@ -928,7 +928,7 @@ struct
    * 4) Concatenate the resulting qss and return the result.
    *)
   fun matchPARe {matchE, ename, s_a, s_R, es, Ps}
-    = lzmake (fn () =>
+    = lzmake (fn () => ((*print "PARe ";*)
     let
       val n = length es
       val m = length Ps
@@ -963,7 +963,7 @@ struct
         end
     in
       lzunmk (nextmatch (firstsplit m n))
-    end)
+    end))
 
   (* Match a context permutation:
    * 1) Compute the local inner faces Xss of the redex primes Qs.
@@ -973,7 +973,7 @@ struct
    *    2c) Permute qs by pibar and return the result.
    *)
   fun matchPER {matchE, ename, s_a, s_R, es, Qs}
-    = lzmake (fn () =>
+    = lzmake (fn () => ((*print "PER ";*)
     let
       val Xss = map (loc o innerface) Qs
       fun nextmatch (perm as (_, pi, _) : Mutable operm) =
@@ -999,7 +999,7 @@ struct
         end
     in
       lzunmk (nextmatch (firstperm (map (hd o loc o outerface) Qs)))
-    end)
+    end))
 
 
   val warninggiven = ref false
@@ -1009,7 +1009,7 @@ struct
    * THE FOLLOWING IS A DUMMY IMPLEMENTATION:
    *)
   fun matchMER (args as {ename, s_a, s_R, e = g, Ps}) =
-    let
+    let (*val _ =  print "MER "*)
       fun toMER {ename', Y, s_C, Es, pi, qs} =
         {ename' = ename', Y = Y, s_C = s_C,
          E = makeG (List.concat (map (#Ss o unmkG) Es)),
@@ -1042,7 +1042,7 @@ struct
    *)
   and matchION (args as {ename, 
                          s_a as {s_a_e, s_a_n}, s_R, e = g, Ps})
-    = lzmake (fn () =>
+    = lzmake (fn () => ((*print "ION ";*)
     case unmkG g of  {Ss = [s], ...} =>
       (case unmkS s of BgBDNF.SMol m =>
         let
@@ -1082,7 +1082,7 @@ struct
           lzunmk matches
         end
        | _ => raise AgentNotGround (g, "in matchDS"))
-      | _ => LazyList.Nil)
+      | _ => LazyList.Nil))
   
   (* Match a global discrete prime using a SWX, PAX, MER or ION rule:
    * 1) First return any PAX rule matches,
@@ -1112,7 +1112,7 @@ struct
    *)  
   and matchABS {ename,
                 s_a = {s_a_e, s_a_n}, s_R as {s_R_e, s_R_n}, e = p, Ps}
-    = lzmake (fn () =>
+    = lzmake (fn () => ((*print "ABS ";*)
     let
       val {Y = W, s = s_a_L, N = n, ...} = unmkP p
       val {absnames = Z, G = g} = unmkN n
@@ -1135,7 +1135,7 @@ struct
                      Ps = Ps})
     in
       lzunmk matches
-    end)
+    end))
 
   (* Match a closure:
    * 1) Open w_a, yielding s_a = s_a_e * s_a_n
@@ -1146,7 +1146,7 @@ struct
    * 4) Check that s_C = id_{Y_R} * s'_C
    * 5) Return a new w_C as s'_C where links Y_C are closed.
    *)
-  fun matchCLO {w_a, w_R, ps, Ps} = lzmake (fn () =>
+  fun matchCLO {w_a, w_R, ps, Ps} = lzmake (fn () => ((*print "CLO ";*)
     let
       open Wiring
       val {opened = s_a_e, rest = s_a_n, ...}
@@ -1176,7 +1176,7 @@ struct
           rest ()
     in
       lzunmk (lzfoldr toCLO lzNil matches)
-    end)
+    end))
     
   fun matches {agent, redex} = lzmake (fn () =>
     let
