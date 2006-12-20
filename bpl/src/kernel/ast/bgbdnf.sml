@@ -1031,11 +1031,15 @@ struct
               val {major, minors} = Permutation.split pi Xss
               handle Permutation.NotRegularisable _ =>
                 raise IrregularBDNF
-                  (i, B, pi, Xss, "irregular bigraph detected in regN")
+                  (i, B, pi, Xss, "irregular bigraph detected during split in regN")
               val Ss' = map regS (ListPair.zip (Ss, minors))
+              val Ss'' = Permutation.permute major Ss'
+              handle Subscript =>
+                raise IrregularBDNF
+                  (i, B, pi, Xss, "wrong major permutation detected during permute in regN: "
+                  ^ "major=" ^ Permutation.toString major)
             in
-              Abs (absnames,
-                   Com (idxmerge, Ten (Permutation.permute major Ss')))
+              Abs (absnames, Com (idxmerge, Ten Ss''))
             end
 
         fun regD D =
