@@ -407,7 +407,8 @@ struct
 
         val (ns, sumns)
             = foldr
-                (fn (Xs, (ns, sumns)) => ((length Xs) :: ns, sumns))
+                (fn (Xs, (ns, sumns)) =>
+                    let val n = length Xs in (n::ns, n+sumns) end)
                 ([], 0)
 	        Xss
 
