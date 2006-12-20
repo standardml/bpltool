@@ -1100,40 +1100,46 @@ struct
         let
           val {id_Z, KyX, N = n} = unmkM m
           val {ctrl, free = ys, bound = Xs} = Ion.unmk KyX
-          val Y = foldr (fn (y, Y) => NameSet.insert y Y) NameSet.empty ys
-          val s_Y_n = Wiring.restrict s_a_n Y
-          val s_Y_e = Wiring.restrict s_a_e Y
-          val s_Y = Wiring.|| (s_Y_n, s_Y_e)
-          val vXs = makefreshlinks Xs
-          val p = makeP (Wiring.make' vXs) n
-          fun toION ({ename', Y = Y', s_C, E = P, qs, tree}, lzms) =
-            let
-              val {s = vZ, N, ...} = unmkP P
-              val vZs =  Wiring.unmk vZ
-              val Zs = sortlinksby vXs vZs
-              val s_C = Wiring.|| (s_Y, s_C)
-              val ename'
-                = NameSet.fold (fn y => fn ename => NameMap.add' (y, y, ename))
-                  ename' (Wiring.app s_Y_e Y)
-              val KyZ = Ion.make {ctrl = ctrl, free = ys, bound = Zs}
-              val G = makeG [makeS (SMol (makeM KyZ N))]
-            in
-              lzCons
-                (fn () =>
-                 ({ename' = ename', Y = Y', s_C = s_C, E = G, qs = qs,
-                   tree = ION tree},
-                  lzms ()))
-            end
-            handle NameMap.DATACHANGED => lzms ()
-          val matches
-            = lzfoldr toION lzNil (matchABS {ename = ename,
-                                     s_a = s_a,
-                                     s_R = s_R,
-                                     e = p,
-                                     Ps = Ps})
         in
-          lzunmk matches
-        end
+          if (*FIXME: test for active control*)true then
+	          let
+		          val Y = foldr (fn (y, Y) => NameSet.insert y Y) NameSet.empty ys
+		          val s_Y_n = Wiring.restrict s_a_n Y
+		          val s_Y_e = Wiring.restrict s_a_e Y
+		          val s_Y = Wiring.|| (s_Y_n, s_Y_e)
+		          val vXs = makefreshlinks Xs
+		          val p = makeP (Wiring.make' vXs) n
+		          fun toION ({ename', Y = Y', s_C, E = P, qs, tree}, lzms) =
+		            let
+		              val {s = vZ, N, ...} = unmkP P
+		              val vZs =  Wiring.unmk vZ
+		              val Zs = sortlinksby vXs vZs
+		              val s_C = Wiring.|| (s_Y, s_C)
+		              val ename'
+		                = NameSet.fold (fn y => fn ename => NameMap.add' (y, y, ename))
+		                  ename' (Wiring.app s_Y_e Y)
+		              val KyZ = Ion.make {ctrl = ctrl, free = ys, bound = Zs}
+		              val G = makeG [makeS (SMol (makeM KyZ N))]
+		            in
+		              lzCons
+		                (fn () =>
+		                 ({ename' = ename', Y = Y', s_C = s_C, E = G, qs = qs,
+		                   tree = ION tree},
+		                  lzms ()))
+		            end
+		            handle NameMap.DATACHANGED => lzms ()
+		          val matches
+		            = lzfoldr toION lzNil (matchABS {ename = ename,
+		                                     s_a = s_a,
+		                                     s_R = s_R,
+		                                     e = p,
+		                                     Ps = Ps})
+		        in
+		          lzunmk matches
+		        end
+	        else
+	          LazyList.Nil
+	      end
        | _ => raise AgentNotGround (g, "in matchDS"))
       | _ => LazyList.Nil))
   
