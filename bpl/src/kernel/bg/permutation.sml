@@ -405,7 +405,15 @@ struct
         val major_pi = array (k, (~12, NameSet.empty))
         val major_pi_inv = array (k, (~13, NameSet.empty))
 
-        val ns = map length Xss
+        val (ns, sumns)
+            = foldr
+                (fn (Xs, (ns, sumns)) => ((length Xs) :: ns, sumns))
+                ([], 0)
+	        Xss
+
+        val _ = if width <> sumns then
+                  raise NotRegularisable (copy perm, Xss)
+                else ()
 
         val minors 
             = Array.fromList
@@ -450,16 +458,13 @@ struct
                  (l, i + 1)
                else
                  (l + 1, 0))
-          val (_, _, sumns) = Array.foldli nlocatedAt (0, ns, 0) nlocated
         in
-          val _ = if sumns <> width
-                       orelse (width > 0
-                                 andalso #1 (Array.foldli
+          val _ = (Array.foldli nlocatedAt (0, ns, 0) nlocated;
+                   if (width > 0 andalso #1 (Array.foldli
                                                mlocatedAt (0, 0) mlocated) >= k)
-                  then
-                    raise NotRegularisable (copy perm, Xss)
-                  else
-                    ()
+                   then
+                     raise NotRegularisable (copy perm, Xss)
+                   else ())
         end
 
         fun make_minor_pi (Xs, (j, offset)) =
