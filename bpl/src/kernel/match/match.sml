@@ -1051,9 +1051,11 @@ struct
       else
         print "kernel/match/match.sml: matchMER not implemented!\n";
       warninggiven := true;
-  	  lzmap toMER
+  	  (* THIS IS WRONG, IT CAUSES INFINITE RECURSION: lzmap toMER
         (matchPER {ename = ename, matchE = matchDG,
                    s_a = s_a, s_R = s_R, es = [g], Qs = Ps})
+       *)
+      lzNil
     end
 
   (* Match a global discrete prime using the ION rule, if possible:
