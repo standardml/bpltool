@@ -498,6 +498,7 @@ struct
       [Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data pp w, []),
        Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data Name.pp x, []),
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_NotInDomain _ = raise Match
   val _ = add_explainer
             (mk_explainer "the name is not in the domain of the wiring"
                           explain_NotInDomain)
@@ -506,6 +507,7 @@ struct
       [Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data pp w, []),
        Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data NameSetPP.pp X, []),
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_NotInCodomain _ = raise Match
   val _ = add_explainer
             (mk_explainer "the names are not in the codomain of the wiring"
                           explain_NotInCodomain)

@@ -63,6 +63,7 @@ struct
   exception LogicalError of string
   fun explain_LogicalError (LogicalError errtxt) =
       [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_LogicalError _ = raise Match
   val _ = add_explainer
             (mk_explainer
                "an internal error occurred"
@@ -80,6 +81,7 @@ struct
               mk_list_pp "[" "]" "," pp_elm p, []),
          Exp (LVL_LOW, file_origin, pp_nothing, [])]
       end
+    | explain_NotPermutation _ = raise Match
   val _ = add_explainer
             (mk_explainer "not a permutation" explain_NotPermutation)
 
@@ -213,6 +215,7 @@ struct
       map (fn p => Exp (LVL_USER, Origin.unknown_origin,
                         pack_pp_with_data pp p, [])) [p1, p2]
       @ [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_Uncomposable _ = raise Match
   val _ = add_explainer
             (mk_explainer "permutations are not composable" explain_Uncomposable)
 
@@ -383,6 +386,7 @@ struct
             mk_list_pp "{" "}" "," (mk_list_pp' "{" "}" "," NameSetPP.pp) nsss,
             []),
        Exp (LVL_LOW, file_origin, pp_nothing, [])]
+    | explain_NotRegularisable _ = raise Match
   val _ = add_explainer
             (mk_explainer "permutation is not regularisable"
                           explain_NotRegularisable)
@@ -390,6 +394,7 @@ struct
   (** Split a permutation into one major and a number of minor
    * permutations.
    * @params pi Xss
+   * @param pi   the permutation to split
    * @param Xss  list of local inner name lists.
    * @exception NotRegularisable  if the permutation cannot be
    *                              regularized.
@@ -423,15 +428,15 @@ struct
         val nlocated = array (width, (~17, ~17))
         val mlocated = array (width, (~18, ~18))
         local
-          fun nlocatedAt (j, x, (l, n::ns, sumns)) =
+          fun nlocatedAt (j, x, (l, n_l::ns, sumns)) =
               let
                 val j' = j - sumns
               in
-                if j' < n then
+                if j' < n_l then
                   (update (nlocated, j, (l, j'));
-                   (l, n::ns, sumns))
+                   (l, n_l::ns, sumns))
                 else
-                  nlocatedAt (j, x, (l + 1, ns, n + sumns))
+                  nlocatedAt (j, x, (l + 1, ns, n_l + sumns))
               end
             | nlocatedAt _ =
                 raise LogicalError ("the function nlocatedAt was \
@@ -445,12 +450,16 @@ struct
                  (l, i + 1)
                else
                  (l + 1, 0))
+          val (_, _, sumns) = Array.foldli nlocatedAt (0, ns, 0) nlocated
         in
-          val _ = (Array.foldli nlocatedAt (0, ns, 0) nlocated;
-                   if #1 (Array.foldli mlocatedAt (0, 0) mlocated) >= k then
-                     raise NotRegularisable (copy perm, Xss)
-                   else
-                     ())
+          val _ = if sumns <> width
+                       orelse (width > 0
+                                 andalso #1 (Array.foldli
+                                               mlocatedAt (0, 0) mlocated) >= k)
+                  then
+                    raise NotRegularisable (copy perm, Xss)
+                  else
+                    ()
         end
 
         fun make_minor_pi (Xs, (j, offset)) =
@@ -494,6 +503,7 @@ struct
             mk_list_pp "{" "}" "," (mk_list_pp' "{" "}" "," NameSetPP.pp) nsss2,
             []),
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_UnequalLengths _ = raise Match
   val _ = add_explainer 
             (mk_explainer "lists of unequal length" explain_UnequalLengths)
 

@@ -121,6 +121,7 @@ sig
   (** Split a permutation into one major and a number of minor
    * permutations.
    * @params pi Xss
+   * @param pi   the permutation to split
    * @param Xss  list of local inner name lists.
    * @exception NotRegularisable  if the permutation cannot be
    *                              regularized.
