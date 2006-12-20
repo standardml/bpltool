@@ -401,20 +401,19 @@ struct
    *)
   fun split (perm as {width, pi, pi_inv} : 'kinda permutation) Xss =
       let
-        val k = length Xss
-        val major_pi = array (k, (~12, NameSet.empty))
-        val major_pi_inv = array (k, (~13, NameSet.empty))
-
-        val (ns, sumns)
+        val (k, ns, sumns)
             = foldr
-                (fn (Xs, (ns, sumns)) =>
-                    let val n = length Xs in (n::ns, n+sumns) end)
-                ([], 0)
+                (fn (Xs, (k, ns, sumns)) =>
+                    let val n = length Xs in (k+1, n::ns, n+sumns) end)
+                (0, [], 0)
 	        Xss
 
         val _ = if width <> sumns then
                   raise NotRegularisable (copy perm, Xss)
                 else ()
+
+        val major_pi = array (k, (~12, NameSet.empty))
+        val major_pi_inv = array (k, (~13, NameSet.empty))
 
         val minors 
             = Array.fromList
