@@ -633,9 +633,6 @@ struct
         lzunmk (lzmap make_match premise_matches)
       end)
 
-  (*FIXME should this be implemented or is it combined with matchDG' ? *)
-  and matchDS' {ename, s_a, s_C, g, G} = lzNil
-  
   (* Match a parallel composition to a context using the PARn rule:
    * 1) Let ename_0 = ename.
    * 2) Using ename_i, s_a, s_C, ei, Ei, infer premise i, yielding
@@ -654,7 +651,7 @@ struct
               {ename' = ename_i, s_C' = s_C'_i, qss, tree = PARn' trees} =
             let
               val premise_matches
-                = matchDS' {ename = ename_i, s_a = s_a, s_C = s_C, g = e_i, G = E_i}
+                = matchDG' {ename = ename_i, s_a = s_a, s_C = s_C, g = e_i, G = E_i}
 
               fun extend_result {ename', s_C', qs, tree} =
                   {ename' = ename', s_C' = s_C', qss = qs :: qss,
@@ -676,14 +673,36 @@ struct
    * 2) Let qs = concat qss.
    * 3) Return ename', s_C', qs.
    *)
-  and matchPARe' {ename, s_a, s_C, es, Es} = lzNil
+  and matchPARe' (args as {ename, s_a, s_C, es, Es}) =
+      lzmake (fn () =>
+      let
+        fun toPARe' {ename', s_C', qss, tree} =
+            {ename' = ename',
+             s_C'   = s_C',
+             qs     = List.concat qss,
+             tree   = PARe' tree}
+      in
+        lzunmk (lzmap toPARe' (matchPARn' args))
+      end)
   
   (* Match a tensor product to a context permutation:
    * 1) Infer premise, yielding ename', s_C', qs.
    * 2) Permute qs by pi, yielding qs' so that qs'_i = qs_pi(i).
    * 3) Return ename', s_C, qs'.
    *)
-  and matchPER' {ename, s_a, s_C, es, Es, pi} = lzNil
+  and matchPER' {ename, s_a, s_C, es, Es, pi} =
+      lzmake (fn () =>
+      let
+        fun toPER' {ename', s_C', qs, tree} =
+            {ename' = ename',
+             s_C'   = s_C',
+             qs     = Permutation.permute pi qs,
+             tree   = PER' tree}
+      in
+        lzunmk (lzmap toPER' (matchPARe' {ename = ename,
+                                          s_a = s_a, s_C = s_C,
+                                          es = es, Es = Es}))
+      end)
   
   (* Match a global discrete prime using the SWX rule:
    * If Ps = [P], where P = (id_Z * ^s)(W)G, then
