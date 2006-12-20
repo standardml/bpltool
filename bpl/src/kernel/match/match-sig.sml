@@ -59,7 +59,7 @@ sig
    *)
   val allmatches : {agent : BR bgbdnf, redex : BR bgbdnf} -> match list
 
-  (** Prettyprint a match
+  (** Prettyprint a match.
    * @params indent pps m
    * @param indent  Indentation at each block level.
    * @param pps     Prettyprint stream on which to output.
@@ -78,6 +78,14 @@ sig
           ->(int -> PrettyPrint.ppstream -> DR bgbdnf -> unit)
           -> int -> PrettyPrint.ppstream -> match -> unit
 
+  (** Prettyprint a match, including derivation tree.
+   * @params indent pps m
+   * @param indent  Indentation at each block level.
+   * @param pps     Prettyprint stream on which to output.
+   * @param m       The match to print.
+   *)
+  val ppWithTree : int -> PrettyPrint.ppstream -> match -> unit
+
   (** Return a prettyprinted string representation of a match. *)
   val toString : match -> string
 
@@ -85,6 +93,19 @@ sig
    * using a specific prettyprinter for bgbdnf's.
    *)
   val toString' : (int -> PrettyPrint.ppstream -> B bgbdnf -> unit)
+                ->(int -> PrettyPrint.ppstream -> DR bgbdnf -> unit)
+                -> match -> string
+
+  (** Return a prettyprinted string representation of a match,
+   * including derivation tree.
+   *)
+  val toStringWithTree : match -> string
+
+  (** Return a prettyprinted string representation of a match,
+   * including derivation tree,
+   * using a specific prettyprinter for bgbdnf's.
+   *)
+  val toStringWithTree' : (int -> PrettyPrint.ppstream -> B bgbdnf -> unit)
                 ->(int -> PrettyPrint.ppstream -> DR bgbdnf -> unit)
                 -> match -> string
 end

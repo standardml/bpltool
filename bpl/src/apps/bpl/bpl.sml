@@ -85,7 +85,8 @@ fun help _ = print
   \  str_v v                   Return v as a string\n\
   \  print_v v                 Print v to stdOut\n\
   \  print_m mz                Print a lazy list of matches\n\
-  \  print_m' mz               Print a lazy list of matches simplified\n\
+  \  print_m' mz               Print a lazy list of matches, simplified\n\
+  \  print_mt' mz              Print a lazy list of matches with trees, simplified\n\
   \  explain e                 Explain exception e in detail\n\
   \Example:\n\
   \  let val K = active   (\"K\" =: 2 --> 1)\n\
@@ -128,12 +129,17 @@ fun print_b b = print (str_b b)
 fun print_v v = print (str_v v)
 fun print_m mz
   = (LazyList.lzprint BG.Match.toString mz; print "\n")
-fun print_m' mz =
-  let
-    fun ppBDNF indent pps B
-      = BG.BgVal.pp indent pps (simplify_b B)
-  in
-    LazyList.lzprint (BG.Match.toString' ppBDNF ppBDNF) mz;
-    print "\n"
-  end
+local
+	fun print_m0 mz toStr =
+	  let
+	    fun ppBDNF indent pps B
+	      = BG.BgVal.pp indent pps (simplify_b B)
+	  in
+	    LazyList.lzprintln (toStr ppBDNF ppBDNF) mz;
+	    print "\n"
+	  end
+in
+  fun print_m' mz = print_m0 mz BG.Match.toString'
+  fun print_mt' mz = print_m0 mz BG.Match.toStringWithTree'
+end
 fun explain e = (BG.ErrorHandler.explain e; raise e);

@@ -97,4 +97,6 @@
   val lztolist : 'a lazylist -> 'a list
   (** Print a lazy list lazily. *)
   val lzprint : ('a -> string) -> 'a lazylist -> unit
+  (** Print a lazy list lazily, each element on its own line. *)
+  val lzprintln : ('a -> string) -> 'a lazylist -> unit
 end

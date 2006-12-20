@@ -146,17 +146,20 @@ struct
                      Nil => []
                    | Cons (elt, tail) => elt :: lztolist tail
                    
-  fun lzprint toStr t = 
+  fun lzprint' sep toStr t = 
     let
       fun printrest first t
         = case t () of
             Nil => print "]"
           | Cons (elt, tail)
-             => (if first then () else print ", ";
+             => (if first then () else print sep;
                  print (toStr elt);
                  printrest false tail)
     in
       print "[";
       printrest true t
     end
+    
+  fun lzprint toStr = lzprint' ", " toStr
+  fun lzprintln toStr = lzprint' ",\n " toStr
 end
