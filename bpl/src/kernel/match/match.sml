@@ -1303,7 +1303,7 @@ struct
 	  fun showtrees [] = ()
       | showtrees [tree] = ppTree' tree	    
 	    | showtrees (tree :: trees)
-	    = (ppTree' tree; show ","; brk(); showtrees trees)
+	    = (ppTree' tree; show ","; brk0(); showtrees trees)
 	  and ppTree' PAX' = show "PAX'"
 	    | ppTree' (ION' tree)
 	    = (<<(); show "ION'("; brk(); ppTree' tree; brk0(); show ")"; >>())
