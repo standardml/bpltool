@@ -412,25 +412,6 @@ struct
                   raise NotRegularisable (copy perm, Xss)
                 else ()
 
-        val major_pi = array (k, (~12, NameSet.empty))
-        val major_pi_inv = array (k, (~13, NameSet.empty))
-
-        val minors 
-            = Array.fromList
-                (map 
-                   (fn n =>
-                       let
-                         val minor_pi
-                             = array (n, (~15, NameSet.empty))
-                         val minor_pi_inv
-                             = array (n, (~16, NameSet.empty))
-                       in
-                         {width = n,
-                          pi = minor_pi,
-                          pi_inv = minor_pi_inv}
-                       end)
-                   ns)
-
         (* j is n-located at #1 nlocated[j]  and
          * j's position within that group is #2 nlocated[j] *)
         val nlocated = array (width, (~17, ~17))
@@ -467,32 +448,61 @@ struct
                    else ())
         end
 
+        val major_pi = array (k, (~12, NameSet.empty))
+        val major_pi_inv = array (k, (~13, NameSet.empty))
+
+        val minors 
+            = Array.fromList
+                (map 
+                   (fn n =>
+                       let
+                         val minor_pi
+                             = array (n, (~15, NameSet.empty))
+                         val minor_pi_inv
+                             = array (n, (~16, NameSet.empty))
+                       in
+                         {width = n,
+                          pi = minor_pi,
+                          pi_inv = minor_pi_inv}
+                       end)
+                   ns)
+
+        fun make_major_pi (0, (j, sumns)) =
+            (update (major_pi, j, (j, NameSet.empty));
+             update (major_pi_inv, j, (j, NameSet.empty));
+             (j + 1, sumns))
+          | make_major_pi (n, (j, sumns)) =
+            let
+              val (nloc, _)         = nlocated sub sumns
+              val (pi_inv_sumns, _) = pi_inv sub sumns
+              val (mloc, _)         = mlocated sub pi_inv_sumns
+            in
+              (update (major_pi, mloc, (nloc, NameSet.empty));
+               update (major_pi_inv, nloc, (mloc, NameSet.empty));
+               (j + 1, n + sumns))
+            end
+
         fun make_minor_pi (Xs, (j, offset)) =
             let
-              val {pi = minor_pi, pi_inv = minor_pi_inv, ...}
-                  = minors sub j
+              val {pi = minor_pi, pi_inv = minor_pi_inv, ...} = minors sub j
             in
               (j + 1,
                foldl
                  (fn (X, i) =>
                      let
-                       val (nloc, npos)  = nlocated sub i
+                       val (_, npos)     = nlocated sub i
                        val (pi_inv_i, _) = pi_inv sub i
-                       val (mloc, mpos)  = mlocated sub pi_inv_i
+                       val (_, mpos)     = mlocated sub pi_inv_i
                      in
                        (update (minor_pi, mpos, (npos, X));
                         update (minor_pi_inv, npos, (mpos, X));
-                        (* the same entry is updated for
-                           each site in that group... *)
-                        update (major_pi, mloc, (nloc, NameSet.empty));
-                        update (major_pi_inv, nloc,
-                                (mloc, NameSet.empty));
                         i + 1)
                      end)
                  offset Xs)
             end
       in
-        (foldl make_minor_pi (0, 0) Xss;
+        (foldl make_major_pi (0, 0) ns;
+         foldl make_minor_pi (0, 0) Xss;
          {major = {width  = k,
                    pi     = major_pi,
                    pi_inv = major_pi_inv},
