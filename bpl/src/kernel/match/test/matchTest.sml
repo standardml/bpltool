@@ -23,37 +23,20 @@
  *)
 
 functor MatchTest (structure BG : BG
-                    sharing type BG.Name.name =
-				 BG.NameSet.elt =
-				 BG.Link.name =
-				 BG.Ion.name
-		    sharing type BG.NameSet.Set =
-				 BG.Permutation.nameset =
-				 BG.Link.nameset =
-				 BG.BgVal.nameset
-		    sharing type BG.Link.link = BG.LinkSet.elt
-		    sharing type BG.LinkSet.Set = 
-				 BG.Wiring.linkset
-		    sharing type BG.Permutation.permutation =
-				 BG.BgVal.permutation
-		    sharing type BG.Wiring.wiring = 
-				 BG.BgVal.wiring
-		    sharing type BG.BgVal.bgval = BG.bgval
-		  structure Assert :
-			    sig 
-			      datatype failure =
-				       GeneralFailure of string 
-				     | NotEqualFailure of string * string
-			      exception Fail of failure
-			      val assertEqualString : string -> string -> string 
-			    end
-		  structure Test :
-			    sig
-			      type testFunction = unit -> unit
-			      type test
-			      val labelTests : (string * testFunction) list -> test
-			    end
-			      ) =
+		   structure Assert :
+			     sig 
+			       datatype failure =
+				        GeneralFailure of string 
+				      | NotEqualFailure of string * string
+			       exception Fail of failure
+			       val assertEqualString : string -> string -> string 
+			     end
+		   structure Test :
+			     sig
+			       type testFunction = unit -> unit
+			       type test
+			       val labelTests : (string * testFunction) list -> test
+			     end) =
 struct
 		
 open BG
