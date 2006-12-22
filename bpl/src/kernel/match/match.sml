@@ -1028,6 +1028,7 @@ struct
       val Xss = map (loc o innerface) Qs
       fun nextmatch (perm as (_, pi, _) : Mutable operm) =
         let
+          val pi = Permutation.copy pi
           val Qs' = permute pi Qs
           val pibar = pushthru pi Xss
           fun toPER {ename', Y, s_C, Es, qs, tree}
