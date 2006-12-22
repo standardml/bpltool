@@ -18,7 +18,7 @@
  * USA
  *)
 
-(** Code for testing BPL under SML/NJ. 
+(** Code for testing BPL. 
  * @version $LastChangedRevision$
  *)
 
@@ -33,21 +33,18 @@ structure Test = struct
     structure BGTest 
       = BGTest
 	    (structure Assert = Assert
-             structure Test = Test
-	     structure BG = BG)
+             structure Test = Test)
 
     structure BDNFTest 
       = BDNFTest
 	    (structure ErrorHandler = PrintErrorHandler
              structure Assert = Assert
-             structure Test = Test
-	     structure BG = BG)
+             structure Test = Test)
 
     structure MatchTest 
       = MatchTest
 	    (structure Assert = Assert
-             structure Test = Test
-	     structure BG = BG)
+             structure Test = Test)
 
     structure BGGen
       = BGGen

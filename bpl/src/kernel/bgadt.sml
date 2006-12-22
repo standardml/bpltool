@@ -21,10 +21,10 @@
 (** BG Abstract Data Types module.
  * @version $LastChangedRevision$
  *)
-functor BGADT (structure ErrorHandler : ERRORHANDLER
-                 where type ppstream    = PrettyPrint.ppstream
-                   and type break_style = PrettyPrint.break_style
-                   and type origin      = Origin.origin) 
+functor BGADT' (structure ErrorHandler : ERRORHANDLER
+                  where type ppstream    = PrettyPrint.ppstream
+                    and type break_style = PrettyPrint.break_style
+                    and type origin      = Origin.origin) 
   : BG_ADT where type 'a Match.lazylist = 'a LazyList.lazylist =
 struct
 
@@ -57,14 +57,14 @@ structure ListPP
       (structure PrettyPrint = PrettyPrint)
 
 structure Interface 
-  = Interface 
+  = Interface' 
       (structure NameSet     = NameSet
        structure NameSetPP   = NameSetPP)
 
 structure Control = Control
 
 structure Link 
-  = Link 
+  = Link'
       (structure Name           = Name
        structure NameSet        = NameSet
        structure NameSetCompare = NameSetCompare)
@@ -72,14 +72,14 @@ structure Link
 structure LinkSet = OrderSet (Link.Order)
 
 structure Ion 
-  = Ion
+  = Ion'
       (structure Control     = Control
        structure Name        = Name
        structure NameSet     = NameSet
        structure NameSetPP   = NameSetPP)
 
 structure Wiring 
-  = Wiring 
+  = Wiring'
       (structure IntSet       = IntSet
        structure Link         = Link
        structure LinkSet      = LinkSet
@@ -90,7 +90,7 @@ structure Wiring
        structure ErrorHandler = ErrorHandler)
 
 structure Permutation
-  = Permutation 
+  = Permutation'
       (structure Name         = Name
        structure NameSet      = NameSet
        structure IntSet       = IntSet
@@ -99,7 +99,7 @@ structure Permutation
        structure ErrorHandler = ErrorHandler)
 
 structure BgTerm
-  = BgTerm 
+  = BgTerm'
       (structure Info        = Info
        structure Ion         = Ion
        structure Wiring      = Wiring
@@ -107,7 +107,7 @@ structure BgTerm
        structure NameSetPP   = NameSetPP)
 
 structure BgVal 
-  = BgVal
+  = BgVal'
       (structure Info             = Info
        structure Name             = Name
        structure NameSet          = NameSet
@@ -122,7 +122,7 @@ structure BgVal
        structure ErrorHandler     = ErrorHandler)
       
 structure BgBDNF 
-  = BgBDNF
+  = BgBDNF'
       (structure Info             = Info
        structure Link             = Link
        structure Name             = Name
@@ -152,7 +152,7 @@ type B = BgBDNF.B
 type BR = BgBDNF.BR
 type 'class bgbdnf = 'class BgBDNF.bgbdnf
 
-structure Match = Match
+structure Match = Match'
   (structure Info         = Info
    structure Name         = Name
    structure NameMap      = NameMap
@@ -172,7 +172,7 @@ val pageWidth = ref 70
 val indent = ref 1
 
 structure Sugar 
-  = Sugar 
+  = Sugar'
       (structure Info         = Info
        structure Control      = Control
        structure Name         = Name
@@ -187,4 +187,14 @@ structure Sugar
        structure BgVal        = BgVal
        structure ErrorHandler = ErrorHandler)
 
+end
+
+functor BGADT (structure ErrorHandler : ERRORHANDLER
+                 where type ppstream    = PrettyPrint.ppstream
+                   and type break_style = PrettyPrint.break_style
+                   and type origin      = Origin.origin) 
+  :> BG_ADT where type 'a Match.lazylist = 'a LazyList.lazylist =
+struct
+  structure BGADT = BGADT'(structure ErrorHandler = ErrorHandler)
+  open BGADT
 end

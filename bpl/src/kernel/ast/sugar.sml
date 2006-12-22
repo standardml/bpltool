@@ -21,7 +21,7 @@
 (** Syntactic sugar for creating bgvals in SML.
  * @version $LastChangedRevision$
  *)
-functor Sugar (structure Info : INFO
+functor Sugar'(structure Info : INFO
 	       structure Name : NAME
 	       structure NameSet : MONO_SET
 	       structure Interface : INTERFACE
@@ -60,7 +60,7 @@ functor Sugar (structure Info : INFO
                sharing type Permutation.permutation = BgVal.permutation
                sharing type Permutation.Immutable = BgVal.Immutable
 	       sharing type NameSet.Set = NameSetPP.collection
-	       ) :> SUGAR 
+	       ) : SUGAR 
 where type bgval = BgVal.bgval =
 struct
 type control = Control.control
@@ -247,4 +247,63 @@ fun <|> (b1, b2) = Pri [b1, b2]
 val <|>> = Pri
 fun -/ x = "" / x
 fun -// X = // ("", X)
+end
+
+
+functor Sugar (structure Info : INFO
+	       structure Name : NAME
+	       structure NameSet : MONO_SET
+	       structure Interface : INTERFACE
+	       structure Link : LINK
+	       structure LinkSet : MONO_SET
+	       structure Control : CONTROL
+	       structure Ion : ION
+	       structure Wiring : WIRING
+	       structure Permutation : PERMUTATION
+	       structure BgVal : BGVAL
+	       structure ErrorHandler : ERRORHANDLER
+                 where type ppstream    = PrettyPrint.ppstream
+                   and type break_style = PrettyPrint.break_style
+                   and type origin      = Origin.origin
+	       structure NameSetPP : COLLECTIONPRETTYPRINT
+                 where type ppstream = PrettyPrint.ppstream
+	       sharing type Info.info = BgVal.info
+               sharing type Name.name = 
+			    NameSet.elt =
+			    Link.name =
+			    Ion.name
+               sharing type NameSet.Set = 
+			    Interface.nameset =
+			    BgVal.nameset =
+			    Link.nameset =
+			    Ion.nameset =
+			    Wiring.nameset =
+			    Permutation.nameset
+	       sharing type Interface.interface =
+			    BgVal.interface
+               sharing type Link.link = LinkSet.elt
+               sharing type LinkSet.Set = Wiring.linkset
+	       sharing type Control.control = Ion.control
+	       sharing type Ion.ion = BgVal.ion
+               sharing type Wiring.wiring = BgVal.wiring
+               sharing type Permutation.permutation = BgVal.permutation
+               sharing type Permutation.Immutable = BgVal.Immutable
+	       sharing type NameSet.Set = NameSetPP.collection
+	       ) :> SUGAR 
+where type bgval = BgVal.bgval =
+struct
+  structure Sugar = Sugar'(structure Info = Info
+			   structure Name = Name
+			   structure NameSet = NameSet
+			   structure Interface = Interface
+			   structure Link = Link
+			   structure LinkSet = LinkSet
+			   structure Control = Control
+			   structure Ion = Ion
+			   structure Wiring = Wiring
+			   structure Permutation = Permutation
+			   structure BgVal = BgVal
+			   structure ErrorHandler = ErrorHandler
+			   structure NameSetPP = NameSetPP)
+  open Sugar
 end

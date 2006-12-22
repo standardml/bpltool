@@ -28,14 +28,14 @@
  * information (e.g., source file location for the term).
  * @version $LastChangedRevision$
  *)
-functor BgTerm (structure Info : INFO
+functor BgTerm'(structure Info : INFO
 		structure Ion : ION
 		structure Wiring : WIRING
 		structure Permutation : PERMUTATION
 		structure NameSetPP : COLLECTIONPRETTYPRINT
                   where type ppstream    = PrettyPrint.ppstream
 		sharing type Wiring.nameset = NameSetPP.collection)
-      : BGTERM where type info = Info.info =
+      : BGTERM =
 struct
   type info = Info.info
   type nameset = Wiring.nameset
@@ -249,4 +249,27 @@ struct
 	| Com(b1,b2,_) => 1+size b1+size b2
   and sizes bs = List.foldl (fn (b,s) => size b + s) 0 bs
 
+end
+
+functor BgTerm (structure Info : INFO
+		structure Ion : ION
+		structure Wiring : WIRING
+		structure Permutation : PERMUTATION
+		structure NameSetPP : COLLECTIONPRETTYPRINT
+                  where type ppstream    = PrettyPrint.ppstream
+		sharing type Wiring.nameset = NameSetPP.collection)
+      :> BGTERM where type info = Info.info
+                  and type wiring = Wiring.wiring
+                  and type 'kind permutation = 'kind Permutation.permutation
+                  and type Immutable = Permutation.Immutable
+                  and type ion = Ion.ion
+                  and type nameset = NameSetPP.collection
+ =
+struct
+  structure BgTerm = BgTerm'(structure Info = Info
+			     structure Ion = Ion
+			     structure Wiring = Wiring
+			     structure Permutation = Permutation
+			     structure NameSetPP = NameSetPP)
+  open BgTerm
 end

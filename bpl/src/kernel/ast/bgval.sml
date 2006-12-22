@@ -22,7 +22,7 @@
  * terms with interfaces.
  * @version $LastChangedRevision$
  *)
-functor BgVal (structure Info : INFO
+functor BgVal'(structure Info : INFO
 	       structure Name : NAME
 	       structure NameSet : MONO_SET
 	       structure Link : LINK
@@ -1189,4 +1189,74 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
       in
         Com i (Ten i [Wir i beta_glob_inv, wls], b'')
       end
+end
+
+
+functor BgVal (structure Info : INFO
+	       structure Name : NAME
+	       structure NameSet : MONO_SET
+	       structure Link : LINK
+	       structure LinkSet : MONO_SET
+	       structure Ion : ION
+	       structure Permutation : PERMUTATION
+	       structure Wiring : WIRING
+	       structure Interface : INTERFACE
+	       structure BgTerm : BGTERM
+	       structure ErrorHandler : ERRORHANDLER
+                 where type ppstream    = PrettyPrint.ppstream
+                   and type break_style = PrettyPrint.break_style
+                   and type origin      = Origin.origin
+	       structure NameSetPP : COLLECTIONPRETTYPRINT
+                 where type ppstream    = PrettyPrint.ppstream
+	       sharing type Name.name = 
+			    NameSet.elt = 
+			    Link.name =
+			    Ion.name =
+			    Wiring.name
+	       sharing type NameSet.Set =
+			    Link.nameset =
+			    Ion.nameset =
+			    Permutation.nameset =
+			    Wiring.nameset =
+			    Interface.nameset =
+			    BgTerm.nameset =
+                            NameSetPP.collection
+               sharing type Link.link = 
+			    LinkSet.elt =
+			    Wiring.link
+               sharing type LinkSet.Set = Wiring.linkset
+	       sharing type Ion.ion = BgTerm.ion
+	       sharing type Permutation.permutation =
+			    BgTerm.permutation
+	       sharing type Permutation.Immutable =
+			    BgTerm.Immutable
+	       sharing type Wiring.wiring = BgTerm.wiring
+	       sharing type Interface.interface =
+			    Permutation.interface
+               sharing type Info.info =
+                            BgTerm.info
+			    ) :> BGVAL 
+  where type nameset = NameSet.Set
+    and type name = Name.name
+    and type wiring = Wiring.wiring 
+    and type 'kind permutation = 'kind Permutation.permutation
+    and type Immutable = Permutation.Immutable
+    and type ion = Ion.ion
+    and type interface = Interface.interface 
+    and type bgterm = BgTerm.bgterm
+    and type info = Info.info =
+struct
+  structure BgVal = BgVal'(structure Info = Info
+			   structure Name = Name
+			   structure NameSet = NameSet
+			   structure Link = Link
+			   structure LinkSet = LinkSet
+			   structure Ion = Ion
+			   structure Permutation = Permutation
+			   structure Wiring = Wiring
+			   structure Interface = Interface
+			   structure BgTerm = BgTerm
+			   structure ErrorHandler = ErrorHandler
+			   structure NameSetPP = NameSetPP)
+  open BgVal
 end

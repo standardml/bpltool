@@ -31,7 +31,7 @@
  * @version $LastChangedRevision$
  *)
  
-functor Match (
+functor Match'(
   structure Info        : INFO
   structure Name        : NAME
   structure NameMap     : MONO_FINMAP
@@ -73,7 +73,7 @@ functor Match (
   sharing type Info.info =
                BgBDNF.info =
                BgVal.info
-  ) :> MATCH
+  ) : MATCH
   where type info            = Info.info
     and type 'class bgbdnf   = 'class BgBDNF.bgbdnf
     and type BR              = BgBDNF.BR
@@ -1408,4 +1408,72 @@ struct
     = PrettyPrint.pp_to_string
         (Flags.getIntFlag "/misc/linewidth") 
         (pp0 true ppBBDNF ppDRBDNF (Flags.getIntFlag "/misc/indent"))
+end
+
+
+functor Match (
+  structure Info        : INFO
+  structure Name        : NAME
+  structure NameMap     : MONO_FINMAP
+  structure Link        : LINK
+  structure LinkSet     : MONO_SET
+  structure Permutation : PERMUTATION
+  structure Wiring      : WIRING
+  structure Ion         : ION
+  structure Interface   : INTERFACE
+  structure BgVal       : BGVAL
+  structure BgBDNF      : BGBDNF
+  structure NameSet     : MONO_SET
+  structure LazyList    : LAZYLIST
+  structure ErrorHandler : ERRORHANDLER where type origin = Origin.origin where type ppstream = PrettyPrint.ppstream
+  sharing type Permutation.nameset = NameSet.Set
+  sharing type Permutation.permutation = BgBDNF.permutation
+  sharing type Wiring.wiring = BgVal.wiring
+                             = BgBDNF.wiring
+  sharing type Ion.ion = BgVal.ion = BgBDNF.ion
+  sharing type NameSet.Set = Link.nameset
+                           = Wiring.nameset
+                           = Interface.nameset
+                           = BgBDNF.nameset
+                           = BgVal.nameset
+                           = Ion.nameset
+  sharing type Name.name = Ion.name
+                         = Link.name
+                         = Wiring.name
+                         = NameSet.elt
+                         = BgVal.name
+  sharing type NameMap.dom = Name.name
+  sharing type NameMap.map = Wiring.namemap
+  sharing type LinkSet.Set = Wiring.linkset
+  sharing type LinkSet.elt = Link.link
+                           = Wiring.link
+  sharing type Interface.interface = BgBDNF.interface
+  sharing type BgVal.bgval = BgBDNF.bgval
+  sharing type BgVal.bgmatch = BgBDNF.bgmatch
+  sharing type Info.info =
+               BgBDNF.info =
+               BgVal.info
+  ) :> MATCH
+  where type info            = Info.info
+    and type 'class bgbdnf   = 'class BgBDNF.bgbdnf
+    and type BR              = BgBDNF.BR
+    and type DR              = BgBDNF.DR
+    and type nameset         = NameSet.Set
+    and type 'a lazylist     = 'a LazyList.lazylist =
+struct
+  structure Match = Match'(structure Info = Info
+			   structure Name = Name
+			   structure NameMap = NameMap
+			   structure Link = Link
+			   structure LinkSet = LinkSet
+			   structure Permutation = Permutation
+			   structure Wiring = Wiring
+			   structure Ion = Ion
+			   structure Interface = Interface
+			   structure BgVal = BgVal
+			   structure BgBDNF = BgBDNF
+			   structure NameSet = NameSet
+			   structure LazyList = LazyList
+			   structure ErrorHandler = ErrorHandler)
+  open Match
 end

@@ -21,14 +21,14 @@
 (** Main BG module.
  * @version $LastChangedRevision$
  *)
-functor BG (structure ErrorHandler : ERRORHANDLER
-              where type ppstream    = PrettyPrint.ppstream
-                and type break_style = PrettyPrint.break_style
-                and type origin      = Origin.origin)
+functor BG' (structure ErrorHandler : ERRORHANDLER
+               where type ppstream    = PrettyPrint.ppstream
+                 and type break_style = PrettyPrint.break_style
+                 and type origin      = Origin.origin)
   : BG where type 'a Match.lazylist = 'a LazyList.lazylist =
 struct
 
-structure BGADT = BGADT (structure ErrorHandler = ErrorHandler)
+structure BGADT = BGADT' (structure ErrorHandler = ErrorHandler)
 open BGADT
 		   
 structure Token = LrParser.Token
@@ -113,4 +113,14 @@ fun usefile filename =
       bgbdnf
     end
 
+end
+
+functor BG (structure ErrorHandler : ERRORHANDLER
+              where type ppstream    = PrettyPrint.ppstream
+                and type break_style = PrettyPrint.break_style
+                and type origin      = Origin.origin)
+        :> BG where type 'a Match.lazylist = 'a LazyList.lazylist =
+struct
+  structure BG = BG'(structure ErrorHandler = ErrorHandler)
+  open BG
 end

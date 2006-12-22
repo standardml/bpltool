@@ -18,29 +18,19 @@
  * USA
  *)
 
-(** Testing module for bdnf stuff.
+(** Testing module for basic bigraph stuff.
  * @version $LastChangedRevision: 179 $
  *)
 
-functor BGTest (structure BG : BG
-		structure Assert :
-			  sig 
-			    datatype failure =
-			             GeneralFailure of string 
-			           | NotEqualFailure of string * string
-			    exception Fail of failure
-			    val assertEqualString : string -> string -> string 
-			  end
-		structure Test :
-		          sig
-			    type testFunction = unit -> unit
-			    type test
-			    val labelTests : (string * testFunction) list -> test
-			  end) =
+functor BGTest (structure Assert : ASSERT
+		structure Test   : TEST) =
 struct
 		
-open BG
+open BPL'
 open Assert
 
-  val suite = (fn () => Test.labelTests [])
+  structure PermutationTest = PermutationTest(structure Assert = Assert
+                                              structure Test   = Test)
+
+  val suite = (fn () => Test.labelTests PermutationTest.tests)
 end

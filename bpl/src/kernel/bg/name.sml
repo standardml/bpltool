@@ -22,7 +22,7 @@
  * 
  * @version $LastChangedRevision$
  *)
-structure Name :> NAME =
+structure Name' : NAME =
 struct
   (* Names are identified by unique words. *)
   type name = word * string
@@ -101,4 +101,10 @@ struct
   end
 
   structure NameSet = Rbset(type t = name val compare = compare)
+end
+
+
+structure Name :> NAME =
+struct
+  open Name'
 end

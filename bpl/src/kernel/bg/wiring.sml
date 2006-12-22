@@ -21,7 +21,7 @@
 (** Abstract data type for modelling wirings.
  * @version $LastChangedRevision$
  *)
-functor Wiring (structure Link : LINK
+functor Wiring'(structure Link : LINK
 		structure LinkSet : MONO_SET
 		structure Name : NAME
 		structure NameSet : MONO_SET
@@ -37,7 +37,7 @@ functor Wiring (structure Link : LINK
 		sharing type Name.name = Link.name = NameSet.elt = NameMap.dom
 		sharing type NameSet.Set =
                              Link.nameset =
-		             NameSetPP.collection) :> WIRING 
+		             NameSetPP.collection) : WIRING 
                 where type link       = Link.link
 		  and type linkset    = LinkSet.Set 
                   and type name       = Name.name
@@ -881,4 +881,38 @@ struct
   val ** = foldr x id_0
 
   val (op o) = compose
+end
+
+functor Wiring (structure Link : LINK
+		structure LinkSet : MONO_SET
+		structure Name : NAME
+		structure NameSet : MONO_SET
+		structure NameMap : MONO_FINMAP
+		structure IntSet : MONO_SET where type elt = int
+		structure ErrorHandler : ERRORHANDLER
+                  where type ppstream    = PrettyPrint.ppstream
+                    and type break_style = PrettyPrint.break_style
+                    and type origin      = Origin.origin
+		structure NameSetPP : COLLECTIONPRETTYPRINT
+                  where type ppstream    = PrettyPrint.ppstream
+		sharing type Link.link = LinkSet.elt
+		sharing type Name.name = Link.name = NameSet.elt = NameMap.dom
+		sharing type NameSet.Set =
+                             Link.nameset =
+		             NameSetPP.collection) :> WIRING 
+                where type link       = Link.link
+		  and type linkset    = LinkSet.Set 
+                  and type name       = Name.name
+		  and type nameset    = NameSet.Set
+                  and type 'a namemap = 'a NameMap.map =
+struct
+  structure Wiring = Wiring'(structure Link = Link
+			     structure LinkSet = LinkSet
+			     structure Name = Name
+			     structure NameSet = NameSet
+			     structure NameMap = NameMap
+			     structure IntSet = IntSet
+			     structure ErrorHandler = ErrorHandler
+			     structure NameSetPP = NameSetPP)
+  open Wiring
 end

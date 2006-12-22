@@ -22,9 +22,14 @@
  * @version $LastChangedRevision$
  *)
 
-structure Control :> CONTROL =
+structure Control' : CONTROL =
 struct
   type control = string
   fun make s = s
   fun unmk KyX = KyX
+end
+
+structure Control :> CONTROL =
+struct
+  open Control'
 end

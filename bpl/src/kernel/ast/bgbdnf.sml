@@ -21,7 +21,7 @@
 (** Abstract data type for bigraph binding discrete normal forms (BDNF).
  * @version $LastChangedRevision$
  *)
-functor BgBDNF (structure Info : INFO
+functor BgBDNF'(structure Info : INFO
 		structure Name : NAME
 		structure NameSet : MONO_SET
 		structure LinkSet : MONO_SET
@@ -37,7 +37,7 @@ functor BgBDNF (structure Info : INFO
                     and type origin      = Origin.origin
 		structure NameSetPP : COLLECTIONPRETTYPRINT
                   where type ppstream    = PrettyPrint.ppstream
-    structure ListPP : POLYCOLLECTIONPRETTYPRINT
+		structure ListPP : POLYCOLLECTIONPRETTYPRINT
                   where type ppstream      = PrettyPrint.ppstream
                     and type 'a collection = 'a list
 		sharing type NameSet.Set = NameSetPP.collection
@@ -1113,4 +1113,77 @@ struct
 
   val size = BgVal.size o unmk
 
+end
+
+functor BgBDNF (structure Info : INFO
+		structure Name : NAME
+		structure NameSet : MONO_SET
+		structure LinkSet : MONO_SET
+		structure Interface : INTERFACE
+		structure Ion : ION
+		structure Permutation : PERMUTATION
+		structure Link : LINK
+		structure Wiring : WIRING
+		structure BgVal : BGVAL
+		structure ErrorHandler : ERRORHANDLER
+                  where type ppstream    = PrettyPrint.ppstream
+                    and type break_style = PrettyPrint.break_style
+                    and type origin      = Origin.origin
+		structure NameSetPP : COLLECTIONPRETTYPRINT
+                  where type ppstream    = PrettyPrint.ppstream
+		structure ListPP : POLYCOLLECTIONPRETTYPRINT
+                  where type ppstream      = PrettyPrint.ppstream
+                    and type 'a collection = 'a list
+		sharing type NameSet.Set = NameSetPP.collection
+		sharing type BgVal.interface = 
+			     Interface.interface =
+			     Permutation.interface
+		sharing type BgVal.ion = Ion.ion
+		sharing type BgVal.permutation =
+			     Permutation.permutation
+                sharing type BgVal.Immutable =
+			     Permutation.Immutable
+		sharing type BgVal.wiring = Wiring.wiring
+		sharing type NameSet.Set =
+			     Interface.nameset =
+			     Ion.nameset =
+			     Permutation.nameset =
+			     Link.nameset =
+			     Wiring.nameset =
+			     BgVal.nameset
+		sharing type LinkSet.Set = Wiring.linkset
+		sharing type LinkSet.elt =
+                             Link.link =
+                             Wiring.link
+		sharing type Link.name = NameSet.elt
+		sharing type NameSet.elt =
+                             Name.name =
+                             Ion.name
+                sharing type Info.info =
+                             BgVal.info
+			     ) :> BGBDNF 
+  where type nameset        = NameSet.Set
+    and type info           = Info.info 
+    and type interface      = BgVal.interface
+    and type wiring         = BgVal.wiring
+    and type ion            = Ion.ion
+    and type Immutable      = BgVal.Immutable
+    and type 'a permutation = 'a BgVal.permutation
+    and type bgval          = BgVal.bgval 
+    and type bgmatch        = BgVal.bgmatch = 
+struct
+  structure BgBDNF = BgBDNF'(structure Info = Info
+			     structure Name = Name
+			     structure NameSet = NameSet
+			     structure LinkSet = LinkSet
+			     structure Interface = Interface
+			     structure Ion = Ion
+			     structure Permutation = Permutation
+			     structure Link = Link
+			     structure Wiring = Wiring
+			     structure BgVal = BgVal
+			     structure ErrorHandler = ErrorHandler
+			     structure NameSetPP = NameSetPP
+			     structure ListPP = ListPP)
+  open BgBDNF
 end

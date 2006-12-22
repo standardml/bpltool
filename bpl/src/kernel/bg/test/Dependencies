@@ -2,5 +2,6 @@
 # INCLUDE=../../../lib/util
 # INCLUDE=../../../lib/smlunit
 
-bgTest: /lib/smlunit/. /kernel/bg-sig /lib/util/errormsg
+permutationTest: /lib/smlunit/. /kernel/bpl /lib/util/errormsg
+bgTest: permutationTest /lib/smlunit/. /kernel/bpl /lib/util/errormsg
    /lib/util/origin-sig

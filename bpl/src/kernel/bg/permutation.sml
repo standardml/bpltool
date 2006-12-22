@@ -21,22 +21,22 @@
 (** Abstract data type for modelling bigraph permutations.
  * @version $LastChangedRevision$
  *)
-functor Permutation (structure IntSet : MONO_SET
-                       where type elt = int
-		     structure NameSet : MONO_SET
-		     structure Name : NAME
-		     structure Interface : INTERFACE
-		     structure ErrorHandler : ERRORHANDLER
-                       where type ppstream    = PrettyPrint.ppstream
-                         and type break_style = PrettyPrint.break_style
-                         and type origin      = Origin.origin
-		     structure NameSetPP : COLLECTIONPRETTYPRINT
-                       where type ppstream = PrettyPrint.ppstream
-		     sharing type Interface.nameset = NameSet.Set
-		     sharing type NameSet.Set = NameSetPP.collection
-	             sharing type Name.name = NameSet.elt)
-	:> PERMUTATION 
-	   where type nameset = NameSet.Set
+functor Permutation' (structure IntSet : MONO_SET
+                        where type elt = int
+		      structure NameSet : MONO_SET
+		      structure Name : NAME
+		      structure Interface : INTERFACE
+		      structure ErrorHandler : ERRORHANDLER
+                        where type ppstream    = PrettyPrint.ppstream
+                          and type break_style = PrettyPrint.break_style
+                          and type origin      = Origin.origin
+		      structure NameSetPP : COLLECTIONPRETTYPRINT
+                        where type ppstream = PrettyPrint.ppstream
+		      sharing type Interface.nameset = NameSet.Set
+		      sharing type NameSet.Set = NameSetPP.collection
+	              sharing type Name.name = NameSet.elt)
+	: PERMUTATION 
+	   where type nameset   = NameSet.Set
              and type interface = Interface.interface =
 struct
   type nameset = NameSet.Set
@@ -609,4 +609,31 @@ struct
    * where O(s) is the time for local name set comparison.
    *)
   val op o = compose
+end
+
+functor Permutation (structure IntSet : MONO_SET
+                       where type elt = int
+		     structure NameSet : MONO_SET
+		     structure Name : NAME
+		     structure Interface : INTERFACE
+		     structure ErrorHandler : ERRORHANDLER
+                       where type ppstream    = PrettyPrint.ppstream
+                         and type break_style = PrettyPrint.break_style
+                         and type origin      = Origin.origin
+		     structure NameSetPP : COLLECTIONPRETTYPRINT
+                       where type ppstream = PrettyPrint.ppstream
+		     sharing type Interface.nameset = NameSet.Set
+		     sharing type NameSet.Set = NameSetPP.collection
+	             sharing type Name.name = NameSet.elt)
+	:> PERMUTATION 
+	   where type nameset = NameSet.Set
+             and type interface = Interface.interface =
+struct
+  structure Permutation' = Permutation'(structure IntSet       = IntSet
+					structure NameSet      = NameSet
+					structure Name         = Name
+					structure Interface    = Interface
+					structure ErrorHandler = ErrorHandler
+					structure NameSetPP    = NameSetPP)
+  open Permutation'
 end

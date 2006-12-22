@@ -23,26 +23,13 @@
  *)
 
 functor BDNFTest (structure ErrorHandler : ERRORHANDLER
-                  structure BG : BG
-		  structure Assert :
-			    sig 
-			      datatype failure =
-				       GeneralFailure of string 
-				     | NotEqualFailure of string * string
-			      exception Fail of failure
-			      val assertEqualString : string -> string -> string 
-			    end
-		  structure Test :
-			    sig
-			      type testFunction = unit -> unit
-			      type test
-			      val labelTests : (string * testFunction) list -> test
-			    end) =
+		  structure Assert       : ASSERT
+		  structure Test         : TEST) =
 struct
 		
-open BG
+open BPL'
 open Assert
-val noinfo = BG.Info.noinfo
+val noinfo = Info.noinfo
      
 datatype expectedresult = S of string | E of string
 
@@ -586,7 +573,7 @@ datatype expectedresult = S of string | E of string
 
 	val bgvaltests =
 	    let
-	      open BG.BgVal
+	      open BgVal
 	      val x1 = Name.make "x1"
 	      val x2 = Name.make "x2"
 	      val x3 = Name.make "x3"

@@ -22,13 +22,13 @@
  * @version $LastChangedRevision$
  *)
 
-functor Ion (structure Control : CONTROL
+functor Ion'(structure Control : CONTROL
 	     structure Name : NAME
 	     structure NameSet : MONO_SET
 	     structure NameSetPP : COLLECTIONPRETTYPRINT
                where type ppstream = PrettyPrint.ppstream
 	     sharing type Name.name = NameSet.elt
-	     sharing type NameSet.Set = NameSetPP.collection) :> ION 
+	     sharing type NameSet.Set = NameSetPP.collection) : ION 
 	     where type control  = Control.control
 	       and type name     = Name.name
  	       and type nameset  = NameSet.Set =
@@ -76,4 +76,23 @@ struct
 	   pplist (NameSetPP.pp indent pps) bound);
 	>>>()
       end
+end
+
+
+functor Ion (structure Control : CONTROL
+	     structure Name : NAME
+	     structure NameSet : MONO_SET
+	     structure NameSetPP : COLLECTIONPRETTYPRINT
+               where type ppstream = PrettyPrint.ppstream
+	     sharing type Name.name = NameSet.elt
+	     sharing type NameSet.Set = NameSetPP.collection) :> ION 
+	     where type control  = Control.control
+	       and type name     = Name.name
+ 	       and type nameset  = NameSet.Set =
+struct
+  structure Ion = Ion'(structure Control = Control
+		       structure Name = Name
+		       structure NameSet = NameSet
+		       structure NameSetPP = NameSetPP)
+  open Ion
 end

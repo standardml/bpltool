@@ -21,11 +21,11 @@
 (** Abstract data type for modelling bigraph interfaces. 
  * @version $LastChangedRevision$
  *)
-functor Interface (structure NameSet : MONO_SET
+functor Interface'(structure NameSet : MONO_SET
 		   structure NameSetPP : COLLECTIONPRETTYPRINT
                      where type ppstream    = PrettyPrint.ppstream
 		   sharing type NameSet.Set = NameSetPP.collection)
-	:> INTERFACE where type nameset = NameSet.Set =
+	: INTERFACE where type nameset = NameSet.Set =
 struct
   type nameset = NameSet.Set
 
@@ -127,4 +127,16 @@ struct
 
   val op * = x
 
+end
+
+
+functor Interface (structure NameSet : MONO_SET
+		   structure NameSetPP : COLLECTIONPRETTYPRINT
+                     where type ppstream    = PrettyPrint.ppstream
+		   sharing type NameSet.Set = NameSetPP.collection)
+	:> INTERFACE where type nameset = NameSet.Set =
+struct
+  structure Interface = Interface'(structure NameSet = NameSet
+				   structure NameSetPP = NameSetPP)
+  open Interface
 end

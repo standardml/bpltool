@@ -21,7 +21,7 @@
 (** Term information (origin etc.).
  * @version $LastChangedRevision: 147 $
  *)
-structure Info :> INFO =
+structure Info' : INFO =
 struct
   type info = Origin.origin
 
@@ -30,4 +30,9 @@ struct
   fun make i = i
 
   fun origin i = i
+end
+
+structure Info :> INFO =
+struct
+  open Info'
 end

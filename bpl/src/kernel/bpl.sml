@@ -28,3 +28,11 @@ struct
 
   open BG
 end
+
+structure BPL' : BG =
+struct
+
+  structure BG' = BG' (structure ErrorHandler = PrintErrorHandler)
+
+  open BG'
+end

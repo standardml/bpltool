@@ -18,16 +18,18 @@
  * USA
  *)
 
-(** Testing module for bdnf stuff.
+(** Testing module for Permutation.
  * @version $LastChangedRevision: 179 $
  *)
-
-functor MatchTest (structure Assert : ASSERT
-		   structure Test   : TEST) =
+functor PermutationTest
+          (structure Assert : ASSERT
+	   structure Test   : TEST) =
 struct
-		
+
 open BPL'
 open Assert
 
-  val suite = (fn () => Test.labelTests [])
+  val tests = [] : (string * Test.testFunction) list
+
+  val suite = (fn () => Test.labelTests tests)
 end

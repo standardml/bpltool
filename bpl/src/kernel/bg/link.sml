@@ -21,11 +21,11 @@
 (** Abstract data type for modelling individual links.
  * @version $LastChangedRevision$
  *)
-functor Link (structure Name : NAME
+functor Link'(structure Name : NAME
 	      structure NameSet : MONO_SET
 	      structure NameSetCompare : SETCOMPARE
 	      sharing type NameSet.elt = Name.name
-	      sharing type NameSetCompare.T = NameSet.Set) :> LINK 
+	      sharing type NameSetCompare.T = NameSet.Set) : LINK 
               where type name = Name.name 
 	        and type nameset = NameSet.Set =
 struct
@@ -54,4 +54,19 @@ struct
 	else
 	  Name.< (x1, x2)
   end
+end
+
+
+functor Link (structure Name : NAME
+	      structure NameSet : MONO_SET
+	      structure NameSetCompare : SETCOMPARE
+	      sharing type NameSet.elt = Name.name
+	      sharing type NameSetCompare.T = NameSet.Set) :> LINK 
+              where type name = Name.name 
+	        and type nameset = NameSet.Set =
+struct
+  structure Link = Link'(structure Name = Name
+			 structure NameSet = NameSet
+			 structure NameSetCompare = NameSetCompare)
+  open Link
 end
