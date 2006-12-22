@@ -161,5 +161,5 @@ struct
     end
     
   fun lzprint toStr = lzprint' ", " toStr
-  fun lzprintln toStr = lzprint' ",\n " toStr
+  fun lzprintln toStr = lzprint' ",\n" toStr
 end
