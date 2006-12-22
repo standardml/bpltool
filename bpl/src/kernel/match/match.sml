@@ -132,6 +132,7 @@ struct
   val pushthru = Permutation.pushthru
 
   datatype derivation = PAX'
+                | ZAX'
                 | ION' of derivation
                 | PARn' of derivation list
                 | PARe' of derivation
@@ -140,6 +141,7 @@ struct
                 | ABS' of derivation
                 | SWX of derivation
                 | PAX
+                | ZAX
                 | ION of derivation
                 | PARn of derivation list
                 | PARe of derivation
@@ -414,7 +416,7 @@ struct
    *              ename' s_a_e(x') = s_C'(x'')
    *          else
    *            check/adjust s_C' so that s_a_n(x') = s_C'(x'').
-   * 5) Return ename', s_C', qs = (X)g.
+   * 5) Return ename', s_C', qs = [(X)g].
    *)
   fun matchPAX' {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, g, G} =
       lzmake (fn () => ((*print "PAX' ";*)
@@ -466,6 +468,19 @@ struct
         end
         handle NoMatch => Nil)
       | _ => Nil)
+  (* Match a global discrete prime g to a context G using the ZAX rule:
+   *   Y, id_e, Y |- 1, [[id_0]]^P ~~> 1, [[id_0]]^P
+   * 1) Check that g = 1 and G = 1.
+   * 2) Return ename' = ename, s_C' = {}, qs = [].
+   *)
+      | [] (* This implies G = 1. *)
+      => (case #Ss (unmkG g) of
+            [] (* This implies g = 1. *)
+          => Cons ({ename' = ename,
+                  s_C' = Wiring.id_0,
+                  qs = [],
+                  tree = ZAX'}, lzNil)
+          | _ => Nil)
       | _ => Nil))
   
   and matchMER' {ename, s_a, s_C, g, G} = lzNil
@@ -742,14 +757,14 @@ struct
         lzunmk matches
       end))
     | matchSWX _ = lzNil
-  
+
   (* Match a global discrete prime using the PAX rule:
    * If s_R_e = s_R_n = id_0 and
    * Ps = id_(X) for some X subset of g's outer names, then
    * 1) Let X+Z = outernames (g)
    * 2) Inner-name restrict s_a to X+Z
    * 3) Let s_C = s_a_n * s_a_e
-   * 4) Return ename' = ename, Y = {}, s_C, G = "X", Ps = (X)g
+   * 4) Return ename' = ename, Y = {}, s_C, E = "X", qs = [(X)g]
    *)
   fun matchPAX {ename,
                 s_a = {s_a_e, s_a_n},
@@ -793,6 +808,33 @@ struct
         end
       else
         LazyList.Nil))
+  (* Match a global discrete prime using the ZAX rule:
+   * s, id_e, s |- g, id_0 ~~> g, id_0.
+   * 1) Check that s_R_e = s_R_n = id_0 and Ps = []
+   * 2) Compute X + Z so that g : <X + Z>
+   * 3) Let s_C = s_a_n * s_a_e restricted to X + Z
+   * 4) Return ename' = ename, Y = {}, s_C, E = g, qs = []
+   *)
+    | matchPAX {ename,
+                s_a = {s_a_e, s_a_n},
+                s_R = {s_R_e, s_R_n}, e = g, Ps = []}
+    = lzmake (fn () => ((*print "ZAX ";*)
+      if Wiring.is_id0 s_R_e andalso Wiring.is_id0 s_R_n then
+        let
+	        val XplusZ = Interface.glob (outerface g)
+	      in
+	        LazyList.Cons 
+	          ({ename' = ename,
+	           s_C = Wiring.* (Wiring.restrict s_a_n XplusZ,
+	                           Wiring.restrict s_a_e XplusZ),
+	           Y = NameSet.empty,
+	           E = g,
+	           qs = [],
+	           tree = ZAX},
+	           lzNil)
+	      end
+	    else
+	      LazyList.Nil))
     | matchPAX _ = lzNil
 
   (* makefreshlinks returns a list of links vs/Xs, where vs are
@@ -1306,6 +1348,7 @@ struct
 	    | showtrees (tree :: trees)
 	    = (ppTree' tree; show ","; brk0(); showtrees trees)
 	  and ppTree' PAX' = show "PAX'"
+	    | ppTree' ZAX' = show "ZAX'"
 	    | ppTree' (ION' tree)
 	    = (<<(); show "ION'("; brk(); ppTree' tree; brk0(); show ")"; >>())
 	    | ppTree' (PARn' trees)
@@ -1323,6 +1366,7 @@ struct
 	    | ppTree' (SWX tree)
 	    = (<<(); show "SWX("; brk(); ppTree' tree; brk0(); show ")"; >>())
 	    | ppTree' PAX = show "PAX"
+	    | ppTree' ZAX = show "ZAX"
 	    | ppTree' (ION tree)
 	    = (<<(); show "ION("; brk(); ppTree' tree; brk0(); show ")"; >>())
 	    | ppTree' (PARn trees)
