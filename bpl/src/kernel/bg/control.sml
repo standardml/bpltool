@@ -24,9 +24,11 @@
 
 structure Control' : CONTROL =
 struct
-  type control = string
-  fun make s = s
-  fun unmk KyX = KyX
+  datatype kind = Active | Passive | Atomic
+  type control = string * kind
+  fun make c = c
+  fun unmk c = c
+  fun kind (_,k) = k  
 end
 
 structure Control :> CONTROL =

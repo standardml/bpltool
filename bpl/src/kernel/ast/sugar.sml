@@ -98,12 +98,32 @@ val Par = BgVal.Par Info.noinfo
 val Pri = BgVal.Pri Info.noinfo
 val Com = BgVal.Com Info.noinfo
 
-fun active f = f (fn v => v)
-fun active0 K
-  = Ion (Ion.make {ctrl = Control.make K, free = [], bound = []}) 
+(* changes the kind of the control of a BgVal.Ion to k *)
+fun changeBgvalIonKind k v =
+    case BgVal.match BgVal.PIon v of
+      BgVal.MIon KyX =>
+        let
+          val {ctrl, free, bound} = Ion.unmk KyX
+          val (s, _) = Control.unmk ctrl
+          val ctrl = Control.make (s, k)
+        in
+          Ion (Ion.make {ctrl  = ctrl,
+                         free  = free,
+                         bound = bound})
+	end
+    | _ => v (*FIXME raise an exception*)
 
-val passive = active
-val passive0 = active0
+(*FIXME is this correct?*)
+fun active f = f (changeBgvalIonKind Control.Active)
+fun active0 K
+  = Ion (Ion.make {ctrl = Control.make (K, Control.Active),
+                   free = [], bound = []}) 
+
+(*FIXME is this correct?*)
+fun passive f = f (changeBgvalIonKind Control.Passive)
+fun passive0 K
+  = Ion (Ion.make {ctrl = Control.make (K, Control.Passive),
+                   free = [], bound = []}) 
 
 fun atomic f
   = f (fn v => 
@@ -118,7 +138,8 @@ fun atomic f
 	    Com (v, Abs (X, barrenroot))
 	  end)
 fun atomic0 K
-  = Com (Ion (Ion.make {ctrl = Control.make K, free = [], bound = []}), 
+  = Com (Ion (Ion.make {ctrl = Control.make (K, Control.Atomic),
+                        free = [], bound = []}), 
 	 Mer 0)
 
 exception DuplicateName of string * name list * name list list * string
@@ -181,7 +202,7 @@ fun =: (K, {freearity, boundarity}) k free bound =
       let
 	val ion 
 	  = Ion.make
-	      {ctrl  = Control.make K, 
+	      {ctrl  = Control.make (K, Control.Active), (*FIXME is this correct?*)
 	       free  = map Name.make free, 
 	       bound = map (NameSet.fromList o map Name.make) bound}
 	      handle 
@@ -200,7 +221,7 @@ fun -: (K, freearity) k free =
 			^ namelistToString free ^ "'\n")
     else
       let
-	val ion = Ion.make {ctrl = Control.make K, 
+	val ion = Ion.make {ctrl = Control.make (K, Control.Active), (*FIXME is this correct?*)
 			    free = map Name.make free, 
 			    bound = []}
       in

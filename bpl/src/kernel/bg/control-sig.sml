@@ -26,8 +26,12 @@ signature CONTROL =
 sig
   (** The control data type. *)
   eqtype control
+  (** The kind datatype. *)
+  datatype kind = Active | Passive | Atomic
   (** Construct a control. *)
-  val make : string -> control
+  val make : (string * kind) -> control
   (** Deconstruct a control. *)
-  val unmk : control -> string
+  val unmk : control -> (string * kind)
+  (** Return the kind of a control. *)
+  val kind : control -> kind
 end

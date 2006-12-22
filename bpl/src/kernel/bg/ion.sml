@@ -63,7 +63,7 @@ struct
 	     show ">"; >>())
       in
 	<<<();
-	show (Control.unmk ctrl);
+	show (#1 (Control.unmk ctrl));
 	case bound of
 	  [] =>
 	  (case free of

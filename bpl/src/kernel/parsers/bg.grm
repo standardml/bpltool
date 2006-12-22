@@ -265,7 +265,7 @@ nset    : LBRACE nlist RBRACE (NameSet.fromList (nlist)
 					  ("bg.grm", (LBRACEleft, RBRACEright),
 					   "while parsing"))
 
-ctrlid	: CTRLID	      (Control.make CTRLID)
+ctrlid	: CTRLID	      (Control.make (CTRLID, Control.Active))
 
 link	: SLASH nset	                (Link.make {outer = NONE, inner = nset})
         | id SLASH id	%prec SLASH	(Link.make {outer = SOME (Name.make id1), 
