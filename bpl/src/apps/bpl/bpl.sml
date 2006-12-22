@@ -70,24 +70,16 @@ fun help _ = print
   \  *, ||, <|>                Product, left associative\n\
   \  <[x,...]> P               Abstraction (weakest)\n\n\
   \Operations (A,B,R : 'a bgbdnf, a,r,v : bgval, e : exn):\n\
-  \  denorm_b B                De-normalise B\n\
-  \  regl_b B                  Regularise B\n\
-  \  simpl_b B                 Attempt to simplify B\n\
-  \  match_b {agent = A,\n\
-  \           redex = R}       Match R in A, returning a lazy list of matches\n\
-  \  str_b B                   Return B as a string\n\
-  \  print_b B                 Print B\n\
-  \  norm_v v                  Normalise v\n\
-  \  regl_v v                  Normalise and regularise v\n\
-  \  simpl_v v                 Attempt to simplify v\n\
-  \  match_v {agent = a,\n\
-  \           redex = r}       Match r in a, returning a lazy list of matches\n\
-  \  str_v v                   Return v as a string\n\
-  \  print_v v                 Print v to stdOut\n\
-  \  print_m mz                Print a lazy list of matches\n\
-  \  print_m' mz               Print a lazy list of matches, simplified\n\
-  \  print_mt' mz              Print a lazy list of matches with trees, simplified\n\
-  \  explain e                 Explain exception e in detail\n\
+  \  norm_v v             denorm_b B           (De)normalise\n\
+  \  regl_v v             regl_b B             Regularise\n\
+  \  simpl_v v            simpl_b B            Attempt to simplify\n\
+  \  match_v {agent = a,  match_b {agent = A,  Match redex in agent,\n\
+  \           redex = r}           redex = R}    returning lazy list of matches\n\
+  \  str_v v              str_b B              Return as a string\n\
+  \  print_v v            print_b B            Print to stdOut\n\
+  \  print_mv mz          print_mb mz          Print lazy list of matches\n\
+  \  print_mtv mz         print_mtb mz         Print lazy list of matches with trees\n\
+  \  explain e                                 Explain exception in detail\n\
   \Example:\n\
   \  let val K = active   (\"K\" =: 2 --> 1)\n\
   \      val L = passive0 (\"L\")\n\
@@ -127,8 +119,10 @@ val str_b = BG.BgBDNF.toString
 val str_v = BG.BgVal.toString
 fun print_b b = print (str_b b)
 fun print_v v = print (str_v v)
-fun print_m mz
-  = (LazyList.lzprint BG.Match.toString mz; print "\n")
+fun print_mb mz
+  = (LazyList.lzprintln BG.Match.toString mz; print "\n")
+fun print_mtb mz
+  = (LazyList.lzprintln BG.Match.toStringWithTree mz; print "\n")
 local
 	fun print_m0 mz toStr =
 	  let
@@ -139,7 +133,7 @@ local
 	    print "\n"
 	  end
 in
-  fun print_m' mz = print_m0 mz BG.Match.toString'
-  fun print_mt' mz = print_m0 mz BG.Match.toStringWithTree'
+  fun print_mv mz = print_m0 mz BG.Match.toString'
+  fun print_mtv mz = print_m0 mz BG.Match.toStringWithTree'
 end
 fun explain e = (BG.ErrorHandler.explain e; raise e);
