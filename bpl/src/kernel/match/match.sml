@@ -1455,7 +1455,7 @@ struct
         (Flags.getIntFlag "/misc/linewidth") 
         (pp0 true ppBBDNF ppDRBDNF (Flags.getIntFlag "/misc/indent"))
 val revision
-  = hd (String.tokens (not o Char.isDigit) "$LastChangedRevision: 315$")
+  = hd (String.tokens (not o Char.isDigit) "$LastChangedRevision$")
 end
 
 
