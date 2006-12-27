@@ -140,4 +140,6 @@ signature SUGAR =
     val id_n : int -> bgval
     (** Construct an identity wiring. *)
     val id_X : name list -> bgval
+    (** Revision number.*)
+    val revision : string
   end

@@ -168,4 +168,6 @@ sig
 
   sharing type Link.link =
                LinkSet.elt
+  (** Maximum revision number for containing components.*)
+  val revision : string
 end

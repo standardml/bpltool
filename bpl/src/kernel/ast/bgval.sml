@@ -1198,6 +1198,8 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
       in
         Com i (Ten i [Wir i beta_glob_inv, wls], b'')
       end
+  val revision
+    = hd (String.tokens (not o Char.isDigit) "$LastChangedRevision$")
 end
 
 

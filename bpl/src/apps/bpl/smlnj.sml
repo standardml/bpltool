@@ -36,8 +36,6 @@ local
         typename
         (pp (Flags.getIntFlag "/misc/indent"))
   val _ = ipp ["BG","BgVal","bgval"] BG.BgVal.ppWithIface
-  val BPL_REVISION_STR
-    = String.extract ("$LastChangedRevision: 315", 22, NONE)
 in
  val _ = print 
   	("\nBPL (revision " ^ BPL_REVISION_STR 

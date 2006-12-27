@@ -188,6 +188,12 @@ structure Sugar
        structure BgVal        = BgVal
        structure ErrorHandler = ErrorHandler)
 
+fun getRev s = getOpt (Int.fromString s, 0)
+val revisions
+  = [hd (String.tokens (not o Char.isDigit) "$LastChangedRevision$"),
+     BgVal.revision, BgBDNF.revision, Match.revision, Sugar.revision]
+val revision
+  = Int.toString (foldr Int.max 0 (map getRev revisions))
 end
 
 functor BGADT (structure ErrorHandler : ERRORHANDLER

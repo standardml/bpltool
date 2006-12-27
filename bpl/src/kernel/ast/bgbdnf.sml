@@ -1112,7 +1112,9 @@ struct
         (pp (Flags.getIntFlag "/misc/indent"))
 
   val size = BgVal.size o unmk
-
+  val revision
+    = hd (String.tokens (not o Char.isDigit) "$LastChangedRevision$")
+    
 end
 
 functor BgBDNF (structure Info : INFO

@@ -331,4 +331,6 @@ sig
 
   val size : bgval -> int
 
+  (** Revision number.*)
+  val revision : string
 end

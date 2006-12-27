@@ -269,6 +269,8 @@ fun <|> (b1, b2) = Pri [b1, b2]
 val <|>> = Pri
 fun -/ x = "" / x
 fun -// X = // ("", X)
+val revision
+  = hd (String.tokens (fn c => not (Char.isDigit c)) "$LastChangedRevision$")
 end
 
 

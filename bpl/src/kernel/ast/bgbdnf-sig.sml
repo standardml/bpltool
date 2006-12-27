@@ -238,4 +238,6 @@ sig
 
   val size : 'class bgbdnf -> int
 
+  (** Maximum revision number for containing components.*)
+  val revision : string
 end

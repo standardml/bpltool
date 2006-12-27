@@ -29,6 +29,16 @@ in
   structure BG = BG' (structure ErrorHandler = ErrorHandler)
 end
 
+local
+  fun getRev s = getOpt (Int.fromString s, 0)
+  val revisions
+    = [hd (String.tokens (not o Char.isDigit) "$LastChangedRevision: 355 $"),
+       BG.revision]
+in
+  val BPL_REVISION_STR
+    = Int.toString (foldr Int.max 0 (map getRev revisions))
+end
+
 fun help _ = print
   "BPL Usage Help:\n\n\
   \Node controls (K,L,M : string, m,n >= 0):\n\
