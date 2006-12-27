@@ -185,7 +185,7 @@ struct
   (*FIXME not necessarily the most efficient way to do it... *)
   fun make_ren nm =
       make' (NameMap.Fold
-               (fn ((y, x), ls) =>
+               (fn ((x, y), ls) =>
                    (Link.make {outer = SOME y, inner = NameSet.singleton x})
                    :: ls)
                [] nm)
@@ -296,6 +296,11 @@ struct
 		  show "("; Link'Set.fold ppwire false ls; show ")";
 		  >>())
       end
+
+  fun toString w
+    = PrettyPrint.pp_to_string
+        (Flags.getIntFlag "/misc/linewidth") 
+        (pp (Flags.getIntFlag "/misc/indent")) w
 
   (* Algorithm for composing wirings:
    * 1 For each link V |-> y in w1, add y |-> {} to w_inv.
@@ -512,15 +517,16 @@ struct
             (mk_explainer "the names are not in the codomain of the wiring"
                           explain_NotInCodomain)
 
-  fun in_domain x (_, ht) =
-      case NameHashMap.find ht x of _ => true
-      handle NOT_FOUND => false
+  fun in_domain x (_, ht)
+    = case NameHashMap.find ht x of
+        SOME _ => true
+      | NONE => false
 
   fun app_x (w as (_, ht)) x =
-      case NameHashMap.find ht x of
-	SOME (Name n) => SOME n
-      | _ => NONE 
-      handle NOT_FOUND => raise NotInDomain (w, x, "in app_x")
+    case NameHashMap.find ht x of
+      SOME (Name n) => SOME n
+    | NONE => raise NotInDomain (w, x, "in app_x")
+    | _ => NONE
 
   fun app w X =
       NameSet.fold ((fn (SOME n) => (fn Y => NameSet.insert n Y) 
@@ -549,16 +555,23 @@ struct
           raise NotInCodomain (w, NameSet.difference Y Y', "in app_inverse")
       end
 
-  exception NotARenaming of string * wiring * string
+  exception NotARenaming of wiring * string
+  fun explain_NotARenaming (NotARenaming (w, errtxt)) =
+      [Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data pp w, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_NotARenaming _ = raise Match
+  val _ = add_explainer
+            (mk_explainer "the wiring was expected to be a renaming"
+                          explain_NotARenaming)
 
   fun unmk_ren (w as (link'set, _)) = 
       let
 	fun insertlink {outer = Name y, inner} nm =
 	      (case NameSet.list inner of
                  [x] => NameMap.add (x, y, nm)
-               | _   => raise NotARenaming ("wiring.sml", w, "in unmk_ren"))
+               | _   => raise NotARenaming (w, "in unmk_ren(1)"))
 	  | insertlink {outer = Closure _, ...} _ =
-	      raise NotARenaming ("wiring.sml", w, "in unmk_ren")
+	      raise NotARenaming (w, "in unmk_ren(2)")
       in
 	Link'Set.fold insertlink NameMap.empty link'set
       end
@@ -566,7 +579,7 @@ struct
   fun app_renaming_x w x =
       case app_x w x of
         SOME y => y
-      | NONE   => raise NotARenaming ("wiring.sml", w, "in app_renaming_x")
+      | NONE   => raise NotARenaming (w, "in app_renaming_x")
 
   fun app_renaming_inverse_x w y =
       (*FIXME innefficient...*)
@@ -576,7 +589,7 @@ struct
         if NameSet.size X = 1 then
           hd (NameSet.list X)
         else
-          raise NotARenaming ("wiring.sml", w, "in app_renaming_x")
+          raise NotARenaming (w, "in app_renaming_inverse_x")
       end
       handle NotInCodomain (w, Y, _)
              => raise NotInCodomain (w, Y, "in app_renaming_inverse_x")
@@ -783,9 +796,9 @@ struct
             let
               val n' = case NameSet.list ns of
                          [n] => n
-                       | []  => raise NotARenaming ("wiring.sml", w,
+                       | []  => raise NotARenaming (w,
                                 "wiring contains a link with no inner names")
-                       | _   => raise NotARenaming ("wiring.sml", w,
+                       | _   => raise NotARenaming (w,
                                 "wiring contains a link with multiple inner names")
               val ne = Name n'
             in
@@ -793,8 +806,7 @@ struct
                {outer = ne, inner = NameSet.singleton n})
             end
           | invert_link' {outer = Closure _, ...} =
-            raise NotARenaming ("wiring.sml", w,
-                                "wiring contains a closed link")
+            raise NotARenaming (w, "wiring contains a closed link")
       in
         (Link'Set.map invert_link' ls, ht')
       end

@@ -155,11 +155,10 @@ sig
 
   (** Signal that a wiring is not a renaming.
    * @params file wiring errtxt
-   * @param file    File name for the code that detected the problem.
    * @param wiring  The wiring.
    * @param errtxt  Explanatory error text.
    *)
-  exception NotARenaming of string * wiring * string
+  exception NotARenaming of wiring * string
   (** Compute the name to which the wiring maps a given name.
    * It is not checked that the wiring is a renaming - only that if the 
    * name is in the domain, then it is mapped to a name in the codomain.
@@ -267,4 +266,6 @@ sig
    * @param w       The wiring to output.
    *)
   val pp : int -> PrettyPrint.ppstream -> wiring -> unit
+  (** Return a prettyprinted string representation of a match. *)
+  val toString : wiring -> string
 end

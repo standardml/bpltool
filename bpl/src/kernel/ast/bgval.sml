@@ -168,14 +168,16 @@ struct
     let
       val (t, iface, oface) = unmk v
     in
-      PrettyPrint.begin_block pps PrettyPrint.CONSISTENT indent;
+      PrettyPrint.begin_block pps PrettyPrint.CONSISTENT 0;
     	BgTerm.pp indent pps t;
     	PrettyPrint.add_break pps (1, 0);
     	PrettyPrint.add_string pps ": ";
+      PrettyPrint.begin_block pps PrettyPrint.CONSISTENT 0;
     	Interface.pp indent pps iface;
     	PrettyPrint.add_break pps (1, 0);
     	PrettyPrint.add_string pps "-> ";
     	Interface.pp indent pps oface;
+    	PrettyPrint.end_block pps;
     	PrettyPrint.end_block pps
     end
 

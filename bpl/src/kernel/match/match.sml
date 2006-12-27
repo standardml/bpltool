@@ -438,22 +438,22 @@ struct
                 if Wiring.in_domain x s_C_e then
                   (check_adjust'
                      ename'
-                     (Wiring.app_renaming_x s_a_e x') 
-                     (Wiring.app_renaming_x s_C_e x),
+                     (Wiring.app_renaming_x s_a_e x' handle e => raise e) 
+                     (Wiring.app_renaming_x s_C_e x handle e => raise e),
                    s_C')
                 else
                   let
                     val x'' = if Wiring.in_domain x s_C_n then
                                 Wiring.app_renaming_x s_C_n x
-                              else
+ handle e => raise e                              else
                                 x
                   in
                     if Wiring.in_domain x s_a_e then
                       check_adjust
-                        ename' s_C' (Wiring.app_renaming_x s_a_e x') x''
+                        ename' s_C' (Wiring.app_renaming_x s_a_e x' handle e => raise e) x''
                     else
                       (ename',
-                       check_adjust' s_C' x'' (Wiring.app_renaming_x s_a_n x'))
+                       check_adjust' s_C' x'' (Wiring.app_renaming_x s_a_n x' handle e => raise e))
                   end
               end
 
@@ -508,7 +508,10 @@ struct
    * 8) Return ename', s_C', qs.
    *)
   and matchION' {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, g, G} =
-      lzmake (fn () =>
+      lzmake (fn () => ((*print ("ION': s_a_e=" ^ Wiring.toString s_a_e ^ "\ns_a_n="
+      ^ Wiring.toString s_a_n ^ "\ng=" ^ BgBDNF.toString g ^ "\ns_C_e="
+      ^ Wiring.toString s_C_e ^ "\ns_C_n="
+      ^ Wiring.toString s_C_n ^ "\nG=" ^ BgBDNF.toString G ^ "\n");*)
       case #Ss (unmkG g) of
         [s] =>
       (case unmkS s of
@@ -528,11 +531,11 @@ struct
           val ename''
             = ListPair.foldlEq
                 (fn (yi, ui, ename'') =>
-                    if Wiring.in_domain ui s_C_e then
+                    if Wiring.in_domain ui s_C_e handle e => raise e then
                       check_adjust'
                         ename''
-                        (Wiring.app_renaming_x s_a_e yi)
-                        (Wiring.app_renaming_x s_C_e ui)
+                        (Wiring.app_renaming_x s_a_e yi handle e => raise e)
+                        (Wiring.app_renaming_x s_C_e ui handle e => raise e)
                     else
                       ename'')
                 ename (ys, us)
@@ -565,17 +568,17 @@ struct
                             let
                               val u' = if Wiring.in_domain ui s_C_n then
                                          Wiring.app_renaming_x s_C_n ui
-                                       else
+ handle e => raise e                                       else
                                          ui
                             in
                               if Wiring.in_domain yi s_a_e then
                                 check_adjust
                                   ename' s_C'
-                                  (Wiring.app_renaming_x s_a_e yi) u'
+                                  (Wiring.app_renaming_x s_a_e yi handle e => raise e) u'
                               else
                                 (ename',
                                  check_adjust'
-                                   s_C' u' (Wiring.app_renaming_x s_a_n yi))
+                                   s_C' u' (Wiring.app_renaming_x s_a_n yi handle e => raise e))
                             end
                           else
                             (ename', s_C'))
@@ -594,7 +597,7 @@ struct
       | _ => Nil)
       | _ => Nil)
       | _ => Nil)
-      | _ => Nil)
+      | _ => Nil))
 
   (* Match a global discrete prime using a PAX, MER or ION rule:
    * 1) First return any PAX rule matches,
@@ -741,13 +744,17 @@ struct
         val s_C_n = Wiring.* (s, s_R_n)
         val id_Y_C_e = Wiring.id_X (Wiring.outernames s_C_e)
         val i = BgBDNF.info P
-        fun toSWX {ename', s_C', qs, tree} =
+        fun toSWX {ename', s_C', qs, tree} = ((*print ("SWX: s_C'=" ^ Wiring.toString s_C'
+        ^ "\ns_R_e=" ^ Wiring.toString s_R_e
+        ^ "\ns_R_n=" ^ Wiring.toString s_R_n
+        ^ "\nP=" ^ BgBDNF.toString P
+        ^ "\nqs=[" ^ concat (map (fn q => BgBDNF.toString q ^ "\n") qs) ^ "]\n");*)
           {ename' = ename',
            Y = NameSet.empty,
            s_C = Wiring.* (s_C', id_Y_C_e),
            E = makeG [makeS (SCon (i, Wiring.id_X U))],
            qs = qs,
-           tree = SWX tree}
+           tree = SWX tree})
         val matches
           = lzmap toSWX
                   (matchDG' {ename = ename,
@@ -1133,7 +1140,8 @@ struct
    *     using s_a, s_R, p, and Ps, yielding
    *     ename', Y', s_C, P = (id * (vec v)/(vec Z))N, and qs
    * 5) Construct s_C = s_Y_n || s_Y_e || s_C
-   *     and    ename' = ename' + {s_Y_e(y) |-> s_Y_e(y) | y in Y}
+   *     and    ename' = ename' + {s_Y_e(y) |-> s_Y_e(y)
+   *                               | y in Y n dom(s_Y_e)}
    *     and         G = (id * K_yZ)N
    * 6) Return ename', Y', s_C, G, qs
    *)
@@ -1153,6 +1161,8 @@ struct
 		          val Y = foldr (fn (y, Y) => NameSet.insert y Y) NameSet.empty ys
 		          val s_Y_n = Wiring.restrict s_a_n Y
 		          val s_Y_e = Wiring.restrict s_a_e Y
+		          val Y_e = NameSet.intersect Y (Wiring.innernames s_Y_e)
+		          val s_Y_e_Y = Wiring.app s_Y_e Y_e handle e => raise e
 		          val s_Y = Wiring.|| (s_Y_n, s_Y_e)
 		          val vXs = makefreshlinks Xs
 		          val p = makeP (Wiring.make' vXs) n
@@ -1163,8 +1173,10 @@ struct
 		              val Zs = sortlinksby vXs vZs
 		              val s_C = Wiring.|| (s_Y, s_C)
 		              val ename'
-		                = NameSet.fold (fn y => fn ename => NameMap.add' (y, y, ename))
-		                  ename' (Wiring.app s_Y_e Y)
+		                = NameSet.fold
+		                    (fn y => fn ename => NameMap.add' (y, y, ename))
+		                    ename'
+		                    s_Y_e_Y
 		              val KyZ = Ion.make {ctrl = ctrl, free = ys, bound = Zs}
 		              val G = makeG [makeS (SMol (makeM KyZ N))]
 		            in
@@ -1294,12 +1306,18 @@ struct
       val ps = #Ps (unmkDR D_a)
       val {wirxid = w_Rxid, D = D_R} = unmkBR redex
       val Ps = #Ps (unmkDR D_R)
+      val Y = (glob o outerface) redex
       fun toMatch {w_C, Qs, pi, qs, tree} =
         let
           val Xs = map (hd o loc o outerface) Qs
+          val Y
+            = foldr
+                (fn (Y', Y) => NameSet.union Y' Y)
+                Y
+                (map (glob o outerface) qs)
         in
           {context
-            = BgBDNF.makeB w_C Xs (BgBDNF.makeD Wiring.id_0 Qs pi),
+            = BgBDNF.makeB w_C Xs (BgBDNF.makeD (Wiring.id_X Y) Qs pi)handle e=>raise e,
            redex = redex,
            parameter = BgBDNF.makeDR Wiring.id_0 qs,
            tree = tree}
