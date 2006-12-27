@@ -37,6 +37,7 @@ functor Match'(
   structure NameMap     : MONO_FINMAP
   structure Link        : LINK
   structure LinkSet     : MONO_SET
+  structure Control     : CONTROL
   structure Permutation : PERMUTATION
   structure Wiring      : WIRING
   structure Ion         : ION
@@ -50,6 +51,7 @@ functor Match'(
   sharing type Permutation.permutation = BgBDNF.permutation
   sharing type Wiring.wiring = BgVal.wiring
                              = BgBDNF.wiring
+  sharing type Control.control = Ion.control
   sharing type Ion.ion = BgVal.ion = BgBDNF.ion
   sharing type NameSet.Set = Link.nameset
                            = Wiring.nameset
@@ -1144,7 +1146,9 @@ struct
           val {id_Z, KyX, N = n} = unmkM m
           val {ctrl, free = ys, bound = Xs} = Ion.unmk KyX
         in
-          if (*FIXME: test for active control*)true then
+          case Control.kind ctrl of
+            Control.Passive => LazyList.Nil
+          | _ =>
 	          let
 		          val Y = foldr (fn (y, Y) => NameSet.insert y Y) NameSet.empty ys
 		          val s_Y_n = Wiring.restrict s_a_n Y
@@ -1180,8 +1184,6 @@ struct
 		        in
 		          lzunmk matches
 		        end
-	        else
-	          LazyList.Nil
 	      end
        | _ => raise AgentNotGround (g, "in matchDS"))
       | _ => LazyList.Nil))
@@ -1461,6 +1463,7 @@ functor Match (
   structure NameMap     : MONO_FINMAP
   structure Link        : LINK
   structure LinkSet     : MONO_SET
+  structure Control     : CONTROL
   structure Permutation : PERMUTATION
   structure Wiring      : WIRING
   structure Ion         : ION
@@ -1474,6 +1477,7 @@ functor Match (
   sharing type Permutation.permutation = BgBDNF.permutation
   sharing type Wiring.wiring = BgVal.wiring
                              = BgBDNF.wiring
+  sharing type Ion.control = Control.control
   sharing type Ion.ion = BgVal.ion = BgBDNF.ion
   sharing type NameSet.Set = Link.nameset
                            = Wiring.nameset
@@ -1510,6 +1514,7 @@ struct
 			   structure NameMap = NameMap
 			   structure Link = Link
 			   structure LinkSet = LinkSet
+			   structure Control = Control
 			   structure Permutation = Permutation
 			   structure Wiring = Wiring
 			   structure Ion = Ion

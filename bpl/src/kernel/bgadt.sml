@@ -159,6 +159,7 @@ structure Match = Match'
    structure Link         = Link
    structure NameSet      = NameSet
    structure LinkSet      = LinkSet
+   structure Control      = Control
    structure Permutation  = Permutation
    structure Interface    = Interface
    structure Ion          = Ion
