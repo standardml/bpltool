@@ -117,8 +117,8 @@ fun match_b {agent, redex}
   = match_rbdnf {agent = regl_b agent, redex = regl_b redex}
 fun match_v {agent, redex}
   = match_rbdnf {agent = regl_v agent, redex = regl_v redex}
-val simplify_v = BG.BgVal.simplify
-fun simplify_b b = simplify_v (denorm_b b) 
+val simpl_v = BG.BgVal.simplify
+fun simpl_b b = simpl_v (denorm_b b) 
 val str_b = BG.BgBDNF.toString
 val str_v = BG.BgVal.toString
 fun print_b b = print (str_b b)
@@ -131,7 +131,7 @@ local
 	fun print_m0 mz toStr =
 	  let
 	    fun ppBDNF indent pps B
-	      = BG.BgVal.pp indent pps (simplify_b B)
+	      = BG.BgVal.pp indent pps (simpl_b B)
 	  in
 	    LazyList.lzprintln (toStr ppBDNF ppBDNF) mz;
 	    print "\n"

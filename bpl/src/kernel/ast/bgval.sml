@@ -909,7 +909,8 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	  	      VAbs (X, v', ioi)
 	  	 | v' => VAbs (X, v', ioi))
 	  | simplify (VTen (vs, ioi as (_, _, i))) =
-	  (* vsl * id_0 * vsr -> vsl * vsr
+	  (* vsl * Ten vs' * vsr -> vsl * vs' * vsr
+	   * vsl * id_0 * vsr -> vsl * vsr
 	   * vs0 * w1 * vs1 * w2 * ... * wn * vsn
 	   *  -> [[w1 * ... * wn]] * vs0 * ... * vsn
 	   * vsl * pi1 * pi2 * vsr -> vsl * [[pi1 * pi2]] * vsr
@@ -917,6 +918,12 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	   *)
 	    let
 	      val vs = map simplify vs
+	      val vs
+	        = foldr
+	            (fn (VTen (vs', _), vs) => vs' @ vs
+	              | (v, vs) => v :: vs)
+	            []
+	            vs
 	      val vs = List.filter (not o is_id0') vs
 	      fun extractwiring [] = (Wiring.id_0, NONE, [])
 	        | extractwiring (v :: vs) =
@@ -957,6 +964,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	   * (v1 * v2)(v1' * v2') -> v1 v1' * v2 v2', if vi : Ii ->, vi' : -> Ii
 		 * (alpha * id_1) K_y(X) -> K_{alpha(y)}(X)
 		 * (alpha * id_1) (beta * K_y(X)) -> alpha' beta * K_{alpha(y)}(X)
+		 * A o (B o C) -> (A o B) o C    (for nicer prettyprinting)
 	   *)
 	    let
 	      val v1' = simplify v1
@@ -1073,6 +1081,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	           end
 	         else
 	           VCom (v1', v2', ioi)
+	      | (v1', VCom (v2a, v2b, _)) => VCom (VCom (v1', v2a, ioi), v2b, ioi)
 	      | (v1', v2') => VCom (v1', v2', ioi)
 	    end                 
     | simplify v = v
