@@ -108,4 +108,6 @@ sig
   val toStringWithTree' : (int -> PrettyPrint.ppstream -> B bgbdnf -> unit)
                 ->(int -> PrettyPrint.ppstream -> DR bgbdnf -> unit)
                 -> match -> string
+  (** Revision number.*)
+  val revision : string
 end

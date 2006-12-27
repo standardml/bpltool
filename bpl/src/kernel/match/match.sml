@@ -1454,6 +1454,7 @@ struct
     = PrettyPrint.pp_to_string
         (Flags.getIntFlag "/misc/linewidth") 
         (pp0 true ppBBDNF ppDRBDNF (Flags.getIntFlag "/misc/indent"))
+val revision = String.extract ("$LastChangedRevision: 315", 22, NONE)
 end
 
 
