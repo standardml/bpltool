@@ -26,7 +26,7 @@
 local
   structure ErrorHandler : ERRORHANDLER = PrintErrorHandler
 in
-  structure BG = BG (structure ErrorHandler = ErrorHandler)
+  structure BG = BG' (structure ErrorHandler = ErrorHandler)
 end
 
 fun help _ = print
@@ -65,6 +65,8 @@ fun help _ = print
   \  |||[A,...]                Parallel product of n factors\n\
   \  <|>>[A,...]               Prime product of n factors\n\
   \  A o B                     Composition\n\n\
+  \ML function composition (f : 'b -> c, g : 'a -> 'b):\n\
+  \  f oo g\n\n\
   \Precedence:\n\
   \  o                         Composition (strongest)\n\
   \  *, ||, <|>                Product, left associative\n\
@@ -90,6 +92,8 @@ fun help _ = print
   \"
   
 open BG.Sugar
+val oo = General.o
+infix 3 oo
 infix 7 /   infix 7 //
 infix 6 o
 infix 5 *   infix 5 ||   infix 5 <|>

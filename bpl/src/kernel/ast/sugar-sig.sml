@@ -60,6 +60,7 @@ signature SUGAR =
     type arities
     type mapinfo
     type absinfo
+    type ctrlkind
 
     (** Singal detection of an ion with duplicate names.
      * @params K ys Xs errtxt
@@ -77,24 +78,24 @@ signature SUGAR =
     exception WrongArity of string
 
     (** Create an active control. *)
-    val active : ((bgval -> bgval) -> 'a) -> 'a
+    val active : (ctrlkind -> 'a) -> 'a
     (** Create an active control of arity 0 -> 0. *)
     val active0 : string -> bgval
     (** Create an atomic control. *)
-    val atomic : ((bgval -> bgval) -> 'a) -> 'a
+    val atomic : (ctrlkind -> 'a) -> 'a
     (** Create an atomic control of arity 0 -> 0. *)
     val atomic0 : string -> bgval
     (** Create an passive control. *)
-    val passive : ((bgval -> bgval) -> 'a) -> 'a
+    val passive : (ctrlkind -> 'a) -> 'a
     (** Create an active passive of arity 0 -> 0. *)
     val passive0 : string -> bgval
     (** Operator to put between control name and arity spec. *)
-    val =: : string * arities -> (bgval -> bgval) 
+    val =: : string * arities -> ctrlkind 
 	     -> name list -> name list list -> bgval
     (** Operator to put between control name and zero inner 
      * arity spec.
      *)
-    val -: : string * int -> (bgval -> bgval) -> name list -> bgval
+    val -: : string * int -> ctrlkind -> name list -> bgval
     (** Operator to put between inner and outer arity. *)
     val --> : int * int -> arities
     (** A barren root bigraph. *)

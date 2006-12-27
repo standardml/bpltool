@@ -70,6 +70,7 @@ type bgval = BgVal.bgval
 type arities = {boundarity : int, freearity : int}
 type mapinfo = int * nameset
 type absinfo = nameset
+type ctrlkind = Control.kind
 
 open Debug
 open ErrorHandler
@@ -98,45 +99,17 @@ val Par = BgVal.Par Info.noinfo
 val Pri = BgVal.Pri Info.noinfo
 val Com = BgVal.Com Info.noinfo
 
-(* changes the kind of the control of a BgVal.Ion to k *)
-fun changeBgvalIonKind k v =
-    case BgVal.match BgVal.PIon v of
-      BgVal.MIon KyX =>
-        let
-          val {ctrl, free, bound} = Ion.unmk KyX
-          val (s, _) = Control.unmk ctrl
-          val ctrl = Control.make (s, k)
-        in
-          Ion (Ion.make {ctrl  = ctrl,
-                         free  = free,
-                         bound = bound})
-	end
-    | _ => v (*FIXME raise an exception*)
-
-(*FIXME is this correct?*)
-fun active f = f (changeBgvalIonKind Control.Active)
+fun active k = k Control.Active
 fun active0 K
   = Ion (Ion.make {ctrl = Control.make (K, Control.Active),
                    free = [], bound = []}) 
 
-(*FIXME is this correct?*)
-fun passive f = f (changeBgvalIonKind Control.Passive)
+fun passive k = k Control.Passive
 fun passive0 K
   = Ion (Ion.make {ctrl = Control.make (K, Control.Passive),
                    free = [], bound = []}) 
 
-fun atomic f
-  = f (fn v => 
-	  let
-	    val X = (hd o Interface.loc o BgVal.innerface) v
-	    val barrenroot
-	      = if NameSet.isEmpty X then
-		  Mer 0
-		else
-		  Ten [Wir (Wiring.introduce X), Mer 0]
-	  in
-	    Com (v, Abs (X, barrenroot))
-	  end)
+fun atomic k = k Control.Atomic
 fun atomic0 K
   = Com (Ion (Ion.make {ctrl = Control.make (K, Control.Atomic),
                         free = [], bound = []}), 
@@ -187,7 +160,7 @@ fun listToString printfun ns =
 val namelistToString = listToString (fn s => s)
 val namelistlistToString = listToString namelistToString
 
-fun =: (K, {freearity, boundarity}) k free bound =
+fun =: (K, {freearity, boundarity}) kind free bound =
     if length free <> freearity then
       raise WrongArity ("Control " ^ K ^ " takes "
 			^ Int.toString freearity 
@@ -200,20 +173,34 @@ fun =: (K, {freearity, boundarity}) k free bound =
 			^ namelistlistToString bound ^ "'\n")
     else
       let
-	val ion 
-	  = Ion.make
-	      {ctrl  = Control.make (K, Control.Active), (*FIXME is this correct?*)
-	       free  = map Name.make free, 
-	       bound = map (NameSet.fromList o map Name.make) bound}
-	      handle 
-	      NameSet.DuplicatesRemoved
-	      => raise DuplicateName 
-			 (K, free, bound,
-			  "Duplicate names are not allowed in ions")
+        val ion
+	        = Ion
+	            (Ion.make
+	            {ctrl  = Control.make (K, kind),
+	             free  = map Name.make free, 
+	             bound = map (NameSet.fromList o map Name.make) bound})
+	          handle 
+	            NameSet.DuplicatesRemoved
+	          => raise DuplicateName 
+			           (K, free, bound,
+			            "Duplicate names are not allowed in ions")
+
       in
-	k (Ion ion)
+        case kind of
+          Control.Atomic =>
+            let
+        		  val X = (hd o Interface.loc o BgVal.innerface) ion
+					    val barrenroot
+					      = if NameSet.isEmpty X then
+						        Mer 0
+						      else
+						        Ten [Wir (Wiring.introduce X), Mer 0]
+			      in
+				      Com (ion, Abs (X, barrenroot))
+			      end
+        | _ => ion
       end
-fun -: (K, freearity) k free =
+fun -: (K, freearity) kind free =
     if length free <> freearity then
       raise WrongArity ("Control " ^ K ^ " takes "
 			^ Int.toString freearity
@@ -221,11 +208,25 @@ fun -: (K, freearity) k free =
 			^ namelistToString free ^ "'\n")
     else
       let
-	val ion = Ion.make {ctrl = Control.make (K, Control.Active), (*FIXME is this correct?*)
-			    free = map Name.make free, 
-			    bound = []}
+        val ion
+	        = Ion 
+	            (Ion.make {ctrl = Control.make (K, kind),
+		                     free = map Name.make free, 
+		                     bound = []})
       in
-	k (Ion ion)
+        case kind of
+          Control.Atomic =>
+            let
+        		  val X = (hd o Interface.loc o BgVal.innerface) ion
+					    val barrenroot
+					      = if NameSet.isEmpty X then
+						        Mer 0
+						      else
+						        Ten [Wir (Wiring.introduce X), Mer 0]
+			      in
+				      Com (ion, Abs (X, barrenroot))
+			      end
+        | _ => ion
       end
 fun --> (boundarity, freearity) = {freearity = freearity,
 				   boundarity = boundarity}
