@@ -20,4 +20,11 @@
 
 signature PARTITION =
 sig
+  type 'a partition
+
+  exception NoPartitions
+
+  val make : 'a list -> int -> 'a partition
+
+  val next : 'a partition -> ('a list list * 'a partition)
 end

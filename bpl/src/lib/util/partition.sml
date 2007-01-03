@@ -20,6 +20,14 @@
 
 structure Partition :> PARTITION =
 struct
+  type 'a partition = unit
+
+  exception NoPartitions
+
+  fun make _ _ = ()
+
+  fun next _ = raise NoPartitions
+
   open Array
   infix 8 sub;
 
