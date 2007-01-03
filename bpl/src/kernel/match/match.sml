@@ -485,6 +485,25 @@ struct
           | _ => Nil)
       | _ => Nil))
   
+  (* Match a global discrete prime to a context using the MER rule:
+  
+  STOP PRESS:  THIS SEEMS CORRECT, BUT MIGHT BE IMPROVABLE!
+  
+   * 1) Find agent width n and context width m.
+   * 2) If n = 1, return NO MATCH (to avoid infinite recursion).
+   * 3) Deconstruct agent g = (id * merge) (m_0 * ... * m_n-1)
+   * 4) Deconstruct context G = (id * merge) (S_0 * ... * S_m-1)
+   * 5) Compute a list Xss of local inner name set lists for S_i's
+   * 6) For each partition rho(n,m) of n into m subsets
+   *    and each m-permutation pi,
+   *     6a) Compute pibar as pi pushed through Xss.
+   *     6b) Construct es as a tensor product of merged partitions
+   *         of agent m_i's
+   *     6c) Construct Es as a tensor product of S_{pi(i)}'s
+   *     6d) Infer premise using ename, s_a, s_C, es, Es and pi,
+   *         yielding ename', s_C', qs.
+   *     6e) Return ename', s_C', qs.
+   *)
   and matchMER' {ename, s_a, s_C, g, G} = lzNil
 
   (* Match a global discrete prime to a context using the ION rule:
@@ -1106,7 +1125,25 @@ struct
 
   val warninggiven = ref false
   (* Match a global discrete prime using the MER rule:
-   * 1) ...
+   * 1) Find agent width n.
+   * 2) If n = 1, return NO MATCH (to avoid infinite recursion).
+   
+   TODO!!!...
+   
+   
+   * 3) Deconstruct agent g = (id * merge) (m_0 * ... * m_n-1)
+   * 4) Deconstruct context G = (id * merge) (S_0 * ... * S_m-1)
+   * 5) Compute a list Xss of local inner name set lists for S_i's
+   * 6) For each partition rho(n,m) of n into m subsets
+   *    and each m-permutation pi,
+   *     6a) Compute pibar as pi pushed through Xss.
+   *     6b) Construct es as a tensor product of merged partitions
+   *         of agent m_i's
+   *     6c) Construct Es as a tensor product of S_{pi(i)}'s
+   *     6d) Infer premise using ename, s_a, s_C, es, Es and pi,
+   *         yielding ename', s_C', qs.
+   *     6e) Return ename', s_C', qs.
+   * 1) Deconstruct agent
    *
    * THE FOLLOWING IS A DUMMY IMPLEMENTATION:
    *)
