@@ -3,20 +3,20 @@
 sigs = info-sig bgterm-sig bgval-sig bgbdnf-sig sugar-sig 
 funs = info bgterm bgval bgbdnf sugar
 
-info-sig:
-info: info-sig /lib/util/origin-sig %NODASHSIG
-bgterm-sig:
-bgterm: + /lib/pp/smlnj/. /lib/coll/pp /kernel/bg/sigs
-bgval-sig:
-bgval: + /lib/pp/smlnj/. /lib/coll/monoset-sig /lib/coll/pp
+info-sig: /lib/util/origin
+info: info-sig /lib/util/origin %NODASHSIG
+bgterm-sig: /lib/pp/smlnj/prettyprint
+bgterm: info-sig /lib/pp/smlnj/. /lib/coll/pp /kernel/bg/sigs
+bgval-sig: /lib/pp/smlnj/prettyprint
+bgval: info-sig /lib/pp/smlnj/. /lib/coll/monoset-sig /lib/coll/pp
    bgterm-sig /kernel/bg/sigs /lib/util/errorhandler-sig
-   /lib/util/origin-sig /lib/util/debug
-bgbdnf-sig:
-bgbdnf: + /lib/coll/monoset-sig /lib/coll/pp /kernel/bg/sigs
+   /lib/util/origin /lib/util/debug /lib/util/flags
+bgbdnf-sig: /lib/pp/smlnj/prettyprint
+bgbdnf: info-sig /lib/coll/monoset-sig /lib/coll/pp /kernel/bg/sigs
    bgval-sig /lib/pp/smlnj/. /lib/util/errorhandler-sig
-   /lib/util/origin-sig /lib/util/debug
+   /lib/util/origin /lib/util/debug /lib/util/flags
 #ppbg bgterm-sig /lib/pp/smlnj/. %NODASHSIG
 sugar-sig:
-sugar: + /lib/coll/monoset-sig /lib/coll/pp /kernel/bg/sigs bgval-sig
-   /lib/util/errorhandler-sig /lib/util/origin-sig /lib/util/debug
+sugar: info-sig /lib/coll/monoset-sig /lib/coll/pp /kernel/bg/sigs bgval-sig
+   /lib/util/errorhandler-sig /lib/util/origin /lib/util/debug
    /lib/pp/smlnj/.

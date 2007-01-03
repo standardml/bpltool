@@ -20,6 +20,8 @@
 # INCLUDE=../pp/smlnj
 # INCLUDE=../pp/mak
 # INCLUDE=../coll
+partition-sig:
+partition: partition-sig %NODASHSIG
 errormsg:
 argparse-sig:
 argparse: argparse-sig %NODASHSIG
@@ -43,8 +45,8 @@ timings: timings-sig flags util /lib/coll/set
   /lib/compat/mosml/hash/. /lib/compat/common/legacytimer %NODASHSIG
 debug-sig:
 debug: + debug-sig flags %NODASHSIG
-origin-sig:
-origin: + origin-sig /lib/pp/smlnj/prettyprint-sig %NODASHSIG
+origin-sig: /lib/pp/smlnj/prettyprint
+origin: origin-sig /lib/pp/smlnj/prettyprint %NODASHSIG
 baseerrorhandler-sig: debug
 baseerrorhandler: + baseerrorhandler-sig debug origin-sig 
    /lib/pp/smlnj/prettyprint-sig %NODASHSIG

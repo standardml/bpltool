@@ -6,7 +6,7 @@
 # INCLUDE=../lib/pp/smlnj
 # INCLUDE=../lib/util
 
-bgadt-sig: bg/sigs ast/sigs match/sigs /lib/coll/set
+bgadt-sig: bg/sigs ast/sigs match/sigs /lib/coll/set /lib/util/errorhandler-sig
 bgadt: bgadt-sig bg/funs ast/funs match/funs /lib/pp/smlnj/.
    /lib/coll/set /lib/coll/pp /lib/coll/lzlist /lib/util/errorhandler-sig
    /lib/util/origin-sig %NODASHSIG

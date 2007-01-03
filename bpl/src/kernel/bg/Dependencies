@@ -5,7 +5,7 @@ sigs = name-sig link-sig control-sig interface-sig ion-sig
        permutation-sig wiring-sig
 funs = name interface control link ion wiring permutation 
 
-name-sig: /lib/coll/ordering-sig /lib/coll/monoset-sig
+name-sig: /lib/coll/ordering-sig /lib/coll/monoset-sig /lib/pp/smlnj/.
 name: /lib/coll/ordering-sig /lib/coll/rbset /lib/pp/edlib/edlibprettyprint
    name-sig /lib/compat/mosml/hash/. /lib/pp/smlnj/. %NODASHSIG
 interface-sig:
@@ -13,14 +13,14 @@ interface: /lib/coll/monoset-sig /lib/coll/pp /lib/pp/smlnj/. name-sig
 link-sig:
 link: /lib/coll/set /lib/coll/pp + name-sig
 wiring-sig:
-wiring: + /lib/pp/smlnj/. /lib/coll/set /lib/coll/pp /lib/coll/map
+wiring: /lib/pp/smlnj/. /lib/coll/set /lib/coll/pp /lib/coll/map
    /lib/compat/mosml/hash/. link-sig name-sig
-   /lib/util/errorhandler-sig /lib/util/origin-sig /lib/util/debug
+   /lib/util/errorhandler-sig /lib/util/origin /lib/util/debug /lib/util/flags
 permutation-sig:
-permutation: + /lib/compat/common/legacyarray /lib/coll/set
+permutation: /lib/compat/common/legacyarray /lib/coll/set
    /lib/coll/pp /lib/pp/smlnj/. interface-sig name-sig
-   /lib/util/errorhandler-sig /lib/util/origin-sig /lib/util/debug
+   /lib/util/errorhandler-sig /lib/util/origin /lib/util/debug
 control-sig:
 control:
-ion-sig:
-ion: + /lib/coll/set /lib/coll/pp /lib/pp/smlnj/. control-sig name-sig 
+ion-sig: /lib/pp/smlnj/.
+ion: /lib/coll/set /lib/coll/pp /lib/pp/smlnj/. control-sig name-sig 
