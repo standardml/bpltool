@@ -487,7 +487,7 @@ struct
   
   (* Match a global discrete prime to a context using the MER rule:
   
-  STOP PRESS:  THIS SEEMS CORRECT, BUT MIGHT BE IMPROVABLE!
+  STOP PRESS:  THIS SEEMS CORRECT, BUT WE MIGHT BE ABLE TO IMPROVE IT!
   
    * 1) Find agent width n and context width m.
    * 2) If n = 1, return NO MATCH (to avoid infinite recursion).
@@ -1246,17 +1246,20 @@ struct
    *    (to avoid infinite recursion via MER-PAR-PARe-PARn),
    *    return any MER rule matches.
    *)
-  and matchDG (args as {ename, s_a, s_R, e = g, Ps}) =
+  and matchDG allowMER (args as {ename, s_a, s_R, e = g, Ps}) =
     lzappend
 	    (lzmake (fn () =>
 	       case lzunmk (matchPAX args) of
 	         LazyList.Nil => lzunmk (matchSWX args)
 	       | mz as (LazyList.Cons _) => mz))
 	    (lzappend (matchION args)
-	      (lzmake (fn () =>
-	        case #Ss (unmkG g) of
-	          (_ :: _ :: _) => lzunmk (matchMER args)
-	        | _ => LazyList.Nil)))
+	    	(if allowMER then
+		      (lzmake (fn () =>
+	        	case #Ss (unmkG g) of
+	          	(_ :: _ :: _) => lzunmk (matchMER args)
+	        	| _ => LazyList.Nil))
+	      else
+	        lzNil))
 
   (* Match an abstraction:
    * 1) Deconstruct p, yielding s_a_L : Z -> W and g.
@@ -1286,7 +1289,8 @@ struct
         end
       val matches
         = lzmap toABS
-           (matchDG {ename = ename,
+           (matchDG true 
+                    {ename = ename,
                      s_a = {s_a_e = s_a_e, s_a_n = s_a_n_new},
                      s_R = s_R,
                      e = g,
