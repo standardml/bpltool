@@ -1124,30 +1124,44 @@ struct
    * 1) Deconstruct agent g into molecule list ms of length n.
 	 * 2) Determine outer width r of redex Ps; let m = r + 1.
    * 3) For each partition rho(n,m) of n into m subsets
-   *    and each m-permutation pi,
-   *     3a) Construct tensor product mss of merged molecule subsets.
+   *     3a) Construct tensor product gs of merged molecule subsets.
    *     3b) Infer premise using ename, s_a, s_R, es = mss, Ps,
    *         yielding ename', Y, s_C, Es, pi, qs.
    *     3c) Return ename', Y, s_C, merged Es, qs.
    *)
-(* THIS IS A DUMMY IMPLEMENTATION: *)
-  val warninggiven = ref false
   fun matchMER (args as {ename, s_a, s_R, e = g, Ps}) =
-    let (*val _ =  print "MER "*)
+    lzmake (fn () =>
+    let val _ =  print "MER "
+      val {idxmerge, Ss = ms} = unmkG g
+      val m = length Ps + 1
+      val rho = Partition.make ms m
       fun toMER {ename', Y, s_C, Es, pi, qs, tree} =
         {ename' = ename', Y = Y, s_C = s_C,
          E = makeG (List.concat (map (#Ss o unmkG) Es)),
          qs = qs, tree = MER tree}
+      fun try (mss, rho) =
+        let
+          val _ = print ("match.sml: DEBUG: Partitioning " ^ Int.toString (length ms)
+          ^ " into [ " ^ concat (map (fn ms => Int.toString (length ms) ^ " ") mss)
+          ^ "].\n")
+          val gs = map makeG mss
+          val matches
+            = matchPER {ename = ename, matchE = matchDG false,
+                  s_a = s_a, s_R = s_R, es = gs, Qs = Ps}
+        in
+          lzappend
+            (lzmap toMER matches)
+          	(try (Partition.next rho)
+          	 handle Partition.NoPartitions => lzNil)
+        end
     in
-      if !warninggiven then
-        () 
-      else
-        print "kernel/match/match.sml: warning: matchMER not implemented!\n";
-      warninggiven := true;
-      lzmap toMER
-        (matchPER {ename = ename, matchE = matchDG false,
-                  s_a = s_a, s_R = s_R, es = [g], Qs = Ps})
-    end
+      lzunmk
+        (try (Partition.next rho)
+         handle Partition.NoPartitions => 
+           (print ("match.sml: DEBUG: No partitons of " ^ Int.toString (length ms)
+          	  ^ " into " ^ Int.toString m ^ " subsets.\n");
+          	lzNil))
+    end)
 
   (* Match a global discrete prime using the ION rule, if possible:
    * If it contains 1 top-level molecule, match an ion:
