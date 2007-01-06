@@ -500,8 +500,85 @@ struct
    *     6d) Infer premise using ename, s_a, s_C, es, Es and pi,
    *         yielding ename', s_C', qs.
    *     6e) Return ename', s_C', qs.
+   *
+   * Function tryPis tries to generate matches with one partition
+   * and all hitherto known permutation, while
+   * function tryRhos tries to generate matches with one permutation
+   * and all hitherto known partitions.
+   * The primed versions are used when there are no more permutation
+   * or partitions left, respectively
    *)
-  and matchMER' {ename, s_a, s_C, g, G} = lzNil
+   (* NOT FULLY IMPLEMENTED YET! *)
+  and matchMER' {ename, s_a, s_C, g, G} = lzmake (fn () =>
+    let
+      val ms = [] (* FIXME: do 3 here *)
+      val Ss = [] (* FIXME: do 4 here *)
+      val m = length Ss
+      val Xss = [] (* FIXME: do 5 here *)
+      fun try pi mss = lzNil (* FIXME: do 6a--6e here *)
+      fun tryPis' allpis allmss (mss, rho) perm (pi :: pis)
+        = lzappend
+            (try pi mss)
+            (tryPis' allpis allmss (mss, rho) perm pis)
+        | tryPis' allpis allmss (mss, rho) perm []
+        = tryPis'
+            allpis (mss :: allmss)
+            (Partition.next rho) perm allpis
+          handle Partition.NoPartitions => lzNil
+      fun tryRhos' allpis allmss (pi, perm) rho (mss :: msss)
+        = lzappend
+            (try pi mss)
+            (tryRhos' allpis allmss (pi, perm) rho msss)
+        | tryRhos' allpis allmss (pi, perm) rho []
+        = let
+            val perm as (_, pi, _) = nextperm perm
+          in
+            tryRhos'
+              allpis allmss
+              (Permutation.copy pi, perm) rho allmss
+          end
+          handle NoMorePerms => lzNil
+      fun tryPis allpis allmss (mss, rho) perm (pi :: pis)
+        = lzappend
+            (try pi mss)
+            (tryPis allpis allmss (mss, rho) perm pis)
+        | tryPis allpis allmss (mss, rho) perm []
+        = let
+            val perm as (_, pi, _) = nextperm perm
+          in
+            tryRhos
+              allpis (mss :: allmss)
+              (Permutation.copy pi, perm) rho (mss :: allmss)
+          end
+          handle NoMorePerms =>
+            (tryPis'
+               allpis (mss :: allmss)
+               (Partition.next rho) perm allpis
+             handle Partition.NoPartitions => lzNil)
+      and tryRhos allpis allmss (pi, perm) rho (mss :: msss)
+        = lzappend
+            (try pi mss)
+            (tryRhos allpis allmss (pi, perm) rho msss)
+        | tryRhos allpis allmss (pi, perm) rho []
+        = tryPis
+            (pi :: allpis) allmss
+            (Partition.next rho) perm (pi :: allpis)
+          handle Partition.NoPartitions =>
+            (let
+               val perm as (_, pi, _) = nextperm perm
+             in
+               tryRhos(*'*)
+                 allpis allmss
+                 (Permutation.copy pi, perm) rho allmss
+             end
+             handle NoMorePerms => lzNil)
+      val perm as (_, pi, _) = firstperm Xss
+    in
+      lzunmk
+        (tryRhos
+           [] []
+           (Permutation.copy pi, perm) (Partition.make ms m) [])
+    end)
 
   (* Match a global discrete prime to a context using the ION rule:
    * 1) Deconstruct agent g = id * K_y(X) and context G = i * L_u(Z).
@@ -1139,8 +1216,9 @@ struct
         {ename' = ename', Y = Y, s_C = s_C,
          E = makeG (List.concat (map (#Ss o unmkG) Es)),
          qs = qs, tree = MER tree}
-      fun try (mss, rho) =
+      fun try rho =
         let
+          val (mss, rho) = Partition.next rho
           val _ = print ("match.sml: DEBUG: Partitioning " ^ Int.toString (length ms)
           ^ " into [ " ^ concat (map (fn ms => Int.toString (length ms) ^ " ") mss)
           ^ "].\n")
@@ -1149,18 +1227,11 @@ struct
             = matchPER {ename = ename, matchE = matchDG false,
                   s_a = s_a, s_R = s_R, es = gs, Qs = Ps}
         in
-          lzappend
-            (lzmap toMER matches)
-          	(try (Partition.next rho)
-          	 handle Partition.NoPartitions => lzNil)
+          lzappend (lzmap toMER matches) (try rho)
         end
+      	handle Partition.NoPartitions => lzNil
     in
-      lzunmk
-        (try (Partition.next rho)
-         handle Partition.NoPartitions => 
-           (print ("match.sml: DEBUG: No partitons of " ^ Int.toString (length ms)
-          	  ^ " into " ^ Int.toString m ^ " subsets.\n");
-          	lzNil))
+      lzunmk (try rho)
     end)
 
   (* Match a global discrete prime using the ION rule, if possible:
