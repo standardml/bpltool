@@ -18,26 +18,49 @@
  * USA
  *)
 
-structure Partition :> PARTITION =
+(* Implementation of list partitioning based on [FIXME] *)
+functor Partition (structure LazyList : LAZYLIST) :> PARTITION =
 struct
-  type 'a partition = unit
+  open LazyList
+  val sub    = Array.sub  infix 8 sub
+  val array  = Array.array
+  val update = Array.update
+
+  type 'a partitiongen = 'a list list lazylist
 
   exception NoPartitions
 
-  fun make _ _ = ()
-
-  fun next _ = raise NoPartitions
-
-  open Array
-  infix 8 sub;
-
-  fun setpart n =
+  fun setpart2 list n m =
+      lzmake (fn () =>
       let
         val c = array (n + 1, 1)
         val b = array (n + 1, 1)
 
+        (* m' is the number of non-empty groups *)
+        fun make_partition m' =
+	    let
+              val partition = List.tabulate (m, fn _ => [])
+
+              (* insert element e into group g of partition p *)
+	      fun insert e g p =
+                  #2 (foldr (fn (group, (g', p)) =>
+                                if g = g' then (0, (e::group)::p)
+                                else           (g' - 1, group::p))
+                            (m,[]) p)
+                  
+            in
+              #2 (foldr (fn (e, (i, p)) =>
+                            (i - 1, insert e (c sub i) p))
+                        (n, partition) list)
+            end
+
         fun print_partition () =
-            (foldl (fn (e, first) => if first then false else (print (Int.toString e); false)) true c;
+            (Array.foldl (fn (e, first) =>
+                             if first then
+                               false
+                             else
+                               (print (Int.toString e); false))
+                         true c;
              print "\n")
 
         fun while' r j =
@@ -53,25 +76,55 @@ struct
             else j
 
         fun for i nj =
-            if i <= nj then
+            lzmake (fn () =>
+            if i <= nj andalso i <= m then
               (update (c, n, i);
-               print_partition ();
-               for (i + 1) nj)
-            else ()
+               Cons (
+                 (print_partition ();
+                 if i < nj then make_partition (nj - 1)
+                           else make_partition nj),
+                 for (i + 1) nj))
+            else Nil)
 
-        fun repeat false 1 j = ()
+        fun repeat false 1 j = lzNil
           | repeat _     r j =
             let
-              val j = while' r j
-              val _ = for 1 (n - j)
-              val r = b sub j
-              val _ = update (c, r, c sub r + 1)
-              val j = if (c sub r > r - j) then j - 1 else j
+              val j  = while' r j
+              val ps = for 1 (n - j)
             in
-              repeat false r j
+              lzappend
+                ps
+                (lzmake (fn () =>
+                 if c sub r < m then
+                   let
+                     val r = b sub j
+                     val _ = update (c, r, c sub r + 1)
+                     val j = if (c sub r > r - j) then j - 1 else j
+                   in
+                     lzunmk (repeat false r j)
+                   end
+                 else
+                   Nil))
             end
       in
-        repeat true 1 0
+        lzunmk (repeat true 1 0)
+      end)
+
+  fun make list m = 
+      let
+        val n = length list
+      in
+        if m < 0 orelse (m = 0 andalso n > 0) then
+          raise NoPartitions
+        else if n = 0 then
+          lzmake (fn () => Cons ([], lzNil))
+        else
+          setpart2 list n m
       end
+
+  fun next pg =
+      (case lzunmk pg of
+         Nil    => raise NoPartitions
+       | Cons r => r)
 end
 

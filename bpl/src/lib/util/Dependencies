@@ -21,7 +21,7 @@
 # INCLUDE=../pp/mak
 # INCLUDE=../coll
 partition-sig:
-partition: partition-sig %NODASHSIG
+partition: partition-sig /lib/coll/lazylist-sig %NODASHSIG
 errormsg:
 argparse-sig:
 argparse: argparse-sig %NODASHSIG

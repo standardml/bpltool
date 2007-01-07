@@ -18,13 +18,33 @@
  * USA
  *)
 
+(** Partioning of lists into m groups. *)
 signature PARTITION =
 sig
-  type 'a partition
+  (** A partition generator type. *)
+  type 'a partitiongen
 
+  (** Signal that there no more partitions are available. *)
   exception NoPartitions
 
-  val make : 'a list -> int -> 'a partition
+  (** Create a partition generator which generates all partitions
+   * of list into m groups. Groups might be empty.
+   *
+   * @params list m
+   * @param list  the list to partition.
+   * @param m     the number of groups in a partition.
+   * @return a partition generator
+   * @exception NoPartitions if it is impossible to partition
+   *                         list into m groups.
+   *)
+  val make : 'a list -> int -> 'a partitiongen
 
-  val next : 'a partition -> ('a list list * 'a partition)
+  (** Get the next partition from a partition generator.
+   * Note that the operation may be destructive.
+   * @params part_gen
+   * @param part_gen  the partition generator.
+   * @return a partition of the list given to make
+   * @exception NoPartitions if no more partitions are available.
+   *)
+  val next : 'a partitiongen -> 'a list list * 'a partitiongen
 end

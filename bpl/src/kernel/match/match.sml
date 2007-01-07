@@ -93,6 +93,8 @@ struct
       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp errtitle,
            explainer e)
 
+  structure Partition = Partition(structure LazyList = LazyList)
+
   open BgVal
   type info = Info.info
   type 'class bgbdnf  = 'class BgBDNF.bgbdnf
