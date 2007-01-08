@@ -18,50 +18,42 @@
  * USA
  *)
 
-(* Implementation of list partitioning based on [FIXME] *)
+(* Implementation of list partitioning based on
+ *
+ * B. Djokic et al. 
+ * "A Fast Iterative Algorithm for Generating Set Partitions"
+ *)
 functor Partition (structure LazyList : LAZYLIST) :> PARTITION =
 struct
   open LazyList
   val sub    = Array.sub  infix 8 sub
   val array  = Array.array
   val update = Array.update
+  val modify = Array.modify
 
   type 'a partitiongen = 'a list list lazylist
 
   exception NoPartitions
 
   fun setpart2 list n m =
-      lzmake (fn () =>
       let
         val c = array (n + 1, 1)
         val b = array (n + 1, 1)
 
+        (* array for building partition *)
+        val p = array (m, [])
+
         (* m' is the number of non-empty groups *)
         fun make_partition m' =
 	    let
-              val partition = List.tabulate (m, fn _ => [])
+              val () = modify (fn _ => []) p
 
               (* insert element e into group g of partition p *)
-	      fun insert e g p =
-                  #2 (foldr (fn (group, (g', p)) =>
-                                if g = g' then (0, (e::group)::p)
-                                else           (g' - 1, group::p))
-                            (m,[]) p)
-                  
+	      fun insert e g = update (p, g - 1, e :: (p sub (g - 1)))
             in
-              #2 (foldr (fn (e, (i, p)) =>
-                            (i - 1, insert e (c sub i) p))
-                        (n, partition) list)
+              (foldr (fn (e, i) => (insert e (c sub i); i - 1)) n list;
+               Array.foldr (fn (g, p) => g :: p) [] p)
             end
-
-        fun print_partition () =
-            (Array.foldl (fn (e, first) =>
-                             if first then
-                               false
-                             else
-                               (print (Int.toString e); false))
-                         true c;
-             print "\n")
 
         fun while' r j =
             if r < n - 1 then
@@ -80,9 +72,8 @@ struct
             if i <= nj andalso i <= m then
               (update (c, n, i);
                Cons (
-                 (print_partition ();
                  if i < nj then make_partition (nj - 1)
-                           else make_partition nj),
+                           else make_partition nj,
                  for (i + 1) nj))
             else Nil)
 
@@ -107,8 +98,8 @@ struct
                    Nil))
             end
       in
-        lzunmk (repeat true 1 0)
-      end)
+        repeat true 1 0
+      end
 
   fun make list m = 
       let
