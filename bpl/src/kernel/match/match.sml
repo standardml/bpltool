@@ -512,88 +512,94 @@ struct
    *)
    (* NOT FULLY IMPLEMENTED YET! *)
   and matchMER' {ename, s_a, s_C, g, G} = lzmake (fn () =>
-    let
+    let (*val _ = print "MER' ";*)
       val ms = #Ss (unmkG g)
-      val Ss = #Ss (unmkG G)
-      val m = length Ss
-      val Xss = map (loc o innerface) Ss
-      fun try pi mss =
-          let
-            val pibar = Permutation.pushthru pi Xss
-            val es = map makeG mss
-            val Es = map (makeG o (fn S => [S])) (Permutation.permute pi Ss)
-            val premise_matches
-                = matchPER' {ename = ename,
-                             s_a = s_a, s_C = s_C,
-                             es = es, Es = Es,
-                             pi = pibar}
-            fun make_match {ename', s_C', qs, tree} =
-                {ename' = ename', s_C' = s_C', qs = qs, tree = MER' tree}
-          in
-            lzmap make_match premise_matches
-          end
-      fun tryPis' allpis allmss mss rho perm (pi :: pis)
-        = lzappend
-            (try pi mss)
-            (tryPis' allpis allmss mss rho perm pis)
-        | tryPis' allpis allmss mss rho perm []
-        = tryPis'
-            allpis (mss :: allmss)
-            (Partition.next rho) rho perm allpis
-          handle Partition.NoPartitions => lzNil
-      fun tryRhos' allpis allmss (pi, perm) rho (mss :: msss)
-        = lzappend
-            (try pi mss)
-            (tryRhos' allpis allmss (pi, perm) rho msss)
-        | tryRhos' allpis allmss (pi, perm) rho []
-        = let
-            val perm as (_, pi, _) = nextperm perm
-          in
-            tryRhos'
-              allpis allmss
-              (Permutation.copy pi, perm) rho allmss
-          end
-          handle NoMorePerms => lzNil
-      fun tryPis allpis allmss mss rho perm (pi :: pis)
-        = lzappend
-            (try pi mss)
-            (tryPis allpis allmss mss rho perm pis)
-        | tryPis allpis allmss mss rho perm []
-        = let
-            val perm as (_, pi, _) = nextperm perm
-          in
-            tryRhos
-              allpis (mss :: allmss)
-              (Permutation.copy pi, perm) rho (mss :: allmss)
-          end
-          handle NoMorePerms =>
-            (tryPis'
-               allpis (mss :: allmss)
-               (Partition.next rho) rho perm allpis
-             handle Partition.NoPartitions => lzNil)
-      and tryRhos allpis allmss (pi, perm) rho (mss :: msss)
-        = lzappend
-            (try pi mss)
-            (tryRhos allpis allmss (pi, perm) rho msss)
-        | tryRhos allpis allmss (pi, perm) rho []
-        = tryPis
-            (pi :: allpis) allmss
-            (Partition.next rho) rho perm (pi :: allpis)
-          handle Partition.NoPartitions =>
-            (let
-               val perm as (_, pi, _) = nextperm perm
-             in
-               tryRhos'
-                 allpis allmss
-                 (Permutation.copy pi, perm) rho allmss
-             end
-             handle NoMorePerms => lzNil)
-      val perm as (_, pi, _) = firstperm (map (fn _ => NameSet.empty) Xss)
     in
-      lzunmk
-        (tryRhos
-           [] []
-           (Permutation.copy pi, perm) (Partition.make ms m) [])
+      if length ms <= 1 then
+        LazyList.Nil
+      else
+        let
+		      val Ss = #Ss (unmkG G)
+		      val m = length Ss
+		      val Xss = map (loc o innerface) Ss
+		      fun try pi mss =
+		          let
+		            val pibar = Permutation.pushthru pi Xss
+		            val es = map makeG mss
+		            val Es = map (makeG o (fn S => [S])) (Permutation.permute pi Ss)
+		            val premise_matches
+		                = matchPER' {ename = ename,
+		                             s_a = s_a, s_C = s_C,
+		                             es = es, Es = Es,
+		                             pi = pibar}
+		            fun make_match {ename', s_C', qs, tree} =
+		                {ename' = ename', s_C' = s_C', qs = qs, tree = MER' tree}
+		          in
+		            lzmap make_match premise_matches
+		          end
+		      fun tryPis' allpis allmss (mss, rho) perm (pi :: pis)
+		        = lzappend
+		            (try pi mss)
+		            (tryPis' allpis allmss (mss, rho) perm pis)
+		        | tryPis' allpis allmss (mss, rho) perm []
+		        = tryPis'
+		            allpis (mss :: allmss)
+		            (Partition.next rho) perm allpis
+		          handle Partition.NoPartitions => lzNil
+		      fun tryRhos' allpis allmss (pi, perm) rho (mss :: msss)
+		        = lzappend
+		            (try pi mss)
+		            (tryRhos' allpis allmss (pi, perm) rho msss)
+		        | tryRhos' allpis allmss (pi, perm) rho []
+		        = let
+		            val perm as (_, pi, _) = nextperm perm
+		          in
+		            tryRhos'
+		              allpis allmss
+		              (Permutation.copy pi, perm) rho allmss
+		          end
+		          handle NoMorePerms => lzNil
+		      fun tryPis allpis allmss (mss, rho) perm (pi :: pis)
+		        = lzappend
+		            (try pi mss)
+		            (tryPis allpis allmss (mss, rho) perm pis)
+		        | tryPis allpis allmss (mss, rho) perm []
+		        = let
+		            val perm as (_, pi, _) = nextperm perm
+		          in
+		            tryRhos
+		              allpis (mss :: allmss)
+		              (Permutation.copy pi, perm) rho (mss :: allmss)
+		          end
+		          handle NoMorePerms =>
+		            (tryPis'
+		               allpis (mss :: allmss)
+		               (Partition.next rho) perm allpis
+		             handle Partition.NoPartitions => lzNil)
+		      and tryRhos allpis allmss (pi, perm) rho (mss :: msss)
+		        = lzappend
+		            (try pi mss)
+		            (tryRhos allpis allmss (pi, perm) rho msss)
+		        | tryRhos allpis allmss (pi, perm) rho []
+		        = tryPis
+		            (pi :: allpis) allmss
+		            (Partition.next rho) perm (pi :: allpis)
+		          handle Partition.NoPartitions =>
+		            (let
+		               val perm as (_, pi, _) = nextperm perm
+		             in
+		               tryRhos'
+		                 allpis allmss
+		                 (Permutation.copy pi, perm) rho allmss
+		             end
+		             handle NoMorePerms => lzNil)
+		      val perm as (_, pi, _) = firstperm (map (fn _ => NameSet.empty) Xss)
+		    in
+		      lzunmk
+		        (tryRhos
+		           [] []
+		           (Permutation.copy pi, perm) (Partition.make ms m) [])
+				end
     end)
 
   (* Match a global discrete prime to a context using the ION rule:
@@ -715,13 +721,16 @@ struct
    *    (to avoid infinite recursion via MER-PAR-PARe-PARn),
    *    return any MER rule matches.
    *)
-  and matchDG' (args as {ename, s_a, s_C, g, G})
+  and matchDG' allowMER (args as {ename, s_a, s_C, g, G})
     = lzappend (matchPAX' args)
         (lzappend (matchION' args)
-          (lzmake (fn () =>
-            case #Ss (unmkG g) of
-              (_ :: _ :: _) => lzunmk (matchMER' args)
-            | _ => Nil)))
+          (if allowMER then
+            lzmake (fn () =>
+              case #Ss (unmkG g) of
+                (_ :: _ :: _) => lzunmk (matchMER' args)
+              | _ => Nil)
+           else
+             lzNil))
 
   (* Match a prime to a context using the ABS rule:
    * 1) Deconstruct agent p = (id * ^s_a_L)(Z)g and
@@ -745,7 +754,8 @@ struct
         val s_a_n' = Wiring.* (s_a_n, s_a_L)
         val s_C_n' = Wiring.* (s_C_n, s_C_L)
 
-        val premise_matches = matchDG' {ename = ename,
+        val premise_matches = matchDG' true
+                                       {ename = ename,
                                         s_a = {s_a_e = s_a_e, s_a_n = s_a_n'},
                                         s_C = {s_C_e = s_C_e, s_C_n = s_C_n'},
                                         g = g, G = G}
@@ -780,7 +790,8 @@ struct
               {ename' = ename_i, s_C' = s_C'_i, qss, tree = PARn' trees} =
             let
               val premise_matches
-                = matchDG' {ename = ename_i, s_a = s_a, s_C = s_C, g = e_i, G = E_i}
+                = matchDG' false 
+                    {ename = ename_i, s_a = s_a, s_C = s_C, g = e_i, G = E_i}
 
               fun extend_result {ename', s_C', qs, tree} =
                   {ename' = ename', s_C' = s_C', qss = qs :: qss,
@@ -866,7 +877,8 @@ struct
            tree = SWX tree})
         val matches
           = lzmap toSWX
-                  (matchDG' {ename = ename,
+                  (matchDG' true 
+                            {ename = ename,
                              s_a = {s_a_e = s_a_e,
                                     s_a_n = s_a_n},
                              s_C = {s_C_e = s_C_e, s_C_n = s_C_n},
@@ -1224,7 +1236,7 @@ struct
    *)
   fun matchMER (args as {ename, s_a, s_R, e = g, Ps}) =
     lzmake (fn () =>
-    let val _ =  print "MER "
+    let (*val _ =  print "MER "*)
       val {idxmerge, Ss = ms} = unmkG g
       val m = length Ps + 1
       val rho = Partition.make ms m
@@ -1234,10 +1246,10 @@ struct
          qs = qs, tree = MER tree}
       fun try rho =
         let
-          val mss = Partition.next rho
-          val _ = print ("match.sml: DEBUG: Partitioning " ^ Int.toString (length ms)
+          val (mss, rho) = Partition.next rho
+          (*val _ = print ("match.sml: DEBUG: Partitioning " ^ Int.toString (length ms)
           ^ " into [ " ^ concat (map (fn ms => Int.toString (length ms) ^ " ") mss)
-          ^ "].\n")
+          ^ "].\n")*)
           val gs = map makeG mss
           val matches
             = matchPER {ename = ename, matchE = matchDG false,
