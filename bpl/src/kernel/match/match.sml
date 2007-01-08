@@ -499,7 +499,7 @@ struct
    *     6b) Construct es as a tensor product of merged partitions
    *         of agent m_i's
    *     6c) Construct Es as a tensor product of S_{pi(i)}'s
-   *     6d) Infer premise using ename, s_a, s_C, es, Es and pi,
+   *     6d) Infer premise using ename, s_a, s_C, es, Es and pi, [FIXME pibar?]
    *         yielding ename', s_C', qs.
    *     6e) Return ename', s_C', qs.
    *
@@ -513,11 +513,25 @@ struct
    (* NOT FULLY IMPLEMENTED YET! *)
   and matchMER' {ename, s_a, s_C, g, G} = lzmake (fn () =>
     let
-      val ms = [] (* FIXME: do 3 here *)
-      val Ss = [] (* FIXME: do 4 here *)
+      val ms = #Ss (unmkG g)
+      val Ss = #Ss (unmkG G)
       val m = length Ss
-      val Xss = [] (* FIXME: do 5 here *)
-      fun try pi mss = lzNil (* FIXME: do 6a--6e here *)
+      val Xss = map (loc o innerface) Ss
+      fun try pi mss =
+          let
+            val pibar = Permutation.pushthru pi Xss
+            val es = map makeG mss
+            val Es = map (makeG o (fn S => [S])) (Permutation.permute pi Ss)
+            val premise_matches
+                = matchPER' {ename = ename,
+                             s_a = s_a, s_C = s_C,
+                             es = es, Es = Es,
+                             pi = pibar}
+            fun make_match {ename', s_C', qs, tree} =
+                {ename' = ename', s_C' = s_C', qs = qs, tree = MER' tree}
+          in
+            lzmap make_match premise_matches
+          end
       fun tryPis' allpis allmss (mss, rho) perm (pi :: pis)
         = lzappend
             (try pi mss)
@@ -574,7 +588,7 @@ struct
                  (Permutation.copy pi, perm) rho allmss
              end
              handle NoMorePerms => lzNil)
-      val perm as (_, pi, _) = firstperm Xss
+      val perm as (_, pi, _) = firstperm (hd Xss) (*FIXME was Xss, but that doesn't work*)
     in
       lzunmk
         (tryRhos
