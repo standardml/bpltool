@@ -40,11 +40,10 @@ sig
   val make : 'a list -> int -> 'a partitiongen
 
   (** Get the next partition from a partition generator.
-   * Note that the operation may be destructive.
    * @params part_gen
    * @param part_gen  the partition generator.
    * @return a partition of the list given to make
    * @exception NoPartitions if no more partitions are available.
    *)
-  val next : 'a partitiongen -> 'a list list * 'a partitiongen
+  val next : 'a partitiongen -> 'a list list
 end
