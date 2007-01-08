@@ -499,7 +499,7 @@ struct
    *     6b) Construct es as a tensor product of merged partitions
    *         of agent m_i's
    *     6c) Construct Es as a tensor product of S_{pi(i)}'s
-   *     6d) Infer premise using ename, s_a, s_C, es, Es and pi, [FIXME pibar?]
+   *     6d) Infer premise using ename, s_a, s_C, es, Es and pibar,
    *         yielding ename', s_C', qs.
    *     6e) Return ename', s_C', qs.
    *
