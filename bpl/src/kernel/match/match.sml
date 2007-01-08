@@ -537,14 +537,14 @@ struct
 		          in
 		            lzmap make_match premise_matches
 		          end
-		      fun tryPis' allpis allmss (mss, rho) perm (pi :: pis)
+		      fun tryPis' allpis allmss mss rho perm (pi :: pis)
 		        = lzappend
 		            (try pi mss)
-		            (tryPis' allpis allmss (mss, rho) perm pis)
-		        | tryPis' allpis allmss (mss, rho) perm []
+		            (tryPis' allpis allmss mss rho perm pis)
+		        | tryPis' allpis allmss mss rho perm []
 		        = tryPis'
 		            allpis (mss :: allmss)
-		            (Partition.next rho) perm allpis
+		            (Partition.next rho) rho perm allpis
 		          handle Partition.NoPartitions => lzNil
 		      fun tryRhos' allpis allmss (pi, perm) rho (mss :: msss)
 		        = lzappend
@@ -559,11 +559,11 @@ struct
 		              (Permutation.copy pi, perm) rho allmss
 		          end
 		          handle NoMorePerms => lzNil
-		      fun tryPis allpis allmss (mss, rho) perm (pi :: pis)
+		      fun tryPis allpis allmss mss rho perm (pi :: pis)
 		        = lzappend
 		            (try pi mss)
-		            (tryPis allpis allmss (mss, rho) perm pis)
-		        | tryPis allpis allmss (mss, rho) perm []
+		            (tryPis allpis allmss mss rho perm pis)
+		        | tryPis allpis allmss mss rho perm []
 		        = let
 		            val perm as (_, pi, _) = nextperm perm
 		          in
@@ -574,7 +574,7 @@ struct
 		          handle NoMorePerms =>
 		            (tryPis'
 		               allpis (mss :: allmss)
-		               (Partition.next rho) perm allpis
+		               (Partition.next rho) rho perm allpis
 		             handle Partition.NoPartitions => lzNil)
 		      and tryRhos allpis allmss (pi, perm) rho (mss :: msss)
 		        = lzappend
@@ -583,7 +583,7 @@ struct
 		        | tryRhos allpis allmss (pi, perm) rho []
 		        = tryPis
 		            (pi :: allpis) allmss
-		            (Partition.next rho) perm (pi :: allpis)
+		            (Partition.next rho) rho perm (pi :: allpis)
 		          handle Partition.NoPartitions =>
 		            (let
 		               val perm as (_, pi, _) = nextperm perm
@@ -1246,7 +1246,7 @@ struct
          qs = qs, tree = MER tree}
       fun try rho =
         let
-          val (mss, rho) = Partition.next rho
+          val mss = Partition.next rho
           (*val _ = print ("match.sml: DEBUG: Partitioning " ^ Int.toString (length ms)
           ^ " into [ " ^ concat (map (fn ms => Int.toString (length ms) ^ " ") mss)
           ^ "].\n")*)
