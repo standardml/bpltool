@@ -583,12 +583,12 @@ struct
             (let
                val perm as (_, pi, _) = nextperm perm
              in
-               tryRhos(*'*)
+               tryRhos'
                  allpis allmss
                  (Permutation.copy pi, perm) rho allmss
              end
              handle NoMorePerms => lzNil)
-      val perm as (_, pi, _) = firstperm (hd Xss) (*FIXME was Xss, but that doesn't work*)
+      val perm as (_, pi, _) = firstperm (map (fn _ => NameSet.empty) Xss)
     in
       lzunmk
         (tryRhos
