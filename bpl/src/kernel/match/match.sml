@@ -1,4 +1,3 @@
-
 (* Copyright (c) 2006  The BPL Group at the IT University of Copenhagen
  *
  * This file is part of BPL.
@@ -715,14 +714,28 @@ struct
       | _ => Nil))
 
   (* Match a global discrete prime using a PAX, MER or ION rule:
-   * 1) First return any PAX rule matches,
-   * 2) Then return any ION rule matches,
-   * 3) Then if the agent contains n > 1 top-level molecules
+   * 1) If PAX rule matches return this match,
+   *    else if ION rule matches return this match,
+   *    else if the agent contains n > 1 top-level molecules
+   *    and MER matching is allowed
    *    (to avoid infinite recursion via MER-PAR-PARe-PARn),
    *    return any MER rule matches.
    *)
-  and matchDG' allowMER (args as {ename, s_a, s_C, g, G})
-    = lzappend (matchPAX' args)
+  and matchDG' allowMER (args as {ename, s_a, s_C, g, G}) =
+    lzmake (fn () =>
+      case lzunmk (matchPAX' args) of
+        mz as (LazyList.Cons _) => mz
+      | _
+      => case (lzunmk (matchION' args), allowMER) of
+           (mz as (LazyList.Cons _), _) => mz
+         | (_, true)
+         => (case #Ss (unmkG g) of
+               (_ :: _ :: _) => lzunmk (matchMER' args)
+             | _ => Nil)
+         | _ => Nil)
+         
+(*    
+    lzappend (matchPAX' args)
         (lzappend (matchION' args)
           (if allowMER then
             lzmake (fn () =>
@@ -730,7 +743,7 @@ struct
                 (_ :: _ :: _) => lzunmk (matchMER' args)
               | _ => Nil)
            else
-             lzNil))
+             lzNil)) *)
 
   (* Match a prime to a context using the ABS rule:
    * 1) Deconstruct agent p = (id * ^s_a_L)(Z)g and
@@ -1337,25 +1350,32 @@ struct
    * 1) First
    *    if possible, return a PAX rule match,
    *    else, return any SWX rule matches,
-   * 2) Then return any ION rule matches,
+   * 2) Then return any ION rule matches, unless PAX matched an id_0 redex
    * 3) Then if the agent contains n > 1 top-level molecules
    *    (to avoid infinite recursion via MER-PAR-PARe-PARn),
    *    return any MER rule matches.
    *)
   and matchDG allowMER (args as {ename, s_a, s_R, e = g, Ps}) =
-    lzappend
-	    (lzmake (fn () =>
-	       case lzunmk (matchPAX args) of
-	         LazyList.Nil => lzunmk (matchSWX args)
-	       | mz as (LazyList.Cons _) => mz))
-	    (lzappend (matchION args)
-	    	(if allowMER then
-		      (lzmake (fn () =>
-	        	case #Ss (unmkG g) of
-	          	(_ :: _ :: _) => lzunmk (matchMER args)
-	        	| _ => LazyList.Nil))
-	      else
-	        lzNil))
+    let
+      val (paxswxz, paxmatch) = 
+	        case lzunmk (matchPAX args) of
+	          LazyList.Nil => (lzunmk (matchSWX args), false)
+	        | mz as (LazyList.Cons _) => (mz, true)
+    in
+      lzappend
+        (lzmake (fn () => paxswxz))
+				(lzappend 
+				  (case (paxmatch, Ps) of
+				     (true, []) => lzNil
+				   | _ =>  matchION args)
+		    	(if allowMER then
+			      (lzmake (fn () =>
+		        	case #Ss (unmkG g) of
+		          	(_ :: _ :: _) => lzunmk (matchMER args)
+		        	| _ => LazyList.Nil))
+		      else
+		        lzNil))
+		end
 
   (* Match an abstraction:
    * 1) Deconstruct p, yielding s_a_L : Z -> W and g.
