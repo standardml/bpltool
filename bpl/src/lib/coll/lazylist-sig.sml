@@ -34,6 +34,8 @@
   val lzCons : (unit -> 'a * 'a lazylist) -> 'a lazylist
   (** Signal that a lazylist was unexpectedly empty. *)
   exception EmptyList
+  (** Test whether the lazy list is empty. *)
+  val lznull : 'a lazylist -> bool
   (** Return the first element of a lazy list. 
    * @exception EmptyList if the list is empty.
    *)

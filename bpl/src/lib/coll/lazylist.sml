@@ -32,6 +32,8 @@ struct
   val lzNil = fn () => Nil
   
   fun lzCons t = fn () => Cons (t ())
+  
+  fun lznull t = case t () of Nil => true | _ => false
 
   fun lzhd t = case t () of
                  Nil => raise EmptyList
