@@ -44,6 +44,7 @@ functor BgVal'(structure Info : INFO
 			    Ion.name =
 			    Wiring.name
 	       sharing type NameSet.Set =
+			    Name.NameSet.Set =
 			    Link.nameset =
 			    Ion.nameset =
 			    Permutation.nameset =
@@ -161,8 +162,15 @@ struct
 	unmk'
       end
 
-  fun pp indent pps
-    = BgTerm.pp indent pps o #1 o unmk
+  fun pp indent pps v =
+      let
+        val (t, iface, oface) = unmk v
+        val external_names
+          = NameSet.union' (Interface.names iface) (Interface.names oface)
+      in
+        (Name.pp_unchanged external_names;
+         BgTerm.pp indent pps t)
+      end
 
   fun ppWithIface (indent:int) pps v =
     let
@@ -1227,6 +1235,7 @@ functor BgVal (structure Info : INFO
 			    Ion.name =
 			    Wiring.name
 	       sharing type NameSet.Set =
+			    Name.NameSet.Set =
 			    Link.nameset =
 			    Ion.nameset =
 			    Permutation.nameset =

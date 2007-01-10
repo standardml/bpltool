@@ -50,4 +50,8 @@ sig
 
   structure Order : ORDERING where type T = name
   structure NameSet : MONO_SET where type elt = name
+
+  (** Tell the name module to print the given set of names as the
+   * string given to <code>make</code>. *)
+  val pp_unchanged : NameSet.Set -> unit
 end

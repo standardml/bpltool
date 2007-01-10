@@ -25,7 +25,7 @@
 structure Name' : NAME =
 struct
   (* Names are identified by unique words. *)
-  type name = word * string
+  type name = Word.word * string
 
   fun == ((id1, _) : name, (id2, _) : name) =
       id1 = id2
@@ -38,26 +38,9 @@ struct
 
   val op < = lt
 
+  val fresh_name = (0w0, "__fresh")
   (* Keep track of used ids *)
-  val next_id = ref 0w0
-
-  fun fresh' s =
-      let
-        val id = !next_id
-      in
-        (next_id := !next_id + 0w1;
-         (id, s))
-      end
-
-  fun fresh (SOME (_, s)) =
-      fresh' s
-    | fresh NONE =
-      fresh' ""
-
-  fun hash (w, _) = w
-
-  (* make must always return the same name when given the same
-   * string. So we store the returned names in a hash table. *)
+  val next_id = ref 0w1
 
   (* Apparently the following hash function is advocated by
    * Knuth - at the very least it actually works in Moscow ML. *)
@@ -65,34 +48,59 @@ struct
       let
         open Word
         fun f (c,h) = 
-            xorb(xorb(<<(h,0w5),>>(h,0w27)), Word.fromInt (ord c))
+            xorb(xorb(<<(h,0w5),>>(h,0w27)), fromInt (ord c))
       in
         CharVector.foldr f 0w0 s
       end
+
+  fun hash (w, _) = w
+
+  (* make must always return the same name when given the same
+   * string. So we store the returned names in a hash table.
+   * In addition, for the pp_unchanged functionality to function
+   * properly, we must keep track of additional ids associated
+   * with a string. *)
 
   exception NOT_FOUND
   structure StringHash =
       HashTableFn (type hash_key = string
                    val  hashVal = stringhash
                    val  sameKey = (op = : string * string -> bool))
-  val name_map =
-      StringHash.mkTable (37, NOT_FOUND) : name StringHash.hash_table
+  val name_map = StringHash.mkTable (37, NOT_FOUND)
+      : (name * word list) StringHash.hash_table
+
+  (* insert the special fresh name in the map *)
+  val () = StringHash.insert name_map ("__fresh", (fresh_name, []))
+
+  fun fresh (SOME (n as (_, s))) =
+      (case StringHash.find name_map s of
+         SOME (n, ids) =>
+         let
+           val id' = !next_id
+         in
+           (next_id := !next_id + 0w1;
+            StringHash.insert name_map (s, (n, id'::ids));
+            (id', s))
+         end
+       | NONE => n) (* the given name n must already be in name_map,
+                    * so this will not happen *) 
+    | fresh NONE = fresh (SOME fresh_name)
+
 
   fun make s =
       case StringHash.find name_map s of
-        SOME n => n
-      | NONE   =>
+        SOME (n, _) => n
+      | NONE =>
         let
-          val n = fresh' s
+          val n = (!next_id, s)
         in
-          (StringHash.insert name_map (s, n);
+          (next_id := !next_id + 0w1;
+           StringHash.insert name_map (s, (n, []));
            n)
         end
   fun ekam ((_, s) : name) = s
   fun unmk ((id, s) : name) =
       s ^ "_" ^ (String.map Char.toLower (Word.toString id))
- 
-  fun pp indent pps n = PrettyPrint.add_string pps (unmk n)
 
   structure Order : ORDERING =
   struct 
@@ -101,6 +109,89 @@ struct
   end
 
   structure NameSet = Rbset(type t = name val compare = compare)
+
+  (* Utilities to keep track of which names should be printed specially: *)
+  structure NameHash =
+      HashTableFn (type hash_key = name
+                   val  hashVal  = hash
+                   val  sameKey  = ==)
+  (*   maps 'problematic' names to similar unproblematic names. *)
+  val pp_changed_map =
+      NameHash.mkTable (38, NOT_FOUND) : name NameHash.hash_table
+  (*   names which should be printed by using ekam instead of unmk. *)
+  val pp_unchanged_names = ref NameSet.empty
+  (*   register a new set of names to be printed without underscores. *)
+  fun pp_unchanged X =
+      let
+        val () = pp_unchanged_names := X
+        val () = NameHash.clear pp_changed_map
+
+        (* check *)
+        fun check_name (w_a, s_a) =
+            let
+              (* Split the name-string at the last "_" *)
+              val (s, i, _, _)
+                = case String.fields (fn c => c = #"_") s_a of
+                    []  => ("", "", false, false)
+                  | [s] => (s,  "", false, false)
+                  | ss 
+                    => foldr (fn (i, (_, _, _, true)) =>
+                                 ("", i, true, false)
+                               | (s, (ss, i, last, false)) =>
+                                 let
+                                   val ss' = if last then s else s^"_"^ss
+                                 in
+                                   (ss', i, false, false)
+                                 end)
+                             ("", "", true, true) ss
+              (* we must check "manually" that the string is a number,
+                 since fromString will happily parse a number-string
+                 with garbage at the end...
+                 Also, numbers with initial zeros are not relevant. *)
+              fun isNumber' s j l =
+                  j >= l orelse (Char.isDigit (String.sub (s, j))
+                                 andalso isNumber' s (j + 1) l)
+              fun isNumber s =
+                  let
+                    val l = String.size s
+                  in
+                    l > 0 andalso String.sub (s, 0) <> #"0"
+                    andalso isNumber' s 0 l
+                  end
+            in
+              (* is the last part a number?
+                 and does the first part clash with another name
+                 which uses that number as id? *)
+              if isNumber i then
+                case StringHash.find name_map s of
+                  NONE => ()
+                | SOME (c as (id', _), id's) =>
+                  let
+                    val id = valOf (Word.fromString i)
+                  in
+                    if id = id'
+                         orelse not (List.all (fn id' => id' <> id) id's) then
+                      (* create a new name to use instead of c *)
+                      NameHash.insert pp_changed_map ((id, s), fresh (SOME c))
+                    else
+                      ()
+                  end
+              else ()
+            end
+      in
+        NameSet.apply check_name X
+      end
+ 
+ 
+(*  fun pp indent pps n = PrettyPrint.add_string pps (unmk n)*)
+  fun pp indent pps n =
+      if NameSet.member n (!pp_unchanged_names) then
+        PrettyPrint.add_string pps (ekam n)
+      else
+        case NameHash.find pp_changed_map n of
+          NONE => PrettyPrint.add_string pps (unmk n)
+        | SOME n' => PrettyPrint.add_string pps (unmk n')
+
 end
 
 

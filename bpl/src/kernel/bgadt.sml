@@ -44,11 +44,9 @@ structure NameMap = OrderFinMap (Name.Order)
 structure IntOrder = struct type T = int fun lt i j = i < j end
 structure IntSet = OrderSet (IntOrder)
 		   
-fun pp_name _ pps x = PrettyPrint.add_string pps (Name.unmk x)
-
 structure NameSetPP 
   = SetPrettyPrint 
-      (val       pp_elt      = pp_name
+      (val       pp_elt      = Name.pp
        structure Set         = NameSet
        structure PrettyPrint = PrettyPrint)
 

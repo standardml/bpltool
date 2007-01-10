@@ -68,10 +68,10 @@ struct
 	  [] =>
 	  (case free of
 	     [] => ()
-	   | (y :: ys) => pplist (show o Name.unmk) free)
+	   | (y :: ys) => pplist (Name.pp indent pps) free)
 	| (X :: Xs) =>
 	  (brk0();
-	   pplist (show o Name.unmk) free;
+	   pplist (Name.pp indent pps) free;
 	   brk0();
 	   pplist (NameSetPP.pp indent pps) bound);
 	>>>()

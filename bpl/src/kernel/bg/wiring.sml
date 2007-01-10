@@ -268,17 +268,17 @@ struct
 	fun ppname {outer, inner} notfirst =
 	    (if notfirst then (show ","; brk()) else ();
 	     case outer of
-	       Name y => show (Name.unmk y)
+	       Name y => Name.pp indent pps y
 	     | _ => ();
 	     true)
 	fun ppwire {outer, inner} notfirst =
 	    (if notfirst then (brk(); show "* ") else ();
 	     case outer of
-	       Name y => show (Name.unmk y)
+	       Name y => Name.pp indent pps y
 	     | _ => ();
 	     show "/";
 	     if NameSet.size inner = 1 then
-	       NameSet.apply (show o Name.unmk) inner
+	       NameSet.apply (Name.pp indent pps) inner
 	     else
 	       NameSetPP.pp indent pps inner;
 	     true)
