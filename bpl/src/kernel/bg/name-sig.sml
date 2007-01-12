@@ -51,7 +51,23 @@ sig
   structure Order : ORDERING where type T = name
   structure NameSet : MONO_SET where type elt = name
 
-  (** Tell the name module to print the given set of names as the
-   * string given to <code>make</code>. *)
-  val pp_unchanged : NameSet.Set -> unit
+  (** Signals that the two names will clash, if they are printed as
+   * the string given to <code>make</code>.
+   * @params n1 n2
+   * @param  n1 the first name.
+   * @param  n2 the second name.
+   *)
+  exception PPUnchangedNameClash of name * name
+
+  (** Tell the name module to print the given sets of inner and outer
+   * names as the string given to <code>make</code>.
+   * Normal pretty printing (i.e. no names are treated specially) is set
+   * by calling <code>pp_unchanged NameSet.empty NameSet.empty</code>.
+   * @params X Y
+   * @param X  inner names
+   * @param Y  outer names
+   * @exception PPUnchangedNameClash  if two names in either X or Y
+   *                                  will clash if printed unchanged.
+   *)
+  val pp_unchanged : NameSet.Set -> NameSet.Set -> unit
 end

@@ -32,7 +32,7 @@ structure ErrorHandler = ErrorHandler
 
 structure Info = Info
 
-structure Name    = Name
+structure Name    = Name(structure ErrorHandler = ErrorHandler)
 (*structure NameSet = OrderSet (Name.Order)*)
 structure NameSet = Name.NameSet
 structure NameSetCompare 

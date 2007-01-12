@@ -152,6 +152,7 @@ sig
                NameSet.elt
 
   sharing type NameSet.Set =
+               Name.NameSet.Set =
                Permutation.nameset =
                Ion.nameset =
                Interface.nameset =

@@ -165,11 +165,13 @@ struct
   fun pp indent pps v =
       let
         val (t, iface, oface) = unmk v
-        val external_names
-          = NameSet.union' (Interface.names iface) (Interface.names oface)
+        (* try to print the interfaces using the names given in the input *)
+        val ()
+          = (Name.pp_unchanged (Interface.names iface) (Interface.names oface))
+            handle Name.PPUnchangedNameClash _ =>
+              Name.pp_unchanged NameSet.empty NameSet.empty
       in
-        (Name.pp_unchanged external_names;
-         BgTerm.pp indent pps t)
+        BgTerm.pp indent pps t
       end
 
   fun ppWithIface (indent:int) pps v =
