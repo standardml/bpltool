@@ -44,6 +44,12 @@ sig
    * @see make.
    *)
   val unmk : ion -> {ctrl : control, free : name list, bound : nameset list}
+  (** Test two ions for equality.
+   * @params i1 i2
+   * @param i1  the first ion.
+   * @param i2  the second ion.
+   *)
+  val eq : ion -> ion -> bool
   (** Return the inner names of the ion. *)
   val innernames : ion -> nameset
   (** Return the outer names of the ion. *)

@@ -65,6 +65,12 @@ sig
   val WLS : info -> wiring list -> bgterm
   (** Return the contextual information of a given bgterm. *)
   val info : bgterm -> info
+  (** Test two bigraph terms for equality (same structure and same names).
+   * @params b1 b2
+   * @param b1  the first bigraph term.
+   * @param b2  the second bigraph term.
+   *)
+  val eq : bgterm -> bgterm -> bool
   (** Prettyprint a bgterm without parentheses around it.
    * @params indent pps t
    * @param indent  Indentation at each block level.

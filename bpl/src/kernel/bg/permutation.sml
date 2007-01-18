@@ -57,8 +57,8 @@ struct
 
   (** The permutation data type uses O(n) space, where n = width. *)
   type 'a permutation = {width : int,
-		      pi : (int * nameset) array,
-		      pi_inv : (int * nameset) array}
+                         pi : (int * nameset) array,
+                         pi_inv : (int * nameset) array}
 
   exception LogicalError of string
   fun explain_LogicalError (LogicalError errtxt) =
@@ -92,6 +92,21 @@ struct
   fun appi f array 
     = (Array.foldl (fn (x, i) => (f (i, x); i + 1)) 0 array; ())
   val acopy = Array.copy
+
+  fun eq {width = width1, pi = pi1, pi_inv = pi_inv1}
+         {width = width2, pi = pi2, pi_inv = pi_inv2} =
+      let
+        fun compare ~1 = true
+          | compare i  =
+            let
+              val (i1, ns1) = pi1 sub i
+              val (i2, ns2) = pi2 sub i
+            in
+              i1 = i2 andalso NameSet.eq ns1 ns2 andalso compare (i - 1)
+            end
+      in
+        width1 = width2 andalso compare (width1 - 1)
+      end
 
   (** Determine whether some permutation is a nameless identity in
    * time O(n), where n = width.

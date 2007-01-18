@@ -44,6 +44,12 @@ struct
       foldl (fn (Xs, X) => NameSet.union X Xs) NameSet.empty bound
   fun outernames ({ctrl, free, bound}) = NameSet.fromList free
 
+  fun eq {ctrl = ctrl1, free = free1, bound = bound1}
+         {ctrl = ctrl2, free = free2, bound = bound2} =
+      Control.eq ctrl1 ctrl2
+      andalso ListPair.all Name.== (free1, free2)
+      andalso ListPair.all (fn (ns1, ns2) => NameSet.eq ns1 ns2) (bound1, bound2)
+
   fun pp indent pps ({ctrl, free, bound} : ion) =
       let
 	open PrettyPrint

@@ -50,6 +50,13 @@ sig
   (** Deconstruct a permutation. *)
   val unmk : 'kind permutation -> (int * nameset) list
 
+  (** Test two permutations for equality.
+   * @params p1 p2
+   * @param p1  the first permutation.
+   * @param p2  the second permutation.
+   *)
+  val eq : 'kind1 permutation -> 'kind2 permutation -> bool
+
   (** Return the width of a permutation. *)
   val width : 'kind permutation -> int
   (** Return the inner face of a permutation *)

@@ -102,6 +102,7 @@ structure BgTerm
        structure Ion         = Ion
        structure Wiring      = Wiring
        structure Permutation = Permutation
+       structure NameSet     = NameSet
        structure NameSetPP   = NameSetPP)
 
 structure BgVal 
@@ -112,6 +113,7 @@ structure BgVal
        structure Link             = Link
        structure LinkSet          = LinkSet
        structure Interface        = Interface
+       structure Control          = Control
        structure Ion              = Ion
        structure Wiring           = Wiring
        structure Permutation      = Permutation

@@ -63,6 +63,13 @@ sig
 
   (** The bgval data type. *)
   type bgval
+  (** Test two bgvals for equality: same structure, same interfaces,
+   * but internal names may differ.
+   * @params b1 b2
+   * @param b1  the first bigraph term.
+   * @param b2  the second bigraph term.
+   *)
+  val eq : bgval -> bgval -> bool
   (** Construct merge_n = one root containing n sites. *)
   val Mer : info -> int -> bgval
   (** Construct "X" = a concretion of a set of names. *)

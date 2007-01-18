@@ -34,4 +34,10 @@ sig
   val unmk : control -> (string * kind)
   (** Return the kind of a control. *)
   val kind : control -> kind
+  (** Test two controls for equality.
+   * @params c1 c2
+   * @param c1  the first control.
+   * @param c2  the second control.
+   *)
+  val eq : control -> control -> bool
 end

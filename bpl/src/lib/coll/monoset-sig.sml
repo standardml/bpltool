@@ -19,6 +19,7 @@ signature MONO_SET =
     val eq : Set -> Set -> bool
 
     exception DuplicatesRemoved
+    exception Empty
 
     val list : Set -> elt list
       (** fromList l : Constructs a set containing the elements in l.
@@ -69,6 +70,12 @@ signature MONO_SET =
        *)
     val foldUntil : (elt -> 'b -> bool * 'b) -> 'b -> Set -> 'b
 
+      (** all f s : applies f to each element x of the set s, until f x
+       * evaluates to false; it returns false if such an x exists and
+       * true otherwise.
+       *)
+    val all : (elt -> bool) -> Set -> bool
+
       (** map f s; builds a new set by applying f to each element in s *)
     val map : (elt -> elt) -> Set -> Set
 
@@ -84,5 +91,11 @@ signature MONO_SET =
 (*
     val pu : elt Pickle.pu -> Set Pickle.pu 
 *)				 
-    
+
+      (** Return some element from the given set.
+       * @params set
+       * @param set  the set to select an element from
+       * @exception Empty if the set is empty
+       *)
+    val someElement : Set -> elt
   end

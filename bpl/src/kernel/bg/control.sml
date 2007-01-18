@@ -29,6 +29,13 @@ struct
   fun make c = c
   fun unmk c = c
   fun kind (_,k) = k  
+  fun strEq s1 s2 = (case String.compare (s1, s2) of
+                       EQUAL => true
+                     | _     => false)
+  fun eq (s1, Active)  (s2, Active)  = strEq s1 s2
+    | eq (s1, Passice) (s2, Passive) = strEq s1 s2
+    | eq (s1, Atomic)  (s2, Atomic)  = strEq s1 s2
+    | eq _            _              = false
 end
 
 structure Control :> CONTROL =

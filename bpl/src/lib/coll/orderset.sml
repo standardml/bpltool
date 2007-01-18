@@ -4,6 +4,7 @@
  *      - exception DuplicatesRemoved - raised by
  *        addList, fromList, union, and insert
  * April 2006: Arne John Glenstrup: Added foldUntil function.
+ * January 2007: Espen Højsgaard: Added all function.
  *) 
 
 functor OrderSet(Order : ORDERING): MONO_SET =
@@ -41,6 +42,10 @@ functor OrderSet(Order : ORDERING): MONO_SET =
 
     fun isEmpty E = true
       | isEmpty _ = false
+
+    exception Empty
+    fun someElement E = raise Empty
+      | someElement (N (x, _, _, _)) = x
 
     fun member (i:elt) (s:Set) : bool =
       let 
@@ -381,6 +386,10 @@ functor OrderSet(Order : ORDERING): MONO_SET =
       in
 	#2 (fold' t e)
       end
+
+    fun all (f: elt -> bool) (E:Set) : bool = true
+      | all (f: elt -> bool) (N(i,s1,s2,_):Set) : bool =
+        all f s1 andalso f i andalso all f s2
 
     (* the usual list map *)
     val listmap = map

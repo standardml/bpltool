@@ -66,18 +66,24 @@ struct
    *)
   type link' = {outer : nameedge, inner : nameset}
 
-  (* Less-than operator on nameedges. *)
-  fun nameedgelt (Name n1)    (Name n2)    = Name.< (n1, n2)
-    | nameedgelt (Name _)     (Closure _)  = true
-    | nameedgelt (Closure _)  (Name _)     = false
-    | nameedgelt (Closure i1) (Closure i2) = i1 < i2
+  (* Compare operator on nameedges. *)
+  fun nameedgecompare (Name n1)    (Name n2)    = Name.compare (n1, n2)
+    | nameedgecompare (Name _)     (Closure _)  = LESS
+    | nameedgecompare (Closure _)  (Name _)     = GREATER
+    | nameedgecompare (Closure i1) (Closure i2) = Int.compare (i1, i2)
 
   (* Less-than operator on link's. *)
   structure Link'Order =
   struct
   type T = link'
-  fun lt ({outer = ne1, ...} : T) ({outer = ne2, ...} : T) 
-      = nameedgelt ne1 ne2
+  fun lt ({outer = ne1, inner = ns1} : T) ({outer = ne2, inner = ns2} : T) 
+      = (case nameedgecompare ne1 ne2 of
+           LESS    => true
+         | GREATER => false
+         | EQUAL   =>
+             (case NameSet.compare (ns1, ns2) of
+                LESS => true
+              | _    => false))
   end
 
   structure Link'Set = OrderSet (Link'Order)
@@ -105,6 +111,8 @@ struct
    * representation, allowing faster composition.
    *)
   type wiring = link'set * nameedge NameHashMap.hash_table
+
+  fun eq (ls1, _) (ls2, _) = Link'Set.eq ls1 ls2
 
   (* Convert an inverted map, mapping nameedges to name sets,
    * into a link'set. 

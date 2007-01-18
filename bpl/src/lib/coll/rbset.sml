@@ -33,6 +33,22 @@ struct
   fun isEmpty (LEAF, _) = true
     | isEmpty _         = false
 
+  fun all (f: elt -> bool) ((t, _): Set) =
+    let
+      fun all' LEAF = true
+        | all' (RED (y, l, r)) =
+          all' l andalso f y andalso all' r
+        | all' (BLACK (y, l, r)) =
+          all' l andalso f y andalso all' r
+    in
+      all' t
+    end
+
+  exception Empty
+  fun someElement (LEAF, _) = raise Empty
+    | someElement (RED (x, _, _), _) = x
+    | someElement (BLACK (x, _, _), _) = x
+
   fun member elm (tree, n) =
       let fun memShared x left right =
               case compare(elm,x) of

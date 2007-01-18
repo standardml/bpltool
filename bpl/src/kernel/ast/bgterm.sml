@@ -32,13 +32,16 @@ functor BgTerm'(structure Info : INFO
 		structure Ion : ION
 		structure Wiring : WIRING
 		structure Permutation : PERMUTATION
+		structure NameSet : MONO_SET
 		structure NameSetPP : COLLECTIONPRETTYPRINT
                   where type ppstream    = PrettyPrint.ppstream
-		sharing type Wiring.nameset = NameSetPP.collection)
+		sharing type NameSet.Set =
+                             Wiring.nameset =
+                             NameSetPP.collection)
       : BGTERM =
 struct
   type info = Info.info
-  type nameset = Wiring.nameset
+  type nameset = NameSet.Set
   type ion = Ion.ion
   type Immutable = Permutation.Immutable
   type 'kind permutation = 'kind Permutation.permutation
@@ -79,6 +82,23 @@ struct
     | info (Pri (_, i))    = i
     | info (Par (_, i))    = i
     | info (Com (_, _, i)) = i
+
+  fun eq (Mer (i1, _))       (Mer (i2, _))                = i1 = i2
+    | eq (Con (ns1, _))      (Con (ns2, _))               = NameSet.eq ns1 ns2
+    | eq (Wir (w1, _))       (Wir (w2, _))                = Wiring.eq w1 w2
+    | eq (Ion (i1, _))       (Ion (i2, _))                = Ion.eq i1 i2
+    | eq (Per (p1, _))       (Per (p2, _))                = Permutation.eq p1 p2
+    | eq (Abs (ns1, b1, _))  (Abs (ns2, b2, _))           = 
+        NameSet.eq ns1 ns2 andalso eq b1 b2
+    | eq (Ten (bs1, _))      (Ten (bs2, _))               = 
+        ListPair.all (fn (b1, b2) => eq b1 b2) (bs1, bs2)
+    | eq (Pri (bs1, _))      (Pri (bs2, _))               = 
+        ListPair.all (fn (b1, b2) => eq b1 b2) (bs1, bs2)
+    | eq (Par (bs1, _))      (Par (bs2, _))               =
+        ListPair.all (fn (b1, b2) => eq b1 b2) (bs1, bs2)
+    | eq (Com (b11, b12, _)) (Com (b21, b22, _))          =
+        eq b11 b21 andalso eq b12 b22
+    | eq _ _                                              = false
 
   fun pp indent pps =
       let
@@ -255,21 +275,25 @@ functor BgTerm (structure Info : INFO
 		structure Ion : ION
 		structure Wiring : WIRING
 		structure Permutation : PERMUTATION
+		structure NameSet : MONO_SET
 		structure NameSetPP : COLLECTIONPRETTYPRINT
                   where type ppstream    = PrettyPrint.ppstream
-		sharing type Wiring.nameset = NameSetPP.collection)
+		sharing type NameSet.Set =
+                             Wiring.nameset =
+                             NameSetPP.collection)
       :> BGTERM where type info = Info.info
                   and type wiring = Wiring.wiring
                   and type 'kind permutation = 'kind Permutation.permutation
                   and type Immutable = Permutation.Immutable
                   and type ion = Ion.ion
-                  and type nameset = NameSetPP.collection
+                  and type nameset = NameSet.Set
  =
 struct
   structure BgTerm = BgTerm'(structure Info = Info
-			     structure Ion = Ion
-			     structure Wiring = Wiring
-			     structure Permutation = Permutation
-			     structure NameSetPP = NameSetPP)
+                             structure Ion = Ion
+                             structure Wiring = Wiring
+                             structure Permutation = Permutation
+                             structure NameSet = NameSet
+                             structure NameSetPP = NameSetPP)
   open BgTerm
 end

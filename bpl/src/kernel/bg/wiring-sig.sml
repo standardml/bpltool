@@ -45,7 +45,12 @@ sig
   val make_ren : name namemap -> wiring
   (** Deconstruct a wiring. *)
   val unmk : wiring -> linkset
-
+  (** Test two wirings for equality.
+   * @params w1 w2
+   * @param w1  the first wiring.
+   * @param w2  the second wiring.
+   *)
+  val eq : wiring -> wiring -> bool
   (** Signal that two wirings cannot be extended due to a link
    * clash involving an outer name of the second wiring.
    *)
