@@ -27,8 +27,8 @@ rule observe =
 	->
   loc(id([0]) | dev([1]) | [2])
   || invoke_g([3] | app(appl(app(appl(fst(var_g))
-			       | appr(exp([0]))))
-		      | appr(exp([1]))))
+			       | appr(exp([1]))))
+		      | appr(exp([0]))))
 
 rule lose =
   devs([0] | dev([1])) || invoke_g([2])
