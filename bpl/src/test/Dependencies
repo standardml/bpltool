@@ -1,8 +1,13 @@
 # INCLUDE=../lib/smlunit
 # INCLUDE=../lib/pp/smlnj
+# INCLUDE=../lib/util
 # INCLUDE=../kernel
+# INCLUDE=../kernel/bg
+# INCLUDE=../kernel/bg/test
 # INCLUDE=../kernel/ast
 # INCLUDE=../kernel/ast/test
+# INCLUDE=../kernel/match
+# INCLUDE=../kernel/match/test
 # INCLUDE=../apps/miniml
 # INCLUDE=../apps/miniml/test
 

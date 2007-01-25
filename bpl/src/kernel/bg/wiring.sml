@@ -501,7 +501,7 @@ struct
 	    (ls, ht)
 	  end
           
-
+  nonfix ++
   fun ++ [] = id_0
     | ++ [w] = w
     | ++ (w :: ws) = plus w (++ ws)

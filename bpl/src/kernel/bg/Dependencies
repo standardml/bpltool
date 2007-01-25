@@ -1,5 +1,6 @@
 # INCLUDE=../../lib/coll
 # INCLUDE=../../lib/pp/smlnj
+# INCLUDE=../../lib/util
 # MLton: $(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
 sigs = name-sig link-sig control-sig interface-sig ion-sig 
        permutation-sig wiring-sig
