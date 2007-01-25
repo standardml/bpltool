@@ -1,4 +1,4 @@
-% Ebbe Elsborg and Henning Niss, 22/01/2007
+% Ebbe Elsborg and Henning Niss, 25/01/2007
 %
 % This is the "sensor" part S of a Plato-graphical system;
 % C || P || A = C || (S || L) || A.
@@ -12,10 +12,11 @@ signature sensor =
     app : active (0 -> 0)	% application
     appl : active (0 -> 0)
     appr : active (0 -> 0)
+    fst: passive (0 -> 0)	% first projection on a pair
     var : atomic (0 -> 1)	% variable
     exp : passive (0 -> 0)	% delay evaluation
     i0,i1,i2,... : atomic (0 -> 0)	% inf. family of identifiers
-    invoke : active (0 -> 1)	% hosts "fnction calls"
+    invoke : active (0 -> 1)	% hosts "function calls"
 end
 
 using sensor
