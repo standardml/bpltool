@@ -49,9 +49,9 @@ debug: + debug-sig flags %NODASHSIG
 origin-sig: /lib/pp/smlnj/prettyprint
 origin: origin-sig /lib/pp/smlnj/prettyprint %NODASHSIG
 baseerrorhandler-sig: debug
-baseerrorhandler: + baseerrorhandler-sig debug origin-sig 
-   /lib/pp/smlnj/prettyprint-sig %NODASHSIG
+baseerrorhandler: + baseerrorhandler-sig debug origin origin-sig 
+   /lib/pp/smlnj/prettyprint /lib/pp/smlnj/prettyprint-sig %NODASHSIG
 errorhandler-sig: baseerrorhandler-sig
-printerrorhandler: + baseerrorhandler errorhandler-sig origin-sig
+printerrorhandler: + baseerrorhandler errorhandler-sig origin origin-sig
    debug /lib/compat/mosml/exception/.
-   /lib/pp/smlnj/prettyprint-sig %NODASHSIG
+   /lib/pp/smlnj/prettyprint /lib/pp/smlnj/prettyprint-sig %NODASHSIG

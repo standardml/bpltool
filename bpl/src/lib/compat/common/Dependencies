@@ -8,3 +8,4 @@ legacytimer: legacytimer-sig %NODASHSIG
 legacysubstring-sig:
 legacysubstring: legacysubstring-sig %NODASHSIG
 exception-sig:
+signalhandler-sig:

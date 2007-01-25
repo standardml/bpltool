@@ -45,7 +45,9 @@ functor Match'(
   structure BgBDNF      : BGBDNF
   structure NameSet     : MONO_SET
   structure LazyList    : LAZYLIST
-  structure ErrorHandler : ERRORHANDLER where type origin = Origin.origin where type ppstream = PrettyPrint.ppstream
+  structure ErrorHandler : ERRORHANDLER
+      where type origin = Origin.origin
+        and type ppstream = PrettyPrint.ppstream
   sharing type Permutation.nameset = NameSet.Set
   sharing type Permutation.permutation = BgBDNF.permutation
   sharing type Wiring.wiring = BgVal.wiring
@@ -1649,7 +1651,9 @@ functor Match (
   structure BgBDNF      : BGBDNF
   structure NameSet     : MONO_SET
   structure LazyList    : LAZYLIST
-  structure ErrorHandler : ERRORHANDLER where type origin = Origin.origin where type ppstream = PrettyPrint.ppstream
+  structure ErrorHandler : ERRORHANDLER
+      where type origin = Origin.origin
+        and type ppstream = PrettyPrint.ppstream
   sharing type Permutation.nameset = NameSet.Set
   sharing type Permutation.permutation = BgBDNF.permutation
   sharing type Wiring.wiring = BgVal.wiring
