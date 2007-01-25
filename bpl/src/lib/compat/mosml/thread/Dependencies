@@ -1,0 +1,2 @@
+. = signalhandler
+signalhandler: /lib/compat/common/signalhandler-sig %NODASHSIG
