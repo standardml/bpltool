@@ -31,15 +31,15 @@ struct
       val aborted = ref false
     in
       callcc (fn k =>
-		 let
-		   val orighandler = inqHandler sigINT
-		 in
-		   setHandler (sigINT, 
-			       HANDLER (fn _ => (aborted := true; k)));
-		   unmaskSignals (MASK [sigINT]);
-		   f ();
-		   setHandler (sigINT, orighandler); ()
-		 end);
+							 let
+							   val orighandler = inqHandler sigINT
+							 in
+							   setHandler (sigINT, 
+								       HANDLER (fn _ => (aborted := true; k)));
+							   unmaskSignals (MASK [sigINT]);
+							   f ();
+							   setHandler (sigINT, orighandler); ()
+							 end);
       !aborted
     end
   fun blockInterrupts () = maskSignals (MASK [sigINT])

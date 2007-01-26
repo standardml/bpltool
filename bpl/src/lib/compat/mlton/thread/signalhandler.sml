@@ -30,20 +30,20 @@ struct
   fun interrupted f =
       let
         fun workrunner t =
-	  let
-	    val workthread 
-	      = new (fn () =>
-			(f ();
-			 switch (fn _ => prepare (t, false))))
-	    val INThandler
-	      = Handler.handler (fn rt => prepare (t, true)) 
-	  in
-	    setHandler (Posix.Signal.int, INThandler);
-	    Mask.unblock (Mask.some [Signal.int]);
-	    prepare (workthread, ())
-	  end
+				  let
+				    val workthread 
+				      = new (fn () =>
+											(f ();
+											 switch (fn _ => prepare (t, false))))
+				    val INThandler
+				      = Handler.handler (fn rt => prepare (t, true)) 
+				  in
+				    setHandler (Posix.Signal.int, INThandler);
+				    Mask.unblock (Mask.some [Signal.int]);
+				    prepare (workthread, ())
+				  end
       in
-	switch workrunner
+				switch workrunner
       end
   fun blockInterrupts ()
     = Mask.block (Mask.some [Signal.int])
