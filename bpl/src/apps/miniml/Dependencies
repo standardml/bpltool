@@ -38,7 +38,7 @@ miniml.lex: /lib/compat/mosml/. miniml.grm-sig source /lib/pp/mak/. /lib/util/so
 miniml.grm: miniml.grm-sig miniml pattern source /lib/pp/mak/. /lib/util/sourceloc
    /lib/ml-yacc/. /lib/compat/mosml/. /lib/util/util /lib/util/flags %NODASHSIG
 minimlparser-sig: pattern miniml
-minimlparser: minimlparser-sig miniml miniml.lex miniml.grm miniml.grm.sml pattern source
+minimlparser: minimlparser-sig miniml miniml.lex miniml.grm pattern source
    /lib/util/sourceloc /lib/ml-yacc/. /lib/pp/mak/. /lib/util/flags /lib/util/dump
    %NODASHSIG
 matchcompiler-sig: pattern miniml

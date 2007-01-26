@@ -101,8 +101,10 @@ struct
   fun insert' elm set =
       insert elm set
       handle DuplicatesRemoved => set
-			     
-  fun addList xs set = List.foldl (fn (elm,set) => insert elm set) set xs
+	
+  fun add (elm, set) = insert elm set		
+  fun add' (elm, set) = insert' elm set     
+  fun addList xs set = List.foldl add set xs
 
   fun push LEAF stack = stack
     | push tree stack = tree :: stack
@@ -232,6 +234,7 @@ struct
   (* FIXME: it *must* be possible to write union, equal, isSubset,
             intersection, and difference more elegantly. 
   *)
+  val FACTOR = 0
   fun union' s1 (_, 0) = s1
     | union' (_, 0) s2 = s2
     | union' s1 (BLACK(x,LEAF,LEAF), _) = insert' x s1
@@ -260,12 +263,17 @@ struct
                         | SOME(y, stack2) => loop x y stack1 stack2 res
                   end
       in  (* FIXME: here is lots of room for optimizations *)
-          case (get [t1], get [t2]) of
-              (SOME(x, stack1), SOME(y, stack2)) => 
-              let val digits = loop x y stack1 stack2 ZERO
-              in  (buildAll digits, toInt digits) end
-            | (_, SOME _) => s2
-            | _           => s1 end  
+	  if n1<FACTOR*n2 then
+	      foldl insert' s2 s1
+	  else if n2<FACTOR*n1 then
+	      foldl insert' s1 s2
+	  else
+              case (get [t1], get [t2]) of
+		  (SOME(x, stack1), SOME(y, stack2)) => 
+		  let val digits = loop x y stack1 stack2 ZERO
+		  in  (buildAll digits, toInt digits) end
+		| (_, SOME _) => s2
+		| _           => s1 end  
 
   fun union s1 (_, 0) = s1
     | union (_, 0) s2 = s2
@@ -288,12 +296,17 @@ struct
                         | SOME(y, stack2) => loop x y stack1 stack2 res
                   end
       in  (* FIXME: here is lots of room for optimizations *)
-          case (get [t1], get [t2]) of
-              (SOME(x, stack1), SOME(y, stack2)) => 
-              let val digits = loop x y stack1 stack2 ZERO
-              in  (buildAll digits, toInt digits) end
-            | (_, SOME _) => s2
-            | _           => s1 end  
+	  if n1<FACTOR*n2 then
+	      foldl insert s2 s1
+	  else if n2<FACTOR*n1 then
+	      foldl insert s1 s2
+	  else
+              case (get [t1], get [t2]) of
+		  (SOME(x, stack1), SOME(y, stack2)) => 
+		  let val digits = loop x y stack1 stack2 ZERO
+		  in  (buildAll digits, toInt digits) end
+		| (_, SOME _) => s2
+		| _           => s1 end  
 
 
   fun intersect (s1 as (t1, n1)) (s2 as (t2, n2)) =

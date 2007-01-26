@@ -7,7 +7,7 @@ sigs = name-sig link-sig control-sig interface-sig ion-sig
 funs = name interface control link ion wiring permutation 
 
 name-sig: /lib/coll/ordering-sig /lib/coll/monoset-sig /lib/pp/smlnj/.
-name: /lib/coll/ordering-sig /lib/coll/rbset /lib/pp/edlib/edlibprettyprint
+name: /lib/coll/ordering-sig /lib/coll/set /lib/pp/edlib/edlibprettyprint
    name-sig /lib/compat/mosml/hash/. /lib/pp/smlnj/.
    /lib/util/debug /lib/util/origin /lib/util/errorhandler-sig %NODASHSIG
 interface-sig:
