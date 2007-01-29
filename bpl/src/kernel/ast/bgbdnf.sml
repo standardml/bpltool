@@ -116,6 +116,8 @@ struct
   type BR = unit
   type 'class bgbdnf = bgval
 
+  fun eq b1 b2 = BgVal.eq b1 b2
+
   datatype stlnode =
            SCon of info * wiring
          | SMol of M bgbdnf

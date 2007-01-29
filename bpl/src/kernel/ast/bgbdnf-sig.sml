@@ -72,6 +72,14 @@ sig
    *)
   val regularize : B bgbdnf -> BR bgbdnf
 
+  (** Test two BDNFs for equality: same structure, same interfaces,
+   * but internal names may differ.
+   * @params b1 b2
+   * @param b1  the first bigraph.
+   * @param b2  the second bigraph.
+   *)
+  val eq : 'class bgbdnf -> 'class bgbdnf -> bool
+
   (** Sum type for singular top-level nodes. The renaming concretion is
       represented by just the renaming. *)
   datatype stlnode =
