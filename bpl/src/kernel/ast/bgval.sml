@@ -1353,7 +1353,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
          *)
         val jbound =
           Int.max(NameSet.size (Wiring.innernames w1),
-                  NameSet.size (Wiring.innernames w2))
+                  NameSet.size (Wiring.innernames w2)) + 1
         val C1js = array (jbound, (0, NameSet.empty))
         val C2js = array (jbound, (0, NameSet.empty))
         val S1js = array (jbound, (0, NameSet.empty, NameSet.empty))
