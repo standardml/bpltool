@@ -1,0 +1,7 @@
+(* Hack to fix defective CM in Windows:
+ * relative references are not resolved properly.
+ * Used in smlnj.sml to include the kernel source files. *)
+Group
+is
+
+../../kernel/sources.cm

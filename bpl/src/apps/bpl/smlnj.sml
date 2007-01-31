@@ -26,7 +26,7 @@
  * @version $LastChangedRevision: 315 
  *)
 
-CM.make' "../../kernel/sources.cm";
+CM.make' "kernelsources.cm";
 
 use "bpl.sml";
 
