@@ -94,6 +94,9 @@ struct
 
     (* pretty print code by Henning Makholm - taken from the regfun impl *)
     open Pretty
+    infixr 5 ^+
+    infix 4 +^
+    infixr 4 ++
     val (kw_style, id_style, regannot_style) =
 	(BOLD,     ITALICS,  COLOR("red"))
     val ppKw = annotate kw_style o ppString

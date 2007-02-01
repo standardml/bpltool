@@ -44,6 +44,9 @@ structure Pattern :> PATTERN = struct
       | arity (ConstCon{arity,...}) = arity
 
     open Pretty
+    infixr 5 ^+
+    infix 4 +^
+    infixr 4 ++
     fun ppCon (TupleCon i) = Util.abort 24680
       | ppCon (ConstCon{name,arity,span}) = ppString name
 

@@ -1,3 +1,9 @@
-Group is
-  ../../common/sources.cm
+Group
+  structure Exception
+is
   exception.sml
+  ../../common/sources.cm
+#if defined (NEW_CM)
+  $/basis.cm
+#else
+#endif

@@ -70,7 +70,7 @@ DESCFILES	= $(shell find . -name .description)
 SMLFILES-kernel	:= $(shell find ./kernel -name CM -prune -a -type f -o -name *.sml)
 SMLFILES-lib	:= $(shell find ./lib -name CM -prune -a -type f -o -name *.sml)
 SMLFILES-miniml	:= $(shell find ./apps/miniml -name CM -prune -a -type f -o -name *.sml)
-CMFILES		= $(patsubst %/Dependencies,%/sources.cm,$(DEPENDENCIES))
+CMFILES        	= $(filter-out ./lib/compat/common/sources.cm, $(patsubst %/Dependencies,%/sources.cm,$(DEPENDENCIES)))
 CMFILES-kernel	= $(filter ./kernel/%,$(CMFILES))
 CMFILES-lib	= $(filter-out ./lib/compat/mosml/thread/sources.cm,$(filter ./lib/%,$(CMFILES)))
 CMFILES-miniml	= $(filter ./apps/miniml/%,$(CMFILES))
@@ -117,7 +117,7 @@ PARSINGFILES := $(patsubst %.grm,%.grm-sig.sml,$(GRMFILES)) $(patsubst %.grm,%.g
 .PHONY: svn-update
 svn-update:
 	cd .. && $(SVN) update
-	
+
 # Documentation
 
 .PHONY:	all doc doc-kernel doc-lib doc-miniml upload-doc
@@ -184,7 +184,7 @@ kernel.cm: kernel.cm.in
 %/mlton.mlb: %/Dependencies
 	cd $(dir $@) && $(MAKE) $(notdir $@)
 
-smlnj-prepare: $(patsubst %/Dependencies,%/sources.cm,$(DEPENDENCIES))
+smlnj-prepare: $(CMFILES)
 mlton-prepare: $(patsubst %/Dependencies,%/mlton.mlb,$(DEPENDENCIES)) 
 
 .PHONY: smlnj-prepare mlton-prepare
@@ -199,6 +199,13 @@ test-smlnj: smlnj-prepare test.cm
 
 test-mosml: unittest
 	./unittest
+
+test-smlnj: smlnj-prepare test.cm
+	echo "val cur_dir = OS.FileSys.getDir ();\
+	      val _ = OS.FileSys.chDir \"lib/compat/smlnj/\";\
+	      use \"cmmakedefine.sml\";\
+              val _ = OS.FileSys.chDir cur_dir;\
+              CM_make \"test.cm\"" | $(SMLNJ)
 
 test-mlton: mlton-prepare $(PARSINGFILES)
 	$(MLTON) test/mlton.mlb && test/mlton
@@ -229,7 +236,7 @@ parsersclean:
 	for l in $(LEXFILES); do $(RM) $$l.sml; done
 
 
-CMDIRS = $(filter-out lib/pp/smlnj,$(MOSMAKEDIRS))
+CMDIRS = $(filter-out lib/pp/smlnj lib/compat/common,$(MOSMAKEDIRS))
 cmclean:
 	for d in $(CMDIRS); do [ -r $$d/Dependencies ] && $(RM) -f $$d/sources.cm; done
 

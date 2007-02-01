@@ -2,7 +2,11 @@ Group
 #if defined (NEW_CM)
   library($/basis.cm)
   library($smlnj/compiler/compiler.cm)
-  library($/smlnj-lib.cm)
+  (library($/smlnj-lib.cm)
+   * (signature HASH_TABLE
+      structure HashTable
+      structure HashString
+      functor HashTableFn))
 #else
   signature HASH_TABLE
   structure HashTable

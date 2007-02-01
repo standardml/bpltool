@@ -20,6 +20,12 @@ structure Dump :> DUMP = struct
     
     fun pp pp ext x =
 	let val os = TextIO.openOut (!prefix ^ "." ^ ext)
+	in  TextIO.output (os, (PrettyPrint.pp_to_string 72 (pp 0) x))
+          ; TextIO.flushOut os
+          ; TextIO.closeOut os
+        end
+(* The following only works with older versions of SML/NJ
+	let val os = TextIO.openOut (!prefix ^ "." ^ ext)
 	    val ps = PrettyPrint.mk_ppstream 
 		        { consumer = fn s => TextIO.output(os, s)
 		        , linewidth = 72
@@ -29,5 +35,6 @@ structure Dump :> DUMP = struct
           ; PrettyPrint.flush_ppstream ps
           ; TextIO.closeOut os
         end
+*)
 
 end (* structure Dump *)

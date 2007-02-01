@@ -44,12 +44,13 @@ functor MiniMLToBG(structure BG : BG_ADT
 			   short="",long="stats",default=false,
 			   desc="Collect statistics (besides timings) of the compilation"}
 
+(* Only works with older versions of SML/NJ:
     fun pps os = PrettyPrint.mk_ppstream 
 		     { consumer = fn s => TextIO.output(os, s)
 		     , linewidth = 72
 		     , flush = fn () => TextIO.flushOut(os)
 		     }
-
+*)
     local open Pretty 
     in
     exception CompileError of string * style pptree
@@ -123,11 +124,19 @@ functor MiniMLToBG(structure BG : BG_ADT
             (* Output result *)
 	    val _ = 
 		let val os = TextIO.openOut outfile
+		in  TextIO.output (os, PrettyPrint.pp_to_string 72 (BG.BgBDNF.pp 0) bpl)
+		  ; TextIO.flushOut os
+		  ; TextIO.closeOut os
+		end
+(*  Only works with older versions of SML/NJ:
+	    val _ = 
+		let val os = TextIO.openOut outfile
 		    val ps = pps os
 		in  BG.BgBDNF.pp 0 ps bpl
 		  ; PrettyPrint.flush_ppstream ps
 		  ; TextIO.closeOut os
 		end
+*)
 	in  
 	    if !statistics then
 		List.app print 

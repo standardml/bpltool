@@ -1,0 +1,15 @@
+(* Hand written! *)
+group is
+  exception-sig.sml
+  signalhandler-sig.sml
+#if defined (NEW_CM)
+#else
+  legacyarray-sig.sml
+  legacyarray.sml
+  legacylistpair-sig.sml
+  legacylistpair.sml
+  legacytimer-sig.sml
+  legacytimer.sml
+  legacysubstring-sig.sml
+  legacysubstring.sml
+#endif

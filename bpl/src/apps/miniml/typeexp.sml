@@ -109,6 +109,9 @@ structure TypeExp :> TYPEEXP = struct
 
     (* Pretty printing *)
     open Pretty
+    infixr 5 ^+
+    infix 4 +^
+    infixr 4 ++
     fun ppVar (V{id,nm=SOME a,...}) = ppString ("'a" ^ Int.toString id) ++ ("[" ^+ ppString a +^ "]")
       | ppVar (V{id,nm=NONE,...}) = ppString ("'a" ^ Int.toString id)
     fun pp tau =

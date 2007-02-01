@@ -1,4 +1,11 @@
 (* Hand written! *)
 Group
 is
-smlnjprettyprint.sml
+#if defined (NEW_CM)
+  $smlnj/compiler/compiler.cm
+  $/pp-lib.cm
+  prettyprint-sig.sml
+  smlnjprettyprintnew.sml
+#else
+  smlnjprettyprint.sml
+#endif

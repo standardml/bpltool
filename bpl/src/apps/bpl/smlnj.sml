@@ -26,7 +26,13 @@
  * @version $LastChangedRevision: 315 
  *)
 
-CM.make' "kernelsources.cm";
+(* Get the right CM.make command for the current version of SML/NJ *)
+val cur_dir = OS.FileSys.getDir ();
+val _ = OS.FileSys.chDir "../../lib/compat/smlnj/";
+use "cmmakedefine.sml";
+val _ = OS.FileSys.chDir cur_dir;
+
+CM_make "kernelsources.cm";
 
 use "bpl.sml";
 
