@@ -43,6 +43,7 @@ functor Match'(
   structure Interface   : INTERFACE
   structure BgVal       : BGVAL
   structure BgBDNF      : BGBDNF
+  structure Rule        : RULE
   structure NameSet     : MONO_SET
   structure LazyList    : LAZYLIST
   structure ErrorHandler : ERRORHANDLER
@@ -72,6 +73,8 @@ functor Match'(
                            = Wiring.link
   sharing type Interface.interface = BgBDNF.interface
   sharing type BgVal.bgval = BgBDNF.bgval
+  sharing type BgBDNF.bgbdnf = Rule.bgbdnf
+  sharing type BgBDNF.BR = Rule.BR
   sharing type BgVal.bgmatch = BgBDNF.bgmatch
   sharing type Info.info =
                BgBDNF.info =
@@ -109,6 +112,7 @@ struct
   type nameset  = NameSet.Set
   type link     = Link.link
   type linkset  = LinkSet.Set
+  type rule = Rule.rule
   open LazyList
 
   val bgvalmatch = BgVal.match
@@ -156,13 +160,15 @@ struct
                 | CLO of derivation
 
   type match = {context : B bgbdnf,
-                redex : BR bgbdnf,
+                rule : rule,
                 parameter : DR bgbdnf,
                 tree : derivation}
 
-  fun unmk {context, redex, parameter, tree}
-    = {context = context, redex = redex, parameter = parameter}
-
+  fun unmk' m = m
+  
+  fun unmk {context, rule, parameter, tree}
+    = {context = context, rule = rule, parameter = parameter}
+  
   (* Signals that there are no more new ways of splitting. *)
   exception NoMoreSplits
   
@@ -1459,8 +1465,9 @@ struct
       lzunmk (lzfoldr toCLO lzNil matches)
     end))
     
-  fun matches {agent, redex} = lzmake (fn () =>
+  fun matches {agent, rule} = lzmake (fn () =>
     let
+      val {redex, react, inst} = Rule.unmk rule
       val {wirxid = w_axid, D = D_a} = unmkBR agent
       val ps = #Ps (unmkDR D_a)
       val {wirxid = w_Rxid, D = D_R} = unmkBR redex
@@ -1477,7 +1484,7 @@ struct
         in
           {context
             = BgBDNF.makeB w_C Xs (BgBDNF.makeD (Wiring.id_X Y) Qs pi)handle e=>raise e,
-           redex = redex,
+           rule = rule,
            parameter = BgBDNF.makeDR Wiring.id_0 qs,
            tree = tree}
         end
@@ -1510,7 +1517,7 @@ struct
       Nil => NONE
     | Cons (m, ms) => SOME m
 
-  val allmatches : {agent : BR bgbdnf, redex : BR bgbdnf }
+  val allmatches : {agent : BR bgbdnf, rule : rule}
                  -> match list = lztolist o matches
   
   fun ppTree indent pps tree =
@@ -1567,7 +1574,7 @@ struct
   end  
   
   fun pp0 showTree ppBBDNF ppDRBDNF indent pps
-          ({context, redex, parameter, tree} : match) =
+          ({context, rule, parameter, tree} : match) =
     let
       open PrettyPrint
       val show = add_string pps
@@ -1612,6 +1619,11 @@ struct
              arg = "N",
              desc = "Set extra indentation at each level when prettyprinting to N"}
              
+  val treeToString
+    = PrettyPrint.pp_to_string
+        (Flags.getIntFlag "/misc/linewidth") 
+        (ppTree (Flags.getIntFlag "/misc/indent"))
+
   val toString
     = PrettyPrint.pp_to_string
         (Flags.getIntFlag "/misc/linewidth") 
@@ -1649,6 +1661,7 @@ functor Match (
   structure Interface   : INTERFACE
   structure BgVal       : BGVAL
   structure BgBDNF      : BGBDNF
+  structure Rule        : RULE
   structure NameSet     : MONO_SET
   structure LazyList    : LAZYLIST
   structure ErrorHandler : ERRORHANDLER
@@ -1678,6 +1691,8 @@ functor Match (
                            = Wiring.link
   sharing type Interface.interface = BgBDNF.interface
   sharing type BgVal.bgval = BgBDNF.bgval
+  sharing type BgBDNF.bgbdnf = Rule.bgbdnf
+  sharing type BgBDNF.BR = Rule.BR
   sharing type BgVal.bgmatch = BgBDNF.bgmatch
   sharing type Info.info =
                BgBDNF.info =
@@ -1702,6 +1717,7 @@ struct
 			   structure Interface = Interface
 			   structure BgVal = BgVal
 			   structure BgBDNF = BgBDNF
+         structure Rule = Rule
 			   structure NameSet = NameSet
 			   structure LazyList = LazyList
 			   structure ErrorHandler = ErrorHandler)

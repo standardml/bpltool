@@ -18,24 +18,27 @@
  * USA
  *)
 
-(** Module with dummy signal handling utility functions for Moscow ML.
- * @version $LastChangedRevision: 393 $
+(** Datatype for representing instantiations.
+ * @version $LastChangedRevision: 397 $
  *)
 
-structure SignalHandler : SIGNALHANDLER =
-struct
-  open TextIO
-  val warningGiven = ref false
-  fun warn ()
-    = (if !warningGiven then () else
-  	     (output (stdErr, "lib/compat/mosml/thread/signalhandler.sml:\
-  	     	\ Warning: signal handling not implemented faithfully for Moscow ML!\n");
-  	     	flushOut stdErr);
-  	   warningGiven := true)
-
-  fun interrupted f	= ((f (); false) handle Interrupt => true)
-  prim_val catch_interrupt : bool -> unit = 1 "sys_catch_break"
-  fun blockInterrupts () = catch_interrupt false
-  fun unblockInterrupts () = catch_interrupt true
+signature INSTANTIATION =
+sig
+  type bgval
+  type 'a bgbdnf
+  type DR
+  (** Instantiation type. *)
+  type inst
+  (** Use an instantiation to instantiate a bgval. *)
+  val instantiate : inst -> DR bgbdnf -> bgval
+  (** Prettyprint an instantiation.
+   * @params indent pps inst
+   * @param indent  Indentation at each block level.
+   * @param pps     Prettyprint stream on which to output.
+   * @param inst    The instantiation to print.
+   *)
+  val pp : int -> PrettyPrint.ppstream -> inst -> unit
+  (** Return a prettyprinted string representation of a instantiation. *)
+  val toString : inst -> string
+  
 end
-

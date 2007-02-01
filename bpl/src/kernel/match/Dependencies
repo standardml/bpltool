@@ -12,3 +12,7 @@ match: match-sig /kernel/bg/sigs /kernel/ast/sigs /lib/compat/mosml/hash/.
   /lib/compat/mosml/hash/. /lib/compat/common/. /lib/util/flags
   /lib/util/origin /lib/util/errorhandler-sig /lib/util/debug
   /lib/util/partition %NODASHSIG
+react-sig: /lib/coll/lazylist /lib/pp/smlnj/prettyprint
+react: react-sig /lib/coll/lazylist /lib/coll/monofinmap-sig
+  /kernel/ast/bgbdnf-sig /kernel/ast/bgval-sig /kernel/ast/instantiation-sig
+  match /kernel/ast/rule-sig

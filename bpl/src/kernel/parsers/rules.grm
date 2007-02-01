@@ -1,0 +1,326 @@
+(* Simple grammar file for ML-Yacc (SML/NJ) defining the parser 
+   for reaction rules. 
+
+   Functionality - for now - just read a file containing a single dec 
+   on the form:
+
+   bg
+
+   Syntax and grammar summary :
+
+   bg := 1
+      |  merge(n)
+      |  `nset`
+      |  name/name 
+      |  -/name 
+      |  name//nset
+      |  -//nset
+      |  ctrlid <nlist> <nsetlist>
+      |  ctrlid <nlist>
+      |  ctrlid
+      |  @[ permentrylist ]
+      |  @@[ permentrylist ]
+      |  <nset> bg
+      |  bg * bg
+      |  bg <|> bg
+      |  bg || bg
+      |  bg o bg
+  
+   nsetlist      = [nsets]
+                 | []
+   
+   nsets         = nset
+	         | nset, nsets
+
+   nset          = [names]
+                 | []
+
+   names         = name
+	         | name, names
+
+   permentrylist = [permentries]
+                 | []
+   
+   permentries   = permentry 
+		 | permentry, permentrylist
+
+   permentry     = int & nset
+                 | int
+   
+   name   = [a-n|p-v|yz]
+          | [a-z][A-za-z0-9_]+
+
+   (single o and * are keywords)
+
+   ctrlid  = [A-Z][A-za-z0-9_]*
+
+   - and ML-style comments (* ... *) 
+
+-----
+
+  Precedences (with tightest binding at bottom):
+
+  ( )         abstraction
+  *, <|>, ||  tensor product, prime product, parallel product
+  o           composition
+
+-----
+
+Notes:
+-  For now, I'm just creating a fresh ctrl for each
+   ion - hence ctrl-eq must be tested by testing constituent parts.
+   Change datatype bg (and this call) to let ions point to a common ctrl-def.
+-  Tensor product XX is parsed as if it was a binary operator
+   (as are prime product and parallel product)
+-  Nice-to-have extended forms : 
+     id_iface      =>  id on iface - iface
+     id		   =>  (not only grammar issue) 
+			- id that can be instatiated to 
+     'nlist'       => '{nlist}'
+*)
+
+(* Position info stuff - below *)
+
+open BgTerm
+
+type control = Control.control
+type name = Name.name
+type link = Link.link
+type nameset = NameSet.Set
+type linkset = LinkSet.Set
+type ion = Ion.ion
+type 'kind permutation = 'kind Permutation.permutation
+
+(** Signal that a set with duplicate names has been encountered. 
+ * @params smlfile leftpos rightpos errtxt
+ * @param smlfile   SML file with the code that encountered the error.
+ * @param leftpos   Position of lefthand side of error term.
+ * @param rightpos  Position of righthand side of error term.
+ * @param errtxt    Text detailing the error.
+*)
+exception DuplicateNames of string * (int * int) * string
+
+fun warning str v = (print ("Parser warning: "^str^"\n"); v)
+
+fun mk_origin p1 p2 = Origin.mk_file_origin (!ErrorMsg.fileName) (Origin.POS (ErrorMsg.toCoords p1 p2))
+
+fun mk_info p1 p2 = Info.make (mk_origin p1 p2)
+
+fun nset2idlinkset nset =
+    NameSet.fold 
+      (fn name => 
+	  fn links =>
+	     LinkSet.insert
+	       (Link.make {outer = SOME name, 
+			   inner = NameSet.singleton name}) 
+	       links)
+      LinkSet.empty
+      nset
+
+%%
+%term EOF
+	 | ID of string | INT of int | CTRLID of string
+	 | AMP | EQ | MAPSTO | MAPPSTO
+	 | MERGEn of int
+	 | LPAREN | RPAREN | LBRACK | RBRACK | LBRACE | RBRACE | GT | LT
+	 | SLASH | SLASHSLASH | DASHSLASH | DASHSLASHSLASH
+	 | OO | XX | PRI | PAR | QUOTE | BQUOTE | COMMA
+         | IDX0 | IDBB0 | ONE | IDW | IDW0 | IDPn of int
+
+%nonterm
+  rule of rule
+| rulelist of rule list
+| rules of rule list
+| rulefield of rulefield
+| rulefields of rulefield list
+| inst of inst
+| map of map
+| maps of map list
+| bg of bgterm
+| altbg of bgterm
+| fports of name list
+| nlist of name list
+| names of name list
+| bports of nameset list
+| nsetlist of nameset list
+| nset of nameset
+| ctrlid of control
+| link of link
+| perm of Immutable permutation
+| permentrylist of (int * nameset) list
+| permentry of (int * nameset)
+| id of string
+| int of int
+
+%pos int
+%verbose
+%start rules
+%eop EOF
+%noshift EOF
+
+%name BgTerm
+
+%header (functor BgTermLrVals
+		   (structure Info : INFO
+		    structure Token : TOKEN
+		    structure Control : CONTROL
+		    structure Name : NAME
+		    structure NameSet : MONO_SET
+		    structure Link : LINK
+		    structure LinkSet : MONO_SET
+		    structure Wiring : WIRING
+		    structure Ion : ION
+		    structure Permutation : PERMUTATION
+		    structure BgTerm : BGTERM
+		    sharing type Control.control = Ion.control
+		    sharing type Name.name = 
+				 NameSet.elt = 
+				 Link.name =
+				 Ion.name
+		    sharing type NameSet.Set =
+				 Link.nameset =
+				 Ion.nameset =
+				 Permutation.nameset =
+				 BgTerm.nameset
+		    sharing type Link.link = LinkSet.elt
+		    sharing type LinkSet.Set = Wiring.linkset
+		    sharing type Wiring.wiring = BgTerm.wiring
+		    sharing type Ion.ion = BgTerm.ion
+		    sharing type Permutation.permutation =
+				 BgTerm.permutation
+		    sharing type Permutation.Immutable =
+		                 BgTerm.Immutable
+                    sharing type Info.info =
+                                 BgTerm.info
+		    )
+	)
+
+%keyword 
+
+%left COMMA
+%nonassoc LPAREN RPAREN
+%left XX PRI PAR
+%left OO
+%nonassoc LT GT LBRACE RBRACE
+%left SLASH
+
+%%
+rulelist : LBRACK rules RBRACK ()
+         | LBRACK RBRACK      ()
+         
+rules : rule                  ()
+      | rule COMMA rules      ()
+
+rule : LBRACE rulefields RBRACE ()
+
+rulefields : rulefield        ()
+           | rulefield COMMA rulefields
+                              ()
+
+rulefield : id EQ bg          ()
+          | id EQ inst        ()
+
+inst : LBRACK maps RBRACK     ()
+     | LBRACK RBRACK          ()
+
+maps : map                    ()
+     | map COMMA maps         ()
+
+map : int MAPSTO int          ()
+    | int AMP nlist MAPPSTO int AMP nlist
+                              ()
+
+bg : altbg                    (altbg)
+   | bg XX bg                 (Ten ([bg1, bg2], mk_info bg1left bg2right))
+   | bg PRI bg                (Pri ([bg1, bg2], mk_info bg1left bg2right))
+   | bg PAR bg                (Par ([bg1, bg2], mk_info bg1left bg2right))
+   | bg OO bg                 (Com (bg1, bg2, mk_info bg1left bg2right))
+
+altbg : ONE                   (Mer (0, mk_info ONEright ONEleft))
+   | IDX0                     (Ten ([], mk_info IDX0left IDX0right))
+   | IDBB0                    (Par ([], mk_info IDBB0left IDBB0right))
+   | MERGEn                   (Mer (MERGEn, mk_info MERGEnleft MERGEnright))
+   | BQUOTE nset BQUOTE       (Con (nset, mk_info QUOTE1left QUOTE2right))
+   | link                     (Wir (Wiring.make 
+				      (LinkSet.singleton link), 
+				      mk_info linkleft linkright))
+   | IDW nset                 (Wir (Wiring.make (nset2idlinkset nset),
+				    mk_info IDWleft IDWright))
+   | IDW0                     (Wir (Wiring.id_0, mk_info IDW0left IDW0right))
+   | ctrlid fports bports     (let 
+				 val fp = fports
+				 val bp = bports
+			       in
+				 Ion (Ion.make 
+					({ctrl = ctrlid, 
+					  free = fports,
+					  bound = bports}),
+					mk_info ctrlidleft bportsright)
+			       end)
+   | ctrlid fports            (let 
+				 val fp = fports
+			       in
+				 Ion (Ion.make 
+					({ctrl = ctrlid, 
+					  free = fports,
+					  bound = []}),
+					mk_info ctrlidleft fportsright)
+			       end)
+   | ctrlid                   (Ion (Ion.make 
+					({ctrl = ctrlid, 
+					  free = [],
+					  bound = []}),
+					mk_info ctrlidleft ctrlidright))
+   | perm                     (Per (perm, mk_info permleft permright))
+   | IDPn                     (Per (Permutation.id_n IDPn, mk_info IDPnleft IDPnright))
+   | LPAREN nset RPAREN bg    (Abs (nset, bg, mk_info LPARENleft bgright))
+   | LPAREN bg RPAREN         (bg)
+
+fports	: LT names GT         (names)
+
+names   : id COMMA names      (Name.make id :: names)
+        | id		      ([Name.make id])
+        |		      ([])
+
+id      : ID                  (ID)
+        | IDX0                ("idx_0")
+        | IDW                 ("idw_")
+        | IDW0                ("idw_0")
+        | MERGEn              ("merge(" ^ Int.toString MERGEn ^ ")")
+        | IDPn                ("idp(" ^ Int.toString IDPn ^ ")")
+
+bports	: LT nsetlist GT      (nsetlist)
+
+nsetlist : nset COMMA nsetlist (nset :: nsetlist)
+	 | nset		      ([nset])
+         |		      ([])
+
+nlist   : LBRACK names RBRACK (names)
+
+nset    : LBRACK names RBRACK (NameSet.fromList (names)
+			       handle NameSet.DuplicatesRemoved
+				      => raise 
+					DuplicateNames 
+					  ("bg.grm", (LBRACEleft, RBRACEright),
+					   "while parsing"))
+
+ctrlid	: CTRLID	      (Control.make (CTRLID, Control.Active))
+
+link	: DASHSLASHSLASH nset	        (Link.make {outer = NONE, inner = nset})
+        | id SLASH id	%prec SLASH	(Link.make {outer = SOME (Name.make id1), 
+						    inner = NameSet.singleton (Name.make id2)})
+	| DASHSLASH id			(Link.make {outer = NONE, 
+						    inner = NameSet.singleton (Name.make id)})
+	| id SLASHSLASH nset	        (Link.make {outer = SOME (Name.make id), inner = nset})
+
+perm	: LBRACK permentrylist RBRACK	        (Permutation.make permentrylist)
+
+permentrylist : permentry COMMA permentrylist   (permentry :: permentrylist)
+	      | permentry                       ([permentry])
+	      |                                 ([]) 
+
+permentry : int AMP nset			((int, nset))
+	  | int					((int, NameSet.empty))
+
+int : INT                                       (INT)
+    | ONE                                       (1)

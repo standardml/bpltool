@@ -36,6 +36,7 @@ local
         typename
         (pp (Flags.getIntFlag "/misc/indent"))
   val _ = ipp ["BG","BgVal","bgval"] BG.BgVal.ppWithIface
+  val _ = ipp ["BG","Match","derivation"] BG.Match.ppTree
 in
  val _ = print 
   	("\nBPL (revision " ^ BPL_REVISION_STR 

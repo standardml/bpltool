@@ -29,19 +29,27 @@ sig
   type B
   type BR
   type DR
+  type rule
   type nameset
   type 'a lazylist
   
   (** A match type. *)
   type match
+  type derivation
 
   (** Deconstruct a match. *)
   val unmk : match -> {context : B bgbdnf,
-                       redex : BR bgbdnf,
+                       rule : rule,
                        parameter : DR bgbdnf}
                        
+  (** Deconstruct a match, returning also its derivation tree. *)
+  val unmk' : match -> {context : B bgbdnf,
+                        rule : rule,
+                        parameter : DR bgbdnf,
+                        tree : derivation}
+                       
   (** Compute a lazy list of matches of a redex in an agent. *)
-  val matches : {agent : BR bgbdnf, redex : BR bgbdnf} -> match lazylist
+  val matches : {agent : BR bgbdnf, rule : rule} -> match lazylist
 
   (** Infer a match of a redex in an agent.
    * @params {agent, redex}
@@ -49,7 +57,7 @@ sig
    * @param redex      the redex to match.
    * @return SOME match if a match is found, NONE otherwise.
    *)
-  val amatch : {agent : BR bgbdnf, redex : BR bgbdnf} -> match option
+  val amatch : {agent : BR bgbdnf, rule : rule} -> match option
 
   (** Infer all matches of a redex in an agent.
    * @params {agent, redex}
@@ -57,7 +65,15 @@ sig
    * @param redex   the redex to match.
    * @return a list of matches, empty if redex does not match.
    *)
-  val allmatches : {agent : BR bgbdnf, redex : BR bgbdnf} -> match list
+  val allmatches : {agent : BR bgbdnf, rule : rule} -> match list
+
+  (** Prettyprint an inference tree.
+   * @params indent pps t
+   * @param indent  Indentation at each block level.
+   * @param pps     Prettyprint stream on which to output.
+   * @param t       The tree to print.
+   *)
+  val ppTree : int -> PrettyPrint.ppstream -> derivation -> unit
 
   (** Prettyprint a match.
    * @params indent pps m

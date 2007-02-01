@@ -152,6 +152,15 @@ type B = BgBDNF.B
 type BR = BgBDNF.BR
 type 'class bgbdnf = 'class BgBDNF.bgbdnf
 
+structure Instantiation = Instantiation
+  (structure BgVal = BgVal
+   structure BgBDNF = BgBDNF)
+  
+structure Rule = Rule
+  (structure BgVal = BgVal
+   structure BgBDNF = BgBDNF
+   structure Instantiation = Instantiation)
+
 structure Match = Match'
   (structure Info         = Info
    structure Name         = Name
@@ -166,6 +175,7 @@ structure Match = Match'
    structure Wiring       = Wiring
    structure BgVal        = BgVal
    structure BgBDNF       = BgBDNF
+   structure Rule         = Rule
    structure LazyList     = LazyList
    structure ErrorHandler = ErrorHandler)
 
