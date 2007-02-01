@@ -24,7 +24,7 @@
 #              of SMLNJ, based on Dependencies files of Mosmake
 
 progname="$0"
-debug=
+debug=1
 
 usage () {
   echo "Usage: $progname [ OPTION .. OPTION ] [ DEPENDENCIESFILE ] [ CMFILE ]"
@@ -74,7 +74,7 @@ do
 			excludedirs="$excludedirs\|$excludedir"
 		elif [ $nextarg = change ]
 		then
-			changes="$changes -e s=${change}=g"
+			changes="$changes -e s=${change//./\.}=g"
 		fi
 		nextarg=
 	else
