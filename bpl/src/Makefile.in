@@ -72,7 +72,7 @@ SMLFILES-lib	:= $(shell find ./lib -name CM -prune -a -type f -o -name *.sml)
 SMLFILES-miniml	:= $(shell find ./apps/miniml -name CM -prune -a -type f -o -name *.sml)
 CMFILES		= $(patsubst %/Dependencies,%/sources.cm,$(DEPENDENCIES))
 CMFILES-kernel	= $(filter ./kernel/%,$(CMFILES))
-CMFILES-lib	= $(filter ./lib/%,$(CMFILES))
+CMFILES-lib	= $(filter-out ./lib/compat/mosml/thread/sources.cm,$(filter ./lib/%,$(CMFILES)))
 CMFILES-miniml	= $(filter ./apps/miniml/%,$(CMFILES))
 
 include $(MOSMAKE)/Makefile.inc
@@ -194,17 +194,32 @@ check: test
 
 test: test-$(MLC)
 
-test-mosml: unittest
-	./unittest
-
 test-smlnj: smlnj-prepare test.cm
 	echo "CM.make' \"test.cm\";" | $(SMLNJ)
+
+test-mosml: unittest
+	./unittest
 
 test-mlton: mlton-prepare $(PARSINGFILES)
 	$(MLTON) test/mlton.mlb && test/mlton
 
 .PHONY:	check test test-smlnj test-mosml test-mlton
 
+# Web application
+webapp: webapp-$(MLC)
+
+webapp-smlnj: smlnj-prepare $(PARSINGFILES)
+	echo "CM.make' \"apps/bplweb/backend/sources.cm\";" | $(SMLNJ)
+
+webapp-mosml: mosml-prepare $(PARSINGFILES)
+	@echo MosML webapp not implemented yet
+	false
+
+webapp-mlton: mlton-prepare $(PARSINGFILES)
+	$(MLTON) apps/bplweb/backend/mlton.mlb
+	apps/bplweb/backend/mlton < apps/bplweb/backend/test/matching1.cmd
+
+.PHONY: webapp webapp-smlnj webapp-mosml webapp-mlton
 # Clean up
 clean:
 	$(RM) *~ 
