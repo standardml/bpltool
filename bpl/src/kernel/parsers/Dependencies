@@ -9,3 +9,8 @@ bg.lex: /lib/util/errormsg /lib/compat/mosml/. bg.grm-sig
 bg.grm: /lib/ml-yacc/.  /lib/coll/monoset-sig bg.grm-sig
    /kernel/bg/sigs /kernel/ast/sigs /lib/util/errormsg
    /lib/util/origin-sig /lib/util/origin /lib/pp/smlnj/. %NODASHSIG
+rules.grm-sig: /lib/ml-yacc/.
+rules.lex: /lib/util/errormsg /lib/compat/mosml/. rules.grm-sig
+rules.grm: /lib/ml-yacc/.  /lib/coll/monoset-sig rules.grm-sig
+   /kernel/bg/sigs /kernel/ast/sigs /lib/util/errormsg
+   /lib/util/origin-sig /lib/util/origin /lib/pp/smlnj/. %NODASHSIG

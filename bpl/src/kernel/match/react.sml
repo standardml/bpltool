@@ -100,7 +100,7 @@ struct
       val op o = Com
       fun b1 * b2 = Ten [b1, b2]
       val {rule, context, parameter} = Match.unmk match
-      val {redex, react, inst} = Rule.unmk rule
+      val {name, redex, react, inst} = Rule.unmk rule
       val instantiation = Instantiation.instantiate inst parameter
       val Z = Interface.glob (BgBDNF.outerface parameter)
       val id_Z = Wir (Wiring.id_X Z)

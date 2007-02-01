@@ -36,9 +36,9 @@ sig
    * @param react  Reactum bigraph
    * @param inst   Instantiation
    *)
-  val make : {redex : BR bgbdnf, react : bgval, inst : inst} -> rule
+  val make : {name : string, redex : BR bgbdnf, react : bgval, inst : inst} -> rule
   (** Deconstruct a rule. @see make. *)
-  val unmk : rule -> {redex : BR bgbdnf, react : bgval, inst : inst}
+  val unmk : rule -> {name : string, redex : BR bgbdnf, react : bgval, inst : inst}
   (** Prettyprint a rule.
    * @params indent pps r
    * @param indent  Indentation at each block level.

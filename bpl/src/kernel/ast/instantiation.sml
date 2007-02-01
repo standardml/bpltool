@@ -34,6 +34,8 @@ struct
   fun make () = ()
   (** FIXME: Deconstruct an instantiation. *)
   fun unmk () = ()
+  (** FIXME: *)
+  val id : inst = ()
   (** FIXME: Use an instantiation to instantiate a bgval. *)
   fun instantiate inst d = d
   (** FIXME: Prettyprint an instantiation.

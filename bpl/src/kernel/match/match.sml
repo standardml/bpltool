@@ -1467,7 +1467,7 @@ struct
     
   fun matches {agent, rule} = lzmake (fn () =>
     let
-      val {redex, react, inst} = Rule.unmk rule
+      val {name, redex, react, inst} = Rule.unmk rule
       val {wirxid = w_axid, D = D_a} = unmkBR agent
       val ps = #Ps (unmkDR D_a)
       val {wirxid = w_Rxid, D = D_R} = unmkBR redex

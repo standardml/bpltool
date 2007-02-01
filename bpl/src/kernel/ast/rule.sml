@@ -33,7 +33,7 @@ struct
   type 'a bgbdnf = 'a BgBDNF.bgbdnf
   type BR = BgBDNF.BR
   type inst = Instantiation.inst
-  type rule = {redex : BR bgbdnf, react : bgval, inst : inst}
+  type rule = {name : string, redex : BR bgbdnf, react : bgval, inst : inst}
   (** Construct a rule.  The instantiation must be compatible
    * with redex and reactum inner faces, i.e., instantiate the
    * inner face of reactum from the inner face of redex.
@@ -51,7 +51,7 @@ struct
    * @param pps     Prettyprint stream on which to output.
    * @param r       The rule to output.
    *)
-  fun pp indent pps {redex, react, inst} =
+  fun pp indent pps {name, redex, react, inst} =
     let
       open PrettyPrint
       val show = add_string pps

@@ -195,17 +195,14 @@ check: test
 test: test-$(MLC)
 
 test-smlnj: smlnj-prepare test.cm
-	echo "CM.make' \"test.cm\";" | $(SMLNJ)
-
-test-mosml: unittest
-	./unittest
-
-test-smlnj: smlnj-prepare test.cm
 	echo "val cur_dir = OS.FileSys.getDir ();\
 	      val _ = OS.FileSys.chDir \"lib/compat/smlnj/\";\
 	      use \"cmmakedefine.sml\";\
               val _ = OS.FileSys.chDir cur_dir;\
               CM_make \"test.cm\"" | $(SMLNJ)
+
+test-mosml: unittest
+	./unittest
 
 test-mlton: mlton-prepare $(PARSINGFILES)
 	$(MLTON) test/mlton.mlb && test/mlton

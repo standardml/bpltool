@@ -29,6 +29,8 @@ sig
   type DR
   (** Instantiation type. *)
   type inst
+  (** The identity instantiation. *)
+  val id : inst
   (** Use an instantiation to instantiate a bgval. *)
   val instantiate : inst -> DR bgbdnf -> bgval
   (** Prettyprint an instantiation.

@@ -73,10 +73,15 @@ val () =
       ("idw_", Tokens.IDW ),
       ("idw_0", Tokens.IDW0 ),
       ("1", Tokens.ONE ),
+      ("<->", Tokens.ONE ),
       ("||", Tokens.PAR ),
       ("<|>", Tokens.PRI ),
       ("*", Tokens.XX ),
-      ("o", Tokens.OO )
+      ("o", Tokens.OO ),
+      ("/", Tokens.SLASH),
+      ("-/", Tokens.DASHSLASH),
+      ("//", Tokens.SLASHSLASH),
+      ("-//", Tokens.DASHSLASHSLASH)
       ]
 
 val () =
@@ -90,10 +95,6 @@ val () =
       ("]", Tokens.RBRACK),
       ("(", Tokens.LPAREN),
       (")", Tokens.RPAREN),
-      ("/", Tokens.SLASH),
-      ("-/", Tokens.DASHSLASH),
-      ("//", Tokens.SLASHSLASH),
-      ("-//", Tokens.DASHSLASHSLASH),
       (",", Tokens.COMMA),
       ("'", Tokens.QUOTE),
       ("`", Tokens.BQUOTE)
@@ -120,10 +121,11 @@ end
 val comlevel = ref 0;
 
 %%
-%header (functor BgTermLex(structure Tokens : BgTerm_TOKENS));
-KW_ID   = \* | [|]{1,2} | [a-z][A-za-z0-9_]* | 1;
+%header (functor BgRulesLex(structure Tokens : BgRules_TOKENS));
+KW_ID   = \* | [|]{1,2} | [<][|][>] | [<]-[>] | [a-z][A-za-z0-9_]* | 1 | -?[/][/]?;
 CTRLID  = [A-Z?!][A-za-z0-9_]*;
 INT     = (0 | [1-9][0-9]*);
+STRING  = \"([^\ \t\013\n]|\\\")*\";
 WHITESPACE = [\ \t\013];
 %%
 \n                        => ( lineNum := !lineNum+1; 
@@ -140,6 +142,17 @@ WHITESPACE = [\ \t\013];
 				     ^ "\". Skipping..." ); 
 				  comlevel := 0;
 				  continue()));
+{STRING}                  => ( if (!comlevel > 0) then
+				 continue()
+			       else
+				 (debugprintpos yypos  
+						(yypos + size yytext)
+						("STRING("^yytext^")");
+				  Tokens.STRING
+				    (String.substring
+				      (yytext, 1, size yytext - 2),
+				     yypos,
+				     yypos + size yytext)));
 merge\({INT}\)            => ( if (!comlevel > 0) then
 				 continue()
 			       else
