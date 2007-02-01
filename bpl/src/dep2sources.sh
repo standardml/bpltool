@@ -24,7 +24,7 @@
 #              of SMLNJ, based on Dependencies files of Mosmake
 
 progname="$0"
-debug=1
+debug=
 
 usage () {
   echo "Usage: $progname [ OPTION .. OPTION ] [ DEPENDENCIESFILE ] [ CMFILE ]"
