@@ -1,33 +1,50 @@
 (************************************************************************
-  Ebbe Elsborg and Henning Niss
-  18/12/2005: 
+  Ebbe Elsborg and Henning Niss, 2/2/2007
  
-  This is the "location-based service" part A of a Plato-graphical system;
-  C || P || A = C || (S || L) || A.
+  This is the "location-aware application" part A of a Plato-graphical
+  system; C || P || A = C || (S || L) || A.
 ************************************************************************)
 
-fun isCoffee dev = ...
-fun parent   loc = ...
+datatype bool = True | False
+datatype loc = Loc of int
+datatype dev = Dev of int
+datatype res = Res of loc
+datatype whereIs = WhereIs of dev * (loc -> unit)
 
-fun filter args =
-  let val p = fst args
-      fun loop l =
-	case l of
-	  []    => []
-        | x::xs => if p x then x :: loop xs else loop xs
-  in  loop (snd args)
-  end
+fun new () = ref False
 
-fun service' loc =
-  (* very stupid, repeatedly looks through the same locations *)
-  let val all = aFindall loc
-      val coffee = filter (isCoffee, all)
-  in  case coffee of
-         []    => service' (parent loc)
-       | x::xs => coffee
-  end
+(* just for typechecking -- remove later *)
+fun exchange (r,s) =
+    let val tmp = !r
+    in r := (!s) ; s := tmp
+    end
 
-fun service me =
-  let val my_loc = whr me
-  in  service' my_loc
-  end
+(* just for typechecking -- remove later *)
+fun enqL x = ()
+
+fun spinlock l =
+    let val t = ref True
+        fun loop () = ( exchange(t,l); if !t = True then loop() else () )
+    in loop ()
+    end
+
+fun spinunlock l = 
+    let val t = ref False
+    in exchange(t,l)
+    end
+
+fun wait i = if i<0 then () else wait(i-1)
+
+val queue = ref []
+
+fun deq () =
+    case (!queue) of [] => NONE
+		   | (q::qs) => let val _ = queue:=qs 
+				in SOME(q)
+				end
+
+fun enqA e = queue:=(!queue)@[e]
+
+fun whereIs d =
+    enqL(WhereIs(d,fn r => enqA(Res r)));
+    wait(100)
