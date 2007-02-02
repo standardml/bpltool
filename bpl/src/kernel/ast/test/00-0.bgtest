@@ -1,0 +1,10 @@
+Testing barren root
+
+()
+
+result:
+
+(idw_0 * idp_1)
+ o (idw_0
+    * ([[(idw_0 * ({})(idw_0 * idp_1) o '{}')
+       o (({})(idw_0 * 1) o idx_0)]] o idp_0))

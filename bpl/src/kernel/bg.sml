@@ -72,11 +72,12 @@ fun bgvalUsefile'' filename =
       fun parseerror (s, p1, p2) = ErrorMsg.error p1 p2 s
       val lexer = BgTermLex.makeLexer get
       val (bgterm, _)
-	= BgTermParser.parse
-	    (30, 
-	     BgTermParser.Stream.streamify (lexer),
-	     parseerror, 
-	     ())
+	= (BgTermParser.parse
+	     (30, 
+	      BgTermParser.Stream.streamify (lexer),
+	      parseerror, 
+	      ()))
+          handle e => (TextIO.closeIn file; raise e)
       val bgval = BgVal.make BgTerm.info bgterm
     in
       TextIO.closeIn file;

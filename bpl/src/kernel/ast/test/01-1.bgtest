@@ -1,0 +1,12 @@
+Testing merge with 1 site
+
+merge_1
+
+result:
+
+(idw_0 * idp_1)
+ o (idw_0
+    * [[(idw_0 * ({})(idw_0 * idp_1) o '{}')
+       o (({})(idw_0 * merge_1)
+               o [[(idw_0 * idp_1) o '{}']])]]
+       o idp_1)

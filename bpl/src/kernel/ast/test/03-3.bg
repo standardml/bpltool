@@ -1,3 +1,0 @@
-(* Testing wiring with duplicate names *)
-
-/{x,x}

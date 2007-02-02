@@ -22,650 +22,174 @@
  * @version $LastChangedRevision$
  *)
 
-functor BDNFTest (structure ErrorHandler : ERRORHANDLER
-		  structure Assert       : ASSERT
-		  structure Test         : TEST) =
+functor BDNFTest (structure ErrorHandler  : ERRORHANDLER
+		  structure Assert        : ASSERT
+		  structure Test          : TEST
+                  (*val       test_data_dir : string*)) =
 struct
-		
+
 open BPL'
 open Assert
-val noinfo = Info.noinfo
-     
-datatype expectedresult = S of string | E of string
 
-  (* remove whitespace characters *)
-  fun removeSpaces s =
-      String.concat (String.tokens Char.isSpace s)
+(* The following format should be used for *.bgtest files: *)
+(*
+one line description
 
-  fun testfile get (S expectedstring) filename =
-      (assertEqualString
-         (removeSpaces expectedstring)
-         (removeSpaces (get filename)); ())
-    | testfile get (E expectedexnname) filename = 
-      (((get filename; 
-	 raise Assert.Fail
-		 (GeneralFailure ("expected exception "
-				  ^ expectedexnname)))
-	handle exn => 
-	       (if exnName exn = expectedexnname then
-		  ()
-		else
-		  (raise Assert.Fail
-		     (GeneralFailure 
-			("expected exception " ^
-			 expectedexnname ^ ", got " ^
-			 exnName exn)))));
-       ())
-      
-  val suite =
-       let
-	 fun testModule getfile getexpected =
-	     map 
-	       (fn (txt, expected1, expected2, file)
-		   => (txt, 
-		       (fn () =>
-			   testfile 
-			     getfile
-			     (getexpected (expected1, expected2))
-			     (file ^ ".bg"))))
-	[("00-0: barren root", S"1", 
-	  S"(idw_0 * idp_1)\
-           \ o (idw_0\
-           \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})(idw_0 * 1) o idx_0) o idp_0)", "00-0"),
-         ("01-0: merge with 0 sites", S"1", 
-	  S"(idw_0 * idp_1)\
-           \ o (idw_0\
-           \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})(idw_0 * 1) o idx_0) o idp_0)", "01-0"),
-         ("01-1: merge with 1 site", S"merge_1", 
-	  S"(idw_0 * idp_1)\
-           \ o (idw_0\
-           \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})(idw_0 * merge_1)\
-           \               o ((idw_0 * idp_1) o '{}'))\
-           \       o idp_1)", "01-1"),
-         ("01-2: merge with >1 sites", S"merge_2", 
-	  S"(idw_0 * idp_1)\
-           \ o (idw_0\
-           \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})(idw_0 * merge_2)\
-           \               o ((idw_0 * idp_1) o '{}'\
-           \                  * (idw_0 * idp_1) o '{}'))\
-           \       o idp_2)", "01-2"),
-         ("02-0: concretion with 0 names", S"'{}'", 
-	  S"(idw_0 * idp_1)\
-           \ o (idw_0\
-           \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})(idw_0 * merge_1)\
-           \               o ((idw_0 * idp_1) o '{}'))\
-           \       o idp_1)", "02-0"),
-         ("02-1: concretion with 1 name", S"'{x}'", 
-	  S"(x/x * idp_1)\
-           \ o (idw_0\
-           \    * (x/x * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})(x/x * merge_1)\
-           \               o ((x/x * idp_1) o '{x}'))\
-           \       o [0{x}])", "02-1"),
-         ("02-2: concretion with >1 names", S"'{x, y}'", 
-	  S"(idw_{x, y} * idp_1)\
-           \ o (idw_0\
-           \    * (idw_{x, y} * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})(idw_{x, y} * merge_1)\
-           \               o ((idw_{x, y} * idp_1) o '{x, y}'))\
-           \       o [0{x, y}])", "02-2"),
-         ("02-3: concretion with duplicate name",
-          E"DuplicateNames", E"DuplicateNames", "02-3"),
-         ("02-4: concretion composition", S"'{x}' o [0{x}]", 
-	  S"(x/x * idp_1)\
-           \ o (idw_0\
-           \    * (x/x * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})(x/x * merge_1)\
-           \               o ((x/x * idp_1) o '{x}'))\
-           \       o [0{x}])", "02-4"),
-         ("03-0: wiring with 0/0 names", S"/{}",
-          S"(/{} * idp_0) o (idw_0 * idx_0 o idp_0)", "03-0"),
-         ("03-1: wiring with 0/1 name", S"/x",
-          S"(/x * idp_0) o (x/x * idx_0 o idp_0)", "03-1"),
-         ("03-2: wiring with 0/>1 names", S"/{x, y}", 
-	  S"(/{x, y} * idp_0) o (idw_{x, y} * idx_0 o idp_0)", "03-2"),
-         ("03-3: wiring with duplicate names",
-          E"DuplicateNames", E"DuplicateNames", "03-3"),
-         ("03-4: wiring with 1/0 names", S"y/{}",
-          S"(y/{} * idp_0) o (idw_0 * idx_0 o idp_0)", "03-4"),
-         ("03-5: wiring renaming with 1/1 name", S"y/x",
-          S"(y/x * idp_0) o (x/x * idx_0 o idp_0)", "03-5"),
-         ("03-6: wiring identity", S"x/x",
-          S"(x/x * idp_0) o (x/x * idx_0 o idp_0)", "03-6"),
-         ("03-7: wiring with 1/>1 name", S"y/{x, y}", 
-	  S"(y/{x, y} * idp_0) o (idw_{x, y} * idx_0 o idp_0)", "03-7"),
-         ("03-8: wiring with duplicate name",
-          E"DuplicateNames", E"DuplicateNames", "03-8"),
-         ("04-0-0: Ion with 0/0 names/sets", S"K", 
-	  S"(idw_0 * idp_1)\
-           \ o (idw_0\
-           \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})\
-           \          (idw_0 * merge_1)\
-           \           o ((idw_0 * K)\
-           \               o ({})\
-           \                 (idw_0 * merge_1)\
-           \                  o ((idw_0 * idp_1) o '{}')))\
-           \       o idp_1)", "04-0-0"),
-         ("04-0-1: ion with 0/1(0) names/sets(elements)", S"K<><{}>", 
-	  S"(idw_0 * idp_1)\
-           \ o (idw_0\
-           \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})\
-           \          (idw_0 * merge_1)\
-           \           o ((idw_0 * K<><{}>)\
-           \              o ({})\
-           \                (idw_0 * merge_1)\
-           \                 o ((idw_0 * idp_1) o '{}')))\
-           \       o idp_1)", "04-0-1"),
-         ("04-0-2: ion with 0/1(1) names/sets(elements)", S"K<><{x}>", 
-	  S"(idw_0 * idp_1)\
-           \ o (idw_0\
-           \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})\
-           \          (idw_0 * merge_1)\
-           \           o ((idw_0 * K<><{x}>)\
-           \              o ({x})\
-           \                (x/x * merge_1) o ((x/x * idp_1) o '{x}')))\
-           \       o [0{x}])", "04-0-2"),
-         ("04-0-3: ion with 0/1(>1) names/sets(elements)", S"K<><{x, y}>",
-	  S"(idw_0 * idp_1)\
-           \ o (idw_0\
-           \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})\
-           \          (idw_0 * merge_1)\
-           \           o ((idw_0 * K<><{x, y}>)\
-           \              o ({x, y})\
-           \                (idw_{x, y} * merge_1)\
-           \                 o ((idw_{x, y} * idp_1) o '{x, y}')))\
-           \       o [0{x, y}])", "04-0-3"),
-         ("04-0-4: ion with 0/duplicate names",
-          E"DuplicateNames", E"DuplicateNames", "04-0-4"),
-         ("04-0-5: ion with 0/>1(0) names/sets(elements)",
-          S"K<><{}, {}>",
-	  S"(idw_0 * idp_1)\
-           \ o (idw_0\
-           \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})\
-           \          (idw_0 * merge_1)\
-           \           o ((idw_0 * K<><{}, {}>)\
-           \               o ({})\
-           \                 (idw_0 * merge_1)\
-           \                  o ((idw_0 * idp_1) o '{}')))\
-           \       o idp_1)", "04-0-5"),
-         ("04-0-6: ion with 0/>1(>0) names/sets(elements)",
-          S"K<><{x}, {y, z}>", 
-	  S"(idw_0 * idp_1)\
-           \ o (idw_0\
-           \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})\
-           \          (idw_0 * merge_1)\
-           \           o ((idw_0 * K<><{x}, {y, z}>)\
-           \              o ({x, y, z})\
-           \                (idw_{x, y, z} * merge_1)\
-           \                 o ((idw_{x, y, z} * idp_1)\
-           \                     o '{x, y, z}')))\
-           \       o [0{x, y, z}])", "04-0-6"),
-         ("04-0-7: ion with 0/>1(>0) names/sets(duplicate elements)",
-          E"DuplicateNames", E"DuplicateNames", "04-0-7"),
-         ("04-1-0: Ion with 1/0 names/sets", S"K<x>", 
-	  S"(x/x_17 * idp_1)\
-           \ o (idw_0\
-           \    * (x_17/x_17 * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})\
-           \          (x_17/x_17 * merge_1)\
-           \           o ((idw_0 * K<x_17>)\
-           \               o ({})\
-           \                 (idw_0 * merge_1)\
-           \                  o ((idw_0 * idp_1) o '{}')))\
-           \       o idp_1)", "04-1-0"),
-         ("04-1-1: ion with 1/1(>1) names/sets(elements)",
-          S"K<x><{x, y}>", 
-	  S"(x/x_18 * idp_1)\
-           \ o (idw_0\
-           \    * (x_18/x_18 * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})\
-           \          (x_18/x_18 * merge_1)\
-           \           o ((idw_0 * K<x_18><{x, y}>)\
-           \              o ({x, y})\
-           \                (idw_{x, y} * merge_1)\
-           \                 o ((idw_{x, y} * idp_1) o '{x, y}')))\
-           \       o [0{x, y}])", "04-1-1"),
-         ("04-2-0: ion with >1/>1(>1) names/sets(elements)",
-          S"K<x, y><{y, z}, {}>", 
-	  S"((x/x_1a * y/y_19) * idp_1)\
-           \ o (idw_0\
-           \    * (idw_{y_19, x_1a} * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})\
-           \          (idw_{y_19, x_1a} * merge_1)\
-           \           o ((idw_0 * K<x_1a, y_19><{y, z}, {}>)\
-           \               o ({y, z})\
-           \                 (idw_{y, z} * merge_1)\
-           \                  o ((idw_{y, z} * idp_1) o '{y, z}')))\
-           \       o [0{y, z}])", "04-2-0"),
-         ("04-2-1: ion with duplicate/>1(?) names/sets(elements)",
-          E"DuplicateNames", E"DuplicateNames", "04-2-1"),
-         ("05-0-0: Permutation of width 0", S"idp_0",
-          S"(idw_0 * idp_0) o (idw_0 * idx_0 o idp_0)", "05-0-0"),
-         ("05-1-0: Permutation of width(elements) 1(0)", S"idp_1", 
-	  S"(idw_0 * idp_1)\
-           \ o (idw_0\
-           \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})(idw_0 * merge_1) o ((idw_0 * idp_1) o '{}'))\
-           \       o idp_1)", "05-1-0"),
-         ("05-1-1: Permutation of width(elements) 1(>0)", S"[0{x}]", 
-	  S"(idw_0 * [0{x}])\
-           \ o (idw_0\
-           \    * (idw_0 * ({x})(x/x * idp_1) o '{x}')\
-           \       o (({x})(x/x * merge_1) o ((x/x * idp_1) o '{x}'))\
-           \       o [0{x}])", "05-1-1"),
-         ("05-2-0: identity Permutation of width(elements) >1(>0)",
-          S"[0{x}, 1, 2{y, z}]", 
-	  S"(idw_0 * [0{x}, 1, 2{y, z}])\
-           \ o (idw_0\
-           \    * ((idw_0 * ({x})(x/x * idp_1) o '{x}')\
-           \        o (({x})(x/x * merge_1) o ((x/x * idp_1) o '{x}'))\
-           \       * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \          o (({})\
-           \            (idw_0 * merge_1)\
-           \             o ((idw_0 * idp_1) o '{}'))\
-           \       * (idw_0 * ({y, z})(idw_{y, z} * idp_1) o '{y, z}')\
-           \          o ({y, z})\
-           \            (idw_{y, z} * merge_1)\
-           \             o ((idw_{y, z} * idp_1) o '{y, z}'))\
-           \       o [0{x}, 1, 2{y, z}])", "05-2-0"),
-         ("05-2-1: Permutation of width(elements) >1(>0)",
-          S"[2{x}, 0, 1{y, z}]", 
-	  S"(idw_0 * [0, 1{y, z}, 2{x}])\
-           \ o (idw_0\
-           \    * ((idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \        o (({})\
-           \           (idw_0 * merge_1)\
-           \            o ((idw_0 * idp_1) o '{}'))\
-           \       * (idw_0 * ({y, z})(idw_{y, z} * idp_1) o '{y, z}')\
-           \          o (({y, z})\
-           \             (idw_{y, z} * merge_1)\
-           \              o ((idw_{y, z} * idp_1) o '{y, z}'))\
-           \       * (idw_0 * ({x})(x/x * idp_1) o '{x}')\
-           \          o ({x})(x/x * merge_1) o ((x/x * idp_1) o '{x}'))\
-           \       o [2{x}, 0, 1{y, z}])", "05-2-1"),
-         ("05-2-2: Permutation with duplicate names",
-          E"DuplicateNames", E"DuplicateNames", "05-2-2"),
-         ("05-2-3: Permutation with duplicate names",
-          E"DuplicateNames", E"DuplicateNames", "05-2-3"),
-         ("05-2-4: ill-formed permutation",
-          E"NotPermutation", E"NotPermutation", "05-2-4"),
-         ("06-0-0: abstraction of 0 of 0 names", S"({})1", 
-	  S"(idw_0 * idp_1)\
-           \ o (idw_0\
-           \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})(idw_0 * 1) o idx_0)\
-           \       o idp_0)", "06-0-0"),
-         ("06-0-1: abstraction of 0 of >0 names", S"({})K<y>", 
-	  S"(y/y_1b * idp_1)\
-           \ o (idw_0\
-           \    * (y_1b/y_1b * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})\
-           \          (y_1b/y_1b * merge_1)\
-           \           o ((idw_0 * K<y_1b>)\
-           \               o ({})\
-           \                 (idw_0 * merge_1)\
-           \                  o ((idw_0 * idp_1) o '{}')))\
-           \       o idp_1)", "06-0-1"),
-         ("06-0-2: abstraction of bigraph of width >1",
-          E"NotPrime", E"NotPrime", "06-0-2"),
-         ("06-1-0: abstraction of >0 of 0 names",
-          E"NameMissing", E"NameMissing", "06-1-0"),
-         ("06-1-1: abstraction of >0 of >0 names", S"({x})'{x, y}'", 
-	  S"(y/y * [0{x}])\
-           \ o (idw_0\
-           \    * (y/y * ({x})(x/x * idp_1) o '{x}')\
-           \       o (({x})(idw_{x, y} * merge_1)\
-           \                o ((idw_{x, y} * idp_1) o '{x, y}'))\
-           \       o [0{x, y}])", "06-1-1"),
-         ("06-1-2: abstraction of bigraph of width 0",
-          E"NotPrime", E"NotPrime", "06-1-2"),
-         ("06-1-3: abstraction of bigraph of width 1",
-          S"K o L<><{x}>",
-	  S"(idw_0 * idp_1)\
-	   \ o (idw_0\
-	   \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-	   \       o (({})\
-	   \          (idw_0 * merge_1)\
-	   \           o ((idw_0 * K)\
-	   \               o ({})\
-	   \                 (idw_0 * merge_1)\
-	   \                  o ((idw_0 * L<><{x}>)\
-	   \                      o ({x})\
-           \                        (x/x * merge_1)\
-           \                         o ((x/x * idp_1) o '{x}'))))\
-           \       o [0{x}])",
-	  "06-1-3"),
-         ("06-1-4: normalisation and composition",
-          S"K<><{x_b}> o ({x_b})L * x_b/{}",
-	  S"(idw_0 * idp_1)\
-	   \ o (idw_0\
-	   \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-	   \       o (({})\
-	   \          (idw_0 * merge_1)\
-	   \           o ((idw_0 * K<><{}>)\
-	   \               o ({})\
-	   \                 (idw_0 * merge_1)\
-	   \                  o ((idw_0 * L)\
-	   \                      o ({})\
-	   \                        (idw_0 * merge_1)\
-           \                         o ((idw_0 * idp_1) o '{}'))))\
-	   \       o idp_1)",
-	  "06-1-4"),
-         ("07-0-0: tensor product of bigraphs of width 0/0",
-          S"x/{x, y} * y/z * z/{} * /w", 
-	  S"((x/{x, y} * y/z * z/{} * /w) * idp_0)\
-           \ o (idw_{x, y, z, w} * idx_0 o idp_0)", "07-0-0"),
-         ("07-0-1: tensor product of bigraphs of width 0/>0",
-          S"x/{x, y} * y/z * [1, 0{w}]", 
-	  S"((x/{x, y} * y/z) * [0{w}, 1])\
-           \ o (idw_{x, y, z}\
-           \    * ((idw_0 * ({w})(w/w * idp_1) o '{w}')\
-           \        o (({w})(w/w * merge_1) o ((w/w * idp_1) o '{w}'))\
-           \           * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \              o ({})(idw_0 * merge_1)\
-           \                     o ((idw_0 * idp_1) o '{}'))\
-           \       o [1, 0{w}])", "07-0-1"),
-         ("07-1-0: tensor product of bigraphs of width >0/0",
-          S"[1, 0{w}] * x/{x, y} * y/z",
-	  S"((x/{x, y} * y/z) * [0{w}, 1])\
-           \ o (idw_{x, y, z}\
-           \    * ((idw_0 * ({w})(w/w * idp_1) o '{w}')\
-           \        o (({w})(w/w * merge_1) o ((w/w * idp_1) o '{w}'))\
-           \           * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \              o ({})(idw_0 * merge_1)\
-           \                     o ((idw_0 * idp_1) o '{}'))\
-           \       o [1, 0{w}])", "07-1-0"),
-         ("07-1-1: tensor product of bigraphs of w_eidth >0/>0",
-          S"[1, 0{w}] * [2{x}, 0, 1{y, z}]", 
-	  S"(idw_0 * [0{w}, 1, 2, 3{y, z}, 4{x}])\
-           \ o (idw_0\
-           \    * ((idw_0 * ({w})(w/w * idp_1) o '{w}')\
-           \        o (({w})(w/w * merge_1) o ((w/w * idp_1) o '{w}'))\
-           \       * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \          o (({})(idw_0 * merge_1) o ((idw_0 * idp_1) o '{}'))\
-           \       * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \          o (({})(idw_0 * merge_1) o ((idw_0 * idp_1) o '{}'))\
-           \       * (idw_0 * ({y, z})(idw_{y, z} * idp_1) o '{y, z}')\
-           \          o (({y, z})\
-           \             (idw_{y, z} * merge_1)\
-           \              o ((idw_{y, z} * idp_1) o '{y, z}'))\
-           \       * (idw_0 * ({x})(x/x * idp_1) o '{x}')\
-           \          o ({x})(x/x * merge_1) o ((x/x * idp_1) o '{x}'))\
-           \       o [1, 0{w}, 4{x}, 2, 3{y, z}])", "07-1-1"),
-         ("07-2-0: tensor product with global outer name clash",
-          E"NotTensorable", E"NotTensorable", "07-2-0"),
-         ("07-2-1: tensor product with global inner name clash",
-          E"NotTensorable", E"NotTensorable", "07-2-1"),
-         ("07-2-2: tensor product with local outer name clash",
-          E"NotTensorable", E"NotTensorable", "07-2-2"),
-         ("07-2-3: tensor product with local inner name clash",
-          E"NotTensorable", E"NotTensorable", "07-2-3"),
-         ("07-2-4: tensor product with local/global inner name clash",
-          E"NotTensorable", E"NotTensorable", "07-2-4"),
-         ("07-2-5: tensor product with local/global outer name clash",
-          E"NotTensorable", E"NotTensorable", "07-2-5"),
-         ("08-0-0: composition of bigraphs of width 0/0",
-          S"x/{x, y_c} o (y_c/z * x/{})", 
-	  S"(x/z * idp_0) o (z/z * idx_0 o idp_0)", "08-0-0"),
-         ("08-1-0: composition of bigraphs of width >0/0",
-          S"(1 * x/{y_c, z}) o (y_c/z * z/{})", 
-	  S"(x/z * idp_1)\
-           \ o (z/z\
-           \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})(idw_0 * 1) o idx_0)\
-           \       o idp_0)", "08-1-0"),
-         ("08-1-1: composition of bigraphs of width >0/>0", 
-	  S"('{x, y}' * /w_e * K<z><{z}, {v_f, u_10}>)\
-	   \ o ((({x, y})L<x, y, w_e>) * ({z, v_f, u_10})M<u_10, v_f, z>)", 
-	  S"((x/x_2f * y/y_2e * z/z_30 * /w_2d) * idp_2)\
-           \ o (idw_0\
-           \    * ((idw_{w_2d, y_2e, x_2f} * ({})(idw_0 * idp_1) o '{}')\
-           \        o (({})\
-           \           (idw_{w_2d, y_2e, x_2f} * merge_1)\
-           \            o ((idw_0 * L<x_2f, y_2e, w_2d>)\
-           \                o ({})(idw_0 * merge_1)\
-           \                       o ((idw_0 * idp_1) o '{}')))\
-           \       * (z_30/z_30 * ({})(idw_0 * idp_1) o '{}')\
-           \          o ({})\
-           \            (z_30/z_30 * merge_1)\
-           \             o ((idw_0 * K<z_30><{z_2a}, {v_2b, u_2c}>)\
-           \                 o ({z_2a, v_2b, u_2c})\
-           \                   (idw_{z_2a, v_2b, u_2c} * merge_1)\
-           \                    o ((idw_0 * M<u_2c,v_2b,z_2a>)\
-           \                        o ({})(idw_0 * merge_1)\
-           \                               o ((idw_0 * idp_1) o '{}'))))\
-           \       o idp_2)", "08-1-1"),
-         ("08-1-2: composition of inner/outer width 0/>0",
-          E"NotComposable", E"NotComposable", "08-1-2"),
-         ("08-1-3: composition of inner/outer width >0/0",
-          E"NotComposable", E"NotComposable", "08-1-3"),
-         ("08-1-4: composition of inner/outer width >0 <> >0",
-          E"NotComposable", E"NotComposable", "08-1-4"),
-         ("08-1-5: composition of bigraph with barren root", S"'{}' o 1", 
-	  S"(idw_0 * idp_1)\
-           \ o (idw_0\
-           \    * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \       o (({})(idw_0 * 1) o idx_0) o idp_0)", "08-1-5"),
-         ("08-2-0: composition with inner/outer local name set sizces 0/>0",
-          E"NotComposable", E"NotComposable", "08-2-0"),
-         ("08-2-1: composition with inner/outer global name set sizces 0/>0",
-          E"NotComposable", E"NotComposable", "08-2-1"),
-         ("08-2-2: composition with inner/outer names global/local",
-          E"NotComposable", E"NotComposable", "08-2-2"),
-         ("08-2-3: composition with inner/outer local name set sizes >0/0",
-          E"NotComposable", E"NotComposable", "08-2-3"),
-         ("08-2-4: composition with inner/outer global name set sizes >0/0",
-          E"NotComposable", E"NotComposable", "08-2-4"),
-         ("09-0-0: parallel product of bigraphs of width 0/0",
-          S"x/{x, y} * y/z * z/{} * /w", 
-	  S"((x/{x, y} * y/z * z/{} * /w) * idp_0)\
-           \ o (idw_{x, y, z, w} * idx_0 o idp_0)", "09-0-0"),
-         ("09-0-1: parallel product of bigraphs of width 0/>0",
-          S"x/{x, y} * y/z * [1, 0{w}]", 
-	  S"((x/{x, y} * y/z) * [0{w}, 1])\
-           \ o (idw_{x, y, z}\
-           \    * ((idw_0 * ({w})(w/w * idp_1) o '{w}')\
-           \        o (({w})(w/w * merge_1) o ((w/w * idp_1) o '{w}'))\
-           \       * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \          o ({})(idw_0 * merge_1)\
-           \                 o ((idw_0 * idp_1) o '{}'))\
-           \       o [1, 0{w}])", "09-0-1"),
-         ("09-1-0: parallel product of bigraphs of width >0/0",
-          S"[1, 0{w}] * x/{x, y} * y/z",
-	  S"((x/{x, y} * y/z) * [0{w}, 1])\
-           \ o (idw_{x, y, z}\
-           \    * ((idw_0 * ({w})(w/w * idp_1) o '{w}')\
-           \        o (({w})(w/w * merge_1) o ((w/w * idp_1) o '{w}'))\
-           \       * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \          o ({})(idw_0 * merge_1)\
-           \                 o ((idw_0 * idp_1) o '{}'))\
-           \       o [1, 0{w}])", "09-1-0"),
-         ("09-1-1: parallel product of bigraphs of width >0/>0",
-          S"[1, 0{w}] * [2{x}, 0, 1{y, z}]", 
-	  S"(idw_0 * [0{w}, 1, 2, 3{y, z}, 4{x}])\
-           \ o (idw_0\
-           \    * ((idw_0 * ({w})(w/w * idp_1) o '{w}')\
-           \        o (({w})(w/w * merge_1) o ((w/w * idp_1) o '{w}'))\
-           \       * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \          o (({})(idw_0 * merge_1) o ((idw_0 * idp_1) o '{}'))\
-           \       * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \          o (({})(idw_0 * merge_1) o ((idw_0 * idp_1) o '{}'))\
-           \       * (idw_0 * ({y, z})(idw_{y, z} * idp_1) o '{y, z}')\
-           \          o (({y, z})\
-           \             (idw_{y, z} * merge_1)\
-           \              o ((idw_{y, z} * idp_1) o '{y, z}'))\
-           \       * (idw_0 * ({x})(x/x * idp_1) o '{x}')\
-           \          o ({x})(x/x * merge_1) o ((x/x * idp_1) o '{x}'))\
-           \       o [1, 0{w}, 4{x}, 2, 3{y, z}])", "09-1-1"),
-         ("09-2-0: parallel product with global outer name clash",
-          S"((x/x * y/{y_11, y_12}) * idp_2)\
-           \ o (((x/x * y_12/y) * idp_1) o K<x,y>\
-           \     * (y_11/y * idp_1) o (y/z * merge_1))",
-          S"((x/x_3d * y/{z,y_3c}) * idp_2)\
-           \ o (z/z\
-           \    * ((idw_{y_3c,x_3d} * ({})(idw_0 * idp_1) o '{}')\
-           \        o (({})\
-           \           (idw_{y_3c,x_3d} * merge_1)\
-           \            o ((idw_0 * K<x_3d,y_3c>)\
-           \               o ({})(idw_0 * merge_1)\
-           \                      o ((idw_0 * idp_1) o '{}')))\
-           \       * (idw_0 * ({})(idw_0 * idp_1) o '{}')\
-           \          o ({})\
-           \            (idw_0 * merge_1) o ((idw_0 * idp_1) o '{}'))\
-           \      o idp_2)", "09-2-0"),
-         ("09-2-1: parallel product with global inner name clash",
-          E"NotParallelisable", E"NotParallelisable", "09-2-1"),
-         ("09-2-2: parallel product with local outer name clash",
-          E"NotParallelisable", E"NotParallelisable", "09-2-2"),
-         ("09-2-3: parallel product with local inner name clash",
-          E"NotParallelisable", E"NotParallelisable", "09-2-3"),
-         ("09-2-4: parallel product with local/global inner name clash",
-          E"NotParallelisable", E"NotParallelisable", "09-2-4"),
-         ("09-2-5: parallel product with local/global outer name clash",
-          E"NotParallelisable", E"NotParallelisable", "09-2-5"),
-         ("10-0-0: prime product of bigraphs of width 0/0",
-          E"NotPrimeable", E"NotPrimeable", "10-0-0"),
-         ("10-0-1: prime product of bigraphs of width 0/>0",
-          E"NotPrimeable", E"NotPrimeable", "10-0-1"),
-         ("10-1-0: prime product of bigraphs of width >0/0",
-          E"NotPrimeable", E"NotPrimeable", "10-1-0"),
-         ("10-1-1: prime product of bigraphs of width >0/>0",
-          S"({x,y,z,w})\
-           \(idw_{x,y,z,w} * merge_5)\
-           \ o (('{w}'*'{}') o [1, 0{w}]\
-           \     * ('{}' * '{y,z}' * '{x}') o [2{x},0,1{y,z}])",
-	  S"(idw_0 * [0{x,y,z,w}])\
-           \ o (idw_0\
-           \    * (idw_0\
-           \       * ({x,y,z,w})(idw_{x,y,z,w} * idp_1) o '{x,y,z,w}')\
-           \       o (({x,y,z,w})\
-           \          (idw_{x,y,z,w} * merge_5)\
-           \           o ((w/w * idp_1) o '{w}'\
-           \           * (idw_0 * idp_1) o '{}'\
-           \           * (idw_0 * idp_1) o '{}'\
-           \           * (idw_{y,z} * idp_1) o '{y,z}'\
-           \           * (x/x * idp_1) o '{x}'))\
-           \       o [1, 0{w}, 4{x}, 2, 3{y,z}])", "10-1-1"),
-         ("10-2-0: prime product with global inner names",
-          E"NotPrimeable", E"NotPrimeable", "10-2-0"),
-         ("10-2-1: prime product with global inner name clash",
-          E"NotPrimeable", E"NotPrimeable", "10-2-1"),
-         ("10-2-2: prime product with local outer name clash",
-          E"NotPrimeable", E"NotPrimeable", "10-2-2"),
-         ("10-2-3: prime product with local inner name clash",
-          E"NotPrimeable", E"NotPrimeable", "10-2-3"),
-         ("10-2-4: prime product with local/global inner name clash",
-          E"NotPrimeable", E"NotPrimeable", "10-2-4"),
-         ("10-2-5: prime product with local/global outer name clash",
-          E"NotPrimeable", E"NotPrimeable", "10-2-5")
-]
+the bg term to use as input
+may use multiple lines
 
-	val bgvaltests =
-	    let
-	      open BgVal
-	      val x1 = Name.make "x1"
-	      val x2 = Name.make "x2"
-	      val x3 = Name.make "x3"
-	      val x4 = Name.make "x4"
-	      val y1 = Name.make "y1"
-	      val y2 = Name.make "y2"
-	      val y3 = Name.make "y3"
-	      val y4 = Name.make "y4"
-	      val y5 = Name.make "y5"
-	      val y6 = Name.make "y6"
-	      val Y12 = NameSet.fromList [y1, y2]
-	      val Y23 = NameSet.fromList [y2, y3]
-	      val Y3 = NameSet.fromList [y3]
-	      val Y34 = NameSet.fromList [y3, y4]
-	      val Y45 = NameSet.fromList [y4, y5]
-	      val Y56 = NameSet.fromList [y5, y6]
-	      val p1 = Per noinfo (Permutation.id [Y12, Y3])
-	      val b1 = Ten noinfo [Con noinfo Y45, p1]
-	      val b2 = Wir noinfo 
-			   (Wiring.make
-			      (LinkSet.fromList 
-			      [Link.make {outer = SOME y5, 
-					  inner = NameSet.empty},
-			       Link.make {outer = SOME y6, 
-					  inner = NameSet.singleton y6}]))
-	      val b3 = Wir noinfo
-			   (Wiring.make
-			      (LinkSet.fromList
-				 [Link.make {outer = SOME y2, 
-					     inner = NameSet.empty}]))
-	      val b4 = Abs noinfo
-			   (NameSet.singleton y2,
-			    Ten noinfo 
-				[Mer noinfo 0,
-				 Wir noinfo
-				     (Wiring.make
-					(LinkSet.fromList 
-					   [Link.make 
-					      {outer = SOME y2, 
-					       inner = NameSet.empty},
-					      Link.make
-						{outer = SOME y5, 
-						 inner = NameSet.empty}]))])
-	      fun bgvalToString' f () =
-		  bgvalToString (f ())
-		  handle e => (ErrorHandler.explain e; raise e)
-	      fun assertEqualExpected (S expstr) f () =
-		  assertEqualString expstr (f ())
-		| assertEqualExpected (E expexn) f () =
-		  let
-		    val actual = f ()
-		  in
-		    raise Assert.Fail
-			    (GeneralFailure 
-			       ("expected exception " ^
-				expexn ^ ", got <" ^ actual ^ ">"))
-		  end
-		    handle exn =>
-			   (if exnName exn = expexn then
-			      ""
-			    else
-			      (raise Assert.Fail
-				       (GeneralFailure 
-					  ("expected exception " ^
-					   expexn ^ ", got " ^
-					   exnName exn))))
-	      fun startsubsuite ()
-		= (ErrorMsg.reset(); ErrorMsg.fileName := "bdnfTest.sml")
-	    in
-	      map (fn (t, expected, f) 
-		      => (t, ignore o assertEqualExpected expected
-			      (bgvalToString' f)))
-	    [("Empty parallel product", S"idx_0",
-	      fn () => (startsubsuite (); Par noinfo [])),
-	     ("Singleton parallel product", 
-	      S"'{y4, y5}' * [0{y1, y2}, 1{y3}]",
-	      fn () => Par noinfo [b1]),
-	     ("Empty prime product", S"1",
-	      fn () => Pri noinfo []),
-	     ("Singleton prime product", 
-	      S"({y1, y2, y3})\n\
-	       \ (idw_{y1, y2, y3, y4, y5} * merge_3)\n\
-	       \  o ((idw_{y4, y5} * '{}' * '{y1, y2}' * '{y3}')\n\
-	       \     o ('{y4, y5}' * [0{y1, y2}, 1{y3}]))",
-	      fn () => Pri noinfo [b1])]
-	    end
-       in
-	 Test.labelTests
-	 o (fn () => testModule (bgvalToString o bgvalUsefile'') #1
-		     @ testModule (toString o usefile'') #2
-		     @ bgvaltests)
-       end
+result:
+
+expected term
+may use multiple lines
+*)
+(* The result is also allowed to be an exception as in the following: *)
+(*
+one line description
+
+the bg term to use as input
+may use multiple lines
+
+exception:
+nameOfException
+*)
+(* the exception name must come on the line immediately
+   after the exception keyword. *)
+
+
+  datatype expectedresult = S of bgval | E of string
+
+  val assertEqualBgVal = assertEqual (fn (b1, b2) => BgVal.eq b1 b2) (PrettyPrint.pp_to_string 72 (BgVal.pp 0))
+
+  exception InvalidTestFile of string * string
+
+  (* utility function to remove the last character from
+   * a string (usually \n) *)
+  fun strip_last_char s = String.substring (s, 0, String.size s - 1)
+
+  fun build_test_suite test_data_dir () =
+      let
+        open OS.FileSys
+
+        (* Test function for a given file name *)
+        fun test filename () =
+            let
+              (* split the file into comment, input, and expected result *)
+              val test_file = test_data_dir ^ "/" ^ filename
+              val is = TextIO.openIn test_file
+              val comment
+                = case TextIO.inputLine is of
+                    SOME s => strip_last_char s
+                  | NONE => (  TextIO.closeIn is
+                             ; raise InvalidTestFile
+                               (test_file, "the file is empty"))
+
+              val input_file = test_data_dir ^ "/" ^ filename ^ ".input.tmp"
+              val result_file = test_data_dir ^ "/" ^ filename ^ ".result.tmp"
+              val input_os = TextIO.openOut input_file
+              val result_os = TextIO.openOut result_file
+              fun close_files () = (  TextIO.closeIn is
+                                    ; TextIO.closeOut input_os
+                                    ; TextIO.closeOut result_os)
+              fun rm_tmp_files () = (  remove input_file
+                                     ; remove result_file)
+              fun cleanup () = (  close_files ()
+                                ; rm_tmp_files())
+                
+              fun parse_result () =
+                  case TextIO.inputLine is of
+                    SOME s => (  TextIO.output (result_os, s)
+                               ; parse_result ())
+                  | NONE => ()
+
+              fun parse_exception () =
+                  case TextIO.inputLine is of
+                    SOME s => strip_last_char s
+                  | NONE => (  cleanup ()
+                             ; raise InvalidTestFile
+                                       (test_file,
+                                        "the file has no exception name"))
+              fun parse_test_file () =
+                  case TextIO.inputLine is of
+                    SOME s => if String.isPrefix "result:" s then
+                                (parse_result (); NONE)
+                              else if String.isPrefix "exception:" s then
+                                SOME (parse_exception ())
+                              else
+                                (  TextIO.output (input_os, s)
+                                 ; parse_test_file ())
+                  | NONE => (  cleanup ()
+                             ; raise InvalidTestFile
+                                       (test_file,
+                                        "the file has no result/\
+                                         \exception section"))
+            in
+              case parse_test_file () of
+                NONE =>
+                let
+                  val () = close_files ()
+                  val input_bgval
+                    = (bgvalUsefile'' input_file)
+                      handle e => (  rm_tmp_files()
+                                   ; raise InvalidTestFile
+                                             (test_file,
+                                              "the input is not a /\
+                                               \well-formed bgterm"))
+                  val result_bgval
+                    = (bgvalUsefile'' result_file)
+                      handle e => (  rm_tmp_files()
+                                   ; raise InvalidTestFile
+                                             (test_file,
+                                              "the result is not a /\
+                                              \well-formed bgterm"))
+                in
+                  (  assertEqualBgVal
+                       result_bgval
+                       (BgBDNF.unmk (BgBDNF.make input_bgval))
+                   ; rm_tmp_files ())
+                end
+              | SOME exnname =>
+                (  close_files ()
+                 ; usefile'' input_file
+                 ; raise Assert.Fail
+                           (GeneralFailure ("expected exception "
+                                            ^ exnname)))
+                handle exn => 
+                  (  rm_tmp_files ()
+                   ; case exn of
+                       Assert.Fail g => raise Assert.Fail g
+                     | exn =>
+                       if exnName exn = exnname then
+                         ()
+                       else
+                         (raise Assert.Fail
+                                  (GeneralFailure 
+                                     ("expected exception " ^
+                                      exnname ^ ", got " ^
+                                      exnName exn))))
+            end
+
+        (* scan the test data directory for *.bgtest files *)
+        val dirstream = openDir test_data_dir
+        fun build_test_list NONE acc = (closeDir dirstream; acc)
+          | build_test_list (SOME filename) acc =
+            if String.isSuffix ".bgtest" filename then
+              let
+                (* the test name is taken to be the filename (ex. extension) *)
+                val testname
+                  = String.substring (filename, 0, String.size filename - 7)
+              in
+                build_test_list
+                  (readDir dirstream)
+                  ((testname, test filename) :: acc)
+              end
+            else
+              build_test_list (readDir dirstream) acc
+      in
+        Test.labelTests (build_test_list (readDir dirstream) [])
+      end
+
+  val suite = build_test_suite
 
 end
        

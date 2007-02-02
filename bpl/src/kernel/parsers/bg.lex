@@ -117,8 +117,8 @@ val comlevel = ref 0;
 
 %%
 %header (functor BgTermLex(structure Tokens : BgTerm_TOKENS));
-KW_ID   = \* | [|]{1,2} | [a-z][A-za-z0-9_]* | 1;
-CTRLID  = [A-Z?!][A-za-z0-9_]*;
+KW_ID   = \* | [|]{1,2} | [a-z][A-Za-z0-9_]* | 1;
+CTRLID  = [A-Z?!][A-Za-z0-9_]*;
 INT     = (0 | [1-9][0-9]*);
 WHITESPACE = [\ \t\013];
 %%

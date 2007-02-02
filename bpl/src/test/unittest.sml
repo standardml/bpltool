@@ -39,7 +39,8 @@ structure Test = struct
       = BDNFTest
 	    (structure ErrorHandler = PrintErrorHandler
              structure Assert = Assert
-             structure Test = Test)
+             structure Test = Test
+             val       test_data_dir = "kernel/ast/test")
 
     structure MatchTest 
       = MatchTest
@@ -64,15 +65,17 @@ structure Test = struct
 
     fun run () =
 	let
-	    fun run1 (dir, suite) =
+	    fun run1 (name, dir, suite) =
 		let val cwd = OS.FileSys.getDir ()
 		in  OS.FileSys.chDir dir
+                  ; print ("\nRunning " ^ name ^ " test suite: ")
 		  ; TextUITestRunner.runTest {output = TextIO.stdErr} (suite())
+                  ; print ("\n")
 		  ; OS.FileSys.chDir cwd
 		end
-	    val tests = [ ("kernel/bg/test",   BGTest.suite)
-			, ("kernel/ast/test",  BDNFTest.suite)
-			, ("apps/miniml/test", MiniMLTest.suite)
+	    val tests = [ ("BG", "kernel/bg/test",   BGTest.suite)
+			, ("BDNF", "kernel/ast/test",  BDNFTest.suite ".")
+			, ("MiniML", "apps/miniml/test", MiniMLTest.suite)
 			]
 	    fun say s = TextIO.print(s^"\n")
 	in

@@ -122,6 +122,8 @@ fun nset2idlinkset nset =
 | dec of bgterm
 | bg of bgterm
 | altbg of bgterm
+| bglist of bgterm list
+| bglst of bgterm list
 | fports of name list
 | nlist of name list
 | bports of nameset list
@@ -194,9 +196,16 @@ dec	: bg                  (bg)
 
 bg : altbg                    (altbg)
    | bg XX bg                 (Ten ([bg1, bg2], mk_info bg1left bg2right))
+   | bglist                   (Ten (bglist, mk_info bglistleft bglistright))
    | bg PRI bg                (Pri ([bg1, bg2], mk_info bg1left bg2right))
    | bg PAR bg                (Par ([bg1, bg2], mk_info bg1left bg2right))
    | bg OO bg                 (Com (bg1, bg2, mk_info bg1left bg2right))
+
+bglist : LBRACK LBRACK bglst RBRACK RBRACK  (bglst)
+
+bglst   : bg COMMA bglst      (bg :: bglst)
+        | bg		      ([bg])
+        |		      ([])
 
 altbg : LPAREN RPAREN         (Mer (0, mk_info LPARENleft RPARENright))
    | IDX0                     (Ten ([], mk_info IDX0left IDX0right))
