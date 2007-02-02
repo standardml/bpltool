@@ -11,16 +11,18 @@ datatype dev = Dev of int
 datatype res = Res of loc
 datatype whereIs = WhereIs of dev * (loc -> unit)
 
-fun new () = ref False
-
 (* just for typechecking -- remove later *)
 fun exchange (r,s) =
     let val tmp = !r
-    in r := (!s) ; s := tmp
+    in r:=(!s) ; s:=tmp
     end
 
 (* just for typechecking -- remove later *)
 fun enqL x = ()
+
+fun new () = ref False
+
+val lock = new ()
 
 fun spinlock l =
     let val t = ref True
@@ -38,13 +40,20 @@ fun wait i = if i<0 then () else wait(i-1)
 val queue = ref []
 
 fun deq () =
-    case (!queue) of [] => NONE
-		   | (q::qs) => let val _ = queue:=qs 
-				in SOME(q)
-				end
+    if !lock = True then wait(100)
+    else ( spinlock lock;
+	   case (!queue) of [] => NONE
+			  | (q::qs) => let val _ = queue:=qs 
+				       in SOME(q)
+				       end;
+	   spinunlock lock
+	   )
 
-fun enqA e = queue:=(!queue)@[e]
+fun enqA e =
+    if !lock = True then wait(100)
+    else ( spinlock lock;
+	   queue:=(!queue)@[e];
+	   spinunlock lock
+	   )
 
-fun whereIs d =
-    enqL(WhereIs(d,fn r => enqA(Res r)));
-    wait(100)
+fun whereIs d = enqL(WhereIs(d,fn r => enqA(Res r)))
