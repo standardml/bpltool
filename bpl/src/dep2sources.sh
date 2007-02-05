@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 # Copyright (c) 2006  The BPL Group at the IT University of Copenhagen
 #
 # This file is part of BPL.
