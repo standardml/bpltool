@@ -5,31 +5,29 @@
   system; C || P || A = C || (S || L) || A.
 ************************************************************************)
 
-datatype bool = True | False
-type loc = int
+type lid = int
 type dev = int
-datatype res = Res of loc
-datatype whereis = WhereIs of dev * (loc -> unit)
+datatype res = Res of lid
+datatype whereis = WhereIs of dev * (lid -> unit)
 datatype enql = enqL of whereis
 
-(* just for typechecking -- remove later *)
-fun exchange (r,s) =
+fun exchange (r,s) = (* just for typechecking -- remove later *)
     let val tmp = !r
     in r:=(!s) ; s:=tmp
     end
 
-fun new () = ref False
+fun new () = ref false
 
 val lock = new ()
 
 fun spinlock l =
-    let val t = ref True
-        fun loop () = ( exchange(t,l); if !t = True then loop() else () )
+    let val t = ref true
+        fun loop () = ( exchange(t,l); if !t then loop() else () )
     in loop ()
     end
 
 fun spinunlock l = 
-    let val t = ref False
+    let val t = ref false
     in exchange(t,l)
     end
 
@@ -39,10 +37,11 @@ val queue = ref []
 
 fun deq () =
     ( spinlock lock;
-      case (!queue) of [] => NONE
-		     | (q::qs) => let val _ = queue:=qs 
-				  in SOME(q)
-				  end;
+      (case (!queue) of [] => NONE
+		      | (q::qs) => let val _ = queue:=qs 
+				   in SOME(q)
+				   end)
+      before
       spinunlock lock )
 
 fun enqA e =
