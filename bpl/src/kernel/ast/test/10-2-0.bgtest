@@ -1,0 +1,6 @@
+Expect error: Testing prime product with global inner names
+
+K<x,y><> | (y/{z} | merge_1)
+
+exception:
+NotPrimeable

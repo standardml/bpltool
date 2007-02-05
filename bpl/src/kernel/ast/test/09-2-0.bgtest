@@ -1,0 +1,18 @@
+Testing parallel product with global outer name clash
+
+K<x,y><> || (y/{z} || merge_1)
+
+result:
+
+(///[x/x , y/{z,y}] * idp_2)
+ o (z/z
+    * `**[(idw_{y,x} * ({})(idw_0 * idp_1) o '{}')
+           o (({})
+              (idw_{y,x} * merge_1)
+               o `**[(idw_0 * K<x,y>)
+                      o ({})(idw_0 * merge_1)
+                            o `**[(idw_0 * idp_1) o '{}']])
+          , (idw_0 * ({})(idw_0 * idp_1) o '{}')
+             o ({})
+               (idw_0 * merge_1) o `**[(idw_0 * idp_1) o '{}']]
+      o idp_2)

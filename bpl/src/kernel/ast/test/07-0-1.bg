@@ -1,4 +1,0 @@
-(* Testing tensor product of bigraphs of width 0/>0 *)
-
-x/{x,y} * y/{z} * [1,0{w}]
-

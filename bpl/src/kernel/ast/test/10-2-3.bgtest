@@ -1,0 +1,6 @@
+Expect error: Testing prime product with local inner name clash
+
+'{x,y}'  |  K<><{z},{y}>
+
+exception:
+NotPrimeable

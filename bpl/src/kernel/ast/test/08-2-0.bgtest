@@ -1,0 +1,6 @@
+Expect error: Testing composition with inner/outer local name set sizes 0/>0
+
+merge_2 o [1,0{x}]
+
+exception:
+NotComposable

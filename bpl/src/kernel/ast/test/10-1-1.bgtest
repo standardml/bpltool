@@ -1,0 +1,18 @@
+Testing prime product of bigraphs of width >0/>0
+
+[1,0{w}]  |  [2{x}, 0, 1{y,z}]
+
+result:
+
+(idw_0 * [0{x,y,z,w}])
+ o (idw_0
+    * `**[(idw_0
+           * ({x,y,z,w})(idw_{x,y,z,w} * idp_1) o '{x,y,z,w}')
+           o (({x,y,z,w})
+              (idw_{x,y,z,w} * merge_5)
+               o `**[(w/w * idp_1) o '{w}'
+                     , (idw_0 * idp_1) o '{}'
+                     , (idw_0 * idp_1) o '{}'
+                     , (idw_{y,z} * idp_1) o '{y,z}'
+                     , (x/x * idp_1) o '{x}'])]
+       o [1, 0{w}, 4{x}, 2, 3{y,z}])

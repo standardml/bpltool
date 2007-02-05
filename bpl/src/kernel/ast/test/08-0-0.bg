@@ -1,3 +1,0 @@
-(* Testing composition of bigraphs of width 0/0 *)
-
-x/{x,y} o (y/{z} * x/{})

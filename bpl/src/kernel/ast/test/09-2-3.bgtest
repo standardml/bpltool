@@ -1,0 +1,6 @@
+Expect error: Testing parallel product with local inner name clash
+
+'{x,y}'  ||  K<><{z},{y}>
+
+exception:
+NotParallelisable

@@ -1,0 +1,6 @@
+Expect error: Testing composition of inner/outer width >0 <> >0
+
+('{}' * K<><>) o [2,0,1]
+
+exception:
+NotComposable

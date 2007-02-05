@@ -1,0 +1,11 @@
+Testing abstraction of 0 of 0 names
+
+({})merge_0
+
+result:
+
+(idw_0 * idp_1)
+ o (idw_0
+    * `**[(idw_0 * ({})(idw_0 * idp_1) o '{}')
+         o (({})(idw_0 * 1) o idx_0)]
+       o idp_0)

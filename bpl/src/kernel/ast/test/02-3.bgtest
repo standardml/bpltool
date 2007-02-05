@@ -1,0 +1,6 @@
+Expect error: Testing concretion with duplicate name
+
+'{x,x}'
+
+exception:
+DuplicateNames

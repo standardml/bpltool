@@ -1,3 +1,0 @@
-(* Expect error: Testing prime product with local outer name clash *)
-
-(({x})x/{} | merge_0) | [1{x,z}, 0]

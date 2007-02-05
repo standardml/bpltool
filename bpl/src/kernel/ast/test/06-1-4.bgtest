@@ -1,0 +1,19 @@
+Testing normalisation and composition
+
+K<><{x}> o ({x})L * x/{} 
+
+result:
+
+(idw_0 * idp_1)
+ o (idw_0
+    * `**[(idw_0 * ({})(idw_0 * idp_1) o '{}')
+         o (({})
+            (idw_0 * merge_1)
+             o `**[(idw_0 * K<><{}>)
+                 o ({})
+                   (idw_0 * merge_1)
+                    o `**[(idw_0 * L)
+                        o ({})
+                          (idw_0 * merge_1)
+                           o `**[(idw_0 * idp_1) o '{}']]])]
+       o idp_1)

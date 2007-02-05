@@ -1,0 +1,24 @@
+Testing composition of bigraphs of width >0/>0
+
+('{x,y}' * /{w} * K<z><{z},{u,v}>) o ((({y,x})L<x,y,w><>) * ({u,v,z})M<u,v,z><>)
+
+result:
+
+(///[x/x , y/y , z/z , /w] * idp_2)
+ o (idw_0
+    * `**[(idw_{w, y, x} * ({})(idw_0 * idp_1) o '{}')
+           o (({})
+              (idw_{w, y, x} * merge_1)
+               o `**[(idw_0 * L<x, y, w>)
+                      o ({})(idw_0 * merge_1)
+                             o `**[(idw_0 * idp_1) o '{}']])
+          , (z/z * ({})(idw_0 * idp_1) o '{}')
+             o ({})
+               (z/z * merge_1)
+                o `**[(idw_0 * K<z><{z}, {v, u}>)
+                       o ({z, v, u})
+                         (idw_{z, v, u} * merge_1)
+                          o `**[(idw_0 * M<u,v,z>)
+                                 o ({})(idw_0 * merge_1)
+                                        o `**[(idw_0 * idp_1) o '{}']]]]
+       o idp_2)

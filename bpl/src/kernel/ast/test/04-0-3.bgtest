@@ -1,0 +1,16 @@
+Testing ion with 0/1(>1) names/sets(elements)
+
+K<><{x,y}>
+
+result:
+
+(idw_0 * idp_1)
+ o (idw_0
+    * `**[(idw_0 * ({})(idw_0 * idp_1) o '{}')
+         o (({})
+            (idw_0 * merge_1)
+             o `**[(idw_0 * K<><{x, y}>)
+                o ({x, y})
+                  (idw_{x, y} * merge_1)
+                   o `**[(idw_{x, y} * idp_1) o '{x, y}']])]
+       o [0{x, y}])

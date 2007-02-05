@@ -1,0 +1,7 @@
+Testing wiring with 0/0 names
+
+/{}
+
+result:
+
+(/{} * idp_0) o (idw_0 * idx_0 o idp_0)

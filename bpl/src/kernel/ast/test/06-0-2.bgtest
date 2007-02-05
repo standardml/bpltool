@@ -1,0 +1,7 @@
+Expect error: Testing abstraction of bigraph of width >1
+
+({})'{x}' * merge_3
+
+exception:
+NotPrime
+

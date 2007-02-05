@@ -92,7 +92,8 @@ val () =
       (")", Tokens.RPAREN),
       ("/", Tokens.SLASH),
       (",", Tokens.COMMA),
-      ("'", Tokens.QUOTE)
+      ("'", Tokens.QUOTE),
+      ("`", Tokens.BQUOTE)
       ]
 
 local

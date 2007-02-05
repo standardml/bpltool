@@ -1,0 +1,8 @@
+Testing tensor product of bigraphs of width 0/0
+
+x/{x,y} * y/{z} * z/{} * /{w}
+
+result:
+
+(///[x/{x, y} , y/z , z/{} , /w] * idp_0)
+ o (idw_{x, y, z, w} * idx_0 o idp_0)

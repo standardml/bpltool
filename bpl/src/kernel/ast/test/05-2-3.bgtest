@@ -1,0 +1,6 @@
+Expect error: Testing Permutation with duplicate names
+
+[2{z},0,1{y,y}]
+
+exception:
+DuplicateNames

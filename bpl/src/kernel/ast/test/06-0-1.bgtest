@@ -1,0 +1,16 @@
+Testing abstraction of 0 of >0 names
+
+({})K<y><>
+
+result:
+
+(y/y * idp_1)
+ o (idw_0
+    * `**[(y/y * ({})(idw_0 * idp_1) o '{}')
+         o (({})
+            (y/y * merge_1)
+             o `**[(idw_0 * K<y>)
+                 o ({})
+                   (idw_0 * merge_1)
+                    o `**[(idw_0 * idp_1) o '{}']])]
+       o idp_1)

@@ -1,0 +1,6 @@
+Expect error: Testing abstraction of bigraph of width 0
+
+({x})x/x
+
+exception:
+NotPrime

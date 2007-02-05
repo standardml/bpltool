@@ -1,0 +1,6 @@
+Expect error: Testing parallel product with local/global outer name clash
+
+[0{x,z}] || (z/{y} || [0])
+
+exception:
+NotParallelisable

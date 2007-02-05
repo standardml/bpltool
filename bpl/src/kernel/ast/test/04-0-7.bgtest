@@ -1,0 +1,7 @@
+Expect error: Testing ion with 0/>1(>0) names/sets(duplicate elements)
+
+K<><{x},{y,x}>
+
+exception:
+DuplicateNames
+

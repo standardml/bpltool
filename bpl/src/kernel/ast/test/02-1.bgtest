@@ -1,0 +1,12 @@
+Testing concretion with 1 name
+
+'{x}'
+
+result:
+
+(x/x * idp_1)
+ o (idw_0
+    * (`**[(x/x * ({})(idw_0 * idp_1) o '{}')
+         o (({})(x/x * merge_1)
+                 o `**[(x/x * idp_1) o '{x}'])]
+       o [0{x}]))

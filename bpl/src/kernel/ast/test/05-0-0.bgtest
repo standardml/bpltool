@@ -1,0 +1,7 @@
+Testing Permutation of width 0
+
+[]
+
+result:
+
+(idw_0 * idp_0) o (idw_0 * idx_0 o idp_0)

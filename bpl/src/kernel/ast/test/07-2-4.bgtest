@@ -1,0 +1,6 @@
+Expect error: Testing tensor product with local/global inner name clash
+
+'{x,y}' * (z/{z,y} * [0])
+
+exception:
+NotTensorable

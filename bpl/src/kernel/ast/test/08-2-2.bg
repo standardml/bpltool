@@ -1,3 +1,0 @@
-(* Expect error: Testing composition with inner/outer names global/local *)
-
-([0] * y/x) o ({x})K<x><>

@@ -1,0 +1,11 @@
+Testing composition of bigraphs of width >0/0
+
+(merge_0 * x/{y,z}) o (y/{z} * z/{})
+
+result:
+
+(x/z * idp_1)
+ o (z/z
+    * `**[(idw_0 * ({})(idw_0 * idp_1) o '{}')
+           o (({})(idw_0 * 1) o idx_0)]
+       o idp_0)

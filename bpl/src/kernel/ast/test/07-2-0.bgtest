@@ -1,0 +1,6 @@
+Expect error: Testing tensor product with global outer name clash
+
+K<x,y><> * (y/{z} * merge_1)
+
+exception:
+NotTensorable

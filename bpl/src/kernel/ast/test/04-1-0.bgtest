@@ -1,0 +1,16 @@
+Testing Ion with 1/0 names/sets
+
+K<x><>
+
+result:
+
+(x/x * idp_1)
+ o (idw_0
+    * `**[(x/x * ({})(idw_0 * idp_1) o '{}')
+         o (({})
+            (x/x * merge_1)
+             o `**[(idw_0 * K<x>)
+                 o ({})
+                   (idw_0 * merge_1)
+                    o `**[(idw_0 * idp_1) o '{}']])]
+       o idp_1)

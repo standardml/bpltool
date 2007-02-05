@@ -1,3 +1,0 @@
-(* Testing normalisation and composition *)
-
-K<><{x}> o ({x})L * x/{} 

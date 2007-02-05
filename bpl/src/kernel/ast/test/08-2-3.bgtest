@@ -1,0 +1,7 @@
+Expect error: Testing composition with inner/outer local name set sizes >0/0
+
+K<><{x,y}> o merge_2
+
+
+exception:
+NotComposable

@@ -1,3 +1,0 @@
-(* Expect error: Testing prime product with local/global outer name clash *)
-
-[0{x,z}] | (z/{} | [0])

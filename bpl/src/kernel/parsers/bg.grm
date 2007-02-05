@@ -81,6 +81,7 @@ type link = Link.link
 type nameset = NameSet.Set
 type linkset = LinkSet.Set
 type ion = Ion.ion
+type wiring = Wiring.wiring
 type 'kind permutation = 'kind Permutation.permutation
 
 (** Signal that a set with duplicate names has been encountered. 
@@ -114,7 +115,7 @@ fun nset2idlinkset nset =
 	 | ID of string | INT of int | CTRLID of string
 	 | MERGEn of int
 	 | LPAREN | RPAREN | LBRACK | RBRACK | LBRACE | RBRACE | GT | LT
-	 | SLASH | OO | XX | PRI | PAR | QUOTE | COMMA
+	 | SLASH | OO | XX | PRI | PAR | QUOTE | BQUOTE | COMMA
          | IDX0 | IDBB0 | ONE | IDW | IDW0 | IDPn of int
 
 %nonterm
@@ -122,8 +123,8 @@ fun nset2idlinkset nset =
 | dec of bgterm
 | bg of bgterm
 | altbg of bgterm
+| tenlist of bgterm list
 | bglist of bgterm list
-| bglst of bgterm list
 | fports of name list
 | nlist of name list
 | bports of nameset list
@@ -134,6 +135,8 @@ fun nset2idlinkset nset =
 | perm of Immutable permutation
 | permentrylist of (int * nameset) list
 | permentry of (int * nameset)
+| wiring of wiring
+| wiringentrylist of link list
 | id of string
 | int of int
 
@@ -167,7 +170,9 @@ fun nset2idlinkset nset =
 				 Ion.nameset =
 				 Permutation.nameset =
 				 BgTerm.nameset
-		    sharing type Link.link = LinkSet.elt
+		    sharing type Link.link =
+				 LinkSet.elt =
+				 Wiring.link
 		    sharing type LinkSet.Set = Wiring.linkset
 		    sharing type Wiring.wiring = BgTerm.wiring
 		    sharing type Ion.ion = BgTerm.ion
@@ -196,14 +201,14 @@ dec	: bg                  (bg)
 
 bg : altbg                    (altbg)
    | bg XX bg                 (Ten ([bg1, bg2], mk_info bg1left bg2right))
-   | bglist                   (Ten (bglist, mk_info bglistleft bglistright))
+   | tenlist                  (Ten (tenlist, mk_info tenlistleft tenlistright))
    | bg PRI bg                (Pri ([bg1, bg2], mk_info bg1left bg2right))
    | bg PAR bg                (Par ([bg1, bg2], mk_info bg1left bg2right))
    | bg OO bg                 (Com (bg1, bg2, mk_info bg1left bg2right))
 
-bglist : LBRACK LBRACK bglst RBRACK RBRACK  (bglst)
+tenlist : BQUOTE XX XX LBRACK bglist RBRACK  (bglist)
 
-bglst   : bg COMMA bglst      (bg :: bglst)
+bglist  : bg COMMA bglist     (bg :: bglist)
         | bg		      ([bg])
         |		      ([])
 
@@ -247,6 +252,7 @@ altbg : LPAREN RPAREN         (Mer (0, mk_info LPARENleft RPARENright))
    | IDPn                     (Per (Permutation.id_n IDPn, mk_info IDPnleft IDPnright))
    | LPAREN nset RPAREN bg    (Abs (nset, bg, mk_info LPARENleft bgright))
    | LPAREN bg RPAREN         (bg)
+   | wiring                   (Wir (wiring, mk_info wiringleft wiringright))
 
 fports	: LT nlist GT         (nlist)
 
@@ -291,6 +297,12 @@ permentrylist : permentry COMMA permentrylist   (permentry :: permentrylist)
 
 permentry : int nset				((int, nset))
 	  | int					((int, NameSet.empty))
+
+wiring  : SLASH SLASH SLASH LBRACK wiringentrylist RBRACK         (Wiring.make' wiringentrylist)
+
+wiringentrylist : link COMMA wiringentrylist  (link :: wiringentrylist)
+                | link                        ([link])
+                |                             ([])
 
 int : INT                                       (INT)
     | ONE                                       (1)

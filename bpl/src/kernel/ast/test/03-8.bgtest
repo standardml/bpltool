@@ -1,0 +1,6 @@
+Expect error: Testing wiring with duplicate name
+
+y/{x,x}
+
+exception:
+DuplicateNames

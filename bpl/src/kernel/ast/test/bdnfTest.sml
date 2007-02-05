@@ -24,8 +24,7 @@
 
 functor BDNFTest (structure ErrorHandler  : ERRORHANDLER
 		  structure Assert        : ASSERT
-		  structure Test          : TEST
-                  (*val       test_data_dir : string*)) =
+		  structure Test          : TEST) =
 struct
 
 open BPL'
@@ -59,7 +58,9 @@ nameOfException
 
   datatype expectedresult = S of bgval | E of string
 
-  val assertEqualBgVal = assertEqual (fn (b1, b2) => BgVal.eq b1 b2) (PrettyPrint.pp_to_string 72 (BgVal.pp 0))
+  val assertEqualBgVal
+    = assertEqual (fn (b1, b2) => BgVal.eq b1 b2)
+                  (PrettyPrint.pp_to_string 72 (BgVal.pp 0))
 
   exception InvalidTestFile of string * string
 
@@ -84,9 +85,9 @@ nameOfException
                              ; raise InvalidTestFile
                                (test_file, "the file is empty"))
 
-              val input_file = test_data_dir ^ "/" ^ filename ^ ".input.tmp"
+              val input_file  = test_data_dir ^ "/" ^ filename ^ ".input.tmp"
               val result_file = test_data_dir ^ "/" ^ filename ^ ".result.tmp"
-              val input_os = TextIO.openOut input_file
+              val input_os  = TextIO.openOut input_file
               val result_os = TextIO.openOut result_file
               fun close_files () = (  TextIO.closeIn is
                                     ; TextIO.closeOut input_os
@@ -155,7 +156,7 @@ nameOfException
                            (GeneralFailure ("expected exception "
                                             ^ exnname)))
                 handle exn => 
-                  (  rm_tmp_files ()
+                  (  rm_tmp_files () handle OS.SysErr (s, _) => () (*FIXME sometimes files cannot be deleted?*)
                    ; case exn of
                        Assert.Fail g => raise Assert.Fail g
                      | exn =>

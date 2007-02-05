@@ -1,3 +1,0 @@
-(* Testing parallel product with global outer name clash *)
-
-K<x,y><> || (y/{z} || merge_1)

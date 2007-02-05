@@ -1,0 +1,6 @@
+Expect error: Testing prime product of bigraphs of width 0/0
+
+x/{x,y} | y/{z} | z/{} | /{w}
+
+exception:
+NotPrimeable

@@ -1,0 +1,6 @@
+Expect error: Testing composition with inner/outer global name set sizes 0/>0
+
+merge_0 o x/x
+
+exception:
+NotComposable
