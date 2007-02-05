@@ -1,24 +1,22 @@
 (************************************************************************
-  Ebbe Elsborg and Henning Niss, 2/2/2007
+  Ebbe Elsborg and Henning Niss, 5/2/2007
  
   This is the "location-aware application" part A of a Plato-graphical
   system; C || P || A = C || (S || L) || A.
 ************************************************************************)
 
 datatype bool = True | False
-datatype loc = Loc of int
-datatype dev = Dev of int
+type loc = int
+type dev = int
 datatype res = Res of loc
-datatype whereIs = WhereIs of dev * (loc -> unit)
+datatype whereis = WhereIs of dev * (loc -> unit)
+datatype enql = enqL of whereis
 
 (* just for typechecking -- remove later *)
 fun exchange (r,s) =
     let val tmp = !r
     in r:=(!s) ; s:=tmp
     end
-
-(* just for typechecking -- remove later *)
-fun enqL x = ()
 
 fun new () = ref False
 
@@ -40,20 +38,25 @@ fun wait i = if i<0 then () else wait(i-1)
 val queue = ref []
 
 fun deq () =
-    if !lock = True then wait(100)
-    else ( spinlock lock;
-	   case (!queue) of [] => NONE
-			  | (q::qs) => let val _ = queue:=qs 
-				       in SOME(q)
-				       end;
-	   spinunlock lock
-	   )
+    ( spinlock lock;
+      case (!queue) of [] => NONE
+		     | (q::qs) => let val _ = queue:=qs 
+				  in SOME(q)
+				  end;
+      spinunlock lock )
 
 fun enqA e =
-    if !lock = True then wait(100)
-    else ( spinlock lock;
-	   queue:=(!queue)@[e];
-	   spinunlock lock
-	   )
+    ( spinlock lock;
+      queue:=(!queue)@[e];
+      spinunlock lock )
 
-fun whereIs d = enqL(WhereIs(d,fn r => enqA(Res r)))
+fun getRes () =
+    ( spinlock lock;
+      (case (!queue) of [] => ( wait(100); getRes() )
+		     | (q::qs) => q)
+      before
+      spinunlock lock )
+
+fun whereIs d =
+    ( enqL(WhereIs(d,fn r => enqA(Res r)));
+      getRes() )
