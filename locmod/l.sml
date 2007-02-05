@@ -30,6 +30,9 @@
 	      redefined 'sobs', 'slost', and 'state'.
 	      COMMENT: Do we also need to export aux. function names?
   30/10/2006: Replaced ~1 with options.
+  02/02/2007: Introduced spinlock on queue.
+  05/02/2007: Introduced WhereIs event,
+              removed some dead code.
  
   This is the "location model" part L of a Plato-graphical system;
   C || P || A = C || (S || L) || A.
@@ -40,15 +43,18 @@
 
 *)
 
-(* export enq,sobs,slost from *)
+(* export enqL from *)
 
 (* consider making these two an abstract type 'Link' *)
 type lid = int
 type dev = int
 
-datatype event =
-	 Observation of dev * lid |
-	 Loss of dev
+datatype res = Res of lid
+datatype enqa = enqA of res
+
+datatype event = Obs of dev * lid
+	       | Loss of dev
+	       | WhereIs of dev * (lid -> enqa)
 
 datatype hierarchy = (* id, devices, sublocations *)
 	 Loc of lid * dev list * hierarchy list
@@ -83,8 +89,8 @@ fun pickloc lname =
        if lname=id then SOME(Loc(id,ds,ls))
        else let fun pickloc' lname [] = NONE
 		  | pickloc' lname (loc::locs) =
-		    case pickloc lname loc of
-			SOME(l) => SOME(l)
+		    case pickloc lname loc
+		     of SOME(l) => SOME(l)
 		      | NONE => pickloc' lname locs
 	    in pickloc' lname ls end
 
@@ -96,33 +102,20 @@ fun flocs option =
 (* find the identifier of a device's location - depth first *)
 fun whr dev =
     fn l =>
-       case l of
-	   (Loc(_,[],[])) => NONE
-	 | (Loc(id,d::ds,ls)) =>
-	   if dev=d then SOME(id) else whr dev (Loc(id,ds,ls))
+       case l
+	of (Loc(_,[],[])) => NONE
+	 | (Loc(id,d::ds,ls)) => if dev=d then SOME(id)
+				 else whr dev (Loc(id,ds,ls))
 	 | (Loc(_,[],ls)) => 
 	   let fun whr' dev =
 		   fn list =>
-		      case list of [] => NONE
-				 | (loc::locs) =>
-				   case whr dev loc of
-				       SOME(i) => SOME(i)
-				     | NONE => whr' dev locs
+		      case list
+		       of [] => NONE
+			| (loc::locs) =>
+			  case whr dev loc
+			   of SOME(i) => SOME(i)
+			    | NONE => whr' dev locs
 	   in whr' dev ls end
-
-(* unpack option val, return location identifier of d's location *)
-(*
-fun where'' d = fn h => case whr d h of NONE => ~1 | SOME(i) => i
-*)
-
-(* move a device 'd' to location 'l' in hierarchy 'h'
-fun move d =
-    fn l =>
-       fn h =>
-	  case whr d h of
-	      NONE => h (* if 'd' not in 'h': ignore *)
-	    | SOME _ => let val h' = delete d h in insert d l h' end
-*)
 
 (* this map must correspond exactly to the hierarchy 'state' below *)
 val prntmap =
@@ -130,9 +123,9 @@ val prntmap =
 
 (* find value of key 'k' in association list 'l' (e.g. prntmap) *)
 fun assoc l =
-    fn k => case l of [] => []
-		    | ((x,y)::pairs) => if k=x then [y]
-					else assoc pairs k
+    fn k => case l
+	     of [] => []
+	      | ((x,y)::pairs) => if k=x then [y] else assoc pairs k
 
 (* climb prntmap 'i' steps *)
 fun prnt i =
@@ -140,18 +133,10 @@ fun prnt i =
        if i<=0 then lid else prnt (i-1) (hd (assoc prntmap lid))
 
 (* find devices in tree-specified range of 'd' excl. 'd' itself *)
-(*
 fun findinrange d =
     fn h =>
-       fn i => let val lid = where'' d h
-		   val area = prnt i lid
-		   val devsinrange = flocs (pickloc area h)
-	       in del_list d devsinrange end
-*)
-fun findinrange d =
-    fn h =>
-       fn i => case whr d h of
-		   NONE => NONE
+       fn i => case whr d h
+		of NONE => NONE
 		 | SOME(l) =>
 		   let val area = prnt i l
 		       val devsinrange = flocs (pickloc area h)
@@ -159,11 +144,6 @@ fun findinrange d =
 		   end
 
 (* find the root of the parent map *)
-(*
-fun findroot map =
-    case map of [] => ~1
-	      | ((x,y)::pairs) => if x=y then x else findroot pairs
-*)
 fun findroot map =
     case map of [] => NONE
 	      | ((x,y)::pairs) => if x=y then SOME(x) else findroot pairs
@@ -178,28 +158,19 @@ fun ancpath lid =
 
 (* test whether element 'e' is in list 'l' *)
 fun listmember e =
-    fn l => case l of [] => false
-		    | (x::xs) => if e=x then true
-				 else listmember e xs
+    fn l => case l
+	     of [] => false
+	      | (x::xs) => if e=x then true else listmember e xs
 
 (* find the nearest common ancestor of two locations *)
-(*
 fun commonanc p1 =
     fn p2 =>
-       case p1 of
-	   [] => ~1
-	 | (x::xs) => case p2 of
-			  [] => ~1
-			| (y::ys) => if listmember x (y::ys) then x
-				     else commonanc xs (y::ys)
-*)
-fun commonanc p1 =
-    fn p2 =>
-       case p1 of
-	   [] => NONE
-	 | (x::xs) => case p2 of
-			  [] => NONE
-			| (y::ys) => if listmember x (y::ys) then SOME(x)
+       case p1
+	of [] => NONE
+	 | (x::xs) => case p2
+		       of [] => NONE
+			| (y::ys) => if listmember x (y::ys)
+				     then SOME(x)
 				     else commonanc xs (y::ys)
 
 (* find a path from location 'lid1' to location 'lid2' *)
@@ -217,25 +188,24 @@ fun findpath lid1 =
 (*ARGH...!!! Ballade med SOME(5) vs. 5 af lokationsværdier...*)
 fun findpath l1 =
     fn lid2 =>
-       case l1 of
-	   NONE => NONE
+       case l1
+	of NONE => NONE
 	 | SOME(lid1) =>
-	   case findroot prntmap of
-	       NONE => NONE
+	   case findroot prntmap
+	    of NONE => NONE
 	     | SOME(r) =>
 	       let val path1 = rev (ancpath lid1 r [lid1])
 		   val path2 = rev (ancpath lid2 r [lid2])
 		   val nearestanc = commonanc path1 path2
-	       in case nearestanc of
-		      NONE => NONE
+	       in case nearestanc
+		   of NONE => NONE
 		    | SOME(l) =>
 		      let val path1' = rev (ancpath lid1 l [])
 			  val path2' = tl(ancpath lid2 l [lid2])
 		      in SOME(path1' @ path2') end
 	       end
 
-(* Event queue with operations *)
-val queue = ref []
+(* Building, initially *)
 val state = (Loc(1,[15],
 		 [Loc(2,[10,11],[]),
 		  Loc(3,[],[]),
@@ -247,14 +217,47 @@ val state = (Loc(1,[15],
 				 Loc(9,[14],[])])])])]) ,
 	     [])
 
+(* Spinlock *)
+fun exchange (r,s) = (* just for typechecking -- remove later *)
+    let val tmp = !r
+    in r:=(!s) ; s:=tmp
+    end
+
+fun new () = ref false
+
+val lock = new ()
+
+fun spinlock l =
+    let val t = ref true
+        fun loop () = ( exchange(t,l); if !t then loop() else () )
+    in loop ()
+    end
+
+fun spinunlock l = 
+    let val t = ref false
+    in exchange(t,l)
+    end
+
+fun wait i = if i<0 then () else wait(i-1)
+
+(* Event queue with operations *)
+val queue = ref []
+
 fun deq () =
-    case (!queue) of [] => NONE
-		   | (q::qs) => let val _ = queue:=qs 
-				in  SOME(q)
-				end
+    ( spinlock lock;
+      (case (!queue) of [] => NONE
+		      | (q::qs) => let val _ = queue:=qs 
+				   in SOME(q)
+				   end)
+      before
+      spinunlock lock )
 
-(***** Interface begin *****)
+fun enqL e = (* THE interface function *)
+    ( spinlock lock;
+      queue:=(!queue)@[e];
+      spinunlock lock )
 
+(* handler functions used by event loop *)
 fun sobs s =
     fn d =>
        fn l =>
@@ -270,18 +273,21 @@ fun slost s =
 	   val inactive = d::inactive'
        in (active,inactive) end
 
-fun enq e = queue:=(!queue)@[e]
-
-(***** Interface end *****)
+fun awhere s =
+    fn d =>
+       fn f => case whr d (#1(s))
+		of SOME(l) => f l
+		 | NONE => f ~1
 
 (* Event loop *)
 fun loop state =
     case deq () of
-	NONE => loop state
-      | SOME(Observation(d,l)) => loop (sobs state d l)
+	NONE => ( wait(100); loop state )
+      | SOME(Obs(d,l)) => loop (sobs state d l)
       | SOME(Loss(d)) => loop (slost state d)
+      | SOME(WhereIs(d,f)) => ( awhere state d f; loop state )
 
-(* OLD CODE BEGIN *)
+(* OLD CODE BEGIN
 val funs =
     (* initial configuration *)
     let val state =
@@ -323,36 +329,42 @@ val funs =
 	fun anavig d l = findpath (whr d (!state)) l
     (* find nearest neighbour query *)
     in (state,devs,sobs',slost',awher,afind,arange,anavig) end
-(* OLD CODE END *)
-
-(***** Interface end *****)
+OLD CODE END *)
 
 (***** Tests *****)
 
-val q0 = !queue;
-val e1 = enq (Observation(15,6));
-val q1 = !queue;
-val e2 = enq (Loss(12));
-val q2 = !queue;
-val o3 = deq ();
-val q3 = !queue;
-val o4 = deq ();
-val q4 = !queue;
-val o5 = deq ();
-val q5 = !queue;
-
+(* testing queue operations *)
 (*
+val s0 = state;
+val q0 = !queue;
+val e1 = enqL(Obs(15,6));
+val q1 = !queue;
+val e2 = enqL(Loss(12));
+val q2 = !queue;
+val e3 = enqL(WhereIs(15,fn r => enqA(Res r)))
+val q3 = !queue;
+val o4 = deq();
+val q4 = !queue;
+val o5 = deq();
+val q5 = !queue;
+val o6 = deq();
+val q6 = !queue
+*)
+
 (* shorthands *)
-val state = #1(funs)
-val devs = #2(funs)
-val fun1 = #3(funs)
-val fun2 = #4(funs)
-val fun3 = #5(funs)
-val fun4 = #6(funs)
-val fun5 = #7(funs)
-val fun6 = #8(funs)
+(*
+val fun1 = #1(funs)
+val fun2 = #2(funs)
+val fun3 = #3(funs)
+val fun4 = #4(funs)
+val fun5 = #5(funs)
+val fun6 = #6(funs)
+val fun7 = #7(funs)
+val fun8 = #8(funs)
+*)
 
 (* testing interface to S *)
+(*
 val state0 = (!state)
 val devs0 = (!devs)
 val s_lose_d14 = fun2 14
@@ -364,8 +376,10 @@ val devs2 = (!devs)
 (*val ged = fun2 14*)
 val state3 = (!state)
 val devs3 = (!devs)
+*)
 
 (* testing interface to A *)
+(*
 val a_where_d12 = fun3 12
 val a_findall_l2 = fun4 2
 val a_range_d13_prnt3 = fun5 13 3
