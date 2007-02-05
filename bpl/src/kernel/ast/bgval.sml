@@ -1481,9 +1481,13 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
     | eq' cm (VAbs (ns1, b1, _)) (VAbs (ns2, b2, _)) =
       let
         val (r, cm') = eq' cm b1 b2
+        val allns1 = Interface.names (outerface b1)
+        val notns1 = NameSet.difference allns1 ns1
+        val allns2 = Interface.names (outerface b2)
+        val notns2 = NameSet.difference allns2 ns2
       in
         if r andalso NameSet.size ns1 = NameSet.size ns2 then
-          add_constraints cm' [(ns1, ns2)]
+          add_constraints cm' [(ns1, ns2), (notns1, notns2)]
         else
           (false, cm')
       end
