@@ -23,6 +23,8 @@
 # Description: dep2sources generates *.cm-files for the Compilation Manager
 #              of SMLNJ, based on Dependencies files of Mosmake
 
+# Requires $SED to be set to a GNU sed compatible version of sed.
+
 progname="$0"
 debug=
 
@@ -152,13 +154,13 @@ echo "#else" >> $outputfile
 echo "#endif" >> $outputfile
   
 
-sed -n \
+${SED} -n \
 	-e '/^[^:#]*\.\(lex\|grm\)-sig:/  b;' \
 	-e '/^[^:#]*\.\(lex\|grm\):/      { s/:.*//; p; b; }' \
 	-e '/^[^.#]*:/                 { s/ *:.*/.sml/; p; }' \
 	< $inputfile >> $outputfile
 echo " " >> $outputfile
-sed -n \
+${SED} -n \
 	-e '/^ *[^#][^=]*$/ { s/^\([^:]*:\)*[ \t]*//; s/\r//g; ' \
 	-e '  :repeat h; s/ .*//; s+\(/[^/]*$\)+\1+p; g; s/^[^ ][^ ]* *//; t repeat;' \
 	-e '}' \

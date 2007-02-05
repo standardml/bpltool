@@ -37,6 +37,7 @@ datadir		= @datadir@
 smldocdir		= @smldocdir@
 
 RM              = rm -f
+export SED      = @SED@
 
 MOSMLC  	= @MOSMLC@
 PERL    	= @PERL@
@@ -175,7 +176,7 @@ installdirs: mkinstalldirs
 
 # SML/NJ
 kernel.cm: kernel.cm.in
-	sed -e 's+@BPLSRCROOT@+$(CURDIR)+g' < $< > $@
+	$(SED) -e 's+@BPLSRCROOT@+$(CURDIR)+g' < $< > $@
 
 %/sources.cm: %/Dependencies
 	cd $(dir $@) && $(MAKE) $(notdir $@)
