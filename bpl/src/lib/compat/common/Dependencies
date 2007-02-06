@@ -1,4 +1,4 @@
-. = legacyarray legacylistpair exception-sig
+. = legacyarray legacylistpair legacysubstring exception-sig
 legacyarray-sig:
 legacyarray: legacyarray-sig %NODASHSIG
 legacylistpair-sig:

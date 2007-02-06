@@ -45,8 +45,12 @@ struct
       in
 				switch workrunner
       end
-  fun blockInterrupts ()
+  fun ignoreInterrupts ()
+    = setHandler (Posix.Signal.int, Handler.ignore)
+  fun acceptInterrupts ()
+    = setHandler (Posix.Signal.int, Handler.default)
+  fun deferInterrupts ()
     = Mask.block (Mask.some [Signal.int])
-  fun unblockInterrupts ()
+  fun resumeInterrupts ()
     = Mask.unblock (Mask.some [Signal.int])
 end

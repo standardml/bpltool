@@ -16,8 +16,12 @@ sig
     val sourceStream : TextIO.instream ref
     val toCoords : int -> int -> ((int * int) * (int * int))
     val error : int -> int -> string -> unit
+    val getErrors
+      : unit
+        -> (string * ((int * int) * (int * int)) * (int * int) * string)
+           list
     exception Error
-    val impossible : string -> 'a   (* raises Error *)
+(*    val impossible : string -> 'a   (* raises Error *)*)
     val reset : unit -> unit
 end
 structure ErrorMsg : ERRORMSG =
@@ -56,7 +60,28 @@ struct
       in
 	look(!linePos,!lineNum)
       end
+
+  val errors
+    : (string * ((int * int) * (int * int)) * (int * int) * string)
+      list ref
+    = ref []
+  (* Accumulates reported errors. *)
   fun error leftpos rightpos (msg:string) =
+    (errors
+      := (!fileName, toCoords leftpos rightpos, (leftpos, rightpos), msg)
+          :: !errors;
+     anyErrors := true)
+
+  fun impossible msg =
+    (errors
+      := (!fileName, ((~1, ~1), (~1, ~1)), (~1, ~1),
+          "Compiler bug: " ^ msg)
+          :: !errors;
+     anyErrors := true)
+
+  fun getErrors () = rev (!errors)
+
+(*  fun error leftpos rightpos (msg:string) =
       let fun print s = TextIO.output(TextIO.stdErr, s) (* Henning *)
 	  fun printPos () =
               case toCoords leftpos rightpos of
@@ -80,6 +105,6 @@ struct
   fun impossible msg =
       (app print ["Error: Compiler bug: ",msg,"\n"];
        TextIO.flushOut TextIO.stdOut;
-       raise Error)
+       raise Error)*)
 end  (* structure ErrorMsg *)
   

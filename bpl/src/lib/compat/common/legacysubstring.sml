@@ -37,7 +37,9 @@ structure Substring :> SUBSTRING
     val full = all
 
     fun concatWith s subs = raise Fail "Substring.concatWith not implemented"
-    fun isSubstring s sub = raise Fail "Substring.isSubstring not implemented"
-    fun isSuffix s sub    = raise Fail "Substring.isSuffix not implemented"
+    fun isSubstring "" sub = true
+      | isSubstring s sub = not (isEmpty (#2 (position s sub)))
+    fun isSuffix "" sub    = true
+      | isSuffix s sub = s = string (#2 (position s sub))
 
 end (* structure Substring *)

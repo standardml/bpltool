@@ -12,4 +12,6 @@ group is
   legacytimer.sml
   legacysubstring-sig.sml
   legacysubstring.sml
+  legacyos-sig.sml
+  legacyos.sml
 #endif

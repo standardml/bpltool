@@ -33,9 +33,14 @@ struct
   	     	flushOut stdErr);
   	   warningGiven := true)
 
-  fun interrupted f	= ((f (); false) handle Interrupt => true)
   prim_val catch_interrupt : bool -> unit = 1 "sys_catch_break"
-  fun blockInterrupts () = catch_interrupt false
-  fun unblockInterrupts () = catch_interrupt true
+  fun interrupted f	= 
+    (catch_interrupt true;
+     ((f (); catch_interrupt false; false)
+      handle Interrupt => (catch_interrupt false; true)))
+  fun ignoreInterrupts  () = warn ()
+  fun resumeInterrupts  () = warn ()
+  fun blockInterrupts   () = warn ()
+  fun unblockInterrupts () = warn ()
 end
 

@@ -24,14 +24,20 @@
 
 signature SIGNALHANDLER =
 sig
-  (** Executes a function with side effects, aborting it 
-   * if an INT signal is delivered.  Before executing, 
-   * interrupts are unblocked.
+  (** Executes a function f with side effects, aborting it 
+   * if an INT signal is delivered.  Before executing f,
+   * resumeInterrupts() is called.
    * @return A boolean indicating whether the function was aborted.
    *)
   val interrupted : (unit -> unit) -> bool
-  (** Inhibit delivery of INT signals *)
-  val blockInterrupts : unit -> unit
+  (** Inhibit delivery of INT signals.  Any INT signals will be
+   * ignored and will not re-appear after a call to acceptInterrupts.
+   *)
+  val ignoreInterrupts : unit -> unit
   (** Allow delivery of INT signals *)
-  val unblockInterrupts : unit -> unit
+  val acceptInterrupts : unit -> unit
+  (** Defer delivery of interrupts till later. *)
+  val deferInterrupts : unit -> unit
+  (** Resume delivery of interrupts, including any deferred. *)
+  val resumeInterrupts : unit -> unit
 end

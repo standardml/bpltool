@@ -42,7 +42,9 @@ struct
 							 end);
       !aborted
     end
-  fun blockInterrupts () = maskSignals (MASK [sigINT])
-  fun unblockInterrupts () = unmaskSignals (MASK [sigINT])
+  fun ignoreInterrupts () = (setHandler (sigINT, IGNORE); ())
+  fun acceptInterrupts () = (setHandler (sigINT, DEFAULT); ())
+  fun deferInterrupts () = maskSignals (MASK [sigINT])
+  fun resumeInterrupts () = unmaskSignals (MASK [sigINT])
 end
 
