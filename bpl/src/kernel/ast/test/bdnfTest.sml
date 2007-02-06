@@ -64,6 +64,20 @@ nameOfException
 
   exception InvalidTestFile of string * string
 
+  (* old versions of SML/NJ doesn't implement isSuffix *)
+  fun isSuffix suf str =
+      let
+        val sufsz = String.size suf
+        val strsz = String.size str
+      in
+        if strsz >= sufsz then
+          case String.compare (suf, String.substring (str, 0, sufsz)) of
+            EQUAL => true
+          | _     => false
+        else
+          false
+      end
+
   (* utility function to remove the last character from
    * a string (usually \n) *)
   fun strip_last_char s = String.substring (s, 0, String.size s - 1)
@@ -78,12 +92,23 @@ nameOfException
               (* split the file into comment, input, and expected result *)
               val test_file = test_data_dir ^ "/" ^ filename
               val is = TextIO.openIn test_file
+              val lines
+                = ref (Substring.fields
+                         (fn #"\n" => true | _ => false)
+                         (Substring.full (TextIO.inputAll is)))
+              val () = TextIO.closeIn is
+
+              fun getLine () =
+                  case !lines of
+                    [] => NONE
+                  | (l::ls) => (  lines := ls
+                                ; SOME (Substring.string l))
+
               val comment
-                = case TextIO.input(*Line*) is of
-                    (*SOME*) s => strip_last_char s
-                  (*| NONE => (  TextIO.closeIn is
-                             ; raise InvalidTestFile
-                               (test_file, "the file is empty"))*)
+                = case getLine () of
+                    SOME s => s
+                  | NONE => raise InvalidTestFile
+                                    (test_file, "the file is empty")
 
               val input_file  = test_data_dir ^ "/" ^ filename ^ ".input.tmp"
               val result_file = test_data_dir ^ "/" ^ filename ^ ".result.tmp"
@@ -98,42 +123,35 @@ nameOfException
                                 ; rm_tmp_files())
                 
               fun parse_result () =
-                  case TextIO.input(*Line*) is of
-                  "" => ()
-                  | (*SOME*) s => (  TextIO.output (result_os, s)
+                  case getLine () of
+                    SOME s => (  TextIO.output (result_os, s)
                                ; parse_result ())
-                  (*| NONE => ()*)
+                  | NONE => ()
 
               fun parse_exception () =
-                  case TextIO.input(*Line*) is of
-                    "" =>  (  cleanup ()
+                  case getLine () of
+                    SOME s => s
+                  | NONE => (  cleanup ()
                              ; raise InvalidTestFile
                                        (test_file,
                                         "the file has no exception name"))
-                  | (*SOME*) s => strip_last_char s
-                  (*| NONE => (  cleanup ()
-                             ; raise InvalidTestFile
-                                       (test_file,
-                                        "the file has no exception name"))*)
+
               fun parse_test_file () =
-                  case TextIO.input(*Line*) is of
-                    "" => (  cleanup ()
+                  case getLine () of
+                    SOME s =>
+                      if String.isPrefix "result:" s then
+                        (parse_result (); NONE)
+                      else if String.isPrefix "exception:" s then
+                        SOME (parse_exception ())
+                      else
+                        (  TextIO.output (input_os, s)
+                         ; TextIO.output (input_os, "\n")
+                         ; parse_test_file ())
+                  | NONE => (  cleanup ()
                              ; raise InvalidTestFile
                                        (test_file,
                                         "the file has no result/\
                                          \exception section"))
-                  | (*SOME*) s => if String.isPrefix "result:" s then
-                                (parse_result (); NONE)
-                              else if String.isPrefix "exception:" s then
-                                SOME (parse_exception ())
-                              else
-                                (  TextIO.output (input_os, s)
-                                 ; parse_test_file ())
-                  (*| NONE => (  cleanup ()
-                             ; raise InvalidTestFile
-                                       (test_file,
-                                        "the file has no result/\
-                                         \exception section"))*)
             in
               case parse_test_file () of
                 NONE =>
