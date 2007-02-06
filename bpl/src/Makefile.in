@@ -186,7 +186,7 @@ kernel.cm: kernel.cm.in
 	cd $(dir $@) && $(MAKE) $(notdir $@)
 
 smlnj-prepare: $(CMFILES)
-mlton-prepare: $(patsubst %/Dependencies,%/mlton.mlb,$(DEPENDENCIES)) 
+mlton-prepare: $(patsubst %/Dependencies,%/mlton.mlb,$(DEPENDENCIES)) $(PARSINGFILES)
 
 .PHONY: smlnj-prepare mlton-prepare
 
