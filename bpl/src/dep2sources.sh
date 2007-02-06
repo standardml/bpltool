@@ -26,7 +26,7 @@
 # Requires $SED to be set to a GNU sed compatible version of sed.
 
 progname="$0"
-debug=
+debug=1
 
 usage () {
   echo "Usage: $progname [ OPTION .. OPTION ] [ DEPENDENCIESFILE ] [ CMFILE ]"
@@ -76,7 +76,8 @@ do
 			excludedirs="$excludedirs\|$excludedir"
 		elif [ $nextarg = change ]
 		then
-			changes="$changes -e s=${change//./\.}=g"
+			change=`echo "$change" | sed -e 's/\\./\\\\./g'`
+			changes="$changes -e s=$change=g"
 		fi
 		nextarg=
 	else
