@@ -29,7 +29,7 @@
 
 @SET_MAKE@
 
-SHELL		= /bin/bash
+SHELL           = @SHELL@
 
 prefix		= @prefix@
 srcdir		= @srcdir@
