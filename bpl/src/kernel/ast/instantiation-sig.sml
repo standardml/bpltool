@@ -25,10 +25,19 @@
 signature INSTANTIATION =
 sig
   type bgval
+  type name
   type 'a bgbdnf
   type DR
   (** Instantiation type. *)
   type inst
+  (** Construct an instantitation.   For instance,
+     [1&[x1,x2] |--> 0&[y1,y2], ...]
+   * make' [(1,0,[(x1,y1),(x2,y2)])] will let root 1 of the instance
+   * be a copy of root 0 of the original, where name y1 is renamed to x1,
+   * name y2 renamed to x2, and all other variables and roots will be
+   * copies of the corresponding entities of the original.
+   *)
+  val make' : (int * int * (name * name) list) list -> inst
   (** The identity instantiation. *)
   val id : inst
   (** Use an instantiation to instantiate a bgval. *)

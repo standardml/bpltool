@@ -36,7 +36,6 @@ functor Reaction (structure RuleNameMap : MONO_FINMAP
                   structure BgVal : BGVAL
                   structure BgBDNF : BGBDNF
                   structure Match : MATCH
-                  where type 'a lazylist = 'a LazyList.lazylist
                   structure Instantiation : INSTANTIATION
                   structure Rule : RULE
                   structure Origin : ORIGIN

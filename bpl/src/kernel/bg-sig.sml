@@ -27,6 +27,18 @@ sig
 
   include BG_ADT
 
+  (** Parse a string as a bigraph term.
+   * @params filename s
+   * @param filename  File name to use when reporting errors.
+   * @param s         The string to be parsed.
+   *)
+  val parseBgTermStr : string -> string -> bgterm
+  (** Parse a string as a list of rules.
+   * @params filename s
+   * @param filename  File name to use when reporting errors.
+   * @param s         The string to be parsed.
+   *)
+  val parseRulesStr : string -> string -> rule list
   (** Read a BG expression from a file print it, and return it as BDNF. *)
   val usefile : string -> B bgbdnf
   (** Read a BG expression from a file, return it as BDNF, explain
@@ -49,5 +61,7 @@ sig
   val bgvalToString : bgval -> string
 
   structure BgTermParser : PARSER
+  
+  structure RulesParser : PARSER
 
 end

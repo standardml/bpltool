@@ -45,7 +45,6 @@ functor Match'(
   structure BgBDNF      : BGBDNF
   structure Rule        : RULE
   structure NameSet     : MONO_SET
-  structure LazyList    : LAZYLIST
   structure ErrorHandler : ERRORHANDLER
       where type origin = Origin.origin
         and type ppstream = PrettyPrint.ppstream
@@ -84,8 +83,7 @@ functor Match'(
     and type 'class bgbdnf   = 'class BgBDNF.bgbdnf
     and type BR              = BgBDNF.BR
     and type DR              = BgBDNF.DR
-    and type nameset         = NameSet.Set
-    and type 'a lazylist     = 'a LazyList.lazylist =
+    and type nameset         = NameSet.Set =
 struct
   open Debug
   open ErrorHandler
@@ -1663,7 +1661,6 @@ functor Match (
   structure BgBDNF      : BGBDNF
   structure Rule        : RULE
   structure NameSet     : MONO_SET
-  structure LazyList    : LAZYLIST
   structure ErrorHandler : ERRORHANDLER
       where type origin = Origin.origin
         and type ppstream = PrettyPrint.ppstream
@@ -1702,8 +1699,7 @@ functor Match (
     and type 'class bgbdnf   = 'class BgBDNF.bgbdnf
     and type BR              = BgBDNF.BR
     and type DR              = BgBDNF.DR
-    and type nameset         = NameSet.Set
-    and type 'a lazylist     = 'a LazyList.lazylist =
+    and type nameset         = NameSet.Set =
 struct
   structure Match = Match'(structure Info = Info
 			   structure Name = Name
@@ -1719,7 +1715,6 @@ struct
 			   structure BgBDNF = BgBDNF
          structure Rule = Rule
 			   structure NameSet = NameSet
-			   structure LazyList = LazyList
 			   structure ErrorHandler = ErrorHandler)
   open Match
 end

@@ -14,5 +14,5 @@ bg-sig: bgadt-sig ast/sugar-sig parsers/.
    /lib/coll/monoset-sig /lib/ml-yacc/. /lib/pp/smlnj/prettyprint %NODASHSIG
 bg: bgadt ast/sugar parsers/. bg-sig /lib/coll/lazylist
    /lib/coll/set /lib/pp/smlnj/. /lib/ml-yacc/. /lib/util/errormsg
-   /lib/util/errorhandler-sig  /lib/util/origin %NODASHSIG
+   /lib/util/errorhandler-sig /lib/util/debug /lib/util/origin %NODASHSIG
 bpl: bg-sig bg /lib/util/printerrorhandler /lib/util/origin %NODASHSIG

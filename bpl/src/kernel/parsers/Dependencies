@@ -3,7 +3,7 @@
 # INCLUDE=../bg
 # INCLUDE=../ast
 
-. = bg.grm bg.lex
+. = bg.grm bg.lex rules.grm rules.lex
 bg.grm-sig: /lib/ml-yacc/.
 bg.lex: /lib/util/errormsg /lib/compat/mosml/. bg.grm-sig
 bg.grm: /lib/ml-yacc/.  /lib/coll/monoset-sig bg.grm-sig

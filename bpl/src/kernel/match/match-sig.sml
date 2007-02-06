@@ -31,7 +31,7 @@ sig
   type DR
   type rule
   type nameset
-  type 'a lazylist
+  type 'a lazylist = 'a LazyList.lazylist
   
   (** A match type. *)
   type match
@@ -101,6 +101,9 @@ sig
    * @param m       The match to print.
    *)
   val ppWithTree : int -> PrettyPrint.ppstream -> match -> unit
+
+  (** Return a prettyprinted string representation of a derivation tree. *)
+  val treeToString : derivation -> string
 
   (** Return a prettyprinted string representation of a match. *)
   val toString : match -> string

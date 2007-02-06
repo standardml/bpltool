@@ -68,6 +68,10 @@ val sign_table : lookup_table =
 val () =
    List.app (fn (str,tok) => H.insert kw_table (str, tok))
      [
+      ("name", Tokens.NAME ),
+      ("redex", Tokens.REDEX ),
+      ("react", Tokens.REACT ),
+      ("inst", Tokens.INST ),
       ("idx_0", Tokens.IDX0 ),
       ("id||_0", Tokens.IDBB0 ),
       ("idw_", Tokens.IDW ),
@@ -81,7 +85,9 @@ val () =
       ("/", Tokens.SLASH),
       ("-/", Tokens.DASHSLASH),
       ("//", Tokens.SLASHSLASH),
-      ("-//", Tokens.DASHSLASHSLASH)
+      ("-//", Tokens.DASHSLASHSLASH),
+      ("|->", Tokens.MAPSTO),
+      ("|-->", Tokens.MAPPSTO)
       ]
 
 val () =
@@ -89,6 +95,8 @@ val () =
      [
       ("<", Tokens.LT),
       (">", Tokens.GT),
+      ("=", Tokens.EQ),
+      ("&", Tokens.AMP),
       ("{", Tokens.LBRACE),
       ("}", Tokens.RBRACE),
       ("[", Tokens.LBRACK),
@@ -121,9 +129,9 @@ end
 val comlevel = ref 0;
 
 %%
-%header (functor BgRulesLex(structure Tokens : BgRules_TOKENS));
-KW_ID   = \* | [|]{1,2} | [<][|][>] | [<]-[>] | [a-z][A-za-z0-9_]* | 1 | -?[/][/]?;
-CTRLID  = [A-Z?!][A-za-z0-9_]*;
+%header (functor RulesLex(structure Tokens : Rules_TOKENS));
+KW_ID   = \* | [|]{1,2} | [<][|][>] | [<|]-[>] | [|]--[>] | [a-z][A-Za-z0-9_]* | 1 | -?[/][/]?;
+CTRLID  = [A-Z?!][A-Za-z0-9_]*;
 INT     = (0 | [1-9][0-9]*);
 STRING  = \"([^\ \t\013\n]|\\\")*\";
 WHITESPACE = [\ \t\013];

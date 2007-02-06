@@ -79,11 +79,11 @@ nameOfException
               val test_file = test_data_dir ^ "/" ^ filename
               val is = TextIO.openIn test_file
               val comment
-                = case TextIO.inputLine is of
-                    SOME s => strip_last_char s
-                  | NONE => (  TextIO.closeIn is
+                = case TextIO.input(*Line*) is of
+                    (*SOME*) s => strip_last_char s
+                  (*| NONE => (  TextIO.closeIn is
                              ; raise InvalidTestFile
-                               (test_file, "the file is empty"))
+                               (test_file, "the file is empty"))*)
 
               val input_file  = test_data_dir ^ "/" ^ filename ^ ".input.tmp"
               val result_file = test_data_dir ^ "/" ^ filename ^ ".result.tmp"
@@ -98,32 +98,42 @@ nameOfException
                                 ; rm_tmp_files())
                 
               fun parse_result () =
-                  case TextIO.inputLine is of
-                    SOME s => (  TextIO.output (result_os, s)
+                  case TextIO.input(*Line*) is of
+                  "" => ()
+                  | (*SOME*) s => (  TextIO.output (result_os, s)
                                ; parse_result ())
-                  | NONE => ()
+                  (*| NONE => ()*)
 
               fun parse_exception () =
-                  case TextIO.inputLine is of
-                    SOME s => strip_last_char s
-                  | NONE => (  cleanup ()
+                  case TextIO.input(*Line*) is of
+                    "" =>  (  cleanup ()
                              ; raise InvalidTestFile
                                        (test_file,
                                         "the file has no exception name"))
+                  | (*SOME*) s => strip_last_char s
+                  (*| NONE => (  cleanup ()
+                             ; raise InvalidTestFile
+                                       (test_file,
+                                        "the file has no exception name"))*)
               fun parse_test_file () =
-                  case TextIO.inputLine is of
-                    SOME s => if String.isPrefix "result:" s then
+                  case TextIO.input(*Line*) is of
+                    "" => (  cleanup ()
+                             ; raise InvalidTestFile
+                                       (test_file,
+                                        "the file has no result/\
+                                         \exception section"))
+                  | (*SOME*) s => if String.isPrefix "result:" s then
                                 (parse_result (); NONE)
                               else if String.isPrefix "exception:" s then
                                 SOME (parse_exception ())
                               else
                                 (  TextIO.output (input_os, s)
                                  ; parse_test_file ())
-                  | NONE => (  cleanup ()
+                  (*| NONE => (  cleanup ()
                              ; raise InvalidTestFile
                                        (test_file,
                                         "the file has no result/\
-                                         \exception section"))
+                                         \exception section"))*)
             in
               case parse_test_file () of
                 NONE =>
@@ -174,7 +184,7 @@ nameOfException
         val dirstream = openDir test_data_dir
         fun build_test_list NONE acc = (closeDir dirstream; acc)
           | build_test_list (SOME filename) acc =
-            if String.isSuffix ".bgtest" filename then
+            if Substring.isSuffix ".bgtest" (Substring.full filename) then
               let
                 (* the test name is taken to be the filename (ex. extension) *)
                 val testname

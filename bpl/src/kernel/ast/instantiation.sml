@@ -28,10 +28,12 @@ struct
   type bgval = BgVal.bgval
   type 'a bgbdnf = 'a BgBDNF.bgbdnf
   type DR = BgBDNF.DR
+  type name = unit
   (** FIXME: Instantiation type. *)
   type inst = unit
   (** FIXME: Construct an instantiation. *)
   fun make () = ()
+  fun make' _ = ()
   (** FIXME: Deconstruct an instantiation. *)
   fun unmk () = ()
   (** FIXME: *)

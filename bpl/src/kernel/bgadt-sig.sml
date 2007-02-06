@@ -55,12 +55,16 @@ sig
   type BR
   (** Bigraphs on {M,S,G,N,P,D,DR,B,BR} BDNF form. *)
   type 'class bgbdnf
+  (** Reaction rule *)
+  type rule
 
   structure Info   : INFO
   structure BgTerm : BGTERM
   structure BgVal  : BGVAL
   structure BgBDNF : BGBDNF
   structure Match  : MATCH
+  structure Instantiation : INSTANTIATION
+  structure Rule          : RULE
 
   structure Interface   : INTERFACE
   structure Ion         : ION
@@ -125,6 +129,10 @@ sig
                BgVal.bgval =
                BgBDNF.bgval =
                Sugar.bgval
+
+  sharing type rule =
+               Rule.rule =
+               Match.rule
 
   sharing type Interface.interface =
                BgVal.interface

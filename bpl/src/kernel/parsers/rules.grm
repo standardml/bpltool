@@ -8,7 +8,7 @@
 
    Syntax and grammar summary :
 
-   bg := 1
+   bg := <->
       |  merge(n)
       |  `nset`
       |  name/name 
@@ -93,9 +93,10 @@ type 'kind permutation = 'kind Permutation.permutation
 type map = (int * name list) * (int * name list)
 type inst = Instantiation.inst
 type rule = Rule.rule
-datatype fieldval = BGTERM of string * bgterm
-                  | INST of string * inst
-                  | RULENAME of string * string
+datatype fieldval = REDEX    of bgterm
+                  | REACT    of bgterm
+                  | INST     of inst
+                  | RULENAME of string
 type rulefield = {name : string, value : fieldval}
 
 (** Signal that a set with duplicate names has been encountered. 
@@ -115,11 +116,14 @@ exception RedexOrReactMissing of int * int
 
 fun warning str v = (print ("Parser warning: "^str^"\n"); v)
 
-fun mk_origin p1 p2 = Origin.mk_file_origin (!ErrorMsg.fileName) (Origin.POS (ErrorMsg.toCoords p1 p2))
+fun mk_origin p1 p2
+  = Origin.mk_file_origin
+      (!ErrorMsg.fileName)
+      (Origin.POS (ErrorMsg.toCoords p1 p2))
 
 fun mk_info p1 p2 = Info.make (mk_origin p1 p2)
 
-fun mk_inst ([], p) = Instantiation.id (* FIXME! *)
+fun mk_inst (maps, p) = Instantiation.make' [] (* FIXME!*)
 
 val nextruleno = ref 0
 fun mk_rule (rulefields, p) =
@@ -140,28 +144,22 @@ fun mk_rule (rulefields, p) =
       = {name = name, redex = redex, react = react, inst = inst}
       | populate _ [] = raise RedexOrReactMissing p
       | populate {name, redex, react, inst}
-                 ((RULENAME ("name", name'), _) :: rulefields)
+                 ((RULENAME name', _) :: rulefields)
       = populate {name = SOME name', redex = redex,
                   react = react, inst = inst} rulefields
       | populate {name, redex, react, inst}
-                 ((BGTERM   ("redex", redex'), _) :: rulefields)
+                 ((REDEX   redex', _) :: rulefields)
       = populate {name = name,
                   redex = SOME (term2rbdnf redex'),
                   react = react, inst = inst} rulefields
       | populate {name, redex, react, inst}
-                 ((BGTERM   ("react", react'), _) :: rulefields)
+                 ((REACT   react', _) :: rulefields)
       = populate {name = name, redex = redex,
                   react = SOME (term2bgval react'), inst = inst} rulefields
       | populate {name, redex, react, inst}
-                 ((INST     ("inst", inst'), _) :: rulefields)
+                 ((INST     inst', _) :: rulefields)
       = populate {name = name, redex = redex,
                   react = react, inst = SOME inst'} rulefields
-      | populate _ ((RULENAME (fieldname, _), p) :: rulefields)
-      = raise UnknownField (fieldname, p)
-      | populate _ ((BGTERM   (fieldname, _), p) :: rulefields)
-      = raise UnknownField (fieldname, p)
-      | populate _ ((INST     (fieldname, _), p) :: rulefields)
-      = raise UnknownField (fieldname, p)
     val ruledata
       = populate
           {name = NONE, redex = NONE, react = NONE, inst = NONE}
@@ -185,6 +183,7 @@ fun nset2idlinkset nset =
 %term EOF
 	 | ID of string | INT of int | CTRLID of string | STRING of string
 	 | AMP | EQ | MAPSTO | MAPPSTO
+	 | NAME | REDEX | REACT | INST
 	 | MERGEn of int
 	 | LPAREN | RPAREN | LBRACK | RBRACK | LBRACE | RBRACE | GT | LT
 	 | SLASH | SLASHSLASH | DASHSLASH | DASHSLASHSLASH
@@ -218,13 +217,13 @@ fun nset2idlinkset nset =
 
 %pos int
 %verbose
-%start rules
+%start rulelist
 %eop EOF
 %noshift EOF
 
-%name BgRules
+%name Rules
 
-%header (functor BgRulesLrVals
+%header (functor RulesLrVals
 		   (structure Info : INFO
 		    structure Token : TOKEN
 		    structure Control : CONTROL
@@ -274,9 +273,10 @@ fun nset2idlinkset nset =
 
 %left COMMA
 %nonassoc LPAREN RPAREN
+%nonassoc LT GT
 %left XX PRI PAR
 %left OO
-%nonassoc LT GT LBRACE RBRACE
+%nonassoc LBRACE RBRACE
 %left SLASH
 
 %%
@@ -295,9 +295,10 @@ rulefields : rulefield        ([(rulefield, (rulefieldleft, rulefieldright))])
                               ((rulefield, (rulefieldleft, rulefieldright))
                                :: rulefields)
 
-rulefield : id EQ bg          (BGTERM (id, bg))
-          | id EQ inst        (INST (id, inst))
-          | id EQ STRING      (RULENAME (id, STRING))
+rulefield : REDEX EQ bg       (REDEX bg)
+          | REACT EQ bg       (REACT bg)
+          | INST EQ inst      (INST inst)
+          | NAME EQ STRING    (RULENAME STRING)
 
 inst : LBRACK maps RBRACK     (mk_inst (maps, (LBRACKleft, RBRACKright)))
      | LBRACK RBRACK          (Instantiation.id)
@@ -352,10 +353,10 @@ altbg : ONE                   (Mer (0, mk_info ONEright ONEleft))
 					mk_info ctrlidleft ctrlidright))
    | perm                     (Per (perm, mk_info permleft permright))
    | IDPn                     (Per (Permutation.id_n IDPn, mk_info IDPnleft IDPnright))
-   | LPAREN nset RPAREN bg    (Abs (nset, bg, mk_info LPARENleft bgright))
+   | LT nset GT bg    (Abs (nset, bg, mk_info LTleft bgright))
    | LPAREN bg RPAREN         (bg)
 
-fports	: LT names GT         (names)
+fports	: LBRACK names RBRACK (names)
 
 names   : id COMMA names      (Name.make id :: names)
         | id		      ([Name.make id])
@@ -367,8 +368,12 @@ id      : ID                  (ID)
         | IDW0                ("idw_0")
         | MERGEn              ("merge(" ^ Int.toString MERGEn ^ ")")
         | IDPn                ("idp(" ^ Int.toString IDPn ^ ")")
+        | NAME                ("name")
+        | REDEX               ("redex")
+        | REACT               ("react")
+        | INST                ("inst")
 
-bports	: LT nsetlist GT      (nsetlist)
+bports	: LBRACK nsetlist RBRACK      (nsetlist)
 
 nsetlist : nset COMMA nsetlist (nset :: nsetlist)
 	 | nset		      ([nset])

@@ -25,7 +25,7 @@ functor BGADT' (structure ErrorHandler : ERRORHANDLER
                   where type ppstream    = PrettyPrint.ppstream
                     and type break_style = PrettyPrint.break_style
                     and type origin      = Origin.origin) 
-  : BG_ADT where type 'a Match.lazylist = 'a LazyList.lazylist =
+  : BG_ADT =
 struct
 
 structure ErrorHandler = ErrorHandler
@@ -161,6 +161,8 @@ structure Rule = Rule
    structure BgBDNF = BgBDNF
    structure Instantiation = Instantiation)
 
+type rule = Rule.rule
+
 structure Match = Match'
   (structure Info         = Info
    structure Name         = Name
@@ -210,7 +212,7 @@ functor BGADT (structure ErrorHandler : ERRORHANDLER
                  where type ppstream    = PrettyPrint.ppstream
                    and type break_style = PrettyPrint.break_style
                    and type origin      = Origin.origin) 
-  :> BG_ADT where type 'a Match.lazylist = 'a LazyList.lazylist =
+  :> BG_ADT =
 struct
   structure BGADT = BGADT'(structure ErrorHandler = ErrorHandler)
   open BGADT

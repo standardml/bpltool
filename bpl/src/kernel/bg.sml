@@ -25,12 +25,32 @@ functor BG' (structure ErrorHandler : ERRORHANDLER
                where type ppstream    = PrettyPrint.ppstream
                  and type break_style = PrettyPrint.break_style
                  and type origin      = Origin.origin)
-  : BG where type 'a Match.lazylist = 'a LazyList.lazylist =
+  : BG =
 struct
+open Debug
+open ErrorHandler
+val file_origin = Origin.mk_file_origin
+                      "$BPL/src/kernel/bg.sml"
+                      Origin.NOPOS
+fun mk_explainer errtitle (explainer : exn -> explanation list) e =
+      Exp (LVL_USER, Origin.unknown_origin, mk_string_pp errtitle,
+           explainer e)
+
+exception ParsingError
+  of (string * ((int * int) * (int * int)) * (int * int) * string)
+      list
+fun explain_ParsingError (ParsingError errors) =
+      map (fn (file, fromto, (fromcharpos, tocharpos), errtxt)
+            => Exp (LVL_USER, Origin.mk_file_origin file (Origin.POS fromto),
+                              mk_string_pp errtxt, []))
+          errors
+    | explain_ParsingError _ = raise Match
+  val _ = add_explainer
+            (mk_explainer "Parsing error" explain_ParsingError)
 
 structure BGADT = BGADT' (structure ErrorHandler = ErrorHandler)
 open BGADT
-		   
+
 structure Token = LrParser.Token
 	   
 structure BgTermLrVals
@@ -56,6 +76,33 @@ structure BgTermParser
        structure Lex         = BgTermLex
        structure LrParser    = LrParser)
 
+structure RulesLrVals
+  = RulesLrVals
+      (structure Info          = Info
+       structure Token         = Token
+       structure Control       = Control
+       structure Name          = Name
+       structure NameSet       = NameSet
+       structure Link          = Link
+       structure LinkSet       = LinkSet
+       structure Wiring        = Wiring
+       structure Ion           = Ion
+       structure Permutation   = Permutation
+       structure BgTerm        = BgTerm
+       structure BgVal         = BgVal
+       structure BgBDNF        = BgBDNF
+       structure Instantiation = Instantiation
+       structure Rule          = Rule)
+
+structure RulesLex 
+  = RulesLex (structure Tokens = RulesLrVals.Tokens)
+
+structure RulesParser
+  = Join
+      (structure ParserData  = RulesLrVals.ParserData
+       structure Lex         = RulesLex
+       structure LrParser    = LrParser)
+
 fun pp bdnf = BgBDNF.pp (!indent) bdnf
 
 fun toString bdnf 
@@ -63,6 +110,47 @@ fun toString bdnf
 
 fun bgvalToString v
   = PrettyPrint.pp_to_string (!pageWidth) (BgVal.pp (!indent)) v
+
+fun parseBgTermStr filename str =
+    let 
+      val _ = (ErrorMsg.reset(); ErrorMsg.fileName := filename)
+      val get' = ref (fn _ => "")
+      val _ = get' := (fn _ => (str before get' := (fn _ => "")))
+      fun get x = (!get') x
+      fun parseerror (s, p1, p2) = ErrorMsg.error p1 p2 s
+      val lexer = BgTermLex.makeLexer get
+      val (rules, _)
+				= BgTermParser.parse
+	    			(30, 
+				     BgTermParser.Stream.streamify (lexer),
+				     parseerror, 
+				     ())
+				  handle ParseError
+				   => raise ParsingError (ErrorMsg.getErrors ())
+    in
+      rules
+    end
+
+fun parseRulesStr filename str =
+    let 
+      val _ = (ErrorMsg.reset(); ErrorMsg.fileName := filename)
+      val get' = ref (fn _ => "")
+      val _ = get' := (fn _ => (str before get' := (fn _ => "")))
+      fun get x = (!get') x
+      fun parseerror (s, p1, p2) = ErrorMsg.error p1 p2 s
+      val lexer = RulesLex.makeLexer get
+      val (rules, _)
+				= RulesParser.parse
+	    			(300, 
+				     RulesParser.Stream.streamify (lexer),
+				     parseerror, 
+				     ())
+				  handle ParseError
+				   => raise ParsingError (ErrorMsg.getErrors ())
+    in
+      rules
+    end
+
 
 fun bgvalUsefile'' filename =
     let 
@@ -120,7 +208,7 @@ functor BG (structure ErrorHandler : ERRORHANDLER
               where type ppstream    = PrettyPrint.ppstream
                 and type break_style = PrettyPrint.break_style
                 and type origin      = Origin.origin)
-        :> BG where type 'a Match.lazylist = 'a LazyList.lazylist =
+        :> BG =
 struct
   structure BG = BG'(structure ErrorHandler = ErrorHandler)
   open BG
