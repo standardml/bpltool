@@ -211,20 +211,19 @@ test-mlton: mlton-prepare $(PARSINGFILES)
 .PHONY:	check test test-smlnj test-mosml test-mlton
 
 # Web application
-webapp: webapp-$(MLC)
+test-webapp: test-webapp-$(MLC)
 
-webapp-smlnj: smlnj-prepare $(PARSINGFILES)
+test-webapp-smlnj: smlnj-prepare $(PARSINGFILES)
 	echo "CM.make' \"apps/bplweb/backend/sources.cm\";" | $(SMLNJ)
 
-webapp-mosml: mosml-prepare $(PARSINGFILES)
-	@echo MosML webapp not implemented yet
-	false
+test-webapp-mosml: bplwebback
+	apps/bplweb/backend/bplwebback < apps/bplweb/backend/test/matching1.cmd
 
-webapp-mlton: mlton-prepare $(PARSINGFILES)
+test-webapp-mlton: mlton-prepare $(PARSINGFILES)
 	$(MLTON) apps/bplweb/backend/mlton.mlb
 	apps/bplweb/backend/mlton < apps/bplweb/backend/test/matching1.cmd
 
-.PHONY: webapp webapp-smlnj webapp-mosml webapp-mlton
+.PHONY: test-webapp test-webapp-smlnj test-webapp-mosml test-webapp-mlton
 # Clean up
 clean:
 	$(RM) *~ 
