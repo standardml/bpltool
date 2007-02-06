@@ -64,20 +64,6 @@ nameOfException
 
   exception InvalidTestFile of string * string
 
-  (* old versions of SML/NJ doesn't implement isSuffix *)
-  fun isSuffix suf str =
-      let
-        val sufsz = String.size suf
-        val strsz = String.size str
-      in
-        if strsz >= sufsz then
-          case String.compare (suf, String.substring (str, 0, sufsz)) of
-            EQUAL => true
-          | _     => false
-        else
-          false
-      end
-
   (* utility function to remove the last character from
    * a string (usually \n) *)
   fun strip_last_char s = String.substring (s, 0, String.size s - 1)
