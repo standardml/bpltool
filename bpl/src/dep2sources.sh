@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # Copyright (c) 2006  The BPL Group at the IT University of Copenhagen
 #
 # This file is part of BPL.
@@ -26,7 +26,7 @@
 # Requires $SED to be set to a GNU sed compatible version of sed.
 
 progname="$0"
-debug=1
+debug=
 
 usage () {
   echo "Usage: $progname [ OPTION .. OPTION ] [ DEPENDENCIESFILE ] [ CMFILE ]"
