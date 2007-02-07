@@ -32,9 +32,10 @@
 SHELL           = @SHELL@
 
 prefix		= @prefix@
+datarootdir	= @datarootdir@
 srcdir		= @srcdir@
 datadir		= @datadir@
-smldocdir		= @smldocdir@
+smldocdir	= @smldocdir@
 
 RM              = rm -f
 export SED      = @SED@
