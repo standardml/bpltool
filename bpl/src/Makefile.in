@@ -196,12 +196,12 @@ check: test
 
 test: test-$(MLC)
 
-test-smlnj: smlnj-prepare test.cm
-	echo "val cur_dir = OS.FileSys.getDir ();\
-	      val _ = OS.FileSys.chDir \"lib/compat/smlnj/\";\
+test-smlnj: smlnj-prepare
+	echo "val pwd = OS.FileSys.getDir ();\
+	      val _   = OS.FileSys.chDir \"lib/compat/smlnj/\";\
 	      use \"cmmakedefine.sml\";\
-              val _ = OS.FileSys.chDir cur_dir;\
-              CM_make \"test.cm\"" | $(SMLNJ)
+              val _   = OS.FileSys.chDir pwd;\
+              CM_make \"test/sources.cm\"" | $(SMLNJ)
 
 test-mosml: unittest
 	./unittest
