@@ -157,6 +157,7 @@ echo "#endif" >> $outputfile
 
 ${SED} -n \
 	-e '/^[^:#]*\.\(lex\|grm\)-sig:/  b;' \
+	-e '/^[^:#]*: *%PROGRAM/  b;' \
 	-e '/^[^:#]*\.\(lex\|grm\):/      { s/:.*//; p; b; }' \
 	-e '/^[^.#]*:/                 { s/ *:.*/.sml/; p; }' \
 	< $inputfile >> $outputfile
