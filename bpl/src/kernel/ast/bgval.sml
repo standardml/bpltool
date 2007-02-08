@@ -165,7 +165,7 @@ struct
 	unmk'
       end
 
-  fun pp indent pps v =
+  fun pp' BgTerm_pp indent pps v =
       let
         val (t, iface, oface) = unmk v
         (* try to print the interfaces using the names given in the input *)
@@ -174,8 +174,12 @@ struct
             handle Name.PPUnchangedNameClash _ =>
               Name.pp_unchanged NameSet.empty NameSet.empty
       in
-        BgTerm.pp indent pps t
+        BgTerm_pp indent pps t
       end
+
+  val oldpp = pp' BgTerm.oldpp
+  
+  val pp = pp' BgTerm.pp
 
   fun ppWithIface (indent:int) pps v =
     let

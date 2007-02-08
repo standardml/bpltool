@@ -266,7 +266,7 @@ struct
 	Link'Set.foldUntil is_not_id0_link true ls
       end
 
-  fun pp indent pps (w as (ls, _)) =
+  fun pp' lbrack dblslash rbrack idw indent pps (w as (ls, _)) =
       let
 	open PrettyPrint
 	val show = add_string pps
@@ -284,26 +284,30 @@ struct
 	     case outer of
 	       Name y => Name.pp indent pps y
 	     | _ => ();
-	     show "/";
 	     if NameSet.size inner = 1 then
-	       NameSet.apply (Name.pp indent pps) inner
+	       (show "/";
+	       NameSet.apply (Name.pp indent pps) inner)
 	     else
-	       NameSetPP.pp indent pps inner;
+	       (show dblslash;
+	       NameSetPP.ppbr indent lbrack rbrack pps inner);
 	     true)
       in
 	case Link'Set.size ls of
-	  0 => show "idw_0"
+	  0 => show (idw ^ "0")
 	| 1 => (Link'Set.fold ppwire false ls; ())
 	| _ => if is_id w then
-		 (show "idw_";
-		  <<(); show "{";
+		 (show idw;
+		  <<(); show lbrack;
 		  Link'Set.fold ppname false ls; 
-		  show "}"; >>())
+		  show rbrack; >>())
 	       else      
 		 (<<();
 		  show "("; Link'Set.fold ppwire false ls; show ")";
 		  >>())
       end
+
+  val pp = pp' "[" "//" "]" "idw"
+  val oldpp = pp' "{" "/" "}" "idw_"
 
   fun toString w
     = PrettyPrint.pp_to_string

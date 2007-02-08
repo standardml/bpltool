@@ -117,7 +117,7 @@ struct
 	SOME _ => false
       | NONE => true
 
-  fun pp indent pps (perm as {width, pi, pi_inv}) =
+  fun pp' lbrack amp rbrack idp indent pps (perm as {width, pi, pi_inv}) =
       let
 	open PrettyPrint
 	val show = add_string pps
@@ -126,20 +126,23 @@ struct
 	fun brk () = add_break pps (1, 0)
 	fun ppmap ((j, X), notfirst) =
 	    (if notfirst then (show ","; brk()) else ();
-	     show (Int.toString j);
+	     show ((Int.toString j) ^ amp);
 	     if not (NameSet.isEmpty X) then
-	       NameSetPP.pp indent pps X
+	       NameSetPP.ppbr indent lbrack rbrack pps X
 	     else
 	       ();
              true)
       in
 	if is_idn perm then
-	  show ("idp_" ^ Int.toString width)
+	  show (idp ^ Int.toString width)
 	else
 	  (<<(); show "[";
 	   Array.foldl ppmap false pi;
 	   show "]"; >>())
       end
+
+  val pp = pp' "[" "&" "]" "idp"
+  val oldpp = pp' "{" "" "}" "idp_"
 
   val toString = PrettyPrint.pp_to_string 60 (pp 2)
 

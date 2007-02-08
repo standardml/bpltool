@@ -18,7 +18,7 @@
  * USA
  *)
 
-(** Datatype for representing instantiations.
+(** Abstract data type for modelling instantiations.
  * @version $LastChangedRevision: 397 $
  *)
 

@@ -50,7 +50,8 @@ struct
       andalso ListPair.all Name.== (free1, free2)
       andalso ListPair.all (fn (ns1, ns2) => NameSet.eq ns1 ns2) (bound1, bound2)
 
-  fun pp indent pps ({ctrl, free, bound} : ion) =
+  fun pp' langle rangle lbrack rbrack
+          indent pps ({ctrl, free, bound} : ion) =
       let
 	open PrettyPrint
 	val show = add_string pps
@@ -61,12 +62,12 @@ struct
 	fun brk () = add_break pps (1, 0)
 	fun brk0 () = add_break pps (0, 0)
 	fun pplist pp_y ys =
-	    (<<(); show "<";
+	    (<<(); show langle;
 	     foldl (fn (y, notfirst) => 
 		       (if notfirst then (show ","; brk()) else ();
 			pp_y y;
 			true)) false ys;
-	     show ">"; >>())
+	     show rangle; >>())
       in
 	<<<();
 	show (#1 (Control.unmk ctrl));
@@ -79,9 +80,12 @@ struct
 	  (brk0();
 	   pplist (Name.pp indent pps) free;
 	   brk0();
-	   pplist (NameSetPP.pp indent pps) bound);
+	   pplist (NameSetPP.ppbr indent lbrack rbrack pps) bound);
 	>>>()
       end
+      
+  val pp = pp' "[" "]" "[" "]"
+  val oldpp = pp' "<" ">" "{" "}"
 end
 
 

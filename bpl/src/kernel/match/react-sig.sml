@@ -18,7 +18,7 @@
  * USA
  *)
 
-(** Signature for functions for performing reactions.
+(** Reaction and tactic functions.
  * Suggested precedence for infix operators:
  *  infixr 4 TIMES_DO
  *  infixl 3 ++

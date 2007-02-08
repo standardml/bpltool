@@ -137,13 +137,168 @@ struct
 		     fn () => show ")")
 		  else
 		    (fn () => (), pal, par, prr, fn () => ())
+	      fun pp' (Mer (0, _)) = show "<->"
+		| pp' (Mer (n, _)) = show ("merge(" ^ Int.toString n ^ ")")
+		| pp' (Con (X, _)) 
+		  = (show "`"; NameSetPP.ppbr indent "[" "]" pps X; show "`")
+		| pp' (Wir (w, _)) = Wiring.pp indent pps w
+		| pp' (Ion (KyX, _)) = Ion.pp indent pps KyX
+		| pp' (Per (pi, _)) = Permutation.pp indent pps pi
+		| pp' (Abs (X, b, _)) =
+		  let
+		    val (showlpar, pal', par', prr', showrpar)
+		      = if prr < PrAbs then 
+			  (fn () => show "(", 
+			   PrMin, PrMin, PrMax,
+			   fn () => show ")")
+			else
+			  (fn () => (), PrMin, par, prr, fn () => ())
+		  in
+		    <<(); 
+		     showlpar();
+                     show "<"; NameSetPP.ppbr indent "[" "]" pps X; show ">";
+		     brk0();
+		     ppp pal' par' prr' b;
+		     showrpar();
+		     >>()
+		  end
+		| pp' (Ten (bs, _)) =
+		  (case bs of
+		    [] => show "idx0"
+		  | [b] => pp' b
+		  | (b :: bs) => 
+		    let
+		      val (showlpar, pal', par', prr', showrpar) 
+			= checkprec PrTen
+		      fun mappp [] = ()
+			| mappp [b]
+			  = (brk(); show "* "; ppp PrTen par' prr' b)
+			| mappp (b :: b' :: bs) 
+			  = (brk();
+			     show "* ";
+			     ppp PrTen PrTen PrTen b;
+			     mappp (b' :: bs))
+		    in
+		      <<();
+		      showlpar();
+		      ppp pal' PrTen PrTen b;
+		      mappp bs;
+		      showrpar();
+		      >>()
+		    end)
+		| pp' (Pri (bs, _)) =
+		  (case bs of
+		    [] => show "<->"
+		  | [b] => pp' b
+		  | (b :: bs) => 
+		    let
+		      val (showlpar, pal', par', prr', showrpar) 
+			= checkprec PrPri
+		      fun mappp [] = ()
+			| mappp [b]
+			  = (brk(); show "| "; ppp PrPri par' prr' b)
+			| mappp (b :: b' :: bs) 
+			  = (brk();
+			     show "| ";
+			     ppp PrPri PrPri PrPri b;
+			     mappp (b' :: bs))
+		    in
+		      <<();
+		      showlpar();
+		      ppp pal' PrPri PrPri b;
+		      mappp bs;
+		      showrpar();
+		      >>()
+		    end)
+		| pp' (Par (bs, _)) =
+		  (case bs of
+		    [] => show "id||0"
+		  | [b] => pp' b
+		  | (b :: bs) => 
+		    let
+		      val (showlpar, pal', par', prr', showrpar) 
+			= checkprec PrPar
+		      fun mappp [] = ()
+			| mappp [b]
+			  = (brk(); show "|| "; ppp PrPar par' prr' b)
+			| mappp (b :: b' :: bs) 
+			  = (brk();
+			     show "|| ";
+			     ppp PrPar PrPar PrPar b;
+			     mappp (b' :: bs))
+		    in
+		      <<();
+		      showlpar();
+		      ppp pal' PrPar PrPar b;
+		      mappp bs;
+		      showrpar();
+		      >>()
+		    end)
+		| pp' (Com (b1, b2, _)) = 
+		  let
+		    val (showlpar, pal', par', prr', showrpar)
+		      = checkprec PrCom
+		  in
+		    <<();
+		    showlpar();
+		    ppp pal' PrCom PrCom b1;
+		    brk();
+		    show "o ";
+		    ppp PrCom par' prr' b2;
+		    showrpar();
+		    >>()
+		  end
+	    in
+	      pp'
+	    end
+      in
+	ppp PrMin PrMin PrMax
+      end
+
+  fun oldpp indent pps =
+      let
+	open PrettyPrint
+	val PrMax = 9
+	val PrAbs = 8
+	val PrCom = 7
+	val PrTen = 6
+	val PrPri = 6
+	val PrPar = 6
+	val PrMin = 0
+	val show = add_string pps
+	fun << () = begin_block pps INCONSISTENT indent
+	fun >> () = end_block pps
+	fun brk () = add_break pps (1, 0)
+	fun brk0 () = add_break pps (0, 0)
+  (* Pretty print using precedences.  Operator precedences
+   * (highest binds tightest):
+   *  8 (X) abstraction (only affects expressions to the right)
+   *  7  o  composition
+   *  6  x  tensor product
+   * Abstraction reaches as far right as possible.
+   * @params pps prf prr t
+   * @param pps  PrettyPrint stream
+   * @param pal  Precedence attraction of surrounding left expression
+   * @param par  Precedence attraction of surrounding right expression
+   * @param prr  Precedence resistance of surrounding right expression
+   * @param t    Term to print
+   *)
+	fun ppp pal par prr =
+	    let 
+	      fun checkprec prec =
+		  if pal >= prec orelse par > prec then
+		    (fn () => show "(", 
+		     PrMin, PrMin, PrMax, 
+		     fn () => show ")")
+		  else
+		    (fn () => (), pal, par, prr, fn () => ())
 	      fun pp' (Mer (0, _)) = show "1"
 		| pp' (Mer (n, _)) = show ("merge_" ^ Int.toString n)
 		| pp' (Con (X, _)) 
 		  = (show "'"; NameSetPP.pp indent pps X; show "'")
-		| pp' (Wir (w, _)) = Wiring.pp indent pps w
-		| pp' (Ion (KyX, _)) = Ion.pp indent pps KyX
-		| pp' (Per (pi, _)) = Permutation.pp indent pps pi
+		| pp' (Wir (w, _)) = Wiring.oldpp indent pps w
+		| pp' (Ion (KyX, _)) = Ion.oldpp indent pps KyX
+		| pp' (Per (pi, _)) = Permutation.oldpp indent pps pi
 		| pp' (Abs (X, b, _)) =
 		  let
 		    val (showlpar, pal', par', prr', showrpar)

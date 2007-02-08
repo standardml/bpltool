@@ -172,6 +172,7 @@ sig
    * @param pi      The permutation to output.
    *)
   val pp : int -> PrettyPrint.ppstream -> 'kind permutation -> unit
+  val oldpp : int -> PrettyPrint.ppstream -> 'kind permutation -> unit
   (** Return a prettyprinted string representation of a permutation. *)
   val toString : 'kind permutation -> string
 end

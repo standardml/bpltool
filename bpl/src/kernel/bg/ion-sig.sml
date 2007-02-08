@@ -60,4 +60,5 @@ sig
    * @param KyX     The ion to output.
    *)
   val pp : int -> PrettyPrint.ppstream -> ion -> unit
+  val oldpp : int -> PrettyPrint.ppstream -> ion -> unit
 end

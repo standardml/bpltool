@@ -78,7 +78,8 @@ sig
    * @param t       The bgterm to print.
    *)
   val pp : int -> PrettyPrint.ppstream -> bgterm -> unit
-
+  val oldpp : int -> PrettyPrint.ppstream -> bgterm -> unit
+  
   val size : bgterm -> int
 
 end

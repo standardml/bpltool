@@ -236,6 +236,7 @@ sig
    * @param t       The bgbdnf to print.
    *)
   val pp : int -> PrettyPrint.ppstream -> 'class bgbdnf -> unit
+  val oldpp : int -> PrettyPrint.ppstream -> 'class bgbdnf -> unit
 
   (** Prettyprint a bgbdnf with interfaces, without parentheses around it.
    * @params indent pps t
