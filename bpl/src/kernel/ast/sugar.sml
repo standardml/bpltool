@@ -169,7 +169,7 @@ fun =: (K, {freearity, boundarity}) kind free bound =
     else if length bound <> boundarity then
       raise WrongArity ("Control " ^ K ^ " takes "
 			^ Int.toString boundarity 
-			^ " bound names, but was given `"
+			^ " bound name sets, but was given `"
 			^ namelistlistToString bound ^ "'\n")
     else
       let
