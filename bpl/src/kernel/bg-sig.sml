@@ -27,18 +27,26 @@ sig
 
   include BG_ADT
 
+  (** The kind of contents to parse. *)
+  type 'a kind
+  (** List of rules contents. *)
+  val RULES : rule list kind
+  (** BgTerm contents. *)
+  val BGTERM : bgterm kind
+
   (** Parse a string as a bigraph term.
    * @params filename s
    * @param filename  File name to use when reporting errors.
    * @param s         The string to be parsed.
    *)
   val parseBgTermStr : string -> string -> bgterm
-  (** Parse a string as a list of rules.
-   * @params filename s
+  (** Parse a string as a kind of contents.
+   * @params kind filename s
+   * @param kind      The kind of contents to expect when parsing.
    * @param filename  File name to use when reporting errors.
    * @param s         The string to be parsed.
    *)
-  val parseRulesStr : string -> string -> rule list
+  val parseStr : 'a kind -> string -> string -> 'a
   (** Read a BG expression from a file print it, and return it as BDNF. *)
   val usefile : string -> B bgbdnf
   (** Read a BG expression from a file, return it as BDNF, explain

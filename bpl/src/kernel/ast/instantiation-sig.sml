@@ -24,10 +24,7 @@
 
 signature INSTANTIATION =
 sig
-  type bgval
   type name
-  type 'a bgbdnf
-  type DR
   (** Instantiation type. *)
   type inst
   (** Construct an instantitation.   For instance,
@@ -40,8 +37,6 @@ sig
   val make' : (int * int * (name * name) list) list -> inst
   (** The identity instantiation. *)
   val id : inst
-  (** Use an instantiation to instantiate a bgval. *)
-  val instantiate : inst -> DR bgbdnf -> bgval
   (** Prettyprint an instantiation.
    * @params indent pps inst
    * @param indent  Indentation at each block level.

@@ -22,13 +22,10 @@
  * @version $LastChangedRevision: 397 $
  *)
 
-functor Instantiation (structure BgVal : BGVAL
-                       structure BgBDNF : BGBDNF) =
+functor Instantiation (structure Name : NAME) : INSTANTIATION
+  where type name = Name.name =
 struct
-  type bgval = BgVal.bgval
-  type 'a bgbdnf = 'a BgBDNF.bgbdnf
-  type DR = BgBDNF.DR
-  type name = unit
+  type name = Name.name
   (** FIXME: Instantiation type. *)
   type inst = unit
   (** FIXME: Construct an instantiation. *)
@@ -38,8 +35,6 @@ struct
   fun unmk () = ()
   (** FIXME: *)
   val id : inst = ()
-  (** FIXME: Use an instantiation to instantiate a bgval. *)
-  fun instantiate inst d = d
   (** FIXME: Prettyprint an instantiation.
    * @params indent pps inst
    * @param indent  Indentation at each block level.

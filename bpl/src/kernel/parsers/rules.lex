@@ -72,10 +72,10 @@ val () =
       ("redex", Tokens.REDEX ),
       ("react", Tokens.REACT ),
       ("inst", Tokens.INST ),
-      ("idx_0", Tokens.IDX0 ),
-      ("id||_0", Tokens.IDBB0 ),
-      ("idw_", Tokens.IDW ),
-      ("idw_0", Tokens.IDW0 ),
+      ("idx0", Tokens.IDX0 ),
+      ("id||0", Tokens.IDBB0 ),
+      ("idw", Tokens.IDW ),
+      ("idw0", Tokens.IDW0 ),
       ("1", Tokens.ONE ),
       ("<->", Tokens.ONE ),
       ("||", Tokens.PAR ),
@@ -161,30 +161,20 @@ WHITESPACE = [\ \t\013];
 				      (yytext, 1, size yytext - 2),
 				     yypos,
 				     yypos + size yytext)));
-merge\({INT}\)            => ( if (!comlevel > 0) then
+merge                     => ( if (!comlevel > 0) then
 				 continue()
 			       else
 				 (debugprintpos yypos  
 						(yypos + size yytext)
-						("MERGEn("^yytext^")");
-				  Tokens.MERGEn
-				    (valOf(Int.fromString 
-						(String.extract
-						   (yytext, 6, NONE))),
-				     yypos,
-				     yypos + size yytext)));
-idp({INT})                => ( if (!comlevel > 0) then
+						("MERGE");
+				  Tokens.MERGE (yypos, yypos + size yytext)));
+idp                      => ( if (!comlevel > 0) then
 				 continue()
 			       else
 				 (debugprintpos yypos  
 						(yypos + size yytext)
-						("IDPn("^yytext^")");
-				  Tokens.IDPn
-				    (valOf(Int.fromString 
-						(String.extract
-						   (yytext, 4, NONE))),
-				     yypos,
-				     yypos + size yytext)));
+						("IDP");
+				  Tokens.IDP (yypos, yypos + size yytext)));
 {KW_ID}                   => ( if (!comlevel > 0) then
 				 continue() 
 			       else 

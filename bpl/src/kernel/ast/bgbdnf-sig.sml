@@ -30,6 +30,7 @@ sig
   type wiring
   type Immutable
   type 'kind permutation
+  type inst
   type bgval
   type bgmatch
 
@@ -71,6 +72,9 @@ sig
    * @exception IrregularBDNF  if b is irregular.
    *)
   val regularize : B bgbdnf -> BR bgbdnf
+
+  (** Use an instantiation to instantiate a bgval. *)
+  val instantiate : inst -> DR bgbdnf -> bgval
 
   (** Test two BDNFs for equality: same structure, same interfaces,
    * but internal names may differ.

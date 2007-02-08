@@ -105,7 +105,8 @@ sig
                B
 
   sharing type BgBDNF.DR =
-               DR
+               DR =
+               Match.DR
 
   sharing type BgBDNF.BR =
                BR =
@@ -128,14 +129,19 @@ sig
   sharing type bgval =
                BgVal.bgval =
                BgBDNF.bgval =
-               Sugar.bgval
+               Sugar.bgval =
+               Rule.bgval
 
   sharing type rule =
                Rule.rule =
                Match.rule
 
+  sharing type Instantiation.inst =
+               Rule.inst
+
   sharing type Interface.interface =
-               BgVal.interface
+               BgVal.interface =
+               BgBDNF.interface
 
   sharing type Control.control =
                Ion.control

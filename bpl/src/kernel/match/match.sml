@@ -519,13 +519,14 @@ struct
   and matchMER' {ename, s_a, s_C, g, G} = lzmake (fn () =>
     let (*val _ = print "MER' ";*)
       val ms = #Ss (unmkG g)
+      val n = length ms
+      val Ss = #Ss (unmkG G)
+	    val m = length Ss
     in
-      if length ms <= 1 then
+      if n <= 1 orelse (n > 0 andalso m = 0) then
         LazyList.Nil
       else
         let
-		      val Ss = #Ss (unmkG G)
-		      val m = length Ss
 		      val Xss = map (loc o innerface) Ss
 		      fun try pi mss =
 		          let

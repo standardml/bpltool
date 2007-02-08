@@ -20,11 +20,11 @@
 
 (** Functions for performing reactions.
  * Suggested precedence for infix operators:
- *  infixr 4 TIMES_DO
- *  infixl 3 ++
- *  infixl 2 ORTHEN
- *  infixr 1 THEN
- *  infixr 1 ELSE
+ *  infixr 4 TIMES_DO                        <br />
+ *  infixl 3 ++                              <br />
+ *  infixl 2 ORTHEN                          <br />
+ *  infixr 1 THEN                            <br />
+ *  infixr 1 ELSE                            <br />
  * @version $LastChangedRevision: 397 $
  *)
 
@@ -48,15 +48,13 @@ functor Reaction (structure RuleNameMap : MONO_FINMAP
                   sharing type Wiring.wiring = BgVal.wiring
                   sharing type BgBDNF.bgbdnf = Match.bgbdnf
                                          = Rule.bgbdnf
-                                         = Instantiation.bgbdnf
-                  sharing type BgBDNF.DR = Instantiation.DR
-                                     = Match.DR
+                  sharing type BgBDNF.DR = Match.DR
                   sharing type BgBDNF.BR = Rule.BR
                                      = Match.BR
                   sharing type BgVal.bgval = BgBDNF.bgval
                                        = Rule.bgval
-                                       = Instantiation.bgval
                   sharing type Instantiation.inst = Rule.inst
+                                                  = BgBDNF.inst
                   sharing type Info.info = BgBDNF.info
                                      = BgVal.info
                   sharing type Interface.interface = BgBDNF.interface) =
@@ -100,7 +98,7 @@ struct
       fun b1 * b2 = Ten [b1, b2]
       val {rule, context, parameter} = Match.unmk match
       val {name, redex, react, inst} = Rule.unmk rule
-      val instantiation = Instantiation.instantiate inst parameter
+      val instantiation = BgBDNF.instantiate inst parameter
       val Z = Interface.glob (BgBDNF.outerface parameter)
       val id_Z = Wir (Wiring.id_X Z)
       val context = BgBDNF.unmk context

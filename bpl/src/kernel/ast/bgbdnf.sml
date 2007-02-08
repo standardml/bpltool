@@ -30,6 +30,7 @@ functor BgBDNF'(structure Info : INFO
 		structure Permutation : PERMUTATION
 		structure Link : LINK
 		structure Wiring : WIRING
+		structure Instantiation : INSTANTIATION
 		structure BgVal : BGVAL
 		structure ErrorHandler : ERRORHANDLER
                   where type ppstream    = PrettyPrint.ppstream
@@ -76,7 +77,8 @@ functor BgBDNF'(structure Info : INFO
     and type Immutable      = BgVal.Immutable
     and type 'a permutation = 'a BgVal.permutation
     and type bgval          = BgVal.bgval 
-    and type bgmatch        = BgVal.bgmatch = 
+    and type bgmatch        = BgVal.bgmatch
+    and type inst           = Instantiation.inst = 
 struct
   open BgVal
   type Immutable = BgVal.Immutable
@@ -115,6 +117,7 @@ struct
   type DR = unit
   type BR = unit
   type 'class bgbdnf = bgval
+  type inst = Instantiation.inst
 
   fun eq b1 b2 = BgVal.eq b1 b2
 
@@ -1088,6 +1091,9 @@ struct
 
   val info = BgVal.info
 
+  (* FIXME: Use an instantiation to instantiate a bgval. *)
+  fun instantiate inst d = d
+
   fun pp indent pps
     = BgVal.pp indent pps o unmk
 
@@ -1128,6 +1134,7 @@ functor BgBDNF (structure Info : INFO
 		structure Permutation : PERMUTATION
 		structure Link : LINK
 		structure Wiring : WIRING
+		structure Instantiation : INSTANTIATION
 		structure BgVal : BGVAL
 		structure ErrorHandler : ERRORHANDLER
                   where type ppstream    = PrettyPrint.ppstream
@@ -1174,7 +1181,8 @@ functor BgBDNF (structure Info : INFO
     and type Immutable      = BgVal.Immutable
     and type 'a permutation = 'a BgVal.permutation
     and type bgval          = BgVal.bgval 
-    and type bgmatch        = BgVal.bgmatch = 
+    and type bgmatch        = BgVal.bgmatch
+    and type inst           = Instantiation.inst = 
 struct
   structure BgBDNF = BgBDNF'(structure Info = Info
 			     structure Name = Name
@@ -1186,6 +1194,7 @@ struct
 			     structure Link = Link
 			     structure Wiring = Wiring
 			     structure BgVal = BgVal
+			     structure Instantiation = Instantiation
 			     structure ErrorHandler = ErrorHandler
 			     structure NameSetPP = NameSetPP
 			     structure ListPP = ListPP)

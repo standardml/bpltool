@@ -131,24 +131,45 @@ fun parseBgTermStr filename str =
       rules
     end
 
-fun parseRulesStr filename str =
+exception ThisCannotHappen
+
+local
+  open RulesLrVals
+  open ParserData.Header
+  fun mkbgterm (BGTERMRESULT bgterm) = bgterm
+    | mkbgterm _ = raise ThisCannotHappen
+  fun mkrules (RULESRESULT rules) = rules
+    | mkrules _ = raise ThisCannotHappen
+in
+  type 'a kind
+    = ((int * int) -> (Tokens.svalue, int) Tokens.token)
+    * (parserresult -> 'a)
+  val BGTERM = (Tokens.BGTERM, mkbgterm)
+  val RULES = (Tokens.RULELIST, mkrules)
+end
+
+
+fun parseStr (kind, mkkind) filename str =
     let 
       val _ = (ErrorMsg.reset(); ErrorMsg.fileName := filename)
       val get' = ref (fn _ => "")
       val _ = get' := (fn _ => (str before get' := (fn _ => "")))
       fun get x = (!get') x
       fun parseerror (s, p1, p2) = ErrorMsg.error p1 p2 s
-      val lexer = RulesLex.makeLexer get
-      val (rules, _)
+      val lexer
+        = RulesParser.Stream.cons
+            (kind (~1, ~1),
+             RulesParser.Stream.streamify (RulesLex.makeLexer get))
+      val (result, _)
 				= RulesParser.parse
 	    			(300, 
-				     RulesParser.Stream.streamify (lexer),
+				     lexer,
 				     parseerror, 
 				     ())
 				  handle ParseError
 				   => raise ParsingError (ErrorMsg.getErrors ())
     in
-      rules
+      mkkind result
     end
 
 

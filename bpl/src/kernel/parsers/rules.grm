@@ -98,6 +98,8 @@ datatype fieldval = REDEX    of bgterm
                   | INST     of inst
                   | RULENAME of string
 type rulefield = {name : string, value : fieldval}
+datatype parserresult = BGTERMRESULT of bgterm
+                      | RULESRESULT of rule list
 
 (** Signal that a set with duplicate names has been encountered. 
  * @params smlfile leftpos rightpos errtxt
@@ -180,18 +182,19 @@ fun nset2idlinkset nset =
       nset
 
 %%
-%term EOF
+%term EOF | BGTERM | RULELIST
 	 | ID of string | INT of int | CTRLID of string | STRING of string
 	 | AMP | EQ | MAPSTO | MAPPSTO
 	 | NAME | REDEX | REACT | INST
-	 | MERGEn of int
+	 | MERGE
 	 | LPAREN | RPAREN | LBRACK | RBRACK | LBRACE | RBRACE | GT | LT
 	 | SLASH | SLASHSLASH | DASHSLASH | DASHSLASHSLASH
 	 | OO | XX | PRI | PAR | QUOTE | BQUOTE | COMMA
-         | IDX0 | IDBB0 | ONE | IDW | IDW0 | IDPn of int
+         | IDX0 | IDBB0 | ONE | IDW | IDW0 | IDP
 
 %nonterm
-  rule of rule
+  start of parserresult
+| rule of rule
 | rulelist of rule list
 | rules of rule list
 | rulefield of fieldval
@@ -213,11 +216,12 @@ fun nset2idlinkset nset =
 | permentrylist of (int * nameset) list
 | permentry of (int * nameset)
 | id of string
+| pint of int
 | int of int
 
 %pos int
 %verbose
-%start rulelist
+%start start
 %eop EOF
 %noshift EOF
 
@@ -280,6 +284,9 @@ fun nset2idlinkset nset =
 %left SLASH
 
 %%
+start : BGTERM bg             (BGTERMRESULT bg)
+      | RULELIST rulelist     (RULESRESULT rulelist)
+
 rulelist : LBRACK rules RBRACK (rules)
          | LBRACK RBRACK      ([])
          
@@ -319,7 +326,7 @@ bg : altbg                    (altbg)
 altbg : ONE                   (Mer (0, mk_info ONEright ONEleft))
    | IDX0                     (Ten ([], mk_info IDX0left IDX0right))
    | IDBB0                    (Par ([], mk_info IDBB0left IDBB0right))
-   | MERGEn                   (Mer (MERGEn, mk_info MERGEnleft MERGEnright))
+   | MERGE pint               (Mer (pint, mk_info MERGEleft pintright))
    | BQUOTE nset BQUOTE       (Con (nset, mk_info BQUOTE1left BQUOTE2right))
    | link                     (Wir (Wiring.make 
 				      (LinkSet.singleton link), 
@@ -352,7 +359,7 @@ altbg : ONE                   (Mer (0, mk_info ONEright ONEleft))
 					  bound = []}),
 					mk_info ctrlidleft ctrlidright))
    | perm                     (Per (perm, mk_info permleft permright))
-   | IDPn                     (Per (Permutation.id_n IDPn, mk_info IDPnleft IDPnright))
+   | IDP pint                 (Per (Permutation.id_n pint, mk_info IDPleft pintright))
    | LT nset GT bg    (Abs (nset, bg, mk_info LTleft bgright))
    | LPAREN bg RPAREN         (bg)
 
@@ -363,11 +370,11 @@ names   : id COMMA names      (Name.make id :: names)
         |		      ([])
 
 id      : ID                  (ID)
-        | IDX0                ("idx_0")
-        | IDW                 ("idw_")
-        | IDW0                ("idw_0")
-        | MERGEn              ("merge(" ^ Int.toString MERGEn ^ ")")
-        | IDPn                ("idp(" ^ Int.toString IDPn ^ ")")
+        | IDX0                ("idx0")
+        | IDW                 ("idw")
+        | IDW0                ("idw0")
+        | MERGE               ("merge")
+        | IDP                 ("idp")
         | NAME                ("name")
         | REDEX               ("redex")
         | REACT               ("react")
@@ -405,6 +412,9 @@ permentrylist : permentry COMMA permentrylist   (permentry :: permentrylist)
 
 permentry : int AMP nset			((int, nset))
 	  | int					((int, NameSet.empty))
+
+pint : int                                      (int)
+     | LPAREN pint RPAREN                       (pint)
 
 int : INT                                       (INT)
     | ONE                                       (1)
