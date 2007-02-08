@@ -141,15 +141,38 @@ type B = BG.BgBDNF.B
 type BR = BG.BgBDNF.BR
 type 'class bgbdnf = 'class BG.BgBDNF.bgbdnf
 type match = BG.Match.match
+type rule = BG.Rule.rule
 val norm_v = BG.BgBDNF.make
 val denorm_b = BG.BgBDNF.unmk
 val regl_b = BG.BgBDNF.regularize
 fun regl_v v = regl_b (norm_v v)
 val match_rbdnf = BG.Match.matches
 fun match_b {agent, redex}
-  = match_rbdnf {agent = regl_b agent, redex = regl_b redex}
+  = let
+      val redex = regl_b redex
+      val react = denorm_b redex
+    in
+      match_rbdnf
+        {agent = regl_b agent,
+         rule = BG.Rule.make
+                  {name = "Rule",
+                   redex = redex,
+                   react = react,
+                   inst = BG.Instantiation.id}}
+    end
 fun match_v {agent, redex}
-  = match_rbdnf {agent = regl_v agent, redex = regl_v redex}
+  = let
+      val redex = regl_v redex
+      val react = denorm_b redex
+    in
+      match_rbdnf
+        {agent = regl_v agent,
+         rule = BG.Rule.make
+                  {name = "Rule",
+                   redex = redex,
+                   react = react,
+                   inst = BG.Instantiation.id}}
+    end
 val simpl_v = BG.BgVal.simplify
 fun simpl_b b = simpl_v (denorm_b b) 
 val str_b = BG.BgBDNF.toString
