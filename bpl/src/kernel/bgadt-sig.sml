@@ -137,7 +137,8 @@ sig
                Match.rule
 
   sharing type Instantiation.inst =
-               Rule.inst
+               Rule.inst =
+               BgBDNF.inst
 
   sharing type Interface.interface =
                BgVal.interface =
