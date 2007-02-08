@@ -306,8 +306,8 @@ struct
 		  >>())
       end
 
-  val pp = pp' "[" "//" "]" "idw"
-  val oldpp = pp' "{" "/" "}" "idw_"
+  fun pp i = pp' "[" "//" "]" "idw" i
+  fun oldpp i = pp' "{" "/" "}" "idw_" i
 
   fun toString w
     = PrettyPrint.pp_to_string
