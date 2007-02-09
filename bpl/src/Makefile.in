@@ -229,8 +229,8 @@ upload-webapp: apps/bplweb/backend/mlton
 	scp $< ssh.itu.dk:/import/stud/share/projects/bpl/work/bpl/src/apps/bplweb/backend/mlton
 
 restart-webapp:
-	pid=`ps -Af | grep '[r]uby bplxmlrpcserver.rb' | sed 's/^[^ ][^ ]*  *\([0-9][0-9]*\).*/\1/'; \
-	echo kill $pid
+	pid=`ps -Af | grep '[r]uby bplxmlrpcserver.rb' | sed 's/^[^ ][^ ]*  *\([0-9][0-9]*\).*/\1/'`; \
+	echo kill $$pid
 	cd apps/bplweb/xmlrpcserver && $(RUBY) bplxmlrpcserver.rb
 
 .PHONY: test-webapp upload-webapp restart-webapp test-webapp-smlnj test-webapp-mosml test-webapp-mlton
