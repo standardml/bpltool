@@ -231,8 +231,8 @@ upload-webapp: apps/bplweb/backend/mlton
 
 restart-webapp:
 	pid=`ps -Af | grep '[r]uby bplxmlrpcserver.rb' | sed 's/^[^ ][^ ]*  *\([0-9][0-9]*\).*/\1/'`; \
-	echo kill $$pid
-	cd apps/bplweb/xmlrpcserver && $(RUBY) bplxmlrpcserver.rb
+	[ "$$pid" = "" ] || echo kill $$pid
+	cd apps/bplweb/xmlrpcserver && $(RUBY) bplxmlrpcserver.rb >> bplxmlrpcserver.log &
 
 .PHONY: test-webapp upload-webapp restart-webapp test-webapp-smlnj test-webapp-mosml test-webapp-mlton
 # Clean up
