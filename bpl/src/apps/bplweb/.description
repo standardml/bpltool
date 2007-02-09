@@ -1,0 +1,48 @@
+BPLweb matching and reaction web application
+It consists of three main components and requires a Ruby interpreter:
+
+1) Front end web server that can be started with the commands
+   
+     cd webserver && ruby script/server
+   
+2) Middle end XMLRPC server for spawning (long-running) matcher
+   processes that can be started with the commands
+   
+     cd xmlrpcserver && ruby bplxmlrpcserver.rb
+     
+3) Back end standalone matcher that is invoked by the XMLRPC server
+   (backend/bplbackend).  This is probably best compiled using
+   MLton.
+
+This architecture was chosen to enable preemptible long-running backend
+matching processes that can be controlled by a multithreaded middle
+end.  The middle end collects results and returns them on request.
+
+Note that Ruby's threads are userspace, and thus can suffer blocking
+for non-returning system calls (January 2007).
+
+Anatomy of a matching and reaction:
+
+1) The web browser sends a matchrequest, containing agent and rules, to
+   the web server, which forwards it to the XMLRPC server.
+   
+2) The XMLRPC server starts an external backend matcher process,
+   handing it the agent and rules, and spawns a result gathering
+   thread for receiving result from the backend.  It then returns
+   'OK' and an ID to the browser via the web server.
+
+3) The web browser sends a number of resultrequests---each containing
+   the ID and a requested result (r, m), where r = rule no,
+   m = match no---via the web server to the XMLRPC server.
+
+4) The XMLRPC server waits until the match m for rule r is ready,
+   or until it has been determined that match m does not exist for
+   rule r.  It then returns the result.
+
+5) The web browser can send a reactrequest (r, m) via the web
+   server to the XMLRPC server, that instructs the backend to
+   replace its agent using match m of rule r and rule r's reactum.
+   The XMLRPC server returns the new agent via the web server.
+
+Any new matching requests with altered agent or rules will start
+the matching over again (but without killing the backend process).

@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "xhtml11.dtd">
+<!--
+ Copyright (c) 2007  The BPL Group at the IT University of Copenhagen
+
+ This file is part of BPL.
+
+ BPL is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or (at
+ your option) any later version.
+
+ BPL is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with BPL; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+ USA
+-->
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+  <head>
+    <title>BPLweb</title>
+    <%= javascript_include_tag :defaults %>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bplweb.css"></style>
+  </head>
+  <body>
+    <h1><center>BPLweb</center></h1>
+
+    <form id="agent-rule-form">
+    <div id="agent-div">
+      <p class="head">
+        <%= visibilitytoggler("agent") %>
+	 Agent:</p>
+      <div id="agent-body">
+	  <textarea id="agent" name="agent" class="editablecode" rows="1" cols="40" title="Enter a ground bigraph here">K o merge(2) o (K o <-> * K o <->)</textarea>
+      </div>
+    </div>
+
+    <div id="rules">
+      <p class="head">
+        <table width="100%">
+	  <tr>
+	    <td align="left">
+	      <%= visibilitytoggler("rules") %>
+	      Rules:</td>
+	    <td align="right">
+	      <input type="button" value="Add" onclick="addrule ();" />
+	      <input type="button" class="matchbutton"
+                value="1 Match" onclick="matchrequest (-1, 1);" />
+	      <input type="button" class="matchbutton"
+                value="All Matches" onclick="matchrequest (-1, -1);" />
+	      <input type="button" class="stopbutton"
+                value="Stop" disabled="disabled"
+	        onclick="stoprequest ();" />
+	    </td>
+	  </tr>
+	</table>
+      </p>
+      <div id="rules-body" class="body">
+	<div id="rule[0]">
+	  <p class="head">
+	    <table width="100%">
+	      <tr>
+	        <td align="left">
+	        <%= visibilitytoggler("rule[0]") %>
+	          Rule <span class='ruleno'>0</span>:</td>
+		<td align="right">
+		  <input type="button" value="Delete"
+		     onclick="deleterule (getruleno(this));"/>
+		  <input type="button" value="1 Match"
+		     onclick="matchrequest (getruleno(this), 1);" />
+		  <input type="button" value="All Matches"
+		     onclick="matchrequest (getruleno(this), -1);" />
+		  <input type="button" value="Stop"
+		disabled="disabled" />
+		</td>
+	      </tr>
+	    </table>
+	  </p>
+	  <div id="rule[0]-body" class="body">
+	    <div id="rule[0]-redex">
+	      <p class="head">
+	        <%= visibilitytoggler("rule[0]-redex") %>
+                Redex:
+              </p>
+	      <div id="rule[0]-redex-body" class="body">
+                <textarea name="redex[0]" class="editablecode" rows="1" cols="40" title="Enter a redex bigraph here">K</textarea>
+              </div>
+            </div>
+	    <div id="rule[0]-react">
+	      <p class="head">
+       	        <%= visibilitytoggler("rule[0]-react") %>
+                Reactum:
+              </p>
+	      <div id="rule[0]-react-body" class="body">
+                <textarea name="react[0]" class="editablecode" rows="1" cols="40" title="Enter a reactum bigraph here">L</textarea>
+              </div>
+            </div>
+	    <div id="rule[0]-inst">
+	      <p class="head">
+       	        <%= visibilitytoggler("rule[0]-inst") %>
+                Instantiation:
+              </p>
+	      <div id="rule[0]-inst-body" class="body">
+                <textarea name="inst[0]" class="editablecode" rows="1" cols="40" title="Enter an instantiation here">[0 |-&gt; 0]</textarea>
+              </div>
+            </div>
+	    <div id="rule[0]-matches">
+	      <p class="head">
+                <%= visibilitytoggler("rule[0]-matches") %>
+                Matches:
+              </p>
+	      <div id="rule[0]-matches-body" class="body">
+              </div>
+            </div>
+	  </div>
+	</div>
+      </div>
+    </div>
+    </form>
+  </body>
+</html>
