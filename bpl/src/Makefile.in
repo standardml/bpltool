@@ -48,6 +48,7 @@ SMLNJ           = @SMLNJ@
 MLTON		= @MLTON@
 MLC		= @MLC@
 KILL	= /usr/bin/kill
+RUBY	= ruby
 
 MAKEFILE	= Makefile
 EXEEXT		= @EXEEXT@
