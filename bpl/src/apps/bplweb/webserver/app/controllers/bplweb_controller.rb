@@ -1,5 +1,6 @@
 require "xmlrpc/client"
 
+$xmlrpcserverport = 3197
 
 class BplwebController < ApplicationController
   def index
@@ -7,7 +8,7 @@ class BplwebController < ApplicationController
 
   def matchrequest
     # Make an object to represent the XML-RPC server.
-    server = XMLRPC::Client.new( "localhost", "/RPC2", 8080)
+    server = XMLRPC::Client.new( "localhost", "/RPC2", $xmlrpcserverport)
 
     params = params()
 
@@ -61,7 +62,7 @@ print "Server call returned to matchrequest " + requestno.to_s + ".\n"
 
   def resultrequest
     # Make an object to represent the XML-RPC server.
-    server = XMLRPC::Client.new( "localhost", "/RPC2", 8080)
+    server = XMLRPC::Client.new( "localhost", "/RPC2", $xmlrpcserverport)
 
     params = params()
 
@@ -89,7 +90,7 @@ print "Server call returned to resultrequest " + id.to_s + ".\n"
 
   def reactrequest
     # Make an object to represent the XML-RPC server.
-    server = XMLRPC::Client.new( "localhost", "/RPC2", 8080)
+    server = XMLRPC::Client.new( "localhost", "/RPC2", $xmlrpcserverport)
 
     params = params()
 

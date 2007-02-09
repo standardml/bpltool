@@ -222,17 +222,17 @@ test-webapp-smlnj: smlnj-prepare $(PARSINGFILES)
 test-webapp-mosml: bplwebback
 	apps/bplweb/backend/bplwebback < apps/bplweb/backend/test/matching1.cmd
 
-test-webapp-mlton: mlton-prepare $(PARSINGFILES)
-	$(MLTON) apps/bplweb/backend/mlton.mlb
+test-webapp-mlton: apps/bplweb/backend/mlton
 	apps/bplweb/backend/mlton < apps/bplweb/backend/test/matching1.cmd
+
+apps/bplweb/backend/mlton: mlton-prepare $(PARSINGFILES)
+	$(MLTON) apps/bplweb/backend/mlton.mlb
 
 upload-webapp: apps/bplweb/backend/mlton
 	scp $< ssh.itu.dk:/import/stud/share/projects/bpl/work/bpl/src/apps/bplweb/backend/mlton
 
 restart-webapp:
-	pid=`ps -Af | grep '[r]uby bplxmlrpcserver.rb' | sed 's/^[^ ][^ ]*  *\([0-9][0-9]*\).*/\1/'`; \
-	[ "$$pid" = "" ] || echo kill $$pid
-	cd apps/bplweb/xmlrpcserver && ($(RUBY) bplxmlrpcserver.rb >> bplxmlrpcserver.log &)
+	cd apps/bplweb/xmlrpcserver && echo boom >> restart
 
 .PHONY: test-webapp upload-webapp restart-webapp test-webapp-smlnj test-webapp-mosml test-webapp-mlton
 # Clean up

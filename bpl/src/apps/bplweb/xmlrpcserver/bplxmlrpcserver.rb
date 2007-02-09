@@ -32,7 +32,7 @@ print "running matcher worker thread...\n"
           unless IO === matcher && !matcher.closed?
             print "running bplwebback...\n"
             $stdout.flush
-            matcher = IO.popen("bplwebback", "w+")
+            matcher = IO.popen("../backend/mlton", "w+")
             matcher.fcntl(4, 0x40000) # Avoid buffering
             matcher.sync = false # Avoid buffering!
             line = matcher.gets
@@ -566,7 +566,7 @@ class Serverobj
 end
         
 
-server = XMLRPC::Server.new(8080)
+server = XMLRPC::Server.new(3197)
 
 interface =
   # no XMLRPC prefix
