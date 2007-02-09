@@ -31,19 +31,25 @@ struct
       let
         fun workrunner t =
 				  let
+				    val orighandler = getHandler (Posix.Signal.int)
+				    fun return f _
+				      = (setHandler (Posix.Signal.int, orighandler);
+				         prepare (t, f))
 				    val workthread 
 				      = new (fn () =>
-											(f ();
-											 switch (fn _ => prepare (t, false))))
+											((f ()
+											  handle e
+											   => switch (return (fn () => raise e)));
+											 switch (return (fn () => false))))
 				    val INThandler
-				      = Handler.handler (fn rt => prepare (t, true)) 
+				      = Handler.handler (return (fn () => true)) 
 				  in
 				    setHandler (Posix.Signal.int, INThandler);
 				    Mask.unblock (Mask.some [Signal.int]);
 				    prepare (workthread, ())
 				  end
       in
-				switch workrunner
+				switch workrunner ()
       end
   fun ignoreInterrupts ()
     = setHandler (Posix.Signal.int, Handler.ignore)
