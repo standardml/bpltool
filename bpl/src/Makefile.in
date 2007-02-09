@@ -47,6 +47,7 @@ MLLEX           = @MLLEX@
 SMLNJ           = @SMLNJ@
 MLTON		= @MLTON@
 MLC		= @MLC@
+KILL	= /usr/bin/kill
 
 MAKEFILE	= Makefile
 EXEEXT		= @EXEEXT@
@@ -212,7 +213,7 @@ test-mlton: mlton-prepare $(PARSINGFILES)
 .PHONY:	check test test-smlnj test-mosml test-mlton
 
 # Web application
-test-webapp: test-webapp-$(MLC)
+test-webapp: test-webapp-mlton
 
 test-webapp-smlnj: smlnj-prepare $(PARSINGFILES)
 	echo "CM.make' \"apps/bplweb/backend/sources.cm\";" | $(SMLNJ)
@@ -224,7 +225,15 @@ test-webapp-mlton: mlton-prepare $(PARSINGFILES)
 	$(MLTON) apps/bplweb/backend/mlton.mlb
 	apps/bplweb/backend/mlton < apps/bplweb/backend/test/matching1.cmd
 
-.PHONY: test-webapp test-webapp-smlnj test-webapp-mosml test-webapp-mlton
+upload-webapp: apps/bplweb/backend/mlton
+	scp $< ssh.itu.dk:/import/stud/share/projects/bpl/work/bpl/src/apps/bplweb/backend/mlton
+
+restart-webapp:
+	pid=`ps -Af | grep '[r]uby bplxmlrpcserver.rb' | sed 's/^[^ ][^ ]*  *\([0-9][0-9]*\).*/\1/'; \
+	echo kill $pid
+	cd apps/bplweb/xmlrpcserver && $(RUBY) bplxmlrpcserver.rb
+
+.PHONY: test-webapp upload-webapp restart-webapp test-webapp-smlnj test-webapp-mosml test-webapp-mlton
 # Clean up
 clean:
 	$(RM) *~ 
