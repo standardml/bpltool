@@ -174,10 +174,11 @@ struct
   
   exception WrongTree of derivation
 
-  exception AgentNotGround of G bgbdnf * string
-  fun explain_AgentNotGround (AgentNotGround (g, rule)) =
-      Exp (LVL_USER, Info.origin (BgBDNF.info g),
-           fn i => fn pps => BgBDNF.ppWithIface i pps g, [])
+  exception AgentNotGround of bgval * string
+  fun explain_AgentNotGround (AgentNotGround (v, rule)) =
+      Exp (LVL_USER, Info.origin (BgVal.info v),
+           fn i =>
+           fn pps => BgVal.ppWithIface i pps (BgVal.simplify v), [])
       :: [Exp (LVL_LOW, file_origin, mk_string_pp rule, [])]
     | explain_AgentNotGround _ = raise Match
   val _ = add_explainer
@@ -1350,7 +1351,7 @@ struct
 		          lzunmk matches
 		        end
 	      end
-       | _ => raise AgentNotGround (g, "in matchDS"))
+       | _ => raise AgentNotGround (BgBDNF.unmk g, "in matchDS"))
       | _ => LazyList.Nil))
   
   (* Match a global discrete prime using a SWX, PAX, MER or ION rule:
@@ -1466,6 +1467,12 @@ struct
     
   fun matches {agent, rule} = lzmake (fn () =>
     let
+      val _ = if width (innerface agent) > 0 then
+                raise
+                  AgentNotGround
+                    (BgBDNF.unmk agent, "in matches")
+              else
+                ()
       val {name, redex, react, inst} = Rule.unmk rule
       val {wirxid = w_axid, D = D_a} = unmkBR agent
       val ps = #Ps (unmkDR D_a)
