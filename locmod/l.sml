@@ -33,6 +33,11 @@
   02/02/2007: Introduced spinlock on queue.
   05/02/2007: Introduced WhereIs event,
               removed some dead code.
+  09/02/2007: Changed sobs and slost to not introduce new devices,
+	      introduced allDevs variable,
+	      changed type of 'inactive' from dev list to hierarchy,
+	      ported functions to use new state and export format,
+	      tested interfaces to S and A.
  
   This is the "location model" part L of a Plato-graphical system;
   C || P || A = C || (S || L) || A.
@@ -49,12 +54,13 @@
 type lid = int
 type dev = int
 
-datatype res = Res of lid
+datatype res = Res of lid | EmptyRes of string | ListRes of lid list
 datatype enqa = enqA of res
 
 datatype event = Obs of dev * lid
 	       | Loss of dev
 	       | WhereIs of dev * (lid -> enqa)
+	       | FindAll of lid * (lid list -> enqa)
 
 datatype hierarchy = (* id, devices, sublocations *)
 	 Loc of lid * dev list * hierarchy list
@@ -63,6 +69,12 @@ datatype hierarchy = (* id, devices, sublocations *)
 fun del_list e =
     fn [] => []
      | (x::xs) => if e=x then del_list e xs else x :: del_list e xs
+
+(* test whether element 'e' is in list 'l' *)
+fun listmember e =
+    fn l => case l
+	     of [] => false
+	      | (x::xs) => if e=x then true else listmember e xs
 
 (* delete device 'dev' from hierarchy 'id' *)
 fun delete dev =
@@ -117,6 +129,20 @@ fun whr dev =
 			    | NONE => whr' dev locs
 	   in whr' dev ls end
 
+(* Building, initially *)
+val state = (Loc(1,[15],
+		 [Loc(2,[10,11],[]),
+		  Loc(3,[],[]),
+		  Loc(4,[],
+		      [Loc(5,[12],[]),
+		       Loc(6,[],
+			   [Loc(7,[],
+				[Loc(8,[13],[]),
+				 Loc(9,[14],[])])])])]) ,
+	     Loc(~1,[16,17,18],[]))
+
+val allDevs = fall(#1(state)) @ fall(#2(state))
+
 (* this map must correspond exactly to the hierarchy 'state' below *)
 val prntmap =
     [(1,1),(2,1),(3,1),(4,1),(5,4),(6,4),(7,6),(8,7),(9,7)]
@@ -155,12 +181,6 @@ fun ancpath lid =
 		   if lid=ancid then a
 		   else ancpath prnt1 ancid (prnt1::a)
 	       end
-
-(* test whether element 'e' is in list 'l' *)
-fun listmember e =
-    fn l => case l
-	     of [] => false
-	      | (x::xs) => if e=x then true else listmember e xs
 
 (* find the nearest common ancestor of two locations *)
 fun commonanc p1 =
@@ -204,18 +224,6 @@ fun findpath l1 =
 			  val path2' = tl(ancpath lid2 l [lid2])
 		      in SOME(path1' @ path2') end
 	       end
-
-(* Building, initially *)
-val state = (Loc(1,[15],
-		 [Loc(2,[10,11],[]),
-		  Loc(3,[],[]),
-		  Loc(4,[],
-		      [Loc(5,[12],[]),
-		       Loc(6,[],
-			   [Loc(7,[],
-				[Loc(8,[13],[]),
-				 Loc(9,[14],[])])])])]) ,
-	     [])
 
 (* Spinlock *)
 fun exchange (r,s) = (* just for typechecking -- remove later *)
@@ -261,23 +269,36 @@ fun enqL e = (* THE interface function *)
 fun sobs s =
     fn d =>
        fn l =>
-	  let val active' = delete d (#1(s))
-	      val inactive = del_list d (#2(s))
-	      val active = insert d l active'
-	  in (active,inactive) end
+	  if listmember d allDevs
+	  then let val active' = delete d (#1(s))
+		   val inactive = delete d (#2(s))
+		   val active = insert d l active'
+	       in (active,inactive) end
+	  else s
 
 fun slost s =
     fn d =>
-       let val active = delete d (#1(s))
-	   val inactive' = del_list d (#2(s))
-	   val inactive = d::inactive'
-       in (active,inactive) end
+       if listmember d allDevs
+       then let val active = delete d (#1(s))
+		val inactive' = delete d (#2(s))
+		val inactive = insert d ~1 inactive'
+	    in (active,inactive) end
+       else s
 
 fun awhere s =
     fn d =>
-       fn f => case whr d (#1(s))
-		of SOME(l) => f l
-		 | NONE => f ~1
+       fn f =>
+	  case whr d (#1(s))
+	   of SOME(l) => f l
+	    | NONE => case whr d (#2(s))
+		       of SOME(l) => f l
+			| NONE => f ~1
+
+fun afindall s =
+    fn l =>
+       fn f => case pickloc l (#1(s))
+		of NONE => f (fall (#2(s)))
+		 | SOME(h) => f (fall h)
 
 (* Event loop *)
 fun loop state =
@@ -286,6 +307,7 @@ fun loop state =
       | SOME(Obs(d,l)) => loop (sobs state d l)
       | SOME(Loss(d)) => loop (slost state d)
       | SOME(WhereIs(d,f)) => ( awhere state d f; loop state )
+      | SOME(FindAll(l,f)) => ( afindall state l f; loop state )
 
 (* OLD CODE BEGIN
 val funs =
@@ -351,37 +373,24 @@ val o6 = deq();
 val q6 = !queue
 *)
 
-(* shorthands *)
-(*
-val fun1 = #1(funs)
-val fun2 = #2(funs)
-val fun3 = #3(funs)
-val fun4 = #4(funs)
-val fun5 = #5(funs)
-val fun6 = #6(funs)
-val fun7 = #7(funs)
-val fun8 = #8(funs)
-*)
-
 (* testing interface to S *)
-(*
-val state0 = (!state)
-val devs0 = (!devs)
-val s_lose_d14 = fun2 14
-val state1 = (!state)
-val devs1 = (!devs)
-val s_disc_d14_l4 = fun1 14 4
-val state2 = (!state)
-val devs2 = (!devs)
-(*val ged = fun2 14*)
-val state3 = (!state)
-val devs3 = (!devs)
-*)
+val s0:hierarchy = #1(state)
+val d0:hierarchy = #2(state)
+val (s1,d1) = slost (s0,d0) 14
+val (s2,d2) = sobs (s1,d1) 14 4
+val (s3,d3) = slost (s2,d2) 20
+val (s4,d4) = sobs (s3,d3) 42 20
 
 (* testing interface to A *)
+val whereA = fn x => if x = ~1 then EmptyRes("nowhere") else Res(x)
+val w0 = awhere (s1,d1) 14 whereA
+val w1 = awhere (s4,d4) 12 whereA
+val w2 = awhere (s4,d4) 20 whereA
+
+val findallA = fn x => ListRes(x)
+val f0 = afindall (s4,d4) 2 findallA
+val f1 = afindall (s4,d4) 20 findallA
 (*
-val a_where_d12 = fun3 12
-val a_findall_l2 = fun4 2
 val a_range_d13_prnt3 = fun5 13 3
 val a_navig_d13_l2 = fun6 13 2
 val a_navig_d14_l7 = fun6 14 7
