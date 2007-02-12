@@ -230,10 +230,10 @@ apps/bplweb/backend/mlton: mlton-prepare $(PARSINGFILES)
 
 remake-uploaded-webapp:
 	@echo Remaking webapp at server.  Remember to commit changes first.
-	ssh ssh.itu.dk 'cd /import/stud/share/projects/bpl/work/bpl/src && svn update && make apps/bplweb/backend/mlton'
+	ssh ssh.itu.dk 'cd /import/stud/share/projects/bpl/work/bpl/src && svn update && nice make apps/bplweb/backend/mlton'
 
 restart-webapp:
-	cd apps/bplweb/xmlrpcserver && echo boom >> restart
+	ssh ssh.itu.dk 'cd /import/stud/share/projects/bpl/work/bpl/src/apps/bplweb/xmlrpcserver && echo boom >> restart'
 
 .PHONY: test-webapp remake-uploaded-webapp restart-webapp test-webapp-smlnj
 .PHONY: test-webapp-mosml test-webapp-mlton
