@@ -3,9 +3,8 @@
 # INCLUDE=../../lib/util
 # MLton: $(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
 sigs = name-sig link-sig control-sig interface-sig ion-sig 
-       permutation-sig wiring-sig instantiation-sig
+       permutation-sig wiring-sig
 funs = name interface control link ion wiring permutation 
-       instantiation
        
 name-sig: /lib/coll/ordering-sig /lib/coll/monoset-sig /lib/pp/smlnj/.
 name: /lib/coll/ordering-sig /lib/coll/set /lib/pp/edlib/edlibprettyprint
@@ -27,6 +26,3 @@ control-sig:
 control:
 ion-sig: /lib/pp/smlnj/.
 ion: /lib/coll/set /lib/coll/pp /lib/pp/smlnj/. control-sig name-sig 
-instantiation-sig: /lib/pp/smlnj/prettyprint
-instantiation: instantiation-sig /lib/pp/smlnj/. name-sig
-  /lib/util/flags %NODASHSIG

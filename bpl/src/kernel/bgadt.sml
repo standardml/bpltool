@@ -95,9 +95,6 @@ structure Permutation
        structure Interface    = Interface
        structure NameSetPP    = NameSetPP
        structure ErrorHandler = ErrorHandler)
-
-structure Instantiation
-  = Instantiation (structure Name = Name)
   
 structure BgTerm
   = BgTerm'
@@ -136,7 +133,6 @@ structure BgBDNF
        structure Wiring           = Wiring
        structure Permutation      = Permutation
        structure BgVal            = BgVal
-       structure Instantiation    = Instantiation
        structure ErrorHandler     = ErrorHandler
        structure NameSetPP        = NameSetPP
        structure ListPP           = ListPP)
@@ -155,6 +151,19 @@ type DR = BgBDNF.DR
 type B = BgBDNF.B
 type BR = BgBDNF.BR
 type 'class bgbdnf = 'class BgBDNF.bgbdnf
+
+structure Instantiation
+  = Instantiation
+      (structure Info             = Info
+       structure Name             = Name
+       structure NameMap          = NameMap
+       structure NameSet          = NameSet
+       structure Interface        = Interface
+       structure Wiring           = Wiring
+       structure BgVal            = BgVal
+       structure BgBDNF           = BgBDNF
+       structure ErrorHandler     = ErrorHandler
+       structure NameSetPP        = NameSetPP)
 
 structure Rule = Rule
   (structure BgVal = BgVal

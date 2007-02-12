@@ -95,7 +95,7 @@ type inst = Instantiation.inst
 type rule = Rule.rule
 datatype fieldval = REDEX    of bgterm
                   | REACT    of bgterm
-                  | INST     of inst
+                  | INST     of map list * (int * int)
                   | RULENAME of string
 type rulefield = {name : string, value : fieldval}
 datatype parserresult = BGTERMRESULT of bgterm
@@ -125,8 +125,6 @@ fun mk_origin p1 p2
 
 fun mk_info p1 p2 = Info.make (mk_origin p1 p2)
 
-fun mk_inst (maps, p) = Instantiation.make' [] (* FIXME!*)
-
 val nextruleno = ref 0
 fun mk_rule (rulefields, p) =
   let
@@ -138,9 +136,11 @@ fun mk_rule (rulefields, p) =
          {name = SOME (Int.toString (!nextruleno)
                        before nextruleno := !nextruleno + 1),
           redex = redex, react = react, inst = inst} []
-      | populate {name, redex, react, inst = NONE} []
-      = populate {name = name, redex = redex, react = react,
-                  inst = SOME Instantiation.id} []
+      | populate {name, redex = SOME redex, react = SOME react, inst = NONE} []
+      = populate {name = name, redex = SOME redex, react = SOME react,
+                  inst = SOME (Instantiation.make''
+                                 (BgBDNF.innerface redex)
+                                 (BgVal.innerface react))} []
       | populate {name = SOME name, redex = SOME redex,
                   react = SOME react, inst = SOME inst} []
       = {name = name, redex = redex, react = react, inst = inst}
@@ -158,10 +158,20 @@ fun mk_rule (rulefields, p) =
                  ((REACT   react', _) :: rulefields)
       = populate {name = name, redex = redex,
                   react = SOME (term2bgval react'), inst = inst} rulefields
+      | populate {name, redex = SOME redex, react = SOME react, inst}
+                 ((INST (inst', p'), _) :: rulefields)
+      = populate {name = name, redex = SOME redex, react = SOME react,
+                  inst = SOME (Instantiation.make'
+                                 (BgBDNF.innerface redex)
+                                 (BgVal.innerface react)
+                                 inst')} rulefields
       | populate {name, redex, react, inst}
-                 ((INST     inst', _) :: rulefields)
-      = populate {name = name, redex = redex,
-                  react = react, inst = SOME inst'} rulefields
+                 ((rf1 as (INST inst', _)) :: rf2 :: rulefields)
+      = populate {name = name, redex = redex, (*FIXME diverges if rf2 is also INST *)
+                  react = react, inst = inst} (rf2 :: rf1 :: rulefields)
+      | populate {name, redex, react, inst}
+                 [(INST inst', _)]
+      = raise RedexOrReactMissing p
     val ruledata
       = populate
           {name = NONE, redex = NONE, react = NONE, inst = NONE}
@@ -199,7 +209,7 @@ fun nset2idlinkset nset =
 | rules of rule list
 | rulefield of fieldval
 | rulefields of (fieldval * (int * int)) list
-| inst of inst
+| inst of map list * (int * int)
 | map of map
 | maps of map list
 | bg of bgterm
@@ -246,6 +256,7 @@ fun nset2idlinkset nset =
 		    sharing type Control.control = Ion.control
 		    sharing type Name.name = 
 				 NameSet.elt = 
+				 Instantiation.name = 
 				 Link.name =
 				 Ion.name
 		    sharing type NameSet.Set =
@@ -270,6 +281,9 @@ fun nset2idlinkset nset =
                     sharing type BgBDNF.bgbdnf = Rule.bgbdnf
                     sharing type BgBDNF.BR = Rule.BR
                     sharing type Rule.inst = Instantiation.inst
+                    sharing type BgBDNF.interface =
+                                 BgVal.interface =
+                                 Instantiation.interface
 		    )
 	)
 
@@ -307,8 +321,8 @@ rulefield : REDEX EQ bg       (REDEX bg)
           | INST EQ inst      (INST inst)
           | NAME EQ STRING    (RULENAME STRING)
 
-inst : LBRACK maps RBRACK     (mk_inst (maps, (LBRACKleft, RBRACKright)))
-     | LBRACK RBRACK          (Instantiation.id)
+inst : LBRACK maps RBRACK     ((maps, (LBRACKleft, RBRACKright)))
+     | LBRACK RBRACK          (([], (LBRACKleft, RBRACKright)))
 
 maps : map                    ([map])
      | map COMMA maps         (map :: maps)

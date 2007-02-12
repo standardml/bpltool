@@ -46,15 +46,20 @@ functor Reaction (structure RuleNameMap : MONO_FINMAP
                   sharing type Match.rule = Rule.rule
                   sharing type Wiring.nameset = Interface.nameset
                   sharing type Wiring.wiring = BgVal.wiring
-                  sharing type BgBDNF.bgbdnf = Match.bgbdnf
-                                         = Rule.bgbdnf
-                  sharing type BgBDNF.DR = Match.DR
+                  sharing type BgBDNF.bgbdnf =
+                               Match.bgbdnf =
+                               Instantiation.bgbdnf =
+                               Rule.bgbdnf
+                  sharing type BgBDNF.DR =
+                               Match.DR =
+                               Instantiation.DR
                   sharing type BgBDNF.BR = Rule.BR
                                      = Match.BR
-                  sharing type BgVal.bgval = BgBDNF.bgval
-                                       = Rule.bgval
+                  sharing type BgVal.bgval =
+                               BgBDNF.bgval =
+                               Instantiation.bgval =
+                               Rule.bgval
                   sharing type Instantiation.inst = Rule.inst
-                                                  = BgBDNF.inst
                   sharing type Info.info = BgBDNF.info
                                      = BgVal.info
                   sharing type Interface.interface = BgBDNF.interface) =
@@ -98,7 +103,7 @@ struct
       fun b1 * b2 = Ten [b1, b2]
       val {rule, context, parameter} = Match.unmk match
       val {name, redex, react, inst} = Rule.unmk rule
-      val instantiation = BgBDNF.instantiate inst parameter
+      val instantiation = Instantiation.instantiate inst parameter
       val Z = Interface.glob (BgBDNF.outerface parameter)
       val id_Z = Wir (Wiring.id_X Z)
       val context = BgBDNF.unmk context

@@ -3,8 +3,8 @@
 # INCLUDE=../../lib/coll
 # INCLUDE=../../lib/pp/smlnj
 
-sigs = match-sig
-funs = match
+sigs = match-sig react-sig rule-sig instantiation-sig
+funs = match react rule instantiation
 
 match-sig: /lib/pp/smlnj/prettyprint /lib/coll/lazylist
 match: match-sig /kernel/bg/sigs /kernel/ast/sigs /lib/compat/mosml/hash/.
@@ -14,5 +14,12 @@ match: match-sig /kernel/bg/sigs /kernel/ast/sigs /lib/compat/mosml/hash/.
   /lib/util/partition %NODASHSIG
 react-sig: /lib/coll/lazylist /lib/pp/smlnj/prettyprint
 react: react-sig /lib/coll/lazylist /lib/coll/monofinmap-sig
-  /kernel/ast/bgbdnf-sig /kernel/ast/bgval-sig /kernel/bg/instantiation-sig
-  match /kernel/ast/rule-sig
+  /kernel/ast/bgbdnf-sig /kernel/ast/bgval-sig instantiation-sig
+  match rule-sig %NODASHSIG
+rule-sig: /lib/pp/smlnj/prettyprint
+rule: /lib/pp/smlnj/. instantiation-sig /kernel/ast/bgval-sig
+  /kernel/ast/bgbdnf-sig rule-sig
+  /lib/util/flags %NODASHSIG
+instantiation-sig: /lib/pp/smlnj/prettyprint
+instantiation: instantiation-sig /lib/pp/smlnj/. /kernel/bg/name-sig
+  /lib/util/flags /lib/coll/listsort %NODASHSIG

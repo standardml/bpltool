@@ -1,8 +1,7 @@
 # INCLUDE=../../lib/coll
 # INCLUDE=../bg
-sigs = info-sig bgterm-sig bgval-sig bgbdnf-sig rule-sig sugar-sig
+sigs = info-sig bgterm-sig bgval-sig bgbdnf-sig sugar-sig
 funs = info bgterm bgval bgbdnf sugar
-       rule
 
 info-sig: /lib/util/origin
 info: info-sig /lib/util/origin %NODASHSIG
@@ -22,6 +21,3 @@ sugar-sig:
 sugar: info-sig /lib/coll/monoset-sig /lib/coll/pp /kernel/bg/sigs bgval-sig
    /lib/util/errorhandler-sig /lib/util/origin /lib/util/debug
    /lib/pp/smlnj/.
-rule-sig: /lib/pp/smlnj/prettyprint
-rule: /lib/pp/smlnj/. /kernel/bg/instantiation-sig bgval-sig bgbdnf-sig rule-sig
-  /lib/util/flags %NODASHSIG

@@ -106,7 +106,8 @@ sig
 
   sharing type BgBDNF.DR =
                DR =
-               Match.DR
+               Match.DR =
+               Instantiation.DR
 
   sharing type BgBDNF.BR =
                BR =
@@ -114,7 +115,8 @@ sig
 
   sharing type BgBDNF.bgbdnf =
                bgbdnf =
-               Match.bgbdnf
+               Match.bgbdnf =
+               Instantiation.bgbdnf
 
   sharing type Info.info =
                BgTerm.info =
@@ -129,6 +131,7 @@ sig
   sharing type bgval =
                BgVal.bgval =
                BgBDNF.bgval =
+               Instantiation.bgval =
                Sugar.bgval =
                Rule.bgval
 
@@ -137,12 +140,12 @@ sig
                Match.rule
 
   sharing type Instantiation.inst =
-               Rule.inst =
-               BgBDNF.inst
+               Rule.inst
 
   sharing type Interface.interface =
                BgVal.interface =
-               BgBDNF.interface
+               BgBDNF.interface =
+               Instantiation.interface
 
   sharing type Control.control =
                Ion.control
@@ -158,12 +161,10 @@ sig
   sharing type Permutation.Immutable =
                BgTerm.Immutable
 
-  sharing type Wiring.wiring =
-               BgVal.wiring
-
   sharing type Name.name =
                Link.name =
                Ion.name =
+               Instantiation.name =
                NameSet.elt
 
   sharing type NameSet.Set =
@@ -177,7 +178,8 @@ sig
                BgVal.nameset
 
   sharing type Wiring.wiring =
-               BgTerm.wiring
+               BgTerm.wiring =
+               BgVal.wiring
 
   sharing type LinkSet.Set =
                Wiring.linkset
