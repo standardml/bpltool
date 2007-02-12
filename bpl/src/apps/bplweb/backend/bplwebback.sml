@@ -263,7 +263,7 @@ val _ = TextIO.output (stdErr, "userules = " ^ Int.toString userules
         let
           val (found, mz, ms) = Array.sub (!matches, ruleno)
           val {context, parameter, rule, ...}
-            = Match.unmk (List.nth (ms, matchno))
+            = Match.unmk (List.nth (rev ms, matchno))
           val context = BgBDNF.unmk context
           val {react, inst : BG.Instantiation.inst, ...} = Rule.unmk rule
           val agent = BgBDNF.unmk (valOf (!agent))
