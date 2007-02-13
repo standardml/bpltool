@@ -474,7 +474,7 @@ struct
 			        (imax, Link'Set.insert l ls)
 			      end
 			    else
-			      (imax, ls)
+			      (imax, Link'Set.insert l ls)
 			  | insertlinks {outer = Closure i, inner} (imax, ls)
 			  = let
 			      fun addedgeof x (I, imin)
@@ -490,7 +490,8 @@ struct
 			    in
 			      (if imin < imax then imax else imin,
 			       if IntSet.isEmpty is then
-			         Link'Set.insert {outer = Closure imin, inner = inner} ls
+			         (NameSet.apply (fn x => NameHashMap.insert ht (x, Closure imin)) inner;
+			          Link'Set.insert {outer = Closure imin, inner = inner} ls)
 			       else
 			         let
 			           val (inner, ls)

@@ -1154,7 +1154,8 @@ struct
 		                 (NameSet.remove
 		                   theoutername (NameSet.union Y Y_a_n)))
 		            end
-          val s_C = Wiring.++ (s_I :: map #s_C matches)
+  	      val s_C_is = map #s_C matches
+          val s_C = Wiring.++ (s_I :: s_C_is)
         in
           {ename' = ename, Y = Y, s_C = s_C, Es = Es, qss = qss, tree = PARn trees}
         end
