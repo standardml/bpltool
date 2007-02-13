@@ -174,10 +174,10 @@ struct
 			= checkprec PrTen
 		      fun mappp [] = ()
 			| mappp [b]
-			  = (brk(); show "* "; ppp PrTen par' prr' b)
+			  = (show " *"; brk(); ppp PrTen par' prr' b)
 			| mappp (b :: b' :: bs) 
-			  = (brk();
-			     show "* ";
+			  = (show " *";
+			     brk();
 			     ppp PrTen PrTen PrTen b;
 			     mappp (b' :: bs))
 		    in
@@ -198,10 +198,10 @@ struct
 			= checkprec PrPri
 		      fun mappp [] = ()
 			| mappp [b]
-			  = (brk(); show "| "; ppp PrPri par' prr' b)
+			  = (show " |"; brk(); ppp PrPri par' prr' b)
 			| mappp (b :: b' :: bs) 
-			  = (brk();
-			     show "| ";
+			  = (show " |";
+			     brk();
 			     ppp PrPri PrPri PrPri b;
 			     mappp (b' :: bs))
 		    in
@@ -222,10 +222,10 @@ struct
 			= checkprec PrPar
 		      fun mappp [] = ()
 			| mappp [b]
-			  = (brk(); show "|| "; ppp PrPar par' prr' b)
+			  = (show " ||"; brk(); ppp PrPar par' prr' b)
 			| mappp (b :: b' :: bs) 
-			  = (brk();
-			     show "|| ";
+			  = (show " ||";
+			     brk();
 			     ppp PrPar PrPar PrPar b;
 			     mappp (b' :: bs))
 		    in
@@ -244,8 +244,8 @@ struct
 		    <<();
 		    showlpar();
 		    ppp pal' PrCom PrCom b1;
+		    show " o";
 		    brk();
-		    show "o ";
 		    ppp PrCom par' prr' b2;
 		    showrpar();
 		    >>()
