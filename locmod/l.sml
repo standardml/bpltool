@@ -38,6 +38,8 @@
 	      changed type of 'inactive' from dev list to hierarchy,
 	      ported functions to use new state and export format,
 	      tested interfaces to S and A.
+  12/02/2007: Ported range and navigation queries to current setup,
+	      cleaned up code.
  
   This is the "location model" part L of a Plato-graphical system;
   C || P || A = C || (S || L) || A.
@@ -61,6 +63,8 @@ datatype event = Obs of dev * lid
 	       | Loss of dev
 	       | WhereIs of dev * (lid -> enqa)
 	       | FindAll of lid * (lid list -> enqa)
+	       | InRange of dev * int * (dev list -> enqa)
+	       | Navig of dev * lid * (lid list -> enqa)
 
 datatype hierarchy = (* id, devices, sublocations *)
 	 Loc of lid * dev list * hierarchy list
@@ -75,6 +79,10 @@ fun listmember e =
     fn l => case l
 	     of [] => false
 	      | (x::xs) => if e=x then true else listmember e xs
+
+(* pick out all first elements of tuples in a list *)
+fun first [] = []
+  | first ((l,a)::m) = l :: first m
 
 (* delete device 'dev' from hierarchy 'id' *)
 fun delete dev =
@@ -130,7 +138,7 @@ fun whr dev =
 	   in whr' dev ls end
 
 (* Building, initially *)
-val state = (Loc(1,[15],
+val model = Loc(1,[15],
 		 [Loc(2,[10,11],[]),
 		  Loc(3,[],[]),
 		  Loc(4,[],
@@ -138,14 +146,17 @@ val state = (Loc(1,[15],
 		       Loc(6,[],
 			   [Loc(7,[],
 				[Loc(8,[13],[]),
-				 Loc(9,[14],[])])])])]) ,
-	     Loc(~1,[16,17,18],[]))
+				 Loc(9,[14],[])])])])])
 
-val allDevs = fall(#1(state)) @ fall(#2(state))
+val devs = Loc(0,[16,17,18],[])
+val state = (model,devs)
+val allDevs = fall(model) @ fall(devs)
 
-(* this map must correspond exactly to the hierarchy 'state' below *)
+(* this map must correspond exactly to the hierarchy 'model' *)
 val prntmap =
-    [(1,1),(2,1),(3,1),(4,1),(5,4),(6,4),(7,6),(8,7),(9,7)]
+    [(1,1),(2,1),(3,1),(4,1),(5,4),(6,4),(7,6),(8,7),(9,7),(0,0)]
+
+val allLocs = first prntmap
 
 (* find value of key 'k' in association list 'l' (e.g. prntmap) *)
 fun assoc l =
@@ -159,15 +170,18 @@ fun prnt i =
        if i<=0 then lid else prnt (i-1) (hd (assoc prntmap lid))
 
 (* find devices in tree-specified range of 'd' excl. 'd' itself *)
-fun findinrange d =
-    fn h =>
-       fn i => case whr d h
-		of NONE => NONE
-		 | SOME(l) =>
-		   let val area = prnt i l
-		       val devsinrange = flocs (pickloc area h)
-		   in SOME(del_list d devsinrange)
-		   end
+fun findinrange s =
+    fn d =>
+       fn i =>
+	  let val h = #1(s) in
+	      case whr d h
+	       of NONE => NONE
+		| SOME(l) =>
+		  let val area = prnt i l
+		      val devsinrange = flocs (pickloc area h)
+		  in SOME(del_list d devsinrange)
+		  end
+	  end
 
 (* find the root of the parent map *)
 fun findroot map =
@@ -193,25 +207,10 @@ fun commonanc p1 =
 				     then SOME(x)
 				     else commonanc xs (y::ys)
 
-(* find a path from location 'lid1' to location 'lid2' *)
-(*
+(* find a path between existing locations 'lid1' and 'lid2' *)
 fun findpath lid1 =
-    fn lid2 => let val root = findroot prntmap
-		   val path1 = rev (ancpath lid1 root [lid1])
-		   val path2 = rev (ancpath lid2 root [lid2])
-		   val nearestanc = commonanc path1 path2
-		   val path1' = rev (ancpath lid1 nearestanc [])
-		   val path2' = tl(ancpath lid2 nearestanc [lid2])
-	       in path1' @ path2' end
-*)
-
-(*ARGH...!!! Ballade med SOME(5) vs. 5 af lokationsværdier...*)
-fun findpath l1 =
     fn lid2 =>
-       case l1
-	of NONE => NONE
-	 | SOME(lid1) =>
-	   case findroot prntmap
+       case findroot prntmap
 	    of NONE => NONE
 	     | SOME(r) =>
 	       let val path1 = rev (ancpath lid1 r [lid1])
@@ -233,8 +232,6 @@ fun exchange (r,s) = (* just for typechecking -- remove later *)
 
 fun new () = ref false
 
-val lock = new ()
-
 fun spinlock l =
     let val t = ref true
         fun loop () = ( exchange(t,l); if !t then loop() else () )
@@ -245,6 +242,8 @@ fun spinunlock l =
     let val t = ref false
     in exchange(t,l)
     end
+
+val lock = new ()
 
 fun wait i = if i<0 then () else wait(i-1)
 
@@ -281,7 +280,7 @@ fun slost s =
        if listmember d allDevs
        then let val active = delete d (#1(s))
 		val inactive' = delete d (#2(s))
-		val inactive = insert d ~1 inactive'
+		val inactive = insert d 0 inactive'
 	    in (active,inactive) end
        else s
 
@@ -292,13 +291,31 @@ fun awhere s =
 	   of SOME(l) => f l
 	    | NONE => case whr d (#2(s))
 		       of SOME(l) => f l
-			| NONE => f ~1
+			| NONE => f 0
 
 fun afindall s =
     fn l =>
        fn f => case pickloc l (#1(s))
 		of NONE => f (fall (#2(s)))
 		 | SOME(h) => f (fall h)
+
+fun ainrange s =
+    fn d =>
+       fn i =>
+	  fn f => case (findinrange s d i)
+		   of NONE => f []
+		    | SOME(l) => f l
+
+fun anavig s =
+    fn d =>
+       fn l =>
+	  fn f => if l = 0 orelse not (listmember l allLocs)
+		  then f []
+		  else case whr d (#1(s))
+			of NONE => f []
+			 | SOME(loc) => case findpath loc l
+					 of NONE => f []
+					  | SOME(p) => f p
 
 (* Event loop *)
 fun loop state =
@@ -308,55 +325,13 @@ fun loop state =
       | SOME(Loss(d)) => loop (slost state d)
       | SOME(WhereIs(d,f)) => ( awhere state d f; loop state )
       | SOME(FindAll(l,f)) => ( afindall state l f; loop state )
+      | SOME(InRange(d,i,f)) => ( ainrange state d i f; loop state )
+      | SOME(Navig(d,l,f)) => ( anavig state d l f; loop state )
 
-(* OLD CODE BEGIN
-val funs =
-    (* initial configuration *)
-    let val state =
-	    ref(Loc(1,[15],
-		    [Loc(2,[10,11],[]),
-		     Loc(3,[],[]),
-		     Loc(4,[],
-			 [Loc(5,[12],[]),
-			  Loc(6,[],
-			      [Loc(7,[],
-				   [Loc(8,[13],[]),
-				    Loc(9,[14],[])])])])]))
-	val devs = ref []
-	(* interface to S; reconfigurations *)
-	fun sobs' d =
-	    fn l =>
-	       let val state' = delete d (!state)
-		   val devs' = del_list d (!devs)
-		   val state'' = insert d l (!state)
-	       in state:=state''; devs:=devs' end
-	fun slost' d =
-	    let val state' = delete d (!state)
-		val devs' = del_list d (!devs)
-		val devs'' = d::devs'
-	    in state:=state'; devs:=devs'' end
-(*
-	fun smove d =
-	    fn l =>
-	       let val state' = move d l (!state) in state:=state' end
-*)
-	(* interface to A; queries *)
-	fun awher d = whr d (!state) (* where'' d (!state) *)
-	(* fun afind lname = flocs (pickloc lname (!state)) *)
-	fun afind lname = case (pickloc lname (!state)) of
-			      NONE => NONE
-			    | SOME(h) => SOME(fall h)
-	fun arange d i = findinrange d (!state) i
-	(* fun anavig d l = findpath (where'' d (!state)) l *)
-	fun anavig d l = findpath (whr d (!state)) l
-    (* find nearest neighbour query *)
-    in (state,devs,sobs',slost',awher,afind,arange,anavig) end
-OLD CODE END *)
 
 (***** Tests *****)
 
 (* testing queue operations *)
-(*
 val s0 = state;
 val q0 = !queue;
 val e1 = enqL(Obs(15,6));
@@ -370,8 +345,13 @@ val q4 = !queue;
 val o5 = deq();
 val q5 = !queue;
 val o6 = deq();
-val q6 = !queue
-*)
+val q6 = !queue;
+val o7 = enqL(FindAll(2,fn r => enqA(ListRes r)))
+val q7 = !queue;
+val o8 = enqL(InRange(12,2,fn r => enqA(ListRes r)))
+val q8 = !queue;
+val q9 = deq();
+val q10 = deq();
 
 (* testing interface to S *)
 val s0:hierarchy = #1(state)
@@ -382,7 +362,7 @@ val (s3,d3) = slost (s2,d2) 20
 val (s4,d4) = sobs (s3,d3) 42 20
 
 (* testing interface to A *)
-val whereA = fn x => if x = ~1 then EmptyRes("nowhere") else Res(x)
+val whereA = fn x => if x = 0 then EmptyRes("nowhere") else Res(x)
 val w0 = awhere (s1,d1) 14 whereA
 val w1 = awhere (s4,d4) 12 whereA
 val w2 = awhere (s4,d4) 20 whereA
@@ -390,8 +370,17 @@ val w2 = awhere (s4,d4) 20 whereA
 val findallA = fn x => ListRes(x)
 val f0 = afindall (s4,d4) 2 findallA
 val f1 = afindall (s4,d4) 20 findallA
-(*
-val a_range_d13_prnt3 = fun5 13 3
-val a_navig_d13_l2 = fun6 13 2
-val a_navig_d14_l7 = fun6 14 7
-*)
+
+val inrangeA = fn x => ListRes(x)
+val r0 = ainrange (s4,d4) 13 3 inrangeA
+val r1 = ainrange (s4,d4) 20 1 inrangeA
+val r2 = ainrange (s4,d4) 10 20 inrangeA
+
+val navigA = fn x => if x = [] then EmptyRes("no path exists") else ListRes(x)
+val n0 = anavig (s4,d4) 13 2 navigA
+val n1 = anavig (s4,d4) 14 7 navigA
+val n2 = anavig (s4,d4) 12 20 navigA
+val n3 = anavig (s4,d4) 12 0 navigA
+val n4 = anavig (s4,d4) 20 0 navigA
+val n5 = anavig (s4,d4) 20 7 navigA
+val n6 = anavig (s4,d4) 20 ~1 navigA
