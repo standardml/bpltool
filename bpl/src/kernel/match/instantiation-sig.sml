@@ -62,6 +62,9 @@ sig
    *)
   val make'' : interface -> interface -> inst
 
+  (** Identity instantiation. *)
+  val id : inst
+
   (** Instantiate a parameter FIXME
    *FIXME take a DR bgbdnf instead of a bgval list?
    * @params FIXME

@@ -219,6 +219,8 @@ struct
 
   fun make'' i1 i2 = make' i1 i2 []
 
+  val id : inst = {n = 0, inst = Array.fromList []} (* FIXME! *)
+
   (* FIXME maybe we should keep the working array between instantiations? *)
   (* FIXME which exceptions should be raised when Ps doesn't match the
    * instantiation? *)
