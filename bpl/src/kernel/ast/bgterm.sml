@@ -119,7 +119,9 @@ struct
    * (highest binds tightest):
    *  8 (X) abstraction (only affects expressions to the right)
    *  7  o  composition
-   *  6  x  tensor product
+   *  6  *  tensor product
+   *  6  |  prime product
+   *  6  || parallel product
    * Abstraction reaches as far right as possible.
    * @params pps prf prr t
    * @param pps  PrettyPrint stream
