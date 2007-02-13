@@ -411,6 +411,9 @@ struct
 
   (** Split a permutation into one major and a number of minor
    * permutations.
+   *
+   * The names used closely reflect those used in the implementation article.
+   * 
    * @params pi Xss
    * @param pi   the permutation to split
    * @param Xss  list of local inner name lists.
@@ -449,18 +452,22 @@ struct
                 raise LogicalError ("the function nlocatedAt was \
                                     \unexpectedly called with an \
                                     \empty list")
-          fun mlocatedAt (j, _, (l, i)) =
-              (update (mlocated, j, (l, i));
-               if j >= (width - 1)
-                    orelse #1 (nlocated sub (#1 (pi sub j)))
-                             = #1 (nlocated sub (#1 (pi sub (j + 1)))) then
-                 (l, i + 1)
-               else
-                 (l + 1, 0))
+          fun mlocatedAt (j, x, (l, i, m::ms)) =
+              if m = 0 then
+                mlocatedAt (j, x, (l + 1, 0, ms))
+              else
+                (update (mlocated, j, (l, i));
+                 if j >= (width - 1)
+                      orelse #1 (nlocated sub (#1 (pi sub j)))
+                               = #1 (nlocated sub (#1 (pi sub (j + 1)))) then
+                   (l, i + 1, m::ms)
+                 else
+                   (l + 1, 0, ms))
+            | mlocatedAt _ = raise NotRegularisable (copy perm, Xss)
         in
           val _ = (Array.foldli nlocatedAt (0, ns, 0) nlocated;
-                   if (width > 0 andalso #1 (Array.foldli
-                                               mlocatedAt (0, 0) mlocated) >= k)
+                   if (width > 0 andalso #1 (Array.foldli (* n_i = 0  <=>  m_i = 0 *)
+                                               mlocatedAt (0, 0, ns) mlocated) >= k)
                    then
                      raise NotRegularisable (copy perm, Xss)
                    else ())
