@@ -293,8 +293,8 @@ struct
 	 {width = width2, pi = pi2, pi_inv = pi_inv2}) =
       let
 	val width = width1 + width2
-	val pi = array (width, (~7, NameSet.empty))
-	val pi_inv = array (width, (~8, NameSet.empty))
+	val pi = array (width, (~21, NameSet.empty))
+	val pi_inv = array (width, (~22, NameSet.empty))
       in
 	acopy {src = pi1, dst = pi, di = 0};
 	acopy {src = pi_inv1, dst = pi_inv, di = 0};
@@ -562,8 +562,8 @@ struct
 	val (lsum, l'sum) = computesums Uiss U'iss 0 0
 
 	val width = lsum + l'sum
-	val pi = array (width, (~12, NameSet.empty))
-	val pi_inv = array (width, (~13, NameSet.empty))
+	val pi = array (width, (~19, NameSet.empty))
+	val pi_inv = array (width, (~20, NameSet.empty))
 
 	(* addmapss Uss U'ss accl accl' adds maps to pi and pi_inv.
 	 * accl = l0 + ... + l{i-1}, where Us is the ith list, and
