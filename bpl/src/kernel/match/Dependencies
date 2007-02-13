@@ -6,6 +6,13 @@
 sigs = match-sig react-sig rule-sig instantiation-sig
 funs = match react rule instantiation
 
+instantiation-sig: /lib/pp/smlnj/prettyprint
+instantiation: instantiation-sig /lib/pp/smlnj/. /kernel/bg/name-sig
+  /lib/util/flags /kernel/ast/bgval-sig /kernel/ast/bgbdnf-sig
+  /kernel/ast/info-sig /kernel/bg/interface-sig /lib/coll/monoset-sig
+  /lib/coll/monofinmap-sig /lib/coll/listsort /kernel/bg/wiring-sig
+  /lib/coll/pp /lib/util/errorhandler-sig /lib/util/origin
+  /lib/compat/common/. %NODASHSIG
 rule-sig: /lib/pp/smlnj/prettyprint
 rule: /lib/pp/smlnj/. instantiation-sig /kernel/ast/bgval-sig
   /kernel/ast/bgbdnf-sig rule-sig
@@ -16,13 +23,6 @@ match: match-sig /kernel/bg/sigs /kernel/ast/sigs /lib/compat/mosml/hash/.
   /lib/compat/mosml/hash/. /lib/compat/common/. /lib/util/flags
   /lib/util/origin /lib/util/errorhandler-sig /lib/util/debug
   /lib/util/partition rule-sig %NODASHSIG
-instantiation-sig: /lib/pp/smlnj/prettyprint
-instantiation: instantiation-sig /lib/pp/smlnj/. /kernel/bg/name-sig
-  /lib/util/flags /kernel/ast/bgval-sig /kernel/ast/bgbdnf-sig
-  /kernel/ast/info-sig /kernel/bg/interface-sig /lib/coll/monoset-sig
-  /lib/coll/monofinmap-sig /lib/coll/listsort /kernel/bg/wiring-sig
-  /lib/coll/pp /lib/util/errorhandler-sig /lib/util/origin
-  /lib/compat/common/. %NODASHSIG
 react-sig: /lib/coll/lazylist /lib/pp/smlnj/prettyprint
 react: react-sig /lib/coll/lazylist /lib/coll/monofinmap-sig
   /lib/pp/smlnj/prettyprint /kernel/ast/sigs instantiation-sig

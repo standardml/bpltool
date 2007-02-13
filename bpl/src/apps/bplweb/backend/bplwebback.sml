@@ -267,7 +267,7 @@ val _ = TextIO.output (stdErr, "userules = " ^ Int.toString userules
           val context = BgBDNF.unmk context
           val {react, inst : BG.Instantiation.inst, ...} = Rule.unmk rule
           val agent = BgBDNF.unmk (valOf (!agent))
-          val instparam = BgBDNF.instantiate inst parameter
+          val instparam = Instantiation.instantiate inst parameter
           val Z = Interface.glob (BgBDNF.outerface parameter)
           val id_Z = BgVal.Wir noinfo (Wiring.id_X Z)
           val oo = BgVal.Com noinfo

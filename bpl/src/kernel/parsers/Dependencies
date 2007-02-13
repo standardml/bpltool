@@ -2,6 +2,7 @@
 # INCLUDE=../../lib/util
 # INCLUDE=../bg
 # INCLUDE=../ast
+# INCLUDE=../match
 
 . = bg.grm bg.lex rules.grm rules.lex
 bg.grm-sig: /lib/ml-yacc/.
