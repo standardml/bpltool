@@ -181,7 +181,7 @@ function deleterule (ruleno) {
       .concat (rule.getElementsBySelector ('[id|="react' + oldnum + '"]'))
       .concat (rule.getElementsBySelector ('[id|="inst' + oldnum + '"]'));
     var newrulenodeid = "rule[" + ruleno + "]";
-alert("changing node " + rulenodeid + " to " + newrulenodeid);
+//alert("changing node " + rulenodeid + " to " + newrulenodeid);
     for (var i = 0; i < namednodes.length; i++) {
       var node = namednodes [i];
       var idstr = node.getAttribute ("id");
