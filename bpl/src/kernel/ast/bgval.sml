@@ -410,6 +410,20 @@ struct
 	raise NotComposable 
 		(v1, v2, "Interface mismatch for composition in Com")
 
+  fun Com' i (v1, v2) =
+      let
+        val X = NameSet.difference
+                  (Interface.glob (outerface v2))
+                  (Interface.glob (innerface v1))
+        val v1' = Ten i [v1, Wir i (Wiring.id_X X)]
+      in
+        if arecomposable v1' v2 then 
+	  VCom (v1', v2, (innerface v2, outerface v1', i))
+        else
+	  raise NotComposable 
+		  (v1, v2, "Interface mismatch for composition in Com'")
+      end
+
   datatype bgpat =
 	   PVar
 	 | PCns

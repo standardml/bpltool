@@ -134,6 +134,15 @@ sig
    *                           from outer face of b_2.
    *)
   val Com : info -> bgval * bgval -> bgval
+  (** Construct (b_1 * id_X) b_2 = a composition of a pair of bigraphs,
+   * where X is the set of global outer names of b_2 which are not
+   * global inner names of b_1.
+   * @exception NotComposable  if the inner face of b_1 is different
+   *                           from outer face of b_2 (b_1 is allowed
+   *                           to have only a subset of the global outer
+   *                           names of b_2 as global inner names).
+   *)
+  val Com' : info -> bgval * bgval -> bgval
 
   (** Construct a bgval from a bgterm.  The bgterm is checked
    * internally for interface consistency.
