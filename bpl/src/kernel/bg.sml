@@ -166,7 +166,7 @@ fun parseStr (kind, mkkind) filename str =
 				     lexer,
 				     parseerror, 
 				     ())
-				  handle ParseError
+				  handle RulesParser.ParseError
 				   => raise ParsingError (ErrorMsg.getErrors ())
     in
       mkkind result

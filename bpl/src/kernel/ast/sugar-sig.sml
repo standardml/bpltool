@@ -25,7 +25,7 @@
  *   open BG.Sugar
  *   infix 7 /   infix 7 //
  *   infix 6 o
- *   infix 5 *   infix 5 ||   infix 5 <|>
+ *   infix 5 *   infix 5 ||   infix 5 `|`
  *   infix 4 >
  *   infix 3 &   infix 3 -->
  *   infix 2 =:  infix 2 -:
@@ -41,9 +41,9 @@
  * 
  *   val (x, y, z, u, w) = ("x", "y", "z", "u", "w")
  * in
- *   (x/y  *  (id_n(1) * z//[x,z]) o `[z,x]`)
- *    o (<[x,z]> (id_X[x,y,z] * merge(6)) o 
- *               (K[x,y,z]  *  (-//[z,y] * id_n(1)) o L[y,z][[z,y],[]]  
+ *   (x/y  *  (idp(1) * z//[x,z]) o `[z,x]`)
+ *    o (<[x,z]> (idw[x,y,z] * merge(6)) o 
+ *               (K[x,y,z]  *  (-//[z,y] * idp(1)) o L[y,z][[z,y],[]]  
  *               *  M[][[x]]  *  N1 o merge(3)  *  N2  *  N3))
  *    o (@@[1&[y,z], 2&[], 0&[]]  *  @[1,2,0]  *  -/w)
  * end
@@ -133,13 +133,17 @@ signature SUGAR =
     (** Construct an iterated parallel product. *)
     val ||| : bgval list -> bgval
     (** Construct a prime product. *)
-    val <|> : bgval * bgval -> bgval
+    val `|` : bgval * bgval -> bgval
     (** Construct an iterated prime product. *)
-    val <|>> : bgval list -> bgval
+    val `|`` : bgval list -> bgval
     (** Construct an identity nameless permutation. *)
-    val id_n : int -> bgval
+    val idp : int -> bgval
+    (** Construct an empty wiring. *)
+    val idw0 : bgval
     (** Construct an identity wiring. *)
-    val id_X : name list -> bgval
+    val idw : name list -> bgval
+    (** Construct an empty tensor product. *)
+    val idx0 : bgval
     (** Revision number.*)
     val revision : string
   end

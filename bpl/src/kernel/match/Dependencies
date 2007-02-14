@@ -11,7 +11,7 @@ instantiation: instantiation-sig /lib/pp/smlnj/. /kernel/bg/name-sig
   /lib/util/flags /kernel/ast/bgval-sig /kernel/ast/bgbdnf-sig
   /kernel/ast/info-sig /kernel/bg/interface-sig /lib/coll/monoset-sig
   /lib/coll/monofinmap-sig /lib/coll/listsort /kernel/bg/wiring-sig
-  /lib/coll/pp /lib/util/errorhandler-sig /lib/util/origin
+  /lib/coll/pp /lib/util/errorhandler-sig /lib/util/origin /lib/util/debug
   /lib/compat/common/. %NODASHSIG
 rule-sig: /lib/pp/smlnj/prettyprint
 rule: /lib/pp/smlnj/. instantiation-sig /kernel/ast/bgval-sig

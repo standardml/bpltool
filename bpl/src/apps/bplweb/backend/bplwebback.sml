@@ -358,7 +358,7 @@ val _ = TextIO.output (stdErr, "userules = " ^ Int.toString userules
         	else
         		log ("Unrecognised input line: " ^ line)
         end
-        
+      
       fun readevalloop () =
         case inputLineNoBuf () of
           SOME line =>
@@ -390,7 +390,17 @@ structure BG = BG (structure ErrorHandler = BPLwebErrorHandler)
 structure BPLwebBack = BPLwebBack
   (structure BG = BG
    structure ErrorHandler = BPLwebErrorHandler
-   structure SignalHandler = SignalHandler);
+   structure SignalHandler = SignalHandler)
+
+val _
+  = ArgParse.parse NONE (Flags.toSpec ())
+     (fn s
+      => TextIO.output (TextIO.stdErr,
+      ("Warning: argument `" ^ s ^ "' ignored.\n")));
+
+(*val _ = BG.RulesLex.UserDeclarations.debug := true;
+
+val _ = Flags.setIntFlag "/debug/level" Debug.LVL_HIGH*)
 
 val _
   = BPLwebBack.run ()

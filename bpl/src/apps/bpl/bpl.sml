@@ -60,7 +60,7 @@ fun help' [] = ()
 	  \  y//[]                     Name introduction\n\
 	  \  -/x                       Closure edge\n\
 	  \  -//[x,...]                Multiple closure edges\n\
-	  \  id_X[x,...]               Identity wiring\n\n\
+	  \  idw[x,...]                Identity wiring\n\n\
 	  \Concretions and merges (n >= 0, x : string):\n\
 	  \  `[x,...]`                 Concretion of names x,...\n\
 	  \  merge(n)                  Merge of inner width n\n\
@@ -68,15 +68,15 @@ fun help' [] = ()
 	  \Permutations (0 <= i_k < m, x : string):\n\
 	  \  @[i_0, ..., i_{m-1}]      Permutation mapping site k to root i_k\n\
 	  \  @@[..., i_k&[x,...], ...] Permutation with local names\n\
-	  \  id_n(m)                   Identity permutation of width m\n\n\
+	  \  idp(m)                    Identity permutation of width m\n\n\
 	  \Abstractions, products, compositions (x : string, A,B,P : bgval, n >= 0):\n\
 	  \  <[x,...]> P               Abstract names x,... of a prime P\n\
 	  \  A * B                     Tensor product\n\
 	  \  A || B                    Parallel product\n\
-	  \  A <|> B                   Prime product\n\
+	  \  A `|` B                   Prime product\n\
 	  \  **[A,...]                 Tensor procuct of n factors\n\
 	  \  |||[A,...]                Parallel product of n factors\n\
-	  \  <|>>[A,...]               Prime product of n factors\n\
+	  \  `|``[A,...]               Prime product of n factors\n\
 	  \  A o B                     Composition\n";
 	  help'' topics)
   | help' ("operator" :: topics) = (print
@@ -84,7 +84,7 @@ fun help' [] = ()
 	  \  f oo g\n\n\
 	  \Precedence:\n\
 	  \  o                         Composition (strongest)\n\
-	  \  *, ||, <|>                Product, left associative\n\
+	  \  *, ||, `|`                Product, left associative\n\
 	  \  <[x,...]> P               Abstraction (weakest)\n";
 	  help'' topics)
   | help' ("operation" :: topics) = (print
@@ -129,7 +129,7 @@ val oo = General.o
 infix 3 oo
 infix 7 /   infix 7 //
 infix 6 o
-infix 5 *   infix 5 ||   infix 5 <|>
+infix 5 *   infix 5 ||   infix 5 `|`
 infix 4 >
 infix 3 &   infix 3 -->
 infix 2 =:  infix 2 -:

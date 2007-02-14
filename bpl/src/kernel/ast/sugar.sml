@@ -258,15 +258,17 @@ fun op / (y, x) = Wir (Wiring.make
 					  (Name.make x)})))
 fun op < Xs = NameSet.fromList (map Name.make Xs)
 fun op > (X, P) = Abs (X, P)
-val id_n = Per o Permutation.id_n
-val id_X = Wir o Wiring.id_X o NameSet.fromList o map Name.make
+val idp = Per o Permutation.id_n
+val idw = Wir o Wiring.id_X o NameSet.fromList o map Name.make
+val idw0 = Wir (Wiring.id_0)
+val idx0 = Ten []
 val op o = Com
 fun op * (b1, b2) = Ten [b1, b2]
 val ** = Ten
 fun || (b1, b2) = Par [b1, b2]
 val ||| = Par
-fun <|> (b1, b2) = Pri [b1, b2]
-val <|>> = Pri
+fun `|` (b1, b2) = Pri [b1, b2]
+val `|`` = Pri
 fun -/ x = "" / x
 fun -// X = // ("", X)
 val revision

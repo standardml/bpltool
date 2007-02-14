@@ -31,7 +31,13 @@ struct
   val lineNum = ref 1
   val linePos = ref [1]
   val sourceStream = ref TextIO.stdIn
-  fun reset() = (anyErrors:=false;
+  val errors
+    : (string * ((int * int) * (int * int)) * (int * int) * string)
+      list ref
+    = ref []
+  fun reset() =
+    (anyErrors:=false;
+     errors := [];
 		 fileName:="";
 		 lineNum:=1;
 		 linePos:=[1];
@@ -61,10 +67,6 @@ struct
 	look(!linePos,!lineNum)
       end
 
-  val errors
-    : (string * ((int * int) * (int * int)) * (int * int) * string)
-      list ref
-    = ref []
   (* Accumulates reported errors. *)
   fun error leftpos rightpos (msg:string) =
     (errors

@@ -92,10 +92,13 @@ print "running matcher worker thread...\n"
               first_rule = false
               rules_formatted += "{"
               first_field = true
-              rule.each {|key, value|
-                rules_formatted += ",\n" unless first_field
-                first_field = false
-                rules_formatted += key + " = " + value
+              ['redex', 'react', 'inst'].each {|key|
+                value = rule [key]
+                if value
+                  rules_formatted += ",\n" unless first_field
+                  first_field = false
+                  rules_formatted += key + " = " + value
+                end
               }
               rules_formatted += "}"
             }

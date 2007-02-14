@@ -134,7 +134,7 @@ struct
              true)
       in
 	if is_idn perm then
-	  show (idp ^ Int.toString width)
+	  show (idp ^ "(" ^ Int.toString width ^ ")")
 	else
 	  (<<(); show "[";
 	   Array.foldl ppmap false pi;

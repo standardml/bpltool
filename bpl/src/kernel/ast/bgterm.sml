@@ -111,10 +111,11 @@ struct
 	val PrPar = 6
 	val PrMin = 0
 	val show = add_string pps
-	fun << () = begin_block pps INCONSISTENT indent
+	fun << () = begin_block pps INCONSISTENT 1
 	fun >> () = end_block pps
 	fun brk () = add_break pps (1, 0)
 	fun brk0 () = add_break pps (0, 0)
+	fun brkindent () = add_break pps (0, indent)
   (* Pretty print using precedences.  Operator precedences
    * (highest binds tightest):
    *  8 (X) abstraction (only affects expressions to the right)
@@ -149,7 +150,9 @@ struct
 		| pp' (Abs (X, b, _)) =
 		  let
 		    val (showlpar, pal', par', prr', showrpar)
-		      = if prr < PrAbs then 
+		      = if prr < PrAbs orelse
+		           pal >= PrAbs orelse
+		           par > PrAbs then 
 			  (fn () => show "(", 
 			   PrMin, PrMin, PrMax,
 			   fn () => show ")")
@@ -159,7 +162,7 @@ struct
 		    <<(); 
 		     showlpar();
                      show "<"; NameSetPP.ppbr indent "[" "]" pps X; show ">";
-		     brk0();
+		     brkindent();
 		     ppp pal' par' prr' b;
 		     showrpar();
 		     >>()
@@ -198,9 +201,9 @@ struct
 			= checkprec PrPri
 		      fun mappp [] = ()
 			| mappp [b]
-			  = (show " |"; brk(); ppp PrPri par' prr' b)
+			  = (show " `|`"; brk(); ppp PrPri par' prr' b)
 			| mappp (b :: b' :: bs) 
-			  = (show " |";
+			  = (show " `|`";
 			     brk();
 			     ppp PrPri PrPri PrPri b;
 			     mappp (b' :: bs))
