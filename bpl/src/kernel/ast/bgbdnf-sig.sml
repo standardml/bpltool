@@ -72,8 +72,8 @@ sig
    *)
   val regularize : B bgbdnf -> BR bgbdnf
 
-  (** Test two BDNFs for equality: same structure, same interfaces,
-   * but internal names may differ.
+  (** Test two BDNFs for equality modulo structural congruence
+   *  and internal names.
    * @params b1 b2
    * @param b1  the first bigraph.
    * @param b2  the second bigraph.

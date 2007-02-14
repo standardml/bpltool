@@ -19,6 +19,8 @@
  *)
 
 (** Datatype for representing instantiations.
+ * Closely follows Jensen and Milner's definition from p 75
+ * "Bigraphs and Mobile Processes (revised)", February 2004.
  * @version $LastChangedRevision: 397 $
  *)
 
@@ -37,6 +39,9 @@ functor Instantiation (
       and type origin      = Origin.origin
   structure NameSetPP : COLLECTIONPRETTYPRINT
     where type ppstream    = PrettyPrint.ppstream
+  structure ListPP : POLYCOLLECTIONPRETTYPRINT
+    where type ppstream      = PrettyPrint.ppstream
+      and type 'a collection = 'a list
   sharing type Info.info =
                BgVal.info =
                BgBDNF.info
@@ -52,7 +57,8 @@ functor Instantiation (
                Wiring.nameset =
                Interface.nameset 
   sharing type Interface.interface =
-               BgVal.interface
+               BgVal.interface =
+               BgBDNF.interface
   sharing type Wiring.wiring = BgVal.wiring
   sharing type BgVal.bgval = BgBDNF.bgval
 ) : INSTANTIATION
@@ -62,6 +68,17 @@ functor Instantiation (
     and type DR        = BgBDNF.DR
     and type interface = Interface.interface =
 struct
+
+  open Debug
+  open ErrorHandler
+
+  val file_origin = Origin.mk_file_origin
+                      "$BPL/src/kernel/match/instantiation.sml"
+                      Origin.NOPOS
+  fun mk_explainer errtitle (explainer : exn -> explanation list) e =
+      Exp (LVL_USER, Origin.unknown_origin, mk_string_pp errtitle,
+           explainer e)
+
   type interface = Interface.interface
   type name      = Name.name
   type wiring    = Wiring.wiring
@@ -77,56 +94,13 @@ struct
   val noinfo = Info.noinfo
 
   (* Instantiation type.
-   * The n is the width of the instantiation, i.e. the width of
-   * the bigraphs resulting from applying the instantiation to a given
-   * parameter.
-   * Each element L_i of the array, L, indicates where the i'th
-   * root of the original
-   *    \bigox_{i \in m}(P_i)
-   * should be copied to and what local substitution to apply to each copy.
-   *    \bigox(P'_i)
-   * I.e. each L_i has elements
-   *    L_ij = (root_ij, ren_ij)
-   * which means that P'_{root_ij} = ren_ij o P_i.
-   * To be meaningful, the n root_ij's must be different and  root_ij \in n.
-   * Also, the outerfaces of the renamings ren_ij must not share names.
-   *)
-  type inst = {n : int, inst : ((int * bgval) list) array}
-  (* Construct an instantiation.
-   * n is taken to be |maps|.
-   * map_i = (root_i, ren_i)  where root_i \in m  is the number of a site
-   *                                              in the redex.
    *
-   *                            and ren_i         is a renaming of the local
-   *                                              names of the site given by
-   *                                              root_i to the local names
-   *                                              of site i in the reactum.
-   *                                              The renaming is given a list
-   *                                              of name pairs (x_j, y_j) to
-   *                                              be interpreted as x_j |-> y_j.
+   * I    is the (local) innerface of the instantiation
+   * J    is the (local) outerface
+   * rho  is the function \bar{rho} : n -> m  and  the local substitutions
+   *      (X_\bar{rho}(j)) -> (Y_j)
    *)
-  fun make m maps =
-      let
-        val inst = array (m, [])
-
-        fun add_entry ((root_i, ren_i), (i, Ys)) =
-            let
-              val L_ijs = inst sub i
-              val ls_i  = BgVal.LS
-                            noinfo
-                            (Wiring.make_ren (NameMap.fromList ren_i))
-              val Ys_i = Interface.names (BgVal.outerface ls_i)
-              val Ys   = (NameSet.union Ys Ys_i)
-                         handle NameSet.DuplicatesRemoved => raise (Fail "FIXME")
-            in
-              (  update (inst, root_i, (i, ls_i)::L_ijs)
-               ; (i + 1, Ys))
-            end
-
-        val (n, _) = foldl add_entry (0, NameSet.empty) maps
-      in
-        {n = n, inst = inst}
-      end
+  type inst = {I : interface, J : interface, rho : (int * bgval) array}
 
   (* Unless otherwise specified in maps, root i of the instance will be
    * a copy of root i of the original, given that there is a unique
@@ -134,47 +108,67 @@ struct
    * If the names used are the same, they are assumed to map to themselves.
    * 
    * The algorithm is as follows:
-   * 1. sort maps by descending reactum root numbers
-   * 2. insert trivial maps for the instance roots that are not mentioned
+   * 1. sort maps by descending reactum site numbers
+   * 2. insert trivial maps for the reactum sites that are not mentioned
    *    (if possible)
    * 3. add name maps to the entries that has none
    * 4. verify the entries of maps. I.e. we check that the names mentioned
    *    in a map correspond to those of the interfaces and that each root
    *    of the instance is mentioned exactly once.
-   * 5. convert maps to the format used by make
    *
-   * steps 2, 3, 4, and 5 is done in step
+   * steps 2, 3, 4, and 5 are done in step
    *)
-  fun make' i1 i2 maps =
+  (* FIXME should the interfaces be local? or should we only store
+   *       the local parts? or neither? *)
+  fun make I J maps =
       let
-        val m = Interface.width i1
-        val n = Interface.width i2
-        val Xs = Array.fromList (Interface.loc i1)
-        val Ys = Array.fromList (Interface.loc i2)
+        val m  = Interface.width I
+        val n  = Interface.width J
+        val Xs = Array.fromList (Interface.loc I)
+        val Ys = Array.fromList (Interface.loc J)
 
-        fun map_cmp (((rea1,_), _), ((rea2,_), _)) = Int.compare (rea2, rea1)
-
-        val maps = ListSort.sort map_cmp maps
-
-        (* infer (if possible) the name map from site red of redex to
-         * site rea of reactum. *)
-        fun infer_map_names rea red =
+        (* Create a rho array on the form described above using a completely
+         * specified map list, i.e. the list must have, in order, elements
+         * [(redex_site_{0}, name_map_{0}), ...,
+         *  (redex_site_{m - 1}, name_map_{m - 1})]
+         *)
+        fun maps2rho maps =
+            let
+              val id_0 = BgVal.Ten noinfo []
+              val rho = array (m, (~1, id_0))
+                
+              fun add_entry ((redsite, nmap), reasite) =
+                  let
+                    val ls = BgVal.LS noinfo (Wiring.make_ren nmap)
+                  in
+                    (  update (rho, reasite, (redsite, ls))
+                     ; reasite + 1)
+                  end
+            in
+              (  foldl add_entry 0 maps
+               ; rho)
+            end
+        (* infer or verify a name map from a redex site to a reactum site.
+         *)
+        fun infer_or_verify_namemap ((rea, []), (red, [])) =
+            (* infer (if possible) the name map from site red of redex to
+             * site rea of reactum. *)
             let
               val X = Xs sub red
               val Y = Ys sub rea
             in
               if NameSet.eq X Y then
-                (red, NameSet.fold (fn n => fn nmap => (n, n)::nmap) [] X)
+                NameSet.fold
+                  (fn n => fn nmap => NameMap.add (n, n, nmap))
+                  NameMap.empty X
               else if NameSet.size X = 1 andalso NameSet.size Y = 1 then
-                (red, [(NameSet.someElement X, NameSet.someElement Y)])
+                NameMap.fromList
+                  [(NameSet.someElement X, NameSet.someElement Y)]
               else
-                raise (Fail "FIXME not a trivial map from names of red to rea")
+                raise Fail "FIXME not a trivial map from names of red to rea"
             end
-
-        (* verify that the names given in the map matches the interfaces.
-         * If no names are given, try to infer them. *)
-        fun verify_map_names ((rea, []), (red, [])) = infer_map_names rea red
-          | verify_map_names ((rea, reans), (red, redns)) =
+          | infer_or_verify_namemap ((rea, reans), (red, redns)) =
+            (* verify the given name map *)
             let
               val X = Xs sub red
               val Y = Ys sub rea
@@ -182,124 +176,113 @@ struct
               (* verify a single renaming and keep track of the used names *)
               fun verify_ren (x, y, (X', Y', nmap)) =
                   if NameSet.member x X andalso NameSet.member y Y then
-                    (NameSet.insert x X', NameSet.insert y Y', (x, y)::nmap)
-                    handle NameSet.DuplicatesRemoved => raise (Fail "FIXME multiple occurences of the same name")
+                    (NameSet.insert x X',
+                     NameSet.insert y Y',
+                     NameMap.add (x, y, nmap))
+                    handle NameSet.DuplicatesRemoved =>
+                      raise Fail "FIXME multiple occurences of the same name"
                   else
-                    raise (Fail "FIXME name doesn't match interface")
+                    raise Fail "FIXME name doesn't match interface"
 
               val (X', Y', nmap)
                 = (ListPair.foldrEq 
                      verify_ren
-                     (NameSet.empty, NameSet.empty, [])
+                     (NameSet.empty, NameSet.empty, NameMap.empty)
                      (redns, reans))
                   handle ListPair.UnequalLengths => raise (Fail "FIXME invalid map")
             in
               if NameSet.size X = NameSet.size X' andalso NameSet.size Y = NameSet.size Y' then
-                (red, nmap)
+                nmap
               else
                 raise Fail "FIXME not all renamings are specified in the map"
             end
 
-        fun foo root [] acc =
-            if root = ~1 then
+        (* infer missing maps and verify the map list.
+         * reasite is the number of the next reactum site to be added to the
+         * accumulator acc.
+         *)
+        fun infer_and_verify_maps reasite acc [] =
+            if reasite = ~1 then
               acc
             else
               raise (Fail "FIXME too few map entries")
-          | foo root (maps as ((map as ((rea, reans), (red, redns)))::mapstl)) acc =
-            if root >= 0 then
-              (case Int.compare (rea, root) of
-                 EQUAL   => foo (root - 1) mapstl ((verify_map_names map) :: acc)
-               | LESS    => foo (root - 1) maps ((infer_map_names root root) :: acc)
+          | infer_and_verify_maps reasite acc (maps as ((map as ((rea, reans), (red, redns)))::mapstl)) =
+            if reasite >= 0 then
+              (case Int.compare (rea, reasite) of
+                 EQUAL => (* verify map and add it to the accumulator *)
+                   infer_and_verify_maps
+                     (reasite - 1)
+                     ((red, (infer_or_verify_namemap map)) :: acc)
+                     mapstl
+               | LESS => (* insert a trivial map for reasite *)
+                   infer_and_verify_maps
+                     (reasite - 1)
+                     ((reasite,
+                       (infer_or_verify_namemap ((reasite, []), (reasite, []))))
+                      :: acc)
+                     maps
                | GREATER => raise (Fail "FIXME invalid rea"))
             else
               raise (Fail "FIXME too many map entries")
+
+        (* compare function for maps used to sort in decreasing order *)
+        fun map_cmp (((rea1,_), _), ((rea2,_), _)) = Int.compare (rea2, rea1)
       in
-        make m (foo (n - 1) maps [])
+        {I = I,
+         J = J,
+         rho = (  maps2rho 
+                o (infer_and_verify_maps (n - 1) [])
+                o (ListSort.sort map_cmp))
+               maps}
       end
 
-  fun make'' i1 i2 = make' i1 i2 []
+  fun make' I J = make I J []
 
-  val id : inst = {n = 0, inst = Array.fromList []} (* FIXME! *)
-
-  (* FIXME maybe we should keep the working array between instantiations? *)
-  (* FIXME which exceptions should be raised when Ps doesn't match the
-   * instantiation? *)
-  fun instantiate {n, inst} d =
+  (* FIXME which exceptions should be raised when d doesn't match the
+   *       instantiation? *)
+  fun instantiate {I, J, rho} d =
       let
         infix 5 **
         fun b1 ** b2 = BgVal.Ten noinfo [b1, b2]
-        val oo = BgVal.Com noinfo
-        infix 7 oo
+        val oo' = BgVal.Com' noinfo
+        infix 7 oo'
         
         val {ren, Ps} = BgBDNF.unmkDR d
+        val Ps = Array.fromList Ps
 
-        (* build the result list in an array *)
-        val id_0 = BgVal.Ten noinfo []
-        val res = array (n, id_0)
-
-        (* copy P_i and rename the local names *)
-        fun copy_P P_i (root_ij, ren_ij) =
-            let
-              val W_i    = Interface.glob (BgVal.outerface P_i)
-              val id_W_i = BgVal.Wir noinfo (Wiring.id_X W_i)
-            in
-              update (res, root_ij, (ren_ij ** id_W_i) oo P_i)
-            end
-
-        fun copies_P (P_i, i) =
-            if i < n then
-              (  app (copy_P (BgBDNF.unmk P_i)) (inst sub i)
-               ; i + 1)
-            else 
-              raise (Fail "FIXME")
-
-        val () = if List.foldl copies_P 0 Ps = n then
-                   ()
-                 else 
-                   raise (Fail "FIXME")
-
-        val P's  = BgVal.Par noinfo (Array.foldr (op ::) [] res)
-        val W    = Interface.glob (BgVal.innerface P's)
-        val id_W = BgVal.Wir noinfo (Wiring.id_X W)
+        fun copy_P ((i, ls_i), es) =
+            (ls_i oo' (BgBDNF.unmk (Ps sub i))) :: es
       in
-        (  if List.foldl copies_P 0 Ps = n then
-             ()
-           else 
-             raise (Fail "FIXME")
-         ; (ren ** id_W) oo (BgVal.Par noinfo (Array.foldr (op ::) [] res)))
+        (* FIXME only compare the local part? *)
+        if Interface.eq (BgBDNF.outerface d, I) then
+          ren oo' (BgVal.Par noinfo (Array.foldr copy_P [] rho))
+        else
+          raise Fail "FIXME parameter does not match the instantiation innerface"
       end
 
-  (** Deconstruct an instantiation. *)
-  fun unmk {n, inst} =
+  (* Deconstruct an instantiation. *)
+  fun unmk {I, J, rho} =
       let
-        val res = array (n, (~1, []))
-
-        (* Convert a single copy endtry to res.
-         * I.e. deconstruct the local substitution and the underlying renaming
-         * {x_j |-> y_j} and set  res_rea = (red, ren).
-         *)
-        local open BgVal in
-          fun map2res red ((rea, subst), m) =
-              case match (PAbs (PCom (PTen [PWir, PVar], PVar))) subst of
-                MAbs (_, MCom (MTen [MWir wren, _], _)) =>
-                let
-                  val ren = (NameMap.Fold (op ::) [] (Wiring.unmk_ren wren))
-                            handle Wiring.NotARenaming _ => raise (Fail "FIXME should not happen")
-                in
-                  (  update (res, rea, (red, ren))
-                   ; m + 1)
-                end
-              | _ => raise (Fail "FIXME should not happen")
-        end
-
-        (* convert an entry of inst to res format *)
-        fun convert (red, entry, m) = foldl (map2res red) m entry
-
-        val m = Array.foldli convert 0 inst
+        open BgVal
+        fun rho2map (reasite, (redsite, ls), maps) = 
+            case match (PAbs (PCom (PTen [PWir, PVar], PVar))) ls of
+              MAbs (_, MCom (MTen [MWir wren, _], _)) =>
+              let
+                val (reans, redns)
+                  = (NameMap.Fold
+                       (fn ((x, y), (reans, redns)) => (y::reans, x::redns))
+                       ([], [])
+                       (Wiring.unmk_ren wren))
+                    handle Wiring.NotARenaming _ =>
+                      raise Fail "FIXME should not happen"
+              in
+                ((reasite, reans), (redsite, redns)) :: maps
+              end
+            | _ => raise Fail "FIXME should not happen"
       in
-        (m, Array.foldr (op ::) [] res)
+        (I, J, Array.foldri rho2map [] rho)
       end
-    
+
   (* Prettyprint an instantiation.
    * @params indent pps inst
    * @param indent  Indentation at each block level.
@@ -313,34 +296,23 @@ struct
 	fun << () = begin_block pps INCONSISTENT indent
 	fun >> () = end_block pps
 	fun brk () = add_break pps (1, 0)
-        fun pp_nlist select [] = ()
-          | pp_nlist select (nmap : (name * name) list) = 
-            ( show "&["
-             ; foldl (fn (xy, notfirst) =>
-                         (  if notfirst then (show ","; brk()) else ()
-                          ; Name.pp indent pps (select xy)
-                          ; true))
-                     false nmap
-             ; show "]")
-        fun pp_elt rea (red, nmap) =
-            (  <<()
-             ; show (Int.toString rea)
-             ; pp_nlist #2 nmap
-             ; show " |--> "
-             ; show (Int.toString red)
-             ; pp_nlist #1 nmap
+	fun pp_e indent pps ((reasite, reans), (redsite, redns)) =
+	    (  <<()
+             ; show (Int.toString reasite)
+             ; ListPP.pp Name.pp indent pps reans
+             ; brk()
+             ; show "|-->"
+             ; brk()
+             ; show (Int.toString redsite)
+             ; ListPP.pp Name.pp indent pps redns
              ; >>())
-	fun pp_e (e, (rea, notfirst)) =
-	    (  if notfirst then (show ","; brk()) else ()
-	     ; pp_elt rea e
-	     ; (rea + 1, true))
       in
-	<<(); show "["; foldl pp_e (0, false) (#2(unmk inst)); show "]"; >>()
+	ListPP.pp pp_e indent pps (#3 (unmk inst))
       end
-      
 
   fun toString i
     = PrettyPrint.pp_to_string
         (Flags.getIntFlag "/misc/linewidth") 
         (pp (Flags.getIntFlag "/misc/indent")) i
+
 end

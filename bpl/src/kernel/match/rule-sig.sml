@@ -37,6 +37,13 @@ sig
    * @param inst   Instantiation
    *)
   val make : {name : string, redex : BR bgbdnf, react : bgval, inst : inst} -> rule
+  (** Construct a rule.
+   * The instantiation will be inferred from redex and reactum.
+   * @params {redex, react}
+   * @param redex  Redex bigraph
+   * @param react  Reactum bigraph
+   *)
+  val make' : {name : string, redex : BR bgbdnf, react : bgval} -> rule
   (** Deconstruct a rule. @see make. *)
   val unmk : rule -> {name : string, redex : BR bgbdnf, react : bgval, inst : inst}
   (** Prettyprint a rule.

@@ -103,6 +103,7 @@ struct
    * The regularized bigraph representation differ only for DR BDNF:
    *
    * DR BDNF: Ten [Wir w, Ten [P_0, ..., P_n-1]]
+   * BR BDNF: Com (Ten [Wir w, Per id_X], DR)
    *)
 
   type M = unit
@@ -115,8 +116,6 @@ struct
   type DR = unit
   type BR = unit
   type 'class bgbdnf = bgval
-
-  fun eq b1 b2 = BgVal.eq b1 b2
 
   datatype stlnode =
            SCon of info * wiring
@@ -1087,6 +1086,57 @@ struct
   fun unmk bdnf = bdnf : bgval
 
   val info = BgVal.info
+
+  fun eqM b1 b2 = raise Fail "FIXME not implemented"
+  fun eqS b1 b2 = raise Fail "FIXME not implemented"
+  fun eqG b1 b2 = raise Fail "FIXME not implemented"
+  fun eqN b1 b2 = raise Fail "FIXME not implemented"
+  fun eqP b1 b2 = raise Fail "FIXME not implemented"
+  fun eqD b1 b2 = raise Fail "FIXME not implemented"
+  fun eqB b1 b2 = raise Fail "FIXME not implemented"
+  fun eqDR b1 b2 = raise Fail "FIXME not implemented"
+  fun eqBR b1 b2 = raise Fail "FIXME not implemented"
+
+  (* determine which normal form b1 matches and call the right function *)
+  fun eq b1 b2 =
+      case match PCns b1 of
+        MCom (MVal com1, MVal com2) => (* M, S, G, P, B, or BR *)
+        (case match PCns com2 of
+           MCon _ => eqS b1 b2 (* S *)
+         | MAbs _ => (* M or P *)
+           (case match (PTen [PWir, PCns]) com1 of
+              MTen [_, MIon _] => eqM b1 b2 (* M *)
+            | MTen [_, MAbs _] => eqP b1 b2 (* P *)
+            | wrongterm =>
+              raise MalformedBDNF
+                      (info b1, wrongterm, "matching M or P in eq"))
+         | MTns tns => (* G, B, or BR *)
+           (case match (PTen [PWir, PCns]) com1 of
+              MTen [_, MMer _] => eqG b1 b2 (* G *)
+            | MTen [_, MPer _] => (* B or BR *)
+              (case match PCns (List.nth (tns, 1)) of
+                 MCom _ => eqB b1 b2  (* B *)
+               | MTns _ => eqBR b1 b2 (* BR *)
+               | wrongterm =>
+                 raise MalformedBDNF
+                         (info b1, wrongterm, "matching B or BR in eq"))
+            | wrongterm =>
+              raise MalformedBDNF
+                      (info b1, wrongterm, "matching G, B or BR in eq"))
+         | wrongterm =>
+           raise MalformedBDNF
+                   (info b1, wrongterm, "matching M, S, G, P, B, or BR in eq"))
+      | MAbs _ => eqN b1 b2 (* N *)
+      | MTns tns => (* D, DR *)
+        (case match PCns (List.nth (tns, 1)) of
+           MCom _ => eqD b1 b2  (* D *)
+         | MTns _ => eqDR b1 b2 (* DR *)
+         | wrongterm =>
+           raise MalformedBDNF
+                   (info b1, wrongterm, "matching D or DR in eq"))
+      | wrongterm =>
+        raise MalformedBDNF (info b1, wrongterm, "matching in eq")
+
 
   fun pp indent pps
     = BgVal.pp indent pps o unmk

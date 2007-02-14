@@ -32,18 +32,7 @@ sig
   
   (** Instantiation type. *)
   type inst
-  (** Construct an instantitation.
-   * Element X_i = (root_i, {x_ij |-> y_ij}) of the argument list
-   * means that root i of an instance should be a copy of root root_i
-   * of the original with its outer names renamed as given by the
-   * renaming {x_ij |-> y_ij}.
-   *
-   * @params FIXME
-   *)
-  val make : int -> (int * (name * name) list) list -> inst
-  (** FIXME
-   *)
-  val unmk : inst -> (int * (int * (name * name) list) list)
+
   (** Construct an instantitation.   For instance,
      [1&[x1,x2] |--> 0&[y1,y2], ...]
    * FIXME update to match changed signature
@@ -54,16 +43,21 @@ sig
    *FIXME how are the interfaces used?
    * @params FIXME
    *)
-  val make' : interface -> interface -> ((int * name list) * (int * name list)) list -> inst
+  val make : interface -> interface ->
+             ((int * name list) * (int * name list)) list ->
+             inst
   (** Construct an instantitation.
    * Try to infer an instantiation from I to J (FIXME describe properly)
    * Equivalent to make' i1 i2 []
    * @params FIXME
    *)
-  val make'' : interface -> interface -> inst
-
-  (** Identity instantiation. *)
-  val id : inst
+  val make' : interface -> interface -> inst
+  (** FIXME describe
+   * FIXME return record?
+   *)
+  val unmk : inst ->
+             (interface * interface *
+              ((int * name list) * (int * name list)) list)
 
   (** Instantiate a parameter FIXME
    *FIXME take a DR bgbdnf instead of a bgval list?
@@ -79,5 +73,5 @@ sig
   val pp : int -> PrettyPrint.ppstream -> inst -> unit
   (** Return a prettyprinted string representation of a instantiation. *)
   val toString : inst -> string
-  
+
 end

@@ -21,9 +21,15 @@
 (** Abstract data type for modelling rules.
  * @version $LastChangedRevision: 397 $
  *)
-functor Rule (structure BgVal : BGVAL
+functor Rule (structure Interface : INTERFACE
+              structure BgVal : BGVAL
               structure BgBDNF : BGBDNF
-              structure Instantiation : INSTANTIATION) : RULE
+              structure Instantiation : INSTANTIATION
+              sharing type Interface.interface =
+                           BgVal.interface =
+                           BgBDNF.interface =
+                           Instantiation.interface
+             ) : RULE
               where type bgval = BgVal.bgval
                 and type 'a bgbdnf = 'a BgBDNF.bgbdnf
                 and type BR = BgBDNF.BR
@@ -43,6 +49,11 @@ struct
    * @param inst   Instantiation
    *)
   fun make r = r
+  fun make' {name, redex, react} =
+      {name = name, redex = redex, react = react,
+       inst = Instantiation.make'
+                (BgBDNF.innerface redex)
+                (BgVal.innerface react)}
   (** Deconstruct a rule. @see make. *)
   fun unmk r = r
   (** Prettyprint a rule.

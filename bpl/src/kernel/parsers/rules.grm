@@ -138,7 +138,7 @@ fun mk_rule (rulefields, p) =
           redex = redex, react = react, inst = inst} []
       | populate {name, redex = SOME redex, react = SOME react, inst = NONE} []
       = populate {name = name, redex = SOME redex, react = SOME react,
-                  inst = SOME (Instantiation.make''
+                  inst = SOME (Instantiation.make'
                                  (BgBDNF.innerface redex)
                                  (BgVal.innerface react))} []
       | populate {name = SOME name, redex = SOME redex,
@@ -161,7 +161,7 @@ fun mk_rule (rulefields, p) =
       | populate {name, redex = SOME redex, react = SOME react, inst}
                  ((INST (inst', p'), _) :: rulefields)
       = populate {name = name, redex = SOME redex, react = SOME react,
-                  inst = SOME (Instantiation.make'
+                  inst = SOME (Instantiation.make
                                  (BgBDNF.innerface redex)
                                  (BgVal.innerface react)
                                  inst')} rulefields

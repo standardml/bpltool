@@ -154,11 +154,10 @@ fun match_b {agent, redex}
     in
       match_rbdnf
         {agent = regl_b agent,
-         rule = BG.Rule.make
+         rule = BG.Rule.make'
                   {name = "Rule",
                    redex = redex,
-                   react = react,
-                   inst = BG.Instantiation.id}}
+                   react = react}}
     end
 fun match_v {agent, redex}
   = let
@@ -167,11 +166,10 @@ fun match_v {agent, redex}
     in
       match_rbdnf
         {agent = regl_v agent,
-         rule = BG.Rule.make
+         rule = BG.Rule.make'
                   {name = "Rule",
                    redex = redex,
-                   react = react,
-                   inst = BG.Instantiation.id}}
+                   react = react}}
     end
 val simpl_v = BG.BgVal.simplify
 fun simpl_b b = simpl_v (denorm_b b) 

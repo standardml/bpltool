@@ -163,10 +163,12 @@ structure Instantiation
        structure BgVal            = BgVal
        structure BgBDNF           = BgBDNF
        structure ErrorHandler     = ErrorHandler
-       structure NameSetPP        = NameSetPP)
+       structure NameSetPP        = NameSetPP
+       structure ListPP           = ListPP)
 
 structure Rule = Rule
-  (structure BgVal = BgVal
+  (structure Interface = Interface
+   structure BgVal = BgVal
    structure BgBDNF = BgBDNF
    structure Instantiation = Instantiation)
 
