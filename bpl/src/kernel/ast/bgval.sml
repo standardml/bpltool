@@ -184,6 +184,11 @@ struct
   fun ppWithIface (indent:int) pps v =
     let
       val (t, iface, oface) = unmk v
+      (* try to print the interfaces using the names given in the input *)
+      val ()
+        = (Name.pp_unchanged (Interface.names iface) (Interface.names oface))
+          handle Name.PPUnchangedNameClash _ =>
+            Name.pp_unchanged NameSet.empty NameSet.empty
     in
       PrettyPrint.begin_block pps PrettyPrint.CONSISTENT 0;
     	BgTerm.pp indent pps t;
