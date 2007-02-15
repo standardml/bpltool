@@ -80,6 +80,7 @@ structure RulesLrVals
   = RulesLrVals
       (structure Info          = Info
        structure Token         = Token
+       structure Interface     = Interface
        structure Control       = Control
        structure Name          = Name
        structure NameSet       = NameSet

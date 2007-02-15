@@ -22,9 +22,12 @@
  * @version $LastChangedRevision: 397 $
  *)
 functor Rule (structure Interface : INTERFACE
+              structure NameSet : MONO_SET
               structure BgVal : BGVAL
               structure BgBDNF : BGBDNF
               structure Instantiation : INSTANTIATION
+              sharing type NameSet.Set =
+                           Interface.nameset
               sharing type Interface.interface =
                            BgVal.interface =
                            BgBDNF.interface =
@@ -50,10 +53,17 @@ struct
    *)
   fun make r = r
   fun make' {name, redex, react} =
-      {name = name, redex = redex, react = react,
-       inst = Instantiation.make'
-                (BgBDNF.innerface redex)
-                (BgVal.innerface react)}
+      let
+        val I
+          = Interface.make {loc = Interface.loc (BgBDNF.innerface redex),
+                            glob = NameSet.empty}
+        val J
+          = Interface.make {loc = Interface.loc (BgVal.innerface react),
+                            glob = NameSet.empty}
+      in
+        {name = name, redex = redex, react = react,
+         inst = Instantiation.make' {I = I, J = J}}
+      end
   (** Deconstruct a rule. @see make. *)
   fun unmk r = r
   (** Prettyprint a rule.

@@ -62,8 +62,9 @@ functor Instantiation (
   sharing type Wiring.wiring = BgVal.wiring
   sharing type BgVal.bgval = BgBDNF.bgval
 ) : INSTANTIATION
-  where type name = Name.name
-    and type bgval = BgVal.bgval
+  where type name      = Name.name
+    and type nameset   = NameSet.Set
+    and type bgval     = BgVal.bgval
     and type 'a bgbdnf = 'a BgBDNF.bgbdnf
     and type DR        = BgBDNF.DR
     and type interface = Interface.interface =
@@ -81,6 +82,7 @@ struct
 
   type interface = Interface.interface
   type name      = Name.name
+  type nameset   = NameSet.Set
   type wiring    = Wiring.wiring
   type bgval     = BgVal.bgval
   type 'a bgbdnf = 'a BgBDNF.bgbdnf
@@ -93,6 +95,36 @@ struct
 
   val noinfo = Info.noinfo
 
+  exception LogicalError of string
+  (* FIXME add explainer *)
+
+  type map = (int * name list) * (int * name list)
+
+  (* Prettyprint a map. *)
+  fun pp_map indent pps ((reasite, reans), (redsite, redns)) =
+      let
+	open PrettyPrint
+	val show = add_string pps
+	fun << () = begin_block pps INCONSISTENT indent
+	fun >> () = end_block pps
+	fun brk () = add_break pps (1, 0)
+        fun pp_nlist nlist =
+          case nlist of
+            [] => ()
+          | _  => (  show "&"
+                   ; ListPP.pp Name.pp indent pps nlist)
+      in
+        (  <<()
+         ; show (Int.toString reasite)
+         ; pp_nlist reans
+         ; brk()
+         ; show "|-->"
+         ; brk()
+         ; show (Int.toString redsite)
+         ; pp_nlist redns
+         ; >>())
+      end
+
   (* Instantiation type.
    *
    * I    is the (local) innerface of the instantiation
@@ -102,35 +134,94 @@ struct
    *)
   type inst = {I : interface, J : interface, rho : (int * bgval) array}
 
+  (* Deconstruct an instantiation. *)
+  fun unmk {I, J, rho} =
+      let
+        open BgVal
+        fun rho2map (reasite, (redsite, ls), maps) = 
+            case match (PAbs (PCom (PTen [PWir, PVar], PVar))) ls of
+              MAbs (_, MCom (MTen [MWir wren, _], _)) =>
+              let
+                val (reans, redns)
+                  = (NameMap.Fold
+                       (fn ((x, y), (reans, redns)) => (y::reans, x::redns))
+                       ([], [])
+                       (Wiring.unmk_ren wren))
+                    handle Wiring.NotARenaming _ =>
+                      raise LogicalError
+                              "rho contains an invalid local substitution"
+              in
+                ((reasite, reans), (redsite, redns)) :: maps
+              end
+            | _ => raise LogicalError
+                           "rho contains an invalid local substitution"
+      in
+        {I = I, J = J, maps = Array.foldri rho2map [] rho}
+      end
+
+  (* Prettyprint an instantiation. *)
+  fun pp indent pps inst =
+      let
+	open PrettyPrint
+	val show = add_string pps
+	fun << () = begin_block pps INCONSISTENT indent
+	fun >> () = end_block pps
+	fun brk () = add_break pps (1, 0)
+      in
+	ListPP.pp pp_map indent pps (#maps (unmk inst))
+      end
+
+  fun toString i
+    = PrettyPrint.pp_to_string
+        (Flags.getIntFlag "/misc/linewidth") 
+        (pp (Flags.getIntFlag "/misc/indent")) i
+
+  exception CannotInferLocalRenaming of map * interface * interface
+  (* FIXME add explainer *)
+
+  exception DuplicateNames of name * map
+  (* FIXME add explainer *)
+
+  exception NameNotInInterface of name * map * interface
+  (* FIXME add explainer *)
+  
+  exception UnequalNameListLengths of map
+  (* FIXME add explainer *)
+
+  exception IncompatibleSites of map * interface * interface
+  (* FIXME add explainer *)
+
+  exception IncompleteRenaming
+  of nameset * nameset * map * interface * interface
+  (* FIXME add explainer *)
+
+  exception InvalidSiteNumber of int * interface
+  (* FIXME add explainer *)
+
+  exception DuplicateEntries of int * map list
+  (* FIXME add explainer *)
+
+  exception NonLocalInterface of interface
+  (* FIXME add explainer *)
+
+
   (* Unless otherwise specified in maps, root i of the instance will be
    * a copy of root i of the original, given that there is a unique
    * one-to-one correspondence between the local names of the two roots.
    * If the names used are the same, they are assumed to map to themselves.
-   * 
-   * The algorithm is as follows:
-   * 1. sort maps by descending reactum site numbers
-   * 2. insert trivial maps for the reactum sites that are not mentioned
-   *    (if possible)
-   * 3. add name maps to the entries that has none
-   * 4. verify the entries of maps. I.e. we check that the names mentioned
-   *    in a map correspond to those of the interfaces and that each root
-   *    of the instance is mentioned exactly once.
-   *
-   * steps 2, 3, 4, and 5 are done in step
    *)
-  (* FIXME should the interfaces be local? or should we only store
-   *       the local parts? or neither? *)
-  fun make I J maps =
+  fun make {I, J, maps} =
       let
         val m  = Interface.width I
         val n  = Interface.width J
         val Xs = Array.fromList (Interface.loc I)
         val Ys = Array.fromList (Interface.loc J)
 
-        (* Create a rho array on the form described above using a completely
-         * specified map list, i.e. the list must have, in order, elements
+        (* Create a rho array on the form described above (type inst) using
+         * a completely specified map list, i.e. the list must have, in order,
+         * elements
          * [(redex_site_{0}, name_map_{0}), ...,
-         *  (redex_site_{m - 1}, name_map_{m - 1})]
+         *  (redex_site_{n - 1}, name_map_{n - 1})]
          *)
         fun maps2rho maps =
             let
@@ -150,14 +241,16 @@ struct
             end
         (* infer or verify a name map from a redex site to a reactum site.
          *)
-        fun infer_or_verify_namemap ((rea, []), (red, [])) =
-            (* infer (if possible) the name map from site red of redex to
-             * site rea of reactum. *)
+        fun infer_or_verify_namemap (map as ((rea, []), (red, []))) =
+            (* infer (if possible) the local renaming from site red of
+             * redex to site rea of reactum, in the form of a name map. *)
             let
               val X = Xs sub red
               val Y = Ys sub rea
             in
-              if NameSet.eq X Y then
+              if NameSet.size X <> NameSet.size Y then
+                raise IncompatibleSites (map, I, J)
+              else if NameSet.eq X Y then
                 NameSet.fold
                   (fn n => fn nmap => NameMap.add (n, n, nmap))
                   NameMap.empty X
@@ -165,41 +258,59 @@ struct
                 NameMap.fromList
                   [(NameSet.someElement X, NameSet.someElement Y)]
               else
-                raise Fail "FIXME not a trivial map from names of red to rea"
+                raise CannotInferLocalRenaming (map, I, J)
             end
-          | infer_or_verify_namemap ((rea, reans), (red, redns)) =
-            (* verify the given name map *)
+          | infer_or_verify_namemap (map as ((rea, reans), (red, redns))) =
+            (* verify the given local renaming (reans)/(redns) and construct
+             * a corresponding name map.  *)
             let
               val X = Xs sub red
               val Y = Ys sub rea
 
-              (* verify a single renaming and keep track of the used names *)
+              val () = if NameSet.size X = NameSet.size Y then ()
+                       else raise IncompatibleSites (map, I, J)
+
+              (* Verify a single renaming, i.e. that the names in the given
+               * renaming matches the interfaces I and J.
+               * Keep track of the used names X' and Y', to make sure that
+               * all the local names of the sites are mentioned exactly once
+               * in the renaming. *)
               fun verify_ren (x, y, (X', Y', nmap)) =
-                  if NameSet.member x X andalso NameSet.member y Y then
-                    (NameSet.insert x X',
-                     NameSet.insert y Y',
-                     NameMap.add (x, y, nmap))
-                    handle NameSet.DuplicatesRemoved =>
-                      raise Fail "FIXME multiple occurences of the same name"
+                  if not (NameSet.member x X) then
+                    raise NameNotInInterface (x, map, I)
+                  else if not (NameSet.member y Y) then
+                    raise NameNotInInterface (y, map, J)
                   else
-                    raise Fail "FIXME name doesn't match interface"
+                    (NameSet.insert x X'
+                       handle NameSet.DuplicatesRemoved =>
+                         raise DuplicateNames (x, map),
+                     NameSet.insert y Y'
+                       handle NameSet.DuplicatesRemoved =>
+                         raise DuplicateNames (y, map),
+                     NameMap.add (x, y, nmap))
 
               val (X', Y', nmap)
                 = (ListPair.foldrEq 
                      verify_ren
                      (NameSet.empty, NameSet.empty, NameMap.empty)
                      (redns, reans))
-                  handle ListPair.UnequalLengths => raise (Fail "FIXME invalid map")
+                  handle ListPair.UnequalLengths =>
+                    raise UnequalNameListLengths map
             in
-              if NameSet.size X = NameSet.size X' andalso NameSet.size Y = NameSet.size Y' then
-                nmap
+              if NameSet.size X <> NameSet.size X' then
+                raise IncompleteRenaming
+                        (NameSet.difference X X',
+                         NameSet.difference Y Y', 
+                         map, I, J)
               else
-                raise Fail "FIXME not all renamings are specified in the map"
+                nmap
             end
 
         (* infer missing maps and verify the map list.
          * reasite is the number of the next reactum site to be added to the
          * accumulator acc.
+         * The result is a list on the form described in the comment
+         * for maps2rho.
          *)
         fun infer_and_verify_maps reasite acc [] =
             if reasite = ~1 then
@@ -212,8 +323,12 @@ struct
                   (infer_or_verify_namemap ((reasite, []), (reasite, []))))
                  :: acc)
                 []
-          | infer_and_verify_maps reasite acc (maps as ((map as ((rea, reans), (red, redns)))::mapstl)) =
-            if reasite >= 0 then
+          | infer_and_verify_maps reasite acc (maps' as ((map as ((rea, reans), (red, redns)))::mapstl)) =
+            if rea < 0 orelse n <= rea then
+              raise InvalidSiteNumber (rea, J)
+            else if red < 0 orelse m <= red then
+              raise InvalidSiteNumber (red, I)
+            else if reasite >= 0 then
               (case Int.compare (rea, reasite) of
                  EQUAL => (* verify map and add it to the accumulator *)
                    infer_and_verify_maps
@@ -226,27 +341,34 @@ struct
                      ((reasite,
                        (infer_or_verify_namemap ((reasite, []), (reasite, []))))
                       :: acc)
-                     maps
-               | GREATER => raise (Fail "FIXME invalid rea"))
+                     maps'
+               | GREATER =>
+                   raise DuplicateEntries (rea, maps))
             else
-              raise (Fail "FIXME too many map entries")
+              raise DuplicateEntries (rea, maps)
 
         (* compare function for maps used to sort in decreasing order *)
         fun map_cmp (((rea1,_), _), ((rea2,_), _)) = Int.compare (rea2, rea1)
       in
-        {I = I,
-         J = J,
-         rho = (  maps2rho 
-                o (infer_and_verify_maps (n - 1) [])
-                o (ListSort.sort map_cmp))
-               maps}
+        if not (Interface.is_local I) then
+          raise NonLocalInterface I
+        else if not (Interface.is_local J) then
+          raise NonLocalInterface J
+        else
+          {I = I,
+           J = J,
+           rho = (  maps2rho 
+                  o (infer_and_verify_maps (n - 1) [])
+                  o (ListSort.sort map_cmp))
+                 maps}
       end
 
-  fun make' I J = make I J []
+  fun make' {I, J} = make {I = I, J = J, maps = []}
 
-  (* FIXME which exceptions should be raised when d doesn't match the
-   *       instantiation? *)
-  fun instantiate {I, J, rho} d =
+  exception IncompatibleParameter of inst * DR bgbdnf
+  (* FIXME add explainer*)
+
+  fun instantiate (inst as {I, J, rho}) d =
       let
         infix 5 **
         fun b1 ** b2 = BgVal.Ten noinfo [b1, b2]
@@ -256,69 +378,16 @@ struct
         val {ren, Ps} = BgBDNF.unmkDR d
         val Ps = Array.fromList Ps
 
+        val d_loc_outerface
+          = Interface.make {loc = Interface.loc (BgBDNF.outerface d),
+                            glob = NameSet.empty}
+
         fun copy_P ((i, ls_i), es) =
             (ls_i oo' (BgBDNF.unmk (Ps sub i))) :: es
       in
-        (* FIXME only compare the local part? *)
-        if Interface.eq (BgBDNF.outerface d, I) then
+        if Interface.eq (d_loc_outerface, I) then
           ren oo' (BgVal.Par noinfo (Array.foldr copy_P [] rho))
         else
-          raise Fail "FIXME parameter does not match the instantiation innerface"
+          raise IncompatibleParameter (inst, d)
       end
-
-  (* Deconstruct an instantiation. *)
-  fun unmk {I, J, rho} =
-      let
-        open BgVal
-        fun rho2map (reasite, (redsite, ls), maps) = 
-            case match (PAbs (PCom (PTen [PWir, PVar], PVar))) ls of
-              MAbs (_, MCom (MTen [MWir wren, _], _)) =>
-              let
-                val (reans, redns)
-                  = (NameMap.Fold
-                       (fn ((x, y), (reans, redns)) => (y::reans, x::redns))
-                       ([], [])
-                       (Wiring.unmk_ren wren))
-                    handle Wiring.NotARenaming _ =>
-                      raise Fail "FIXME should not happen"
-              in
-                ((reasite, reans), (redsite, redns)) :: maps
-              end
-            | _ => raise Fail "FIXME should not happen"
-      in
-        (I, J, Array.foldri rho2map [] rho)
-      end
-
-  (* Prettyprint an instantiation.
-   * @params indent pps inst
-   * @param indent  Indentation at each block level.
-   * @param pps     Prettyprint stream on which to output.
-   * @param inst    The instantiation to print.
-   *)
-  fun pp indent pps inst =
-      let
-	open PrettyPrint
-	val show = add_string pps
-	fun << () = begin_block pps INCONSISTENT indent
-	fun >> () = end_block pps
-	fun brk () = add_break pps (1, 0)
-	fun pp_e indent pps ((reasite, reans), (redsite, redns)) =
-	    (  <<()
-             ; show (Int.toString reasite)
-             ; ListPP.pp Name.pp indent pps reans
-             ; brk()
-             ; show "|-->"
-             ; brk()
-             ; show (Int.toString redsite)
-             ; ListPP.pp Name.pp indent pps redns
-             ; >>())
-      in
-	ListPP.pp pp_e indent pps (#3 (unmk inst))
-      end
-
-  fun toString i
-    = PrettyPrint.pp_to_string
-        (Flags.getIntFlag "/misc/linewidth") 
-        (pp (Flags.getIntFlag "/misc/indent")) i
-
 end

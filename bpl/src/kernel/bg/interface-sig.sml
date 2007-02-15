@@ -56,6 +56,10 @@ sig
    *)
   val eq : (interface * interface) -> bool
 
+  (** Determine whether the interface is local.
+   *)
+  val is_local : interface -> bool
+
   (** Construct the tensor product of two interfaces. *)
   val * : (interface * interface) -> interface
   (** Empty interface. *)

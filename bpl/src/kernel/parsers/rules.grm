@@ -136,11 +136,18 @@ fun mk_rule (rulefields, p) =
          {name = SOME (Int.toString (!nextruleno)
                        before nextruleno := !nextruleno + 1),
           redex = redex, react = react, inst = inst} []
-      | populate {name, redex = SOME redex, react = SOME react, inst = NONE} []
-      = populate {name = name, redex = SOME redex, react = SOME react,
-                  inst = SOME (Instantiation.make'
-                                 (BgBDNF.innerface redex)
-                                 (BgVal.innerface react))} []
+      | populate {name, redex = SOME redex, react = SOME react, inst = NONE} [] =
+        let
+          val I
+            = Interface.make {loc = Interface.loc (BgBDNF.innerface redex),
+                              glob = NameSet.empty}
+          val J
+            = Interface.make {loc = Interface.loc (BgVal.innerface react),
+                              glob = NameSet.empty}
+        in
+          populate {name = name, redex = SOME redex, react = SOME react,
+                    inst = SOME (Instantiation.make' {I = I, J = J})} []
+        end
       | populate {name = SOME name, redex = SOME redex,
                   react = SOME react, inst = SOME inst} []
       = {name = name, redex = redex, react = react, inst = inst}
@@ -159,12 +166,19 @@ fun mk_rule (rulefields, p) =
       = populate {name = name, redex = redex,
                   react = SOME (term2bgval react'), inst = inst} rulefields
       | populate {name, redex = SOME redex, react = SOME react, inst}
-                 ((INST (inst', p'), _) :: rulefields)
-      = populate {name = name, redex = SOME redex, react = SOME react,
-                  inst = SOME (Instantiation.make
-                                 (BgBDNF.innerface redex)
-                                 (BgVal.innerface react)
-                                 inst')} rulefields
+                 ((INST (inst', p'), _) :: rulefields) =
+        let
+          val I
+            = Interface.make {loc = Interface.loc (BgBDNF.innerface redex),
+                              glob = NameSet.empty}
+          val J
+            = Interface.make {loc = Interface.loc (BgVal.innerface react),
+                              glob = NameSet.empty}
+        in
+          populate {name = name, redex = SOME redex, react = SOME react,
+                    inst = SOME (Instantiation.make
+                                   {I = I, J = J, maps = inst'})} rulefields
+        end
       | populate {name, redex, react, inst}
                  ((rf1 as (INST inst', _)) :: rf2 :: rulefields)
       = populate {name = name, redex = redex, (*FIXME diverges if rf2 is also INST *)
@@ -240,6 +254,7 @@ fun nset2idlinkset nset =
 %header (functor RulesLrVals
 		   (structure Info : INFO
 		    structure Token : TOKEN
+		    structure Interface : INTERFACE
 		    structure Control : CONTROL
 		    structure Name : NAME
 		    structure NameSet : MONO_SET
@@ -254,12 +269,14 @@ fun nset2idlinkset nset =
 		    structure Instantiation : INSTANTIATION
 		    structure Rule : RULE
 		    sharing type Control.control = Ion.control
+		    sharing type Interface.interface = Instantiation.interface
 		    sharing type Name.name = 
 				 NameSet.elt = 
 				 Instantiation.name = 
 				 Link.name =
 				 Ion.name
 		    sharing type NameSet.Set =
+				 Interface.nameset =
 				 Link.nameset =
 				 Ion.nameset =
 				 Permutation.nameset =

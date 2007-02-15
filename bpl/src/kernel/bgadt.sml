@@ -167,9 +167,10 @@ structure Instantiation
        structure ListPP           = ListPP)
 
 structure Rule = Rule
-  (structure Interface = Interface
-   structure BgVal = BgVal
-   structure BgBDNF = BgBDNF
+  (structure Interface     = Interface
+   structure NameSet       = NameSet
+   structure BgVal         = BgVal
+   structure BgBDNF        = BgBDNF
    structure Instantiation = Instantiation)
 
 type rule = Rule.rule
