@@ -205,7 +205,13 @@ struct
             if reasite = ~1 then
               acc
             else
-              raise (Fail "FIXME too few map entries")
+              (* insert a trivial map for reasite *)
+              infer_and_verify_maps
+                (reasite - 1)
+                ((reasite,
+                  (infer_or_verify_namemap ((reasite, []), (reasite, []))))
+                 :: acc)
+                []
           | infer_and_verify_maps reasite acc (maps as ((map as ((rea, reans), (red, redns)))::mapstl)) =
             if reasite >= 0 then
               (case Int.compare (rea, reasite) of
