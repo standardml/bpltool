@@ -81,6 +81,9 @@ sig
   (** Utility function for creating a prettyprinter from a string. *)
   val mk_string_pp : string -> (int -> ppstream -> unit)
 
+  (** Utility function for creating a prettyprinter from an integer. *)
+  val mk_int_pp : int -> (int -> ppstream -> unit)
+
   (** Utility function for wrapping a pretty printer
       with the data to be printed. *)
   val pack_pp_with_data

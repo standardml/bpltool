@@ -111,13 +111,14 @@ sig
   exception IncompleteRenaming
   of nameset * nameset * map * interface * interface
 
-  (** Signal that the site number s is invalid wrt. interface i.
+  (** Signal that the site number s in map is invalid wrt. interface i.
    * 
-   * @params s i
-   * @param s  the site number.
-   * @param i  the interface.
+   * @params map s i
+   * @param map  the map.
+   * @param s    the site number.
+   * @param i    the interface.
    *)
-  exception InvalidSiteNumber of int * interface
+  exception InvalidSiteNumber of map * int * interface
 
   (** Signal that a reactum site s is mentioned more than once in a map
    * list maps.

@@ -96,7 +96,13 @@ struct
   val noinfo = Info.noinfo
 
   exception LogicalError of string
-  (* FIXME add explainer *)
+  fun explain_LogicalError (LogicalError errtxt) =
+      [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_LogicalError _ = raise Match
+  val _ = add_explainer
+            (mk_explainer
+               "an internal error occurred"
+               explain_LogicalError)
 
   type map = (int * name list) * (int * name list)
 
@@ -124,6 +130,8 @@ struct
          ; pp_nlist redns
          ; >>())
       end
+
+  val pp_map_list = ListPP.pp pp_map
 
   (* Instantiation type.
    *
@@ -160,16 +168,7 @@ struct
       end
 
   (* Prettyprint an instantiation. *)
-  fun pp indent pps inst =
-      let
-	open PrettyPrint
-	val show = add_string pps
-	fun << () = begin_block pps INCONSISTENT indent
-	fun >> () = end_block pps
-	fun brk () = add_break pps (1, 0)
-      in
-	ListPP.pp pp_map indent pps (#maps (unmk inst))
-      end
+  fun pp indent pps inst = pp_map_list indent pps (#maps (unmk inst))
 
   fun toString i
     = PrettyPrint.pp_to_string
@@ -177,32 +176,144 @@ struct
         (pp (Flags.getIntFlag "/misc/indent")) i
 
   exception CannotInferLocalRenaming of map * interface * interface
-  (* FIXME add explainer *)
+  fun explain_CannotInferLocalRenaming (CannotInferLocalRenaming (map, I, J)) =
+      [Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "map",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data pp_map map, [])]),
+       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "interface I",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data Interface.pp I, [])]),
+       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "interface J",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data Interface.pp J, [])])]
+    | explain_CannotInferLocalRenaming _ = raise Match
+  val _ = add_explainer
+            (mk_explainer
+               "cannot infer local renaming for instantiation"
+               explain_CannotInferLocalRenaming)
 
   exception DuplicateNames of name * map
-  (* FIXME add explainer *)
+  fun explain_DuplicateNames (DuplicateNames (n, map)) =
+      [Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "map",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data pp_map map, [])]),
+       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "name",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data Name.pp n, [])])]
+    | explain_DuplicateNames _ = raise Match
+  val _ = add_explainer
+            (mk_explainer
+               "instantiation map has duplicate names"
+               explain_DuplicateNames)
 
   exception NameNotInInterface of name * map * interface
-  (* FIXME add explainer *)
+  fun explain_NameNotInInterface (NameNotInInterface (n, map, i)) =
+      [Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "map",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data pp_map map, [])]),
+       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "name",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data Name.pp n, [])]),
+       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "interface",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data Interface.pp i, [])])]
+    | explain_NameNotInInterface _ = raise Match
+  val _ = add_explainer
+            (mk_explainer
+               "name in instantiation map doesn't match interface"
+               explain_NameNotInInterface)
   
   exception UnequalNameListLengths of map
-  (* FIXME add explainer *)
+  fun explain_UnequalNameListLengths (UnequalNameListLengths map) =
+      [Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "map",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data pp_map map, [])])]
+    | explain_UnequalNameListLengths _ = raise Match
+  val _ = add_explainer
+            (mk_explainer
+               "instantiation map has name lists of different lengths"
+               explain_UnequalNameListLengths)
 
   exception IncompatibleSites of map * interface * interface
-  (* FIXME add explainer *)
+  fun explain_IncompatibleSites (IncompatibleSites (map, I, J)) =
+      [Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "map",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data pp_map map, [])]),
+       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "interface I",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data Interface.pp I, [])]),
+       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "interface J",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data Interface.pp J, [])])]
+    | explain_IncompatibleSites _ = raise Match
+  val _ = add_explainer
+            (mk_explainer
+               "interface sites specified by instantiation map are incompatible"
+               explain_IncompatibleSites)
 
   exception IncompleteRenaming
   of nameset * nameset * map * interface * interface
-  (* FIXME add explainer *)
+  fun explain_IncompleteRenaming (IncompleteRenaming (X, Y, map, I, J)) =
+      [Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "missing names from I",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data NameSetPP.pp X, [])]),
+       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "missing names from J",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data NameSetPP.pp Y, [])]),
+       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "map",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data pp_map map, [])]),
+       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "interface I",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data Interface.pp I, [])]),
+       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "interface J",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data Interface.pp J, [])])]
+    | explain_IncompleteRenaming _ = raise Match
+  val _ = add_explainer
+            (mk_explainer
+               "instantiation map specifies an incomplete renaming"
+               explain_IncompleteRenaming)
 
-  exception InvalidSiteNumber of int * interface
-  (* FIXME add explainer *)
+  exception InvalidSiteNumber of map * int * interface
+  fun explain_InvalidSiteNumber (InvalidSiteNumber (map, s, i)) =
+      [Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "map",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data pp_map map, [])]),
+       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "site",
+            [Exp (LVL_USER, Origin.unknown_origin, mk_int_pp s, [])]),
+       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "interface",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data Interface.pp i, [])])]
+    | explain_InvalidSiteNumber _ = raise Match
+  val _ = add_explainer
+            (mk_explainer
+               "instantiation map has an invalid site number wrt. interface"
+               explain_InvalidSiteNumber)
 
   exception DuplicateEntries of int * map list
-  (* FIXME add explainer *)
+  fun explain_DuplicateEntries (DuplicateEntries (s, maps)) =
+      [Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "map list",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data pp_map_list maps, [])]),
+       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "site",
+            [Exp (LVL_USER, Origin.unknown_origin, mk_int_pp s, [])])]
+    | explain_DuplicateEntries _ = raise Match
+  val _ = add_explainer
+            (mk_explainer
+               "instantiation map list has duplicate entries for site"
+               explain_DuplicateEntries)
 
   exception NonLocalInterface of interface
-  (* FIXME add explainer *)
+  fun explain_NonLocalInterface (NonLocalInterface i) =
+      [Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "interface",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data Interface.pp i, [])])]
+    | explain_NonLocalInterface _ = raise Match
+  val _ = add_explainer
+            (mk_explainer
+               "instantiation interface is not local"
+               explain_NonLocalInterface)
 
 
   (* Unless otherwise specified in maps, root i of the instance will be
@@ -325,9 +436,9 @@ struct
                 []
           | infer_and_verify_maps reasite acc (maps' as ((map as ((rea, reans), (red, redns)))::mapstl)) =
             if rea < 0 orelse n <= rea then
-              raise InvalidSiteNumber (rea, J)
+              raise InvalidSiteNumber (map, rea, J)
             else if red < 0 orelse m <= red then
-              raise InvalidSiteNumber (red, I)
+              raise InvalidSiteNumber (map, red, I)
             else if reasite >= 0 then
               (case Int.compare (rea, reasite) of
                  EQUAL => (* verify map and add it to the accumulator *)
@@ -366,7 +477,19 @@ struct
   fun make' {I, J} = make {I = I, J = J, maps = []}
 
   exception IncompatibleParameter of inst * DR bgbdnf
-  (* FIXME add explainer*)
+  fun explain_IncompatibleParameter (IncompatibleParameter (inst, d)) =
+      [Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "instantiation",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data pp inst, [])]),
+       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp "parameter",
+            [Exp (LVL_USER, Origin.unknown_origin,
+                  pack_pp_with_data BgBDNF.pp d, [])])]
+    | explain_IncompatibleParameter _ = raise Match
+  val _ = add_explainer
+            (mk_explainer
+               "parameter is not compatible with instantiation"
+               explain_IncompatibleParameter)
+  
 
   fun instantiate (inst as {I, J, rho}) d =
       let
