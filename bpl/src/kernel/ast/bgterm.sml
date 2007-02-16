@@ -111,7 +111,7 @@ struct
 	val PrPar = 6
 	val PrMin = 0
 	val show = add_string pps
-	fun << () = begin_block pps INCONSISTENT 1
+	fun << () = begin_block pps INCONSISTENT 0
 	fun >> () = end_block pps
 	fun brk () = add_break pps (1, 0)
 	fun brk0 () = add_break pps (0, 0)
@@ -174,18 +174,18 @@ struct
 		  | (b :: bs) => 
 		    let
 		      val (showlpar, pal', par', prr', showrpar) 
-			= checkprec PrTen
+						= checkprec PrTen
 		      fun mappp [] = ()
-			| mappp [b]
-			  = (show " *"; brk(); ppp PrTen par' prr' b)
-			| mappp (b :: b' :: bs) 
-			  = (show " *";
-			     brk();
-			     ppp PrTen PrTen PrTen b;
-			     mappp (b' :: bs))
+						| mappp [b]
+						  = (show " *"; brk(); ppp PrTen par' prr' b)
+						| mappp (b :: b' :: bs) 
+						  = (show " *";
+						     brk();
+						     ppp PrTen PrTen PrTen b;
+						     mappp (b' :: bs))
 		    in
-		      <<();
 		      showlpar();
+		      <<();
 		      ppp pal' PrTen PrTen b;
 		      mappp bs;
 		      showrpar();
@@ -200,16 +200,16 @@ struct
 		      val (showlpar, pal', par', prr', showrpar) 
 			= checkprec PrPri
 		      fun mappp [] = ()
-			| mappp [b]
-			  = (show " `|`"; brk(); ppp PrPri par' prr' b)
-			| mappp (b :: b' :: bs) 
-			  = (show " `|`";
-			     brk();
-			     ppp PrPri PrPri PrPri b;
-			     mappp (b' :: bs))
+						| mappp [b]
+						  = (show " `|`"; brk(); ppp PrPri par' prr' b)
+						| mappp (b :: b' :: bs) 
+						  = (show " `|`";
+						     brk();
+						     ppp PrPri PrPri PrPri b;
+						     mappp (b' :: bs))
 		    in
-		      <<();
 		      showlpar();
+		      <<();
 		      ppp pal' PrPri PrPri b;
 		      mappp bs;
 		      showrpar();
@@ -222,18 +222,18 @@ struct
 		  | (b :: bs) => 
 		    let
 		      val (showlpar, pal', par', prr', showrpar) 
-			= checkprec PrPar
+						= checkprec PrPar
 		      fun mappp [] = ()
-			| mappp [b]
-			  = (show " ||"; brk(); ppp PrPar par' prr' b)
-			| mappp (b :: b' :: bs) 
-			  = (show " ||";
-			     brk();
-			     ppp PrPar PrPar PrPar b;
-			     mappp (b' :: bs))
+						| mappp [b]
+						  = (show " ||"; brk(); ppp PrPar par' prr' b)
+						| mappp (b :: b' :: bs) 
+						  = (show " ||";
+						     brk();
+						     ppp PrPar PrPar PrPar b;
+						     mappp (b' :: bs))
 		    in
-		      <<();
 		      showlpar();
+		      <<();
 		      ppp pal' PrPar PrPar b;
 		      mappp bs;
 		      showrpar();
@@ -244,8 +244,8 @@ struct
 		    val (showlpar, pal', par', prr', showrpar)
 		      = checkprec PrCom
 		  in
-		    <<();
 		    showlpar();
+		    <<();
 		    ppp pal' PrCom PrCom b1;
 		    show " o";
 		    brk();

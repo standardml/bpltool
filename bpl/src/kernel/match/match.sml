@@ -335,6 +335,7 @@ struct
    *
    * They must return specific values, as well as
    * - ename'     extension of ename, renaming some of s_a_e's outer names
+   * - Y          set of names to add as introductions to s_a_e
    * - s_C'       substitution representing (part of) context edge links
    *
    * Letting sigma^C represent the context substitution of the
@@ -412,21 +413,32 @@ struct
 
 
   (* Match a global discrete prime g to a context G using the PAX rule:
-   * 1) Deconstruct context G = "alpha" : (X) -> Y.
-   * 2) Compute X, Y, and Z = dom(g) \ X.
-   * 3) Let ename' = ename, s_C' = {}.
-   * 4) For each x in Y + Z, 
-   *    4a) If x in Y then x' = alpha^-1(x) else x' = x.
-   *    4b) If x in dom(s_C_e) then
-   *          check/adjust ename' so that ename' s_a_e(x') = s_C_e(x)
-   *        else
-   *          if x in dom(s_C_n) then x'' = s_C_n(x) else x'' = x
-   *          if x in dom(s_a_e) then
-   *            check/adjust ename' and s_C' so that
-   *              ename' s_a_e(x') = s_C'(x'')
+   * 1) Deconstruct context G = "alpha" : (X + U) -> W.
+   * 2) Find X + Z = dom(g).
+   * 3) Compute X, Z and U from (X + U) and (X + Z).
+   * 4) Let ename' = ename, s_C' = {}, Y = {}.
+   * 5) For each x in W + Z,
+   *    5a) If x in W then x' = alpha^-1(x) else x' = x.
+   *    5b) If x' in X + Z then
+   *          If x in dom(s_C_e) then
+   *            check/adjust ename' so that ename' s_a_e(x') = s_C_e(x).
    *          else
-   *            check/adjust s_C' so that s_a_n(x') = s_C'(x'').
-   * 5) Return ename', s_C', qs = [(X)g].
+   *            if x in dom(s_C_n) then x'' = s_C_n(x) else x'' = x.
+   *            if x in dom(s_a_e) then
+   *              check/adjust ename' and s_C' so that
+   *                ename' s_a_e(x') = s_C'(x'')
+   *            else
+   *              check/adjust s_C' so that s_a_n(x') = s_C'(x'').
+   *        else (* x' in U (implying x in W) *)
+   *          if x in dom(s_C_e) then
+   *            let y = s_C_e(x)
+   *            if y not in rg(s_a_e) then add y to Y.
+   *          else
+   *            if x in dom(s_C_n) then x'' = s_C_n(x) else x'' = x.
+   *            let y = s_C'(x''),
+   *              if necessary by letting y be fresh and adjusting s_C'.
+   *            if y not in rg(s_a) then add y to Y.
+   * 6) Return ename', s_C', Y, qs = [(id_Z * (U + X)(U/ * "X"))(X)g].
    *)
   fun matchPAX' {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, g, G} =
       lzmake (fn () => ((*print "PAX' ";*)
@@ -436,12 +448,12 @@ struct
         BgBDNF.SCon (i, a) =>
         (let
           val X = Wiring.innernames a
-          val Y = Wiring.outernames a
+          val W = Wiring.outernames a
           val Z = NameSet.difference (Interface.glob (outerface g)) X
 
-          fun match_name isinY x (ename', s_C') =
+          fun match_name isinW x (ename', s_C') =
               let
-                val x' = if isinY then Wiring.app_renaming_inverse_x a x else x
+                val x' = if isinW then Wiring.app_renaming_inverse_x a x else x
               in
                 if Wiring.in_domain x s_C_e then
                   (check_adjust'
@@ -468,7 +480,7 @@ struct
           val (ename', s_C')
             = NameSet.fold
                 (match_name false)
-                (NameSet.fold (match_name true) (ename, NameMap.empty) Y)
+                (NameSet.fold (match_name true) (ename, NameMap.empty) W)
                 Z
         in
           Cons ({ename' = ename',
@@ -869,10 +881,10 @@ struct
    * If Ps = [P], where P = (id_Z * ^s)(W)G, then
    * 1) Let s_C_e = s_R_e, s_C_n = s * s_R_n, and infer premise
    *    using s_a_e, s_a_n, s_C_e, s_C_n, g, G,
-   *    yielding ename', s_C', and qs
+   *    yielding ename', s_C', Y, and qs
    * 2) Let Y_C_e = outernames s_C_e
    * 3) Let U = outernames s
-   * 4) Return ename', Y = {}, s_C := s_C' * id_Y_C_e, G := "U", qs
+   * 4) Return ename', Y, s_C := s_C' * id_Y_C_e, G := "U", qs
    *)
   fun matchSWX {ename, 
                 s_a = {s_a_e, s_a_n}, 
