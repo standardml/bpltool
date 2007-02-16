@@ -131,42 +131,13 @@ fun mk_rule (rulefields, p) =
     val term2bgval = BgVal.make BgTerm.info
     val term2rbdnf
       = BgBDNF.regularize o BgBDNF.make o term2bgval
-    fun populate {name = NONE, redex, react, inst} []
+    fun populate {name = NONE, redex, react, inst} [] inst'
       = populate
          {name = SOME (Int.toString (!nextruleno)
                        before nextruleno := !nextruleno + 1),
-          redex = redex, react = react, inst = inst} []
-      | populate {name, redex = SOME redex, react = SOME react, inst = NONE} [] =
-        let
-          val I
-            = Interface.make {loc = Interface.loc (BgBDNF.innerface redex),
-                              glob = NameSet.empty}
-          val J
-            = Interface.make {loc = Interface.loc (BgVal.innerface react),
-                              glob = NameSet.empty}
-        in
-          populate {name = name, redex = SOME redex, react = SOME react,
-                    inst = SOME (Instantiation.make' {I = I, J = J})} []
-        end
-      | populate {name = SOME name, redex = SOME redex,
-                  react = SOME react, inst = SOME inst} []
-      = {name = name, redex = redex, react = react, inst = inst}
-      | populate _ [] = raise RedexOrReactMissing p
-      | populate {name, redex, react, inst}
-                 ((RULENAME name', _) :: rulefields)
-      = populate {name = SOME name', redex = redex,
-                  react = react, inst = inst} rulefields
-      | populate {name, redex, react, inst}
-                 ((REDEX   redex', _) :: rulefields)
-      = populate {name = name,
-                  redex = SOME (term2rbdnf redex'),
-                  react = react, inst = inst} rulefields
-      | populate {name, redex, react, inst}
-                 ((REACT   react', _) :: rulefields)
-      = populate {name = name, redex = redex,
-                  react = SOME (term2bgval react'), inst = inst} rulefields
-      | populate {name, redex = SOME redex, react = SOME react, inst}
-                 ((INST (inst', p'), _) :: rulefields) =
+          redex = redex, react = react, inst = inst} [] inst'
+      | populate {name, redex = SOME redex, react = SOME react, inst = NONE}
+                 [] (SOME inst') =
         let
           val I
             = Interface.make {loc = Interface.loc (BgBDNF.innerface redex),
@@ -177,19 +148,46 @@ fun mk_rule (rulefields, p) =
         in
           populate {name = name, redex = SOME redex, react = SOME react,
                     inst = SOME (Instantiation.make
-                                   {I = I, J = J, maps = inst'})} rulefields
+                                   {I = I, J = J, maps = inst'})}
+                   [] NONE
         end
+      | populate {name, redex = SOME redex, react = SOME react, inst = NONE} [] NONE =
+        let
+          val I
+            = Interface.make {loc = Interface.loc (BgBDNF.innerface redex),
+                              glob = NameSet.empty}
+          val J
+            = Interface.make {loc = Interface.loc (BgVal.innerface react),
+                              glob = NameSet.empty}
+        in
+          populate {name = name, redex = SOME redex, react = SOME react,
+                    inst = SOME (Instantiation.make' {I = I, J = J})} [] NONE
+        end
+      | populate {name = SOME name, redex = SOME redex,
+                  react = SOME react, inst = SOME inst} [] _
+      = {name = name, redex = redex, react = react, inst = inst}
+      | populate _ [] _ = raise RedexOrReactMissing p
       | populate {name, redex, react, inst}
-                 ((rf1 as (INST inst', _)) :: rf2 :: rulefields)
-      = populate {name = name, redex = redex, (*FIXME diverges if rf2 is also INST *)
-                  react = react, inst = inst} (rf2 :: rf1 :: rulefields)
+                 ((RULENAME name', _) :: rulefields) inst'
+      = populate {name = SOME name', redex = redex,
+                  react = react, inst = inst} rulefields inst'
       | populate {name, redex, react, inst}
-                 [(INST inst', _)]
-      = raise RedexOrReactMissing p
+                 ((REDEX   redex', _) :: rulefields)  inst'
+      = populate {name = name,
+                  redex = SOME (term2rbdnf redex'),
+                  react = react, inst = inst} rulefields  inst'
+      | populate {name, redex, react, inst}
+                 ((REACT   react', _) :: rulefields) inst'
+      = populate {name = name, redex = redex,
+                  react = SOME (term2bgval react'), inst = inst} rulefields inst'
+      | populate {name, redex, react, inst}
+                 ((INST (inst', p'), _) :: rulefields) _
+      = populate {name = name, redex = redex, react = react,
+                  inst = inst} rulefields (SOME inst')
     val ruledata
       = populate
           {name = NONE, redex = NONE, react = NONE, inst = NONE}
-          rulefields
+          rulefields NONE
   in
     Rule.make ruledata
   end
