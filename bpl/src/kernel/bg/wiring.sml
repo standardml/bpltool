@@ -535,6 +535,12 @@ struct
         SOME _ => true
       | NONE => false
 
+  fun in_codomain x (ls, _) =
+      not (Link'Set.all
+             (fn {outer = Name y, inner} =>
+                 not (Name.== (x, y))
+               | _ => false) ls)
+
   fun app_x (w as (_, ht)) x =
     case NameHashMap.find ht x of
       SOME (Name n) => SOME n

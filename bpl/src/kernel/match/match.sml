@@ -414,7 +414,7 @@ struct
 
   (* Match a global discrete prime g to a context G using the PAX rule:
    * 1) Deconstruct context G = "alpha" : (X + U) -> W.
-   * 2) Find X + Z = dom(g).
+   * 2) Find X + Z = rg(g).
    * 3) Compute X, Z and U from (X + U) and (X + Z).
    * 4) Let ename' = ename, s_C' = {}, Y = {}.
    * 5) For each x in W + Z,
@@ -432,12 +432,12 @@ struct
    *        else (* x' in U (implying x in W) *)
    *          if x in dom(s_C_e) then
    *            let y = s_C_e(x)
-   *            if y not in rg(s_a_e) then add y to Y.
+   *            if y not in rg(ename') then add y to Y.
    *          else
    *            if x in dom(s_C_n) then x'' = s_C_n(x) else x'' = x.
    *            let y = s_C'(x''),
    *              if necessary by letting y be fresh and adjusting s_C'.
-   *            if y not in rg(s_a) then add y to Y.
+   *            if y not in (rg(ename') + rg(s_a_n)) then add y to Y.
    * 6) Return ename', s_C', Y, qs = [(id_Z * (U + X)(U/ * "X"))(X)g].
    *)
   fun matchPAX' {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, g, G} =
@@ -447,45 +447,109 @@ struct
       (case unmkS S of
         BgBDNF.SCon (i, a) =>
         (let
-          val X = Wiring.innernames a
-          val W = Wiring.outernames a
-          val Z = NameSet.difference (Interface.glob (outerface g)) X
-
-          fun match_name isinW x (ename', s_C') =
+          val XU = Wiring.innernames a
+          val XZ = Interface.glob (outerface g)
+          val X  = NameSet.intersect XU XZ
+          val Z  = NameSet.difference XZ X
+          val U  = NameSet.difference XU X
+          val W  = Wiring.outernames a
+         
+          fun match_name isinW x (ename', rg_ename', s_C', rg_s_C', Y) =
               let
                 val x' = if isinW then Wiring.app_renaming_inverse_x a x else x
               in
-                if Wiring.in_domain x s_C_e then
-                  (check_adjust'
-                     ename'
-                     (Wiring.app_renaming_x s_a_e x' handle e => raise e) 
-                     (Wiring.app_renaming_x s_C_e x handle e => raise e),
-                   s_C')
+                if NameSet.member x' XZ then
+                  if Wiring.in_domain x s_C_e then
+                    let
+                      val s_C_e_x   = Wiring.app_renaming_x s_C_e x  handle e => raise e
+                      val s_a_e_x'  = Wiring.app_renaming_x s_a_e x' handle e => raise e
+                      val ename'    = check_adjust' ename' s_a_e_x' s_C_e_x
+                      val rg_ename' = NameSet.insert' s_C_e_x rg_ename'
+                    in
+                      (ename', rg_ename', s_C', rg_s_C', Y)
+                    end
+                  else
+                    let
+                      val x'' = if Wiring.in_domain x s_C_n then
+                                  Wiring.app_renaming_x s_C_n x
+ handle e => raise e                                else
+                                  x
+                    in
+                      if Wiring.in_domain x s_a_e then
+                        let
+                          val s_a_e_x' = Wiring.app_renaming_x s_a_e x' handle e => raise e
+                          val (ename', s_C')
+                            = check_adjust ename' s_C' s_a_e_x' x''
+                          val rg_ename'
+                            = NameSet.insert'
+                                (valOf (NameMap.lookup ename' s_a_e_x'))
+                                rg_ename'
+                          val rg_s_C'
+                            = NameSet.insert'
+                                (valOf (NameMap.lookup s_C' x''))
+                                rg_s_C'
+                        in
+                          (ename', rg_ename', s_C', rg_s_C', Y)
+                        end
+                      else
+                        let
+                          val s_a_n_x' = Wiring.app_renaming_x s_a_n x' handle e => raise e
+                          val s_C'     = check_adjust' s_C' x'' s_a_n_x'
+                          val rg_s_C'  = NameSet.insert' s_a_n_x' rg_s_C'
+                        in
+                          (ename', rg_ename', s_C', rg_s_C', Y)
+                        end
+                    end
                 else
-                  let
-                    val x'' = if Wiring.in_domain x s_C_n then
-                                Wiring.app_renaming_x s_C_n x
- handle e => raise e                              else
-                                x
-                  in
-                    if Wiring.in_domain x s_a_e then
-                      check_adjust
-                        ename' s_C' (Wiring.app_renaming_x s_a_e x' handle e => raise e) x''
-                    else
-                      (ename',
-                       check_adjust' s_C' x'' (Wiring.app_renaming_x s_a_n x' handle e => raise e))
-                  end
+                  if Wiring.in_domain x s_C_e then
+                    let
+                      val y = Wiring.app_renaming_x s_C_e x
+                    in
+                      if not (NameSet.member y rg_ename') then
+                        (ename', rg_ename', s_C', rg_s_C', NameSet.insert y Y)
+                      else
+                        (ename', rg_ename', s_C', rg_s_C', Y)
+                    end
+                  else
+                    let
+                      val x'' = if Wiring.in_domain x s_C_n then
+                                  Wiring.app_renaming_x s_C_n x
+                                else
+                                  x
+                      val (s_C', y, rg_s_C')
+                        = if NameMap.inDomain x'' s_C' then
+                            (s_C', valOf (NameMap.lookup s_C' x''), rg_s_C')
+                          else
+                            let
+                              val y = Name.fresh NONE
+                              val rg_s_C' = NameSet.insert' y rg_s_C'
+                            in
+                              (NameMap.add (x'', y, s_C'), y, rg_s_C')
+                            end
+                    in
+                      if (not (NameSet.member y rg_ename'))
+                        andalso (not (Wiring.in_codomain y s_a_n)) then
+                        (ename', rg_ename', s_C', rg_s_C', NameSet.insert y Y)
+                      else
+                        (ename', rg_ename', s_C', rg_s_C', Y)
+                    end
               end
 
-          val (ename', s_C')
+          val rg_ename = NameSet.fromList (NameMap.range ename)
+
+          val (ename', rg_ename', s_C', rg_s_C', Y)
             = NameSet.fold
                 (match_name false)
-                (NameSet.fold (match_name true) (ename, NameMap.empty) W)
+                (NameSet.fold
+                   (match_name true)
+                   (ename, rg_ename, NameMap.empty, NameSet.empty, NameSet.empty)
+                   W)
                 Z
         in
           Cons ({ename' = ename',
                  s_C' = Wiring.make_ren s_C',
-                 qs = [makeP (Wiring.id_X X) (makeN X g)],
+                 qs = [makeP (Wiring.* ((Wiring.introduce U), (Wiring.id_X X)))
+                             (makeN X g)],
                  tree = PAX'}, lzNil)
         end
         handle NoMatch => Nil)

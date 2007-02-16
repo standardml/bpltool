@@ -134,6 +134,14 @@ sig
    *)
   val in_domain : name -> wiring -> bool
 
+  (** Determine whether the name is in the codomain of wiring
+   *  (i.e. it is an outer name).
+   * @params name wiring
+   * @param name    The name.
+   * @param wiring  The wiring.
+   *)
+  val in_codomain : name -> wiring -> bool
+
   (** Compute the set of names to which the wiring maps a given set.
    * @params wiring X
    * @param wiring  The wiring.
