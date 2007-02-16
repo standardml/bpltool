@@ -107,27 +107,40 @@ struct
   type map = (int * name list) * (int * name list)
 
   (* Prettyprint a map. *)
-  fun pp_map indent pps ((reasite, reans), (redsite, redns)) =
+  fun pp_map indent pps ((reasite, []), (redsite, [])) =
       let
 	open PrettyPrint
 	val show = add_string pps
 	fun << () = begin_block pps INCONSISTENT indent
 	fun >> () = end_block pps
 	fun brk () = add_break pps (1, 0)
-        fun pp_nlist nlist =
-          case nlist of
-            [] => ()
-          | _  => (  show "&"
-                   ; ListPP.pp Name.pp indent pps nlist)
       in
         (  <<()
          ; show (Int.toString reasite)
-         ; pp_nlist reans
+         ; brk()
+         ; show "|->"
+         ; brk()
+         ; show (Int.toString redsite)
+         ; >>())
+      end
+    | pp_map indent pps ((reasite, reans), (redsite, redns)) =
+      let
+	open PrettyPrint
+	val show = add_string pps
+	fun << () = begin_block pps INCONSISTENT indent
+	fun >> () = end_block pps
+	fun brk () = add_break pps (1, 0)
+      in
+        (  <<()
+         ; show (Int.toString reasite)
+         ; show "&"
+         ; ListPP.pp Name.pp indent pps reans
          ; brk()
          ; show "|-->"
          ; brk()
          ; show (Int.toString redsite)
-         ; pp_nlist redns
+         ; show "&"
+         ; ListPP.pp Name.pp indent pps redns
          ; >>())
       end
 
