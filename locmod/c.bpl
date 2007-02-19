@@ -36,12 +36,12 @@ rule movedown =
 
 % specific model coherent with l.sml
 state model =
-  loc(i1 | dev(i15) |
-      loc(i2 | dev(i10) | dev(i11)) |
-      loc(i3) |
-      loc(i4 | loc(i5 | dev(i12)) |
-	       loc(i6 | loc(i7 | loc(i8 | dev(i13)) |
-				 loc(i9 | dev(i14))))))
+  loc(id(i1) | dev(i15) |
+      loc(id(i2) | dev(i10) | dev(i11)) |
+      loc(id(i3)) |
+      loc(id(i4) | loc(id(i5) | dev(i12)) |
+	           loc(id(i6) | loc(id(i7) | loc(id(i8) | dev(i13)) |
+				             loc(id(i9) | dev(i14))))))
 
 state devs =
-  loc(i0 | dev(i16) | dev(i17) | dev(i18))
+  loc(id(i0) | dev(i16) | dev(i17) | dev(i18))
