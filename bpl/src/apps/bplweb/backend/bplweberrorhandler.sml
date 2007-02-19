@@ -56,6 +56,8 @@ struct
 
   fun mk_string_pp s indent pps = PrettyPrint.add_string pps s
 
+  fun mk_int_pp i indent pps = PrettyPrint.add_string pps (Int.toString i)
+
   fun mk_list_pp ldelim rdelim sep pp list indent pps =
       (PrettyPrint.add_string pps ldelim;
        PrettyPrint.begin_block pps PrettyPrint.INCONSISTENT 0;

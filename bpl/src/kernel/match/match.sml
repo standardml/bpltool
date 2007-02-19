@@ -1232,6 +1232,8 @@ struct
 		            end
   	      val s_C_is = map #s_C matches
           val s_C = Wiring.++ (s_I :: s_C_is)
+          (*val _ = map (fn w => print (Wiring.toString w ^ " ++ ")) s_C_is
+          val _ = print (" = " ^ Wiring.toString s_C ^ "\n")*)
         in
           {ename' = ename, Y = Y, s_C = s_C, Es = Es, qss = qss, tree = PARn trees}
         end
