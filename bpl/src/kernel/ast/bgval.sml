@@ -417,13 +417,16 @@ struct
 
   fun Com' i (v1, v2) =
       let
-        val X = NameSet.difference
-                  (Interface.glob (outerface v2))
-                  (Interface.glob (innerface v1))
-        val v1' = Ten i [v1, Wir i (Wiring.id_X X)]
+        val i1 = innerface v1
+        val i2 = innerface v2
+        val o1 = outerface v1
+        val o2 = outerface v2
+        val X = NameSet.difference (Interface.glob o2) (Interface.glob i1)
+        val v1' = Ten i [v1, Wir i (Wiring.id_X X),
+                         Per i (Permutation.id (Interface.loc o2))]
       in
         if arecomposable v1' v2 then 
-	  VCom (v1', v2, (innerface v2, outerface v1', i))
+	  VCom (v1', v2, (i2, outerface v1', i))
         else
 	  raise NotComposable 
 		  (v1, v2, "Interface mismatch for composition in Com'")
