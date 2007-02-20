@@ -423,7 +423,7 @@ struct
         val o2 = outerface v2
         val X = NameSet.difference (Interface.glob o2) (Interface.glob i1)
         val v1'
-          = if Interface.width o2 = 0 then
+          = if Interface.width i1 = 0 then
               Ten i [v1, Wir i (Wiring.id_X X),
                          Per i (Permutation.id (Interface.loc o2))]
             else
