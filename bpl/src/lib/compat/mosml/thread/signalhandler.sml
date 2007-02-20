@@ -42,5 +42,7 @@ struct
   fun resumeInterrupts  () = warn ()
   fun blockInterrupts   () = warn ()
   fun unblockInterrupts () = warn ()
+  fun acceptInterrupts  () = warn ()
+  fun deferInterrupts   () = warn ()
 end
 

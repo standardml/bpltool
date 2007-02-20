@@ -25,6 +25,6 @@ bplweberrorhandler: /lib/util/errorhandler-sig
   /lib/util/origin /lib/util/debug
 bplwebback: /lib/compat/common/signalhandler-sig
   /lib/util/errorhandler-sig
-  /kernel/bg bplweberrorhandler
+  /kernel/bg-sig bplweberrorhandler
   /lib/compat/mosml/thread/. /lib/coll/lazylist
   %PROGRAM
