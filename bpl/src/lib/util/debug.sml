@@ -20,7 +20,7 @@
 
 (** Debug module whith an integer debug level which is controlled by
  * the Flags module: name="/debug/level", short="d", long="debug-level".
- * @version $LastChangedRevision: 121 $
+ * @version $LastChangedRevision$
  *)
  
 structure Debug : DEBUG =

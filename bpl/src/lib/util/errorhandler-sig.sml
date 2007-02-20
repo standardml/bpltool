@@ -19,7 +19,7 @@
  *)
 
 (** Error handling with the possibility of reporting to the user.
- * @version $LastChangedRevision: 121 $
+ * @version $LastChangedRevision$
  *)
  
 signature ERRORHANDLER =

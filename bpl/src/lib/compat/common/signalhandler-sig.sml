@@ -19,7 +19,7 @@
  *)
 
 (** Module with signal handling utility functions.
- * @version $LastChangedRevision: 393 $
+ * @version $LastChangedRevision$
  *)
 
 signature SIGNALHANDLER =

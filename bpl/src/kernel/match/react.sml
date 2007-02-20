@@ -25,7 +25,7 @@
  *  infixl 2 ORTHEN                          <br />
  *  infixr 1 THEN                            <br />
  *  infixr 1 ELSE                            <br />
- * @version $LastChangedRevision: 397 $
+ * @version $LastChangedRevision$
  *)
 
 functor Reaction (structure RuleNameMap : MONO_FINMAP

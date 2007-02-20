@@ -22,7 +22,7 @@
  * @author Peter Sestoft (taken from the Moscow ML compiler).
  * @contributor Henning Niss (minor modifications) <hniss@itu.dk>.<br/>
  * @contributor Henning Makholm (minor modifications) <henning@makholm.net>.
- * @version $LastChangedRevision: 129 $
+ * @version $LastChangedRevision$
  *)
 
 (* COMMAND-LINE PARSING

@@ -19,7 +19,7 @@
  *)
 
 (** LIST_PAIR signature from the new SML Basis Library.
- * @version  $LastChangedRevision: 102 $
+ * @version  $LastChangedRevision$
  *)
 signature LIST_PAIR = sig
 

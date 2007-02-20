@@ -19,7 +19,7 @@
  *)
 
 (** Error handling.
- * @version $LastChangedRevision: 121 $
+ * @version $LastChangedRevision$
  *)
  
 signature BASEERRORHANDLER =

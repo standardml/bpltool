@@ -56,7 +56,7 @@ infix ::=
  *
  * @author Fritz Henglein, DIKU, University of Copenhagen <henglein@diku.dk>
  * @contributor Henning Niss, IT University of Copenhagen (minor modifications) <hniss@itu.dk>
- * @version $LastChangedRevision: 129 $
+ * @version $LastChangedRevision$
  *)
 
 signature URef =

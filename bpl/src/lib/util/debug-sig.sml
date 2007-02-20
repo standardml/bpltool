@@ -19,7 +19,7 @@
  *)
 
 (** Module with debugging utilities.
- * @version $LastChangedRevision: 121 $
+ * @version $LastChangedRevision$
  *)
  
 signature DEBUG =

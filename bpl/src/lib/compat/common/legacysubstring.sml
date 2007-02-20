@@ -21,7 +21,7 @@
 (** Substring structure matching the SUBSTRING signature from
  * the new SML Basis Library, but based on the old
  * SML Basis Library Substring structure.
- * @version $LastChangedRevision: 102 $
+ * @version $LastChangedRevision$
  *)
 
 structure Substring :> SUBSTRING 

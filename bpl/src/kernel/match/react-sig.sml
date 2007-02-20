@@ -25,7 +25,7 @@
  *  infixl 2 ORTHEN
  *  infixr 1 THEN
  *  infixr 1 ELSE
- * @version $LastChangedRevision: 397 $
+ * @version $LastChangedRevision$
  *)
 
 signature REACTION =

@@ -20,7 +20,7 @@
 
 (** Utilities for dumping prettyprinter output to disk.
  * @author Henning Niss, IT University of Copenhagen <hniss@itu.dk>
- * @version $LastChangedRevision: 129 $
+ * @version $LastChangedRevision$
  *)
 signature DUMP = sig
 

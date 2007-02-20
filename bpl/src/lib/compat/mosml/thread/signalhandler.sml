@@ -19,7 +19,7 @@
  *)
 
 (** Module with dummy signal handling utility functions for Moscow ML.
- * @version $LastChangedRevision: 393 $
+ * @version $LastChangedRevision$
  *)
 
 structure SignalHandler : SIGNALHANDLER =

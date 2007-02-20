@@ -19,7 +19,7 @@
  *)
 
 (** Default instantiation of the BG functor.
- * @version $LastChangedRevision: 281 $
+ * @version $LastChangedRevision$
  *)
 structure BPL :> BG =
 struct

@@ -21,7 +21,7 @@
 (** OS structure matching the OS signature from
  * the new SML Basis Library, but based on the old
  * SML Basis Library OS structure.
- * @version $LastChangedRevision: 102 $
+ * @version $LastChangedRevision$
  *)
 
 structure OS :> OS =

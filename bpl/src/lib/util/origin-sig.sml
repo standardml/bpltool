@@ -19,7 +19,7 @@
  *)
 
 (** The origin of some data (e.g. a file and a position in that file).
- * @version $LastChangedRevision: 121 $
+ * @version $LastChangedRevision$
  *)
  
 signature ORIGIN =

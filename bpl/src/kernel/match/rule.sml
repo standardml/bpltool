@@ -19,7 +19,7 @@
  *)
 
 (** Abstract data type for modelling rules.
- * @version $LastChangedRevision: 397 $
+ * @version $LastChangedRevision$
  *)
 functor Rule (structure Interface : INTERFACE
               structure NameSet : MONO_SET

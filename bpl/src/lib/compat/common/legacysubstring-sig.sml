@@ -19,7 +19,7 @@
  *)
 
 (** SUBSTRING signature from the new SML Basis Library.
- * @version $LastChangedRevision: 102 $
+ * @version $LastChangedRevision$
  *)
 
 signature SUBSTRING = sig

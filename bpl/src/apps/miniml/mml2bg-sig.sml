@@ -19,7 +19,7 @@
  *)
 
 (** Command-line wrapper for the translation from MiniML to bigraphs.
- * @version $LastChangedRevision: 102 $
+ * @version $LastChangedRevision$
  * Modified: $Date: 2006/09/04 20:54:23 $ by: $Author: hniss $
  *)
 

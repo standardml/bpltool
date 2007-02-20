@@ -20,7 +20,7 @@
 
 (** Utilities for timing functions.
  * @author Henning Niss, IT University of Copenhagen <hniss@itu.dk>
- * @version $LastChangedRevision: 129 $
+ * @version $LastChangedRevision$
  *)
 
 signature TIMINGS = sig

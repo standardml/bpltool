@@ -6,7 +6,7 @@
  * See license.txt 
  * (or the <a href="http://www.pllab.riec.tohoku.ac.jp/smlsharp/?SMLSharpLicence">SML# web page</a>)
  * for details.
- * @version $LastChangedRevision: 102 $
+ * @version $LastChangedRevision$
  *)
 structure Assert :> ASSERT =
 struct

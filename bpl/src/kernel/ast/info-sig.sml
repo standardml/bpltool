@@ -19,7 +19,7 @@
  *)
 
 (** A collection of term informations (origin etc.).
- * @version $LastChangedRevision: 147 $
+ * @version $LastChangedRevision$
  *)
 signature INFO =
 sig

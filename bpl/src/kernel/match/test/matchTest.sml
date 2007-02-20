@@ -19,7 +19,7 @@
  *)
 
 (** Testing module for bdnf stuff.
- * @version $LastChangedRevision: 179 $
+ * @version $LastChangedRevision$
  *)
 
 functor MatchTest (structure Assert : ASSERT

@@ -19,7 +19,7 @@
  *)
 
 (** Abstract data type for modelling rules.
- * @version $LastChangedRevision: 397 $
+ * @version $LastChangedRevision$
  *)
 signature RULE =
 sig

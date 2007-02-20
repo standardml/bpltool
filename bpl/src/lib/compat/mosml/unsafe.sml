@@ -20,7 +20,7 @@
 
 (** Glue code to make the ml-lex generated lexer compile with mosml.
  * [It is not very unsafe.]
- * @version $LastChangedRevision: 102 $
+ * @version $LastChangedRevision$
  *)
 
 structure Unsafe = struct

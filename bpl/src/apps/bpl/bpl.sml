@@ -32,7 +32,7 @@ end
 local
   fun getRev s = getOpt (Int.fromString s, 0)
   val revisions
-    = [hd (String.tokens (not o Char.isDigit) "$LastChangedRevision: 355 $"),
+    = [hd (String.tokens (not o Char.isDigit) "$LastChangedRevision$"),
        BG.revision]
 in
   val BPL_REVISION_STR

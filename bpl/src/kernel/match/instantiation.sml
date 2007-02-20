@@ -21,7 +21,7 @@
 (** Datatype for representing instantiations.
  * Closely follows Jensen and Milner's definition from p 75
  * "Bigraphs and Mobile Processes (revised)", February 2004.
- * @version $LastChangedRevision: 397 $
+ * @version $LastChangedRevision$
  *)
 
 functor Instantiation (

@@ -19,7 +19,7 @@
  *)
 
 (** Error handler which prints to std out.
- * @version $LastChangedRevision: 121 $
+ * @version $LastChangedRevision$
  *)
  
 structure BaseErrorHandler

@@ -19,7 +19,7 @@
  *)
  
 (** Backend matcher and reactive system for BPLweb.
- * @version $LastChangedRevision: 240 $
+ * @version $LastChangedRevision$
  *)
 
 functor BPLwebBack (structure BG : BG) =
@@ -267,6 +267,8 @@ val _ = TextIO.output (stdErr, "userules = " ^ Int.toString userules
           val context = BgBDNF.unmk context
           val {react, inst : BG.Instantiation.inst, ...} = Rule.unmk rule
           val agent = BgBDNF.unmk (valOf (!agent))
+          val _ = print ("Inst: " ^ Instantiation.toString inst ^ "\n")
+          val _ = print ("Parameter: " ^ BgBDNF.toString parameter ^ "\n")
           val instparam = Instantiation.instantiate inst parameter
           val Z = Interface.glob (BgBDNF.outerface parameter)
           val id_Z = BgVal.Wir noinfo (Wiring.id_X Z)
@@ -274,7 +276,10 @@ val _ = TextIO.output (stdErr, "userules = " ^ Int.toString userules
           infix 6 oo
           fun ** (v1, v2) = BgVal.Ten noinfo [v1, v2]
           infix 5 **
+          val _ = print ("Context: " ^ BgVal.toString context ^ "\n")
+          val _ = print ("Instparam: " ^ BgVal.toString instparam ^ "\n")
           val newagent = context oo (id_Z ** react) oo instparam
+          val _ = print ("Newagent: " ^BgVal.toString newagent ^ "\n")
         in
           print
             ("NEWAGENT\n" ^ BgVal.toString (BgVal.simplify newagent)

@@ -19,7 +19,7 @@
  *)
 
 (** Representation of input sources (to lexer and parser).
- * @version $LastChangedRevision: 213 $
+ * @version $LastChangedRevision$
  *)
 
 structure Source = struct

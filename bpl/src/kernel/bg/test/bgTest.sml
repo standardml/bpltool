@@ -19,7 +19,7 @@
  *)
 
 (** Testing module for basic bigraph stuff.
- * @version $LastChangedRevision: 179 $
+ * @version $LastChangedRevision$
  *)
 
 functor BGTest (structure Assert : ASSERT

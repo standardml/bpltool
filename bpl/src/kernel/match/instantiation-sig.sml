@@ -19,7 +19,7 @@
  *)
 
 (** Abstract data type for modelling instantiations.
- * @version $LastChangedRevision: 397 $
+ * @version $LastChangedRevision$
  *)
 
 signature INSTANTIATION =

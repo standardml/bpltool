@@ -19,7 +19,7 @@
  *)
 
 (** Module with signal handling utility functions for SML/NJ.
- * @version $LastChangedRevision: 393 $
+ * @version $LastChangedRevision$
  *)
 
 structure SignalHandler : SIGNALHANDLER =

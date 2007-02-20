@@ -21,7 +21,7 @@
 (** ListPair structure matching the LIST_PAIR signature from the
  * new SML Basis Library, but based on the old SML Basis
  * Library ListPair structure.
- * @version  $LastChangedRevision: 102 $
+ * @version  $LastChangedRevision$
  *)
 
 structure ListPair :> LIST_PAIR = struct

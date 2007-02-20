@@ -19,7 +19,7 @@
  *)
 
 (** Testing module for Permutation.
- * @version $LastChangedRevision: 179 $
+ * @version $LastChangedRevision$
  *)
 functor PermutationTest
           (structure Assert : ASSERT

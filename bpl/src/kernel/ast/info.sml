@@ -19,7 +19,7 @@
  *)
 
 (** Term information (origin etc.).
- * @version $LastChangedRevision: 147 $
+ * @version $LastChangedRevision$
  *)
 structure Info' : INFO =
 struct

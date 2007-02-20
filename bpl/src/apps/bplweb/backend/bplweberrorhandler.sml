@@ -19,7 +19,7 @@
  *)
  
 (** Error handler for BPLweb.
- * @version $LastChangedRevision: 240 $
+ * @version $LastChangedRevision$
  *)
 
 structure BPLwebErrorHandler : ERRORHANDLER =
