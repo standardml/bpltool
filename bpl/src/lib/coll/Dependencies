@@ -20,3 +20,5 @@ lazylist: + lazylist-sig
 rbset: monoset-sig /lib/pp/edlib/edlibprettyprint %NODASHSIG
 listsort-sig:
 listsort: listsort-sig %NODASHSIG
+bijectionconstraints-sig:
+bijectionconstraints: monoset-sig monofinmap-sig %NODASHSIG

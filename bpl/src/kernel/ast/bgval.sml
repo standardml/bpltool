@@ -25,6 +25,7 @@
 functor BgVal'(structure Info : INFO
 	       structure Name : NAME
 	       structure NameSet : MONO_SET
+               structure NameBijectionConstraints : BIJECTION_CONSTRAINTS
 	       structure Link : LINK
 	       structure LinkSet : MONO_SET
 	       structure Control : CONTROL
@@ -46,6 +47,7 @@ functor BgVal'(structure Info : INFO
 			    Wiring.name
 	       sharing type NameSet.Set =
 			    Name.NameSet.Set =
+                            NameBijectionConstraints.set =
 			    Link.nameset =
 			    Ion.nameset =
 			    Permutation.nameset =
@@ -65,6 +67,10 @@ functor BgVal'(structure Info : INFO
 	       sharing type Permutation.Immutable =
 			    BgTerm.Immutable
 	       sharing type Wiring.wiring = BgTerm.wiring
+               sharing type NameBijectionConstraints.constraints =
+                            Ion.nameconstraints =
+                            Permutation.nameconstraints =
+                            Wiring.nameconstraints
 	       sharing type Interface.interface =
 			    Permutation.interface
                sharing type Info.info =
@@ -1245,307 +1251,63 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
       end
 
 
-  (* fun eq': test two bgvals for equality, using cm to map the inner
-   * names of the first term to the inner names of the second.
-   *
-   * It is not always possible to immediately know which names are
-   * supposed to be paired up, so we pair up sets of names (of the
-   * same size). For each name in the first set, we keep a reference
-   * to the relevant pair of sets. I.e. we use a
-   *   (nameset * nameset) NameHashMap.hash_table
-   * to represent associations between sets of names.
-   * We call this a 'contraint map'.
-   *
-   * Return the result of the comparison and, if equal, a new map of
-   * the outer names of the first term to the outer names of the
-   * second.
+  structure Constraints = NameBijectionConstraints
+  (* fun eq': test two bgvals for equality up to a bijection between the inner
+   * names satisfying the constraints given by C.
+   * 
+   * If the bgvals are equal, a set of constraints on a bijection between the
+   * outer names is returned.
    *)
-  exception NOT_FOUND
-  structure NameHashMap 
-    = HashTableFn (type hash_key = name
-                   val  hashVal  = Name.hash
-                   val  sameKey  = Name.==);
-  fun createNameHashMap size = NameHashMap.mkTable (size, NOT_FOUND)
-  fun createNameHashMap' () = createNameHashMap 10
-  type contraint_map = (nameset * nameset) NameHashMap.hash_table
-
-  (* insert a constraint into a constraint map *)
-  fun insert_constraint cm (X, Y) =
-      NameSet.apply (fn x => NameHashMap.insert cm (x, (X, Y))) X
-
-  (* Given a constraint map cm and a list of nameset pairs C
-   * (of the same size), checks that cm and C are compatible
-   * and calls insert with each resulting constraint.
-   *
-   * The algorithm is as follows:
-   * 1) let cm' = new constraint map
-   * 2) for each new constraint (X, Y) in C:
-   *      if |X| <> 0 then 
-   *        look up an element x from X in cm: (X', Y') = cm x
-   *        find the intersections of the constraints:
-   *          X'' = X \cap X'
-   *          Y'' = Y \cap Y'
-   *          if |X''| <> |Y''| then return false
-   *          else
-   *            insert (X'', Y'') in cm'
-   *            put (X \ X'', Y \ Y'') into C
-   * 3) return true
-   *
-   * NB! It is assumed, that the the first components of the pairs in C
-   *     are disjoint and that their union equals the union of the first
-   *     components of the pairs of cm.
-   *     Similarly for the second components of the pairs of C.
-   *)
-  fun check_constraints' insert cm C =
-      let
-        fun check_constraint [] = true
-          | check_constraint ((X, Y)::C) =
-            if NameSet.size X <> 0 then
-              let
-                val (X', Y') = NameHashMap.lookup cm (NameSet.someElement X)
-                val X'' = NameSet.intersect X X'
-                val Y'' = NameSet.intersect Y Y'
-              in
-                if NameSet.size X'' <> NameSet.size Y'' then
-                  false
-                else
-                  (insert (X'', Y'');
-                   check_constraint
-                     ((NameSet.difference X X'', NameSet.difference Y Y'')::C))
-              end
-            else
-              check_constraint C
-      in
-        check_constraint C
-      end
-  (* Checks that the constraint map cm and the set of
-   * constraints C are compatible.
-   *)
-  val check_constraints = check_constraints' (fn _ => ())
-  (* Checks that the constraint map cm and the set of constraints C
-   * are compatible and create a new constraint map satisfying both
-   * sets of constraints - if possible.
-   * Return true and the new map on success and false otherwise.
-   *)
-  fun add_constraints cm C =
-      let
-        val cm' = createNameHashMap' ()
-      in
-        (check_constraints' (insert_constraint cm') cm C, cm')
-      end
-
-  fun eq' cm (VMer (i1, _))  (VMer (i2, _))  =
+  fun eq' C (VMer (i1, _))  (VMer (i2, _))  =
       if i1 = i2 then
-        (true, createNameHashMap 0)
+        SOME Constraints.empty
       else
-        (false, cm)
-    | eq' cm (VCon (ns1, _)) (VCon (ns2, _)) =
-      if NameSet.size ns1 = NameSet.size ns2 then
-        add_constraints cm [(ns1, ns2)]
-      else
-        (false, cm)
-    | eq' cm (VWir (w1, _)) (VWir (w2, _))  =
-      (* The algorithm for wirings is as follows:
-       *
-       * 1) create an empty set of contraints C and an empty constraint map cm'
-       * 2) divide the links of each wiring (w[1,2]) into three groups:
-       *      Ci:  the links that are closed by the wiring wi
-       *      Si:  the links that substitute names in wiring wi
-       *      Ii:  the links that introduce names in wiring wi
-       * 3) if |C1| <> |C2| or |C1| <> |C2| or |I1| <> |I2| then
-       *      return false
-       * 4) divide the groups Ci and Si into subgroups Cij and Sij by the number
-       *    j of inner names connected to each link.
-       * 5) for each j
-       *      if |C1j| = |C2j| and |S1j| = |S2j| then
-       *        add constraints  inner_names(C1j) = inner_names(C2j)
-       *                    and  inner_names(S1j) = inner_names(S2j) to C
-       *        insert constraint  outer_names(S1j) = outer_names(S2j)  into cm'
-       *      else
-       *        return false
-       * 6) if  check_constraints cm C  then
-       *      insert constraint  outer_names(I1) = outer_names(I2)  into cm'
-       *      return (true, cm')
-       *    else
-       *      return false
-       *)
+        NONE
+    | eq' C (VCon (ns1, _)) (VCon (ns2, _)) = SOME C
+    | eq' C (VWir (w1, _))  (VWir (w2, _))  = Wiring.eq' C w1 w2
+    | eq' C (VIon (i1, _))  (VIon (i2, _))  = Ion.eq' C i1 i2
+    | eq' C (VPer (p1, _))  (VPer (p2, _))  = Permutation.eq' C p1 p2
+    | eq' C (VAbs (ns1, b1, _)) (VAbs (ns2, b2, _)) =
       let
-        val array  = Array.array
-        val update = Array.update
-        val sub    = Array.sub
-        infix 8 sub
-        (* Collect the needed information for each group:
-         *   Ci  : (#links)
-         *   Cij : (#links, inner names)
-         *   Si  : (#links)
-         *   Sij : (#links, inner names, outer names)
-         *   Ii  : (#links, outer names)
-         *)
-        val jbound =
-          Int.max(NameSet.size (Wiring.innernames w1),
-                  NameSet.size (Wiring.innernames w2)) + 1
-        val C1js = array (jbound, (0, NameSet.empty))
-        val C2js = array (jbound, (0, NameSet.empty))
-        val S1js = array (jbound, (0, NameSet.empty, NameSet.empty))
-        val S2js = array (jbound, (0, NameSet.empty, NameSet.empty))
-        fun classify_link Cijs Sijs link
-                          (Ci_linkc, Si_linkc, Ii_linkc, Ii_outer) =
-            case Link.unmk link of
-              {outer = NONE, inner} =>      (* a closed link *)
-              let
-                val j         = NameSet.size inner
-                val (lc, ins) = Cijs sub j
-              in
-                (update (Cijs, j, (lc + 1, NameSet.union ins inner));
-                 (Ci_linkc + 1, Si_linkc, Ii_linkc, Ii_outer))
-              end
-            | {outer = SOME outer, inner} =>
-              if NameSet.isEmpty inner then (* a name introduction *)
-                (Ci_linkc, Si_linkc, Ii_linkc + 1, NameSet.insert outer Ii_outer)
-              else                          (* a substitution *)
-                let
-                  val j              = NameSet.size inner
-                  val (lc, ins, ons) = Sijs sub j
-                in
-                  (update (Sijs, j, (lc + 1, NameSet.union ins inner,
-                                     NameSet.insert outer ons));
-                   (Ci_linkc, Si_linkc + 1, Ii_linkc, Ii_outer))
-                end
-        val (C1_linkc, S1_linkc, I1_linkc, I1_outer)
-          = LinkSet.fold (classify_link C1js S1js)
-                         (0, 0, 0, NameSet.empty)
-                         (Wiring.unmk w1)
-        val (C2_linkc, S2_linkc, I2_linkc, I2_outer)
-          = LinkSet.fold (classify_link C2js S2js)
-                         (0, 0, 0, NameSet.empty)
-                         (Wiring.unmk w2)
-      in
-        if        C1_linkc <> C2_linkc 
-           orelse S1_linkc <> S2_linkc
-           orelse I1_linkc <> I2_linkc
-        then
-          (false, cm)
-        else
-          let
-            val cm' = createNameHashMap
-                        (NameSet.size (Wiring.outernames w1))
-            (* Check that the C1js and C2js are the same size
-             * and gather constraints (and similarly for Sijs) *)
-            fun check_groups ~1 C = (true, C)
-              | check_groups j C =
-              let
-                val (C1j_linkc, C1j_inner) = C1js sub j
-                val (C2j_linkc, C2j_inner) = C2js sub j
-                val (S1j_linkc, S1j_inner, S1j_outer) = S1js sub j
-                val (S2j_linkc, S2j_inner, S2j_outer) = S2js sub j
-              in
-                if C1j_linkc = C2j_linkc andalso S1j_linkc = S2j_linkc then
-                  (insert_constraint cm' (S1j_outer, S2j_outer);
-                   check_groups
-                     (j-1)
-                     ((C1j_inner, C2j_inner)::(S1j_inner, S2j_inner)::C))
-                else
-                  (false, [])
-              end
-            val (r, C) = check_groups (jbound - 1) []
-          in
-            if r andalso check_constraints cm C then
-              (insert_constraint cm' (I1_outer, I2_outer);
-               (true, cm'))
-            else
-              (false, cm')
-          end
-      end
-    | eq' cm (VIon (i1, _)) (VIon (i2, _)) =
-      let
-        val {ctrl = ctrl1, free = free1, bound = bound1} = Ion.unmk i1
-        val {ctrl = ctrl2, free = free2, bound = bound2} = Ion.unmk i2
-
-        (* check that the bound namesets has the same
-         * size and gather constraints *)
-        fun check_bound [] [] C = (true, C)
-          | check_bound (b1::bs1) (b2::bs2) C =
-            if NameSet.size b1 = NameSet.size b2 then
-              check_bound bs1 bs2 ((b1,b2)::C)
-            else
-              (false, [])
-          | check_bound _ _ _ = (false, [])
-        val (r, C) = check_bound bound1 bound2 []
-
-        (* generate result map (if possible) *)
-        fun make_cm [] [] cm = (true, cm)
-          | make_cm (n1::ns1) (n2::ns2) cm =
-            (NameHashMap.insert
-               cm (n1, (NameSet.singleton n1, NameSet.singleton n2));
-             make_cm ns1 ns2 cm)
-          | make_cm _ _ cm = (false, cm)
-      in
-        if r andalso Control.eq ctrl1 ctrl2 andalso check_constraints cm C
-        then
-          make_cm free1 free2
-                  (createNameHashMap (NameSet.size (Ion.outernames i1)))
-        else
-          (false, cm)
-      end
-    | eq' cm (VPer (p1, _)) (VPer (p2, _)) =
-      let
-        (* check that the permutations are the same
-         * and gather name constraints *)
-        fun check_entry [] [] C = (true, C)
-          | check_entry ((i1,ns1)::p1s) ((i2,ns2)::p2s) C =
-            if i1 = i2 andalso NameSet.size ns1 = NameSet.size ns2 then
-              check_entry p1s p2s ((ns1,ns2)::C)
-            else
-              (false, [])
-          | check_entry _ _ _ = (false, [])
-        val (r, C) = check_entry
-                       (Permutation.unmk p1)
-                       (Permutation.unmk p2)
-                       []
-      in
-        if r then
-          add_constraints cm C
-        else
-          (false, cm)
-      end
-    | eq' cm (VAbs (ns1, b1, _)) (VAbs (ns2, b2, _)) =
-      let
-        val (r, cm') = eq' cm b1 b2
         val allns1 = Interface.names (outerface b1)
         val notns1 = NameSet.difference allns1 ns1
         val allns2 = Interface.names (outerface b2)
         val notns2 = NameSet.difference allns2 ns2
+        val C''    = Constraints.from_list [(ns1, ns2), (notns1, notns2)]
       in
-        if r andalso NameSet.size ns1 = NameSet.size ns2 then
-          add_constraints cm' [(ns1, ns2), (notns1, notns2)]
-        else
-          (false, cm')
+        case eq' C b1 b2 of
+          SOME C' => 
+          if NameSet.size ns1 = NameSet.size ns2 then
+            Constraints.combine (C', C'')
+          else
+            NONE
+        | NONE => NONE
       end
-    | eq' cm (VTen (bs1, (_, of1, _))) (VTen (bs2, _)) =
+    | eq' C (VTen (bs1, (_, of1, _))) (VTen (bs2, _)) =
       let
-        (* the map to return *)
-        val cm' = createNameHashMap (NameSet.size (Interface.names of1))
-        fun eq'' [] [] = true
-          | eq'' (b1::bs1) (b2::bs2) =
+        fun eq'' (b1::bs1) (b2::bs2) C' =
             let
-              val (r, cm'') = eq' cm b1 b2
-              (* add cm'' to cm' *)
-              val () = NameHashMap.appi (NameHashMap.insert cm') cm''
+              (* restrict constraints to the current subterms *)
+              val c_dom = Interface.names (innerface b1)
+              val c_rng = Interface.names (innerface b2)
             in
-              if r then
-                eq'' bs1 bs2
-              else
-                false
+              case Constraints.restrict (C, (c_dom, c_rng)) of
+                SOME C''' =>
+                  (case eq' C''' b1 b2 of
+                     SOME C'' => eq'' bs1 bs2 (Constraints.plus (C', C''))
+                   | NONE     => NONE)
+              | NONE => NONE
             end
-          | eq'' _ _ = false
+          | eq'' [] [] C' = SOME C'
+          | eq'' _ _ _    = NONE
       in
-        (eq'' bs1 bs2, cm')
+        eq'' bs1 bs2 Constraints.empty
       end
-    | eq' cm (VCom (b11, b12, _)) (VCom (b21, b22, _)) =
-      (case eq' cm b12 b22 of
-         (false, cm') => (false, cm')
-       | (true, cm')  => eq' cm' b11 b21)
-    | eq' cm _ _ = (false, cm)
+    | eq' C (VCom (b11, b12, _)) (VCom (b21, b22, _)) =
+      (case eq' C b12 b22 of
+         NONE    => NONE
+       | SOME C' => eq' C' b11 b21)
+    | eq' cm _ _ = NONE
 
   fun eq b1 b2 =
       let
@@ -1554,15 +1316,26 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
         val oface1 = outerface b1
         val oface2 = outerface b2
         val X      = Interface.names iface1
-        val cm     = createNameHashMap (NameSet.size X)
-        val ()     = NameSet.apply
-                       (fn x => let val X = NameSet.singleton x
-                                in insert_constraint cm (X,X) end)
-                       X
+        val Y      = Interface.names oface1
+        val Ci     = NameSet.fold
+                       (fn x => fn Ci =>
+                        let val X = NameSet.singleton x
+                        in Constraints.add ((X,X), Ci) end)
+                       Constraints.empty X
+        val Co     = NameSet.fold
+                       (fn y => fn Co =>
+                        let val Y = NameSet.singleton y
+                        in Constraints.add ((Y,Y), Co) end)
+                       Constraints.empty Y
       in
-        Interface.eq (iface1, iface2)
-        andalso Interface.eq (oface1, oface2)
-        andalso #1 (eq' cm b1 b2)
+        if Interface.eq (iface1, iface2)
+          andalso Interface.eq (oface1, oface2)
+        then
+          case eq' Ci b1 b2 of
+            SOME Co' => Constraints.are_combineable (Co, Co')
+          | NONE     => false
+        else 
+          false
       end
 
   val revision
@@ -1573,6 +1346,7 @@ end
 functor BgVal (structure Info : INFO
 	       structure Name : NAME
 	       structure NameSet : MONO_SET
+               structure NameBijectionConstraints : BIJECTION_CONSTRAINTS
 	       structure Link : LINK
 	       structure LinkSet : MONO_SET
 	       structure Control : CONTROL
@@ -1594,6 +1368,7 @@ functor BgVal (structure Info : INFO
 			    Wiring.name
 	       sharing type NameSet.Set =
 			    Name.NameSet.Set =
+                            NameBijectionConstraints.set =
 			    Link.nameset =
 			    Ion.nameset =
 			    Permutation.nameset =
@@ -1615,6 +1390,10 @@ functor BgVal (structure Info : INFO
 	       sharing type Wiring.wiring = BgTerm.wiring
 	       sharing type Interface.interface =
 			    Permutation.interface
+               sharing type NameBijectionConstraints.constraints =
+                            Ion.nameconstraints =
+                            Permutation.nameconstraints =
+                            Wiring.nameconstraints
                sharing type Info.info =
                             BgTerm.info
 			    ) :> BGVAL 
@@ -1631,6 +1410,7 @@ struct
   structure BgVal = BgVal'(structure Info = Info
 			   structure Name = Name
 			   structure NameSet = NameSet
+                           structure NameBijectionConstraints = NameBijectionConstraints
 			   structure Link = Link
 			   structure LinkSet = LinkSet
                            structure Control = Control

@@ -4,11 +4,13 @@ Group
   library($smlnj/compiler/compiler.cm)
   (library($/smlnj-lib.cm)
    * (signature HASH_TABLE
+      signature MONO_HASH_TABLE
       structure HashTable
       structure HashString
       functor HashTableFn))
 #else
   signature HASH_TABLE
+  signature MONO_HASH_TABLE
   structure HashTable
   structure HashString
   functor HashTableFn

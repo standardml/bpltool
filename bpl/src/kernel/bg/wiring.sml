@@ -26,6 +26,7 @@ functor Wiring'(structure Link : LINK
 		structure Name : NAME
 		structure NameSet : MONO_SET
 		structure NameMap : MONO_FINMAP
+                structure NameBijectionConstraints : BIJECTION_CONSTRAINTS
 		structure IntSet : MONO_SET where type elt = int
 		structure ErrorHandler : ERRORHANDLER
                   where type ppstream    = PrettyPrint.ppstream
@@ -36,19 +37,22 @@ functor Wiring'(structure Link : LINK
 		sharing type Link.link = LinkSet.elt
 		sharing type Name.name = Link.name = NameSet.elt = NameMap.dom
 		sharing type NameSet.Set =
+                             NameBijectionConstraints.set =
                              Link.nameset =
 		             NameSetPP.collection) : WIRING 
                 where type link       = Link.link
 		  and type linkset    = LinkSet.Set 
                   and type name       = Name.name
 		  and type nameset    = NameSet.Set
-                  and type 'a namemap = 'a NameMap.map =
+                  and type 'a namemap = 'a NameMap.map
+                  and type nameconstraints = NameBijectionConstraints.constraints =
 struct
   type link = Link.link
   type linkset = LinkSet.Set
   type nameset = NameSet.Set
   type 'a namemap = 'a NameMap.map
   type name = NameSet.elt
+  type nameconstraints = NameBijectionConstraints.constraints
   open Debug
   open ErrorHandler
 
@@ -113,6 +117,127 @@ struct
   type wiring = link'set * nameedge NameHashMap.hash_table
 
   fun eq (ls1, _) (ls2, _) = Link'Set.eq ls1 ls2
+
+  (* The algorithm for wirings is as follows:
+   *
+   * 1) create two empty sets of contraints C' and C''
+   * 2) divide the links of each wiring (w[1,2]) into three groups:
+   *      Ci:  the links that are closed by the wiring wi
+   *      Si:  the links that substitute names in wiring wi
+   *      Ii:  the links that introduce names in wiring wi
+   * 3) if |C1| <> |C2| or |C1| <> |C2| or |I1| <> |I2| then 
+   *      return NONE
+   * 4) divide the groups Ci and Si into subgroups Cij and Sij by the number
+   *    j of inner names connected to each link.
+   * 5) for each j
+   *      if |C1j| = |C2j| and |S1j| = |S2j| then
+   *        add constraints  inner_names(C1j) = inner_names(C2j)
+   *                    and  inner_names(S1j) = inner_names(S2j) to C'
+   *        add constraint  outer_names(S1j) = outer_names(S2j)  to C''
+   *      else
+   *        return NONE
+   * 6) if  C and C' are combineable  then
+   *      add constraint  outer_names(I1) = outer_names(I2)  C''
+   *      return SOME C''
+   *    else
+   *      return NONE
+   *)
+  structure Constraints = NameBijectionConstraints
+  fun eq' C (ls1, _) (ls2, _) =
+      let
+        val array  = Array.array
+        val update = Array.update
+        val sub    = Array.sub
+        infix 8 sub
+        (* Find the maximum number of inner names for a link. *)
+        fun linkinnersizemax {inner, outer} max =
+            Int.max (max, NameSet.size inner)
+        val jbound
+          = Link'Set.fold linkinnersizemax
+                          (Link'Set.fold linkinnersizemax 0 ls1)
+                          ls2
+        (* Collect the needed information for each group:
+         *   Ci  : (#links)
+         *   Cij : (#links, inner names)
+         *   Si  : (#links)
+         *   Sij : (#links, inner names, outer names)
+         *   Ii  : (#links, outer names)
+         *)
+        val C1js = array (jbound + 1, (0, NameSet.empty))
+        val C2js = array (jbound + 1, (0, NameSet.empty))
+        val S1js = array (jbound + 1, (0, NameSet.empty, NameSet.empty))
+        val S2js = array (jbound + 1, (0, NameSet.empty, NameSet.empty))
+        fun classify_link Cijs Sijs link
+                          (Ci_linkc, Si_linkc, Ii_linkc, Ii_outer) =
+            case link of
+              {outer = Closure _, inner} => (* a closed link *)
+              let
+                val j         = NameSet.size inner
+                val (lc, ins) = Cijs sub j
+              in
+                (update (Cijs, j, (lc + 1, NameSet.union ins inner));
+                 (Ci_linkc + 1, Si_linkc, Ii_linkc, Ii_outer))
+              end
+            | {outer = Name outer, inner} =>
+              if NameSet.isEmpty inner then (* a name introduction *)
+                (Ci_linkc, Si_linkc, Ii_linkc + 1, NameSet.insert outer Ii_outer)
+              else                          (* a substitution *)
+                let
+                  val j              = NameSet.size inner
+                  val (lc, ins, ons) = Sijs sub j
+                in
+                  (update (Sijs, j, (lc + 1, NameSet.union ins inner,
+                                     NameSet.insert outer ons));
+                   (Ci_linkc, Si_linkc + 1, Ii_linkc, Ii_outer))
+                end
+        val (C1_linkc, S1_linkc, I1_linkc, I1_outer)
+          = Link'Set.fold (classify_link C1js S1js)
+                          (0, 0, 0, NameSet.empty)
+                          ls1
+        val (C2_linkc, S2_linkc, I2_linkc, I2_outer)
+          = Link'Set.fold (classify_link C2js S2js)
+                          (0, 0, 0, NameSet.empty)
+                          ls2
+      in
+        if        C1_linkc <> C2_linkc 
+           orelse S1_linkc <> S2_linkc
+           orelse I1_linkc <> I2_linkc
+        then
+          NONE
+        else
+          let
+            (* Check that the C1js and C2js are the same size
+             * and gather constraints (and similarly for Sijs) *)
+            fun check_groups ~1 C' C'' = SOME (C', C'')
+              | check_groups j  C' C'' =
+                let
+                  val (C1j_linkc, C1j_inner) = C1js sub j
+                  val (C2j_linkc, C2j_inner) = C2js sub j
+                  val (S1j_linkc, S1j_inner, S1j_outer) = S1js sub j
+                  val (S2j_linkc, S2j_inner, S2j_outer) = S2js sub j
+                in
+                  if C1j_linkc = C2j_linkc andalso S1j_linkc = S2j_linkc then
+                    check_groups
+                      (j - 1)
+                      (Constraints.add_list
+                         ([(C1j_inner, C2j_inner), (S1j_inner, S2j_inner)], C'))
+                      (Constraints.add ((S1j_outer, S2j_outer), C''))
+                  else
+                    NONE
+                end
+          in
+            case check_groups jbound
+                              Constraints.empty
+                              Constraints.empty of
+              SOME (C', C'') =>
+              if Constraints.are_combineable (C, C') then
+                SOME (Constraints.add ((I1_outer, I2_outer), C''))
+              else
+                NONE
+            | NONE => NONE
+          end
+      end
+      
 
   (* Convert an inverted map, mapping nameedges to name sets,
    * into a link'set. 
@@ -919,6 +1044,7 @@ functor Wiring (structure Link : LINK
 		structure Name : NAME
 		structure NameSet : MONO_SET
 		structure NameMap : MONO_FINMAP
+                structure NameBijectionConstraints : BIJECTION_CONSTRAINTS
 		structure IntSet : MONO_SET where type elt = int
 		structure ErrorHandler : ERRORHANDLER
                   where type ppstream    = PrettyPrint.ppstream
@@ -929,19 +1055,22 @@ functor Wiring (structure Link : LINK
 		sharing type Link.link = LinkSet.elt
 		sharing type Name.name = Link.name = NameSet.elt = NameMap.dom
 		sharing type NameSet.Set =
+                             NameBijectionConstraints.set =
                              Link.nameset =
 		             NameSetPP.collection) :> WIRING 
                 where type link       = Link.link
 		  and type linkset    = LinkSet.Set 
                   and type name       = Name.name
 		  and type nameset    = NameSet.Set
-                  and type 'a namemap = 'a NameMap.map =
+                  and type 'a namemap = 'a NameMap.map
+                  and type nameconstraints = NameBijectionConstraints.constraints  =
 struct
   structure Wiring = Wiring'(structure Link = Link
 			     structure LinkSet = LinkSet
 			     structure Name = Name
 			     structure NameSet = NameSet
 			     structure NameMap = NameMap
+                             structure NameBijectionConstraints = NameBijectionConstraints
 			     structure IntSet = IntSet
 			     structure ErrorHandler = ErrorHandler
 			     structure NameSetPP = NameSetPP)

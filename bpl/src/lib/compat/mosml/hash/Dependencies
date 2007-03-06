@@ -1,4 +1,4 @@
-. = hash-key-sig hash-string hash-table hash-table-fn
+. = hash-key-sig hash-string hash-table hash-table-fn mono-hash-table-sig
 hash-key-sig:
 hash-string:
 hash-table-rep:

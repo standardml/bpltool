@@ -54,6 +54,11 @@ structure ListPP
   = PolyListPrettyPrint
       (structure PrettyPrint = PrettyPrint)
 
+structure NameBijectionConstraints
+  = BijectionConstraints
+      (structure Set = NameSet
+       structure Map = NameMap)
+
 structure Interface 
   = Interface' 
       (structure NameSet     = NameSet
@@ -74,6 +79,7 @@ structure Ion
       (structure Control     = Control
        structure Name        = Name
        structure NameSet     = NameSet
+       structure NameBijectionConstraints = NameBijectionConstraints
        structure NameSetPP   = NameSetPP)
 
 structure Wiring 
@@ -85,12 +91,14 @@ structure Wiring
        structure NameMap      = NameMap
        structure NameSet      = NameSet
        structure NameSetPP    = NameSetPP
+       structure NameBijectionConstraints = NameBijectionConstraints
        structure ErrorHandler = ErrorHandler)
 
 structure Permutation
   = Permutation'
       (structure Name         = Name
        structure NameSet      = NameSet
+       structure NameBijectionConstraints = NameBijectionConstraints
        structure IntSet       = IntSet
        structure Interface    = Interface
        structure NameSetPP    = NameSetPP
@@ -110,6 +118,7 @@ structure BgVal
       (structure Info             = Info
        structure Name             = Name
        structure NameSet          = NameSet
+       structure NameBijectionConstraints = NameBijectionConstraints
        structure Link             = Link
        structure LinkSet          = LinkSet
        structure Interface        = Interface
@@ -127,6 +136,7 @@ structure BgBDNF
        structure Link             = Link
        structure Name             = Name
        structure NameSet          = NameSet
+       structure NameBijectionConstraints = NameBijectionConstraints
        structure LinkSet          = LinkSet
        structure Interface        = Interface
        structure Ion              = Ion

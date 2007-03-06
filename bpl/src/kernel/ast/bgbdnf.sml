@@ -24,6 +24,7 @@
 functor BgBDNF'(structure Info : INFO
 		structure Name : NAME
 		structure NameSet : MONO_SET
+                structure NameBijectionConstraints : BIJECTION_CONSTRAINTS
 		structure LinkSet : MONO_SET
 		structure Interface : INTERFACE
 		structure Ion : ION
@@ -51,6 +52,7 @@ functor BgBDNF'(structure Info : INFO
 			     Permutation.Immutable
 		sharing type BgVal.wiring = Wiring.wiring
 		sharing type NameSet.Set =
+                             NameBijectionConstraints.set =
 			     Interface.nameset =
 			     Ion.nameset =
 			     Permutation.nameset =
@@ -61,10 +63,14 @@ functor BgBDNF'(structure Info : INFO
 		sharing type LinkSet.elt =
                              Link.link =
                              Wiring.link
-		sharing type Link.name = NameSet.elt
 		sharing type NameSet.elt =
+		             Link.name =
                              Name.name =
                              Ion.name
+                sharing type NameBijectionConstraints.constraints =
+                             Ion.nameconstraints =
+                             Permutation.nameconstraints =
+                             Wiring.nameconstraints
                 sharing type Info.info =
                              BgVal.info
 			     ) : BGBDNF 
@@ -1087,36 +1093,332 @@ struct
 
   val info = BgVal.info
 
-  fun eqM b1 b2 = raise Fail "FIXME not implemented"
-  fun eqS b1 b2 = raise Fail "FIXME not implemented"
-  fun eqG b1 b2 = raise Fail "FIXME not implemented"
-  fun eqN b1 b2 = raise Fail "FIXME not implemented"
-  fun eqP b1 b2 = raise Fail "FIXME not implemented"
-  fun eqD b1 b2 = raise Fail "FIXME not implemented"
-  fun eqB b1 b2 = raise Fail "FIXME not implemented"
-  fun eqDR b1 b2 = raise Fail "FIXME not implemented"
-  fun eqBR b1 b2 = raise Fail "FIXME not implemented"
+  structure Constraints = NameBijectionConstraints
+
+  fun eqM C b1 pi1 b2 pi2 =
+      case match (PCom (PTen [PWir, PIon], PVar)) b1 of
+        MCom (MTen [MWir idZ1, MIon KyX1], MVal N1) =>
+     (case match (PCom (PTen [PWir, PIon], PVar)) b2 of
+        MCom (MTen [MWir idZ2, MIon KyX2], MVal N2) =>
+     (case eqN C N1 pi1 N2 pi2 of
+        SOME CN' =>
+        let
+          val idZ1_inner_ns = Wiring.innernames idZ1
+          val idZ2_inner_ns = Wiring.innernames idZ2
+          val KyX1_inner_ns = Ion.innernames KyX1
+          val KyX2_inner_ns = Ion.innernames KyX2
+        in
+          case Constraints.restrict (CN', (idZ1_inner_ns, idZ2_inner_ns)) of
+            SOME CidZ =>
+         (case Wiring.eq' CidZ idZ1 idZ2 of
+            SOME CidZ' =>
+         (case Constraints.restrict (CN', (KyX1_inner_ns, KyX2_inner_ns)) of
+            SOME CKyX =>
+         (case Ion.eq' CKyX KyX1 KyX2 of
+            SOME CKyX' => SOME (Constraints.plus (CidZ', CKyX'))
+          | NONE => NONE)
+          | NONE => NONE)
+          | NONE => NONE)
+          | NONE => NONE
+        end
+      | NONE => NONE)
+      | wrongterm => NONE) (* b2 is not on M BDNF form *)
+      | wrongterm =>
+        raise MalformedBDNF
+                (info b1, wrongterm, "matching M in eqM")
+  and eqS C b1 pi1 b2 pi2 =
+      case match (PCom (PTen [PWir, PVar], PCon)) b1 of
+        MCom (MTen [MWir a1, _], MCon _) =>
+     (case match (PCom (PTen [PWir, PVar], PCon)) b2 of
+        MCom (MTen [MWir a2, _], MCon _) =>
+        Wiring.eq' C a1 a2
+      | wrongterm => NONE) (* b2 is not on (the same) S BDNF form *)
+      | _ => eqM C b1 pi1 b2 pi2 (* b1 must be on M BDNF form *)
+  and eqG C b1 pi1 b2 pi2 =
+      case match (PCom (PTen [PWir, PMer], PTns)) b1 of
+        MCom (MTen [MWir idY1, MMer n1], MTns Ss1) =>
+     (case match (PCom (PTen [PWir, PMer], PTns)) b2 of
+        MCom (MTen [MWir idY2, MMer n2], MTns Ss2) =>
+        (* try all permutations of Ss1 *)
+        let
+          (* test equality of a single permutation *)
+          fun eqSs _ [] [] [] [] CSs' = SOME CSs'
+            | eqSs Cpi (S1::Ss1) (pi1::pis1) (S2::Ss2) (pi2::pis2) CSs' =
+              let
+                val S1_inner_ns = Interface.names (innerface S1)
+                val S2_inner_ns = Interface.names (innerface S2)
+              in
+                case Constraints.restrict
+                       (Cpi, (S1_inner_ns, S2_inner_ns)) of
+                  SOME CS =>
+               (case eqS CS S1 pi1 S2 pi2 of
+                  SOME CS' => eqSs Cpi Ss1 pis1 Ss2 pis2
+                                   (Constraints.plus (CSs', CS'))
+                | NONE => NONE)
+                | NONE => NONE
+              end
+            | eqSs _ _ _ _ _ _ = NONE
+
+          val Xss1 = map (Interface.loc o innerface) Ss1
+          val Xss2 = map (Interface.loc o innerface) Ss2
+          val {group = grouping_pi2, minors = minor_pis2}
+            = Permutation.general_split pi2 Xss2
+
+          val perm = Permutation.firstperm_n (length Ss1)
+
+          (* try each permutation in succession *)
+          fun try_perm perm =
+              let
+                val pi    = Permutation.toperm perm
+                val Ss1'  = Permutation.permute pi Ss1
+                val Xss1' = map (Interface.loc o innerface) Ss1'
+                val pi1'  = Permutation.o (Permutation.prod Xss1 pi, pi1)
+                val {group = grouping_pi1', minors = minor_pis1'}
+                  = Permutation.general_split pi1' Xss1'
+              in
+                case Permutation.eq' C grouping_pi1' grouping_pi2 of
+                  SOME C' => 
+               (case eqSs C' Ss1' minor_pis1' Ss2 minor_pis2 Constraints.empty of
+                  SOME C'' => SOME C''
+                | NONE => try_perm (Permutation.nextperm perm))
+                | NONE => try_perm (Permutation.nextperm perm)
+              end
+              handle Permutation.NoMorePerms => NONE
+        in
+          try_perm perm
+        end
+      | wrongterm => NONE) (* b2 is not on G BDNF form *)
+      | wrongterm =>
+        raise MalformedBDNF
+                (info b1, wrongterm, "matching G in eqG")
+  and eqN C b1 pi1 b2 pi2 =
+      case match (PAbs PVar) b1 of
+        MAbs (X1, MVal G1) =>
+     (case match (PAbs PVar) b2 of
+        MAbs (X2, MVal G2) =>
+     (case eqG C G1 pi1 G2 pi2 of
+        SOME C' =>
+        let
+          val allns1 = Interface.names (outerface b1)
+          val notX1  = NameSet.difference allns1 X1
+          val allns2 = Interface.names (outerface b2)
+          val notX2  = NameSet.difference allns1 X2
+          val C''    = Constraints.from_list [(X1, X2), (notX1, notX2)]
+        in
+          if NameSet.size X1 = NameSet.size X2 then
+            Constraints.combine (C', C'')
+          else 
+            NONE
+        end
+      | NONE => NONE)
+      | wrongterm => NONE) (* b2 is not on N BDNF form *)
+      | wrongterm =>
+        raise MalformedBDNF
+                (info b1, wrongterm, "matching N in eqN")
+  fun eqP C b1 pi1 b2 pi2 =
+      case match (PCom (PTen [PWir, PAbs (PCom (PTen [PWir, PVar], PCon))],
+                        PVar)) b1 of
+        MCom (MTen [MWir idZ1, MAbs (_, MCom (MTen [MWir yX1, _], MCon X1))],
+              MVal N1) =>
+     (case match (PCom (PTen [PWir, PAbs (PCom (PTen [PWir, PVar], PCon))],
+                        PVar)) b2 of
+        MCom (MTen [MWir idZ2, MAbs (_, MCom (MTen [MWir yX2, _], MCon X2))],
+              MVal N2) =>
+     (case eqN C N1 pi1 N2 pi2 of
+        SOME CN' =>
+        let
+          val idZ1_inner_ns = Wiring.innernames idZ1
+          val idZ2_inner_ns = Wiring.innernames idZ2
+        in
+          case Constraints.restrict (CN', (idZ1_inner_ns, idZ2_inner_ns)) of
+            SOME CidZ =>
+         (case Wiring.eq' CidZ idZ1 idZ2 of
+            SOME CidZ' =>
+         (case Constraints.restrict (CN', (X1, X2)) of
+            SOME CyX =>
+         (case Wiring.eq' CyX yX1 yX2 of
+            SOME CyX' => SOME (Constraints.plus (CidZ', CyX'))
+          | NONE => NONE)
+          | NONE => NONE)
+          | NONE => NONE)
+          | NONE => NONE
+        end
+      | NONE => NONE)
+      | wrongterm => NONE) (* b2 is not on P BDNF form *)
+      | wrongterm =>
+        raise MalformedBDNF
+                (info b1, wrongterm, "matching P in eqP")
+  fun eqD C b1 b2 =
+      case match (PTen [PWir, PCom (PTns, PPer)]) b1 of
+        MTen [MWir a1, MCom (MTns Ps1, MPer pi1)] =>
+     (case match (PTen [PWir, PCom (PTns, PPer)]) b2 of
+        MTen [MWir a2, MCom (MTns Ps2, MPer pi2)] =>
+        let
+          val a1_inner_ns = Wiring.innernames a1
+          val a2_inner_ns = Wiring.innernames a2
+          val pi1_ns = Interface.names (Permutation.innerface pi1)
+          val pi2_ns = Interface.names (Permutation.innerface pi2)
+          val {group = grouping_pi1, minors = minor_pis1}
+            = Permutation.general_split pi1 (map (Interface.loc o innerface) Ps1)
+          val {group = grouping_pi2, minors = minor_pis2}
+            = Permutation.general_split pi2 (map (Interface.loc o innerface) Ps2)
+        in
+          case Constraints.restrict (C, (a1_inner_ns, a2_inner_ns)) of
+            SOME Ca =>
+         (case Wiring.eq' Ca a1 a2 of
+            SOME Ca' =>
+         (case Constraints.restrict (C, (pi1_ns, pi2_ns)) of
+            SOME Cpi =>
+         (case Permutation.eq' Cpi grouping_pi1 grouping_pi2 of
+            SOME Cpi' =>
+            let
+              fun eqPs [] [] [] [] CPs' = SOME CPs'
+                | eqPs (P1::Ps1) (pi1::pis1) (P2::Ps2) (pi2::pis2) CPs' =
+                  let
+                    val P1_inner_ns = Interface.names (innerface P1)
+                    val P2_inner_ns = Interface.names (innerface P2)
+                  in
+                    case Constraints.restrict
+                           (Cpi', (P1_inner_ns, P2_inner_ns)) of
+                      SOME CP =>
+                   (case eqP CP P1 pi1 P2 pi2 of
+                      SOME CP' => eqPs Ps1 pis1 Ps2 pis2
+                                       (Constraints.plus (CPs', CP'))
+                    | NONE => NONE)
+                    | NONE => NONE
+                  end
+                | eqPs _ _ _ _ _ = NONE
+            in
+              case eqPs Ps1 minor_pis1 Ps2 minor_pis2 Constraints.empty of
+                SOME CPs' => SOME (Constraints.plus (Ca', CPs'))
+              | NONE => NONE
+            end
+          | NONE => NONE)
+          | NONE => NONE)
+          | NONE => NONE)
+          | NONE => NONE
+        end
+      | wrongterm => NONE) (* b2 is not on D BDNF form *)
+      | wrongterm =>
+        raise MalformedBDNF
+                (info b1, wrongterm, "matching D in eqD")
+  fun eqB C b1 b2 =
+      case match (PCom (PTen [PWir, PPer], PVar)) b1 of
+        MCom (MTen [MWir w1, MPer id_X1], MVal D1) =>
+     (case match (PCom (PTen [PWir, PPer], PVar)) b2 of
+        MCom (MTen [MWir w2, MPer id_X2], MVal D2) =>
+        (case eqD C D1 D2 of
+           SOME C' =>
+           let
+             (* restrict C' to the inner names of w1, w2 and id_X1, id_X2
+              * before comparing the pairs *)
+             val w1_inner_ns = Wiring.innernames w1
+             val w2_inner_ns = Wiring.innernames w2
+             val id_X1_inner_ns = Interface.names (Permutation.innerface id_X1)
+             val id_X2_inner_ns = Interface.names (Permutation.innerface id_X2)
+           in
+             case Constraints.restrict (C', (w1_inner_ns, w2_inner_ns)) of
+               SOME Cw =>
+            (case Wiring.eq' Cw w1 w2 of
+               SOME Cw' =>
+            (case Constraints.restrict (C', (id_X1_inner_ns, id_X2_inner_ns)) of
+               SOME Cid_X =>
+            (case Permutation.eq' Cid_X id_X1 id_X2 of
+               SOME Cid_X' => SOME (Constraints.plus (Cw', Cid_X'))
+             | NONE => NONE)
+             | NONE => NONE)
+             | NONE => NONE)
+             | NONE => NONE
+           end
+         | NONE => NONE)
+      | wrongterm => NONE) (* b2 is not on B BDNF form *)
+      | wrongterm =>
+        raise MalformedBDNF
+                (info b1, wrongterm, "matching B in eqB")
+  fun eqDR C b1 b2 =
+      (* convert to, and compare on, D form *)
+      case match (PTen [PWir, PTns]) b1 of
+        MTen [MWir a1, MTns Ps1] =>
+     (case match (PTen [PWir, PTns]) b2 of
+        MTen [MWir a2, MTns Ps2] =>
+        let
+          val Ps1_loc_names
+            = (List.concat o map (Interface.loc o innerface)) Ps1
+          val Ps2_loc_names
+            = (List.concat o map (Interface.loc o innerface)) Ps2
+          val pi1 = Permutation.id Ps1_loc_names
+          val pi2 = Permutation.id Ps2_loc_names
+          val i = noinfo
+          val D1 = Ten i [Wir i a1, Com i (Ten i Ps1, Per i pi1)]
+          val D2 = Ten i [Wir i a2, Com i (Ten i Ps2, Per i pi2)]
+        in
+          eqD C D1 D2
+        end
+      | wrongterm => NONE) (* b2 is not on D BDNF form *)
+      | wrongterm =>
+        raise MalformedRBDNF
+                (info b1, wrongterm, "matching DR in eqDR")
+  fun eqBR C b1 b2 =
+      case match (PCom (PTen [PWir, PPer], PVar)) b1 of
+        MCom (MTen [MWir w1, MPer id_X1], MVal DR1) =>
+     (case match (PCom (PTen [PWir, PPer], PVar)) b2 of
+        MCom (MTen [MWir w2, MPer id_X2], MVal DR2) =>
+        (case eqDR C DR1 DR2 of
+           SOME C' =>
+           let
+             (* restrict C' to the inner names of w1, w2 and id_X1, id_X2
+              * before comparing the pairs *)
+             val w1_inner_ns = Wiring.innernames w1
+             val w2_inner_ns = Wiring.innernames w2
+             val id_X1_inner_ns = Interface.names (Permutation.innerface id_X1)
+             val id_X2_inner_ns = Interface.names (Permutation.innerface id_X2)
+           in
+             case Constraints.restrict (C', (w1_inner_ns, w2_inner_ns)) of
+               SOME Cw =>
+            (case Wiring.eq' Cw w1 w2 of
+               SOME Cw' =>
+            (case Constraints.restrict (C', (id_X1_inner_ns, id_X2_inner_ns)) of
+               SOME Cid_X =>
+            (case Permutation.eq' Cid_X id_X1 id_X2 of
+               SOME Cid_X' => SOME (Constraints.plus (Cw', Cid_X'))
+             | NONE => NONE)
+             | NONE => NONE)
+             | NONE => NONE)
+             | NONE => NONE
+           end
+         | NONE => NONE)
+      | wrongterm => NONE) (* b2 is not on BR BDNF form *)
+      | wrongterm =>
+        raise MalformedBDNF
+                (info b1, wrongterm, "matching BR in eqBR")
 
   (* determine which normal form b1 matches and call the right function *)
-  fun eq b1 b2 =
+  fun eq' C b1 b2 =
       case match PCns b1 of
         MCom (MVal com1, MVal com2) => (* M, S, G, P, B, or BR *)
         (case match PCns com2 of
-           MCon _ => eqS b1 b2 (* S *)
+           MCon _ => eqS C b1 (Permutation.id (Interface.loc (innerface b1)))
+                           b2 (Permutation.id (Interface.loc (innerface b2)))
          | MAbs _ => (* M or P *)
            (case match (PTen [PWir, PCns]) com1 of
-              MTen [_, MIon _] => eqM b1 b2 (* M *)
-            | MTen [_, MAbs _] => eqP b1 b2 (* P *)
+              MTen [_, MIon _] =>
+              eqM C b1 (Permutation.id (Interface.loc (innerface b1)))
+                    b2 (Permutation.id (Interface.loc (innerface b2)))
+            | MTen [_, MAbs _] =>
+              eqP C b1 (Permutation.id (Interface.loc (innerface b1)))
+                    b2 (Permutation.id (Interface.loc (innerface b2)))
             | wrongterm =>
               raise MalformedBDNF
                       (info b1, wrongterm, "matching M or P in eq"))
          | MTns tns => (* G, B, or BR *)
            (case match (PTen [PWir, PCns]) com1 of
-              MTen [_, MMer _] => eqG b1 b2 (* G *)
+              MTen [_, MMer _] =>
+              eqG C b1 (Permutation.id (Interface.loc (innerface b1)))
+                    b2 (Permutation.id (Interface.loc (innerface b2)))
             | MTen [_, MPer _] => (* B or BR *)
               (case match PCns (List.nth (tns, 1)) of
-                 MCom _ => eqB b1 b2  (* B *)
-               | MTns _ => eqBR b1 b2 (* BR *)
+                 MCom _ => eqB C b1 b2  (* B *)
+               | MTns _ => eqBR C b1 b2 (* BR *)
                | wrongterm =>
                  raise MalformedBDNF
                          (info b1, wrongterm, "matching B or BR in eq"))
@@ -1126,17 +1428,46 @@ struct
          | wrongterm =>
            raise MalformedBDNF
                    (info b1, wrongterm, "matching M, S, G, P, B, or BR in eq"))
-      | MAbs _ => eqN b1 b2 (* N *)
+      | MAbs _ => eqN C b1 (Permutation.id (Interface.loc (innerface b1)))
+                        b2 (Permutation.id (Interface.loc (innerface b2)))
       | MTns tns => (* D, DR *)
         (case match PCns (List.nth (tns, 1)) of
-           MCom _ => eqD b1 b2  (* D *)
-         | MTns _ => eqDR b1 b2 (* DR *)
+           MCom _ => eqD C b1 b2  (* D *)
+         | MTns _ => eqDR C b1 b2 (* DR *)
          | wrongterm =>
            raise MalformedBDNF
                    (info b1, wrongterm, "matching D or DR in eq"))
       | wrongterm =>
         raise MalformedBDNF (info b1, wrongterm, "matching in eq")
 
+  fun eq b1 b2 =
+      let
+        val iface1 = innerface b1
+        val iface2 = innerface b2
+        val oface1 = outerface b1
+        val oface2 = outerface b2
+        val X      = Interface.names iface1
+        val Y      = Interface.names oface1
+        val Ci     = NameSet.fold
+                       (fn x => fn Ci =>
+                        let val X = NameSet.singleton x
+                        in Constraints.add ((X,X), Ci) end)
+                       Constraints.empty X
+        val Co     = NameSet.fold
+                       (fn y => fn Co =>
+                        let val Y = NameSet.singleton y
+                        in Constraints.add ((Y,Y), Co) end)
+                       Constraints.empty Y
+      in
+        if Interface.eq (iface1, iface2)
+          andalso Interface.eq (oface1, oface2)
+        then
+          case eq' Ci b1 b2 of
+            SOME Co' => Constraints.are_combineable (Co, Co')
+          | NONE     => false
+        else 
+          false
+      end
 
   fun pp indent pps
     = BgVal.pp indent pps o unmk
@@ -1174,6 +1505,7 @@ end
 functor BgBDNF (structure Info : INFO
 		structure Name : NAME
 		structure NameSet : MONO_SET
+                structure NameBijectionConstraints : BIJECTION_CONSTRAINTS
 		structure LinkSet : MONO_SET
 		structure Interface : INTERFACE
 		structure Ion : ION
@@ -1201,6 +1533,7 @@ functor BgBDNF (structure Info : INFO
 			     Permutation.Immutable
 		sharing type BgVal.wiring = Wiring.wiring
 		sharing type NameSet.Set =
+                             NameBijectionConstraints.set =
 			     Interface.nameset =
 			     Ion.nameset =
 			     Permutation.nameset =
@@ -1211,10 +1544,14 @@ functor BgBDNF (structure Info : INFO
 		sharing type LinkSet.elt =
                              Link.link =
                              Wiring.link
-		sharing type Link.name = NameSet.elt
 		sharing type NameSet.elt =
+		             Link.name =
                              Name.name =
                              Ion.name
+                sharing type NameBijectionConstraints.constraints =
+                             Ion.nameconstraints =
+                             Permutation.nameconstraints =
+                             Wiring.nameconstraints
                 sharing type Info.info =
                              BgVal.info
 			     ) :> BGBDNF 
@@ -1231,6 +1568,7 @@ struct
   structure BgBDNF = BgBDNF'(structure Info = Info
 			     structure Name = Name
 			     structure NameSet = NameSet
+			     structure NameBijectionConstraints = NameBijectionConstraints
 			     structure LinkSet = LinkSet
 			     structure Interface = Interface
 			     structure Ion = Ion

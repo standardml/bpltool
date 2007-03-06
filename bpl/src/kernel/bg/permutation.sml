@@ -25,6 +25,7 @@ functor Permutation' (structure IntSet : MONO_SET
                         where type elt = int
 		      structure NameSet : MONO_SET
 		      structure Name : NAME
+                      structure NameBijectionConstraints : BIJECTION_CONSTRAINTS
 		      structure Interface : INTERFACE
 		      structure ErrorHandler : ERRORHANDLER
                         where type ppstream    = PrettyPrint.ppstream
@@ -32,15 +33,19 @@ functor Permutation' (structure IntSet : MONO_SET
                           and type origin      = Origin.origin
 		      structure NameSetPP : COLLECTIONPRETTYPRINT
                         where type ppstream = PrettyPrint.ppstream
-		      sharing type Interface.nameset = NameSet.Set
+		      sharing type NameSet.Set =
+                                   NameBijectionConstraints.set =
+                                   Interface.nameset
 		      sharing type NameSet.Set = NameSetPP.collection
 	              sharing type Name.name = NameSet.elt)
 	: PERMUTATION 
 	   where type nameset   = NameSet.Set
-             and type interface = Interface.interface =
+             and type interface = Interface.interface
+             and type nameconstraints = NameBijectionConstraints.constraints =
 struct
   type nameset = NameSet.Set
   type interface = Interface.interface
+  type nameconstraints = NameBijectionConstraints.constraints
 
   type Mutable = unit
   type Immutable = unit
@@ -59,6 +64,12 @@ struct
   type 'a permutation = {width : int,
                          pi : (int * nameset) array,
                          pi_inv : (int * nameset) array}
+
+  (* An ordered permutation is a permutation with additional data that
+   * supports incremental generation of all permutations of this width.
+   *)
+  datatype dir = Left | Right
+  type 'kind ordered_permutation = int * 'kind permutation * (int * dir) list
 
   exception LogicalError of string
   fun explain_LogicalError (LogicalError errtxt) =
@@ -106,6 +117,32 @@ struct
             end
       in
         width1 = width2 andalso compare (width1 - 1)
+      end
+
+  structure Constraints = NameBijectionConstraints
+  fun eq' C {width = width1, pi = pi1, pi_inv = pi_inv1}
+            {width = width2, pi = pi2, pi_inv = pi_inv2} =
+      let
+        (* check that the permutations are the same
+         * and gather name constraints *)
+        fun check_entries ~1 C' = SOME C'
+          | check_entries i  C' =
+            let
+              val (i1, ns1) = pi1 sub i
+              val (i2, ns2) = pi2 sub i
+            in
+              if i1 = i2 andalso NameSet.size ns1 = NameSet.size ns2 then
+                check_entries (i - 1) (Constraints.add ((ns1, ns2), C'))
+              else
+                NONE
+            end
+      in
+        if width1 = width2 then
+          case check_entries (width1 - 1) Constraints.empty of
+            SOME C' => Constraints.combine (C, C')
+          | NONE    => NONE
+        else
+          NONE
       end
 
   (** Determine whether some permutation is a nameless identity in
@@ -394,6 +431,21 @@ struct
 	{width = width', pi = pi', pi_inv = pi_inv'}
       end
 
+  exception IncompatibleNamesetListList
+  of Mutable permutation * nameset list list
+  fun explain_IncompatibleNamesetListList
+      (IncompatibleNamesetListList (p, nsss)) =
+      [Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data pp p, []),
+       Exp (LVL_USER, Origin.unknown_origin,
+            mk_list_pp "{" "}" "," (mk_list_pp' "{" "}" "," NameSetPP.pp) nsss,
+            []),
+       Exp (LVL_LOW, file_origin, pp_nothing, [])]
+    | explain_IncompatibleNamesetListList _ = raise Match
+  val _ = add_explainer
+            (mk_explainer "permutation and list of local inner \
+                          \names lists are incompatible"
+                          explain_IncompatibleNamesetListList)
+
   (** Signal that a permutation is not regularizable relative to a list
    *  of local inner name lists.
    *)
@@ -430,7 +482,7 @@ struct
 	        Xss
 
         val _ = if width <> sumns then
-                  raise NotRegularisable (copy perm, Xss)
+                  raise IncompatibleNamesetListList (copy perm, Xss)
                 else ()
 
         (* j is n-located at #1 nlocated[j]  and
@@ -534,6 +586,131 @@ struct
           minors = Array.foldr (op ::) [] minors})
       end
 
+  (* Split the permutation into two parts: (1) one that groups the sites
+   * according to Xss without changing the order within the group, and (2)
+   * a permutation for each group that permutes the sites of a group.
+   *)
+  fun general_split (perm as {width, pi, pi_inv} : 'kinda permutation) Xss =
+      let
+        val (k, ns, sumns)
+            = foldr
+                (fn (Xs, (k, ns, sumns)) =>
+                    let val n = length Xs in (k+1, n::ns, n+sumns) end)
+                (0, [], 0)
+	        Xss
+
+        val _ = if width <> sumns then
+                  raise IncompatibleNamesetListList (copy perm, Xss)
+                else ()
+        
+        (* the permutation that groups the sites without changing the order within each group *)
+        val group_pi     = array (width, (~24, NameSet.empty))
+        val group_pi_inv = array (width, (~25, NameSet.empty))
+
+        (* the permutations within groups *)
+        val minors 
+            = Array.fromList
+                (map 
+                   (fn n =>
+                       let
+                         val minor_pi
+                             = array (n, (~26, NameSet.empty))
+                         val minor_pi_inv
+                             = array (n, (~27, NameSet.empty))
+                       in
+                         {width = n,
+                          pi = minor_pi,
+                          pi_inv = minor_pi_inv}
+                       end)
+                   ns)
+
+         (* lookup the n inverse permutation entries from offset to
+          * (offset + n - 1) and return them as a list
+          * I.e. find the permutation etries for a group. *)
+         fun group_entries _ 0 acc = acc
+           | group_entries offset n acc =
+             group_entries (offset+1) (n-1) ((offset, pi_inv sub offset) :: acc)
+
+         (* Split the permutation entries for a group.
+          *)
+         fun split_group (n, (group, offset)) =
+             let
+               val {pi = minor_pi, pi_inv = minor_pi_inv, ...} = minors sub group
+               (* compare function for entries used to sort by
+                * ascending "from"-site *)
+               fun cmp_entries ((_, (i1, _)), (_, (i2, _)))
+                 = Int.compare (i1, i2)
+                     
+               (* Split the permutation entry from i to j into one entry
+                * in the grouping permutation and one entry in the permutation
+                * for that group.
+                *)
+               fun split_entry ((j, (i, X)), i_minor) =
+                   let
+                     val j_minor = j - offset
+                     val j_group = offset + i_minor
+                   in
+                     (  update (minor_pi,     i_minor, (j_minor, X))
+                      ; update (minor_pi_inv, j_minor, (i_minor, X))
+                      ; update (group_pi,     i,       (j_group, X))
+                      ; update (group_pi_inv, j_group, (i,       X))
+                      ; i_minor + 1)
+                   end
+             in
+               (  ((foldl split_entry 0) o (ListSort.sort cmp_entries))
+                    (group_entries offset n [])
+                ; (group + 1, offset + n))
+             end
+      in
+        (  foldl split_group (0, 0) ns
+         ; {  group   = {width = width, pi = group_pi, pi_inv = group_pi_inv}
+            , minors  = Array.foldr (op ::) [] minors})
+      end
+
+  fun prod Xss (perm as {width, pi, pi_inv} : 'kinda permutation) =
+      let
+        val (k, ns, sumns)
+            = foldr
+                (fn (Xs, (k, ns, sumns)) =>
+                    let val n = length Xs in (k+1, n::ns, n+sumns) end)
+                (0, [], 0)
+	        Xss
+
+        (* the result permutation *)
+        val ppi     = array (sumns, (~28, NameSet.empty))
+        val ppi_inv = array (sumns, (~29, NameSet.empty))
+
+        (* calculate the offset of the entries in ppi_inv corresponding to
+         * a given index j in pi_inv *)
+        val ms = permute perm ns
+        val ppi_inv_offsets
+          = Array.fromList 
+              (#2 (foldr
+                     (fn (m, (summs, acc)) => (summs - m, (summs - m) :: acc))
+                     (sumns, [])
+                     ms))
+ 
+        (* compute the product of a single permutation entry of perm
+         * and the corresponding nameset list *)
+        fun prod_entry (Xs, (i, offseti)) =
+            let
+              val (j, _)  = pi sub i
+              val offsetj = ppi_inv_offsets sub j
+              fun update_prod_entry (X, (i', j')) =
+                  (  update (ppi,     i', (j', X))
+                   ; update (ppi_inv, j', (i', X))
+                   ; (i' + 1, j' + 1))
+              val (offseti', _) = foldl update_prod_entry (offseti, offsetj) Xs
+            in
+              (i + 1, offseti')
+            end
+      in
+        (  foldl prod_entry (0, 0) Xss
+         ; {  width  = sumns
+            , pi     = ppi
+            , pi_inv = ppi_inv})
+      end
+
   exception UnequalLengths of nameset list list * nameset list list * string
   fun explain_UnequalLengths (UnequalLengths (nsss1, nsss2, errtxt)) =
       [Exp (LVL_USER, Origin.unknown_origin,
@@ -634,12 +811,63 @@ struct
    * where O(s) is the time for local name set comparison.
    *)
   val op o = compose
+
+  val toperm : 'kind ordered_permutation -> 'kind permutation = #2
+  exception NoMorePerms
+
+  (* Return the first permutation in the ordering. *)
+  fun firstperm names : Mutable ordered_permutation =
+    let
+      fun poslist 0 = []
+        | poslist n = (n - 1, Left) :: poslist (n - 1)
+      val pi = copy (id names)
+      val n = width pi
+    in
+      (n, pi, poslist n)
+    end
+  
+  (* Return the first permutation in the ordering. *)
+  fun firstperm_n n : Mutable ordered_permutation =
+    let
+      fun poslist 0 = []
+        | poslist n = (n - 1, Left) :: poslist (n - 1)
+      val pi = copy (id_n n)
+    in
+      (n, pi, poslist n)
+    end
+
+  (* Update _destructively_ permutation p and return it as the next
+   * permutation in the ordering.  The inner face of the permutation
+   * is preserved (cf. swap).
+   * This implementation uses the Johnson-Trotter algorithm.
+   *)
+  fun nextperm (n, pi, poss) =
+    let
+      fun np offset i [] = raise NoMorePerms
+        | np offset i [_] = raise NoMorePerms
+        | np offset i ((p, Left) :: ps) =
+          if (p <= 0) then
+            (p, Right) :: np (offset + 1) (i - 1) ps
+          else
+            (swap pi (offset + p - 1, offset + p);
+             (p - 1, Left) :: ps)
+        | np offset i ((p, Right) :: ps) =
+          if (p >= i - 1) then
+            (p, Left) :: np offset (i - 1) ps
+          else
+            (swap pi (offset + p, offset + p + 1);
+             (p + 1, Right) :: ps)
+      val newposs = np 0 n poss
+    in
+      (n, pi, newposs)
+    end 
 end
 
 functor Permutation (structure IntSet : MONO_SET
                        where type elt = int
 		     structure NameSet : MONO_SET
 		     structure Name : NAME
+                     structure NameBijectionConstraints : BIJECTION_CONSTRAINTS
 		     structure Interface : INTERFACE
 		     structure ErrorHandler : ERRORHANDLER
                        where type ppstream    = PrettyPrint.ppstream
@@ -648,15 +876,19 @@ functor Permutation (structure IntSet : MONO_SET
 		     structure NameSetPP : COLLECTIONPRETTYPRINT
                        where type ppstream = PrettyPrint.ppstream
 		     sharing type Interface.nameset = NameSet.Set
-		     sharing type NameSet.Set = NameSetPP.collection
+		     sharing type NameSet.Set =
+                                  NameBijectionConstraints.set =
+                                  NameSetPP.collection
 	             sharing type Name.name = NameSet.elt)
 	:> PERMUTATION 
 	   where type nameset = NameSet.Set
-             and type interface = Interface.interface =
+             and type interface = Interface.interface
+             and type nameconstraints = NameBijectionConstraints.constraints =
 struct
   structure Permutation' = Permutation'(structure IntSet       = IntSet
 					structure NameSet      = NameSet
 					structure Name         = Name
+                                        structure NameBijectionConstraints = NameBijectionConstraints
 					structure Interface    = Interface
 					structure ErrorHandler = ErrorHandler
 					structure NameSetPP    = NameSetPP)

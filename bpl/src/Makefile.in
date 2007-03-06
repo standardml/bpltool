@@ -203,7 +203,7 @@ test-smlnj: smlnj-prepare
 	      val _   = OS.FileSys.chDir \"lib/compat/smlnj/\";\
 	      use \"cmmakedefine.sml\";\
               val _   = OS.FileSys.chDir pwd;\
-              CM_make \"test/sources.cm\"" | $(SMLNJ)
+              CM_make \"test/unittest.cm\"" | $(SMLNJ)
 
 test-mosml: unittest
 	./unittest

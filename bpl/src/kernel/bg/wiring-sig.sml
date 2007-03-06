@@ -26,6 +26,7 @@ sig
   type name
   type nameedge
   type nameset
+  type nameconstraints
   type 'a namemap
   type link
   type linkset
@@ -51,6 +52,19 @@ sig
    * @param w2  the second wiring.
    *)
   val eq : wiring -> wiring -> bool
+  (** Test two wirings for equality up to a bijection between the inner
+   * names satisfying the constraints given by C.
+   * 
+   * If the wirings are equal, a set of constraints on a bijection between the
+   * outer names is returned.
+   *
+   * @params C w1 w2
+   * @param C   constraints on the bijection between the inner names of the two
+   *            wirings.
+   * @param w1  the first wiring.
+   * @param w2  the second wiring.
+   *)
+  val eq' : nameconstraints -> wiring -> wiring -> nameconstraints option
   (** Signal that two wirings cannot be extended due to a link
    * clash involving an outer name of the second wiring.
    *)

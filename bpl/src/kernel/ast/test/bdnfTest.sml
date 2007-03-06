@@ -105,6 +105,7 @@ nameOfException
                                     ; TextIO.closeOut result_os)
               fun rm_tmp_files () = (  remove input_file
                                      ; remove result_file)
+                                    handle OS.SysErr (s, _) => () (*FIXME sometimes files cannot be deleted?*)
               fun cleanup () = (  close_files ()
                                 ; rm_tmp_files())
                 
@@ -170,7 +171,7 @@ nameOfException
                            (GeneralFailure ("expected exception "
                                             ^ exnname)))
                 handle exn => 
-                  (  rm_tmp_files () handle OS.SysErr (s, _) => () (*FIXME sometimes files cannot be deleted?*)
+                  (  rm_tmp_files ()
                    ; case exn of
                        Assert.Fail g => raise Assert.Fail g
                      | exn =>

@@ -9,7 +9,8 @@
 bgadt-sig: bg/sigs ast/sigs match/sigs /lib/coll/set /lib/util/errorhandler-sig
 bgadt: bgadt-sig bg/funs ast/funs match/funs /lib/pp/smlnj/.
    /lib/coll/set /lib/coll/pp /lib/coll/lzlist /lib/util/errorhandler-sig
-   /lib/util/origin-sig /lib/util/origin /lib/coll/map %NODASHSIG
+   /lib/util/origin-sig /lib/util/origin /lib/coll/map
+   /lib/coll/bijectionconstraints-sig %NODASHSIG
 bg-sig: bgadt-sig ast/sugar-sig parsers/.
    /lib/coll/monoset-sig /lib/ml-yacc/. /lib/pp/smlnj/prettyprint %NODASHSIG
 bg: bgadt ast/sugar parsers/. bg-sig /lib/coll/lazylist

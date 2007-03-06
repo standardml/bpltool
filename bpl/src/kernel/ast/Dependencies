@@ -11,7 +11,7 @@ bgval-sig: /lib/pp/smlnj/prettyprint
 bgval: info-sig /lib/pp/smlnj/. /lib/coll/monoset-sig /lib/coll/pp
    bgterm-sig /kernel/bg/sigs /lib/util/errorhandler-sig
    /lib/util/origin /lib/util/debug /lib/util/flags
-   /lib/compat/mosml/hash/.
+   /lib/compat/mosml/hash/. /lib/coll/bijectionconstraints-sig
 bgbdnf-sig: /lib/pp/smlnj/prettyprint
 bgbdnf: info-sig /lib/coll/monoset-sig /lib/coll/pp /kernel/bg/sigs
    bgval-sig /lib/pp/smlnj/. /lib/util/errorhandler-sig

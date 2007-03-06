@@ -227,17 +227,13 @@ struct
         y :: ys
       end
 
-  (* An ordered permutation is a permutation with additional data that
-   * supports incremental generation of all permutations of this width.
-   *)
-  datatype dir = Left | Right
-  type 'kind operm = int * 'kind permutation * (int * dir) list
   type Immutable = Permutation.Immutable
   type Mutable = Permutation.Mutable
-  val toPermutation : 'kind operm -> 'kind permutation = #2
-
-  (* Signals that there are no more new permutations. *)
-  exception NoMorePerms
+  val toperm = Permutation.toperm
+  val firstperm = Permutation.firstperm
+  val firstperm_n = Permutation.firstperm_n
+  val nextperm = Permutation.nextperm
+  exception NoMorePerms = Permutation.NoMorePerms
 
   (* Signals that an error during grouping of tensor factors. *)
   exception GroupError of string * string * P bgbdnf list * int list
@@ -246,55 +242,6 @@ struct
   exception UnequalLengths
    of wiring list * wiring list * wiring list * wiring list * int * P bgbdnf list list
 
-  (* Returns a mutable copy of a perm. *)
-  fun permcopy (n, pi, ps) = (n, Permutation.copy pi, ps)
-
-  (* Return the first permutation in the ordering. *)
-  fun firstperm names : Mutable operm =
-    let
-      fun poslist 0 = []
-        | poslist n = (n - 1, Left) :: poslist (n - 1)
-      val pi = Permutation.copy (Permutation.id names)
-      val n = Permutation.width pi
-    in
-      (n, pi, poslist n)
-    end
-  
-  (* Return the first permutation in the ordering. *)
-  fun firstperm_n n : Mutable operm =
-    let
-      fun poslist 0 = []
-        | poslist n = (n - 1, Left) :: poslist (n - 1)
-      val pi = Permutation.copy (Permutation.id_n n)
-    in
-      (n, pi, poslist n)
-    end
-  
-  (* Update _destructively_ permutation p and return it as the next
-   * permutation in the ordering.  The inner face of the permutation
-   * is preserved (cf. Permutation.swap).
-   * This implementation uses the Johnson-Trotter algorithm.
-   *)
-  fun nextperm (n, pi, poss) =
-    let
-      fun np offset i [] = raise NoMorePerms
-        | np offset i [_] = raise NoMorePerms
-        | np offset i ((p, Left) :: ps) =
-          if (p <= 0) then
-            (p, Right) :: np (offset + 1) (i - 1) ps
-          else
-            (Permutation.swap pi (offset + p - 1, offset + p);
-             (p - 1, Left) :: ps)
-        | np offset i ((p, Right) :: ps) =
-          if (p >= i - 1) then
-            (p, Left) :: np offset (i - 1) ps
-          else
-            (Permutation.swap pi (offset + p, offset + p + 1);
-             (p + 1, Right) :: ps)
-      val newposs = np 0 n poss
-    in
-      (n, pi, newposs)
-    end 
 
   (* Matching rule functions
    * =======================
@@ -548,6 +495,7 @@ struct
         in
           Cons ({ename' = ename',
                  s_C' = Wiring.make_ren s_C',
+                 Y = Y,
                  qs = [makeP (Wiring.* ((Wiring.introduce U), (Wiring.id_X X)))
                              (makeN X g)],
                  tree = PAX'}, lzNil)
@@ -564,6 +512,7 @@ struct
             [] (* This implies g = 1. *)
           => Cons ({ename' = ename,
                   s_C' = Wiring.id_0,
+                  Y = NameSet.empty,
                   qs = [],
                   tree = ZAX'}, lzNil)
           | _ => Nil)
@@ -615,8 +564,8 @@ struct
 		                             s_a = s_a, s_C = s_C,
 		                             es = es, Es = Es,
 		                             pi = pibar}
-		            fun make_match {ename', s_C', qs, tree} =
-		                {ename' = ename', s_C' = s_C', qs = qs, tree = MER' tree}
+		            fun make_match {ename', s_C', Y, qs, tree} =
+		                {ename' = ename', s_C' = s_C', Y = Y, qs = qs, tree = MER' tree}
 		          in
 		            lzmap make_match premise_matches
 		          end
@@ -635,7 +584,8 @@ struct
 		            (tryRhos' allpis allmss (pi, perm) rho msss)
 		        | tryRhos' allpis allmss (pi, perm) rho []
 		        = let
-		            val perm as (_, pi, _) = nextperm perm
+		            val perm = nextperm perm
+                            val pi   = toperm perm
 		          in
 		            tryRhos'
 		              allpis allmss
@@ -648,7 +598,8 @@ struct
 		            (tryPis allpis allmss mss rho perm pis)
 		        | tryPis allpis allmss mss rho perm []
 		        = let
-		            val perm as (_, pi, _) = nextperm perm
+		            val perm = nextperm perm
+                            val pi   = toperm perm
 		          in
 		            tryRhos
 		              allpis (mss :: allmss)
@@ -669,14 +620,16 @@ struct
 		            (Partition.next rho) rho perm (pi :: allpis)
 		          handle Partition.NoPartitions =>
 		            (let
-		               val perm as (_, pi, _) = nextperm perm
+                               val perm = nextperm perm
+                               val pi   = toperm perm
 		             in
 		               tryRhos'
 		                 allpis allmss
 		                 (Permutation.copy pi, perm) rho allmss
 		             end
 		             handle NoMorePerms => lzNil)
-		      val perm as (_, pi, _) = firstperm (map (fn _ => NameSet.empty) Xss)
+		      val perm = firstperm (map (fn _ => NameSet.empty) Xss)
+                      val pi   = toperm perm
 		    in
 		      lzunmk
 		        (tryRhos
@@ -757,7 +710,7 @@ struct
                                            p = BgBDNF.makeP vX n,
                                            P = BgBDNF.makeP vZ N}
 
-          fun make_match {ename', s_C', qs, tree} =
+          fun make_match {ename', s_C', Y, qs, tree} =
               let
                 val (ename', s_C')
                   = ListPair.foldlEq
@@ -785,6 +738,7 @@ struct
               in
                 {ename' = ename',
                  s_C' = Wiring.make_ren s_C',
+                 Y = Y,
                  qs = qs,
                  tree = ION' tree}
               end
@@ -857,12 +811,13 @@ struct
                                         s_C = {s_C_e = s_C_e, s_C_n = s_C_n'},
                                         g = g, G = G}
 
-        fun make_match {ename', s_C', qs, tree} =
+        fun make_match {ename', s_C', Y, qs, tree} =
             {ename' = ename',
              s_C' = Wiring.restrict s_C' (*FIXME be smarter...*)
                       (NameSet.difference
                          (Wiring.innernames s_C')
                          (Wiring.outernames s_C_L)),
+             Y = Y,
              qs = qs,
              tree = ABS' tree}
       in
@@ -884,15 +839,15 @@ struct
           | build_matches _ [] _ = raise NoMatch
           | build_matches [] _ _ = raise NoMatch
           | build_matches (e_i::es) (E_i::Es)
-              {ename' = ename_i, s_C' = s_C'_i, qss, tree = PARn' trees} =
+              {ename' = ename_i, s_C' = s_C'_i, Y, qss, tree = PARn' trees} =
             let
               val premise_matches
                 = matchDG' false 
                     {ename = ename_i, s_a = s_a, s_C = s_C, g = e_i, G = E_i}
 
-              fun extend_result {ename', s_C', qs, tree} =
-                  {ename' = ename', s_C' = s_C', qss = qs :: qss,
-                   tree = PARn' (tree :: trees)}
+              fun extend_result {ename', s_C', Y = Y', qs, tree} =
+                  {ename' = ename', s_C' = s_C', Y = NameSet.union Y Y',
+                   qss = qs :: qss, tree = PARn' (tree :: trees)}
             in
               lzconcat
                 (lzmap (build_matches es Es o extend_result) premise_matches)
@@ -901,7 +856,8 @@ struct
       in
         lzunmk
           (build_matches es Es
-             {ename' = ename, s_C' = Wiring.id_0, qss = [], tree = PARn' []})
+             {ename' = ename, s_C' = Wiring.id_0, Y = NameSet.empty,
+              qss = [], tree = PARn' []})
       end
       handle NoMatch => Nil)
 
@@ -913,9 +869,10 @@ struct
   and matchPARe' (args as {ename, s_a, s_C, es, Es}) =
       lzmake (fn () =>
       let
-        fun toPARe' {ename', s_C', qss, tree} =
+        fun toPARe' {ename', s_C', Y, qss, tree} =
             {ename' = ename',
              s_C'   = s_C',
+             Y      = Y,
              qs     = List.concat qss,
              tree   = PARe' tree}
       in
@@ -930,9 +887,10 @@ struct
   and matchPER' {ename, s_a, s_C, es, Es, pi} =
       lzmake (fn () =>
       let
-        fun toPER' {ename', s_C', qs, tree} =
+        fun toPER' {ename', s_C', Y, qs, tree} =
             {ename' = ename',
              s_C'   = s_C',
+             Y      = Y,
              qs     = Permutation.permute pi qs,
              tree   = PER' tree}
       in
@@ -961,13 +919,13 @@ struct
         val s_C_n = Wiring.* (s, s_R_n)
         val id_Y_C_e = Wiring.id_X (Wiring.outernames s_C_e)
         val i = BgBDNF.info P
-        fun toSWX {ename', s_C', qs, tree} = ((*print ("SWX: s_C'=" ^ Wiring.toString s_C'
+        fun toSWX {ename', s_C', Y, qs, tree} = ((*print ("SWX: s_C'=" ^ Wiring.toString s_C'
         ^ "\ns_R_e=" ^ Wiring.toString s_R_e
         ^ "\ns_R_n=" ^ Wiring.toString s_R_n
         ^ "\nP=" ^ BgBDNF.toString P
         ^ "\nqs=[" ^ concat (map (fn q => BgBDNF.toString q ^ "\n") qs) ^ "]\n");*)
           {ename' = ename',
-           Y = NameSet.empty,
+           Y = Y,
            s_C = Wiring.* (s_C', id_Y_C_e),
            E = makeG [makeS (SCon (i, Wiring.id_X U))],
            qs = qs,
@@ -1210,27 +1168,27 @@ struct
                 Wiring.id_0
               else
                 let
-				          (* Pick an outer name from Y + Y_a_n *)
-				          val theoutername
-				            = case NameSet.foldUntil
-				                (fn y => fn NONE => (true, SOME y) | y' => (true, y'))
-				                (NameSet.foldUntil 
-				                  (fn y => fn NONE => (true, SOME y) | y' => (true, y'))
-				                  NONE Y)
-				                Y_a_n of
-				                 SOME y => y
-				               | NONE => raise ThisCannotHappen (* as Y + Y_a_n <> {} *)
-				        in
-		              Wiring.*
-		              (Wiring.make
-		                (LinkSet.singleton
-		                  (Link.make {outer = SOME theoutername,
-		                              inner = NameSet.union Y_R_e Y_R_n})),
-		               Wiring.introduce
-		                 (NameSet.remove
-		                   theoutername (NameSet.union Y Y_a_n)))
-		            end
-  	      val s_C_is = map #s_C matches
+                  (* Pick an outer name from Y + Y_a_n *)
+                  val theoutername
+                    = case NameSet.foldUntil
+                             (fn y => fn NONE => (true, SOME y) | y' => (true, y'))
+                             (NameSet.foldUntil 
+                                (fn y => fn NONE => (true, SOME y) | y' => (true, y'))
+                                NONE Y)
+                             Y_a_n of
+                        SOME y => y
+                      | NONE => raise ThisCannotHappen (* as Y + Y_a_n <> {} *)
+                in
+                  Wiring.*
+                    (Wiring.make
+                       (LinkSet.singleton
+                          (Link.make {outer = SOME theoutername,
+                                      inner = NameSet.union Y_R_e Y_R_n})),
+                       Wiring.introduce
+                         (NameSet.remove
+                          theoutername (NameSet.union Y Y_a_n)))
+                end
+          val s_C_is = map #s_C matches
           val s_C = Wiring.++ (s_I :: s_C_is)
           (*val _ = map (fn w => print (Wiring.toString w ^ " ++ ")) s_C_is
           val _ = print (" = " ^ Wiring.toString s_C ^ "\n")*)
@@ -1298,9 +1256,9 @@ struct
     = lzmake (fn () => ((*print "PER ";*)
     let
       val Xss = map (loc o innerface) Qs
-      fun nextmatch (perm as (_, pi, _) : Mutable operm) =
+      fun nextmatch perm =
         let
-          val pi = Permutation.copy pi
+          val pi = Permutation.copy (toperm perm)
           val Qs' = permute pi Qs
           val pibar = pushthru pi Xss
           fun toPER {ename', Y, s_C, Es, qs, tree}

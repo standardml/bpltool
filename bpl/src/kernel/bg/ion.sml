@@ -27,15 +27,20 @@ functor Ion'(structure Control : CONTROL
 	     structure NameSet : MONO_SET
 	     structure NameSetPP : COLLECTIONPRETTYPRINT
                where type ppstream = PrettyPrint.ppstream
+             structure NameBijectionConstraints : BIJECTION_CONSTRAINTS
 	     sharing type Name.name = NameSet.elt
-	     sharing type NameSet.Set = NameSetPP.collection) : ION 
+	     sharing type NameSet.Set =
+                          NameBijectionConstraints.set =
+                          NameSetPP.collection) : ION 
 	     where type control  = Control.control
 	       and type name     = Name.name
- 	       and type nameset  = NameSet.Set =
+ 	       and type nameset  = NameSet.Set
+               and type nameconstraints = NameBijectionConstraints.constraints =
 struct
   type control  = Control.control
   type name     = Name.name
   type nameset  = NameSet.Set
+  type nameconstraints = NameBijectionConstraints.constraints
 
   type ion = {ctrl : control, free : name list, bound : nameset list}
   fun make x = x
@@ -49,6 +54,39 @@ struct
       Control.eq ctrl1 ctrl2
       andalso ListPair.all Name.== (free1, free2)
       andalso ListPair.all (fn (ns1, ns2) => NameSet.eq ns1 ns2) (bound1, bound2)
+
+  structure Constraints = NameBijectionConstraints
+  fun eq' C {ctrl = ctrl1, free = free1, bound = bound1}
+            {ctrl = ctrl2, free = free2, bound = bound2} =
+      let
+        (* check that the bound namesets has the same
+         * size and gather constraints *)
+        fun check_bound [] [] C' = SOME C'
+          | check_bound (b1::bs1) (b2::bs2) C' =
+            if NameSet.size b1 = NameSet.size b2 then
+              check_bound bs1 bs2 (Constraints.add ((b1, b2), C'))
+            else
+              NONE
+          | check_bound _ _ _ = NONE
+        
+        (* generate result constraints (if possible) *)
+        fun make_C [] [] C = SOME C
+          | make_C (n1::ns1) (n2::ns2) C =
+            make_C ns1 ns2
+                   (Constraints.add
+                      ((NameSet.singleton n1, NameSet.singleton n2), C))
+          | make_C _ _ _ = NONE
+      in
+        case check_bound bound1 bound2 Constraints.empty of
+          SOME C' =>
+          if Control.eq ctrl1 ctrl2 andalso Constraints.are_combineable (C, C')
+          then
+            make_C free1 free2 Constraints.empty
+          else
+            NONE
+        | NONE => NONE
+      end
+      
 
   fun pp' langle rangle lbrack rbrack
           indent pps ({ctrl, free, bound} : ion) =
@@ -94,15 +132,20 @@ functor Ion (structure Control : CONTROL
 	     structure NameSet : MONO_SET
 	     structure NameSetPP : COLLECTIONPRETTYPRINT
                where type ppstream = PrettyPrint.ppstream
+             structure NameBijectionConstraints : BIJECTION_CONSTRAINTS
 	     sharing type Name.name = NameSet.elt
-	     sharing type NameSet.Set = NameSetPP.collection) :> ION 
+	     sharing type NameSet.Set =
+                          NameBijectionConstraints.set =
+                          NameSetPP.collection) :> ION 
 	     where type control  = Control.control
 	       and type name     = Name.name
- 	       and type nameset  = NameSet.Set =
+ 	       and type nameset  = NameSet.Set
+               and type nameconstraints = NameBijectionConstraints.constraints =
 struct
   structure Ion = Ion'(structure Control = Control
 		       structure Name = Name
 		       structure NameSet = NameSet
+                       structure NameBijectionConstraints = NameBijectionConstraints
 		       structure NameSetPP = NameSetPP)
   open Ion
 end

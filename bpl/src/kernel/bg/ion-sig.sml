@@ -27,6 +27,7 @@ sig
   eqtype control
   type name
   type nameset
+  type nameconstraints
 
   (** The ion data type. *)
   type ion
@@ -50,6 +51,19 @@ sig
    * @param i2  the second ion.
    *)
   val eq : ion -> ion -> bool
+  (** Test two ions for equality up to a bijection between the inner
+   * names satisfying the constraints given by C.
+   * 
+   * If the ions are equal, a set of constraints on a bijection between the
+   * outer names is returned.
+   *
+   * @params C i1 i2
+   * @param C   constraints on the bijection between the inner names of the two
+   *            ions.
+   * @param i1  the first ion.
+   * @param i2  the second ion.
+   *)
+  val eq' : nameconstraints -> ion -> ion -> nameconstraints option
   (** Return the inner names of the ion. *)
   val innernames : ion -> nameset
   (** Return the outer names of the ion. *)
