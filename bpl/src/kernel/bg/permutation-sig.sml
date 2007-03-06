@@ -207,7 +207,7 @@ sig
    * if the namesets of i and j differ (and i <> j).
    * @params pi i j
    * @param pi  The permutation to update.
-   * @returns   The updated pi.
+   * @return    The updated pi.
    *)
   val swap : Mutable permutation -> int * int -> 'kind permutation
   (** Return a shallow copy of the permutation. *)
