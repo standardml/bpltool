@@ -18,11 +18,14 @@ wiring-sig:
 wiring: /lib/pp/smlnj/. /lib/coll/set /lib/coll/pp /lib/coll/map
    /lib/compat/mosml/hash/. link-sig name-sig
    /lib/util/errorhandler-sig /lib/util/origin /lib/util/debug /lib/util/flags
+   /lib/coll/bijectionconstraints-sig
 permutation-sig:
 permutation: /lib/compat/common/legacyarray /lib/coll/set
    /lib/coll/pp /lib/pp/smlnj/. interface-sig name-sig
    /lib/util/errorhandler-sig /lib/util/origin /lib/util/debug
+   /lib/coll/bijectionconstraints-sig /lib/coll/listsort
 control-sig:
 control:
 ion-sig: /lib/pp/smlnj/.
-ion: /lib/coll/set /lib/coll/pp /lib/pp/smlnj/. control-sig name-sig 
+ion: /lib/coll/set /lib/coll/pp /lib/pp/smlnj/. control-sig name-sig
+   /lib/coll/bijectionconstraints-sig

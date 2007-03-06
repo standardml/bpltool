@@ -16,6 +16,7 @@ bgbdnf-sig: /lib/pp/smlnj/prettyprint
 bgbdnf: info-sig /lib/coll/monoset-sig /lib/coll/pp /kernel/bg/sigs
    bgval-sig /lib/pp/smlnj/. /lib/util/errorhandler-sig
    /lib/util/origin /lib/util/debug /lib/util/flags
+   /lib/coll/bijectionconstraints-sig
 #ppbg bgterm-sig /lib/pp/smlnj/. %NODASHSIG
 sugar-sig:
 sugar: info-sig /lib/coll/monoset-sig /lib/coll/pp /kernel/bg/sigs bgval-sig
