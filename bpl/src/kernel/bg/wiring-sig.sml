@@ -226,13 +226,6 @@ sig
    * outer name.
    *)
   val restrict_outer : wiring -> nameset -> wiring
-  (** Split a wiring into two, one of which maps to a given set of names.
-	 * @params w Y
-	 * @return {inCod, notInCod}
-	 *   Wirings that satisfy w = w_inCod x w_notInCod and
-	 *   w_inCod : X -> Y and w_inCod contains no internal edges. 
-   *)
-  val split : wiring -> nameset -> {inDom : wiring, notInDom : wiring}
   (** Split a wiring into two, one that maps from a given domain, and 
    * one that does not map from the domain.
    * The inner face is trimmed to include only names which maps to an
@@ -241,6 +234,13 @@ sig
    * @return {inDom, notInDom} so that w = inDom || notInDom, and the
    *         points of inDom are in X, and the points of notInDom are
    *         not in X.
+   *)
+  val split : wiring -> nameset -> {inDom : wiring, notInDom : wiring}
+  (** Split a wiring into two, one of which maps to a given set of names.
+	 * @params w Y
+	 * @return {inCod, notInCod}
+	 *   Wirings that satisfy w = w_inCod x w_notInCod and
+	 *   w_inCod : X -> Y and w_inCod contains no internal edges. 
    *)
   val split_outer : wiring -> nameset -> {inCod : wiring, notInCod : wiring}
   (** Split wiring into closed and open part, then turn closed edges
