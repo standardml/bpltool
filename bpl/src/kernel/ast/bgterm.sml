@@ -104,11 +104,11 @@ struct
       let
 	open PrettyPrint
 	val PrMax = 9
-	val PrAbs = 8
-	val PrCom = 7
-	val PrTen = 6
-	val PrPri = 6
-	val PrPar = 6
+	val PrCom = 6
+	val PrTen = 5
+	val PrPri = 5
+	val PrPar = 5
+	val PrAbs = 4
 	val PrMin = 0
 	val show = add_string pps
 	fun << () = begin_block pps INCONSISTENT 0
