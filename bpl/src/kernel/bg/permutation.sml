@@ -156,18 +156,20 @@ struct
 
   fun pp' lbrack amp rbrack idp indent pps (perm as {width, pi, pi_inv}) =
       let
-	open PrettyPrint
-	val show = add_string pps
-	fun << () = begin_block pps INCONSISTENT indent
-	fun >> () = end_block pps
-	fun brk () = add_break pps (1, 0)
-	fun ppmap ((j, X), notfirst) =
-	    (if notfirst then (show ","; brk()) else ();
-	     show ((Int.toString j) ^ amp);
-	     if not (NameSet.isEmpty X) then
-	       NameSetPP.ppbr indent lbrack rbrack pps X
-	     else
-	       ();
+				open PrettyPrint
+				val show = add_string pps
+				fun << () = begin_block pps INCONSISTENT indent
+				fun >> () = end_block pps
+				fun brk () = add_break pps (1, 0)
+				val permIsNameless = Array.all (fn (j, X) => NameSet.isEmpty X) pi
+				fun ppmap ((j, X), notfirst) =
+				    (if notfirst then (show ","; brk()) else ();
+				     show (Int.toString j);
+				     if permIsNameless then
+				       ()
+				     else
+				       (show amp;
+				        NameSetPP.ppbr indent lbrack rbrack pps X);
              true)
       in
 	if is_idn perm then
