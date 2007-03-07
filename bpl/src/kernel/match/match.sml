@@ -492,7 +492,20 @@ struct
                    (ename, rg_ename, NameMap.empty, NameSet.empty, NameSet.empty)
                    W)
                 Z
+fun nameMapToString nm
+  = "{ " ^
+    NameMap.Fold
+      (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " ")
+      ""
+      nm ^
+    "}"      
         in
+(*        print ("g=" ^ BgBDNF.toString g ^ ", G=" ^ BgBDNF.toString G ^
+               "\ns_a_n=" ^ Wiring.toString s_a_n ^ ", s_a_e=" ^ Wiring.toString s_a_e ^
+               ", s_C_n=" ^ Wiring.toString s_C_n ^ ", s_C_e=" ^ Wiring.toString s_C_e ^
+               "\nename=" ^ nameMapToString ename ^ ", ename'=" ^ nameMapToString ename' ^
+               ", s_C'=" ^ nameMapToString s_C' ^ "\n");
+*)
           Cons ({ename' = ename',
                  s_C' = Wiring.make_ren s_C',
                  Y = Y,
@@ -503,7 +516,7 @@ struct
         handle NoMatch => Nil)
       | _ => Nil)
   (* Match a global discrete prime g to a context G using the ZAX rule:
-   *   Y, id_e, Y |- 1, [[id_0]]^P ~~> 1, [[id_0]]^P
+   *   Y, id_e, Y |- 1, [[id_0]]^P ~~> 1, [[id_0]]^P.
    * 1) Check that g = 1 and G = 1.
    * 2) Return ename' = ename, s_C' = {}, qs = [].
    *)
@@ -1447,6 +1460,9 @@ struct
         in
           {ename' = ename', Y = Y, s_C = s_C, E = P, qs = qs,
            tree = ABS tree}
+           (* FIXME: tree might not be prime!  In that case,
+              tree cannot create a match and this submatch must
+              be skipped. *)
         end
       val matches
         = lzmap toABS
