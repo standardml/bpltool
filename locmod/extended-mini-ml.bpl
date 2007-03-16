@@ -128,7 +128,7 @@ signature eMiniml =
     swap  : active (0 -> 0)	% atomically swap contents of two ref. cells
     swapl : active (0 -> 0)
     swapr : active (0 -> 0)
-    store : active (0 -> 0)
+    store : passive (0 -> 0)
     exp   : passive (0 -> 0)    % delay evaluation
     sub   : active (1 -> 0)
     def   : active (0 -> 1)
