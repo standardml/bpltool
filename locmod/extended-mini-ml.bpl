@@ -23,12 +23,13 @@
 % BNF:
 %  p ::= datatype D = {C_i e_i}^n
 %  e ::= x | e1 e2 | (e1,e2) | fst e | snd e | let x = e1 in e2 end
-%      | ref e | !e | e1 := e2 | swap(e1,e2)
+%      | ref e | !e | e1 := e2 | exchange(e1,e2)
 %      | C e | case e of {C_i x_i => e_i}^n | v
 %  v ::= lam x. e | fix f(x) = e | (v,v) | unit | l | C v | n
 %  E ::= [ ] | E e | v E | (E,e) | (v,E) | fst E | snd E
 %       | let x = E in e end | let x = v in E end
-%       | ref E | !E | E := e | v := E | swap(E,e) | swap(l,E)
+%       | ref E | !E | E := e | v := E
+%       | exchange(E,e) | exchange(l,E)
 %       | C E | case E of {C_i x_i => e_i}^n
 %
 % The evaluation contexts, E, are _certain_ kinds of applications.
@@ -51,7 +52,7 @@
 %    <ref v,s> -> <l,(s,l->v)>	% l fresh
 %    <!l,s[l->v]> -> <v,s[l->v]>
 %    <l:=v1,s[l->v2]> -> <unit,s[l->v1]>
-%    <swap(l,l'),s[l->v,l'->v']> -> <unit,s[l->v',l'->v]>
+%    <exchange(l,l'),s[l->v,l'->v']> -> <unit,s[l->v',l'->v]>
 %
 % 
 % TRANSLATION:
@@ -91,9 +92,9 @@
 % [e1 := e2]_X		 = (asgn \o id_X)
 %			     ((acell \o id_X)[e1]_X |
 %			      (aval \o id_X)(exp \o id_X)[e2]_X)
-% [swap(e1,e2)]_X	 = (swap \o id_X)
-%			     ((swapl \o id_X)[e]_X |
-%			      (swapr \o id_X)(exp \o id_X)[e2]_X)
+% [exchange(e1,e2)]_X	 = (exchange \o id_X)
+%			     ((exchangel \o id_X)[e]_X |
+%			      (exchanger \o id_X)(exp \o id_X)[e2]_X)
 
 signature eMiniml =
   sig	% arity is (binding -> free)
@@ -125,9 +126,9 @@ signature eMiniml =
     0,1,2... : atomic (0 -> 0)	% a control for each natural number (+zero)
     cell  : atomic (0 -> 1)	% reference cell (rc)
     cell' : passive (0 -> 1)	% reference cell in store, linked to rc
-    swap  : active (0 -> 0)	% atomically swap contents of two ref. cells
-    swapl : active (0 -> 0)
-    swapr : active (0 -> 0)
+    exchange : active (0 -> 0)	% atomically swap contents of two ref. cells
+    exchangel : active (0 -> 0)
+    exchanger : active (0 -> 0)
     store : passive (0 -> 0)
     exp   : passive (0 -> 0)    % delay evaluation
     sub   : active (1 -> 0)
@@ -229,13 +230,13 @@ rule asgn_2 =
     ->
   val(unit) \o {l} || store(cell'_l(val([0])) | [2])
 
-rule swap_1 =
-  swap(swapl(val([0])) |swapr(exp([1])))
+rule exchange_1 =
+  exchange(exchangel(val([0])) | exchanger(exp([1])))
    ->
-  swap(swapl(val([0])) |swapr([1]))
+  exchange(exchangel(val([0])) | exchanger([1]))
 
 rule swap_2 =
-  swap(swapl(val(cell_l1)) | swapr(val(cell_l2)))
+  exchange(exchangel(val(cell_l1)) | exchanger(val(cell_l2)))
 	|| store(cell'_l1([0]) | cell'_l2([1]) | [2])
     ->
   val(unit) \o {l1,l2}
