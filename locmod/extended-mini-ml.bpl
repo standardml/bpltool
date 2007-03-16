@@ -17,20 +17,20 @@
 % Vars, Cells, Dats, and Cons are pairwise disjoint.
 %
 % Shorthands:
-%  '{C_i e_i}^n'  for  'C_0 e_0 | ... | C_n e_n'
-%  '{C_i x_i => e_i}^n'  for  'C_0 x_0 => e_1 | ... | C_n x_n => e_n'
+%  '{C_i(e_i)}^n'  for  'C_0(e_0) | ... | C_n(e_n)'
+%  '{C_i(x_i) => e_i}^n'  for  'C_0(x_0) => e_1 | ... | C_n(x_n) => e_n'
 %
 % BNF:
 %  p ::= datatype D = {C_i e_i}^n
 %  e ::= x | e1 e2 | (e1,e2) | fst e | snd e | let x = e1 in e2 end
 %      | ref e | !e | e1 := e2 | exchange(e1,e2)
-%      | C e | case e of {C_i x_i => e_i}^n | v
-%  v ::= lam x. e | fix f(x) = e | (v,v) | unit | l | C v | n
+%      | C(e) | case e of {C_i(x_i) => e_i}^n | v
+%  v ::= lam x. e | fix f(x) = e | (v,v) | unit | l | C(v) | n
 %  E ::= [ ] | E e | v E | (E,e) | (v,E) | fst E | snd E
 %       | let x = E in e end | let x = v in E end
 %       | ref E | !E | E := e | v := E
 %       | exchange(E,e) | exchange(l,E)
-%       | C E | case E of {C_i x_i => e_i}^n
+%       | C(E) | case E of {C_i x_i => e_i}^n
 %
 % The evaluation contexts, E, are _certain_ kinds of applications.
 % We model the different kinds of activities for the different 
@@ -80,8 +80,8 @@
 %                             (appr \o id_X)(exp \o id_X)[e2]_X)
 % [unit]_X               = (val | X) unit
 % [n]_X                  = (val | X) n
-% [C e]_X	         = (C \o id_X)[e]_X
-% [case e of {C_i x_i => e_i}^n]_X =
+% [C(e)]_X	         = (C \o id_X)[e]_X
+% [case e of {C_i(x_i) => e_i}^n]_X =
 %   (case \o id_X)
 %     ((casel \o id_X)([e]_X) |
 %      (casee_(x0) \o id_X)(C0 \o id_X)(exp \o id_X)([e0]_{X \u {x0}}) |
