@@ -23,6 +23,11 @@
 # INCLUDE=../compat/mlton
 partition-sig:
 partition: partition-sig /lib/coll/lazylist-sig %NODASHSIG
+orderedpartition-sig:
+orderedpartition: orderedpartition-sig partition-sig /lib/coll/lazylist-sig
+   %NODASHSIG
+subset-sig:
+subset: subset-sig /lib/coll/lazylist-sig /lib/coll/monoset-sig %NODASHSIG
 errormsg:
 argparse-sig:
 argparse: argparse-sig %NODASHSIG

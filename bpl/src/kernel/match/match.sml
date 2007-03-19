@@ -95,7 +95,14 @@ struct
       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp errtitle,
            explainer e)
 
+  (* FIXME move to functor argument? *)
   structure Partition = Partition(structure LazyList = LazyList)
+  structure OrderedPartition
+    = OrderedPartition(structure LazyList = LazyList
+                       structure Partition = Partition)
+  structure NameSetSubset
+    = Subset(structure LazyList = LazyList
+             structure Set = NameSet)
 
   open BgVal
   type info = Info.info
@@ -974,98 +981,362 @@ fun nameMapToString nm
       end))
     | matchSWX _ = lzNil
 
-
-  (* Structure for generating all ordered partitions of a list into m groups.
-   * Note that groups are allowed to be empty and that the order of empty
-   * groups is insignificant.
+  (* Split a link l "horizontally" into a link, a substitution, and an
+   * identity wiring:
+   *
+   *   l = l' (tau * id_Z) : X -> {y}
+   *   l'                  : V \cup Z -> {y}
+   *   tau                 : W -> V.
+   *   X = W \cup Z
+   *
+   * Many splits may be possible so the result is a lazy list of all the
+   * possible splits on the form {l', tau, id_Z}.
+   *
+   * The algorithm is as follows:
+   *
+   * 1) lay out the set V as [v_1, ..., v_m]
+   * 2) for all subsets W of X
+   *    a) let  id_Z = id_Z  where Z = X\W
+   *       and  l'   = y/U   where U = V \cup Z 
+   *    b) for each ordered partition [W_1, ..., W_m] of W into m sets
+   *         tau = \bigox_{j \in {1,...,m}} v_j/W_j
+   *         return {l', tau, id_Z}
    *)
-  type 'a ordered_partition_gen = 'a list list lazylist ref
-  (*FIXME describe and add explainer *)
-  exception NoPartitions
-  fun make_ordered_partition_gen list m =
+  fun horizontally_split_link l V =
       let
-        (* use a standard partition generator to
-         * generate the basis partitions *)
-        val pg = Partition.make list m
-                 handle Partition.NoPartitions => raise NoPartitions
+        val m  = NameSet.size V
+        val vs = NameSet.list V
+        val {outer = y, inner = X} = Link.unmk l
 
-        (* generate all permutations of a list of lists
-         * excluding the ones where only empty sublists change places.
-         * FIXME inefficient! *)
-        fun all_perms []   = lzCons (fn () => ([], lzNil))
-          | all_perms list =
+        (* Iterate through the ordered partitions of some W *)
+        fun next_partition partitiongen = lzmake (fn () =>
             let
-              fun foo _ pre [] = lzNil
-                | foo true pre ([]::post) = foo true (pre @ [[]]) post
-                | foo notempty pre (e::post) =
-                  lzappend
-                    (lzmap (fn l => e::l) (all_perms (pre @ post)))
-                    (foo (notempty orelse null e) (pre @ [e]) post)
+              val Wpart = OrderedPartition.next partitiongen
+              fun to_link (v_j, W_j) =
+                  Link.make {outer = SOME v_j,
+                             inner = NameSet.fromList W_j}
             in
-              foo false [] list
+              Cons (Wiring.make' (ListPair.map to_link (vs, Wpart)),
+                    (next_partition partitiongen))
             end
+            handle OrderedPartition.NoPartitions => Nil)
 
-         fun next () = lzmake (fn () =>
+        (* Iterate through the subsets of X *)
+        fun next_subset subsetgen = lzmake (fn () =>
             let
-              val partition = Partition.next pg
+              val W = NameSetSubset.next subsetgen
+              val partitiongen
+                = OrderedPartition.make (NameSet.list W) m
+              val Z    = NameSet.difference X W
+              val id_Z = Wiring.id_X Z
+              val U    = NameSet.union V Z
+              val l'   = Wiring.make' [Link.make {outer = y, inner = U}]
+              fun insert_tau tau = {tau = tau, id_Z = id_Z, l' = l'}
             in
-              lzunmk (lzappend (all_perms partition) (next ()))
+              lzunmk (lzappend
+                        (lzmap
+                           insert_tau
+                           (next_partition partitiongen))
+                        (next_subset subsetgen))
             end
-            handle Partition.NoPartitions => Nil)
+            handle NameSetSubset.NoSubsets => Nil)
       in
-        ref (next ())
-      end
-  fun make_ordered_partition_nameset_gen X m =
-      make_ordered_partition_gen (NameSet.list X) m
-  fun next_ordered_partition opg =
-      case lzunmk (!opg) of
-         Nil    => raise NoPartitions
-       | Cons (r, g) => (opg := g; r)
-  (* get the next ordered partition where each
-   * sub list has at least one element
-   * FIXME inefficient *)
-  fun next_ordered_partition' opg =
-      let 
-        val part = next_ordered_partition opg
-      in
-        if List.all (fn l => length l > 0) part then
-          part
-        else
-          next_ordered_partition' opg
+        next_subset (NameSetSubset.make X)
       end
 
-  (* Generate all subsets of a set of names *)
-  type nameset_subset_gen = nameset lazylist ref
-  (*FIXME describe and add explainer *)
-  exception NoSubsets
-  fun make_nameset_subset_gen X =
+  (* As the above except that Z = Ø.
+   *
+   * The algorithm can thus be simplified to the following:
+   *
+   * 1) lay out the set V as [v_1, ..., v_m]
+   * 2) let  l' = y/V
+   *    for each ordered partition [X_1, ..., X_m] of X into m sets
+   *      tau = \bigox_{j \in {1,...,m}} v_j/X_j
+   *      return {l', tau}
+   *)
+  fun horizontally_split_link' l V = lzmake (fn () =>
       let
-        fun all_subsets []      = lzCons (fn () => (NameSet.empty, lzNil))
-          | all_subsets (n::ns) =
-            lzfoldr (fn (X', rest) => 
-                        lzCons (fn () => (NameSet.insert n X',
-                        lzCons (fn () => (X', rest ())))))
-                    lzNil (all_subsets ns)
+        val m  = NameSet.size V
+        val vs = NameSet.list V
+        val {outer = y, inner = X} = Link.unmk l
+
+        (* Iterate through the partitions of X *)
+        fun next_partition partitiongen = lzmake (fn () =>
+            let
+              val Xpart = OrderedPartition.next partitiongen
+              fun to_link (v_j, X_j) =
+                  Link.make {outer = SOME v_j,
+                             inner = NameSet.fromList X_j}
+            in
+              Cons (Wiring.make' (ListPair.map to_link (vs, Xpart)),
+                    next_partition partitiongen)
+            end
+            handle OrderedPartition.NoPartitions => Nil)
+
+        val l' = Wiring.make' [Link.make {outer = y, inner = V}]
+
+        fun insert_tau tau = {tau = tau, l' = l'}
       in
-        ref (all_subsets (NameSet.list X))
-      end
-  fun next_nameset_subset nsg =
-      case lzunmk (!nsg) of
-         Nil    => raise NoSubsets
-       | Cons (r, g) => (nsg := g; r)
-  (* get the next subset that has at least size m*)
-  fun next_nameset_subset' nsg m =
+        lzunmk
+          (lzmap
+             insert_tau
+             (next_partition
+                (OrderedPartition.make (NameSet.list X) m)))
+      end)
+
+  (* Split a substitution "horizontally" into two substitutions and an
+   * identity wiring, where the interface between the two substitutions
+   * is given by V and some links must "pass through" both substitutions.
+   *
+   * More formal: given a substitution s, find sigma, tau, and id_Z such
+   * that
+   *
+   *   s = sigma (tau * id_Z)
+   *   sigma : V \cup Z ->
+   *   tau   : -> V
+   *
+   * The substitution s is given in the form of two substitutions s_n
+   * and s_e and a partial renaming ename of s_e's outer names. Name
+   * introductions may be added to the set Y. I.e.
+   *
+   *   s = Y * (ename * id_Q) s_e * s_n
+   *
+   * where Q is the set of outer names of s_n not in the domain of
+   * ename.
+   *
+   * The links of s_n that must pass through tau is identified by their
+   * (outer) name being in L. All inner names of such links must be
+   * inner names of tau.
+   * 
+   * Many splits may be possible so the result is a lazy list of all the
+   * possible splits on the form {sigma, tau, id_Z, Y}.
+   *
+   * The algorithm is as follows:
+   *
+   * 1) let k = |L| and s_e' = (ename * id_Q) s_e
+   * 2) split s_n = s_n_L * s_n_notL  where s_n_L : -> L
+   * 3) lay out the links of s_n_L as        [l_L_1, ..., l_L_k]
+   *    and the links of s_e' * s_n_notL as  [l_notL_1, ..., l_notL_p]
+   * 4) for each subset W of V whith |W| >= |L|
+   *      a) let j = |W]
+   *             T = V\W
+   *      b) for each ordered partition [W_1, ..., W_k] of W with |W_i| >= 1
+   *           1) for each link l_L_i find all splits  l_L_i = l'_L_i tau_L_i
+   *                                            where  tau_L_i : -> W_i
+   *           2) for each combination of splits of the links of s_n_L 
+   *                a) let tau_L   = \bigox_{i \in {1,...,k}} tau_L_i
+   *                       sigma_L = \bigox_{i \in {1,...,k}} l'_L_i
+   *                b) for each subset U of T
+   *                     1) let S = T\U  and  tau_S = S
+   *                     2) for each partition {S_1, ..., S_q} of S
+   *                          a) let  Y = {y_1, ..., y_q}  where the y_i are fresh
+   *                                  sigma_S = \bigox_{i \in {1,...,q}} y_i/S_i
+   *                          b) for each ordered partition [U_1, ..., U_p] of U
+   *                               1) for each link l_notL_i find all splits
+   *                                    l_notL_i = l'_notL_i (tau_notL_i * id_Z_i)
+   *                                  where  tau_notL_i : -> U_i
+   *                               2) for each combination of splits of the links of s_e' * s_n_notL
+   *                                    a) let tau_notL   = \bigox_{i \in {1,...,p}} tau_notL_i
+   *                                           id_Z       = \bigox_{i \in {1,...,p}} id_Z_i
+   *                                           sigma_notL = \bigox_{i \in {1,...,p}} l'_notL_i
+   *                                    b) return {sigma = sigma_L * sigma_notL * sigma_S,
+   *                                               tau   = tau_L * tau_notL * tau_S,
+   *                                               id_Z  = id_Z,
+   *                                               Y     = Y}
+   *)
+  fun horizontally_split_wiring {ename, s_e, s_n} V L =
       let
-        val s = next_nameset_subset nsg
+        open Wiring
+        infix 5 *
+
+        val k = NameSet.size L
+        val {inCod = s_n_L, notInCod = s_n_notL} = split_outer s_n L
+        val l_Ls = LinkSet.list (unmk s_n_L)
+        (* Apply the partial renaming ename to each link of s_e *)
+        fun link_rename l =
+          case Link.unmk l of
+            {outer = SOME y, inner} =>
+              (case NameMap.lookup ename y of
+                 SOME y' => Link.make {outer = SOME y', inner = inner}
+               | NONE => l)
+          | _ => l
+        val l_notLs
+          = (LinkSet.list (unmk s_n_notL))
+            @ (map link_rename (LinkSet.list (unmk s_e)))
+        val p = length l_notLs
+          
+        (* iterate through all ordered partitions of U *)
+        fun next_U_partition partitiongen (ts as {tau_LS, sigma_LS}) =
+            lzmake (fn () =>
+            let
+              val Uparts = OrderedPartition.next partitiongen
+              (* Iterate through the links l_notLs and find
+               * all combinations of all possible splits.
+               * For each combination, calculate the corresponding
+               * tau_notL * tau_LS, id_Z, and sigma_notL * sigma_LS *)
+              fun link_splits [] [] tis = lzCons (fn () => (tis, lzNil))
+                | link_splits
+                    (l_notL_i::l_notLs) (Upart::Uparts) {tau, id_Z, sigma} =
+                  let
+                    (* Split and combine the remaining links recursively
+                     * building tau and sigma on the way.
+                     * NB! The recursive split-combinations are calculated
+                     *     for each split of the current link... *)
+                    fun combine_splits
+                          {tau = tau_notL_i, id_Z = id_Z_i, l' = l'_notL_i} =
+                        link_splits
+                          l_notLs
+                          Uparts
+                          {tau   = tau * tau_notL_i,
+                           id_Z  = id_Z * id_Z_i,
+                           sigma = sigma * l'_notL_i}
+                  in
+                    lzconcat
+                      (lzmap
+                         combine_splits
+                         (horizontally_split_link
+                            l_notL_i
+                            (NameSet.fromList Upart)))
+                  end
+                | link_splits _ _ _ = raise ThisCannotHappen
+            in
+              lzunmk
+                (lzappend
+                   (link_splits
+                      l_notLs
+                      Uparts
+                      {tau = tau_LS, id_Z = id_0, sigma = sigma_LS})
+                   (next_U_partition partitiongen ts))
+            end)
+
+        (* iterate through the partitons of S *)
+        fun next_S_partition partitiongen U (ts as {tau_LS, sigma_L}) =
+            lzmake (fn () =>
+            let
+              val Sparts = Partition.next partitiongen
+              val (l_Ss, Y)
+                = foldr
+                    (fn (Spart, (l_Ss, Y)) =>
+                       if null Spart then
+                         (l_Ss, Y)
+                       else
+                         let
+                           val y = Name.fresh NONE
+                         in
+                           (LinkSet.insert
+                              (Link.make
+                                 {outer = SOME y,
+                                  inner = NameSet.fromList Spart})
+                              l_Ss,
+                            NameSet.insert y Y)
+                         end)
+                    (LinkSet.empty, NameSet.empty) Sparts
+              val sigma_S = make l_Ss
+              fun insert_Y {tau, id_Z, sigma} =
+                  {tau = tau, id_Z = id_Z, sigma = sigma, Y = Y}
+            in
+              lzunmk
+                (lzappend
+                   (lzmap
+                      insert_Y
+                      (next_U_partition
+                         (OrderedPartition.make (NameSet.list U) p)
+                         {tau_LS = tau_LS, sigma_LS = sigma_L * sigma_S}))
+                   (next_S_partition partitiongen U ts))
+            end)
+
+        (* iterate through all subsets U of T *)
+        fun next_T_subset subsetgen T (ts as {tau_L, sigma_L}) =
+            lzmake (fn () =>
+            let
+              val U = NameSetSubset.next subsetgen
+              (* the names of S = (V\W)\U must be introduced by
+               * tau and substituted to fresh names by sigma.
+               * the fresh names are returned in Y such that the
+               * invented links are closed in matchCLO. *)
+              val S = NameSet.difference T U
+              val tau_S = introduce S
+            in
+              lzunmk
+                (lzappend
+                   (next_S_partition
+                      (Partition.make
+                         (NameSet.list S)
+                         (NameSet.size S))
+                      U
+                      {tau_LS = tau_L * tau_S, sigma_L = sigma_L})
+                   (next_T_subset subsetgen T ts))
+            end)
+
+        (* iterate through all ordered partitions of a subset W
+         * of V where all sets in the partition are non-empty *)
+        fun next_W_partition partitiongen T = lzmake (fn () =>
+            let
+              val Wparts = OrderedPartition.next' partitiongen
+              (* Iterate through the links l_Ls and find
+               * all combinations of all possible splits.
+               * For each combination, calculate the
+               * corresponding tau_L and sigma_L *)
+              fun link_splits [] [] ts =
+                  next_T_subset (NameSetSubset.make T) T ts
+                | link_splits (l_L_i::l_Ls) (Wpart::Wparts) {tau_L, sigma_L} =
+                  let
+                    (* Split and combine the remaining links recursively
+                     * building tau_L and sigma_L on the way.
+                     * NB! The recursive split-combinations are calculated
+                     *     for each split of the current link... *)
+                    fun combine_splits {tau = tau_L_i, l' = l'_L_i} =
+                        link_splits
+                          l_Ls
+                          Wparts
+                          {tau_L   = tau_L * tau_L_i,
+                           sigma_L = sigma_L * l'_L_i}
+                  in
+                    lzconcat
+                      (lzmap
+                         combine_splits
+                         (horizontally_split_link'
+                            l_L_i
+                            (NameSet.fromList Wpart)))
+                  end
+                | link_splits _ _ _ = raise ThisCannotHappen
+            in
+              lzunmk
+                (lzappend
+                   (link_splits
+                      l_Ls
+                      Wparts
+                      {tau_L   = id_0,
+                       sigma_L = id_0})
+                   (next_W_partition partitiongen T))
+            end)
+
+        (* iterate through all subsets W of V of size >= |L| = k *)
+        fun next_V_subset subsetgen = lzmake (fn () =>
+            let
+              val W = NameSetSubset.next' subsetgen k
+              val T = NameSet.difference V W
+            in
+              lzunmk
+                (lzappend
+                   (next_W_partition
+                      (OrderedPartition.make (NameSet.list W) k)
+                      T)
+                   (next_V_subset subsetgen))
+            end)
       in
-        if NameSet.size s >= m then
-          s
-        else
-          next_nameset_subset' nsg m
+        next_V_subset (NameSetSubset.make V)
       end
 
   (* Match a global discrete prime using the PAX rule:
-   * FIXME
+   * If s_R_e = s_R_n = id_0 and Ps = id_(V).
+   * 1) Split s_a into sigma, id_Z, and tau such that
+   *      Y * ename s_a_e * s_a_n = sigma (id_Z * tau)
+   *      tau : X -> V
+   *    for some set of fresh names Y and such that inner names of s_a
+   *    associated with L are in X.
+   * 2) Return ename' = ename, Y, s_C = sigma,
+   *           E = "V", qs = [(id_Z * ^tau)(X)g]
    *)
   fun matchPAX {ename,
                 s_a = {s_a_e, s_a_n}, L,
@@ -1084,249 +1355,7 @@ fun nameMapToString nm
                    andalso NameSet.size V >= NameSet.size L
                  then
                    let
-                     (* FIXME *)
-                     fun non_L_link_splits l V =
-                         let
-                           val m  = NameSet.size V
-                           val vs = NameSet.list V
-                           val (y, X)
-                             = case Link.unmk l of
-                                 {outer = SOME y, inner} => (y, inner)
-                               | _ => raise ThisCannotHappen
-
-                           fun next_partition partitiongen = lzmake (fn () =>
-                               let
-                                 val X'part = next_ordered_partition partitiongen
-                                 fun to_link (vj, Xj) =
-                                     Link.make
-                                       {outer = SOME vj,
-                                        inner = NameSet.fromList Xj}
-                               in
-                                 Cons
-                                   (Wiring.make'
-                                      (ListPair.map (to_link) (vs, X'part)),
-                                    (next_partition partitiongen))
-                               end
-                               handle NoPartitions => Nil)
-
-                           fun next_subset subsetgen = lzmake (fn () =>
-                               let
-                                 val X' = next_nameset_subset subsetgen
-                                 val partitiongen
-                                   = make_ordered_partition_nameset_gen X' m
-                                 val Z     = NameSet.difference X X'
-                                 val idZ   = Wiring.id_X Z
-                                 val sigma
-                                   = Wiring.make'
-                                       [Link.make
-                                          {outer = SOME y,
-                                           inner = NameSet.union V Z}]
-                                 fun insert_tau tau =
-                                     {tau   = tau,
-                                      idZ   = idZ,
-                                      sigma = sigma}
-                               in
-                                 lzunmk (lzappend
-                                           (lzmap
-                                              insert_tau
-                                              (next_partition partitiongen))
-                                           (next_subset subsetgen))
-                               end
-                               handle NoSubsets => Nil)
-                         in
-                           next_subset (make_nameset_subset_gen X)
-                         end
-                     (* FIXME *)
-                     fun L_link_splits l V = lzmake (fn () =>
-                         let
-                           val m  = NameSet.size V
-                           val vs = NameSet.list V
-                           val (y, X)
-                             = case Link.unmk l of
-                                 {outer = SOME y, inner} => (y, inner)
-                               | _ => raise ThisCannotHappen
-
-                           fun next_partition partitiongen = lzmake (fn () =>
-                               let
-                                 val Xpart = next_ordered_partition partitiongen
-                                 fun to_link (vj, Xj) =
-                                     Link.make
-                                       {outer = SOME vj,
-                                        inner = NameSet.fromList Xj}
-                               in
-                                 Cons
-                                   (Wiring.make'
-                                      (ListPair.map (to_link) (vs, Xpart)),
-                                    next_partition partitiongen)
-                               end
-                               handle NoPartitions => Nil)
-
-                           val sigma
-                             = Wiring.make'
-                                 [Link.make {outer = SOME y, inner = V}]
-
-                           fun insert_tau tau =
-                               {tau   = tau,
-                                sigma = sigma}
-                         in
-                           lzunmk
-                             (lzmap
-                                insert_tau
-                                (next_partition
-                                   (make_ordered_partition_nameset_gen X m)))
-                         end)
-                     (* The links of s_a_n that has an outer name in L
-                      * must be in tau. *)
-                     val {inCod = s_a_n_L, notInCod = s_a_n_notL}
-                       = Wiring.split_outer s_a_n L
-                     val s_a_n_Ls    = LinkSet.list (Wiring.unmk s_a_n_L)
-                     val s_a_n_notLs = LinkSet.list (Wiring.unmk s_a_n_notL)
-                     (* Apply the partial renaming ename to s_a_e *)
-                     fun link_rename l =
-                         case Link.unmk l of
-                           {outer = SOME y, inner} =>
-                        (case NameMap.lookup ename y of
-                           SOME y' => Link.make {outer = SOME y', inner = inner}
-                         | NONE => l)
-                         | _ => l
-                     val s_a_e's
-                       = map link_rename (LinkSet.list (Wiring.unmk s_a_e))
-                     val s_as = s_a_n_notLs @ s_a_e's
-                     (* the number of non-L links (from both s_a_n and s_a_e) *)
-                     val nonL_count = length s_a_e's + length s_a_n_notLs
-
-                     val size_L = NameSet.size L
-
-                     (* iterate through all ordered partitions of a
-                      * subset V'' of V\V' *)
-                     fun next_V''_partition partitiongen (ts as {tau, sigma}) = lzmake (fn () =>
-                         let
-                           val V''part = next_ordered_partition partitiongen
-                           (* iterate through the links of s_a_n_notLs and s_a_e's *)
-                           fun foo [] [] tis = lzCons (fn () => (tis, lzNil))
-                             | foo (s_a_i::s_as) (V''p::V''part) {tau, idZ, sigma} =
-                               let
-                                 fun bar {tau = tau_i, idZ = idZ_i, sigma = sigma_i} =
-                                     foo
-                                       s_as
-                                       V''part
-                                       {tau   = Wiring.* (tau, tau_i),
-                                        idZ   = Wiring.* (idZ, idZ_i),
-                                        sigma = Wiring.* (sigma, sigma_i)}
-                               in
-                                 lzconcat (lzmap bar (non_L_link_splits s_a_i (NameSet.fromList V''p)))
-                               end
-                             | foo _ _ _ = raise ThisCannotHappen
-                         in
-                           lzunmk
-                             (lzappend
-                                (foo s_as V''part {tau = tau, idZ = Wiring.id_0, sigma = sigma})
-                                (next_V''_partition partitiongen ts))
-                         end)
-
-                     (* iterate through the partitons of V''' = (V\V')\V'' *)
-                     fun next_V'''_partition partitiongen V'' (ts as {tau, sigma}) = lzmake (fn () =>
-                         let
-                           val V'''part = Partition.next partitiongen
-                           val (s, Y)
-                             = foldr
-                                 (fn (V'''p, (s, Y)) =>
-                                     if null V'''p then
-                                       (s, Y)
-                                     else
-                                       let
-                                         val y = Name.fresh NONE
-                                       in
-                                         (LinkSet.insert
-                                            (Link.make
-                                               {outer = SOME y,
-                                                inner = NameSet.fromList V'''p})
-                                            s,
-                                          NameSet.insert y Y)
-                                       end)
-                                 (LinkSet.empty, NameSet.empty) V'''part
-                           val sigma' = Wiring.* (sigma, Wiring.make s)
-                           fun insert_Y {tau, idZ, sigma} =
-                               {tau = tau, idZ = idZ, sigma = sigma, Y = Y}
-                         in
-                           lzunmk
-                             (lzappend
-                                (lzmap
-                                   insert_Y
-                                   (next_V''_partition
-                                      (make_ordered_partition_nameset_gen
-                                         V''
-                                         nonL_count)
-                                      {tau = tau, sigma = sigma'}))
-                                (next_V'''_partition partitiongen V'' ts))
-                         end)
-
-                     (* iterate through all subsets V'' of V\V' (called notV') *)
-                     fun next_notV'_subset subsetgen notV' (ts as {tau, sigma}) = lzmake (fn () =>
-                         let
-                           val V'' = next_nameset_subset subsetgen
-                           (* the names of (V\V')\V'' must be introduced by
-                            * tau and substituted to fresh names by sigma.
-                            * the fresh names are returned in Y such that the
-                            * invented links are closed in matchCLO. *)
-                           val V''' = NameSet.difference notV' V''
-                           val tau' = Wiring.* (tau, Wiring.introduce V''')
-                         in
-                           lzunmk
-                             (lzappend
-                                (next_V'''_partition
-                                   (Partition.make
-                                      (NameSet.list V''')
-                                      (NameSet.size V'''))
-                                   V''
-                                   {tau = tau', sigma = sigma})
-                                (next_notV'_subset subsetgen notV' ts))
-                         end)
-
-                     (* iterate through all ordered partitions of a subset V'
-                      * of V where all sets in the partition are non-empty *)
-                     fun next_V'_partition partitiongen notV' = lzmake (fn () =>
-                         let
-                           val V'part = next_ordered_partition' partitiongen
-                           (* iterate through the links of s_a_n_Ls *)
-                           fun foo [] [] ts =  
-                               next_notV'_subset (make_nameset_subset_gen notV') notV' ts
-                             | foo (s_a_n_Li::s_a_n_Ls) (V'p::V'part) {tau, sigma} =
-                               let
-                                 fun bar {tau = tau_i, sigma = sigma_i} =
-                                     foo
-                                       s_a_n_Ls
-                                       V'part
-                                       {tau   = Wiring.* (tau, tau_i),
-                                        sigma = Wiring.* (sigma, sigma_i)}
-                               in
-                                 lzconcat (lzmap bar (L_link_splits s_a_n_Li (NameSet.fromList V'p)))
-                               end
-                             | foo _ _ _ = raise ThisCannotHappen
-                         in
-                           lzunmk
-                             (lzappend
-                                (foo
-                                   s_a_n_Ls
-                                   V'part
-                                   {tau = Wiring.id_0,
-                                    sigma = Wiring.id_0})
-                                (next_V'_partition partitiongen notV'))
-                         end)
-
-                     (* iterate through all subsets V' of V of size >= |L| *)
-                     fun next_V_subset subsetgen = lzmake (fn () =>
-                         let
-                           val V' = next_nameset_subset' subsetgen size_L
-                         in
-                           lzunmk
-                             (lzappend
-                                (next_V'_partition
-                                   (make_ordered_partition_nameset_gen V' size_L)
-                                   (NameSet.difference V V'))
-                                (next_V_subset subsetgen))
-                         end)
-                     fun toPAX {tau, idZ, sigma, Y} =
+                     fun toPAX {tau, id_Z, sigma, Y} =
                          {ename' = ename,
                           s_C = sigma,
                           Y = Y,
@@ -1334,7 +1363,12 @@ fun nameMapToString nm
                           qs = [makeP tau (makeN (Wiring.innernames tau) g)],
                           tree = PAX}
                    in
-                     lzunmk (lzmap toPAX (next_V_subset (make_nameset_subset_gen V)))
+                     lzunmk
+                       (lzmap
+                          toPAX
+                          (horizontally_split_wiring
+                             {ename = ename, s_e = s_a_e, s_n = s_a_n}
+                             V L))
                    end
                  else
                    Nil

@@ -24,7 +24,7 @@ sig
   (** A partition generator type. *)
   type 'a partitiongen
 
-  (** Signal that there no more partitions are available. *)
+  (** Signal that there are no more partitions. *)
   exception NoPartitions
 
   (** Create a partition generator which generates all partitions
