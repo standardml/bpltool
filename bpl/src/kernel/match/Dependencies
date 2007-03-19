@@ -22,7 +22,8 @@ match: match-sig /kernel/bg/sigs /kernel/ast/sigs /lib/compat/mosml/hash/.
   /lib/pp/smlnj/. /lib/coll/pp /lib/coll/lzlist /lib/coll/set /lib/coll/map
   /lib/compat/mosml/hash/. /lib/compat/common/. /lib/util/flags
   /lib/util/origin /lib/util/errorhandler-sig /lib/util/debug
-  /lib/util/partition /lib/util/orderedpartition rule-sig %NODASHSIG
+  /lib/util/partition /lib/util/orderedpartition /lib/util/subset
+  rule-sig %NODASHSIG
 react-sig: /lib/coll/lazylist /lib/pp/smlnj/prettyprint
 react: react-sig /lib/coll/lazylist /lib/coll/monofinmap-sig
   /lib/pp/smlnj/prettyprint /kernel/ast/sigs instantiation-sig
