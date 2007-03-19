@@ -41,13 +41,13 @@ print "running matcher worker thread...\n"
           print "matcher worker going to sleep...\n"
           worker.wait(mutex)
           print "matcher worker thread waking up...\n"
-          print "IO === matcher = "
-          if IO === matcher
-            print "yes"
-          else
-            print "no"
-          end
-          print "\n"
+          #print "IO === matcher = "
+          #if IO === matcher
+          #  print "yes"
+          #else
+          #  print "no"
+          #end
+          #print "\n"
           $stdout.flush
           unless IO === matcher && !matcher.closed?
             print "running bplwebback...\n"
