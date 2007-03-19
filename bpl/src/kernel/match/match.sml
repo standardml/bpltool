@@ -1207,7 +1207,8 @@ fun nameMapToString nm
                       Uparts
                       {tau = tau_LS, id_Z = id_0, sigma = sigma_LS})
                    (next_U_partition partitiongen ts))
-            end)
+            end
+            handle OrderedPartition.NoPartitions => Nil)
 
         (* iterate through the partitons of S *)
         fun next_S_partition partitiongen U (ts as {tau_LS, sigma_L}) =
@@ -1243,7 +1244,8 @@ fun nameMapToString nm
                          (OrderedPartition.make (NameSet.list U) p)
                          {tau_LS = tau_LS, sigma_LS = sigma_L * sigma_S}))
                    (next_S_partition partitiongen U ts))
-            end)
+            end
+            handle Partition.NoPartitions => Nil)
 
         (* iterate through all subsets U of T *)
         fun next_T_subset subsetgen T (ts as {tau_L, sigma_L}) =
@@ -1266,7 +1268,8 @@ fun nameMapToString nm
                       U
                       {tau_LS = tau_L * tau_S, sigma_L = sigma_L})
                    (next_T_subset subsetgen T ts))
-            end)
+            end
+            handle NameSetSubset.NoSubsets => Nil)
 
         (* iterate through all ordered partitions of a subset W
          * of V where all sets in the partition are non-empty *)
@@ -1309,7 +1312,8 @@ fun nameMapToString nm
                       {tau_L   = id_0,
                        sigma_L = id_0})
                    (next_W_partition partitiongen T))
-            end)
+            end
+            handle OrderedPartition.NoPartitions => Nil)
 
         (* iterate through all subsets W of V of size >= |L| = k *)
         fun next_V_subset subsetgen = lzmake (fn () =>
@@ -1323,7 +1327,8 @@ fun nameMapToString nm
                       (OrderedPartition.make (NameSet.list W) k)
                       T)
                    (next_V_subset subsetgen))
-            end)
+            end
+            handle NameSetSubset.NoSubsets => Nil)
       in
         next_V_subset (NameSetSubset.make V)
       end
