@@ -78,17 +78,17 @@ struct
 
         (* Creates an 'a list list from the current state of c. *)
         fun make_partition () =
-	    let
-              (* set all groups to the empty list *)
-              val () = modify (fn _ => []) p
-              (* insert element e into group g of partition p *)
-	      fun insert e g = update (p, g - 1, e :: (p sub (g - 1)))
-            in
-               (* insert each element into the group specified by c *)
-              (foldr (fn (e, i) => (insert e (c sub i); i - 1)) n list;
-               (* return the list *)
-               Array.foldr (fn (g, p) => g :: p) [] p)
-            end
+          let
+            (* set all groups to the empty list *)
+            val () = modify (fn _ => []) p
+            (* insert element e into group g of partition p *)
+            fun insert e g = update (p, g - 1, e :: (p sub (g - 1)))
+          in
+            (* insert each element into the group specified by c *)
+            (foldr (fn (e, i) => (insert e (c sub i); i - 1)) n list;
+             (* return the list *)
+             Array.foldr (fn (g, p) => g :: p) [] p)
+          end
 
         (* "functional" implementation of the setpart2 while-loop.
          *
@@ -157,7 +157,7 @@ struct
         if m < 0 orelse (m = 0 andalso n > 0) then
           raise NoPartitions
         else if n = 0 then
-          ref (lzmake (fn () => Cons ([], lzNil)))
+          ref (lzmake (fn () => Cons (List.tabulate (m, fn _ => []), lzNil)))
         else
           ref (setpart2 list n m)
       end
