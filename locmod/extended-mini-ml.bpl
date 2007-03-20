@@ -10,22 +10,26 @@
 %
 % Sets:
 % n ranges over positive integers and zero.
-% x,f belong to a set Vars of variable names.
+% b,x,f belong to a set Vars of variable names.
 % l belongs to a set Cells of reference cells.
 % D ranges over a set Dats of datatype names.
 % C ranges over a set Cons of contructor names.
 % Vars, Cells, Dats, and Cons are pairwise disjoint.
 %
-% Shorthands:
+% Shorthands and notation:
 %  '{C_i(e_i)}^n'  for  'C_0(e_0) | ... | C_n(e_n)'
 %  '{C_i(x_i) => e_i}^n'  for  'C_0(x_0) => e_1 | ... | C_n(x_n) => e_n'
+%  '*' denotes the empty string 
 %
 % BNF:
-%  p ::= datatype D = {C_i(e_i)}^n
+%  p ::= export a from t
+%  a ::= b | a1,a2
+%  t ::= datatype D = {C_i(e_i)}^n | d
+%  d ::= x = e | x1 = e1 ; x2 = e2
 %  e ::= x | e1 e2 | (e1,e2) | fst e | snd e | let x = e1 in e2 end
 %      | ref e | !e | e1 := e2 | exchange(e1,e2)
 %      | C(e) | case e of {C_i(x_i) => e_i}^n | v
-%  v ::= lam x. e | fix f(x) = e | (v,v) | unit | l | C(v) | n
+%  v ::= lam x. e | fix f(x) = e | (v1,v2) | unit | l | C(v) | n
 %  E ::= [ ] | E e | v E | (E,e) | (v,E) | fst E | snd E
 %       | let x = E in e end | let x = v in E end
 %       | ref E | !E | E := e | v := E
