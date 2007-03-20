@@ -245,7 +245,7 @@ fun spinunlock l =
 
 val lock = new ()
 
-fun wait i = if i<0 then () else wait(i-1)
+fun wait i = if i<=0 then () else wait(i-1)
 
 (* Event queue with operations *)
 val queue = ref []
