@@ -25,9 +25,10 @@
 # restart the server.
 
 if [ -e restart ]
+then
   if [ ! -p restart ] 
   then
-    echo "Error: file `restart' should be a named pipe!"
+    echo "Error: file 'restart' should be a named pipe!"
     exit 1
   fi
 else
