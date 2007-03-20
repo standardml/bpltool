@@ -3,7 +3,7 @@
 % Bug-fixing and extending Lars Birkedal's encoding of 2005-07-11.
 %
 % Ebbe Elsborg and Henning Niss, 2005-01-03.
-% Revised by Ebbe Elsborg, 2007-03-15.
+% Revised by Ebbe Elsborg, 2007-03-20.
 %
 % In CBV, the activity (evaluation order) for an application node
 % changes during evaluation.
@@ -21,7 +21,7 @@
 %  '{C_i(x_i) => e_i}^n'  for  'C_0(x_0) => e_1 | ... | C_n(x_n) => e_n'
 %
 % BNF:
-%  p ::= datatype D = {C_i e_i}^n
+%  p ::= datatype D = {C_i(e_i)}^n
 %  e ::= x | e1 e2 | (e1,e2) | fst e | snd e | let x = e1 in e2 end
 %      | ref e | !e | e1 := e2 | exchange(e1,e2)
 %      | C(e) | case e of {C_i(x_i) => e_i}^n | v
@@ -30,7 +30,7 @@
 %       | let x = E in e end | let x = v in E end
 %       | ref E | !E | E := e | v := E
 %       | exchange(E,e) | exchange(l,E)
-%       | C(E) | case E of {C_i x_i => e_i}^n
+%       | C(E) | case E of {C_i(x_i) => e_i}^n
 %
 % The evaluation contexts, E, are _certain_ kinds of applications.
 % We model the different kinds of activities for the different 
