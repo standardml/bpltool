@@ -33,7 +33,7 @@ fun spinunlock l =
     in exchange(t,l)
     end
 
-fun wait i = if i<0 then () else wait(i-1)
+fun wait i = if i<=0 then () else wait(i-1)
 
 val queue = ref []
 
