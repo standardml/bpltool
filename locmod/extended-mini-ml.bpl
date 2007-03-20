@@ -19,7 +19,6 @@
 % Shorthands and notation:
 %  '{C_i(e_i)}^n'  for  'C_0(e_0) | ... | C_n(e_n)'
 %  '{C_i(x_i) => e_i}^n'  for  'C_0(x_0) => e_1 | ... | C_n(x_n) => e_n'
-%  '*' denotes the empty string 
 %
 % BNF:
 %  p ::= export a from t
