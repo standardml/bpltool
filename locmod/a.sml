@@ -1,9 +1,11 @@
 (************************************************************************
-  Ebbe Elsborg and Henning Niss, 5/2/2007
+  Ebbe Elsborg and Henning Niss, 20/3/2007
  
   This is the "location-aware application" part A of a Plato-graphical
   system; C || P || A = C || (S || L) || A.
 ************************************************************************)
+
+(* export enqA from *)
 
 type lid = int
 type dev = int
