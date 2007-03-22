@@ -63,8 +63,8 @@
 % \o denotes the extension operator (\oplus in LaTeX) and
 % \u denotes disjoint union (\uplus in LaTeX).
 %
-% The superscript on [_] identifies the semantic function.
-% The subscript X [-] contains the set of free variable names of '-'.
+% The superscript on [-] identifies the semantic function.
+% The subscript X on [-] contains the set of free variable names of '-'.
 % The (S) in front of the semantic function [-]^dtypes denotes the
 % signature used, and in this case, updated by the translation.
 % The signature is unchanged by all other semantic functions, thus omitted.
