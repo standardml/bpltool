@@ -3,14 +3,15 @@
 % Bug-fixing and extending Lars Birkedal's encoding of 2005-07-11.
 %
 % Ebbe Elsborg and Henning Niss, 2005-01-03.
-% Revised by Ebbe Elsborg, 2007-03-20.
+% Revised by Ebbe Elsborg, 2007-03-22.
 %
 % In CBV, the activity (evaluation order) for an application node
 % changes during evaluation.
 %
 % Sets:
 % n ranges over positive integers and zero.
-% b,x,f belong to a set Vars of variable names.
+% x,f belong to a set Vars of variable names.
+% a is a subset of Vars.
 % l belongs to a set Cells of reference cells.
 % D ranges over a set Dats of datatype names.
 % C ranges over a set Cons of contructor names.
@@ -21,18 +22,17 @@
 %  '{C_i(x_i) => e_i}^n'  for  'C_0(x_0) => e_1 | ... | C_n(x_n) => e_n'
 %
 % BNF:
-%  p ::= export a from t
-%  a ::= b | a1,a2
-%  t ::= datatype D = {C_i(e_i)}^n | d
-%  d ::= x = e | x1 = e1 ; x2 = e2
+%  p ::= export a from t | t
+%  t ::= datatype D = {C_i of e_i}^n ; t | d
+%  T ::= Nat | Unit | T1 -> T2 | T1 * T2 | Ref T | C_i : T_i
+%  d ::= val x = e | val x = e ; d
 %  e ::= x | e1 e2 | (e1,e2) | fst e | snd e | let x = e1 in e2 end
 %      | ref e | !e | e1 := e2 | exchange(e1,e2)
 %      | C(e) | case e of {C_i(x_i) => e_i}^n | v
 %  v ::= lam x. e | fix f(x) = e | (v1,v2) | unit | l | C(v) | n
 %  E ::= [ ] | E e | v E | (E,e) | (v,E) | fst E | snd E
 %       | let x = E in e end | let x = v in E end
-%       | ref E | !E | E := e | v := E
-%       | exchange(E,e) | exchange(l,E)
+%       | ref E | !E | E := e | l := E | exchange(E,e) | exchange(l,E)
 %       | C(E) | case E of {C_i(x_i) => e_i}^n
 %
 % The evaluation contexts, E, are _certain_ kinds of applications.
@@ -51,8 +51,8 @@
 %    let x = v in e end -> e[v/x]
 %    (lam x. e) v -> e[v/x]
 %    (fix f(x) = e) v -> e[v/x, fix f(x)=e/f]
-%    case C_j v of {C_i x_i => e_i}^n -> e_j[v/x_j] % j in {0,1,...n}
-%    <ref v,s> -> <l,(s,l->v)>	% l fresh
+%    case C_j(v) of {C_i(x_i) => e_i}^n -> e_j[v/x_j] % j in {0,1,...n}
+%    <ref v,s> -> <l,(s,l->v)>	,  l fresh
 %    <!l,s[l->v]> -> <v,s[l->v]>
 %    <l:=v1,s[l->v2]> -> <unit,s[l->v1]>
 %    <exchange(l,l'),s[l->v,l'->v']> -> <unit,s[l->v',l'->v]>
@@ -60,44 +60,65 @@
 % 
 % TRANSLATION:
 %
-% \o denotes the extension operator (\oplus i LaTeX) and
+% \o denotes the extension operator (\oplus in LaTeX) and
 % \u denotes disjoint union (\uplus in LaTeX).
 %
-% The subscript X on [e]_X contains the set of free variable names of e.
+% The superscript on [_] identifies the semantic function.
+% The subscript X [-] contains the set of free variable names of '-'.
+% The (S) in front of the semantic function [-]^dtypes denotes the
+% signature used, and in this case, updated by the translation.
+% The signature is unchanged by all other semantic functions, thus omitted.
 % 'id_X' in BPL notation is 'x_1/x_1,...,x_n/x_n' for X={x_1,...,x_n}.
 %
-% [x]_{X\uplus {x}}      = X \o var_x
-% [(e1,e2)]_X            = (pair \o id_X)
-%	                     ((pairl \o id_X)[e1]_X |
-%                             (pairr \o id_X)(exp \o id_X)[e2]_X
-% [fst e]_X              = (fst \o id_X)[e]_X
-% [snd e]_X              = (snd \o id_X)[e]_X
-% [let x = e1 in e2]_X   = (let \o id_X)
-%			     ((letd \o id_X)[e1]_X |
-%                             (letb_(x) \o id_X)[e2]_{X \u {x}})
-% [lam x. e]_X           = (val \o id_X)(lam_(x) \o id_X)[e]_{X \u {x}}
-% [fix f(x) = e]_X       = (val \o id_X)
-%			     (fix_(f,x) \o id_X)[e]_{X \u {f,x}}
-% [e1 e2]_X              = (app \o id_X)
-%			     ((appl \o id_X)[e1]_X | 
-%                             (appr \o id_X)(exp \o id_X)[e2]_X)
-% [unit]_X               = (val | X) unit
-% [n]_X                  = (val | X) n
-% [C(e)]_X	         = (C \o id_X)[e]_X
-% [case e of {C_i(x_i) => e_i}^n]_X =
+% [t]^prog_X               = store() | [t]^dtypes_X
+% [export a from t]^prog_X = store() | (([a]^names_a \o id_X)
+%					([t]^dtypes_{X \u a}))
+%
+% [a]^names_a = id_a
+%	Notice that these names are added to the outer face.
+%
+% (S)[datatype D = C_i of T_i ; t]^dtypes_X = (S,C_i)[t]^dtypes_X , i=1..n
+%	where (S,C_i) denotes update of S by the active control C_i
+%	with arity (0 -> 0).
+% (S)[d]^dtypes_X                           = (S)[d]^decls_X
+%	Notice how types are thrown away.
+%
+% [val x = e]^decls_X     = def'_x([e]^exp_X)
+% [val x = e ; d]^decls_X = def'_x([e]^exp_X) | [d]^decls_{X \u {x}}
+% 	Notice how previous declarations can be referenced.
+%
+% [x]^exp_{X\uplus {x}}    = X \o var_x
+% [(e1,e2)]^exp_X          = (pair \o id_X)
+%	                      ((pairl \o id_X)[e1]^exp_X |
+%                              (pairr \o id_X)(exp \o id_X)[e2]^exp_X
+% [fst e]^exp_X            = (fst \o id_X)[e]^exp_X
+% [snd e]^exp_X            = (snd \o id_X)[e]^exp_X
+% [let x = e1 in e2]^exp_X = (let \o id_X)
+%			      ((letd \o id_X)[e1]^exp_X |
+%                              (letb_(x) \o id_X)[e2]^exp_{X \u {x}})
+% [lam x. e]^exp_X         = (val \o id_X)(lam_(x) \o id_X)[e]^exp_{X \u {x}}
+% [fix f(x) = e]^exp_X     = (val \o id_X)
+%			      (fix_(f,x) \o id_X)[e]^exp_{X \u {f,x}}
+% [e1 e2]^exp_X            = (app \o id_X)
+%			      ((appl \o id_X)[e1]^exp_X | 
+%                              (appr \o id_X)(exp \o id_X)[e2]^exp_X)
+% [unit]^exp_X             = (val | X) unit
+% [n]^exp_X                = (val | X) n
+% [C(e)]^exp_X	           = (C \o id_X)[e]^exp_X
+% [case e of {C_i(x_i) => e_i}^n]^exp_X =
 %   (case \o id_X)
-%     ((casel \o id_X)([e]_X) |
-%      (casee_(x0) \o id_X)(C0 \o id_X)(exp \o id_X)([e0]_{X \u {x0}}) |
-%      ...
-%      (casee_(xn) \o id_X)(Cn \o id_X)(exp \o id_X)([en]_{X \u {xn}}))
-% [ref e]_X		 = (ref \o id_X)[e]_X
-% [!e]_X		 = (deref \o id_X)[e]_X
-% [e1 := e2]_X		 = (asgn \o id_X)
-%			     ((acell \o id_X)[e1]_X |
-%			      (aval \o id_X)(exp \o id_X)[e2]_X)
-% [exchange(e1,e2)]_X	 = (exchange \o id_X)
-%			     ((exchangel \o id_X)[e]_X |
-%			      (exchanger \o id_X)(exp \o id_X)[e2]_X)
+%    ((casel \o id_X)([e]^exp_X) |
+%     (casee_(x0) \o id_X)(C0 \o id_X)(exp \o id_X)([e0]^exp_{X \u {x0}}) |
+%     ...
+%     (casee_(xn) \o id_X)(Cn \o id_X)(exp \o id_X)([en]^exp_{X \u {xn}}))
+% [ref e]^exp_X		   = (ref \o id_X)[e]^exp_X
+% [!e]^exp_X		   = (deref \o id_X)[e]^exp_X
+% [e1 := e2]^exp_X	   = (asgn \o id_X)
+%			      ((acell \o id_X)[e1]^exp_X |
+%			       (aval \o id_X)(exp \o id_X)[e2]^exp_X)
+% [exchange(e1,e2)]^exp_X  = (exc \o id_X)
+%			      ((excl \o id_X)[e]^exp_X |
+%			       (excr \o id_X)(exp \o id_X)[e2]^exp_X)
 
 signature eMiniml =
   sig	% arity is (binding -> free)
@@ -129,9 +150,9 @@ signature eMiniml =
     0,1,2... : atomic (0 -> 0)	% a control for each natural number (+zero)
     cell  : atomic (0 -> 1)	% reference cell (rc)
     cell' : passive (0 -> 1)	% reference cell in store, linked to rc
-    exchange : active (0 -> 0)	% atomically swap contents of two ref. cells
-    exchangel : active (0 -> 0)
-    exchanger : active (0 -> 0)
+    exc : active (0 -> 0)	% atomically swap contents of two ref. cells
+    excl : active (0 -> 0)
+    excr : active (0 -> 0)
     store : passive (0 -> 0)
     exp   : passive (0 -> 0)    % delay evaluation
     sub   : active (1 -> 0)
@@ -233,13 +254,13 @@ rule asgn_2 =
     ->
   val(unit) \o {l} || store(cell'_l(val([0])) | [2])
 
-rule exchange_1 =
-  exchange(exchangel(val([0])) | exchanger(exp([1])))
+rule exc_1 =
+  exc(excl(val([0])) | excr(exp([1])))
    ->
-  exchange(exchangel(val([0])) | exchanger([1]))
+  exc(excl(val([0])) | excr([1]))
 
-rule swap_2 =
-  exchange(exchangel(val(cell_l1)) | exchanger(val(cell_l2)))
+rule exc_2 =
+  exc(excl(val(cell_l1)) | excr(val(cell_l2)))
 	|| store(cell'_l1([0]) | cell'_l2([1]) | [2])
     ->
   val(unit) \o {l1,l2}
