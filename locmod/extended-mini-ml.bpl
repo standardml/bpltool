@@ -3,7 +3,7 @@
 % Bug-fixing and extending Lars Birkedal's encoding of 2005-07-11.
 %
 % Ebbe Elsborg and Henning Niss, 2005-01-03.
-% Revised by Ebbe Elsborg, 2007-03-22.
+% Revised by Ebbe Elsborg, 2007-03-26.
 %
 % In CBV, the activity (evaluation order) for an application node
 % changes during evaluation.
@@ -60,6 +60,10 @@
 % 
 % TRANSLATION:
 %
+% The store is provided by translation on "system level"!
+% I.e. M = /X . ( C || S || [L]^prog_X || [A]^prog_X ) | store() , where 
+% X = {enqL,enqA}, and store:passive (0->0) belongs to Sig_M.
+%
 % \o denotes the extension operator (\oplus in LaTeX) and
 % \u denotes disjoint union (\uplus in LaTeX).
 %
@@ -70,9 +74,8 @@
 % The signature is unchanged by all other semantic functions, thus omitted.
 % 'id_X' in BPL notation is 'x_1/x_1,...,x_n/x_n' for X={x_1,...,x_n}.
 %
-% [t]^prog_X               = store() | [t]^dtypes_X
-% [export a from t]^prog_X = store() | (([a]^names_a \o id_X)
-%					([t]^dtypes_{X \u a}))
+% [t]^prog_X               = [t]^dtypes_X
+% [export a from t]^prog_X = (([a]^names_a \o id_X) ([t]^dtypes_{X \u a}))
 %
 % [a]^names_a = id_a
 %	Notice that these names are added to the outer face.
