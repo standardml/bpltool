@@ -160,7 +160,7 @@ signature eMiniml =
     exp   : passive (0 -> 0)    % delay evaluation
     sub   : active (1 -> 0)
     def   : active (0 -> 1)
-    def'  : active (0 -> 1)	% non-discardable definition
+    def'  : passive (0 -> 1)	% non-discardable definition
 
   end
 
