@@ -3,7 +3,7 @@
 % Bug-fixing and extending Lars Birkedal's encoding of 2005-07-11.
 %
 % Ebbe Elsborg and Henning Niss, 2005-01-03.
-% Revised by Ebbe Elsborg, 2007-03-26.
+% Revised by Ebbe Elsborg, 2007-03-27.
 %
 % In CBV, the activity (evaluation order) for an application node
 % changes during evaluation.
@@ -26,12 +26,12 @@
 %  t ::= datatype D = {C_i of e_i}^n ; t | d
 %  T ::= Nat | Unit | T1 -> T2 | T1 * T2 | Ref T | C_i : T_i
 %  d ::= val x = e | val x = e ; d
-%  e ::= x | e1 e2 | (e1,e2) | fst e | snd e | let x = e1 in e2 end
+%  e ::= x | e1 e2 | (e1,e2) | fst e | snd e | let val x = e1 in e2 end
 %      | ref e | !e | e1 := e2 | exchange(e1,e2)
 %      | C(e) | case e of {C_i(x_i) => e_i}^n | v
 %  v ::= lam x. e | fix f(x) = e | (v1,v2) | unit | l | C(v) | n
 %  E ::= [ ] | E e | v E | (E,e) | (v,E) | fst E | snd E
-%       | let x = E in e end | let x = v in E end
+%       | let val x = E in e end | let val x = v in E end
 %       | ref E | !E | E := e | l := E | exchange(E,e) | exchange(l,E)
 %       | C(E) | case E of {C_i(x_i) => e_i}^n
 %
@@ -48,7 +48,7 @@
 %
 %    fst (v1,v2) -> v1
 %    snd (v1,v2) -> v2
-%    let x = v in e end -> e[v/x]
+%    let val x = v in e end -> e[v/x]
 %    (lam x. e) v -> e[v/x]
 %    (fix f(x) = e) v -> e[v/x, fix f(x)=e/f]
 %    case C_j(v) of {C_i(x_i) => e_i}^n -> e_j[v/x_j] % j in {0,1,...n}
@@ -96,9 +96,9 @@
 %                              (pairr \o id_X)(exp \o id_X)[e2]^exp_X
 % [fst e]^exp_X            = (fst \o id_X)[e]^exp_X
 % [snd e]^exp_X            = (snd \o id_X)[e]^exp_X
-% [let x = e1 in e2]^exp_X = (let \o id_X)
-%			      ((letd \o id_X)[e1]^exp_X |
-%                              (letb_(x) \o id_X)[e2]^exp_{X \u {x}})
+% [let val x = e1 in e2]^exp_X = (let \o id_X)
+%			          ((letd \o id_X)[e1]^exp_X |
+%                                  (letb_(x) \o id_X)[e2]^exp_{X \u {x}})
 % [lam x. e]^exp_X         = (val \o id_X)(lam_(x) \o id_X)[e]^exp_{X \u {x}}
 % [fix f(x) = e]^exp_X     = (val \o id_X)
 %			      (fix_(f,x) \o id_X)[e]^exp_{X \u {f,x}}
