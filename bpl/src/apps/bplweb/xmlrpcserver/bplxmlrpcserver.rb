@@ -587,7 +587,6 @@ class Serverobj
   end
 
   def simplifyrequest (agent)
-    @mutex.synchronize {
     print "simplifyrequest (" + agent + ")\n"
     matcher = IO.popen("../backend/mlton", "w+")
     matcher.fcntl(4, 0x40000) # Avoid buffering
