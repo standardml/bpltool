@@ -3,7 +3,7 @@
 % Bug-fixing and extending Lars Birkedal's encoding of 2005-07-11.
 %
 % Ebbe Elsborg and Henning Niss, 2005-01-03.
-% Revised by Ebbe Elsborg, 2007-03-27.
+% Revised by Ebbe Elsborg, 2007-03-28.
 %
 % In CBV, the activity (evaluation order) for an application node
 % changes during evaluation.
@@ -160,7 +160,7 @@ signature eMiniml =
     exp   : passive (0 -> 0)    % delay evaluation
     sub   : active (1 -> 0)
     def   : active (0 -> 1)
-    def'  : passive (0 -> 1)	% non-discardable definition
+    def'  : active (0 -> 1)	% non-discardable definition
 
   end
 
@@ -194,9 +194,9 @@ rule gc =
   [0]
 
 rule sub' =
-  var_x || def'_x([0])
+  var_x || def'_x(val([0]))
     ->
-  [0] \o {x} || def'_x([0])
+  val([0]) \o {x} || def'_x(val([0]))
 
 % there is no gc' rule, on purpose
 
