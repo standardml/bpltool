@@ -656,29 +656,6 @@ class Serverobj
     end
     matcher.close
   end  
-    
-
-
-    
-    
-    sessionid = aid['sessionid']
-      if sessionid < 0
-        return {'type' => 'ERROR', 'subtype' => 'MATCHSERVER',
-                'errtxt' => "Matching server: Wrong id: " + aid.to_s}
-      end
-      @matchingsflag.wait(@mutex) unless @matchings
-      until @matchings[sessionid]
-        @matchingssessionidflag.wait(@mutex)
-      end
-      matching = @matchings[sessionid]
-      if defined? matching && matching
-        return matching.reactrequest1(aid, ruleno, matchno, requestno)
-      else
-        return {'type' => "ERROR", 'subtype' => 'MATCHSERVER',
-                'errtxt' => 'Matching server: matching lost'}
-    end
-    }
-  end
 
 end
         
