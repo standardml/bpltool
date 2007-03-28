@@ -37,7 +37,7 @@ fi
 
 while true
 do
-  ruby script/server -p 7913 >> log/webserver.log 2>&1 &
+  ruby script/server -p 8080 >> log/webserver.log 2>&1 &
   pid=$!
   read < restart
   kill $pid

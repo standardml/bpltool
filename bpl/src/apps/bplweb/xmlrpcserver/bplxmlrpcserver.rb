@@ -723,7 +723,7 @@ server.add_handler("simplifyrequest",
   returns a {type, {agent}}
   where type is 'OK' or 'TimeOut'") {
   |agent|
-  serverobj.reactrequest(agent)
+  serverobj.simplifyrequest(agent)
 }
 
 server.serve
