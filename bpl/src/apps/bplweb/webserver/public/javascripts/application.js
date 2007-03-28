@@ -455,3 +455,27 @@ function reactrequest (rule, match) {
         },
      });
 }
+
+
+function simplifyrequest (agent) {
+  new Ajax.Request
+    ('/bplweb/simplifyrequest',
+     {'parameters': $('agent-rule-form').serialize (),
+      onSuccess: function (transport, json) {
+          result = eval ("(" + transport.responseText + ")");
+          switch (result ['type'].toUpperCase ()) {
+          case 'OK':
+            $('agent').value = result.simplifiedagent;
+            break;
+          case 'TIMEOUT':
+            alert ("The simplification request timed out.  Please try again.");
+            break;
+          case 'ERROR':
+            alert ("Error: " + result.errtxt);
+            break;
+          default:
+            alert ("Unrecognised server simplification response: " + transport.responseText);
+          }
+        },
+     });
+}

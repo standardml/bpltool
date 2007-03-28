@@ -288,6 +288,22 @@ val _ = TextIO.output (stdErr, "userules = " ^ Int.toString userules
         | doreact (NONE, _) = log "Ruleno not specified!"
         | doreact (_, NONE) = log "Matchno not specified!"
       
+      fun dosimplify (SOME agentstr) =
+        let
+          val simplifiedagent
+            = BgVal.simplify
+                (BgBDNF.unmk 
+                  (BgBDNF.make
+                    (BgVal.make
+                      BgTerm.info
+                        (parseStr BGTERM "agent" agentstr))))
+        in
+          print
+            ("SIMPLIFIEDAGENT\n" ^ BgVal.toString simplifiedagent
+             ^ "\nEND\n")
+        end
+        | dosimplify NONE = log "Agent not specified!"
+      
       fun getuntil endmarker =
         let
           val markerlen = size endmarker
@@ -364,6 +380,23 @@ val _ = TextIO.output (stdErr, "userules = " ^ Int.toString userules
         		log ("Unrecognised input line: " ^ line)
         end
       
+      fun evalsimplify (agent) =
+      	let
+      	  val line
+      	    = case inputLineNoBuf () of
+      	        SOME s => s | NONE => raise Expected "ENDSIMPLIFY"
+      	  val upline = String.translate (String.str o Char.toUpper) line
+        in
+        	if String.isPrefix "AGENT" upline then
+        		evalsimplify (SOME (getuntil "ENDAGENT"))
+        	else if String.isPrefix "ENDSIMPLIFY" upline then
+        		dosimplify (agent)
+        	else if null (String.tokens Char.isSpace line) then
+        	  evalsimplify (agent)
+        	else
+        		log ("Unrecognised input line: " ^ line)
+        end
+      
       fun readevalloop () =
         case inputLineNoBuf () of
           SOME line =>
@@ -379,6 +412,13 @@ val _ = TextIO.output (stdErr, "userules = " ^ Int.toString userules
         		  andalso (size line < 6 orelse
         		           not (Char.isAlpha (String.sub (line, 5)))) then
         		  evalreact (NONE, NONE)
+        		  handle e => BPLwebErrorHandler.explain e
+        		  handle _ => ()
+        	  else if String.substring (line, 0, 8) = "SIMPLIFY"
+        		  handle Subscript => false
+        		  andalso (size line < 7 orelse
+        		           not (Char.isAlpha (String.sub (line, 8)))) then
+        		  evalsimplify (NONE)
         		  handle e => BPLwebErrorHandler.explain e
         		  handle _ => ()
         	  else

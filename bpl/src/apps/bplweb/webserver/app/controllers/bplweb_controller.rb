@@ -118,4 +118,24 @@ print "Server call returned to reactrequest " + id.to_s + ".\n"
   end
   
 
-end
+  def simplifyrequest
+    # Make an object to represent the XML-RPC server.
+    server = XMLRPC::Client.new( "localhost", "/RPC2", $xmlrpcserverport)
+
+    params = params()
+
+    agent = params ['agent']
+
+    begin
+      # Call the remote server and get our result
+      @result = server.call("simplifyrequest", agent);
+    rescue StandardError => e
+      @result = {'type' => 'XMLRPCERROR',
+        'errtxt' => 'Exception in reactrequest from XMLRPC: ' +
+                     e.message + "\n" +
+                     e.backtrace.delete_if{|x| x.include? "/usr/lib/"}.join("\n")}
+    rescue Timeout::Error
+      @result = {'type' => 'TIMEOUT'}
+    end
+print "Server call returned to simplifyrequest " + id.to_s + ".\n"
+nd

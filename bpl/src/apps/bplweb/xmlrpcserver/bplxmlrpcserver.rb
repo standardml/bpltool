@@ -586,6 +586,100 @@ class Serverobj
     }
   end
 
+  def simplifyrequest (agent)
+    @mutex.synchronize {
+    print "simplifyrequest (" + agent + ")\n"
+    matcher = IO.popen("../backend/mlton", "w+")
+    matcher.fcntl(4, 0x40000) # Avoid buffering
+    matcher.sync = false # Avoid buffering!
+    line = matcher.gets
+    if line.strip.upcase != "READY"
+      print "Error: expected 'READY' from bplwebback, got '#{line}\n'"
+    end
+    
+    matcher.puts("SIMPLIFY\nAGENT\n#{agent}\nENDAGENT\nENDSIMPLIFY\n")
+    matcher.flush
+    line = matcher.gets
+    
+    print "reading from bplwebback: #{line}"
+    case line.strip.upcase
+      when "SIMPLIFIEDAGENT"
+        if matcher.eof?
+          print "result worker thread: unexpected EOF from bplwebback when reading SIMPLIFIEDAGENT\n"
+          matcher.close
+          break
+        end
+        simplifiedagent = ""
+        line = matcher.gets
+        while line.strip.upcase != "END"
+          simplifiedagent += line
+          if matcher.eof?
+            print "result worker thread: unexpected EOF from bplwebback when reading new agent\n"
+            break
+          end
+          line = matcher.gets
+        end
+        matcher.close
+        simplifiedagent = simplifiedagent.strip
+        print "returning simplified agent '#{simplifiedagent}'"
+        return {'type' => "OK", 'simplifiedagent' => simplifiedagent}
+      when "ERROR"
+        errtxt = ""
+        if matcher.eof?
+          print "unexpected EOF from bplwebback when reading ERROR\n"
+          matcher.close
+          break
+        end
+        line = matcher.gets
+        while line.strip.upcase != "END"
+          errtxt += line
+          if matcher.eof?
+            print "result worker thread: unexpected EOF from bplwebback\n"
+            break
+          end
+          line = matcher.gets
+        end
+        matcher.close
+        print "returning error #{errtxt}"
+        return {
+          'type' => "ERROR",
+          'subtype' => "MATCHER",
+          'errtxt' => errtxt
+        }
+      else
+        print "returning error #{line}"
+        return {
+          'type' => "ERROR",
+          'subtype' => "MATCHER",
+          'errtxt' => line
+        }
+    end
+    matcher.close
+  end  
+    
+
+
+    
+    
+    sessionid = aid['sessionid']
+      if sessionid < 0
+        return {'type' => 'ERROR', 'subtype' => 'MATCHSERVER',
+                'errtxt' => "Matching server: Wrong id: " + aid.to_s}
+      end
+      @matchingsflag.wait(@mutex) unless @matchings
+      until @matchings[sessionid]
+        @matchingssessionidflag.wait(@mutex)
+      end
+      matching = @matchings[sessionid]
+      if defined? matching && matching
+        return matching.reactrequest1(aid, ruleno, matchno, requestno)
+      else
+        return {'type' => "ERROR", 'subtype' => 'MATCHSERVER',
+                'errtxt' => 'Matching server: matching lost'}
+    end
+    }
+  end
+
 end
         
 
@@ -645,6 +739,15 @@ server.add_handler("reactrequest",
   where type is 'OK' or 'TimeOut'") {
   |id, rule, match, requestno|
   serverobj.reactrequest(id, rule, match, requestno)
+}
+
+server.add_handler("simplifyrequest", 
+                   ['string'],
+                   "simplifyrequest(agent)
+  returns a {type, {agent}}
+  where type is 'OK' or 'TimeOut'") {
+  |agent|
+  serverobj.reactrequest(agent)
 }
 
 server.serve
