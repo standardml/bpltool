@@ -138,4 +138,6 @@ print "Server call returned to reactrequest " + id.to_s + ".\n"
       @result = {'type' => 'TIMEOUT'}
     end
 print "Server call returned to simplifyrequest " + id.to_s + ".\n"
-nd
+  end
+
+end
