@@ -36,7 +36,7 @@
 	 Agent:</p>
       <div id="agent-body">
 	  <textarea id="agent" name="agent" class="editablecode"
-	    onkeypress="resizenode (this);" rows="1" cols="60"
+	    onkeypress="resizenode (this);" rows="1" cols="50"
 	    title="Enter a ground bigraph here">Get[y][[z]] o (&lt;[z]> z//[] * &lt;->) `|` Send[x,y] o &lt;-></textarea>
       </div>
     </div>
@@ -89,7 +89,9 @@
                 Redex:
               </p>
 	      <div id="rule[0]-redex-body" class="body">
-                <textarea name="redex[0]" class="editablecode" rows="1" cols="40" title="Enter a redex bigraph here">Get[y1][[z1]] `|` Send[x1,y1] o &lt;-></textarea>
+                <textarea name="redex[0]" class="editablecode" rows="1" cols="45"
+                  title="Enter a redex bigraph here"
+                  onkeypress="resizenode (this);">Get[y1][[z1]] `|` Send[x1,y1] o &lt;-></textarea>
               </div>
             </div>
 	    <div id="rule[0]-react">
@@ -98,7 +100,9 @@
                 Reactum:
               </p>
 	      <div id="rule[0]-react-body" class="body">
-                <textarea name="react[0]" class="editablecode" rows="1" cols="40" title="Enter a reactum bigraph here">(x1//[] * y1/z1 * idp(1)) o `[z1]`</textarea>
+                <textarea name="react[0]" class="editablecode" rows="1" cols="45"
+                  title="Enter a reactum bigraph here"
+                  onkeypress="resizenode (this);">(x1//[] * y1/z1 * idp(1)) o `[z1]`</textarea>
               </div>
             </div>
 	    <div id="rule[0]-inst">
@@ -107,7 +111,9 @@
                 Instantiation:
               </p>
 	      <div id="rule[0]-inst-body" class="body">
-                <textarea name="inst[0]" class="editablecode" rows="1" cols="40" title="Enter an instantiation here">[0 |-&gt; 0]</textarea>
+                <textarea name="inst[0]" class="editablecode" rows="1" cols="45"
+                  title="Enter an instantiation here"
+                  onkeypress="resizenode (this);">[0 |-&gt; 0]</textarea>
               </div>
             </div>
 	    <div id="rule[0]-matches">

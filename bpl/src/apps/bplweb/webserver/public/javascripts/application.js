@@ -124,7 +124,8 @@ function rulechild (title, id, term, insertbody) {
 "              </p>\n" +
 "	      <div id='" + id + "-body' class='body'>\n" +
 (insertbody ? 
-"                <textarea name='" + id + "' class='editablecode' " + titleattr + "rows='1' cols='60'></textarea>\n" : "") +
+"                <textarea name='" + id + "' class='editablecode' " + titleattr + "rows='1' cols='60'\n" +
+"                 onkeypress='resizenode (this);'></textarea>\n" : "") +
 "              </div>\n" +
 "            </div>\n");
 }
