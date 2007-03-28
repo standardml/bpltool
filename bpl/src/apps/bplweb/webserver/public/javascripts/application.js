@@ -52,13 +52,12 @@ function gettextsize (text) {
 
 
 function resizenode (textareanode) {
-  var nodetext = textareanode.textContent;
+  var nodetext = textareanode.value;
   var textsize = gettextsize (nodetext);
   var rows = min (max (textsize.rows, 1), 20);
   var cols = min (max (textsize.cols + 2, 40), 100);
-  alert (rows + "/" + cols);
-  textareanode.setAttribute ("rows", rows);
-  textareanode.setAttribute ("cols", cols);
+  textareanode.rows = rows;
+  textareanode.cols = cols;
 }
 
 
