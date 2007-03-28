@@ -246,7 +246,7 @@ remake-uploaded-webapp:
 restart-webapp:
 	ssh $(WEBAPP-SERVER) 'cd $(WEBAPP-BPLDIR)/src/apps/bplweb/xmlrpcserver && echo boom >> restart'
 
-.PHONY: test-webapp remake-uploaded-webapp restart-webapp test-webapp-smlnj
+.PHONY: test-webapp update-webapp remake-uploaded-webapp restart-webapp test-webapp-smlnj
 .PHONY: test-webapp-mosml test-webapp-mlton
 # Clean up
 clean:
