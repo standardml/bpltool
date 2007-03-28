@@ -81,8 +81,11 @@ CMFILES-miniml	= $(filter ./apps/miniml/%,$(CMFILES))
 
 include $(MOSMAKE)/Makefile.inc
 
-WEBAPP-BPLDIR	= /import/stud/share/projects/bpl/work/bpl
-WEBAPP-SERVER	= ssh.itu.dk
+#WEBAPP-BPLDIR	= /import/stud/share/projects/bpl/work/bpl
+#WEBAPP-SERVER	= ssh.itu.dk
+WEBAPP-BPLDIR	= /home/panic/Research/bplproject/impl/bpl
+WEBAPP-SERVER	= tiger.itu.dk
+
 
 # Files to clean up
 CLEANFILES :=
@@ -230,10 +233,16 @@ test-webapp-mlton: apps/bplweb/backend/mlton
 apps/bplweb/backend/mlton: mlton-prepare $(PARSINGFILES)
 	$(MLTON) apps/bplweb/backend/mlton.mlb
 
+# Update web application pages and XML RPC server, but not backend executable
+update-webapp:
+	ssh $(WEBAPP-SERVER) 'cd $(WEBAPP-BPLDIR)/src/apps/bplweb && svn update'
+
+# Rebuild backend executable
 remake-uploaded-webapp:
 	@echo Remaking webapp at server.  Remember to commit changes first.
 	ssh $(WEBAPP-SERVER) 'cd $(WEBAPP-BPLDIR)/src && svn update && ./config.status && nice make apps/bplweb/backend/mlton'
 
+# Restart XML RPC server
 restart-webapp:
 	ssh $(WEBAPP-SERVER) 'cd $(WEBAPP-BPLDIR)/src/apps/bplweb/xmlrpcserver && echo boom >> restart'
 
