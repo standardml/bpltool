@@ -457,7 +457,7 @@ function reactrequest (rule, match) {
 }
 
 
-function simplifyrequest (agent) {
+function simplifyrequest () {
   new Ajax.Request
     ('/bplweb/simplifyrequest',
      {'parameters': $('agent-rule-form').serialize (),

@@ -32,8 +32,17 @@
     <form id="agent-rule-form">
     <div id="agent-div">
       <p class="head">
-        <%= visibilitytoggler("agent") %>
-	 Agent:</p>
+        <table width="100%">
+          <tr>
+            <td align="left">
+              <%= visibilitytoggler("agent") %>
+	      Agent:</td>
+	    <td align="right">
+	      <input type="button" value="Simplify" onclick="simplifyrequest ();" />
+	    </td>
+	  </tr>
+	</table>
+      </p>
       <div id="agent-body">
 	  <textarea id="agent" name="agent" class="editablecode"
 	    onkeypress="resizenode (this);" rows="1" cols="55"
