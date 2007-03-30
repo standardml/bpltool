@@ -479,3 +479,10 @@ function simplifyrequest () {
         },
      });
 }
+
+
+function openhelpwindow (url, title, width, height) {
+  window.open
+    (url, 'Help: ' + title,
+     'menubar=no,toolbar=no,location=no,directories=no,scrollbars=yes,resizeable=yes,width=' + width + ',height=' + height);
+}

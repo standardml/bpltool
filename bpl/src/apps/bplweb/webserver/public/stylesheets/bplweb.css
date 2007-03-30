@@ -57,3 +57,18 @@
       padding-bottom: 0px;
       font-size: small;
     }
+    .helpicon {
+      border-width: 0;
+      vertical-align: middle;
+    }
+    p.head a.helpicon {
+      border: 0;
+      background: #ffffff;
+    }
+    table.help { border-spacing: 0; }
+    tr.ion + tr.wiring td,
+    tr.wiring + tr.concretion td,
+    tr.concretion + tr.merge td,
+    tr.merge + tr.permutation td,
+    tr.permutation + tr.operation td,
+    tr.operation + tr.precedences td { border-top: thin dotted blue; }

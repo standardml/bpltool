@@ -1,0 +1,127 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "xhtml11.dtd">
+<!--
+ Copyright (c) 2007  The BPL Group at the IT University of Copenhagen
+
+ This file is part of BPL.
+
+ BPL is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or (at
+ your option) any later version.
+
+ BPL is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with BPL; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+ USA
+-->
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+  <head>
+    <title>Help: Bigraph syntax</title>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bplweb.css"></style>
+  </head>
+  <body>
+    <table class="help">
+      <tr class="ion">
+        <td><code>K[y,...]</code></td>
+	<td>Ion with control of global arity</td>
+      </tr>
+      <tr class="ion">
+        <td><code>L[y,...][[x,...],...]</code></td>
+	<td>Ion with control of global/local arity</td>
+      </tr>
+      <tr class="wiring">
+        <td><code>y/x</code></td>
+        <td>Renaming link</td>
+      </tr>
+      <tr class="wiring">
+        <td><code>y//[x,...]</code></td>
+        <td>Substitution link</td>
+      </tr>
+      <tr class="wiring">
+        <td><code>y//[]</code></td>
+        <td>Name introduction</td>
+      </tr>
+      <tr class="wiring">
+        <td><code>-/x</code></td>
+        <td>Closure edge</td>
+      </tr>
+      <tr class="wiring">
+        <td><code>-//[x,...]</code></td>
+        <td>Multiple closure edges</td>
+      </tr>
+      <tr class="wiring">
+        <td><code>idw[x,...]</code></td>
+        <td>Identity wiring</td>
+      </tr>
+      <tr class="concretion">
+        <td><code>`[x,...]`</code></td>
+        <td>Concretion of names <code>x</code>,...</td>
+      </tr>
+      <tr class="merge">
+        <td><code>merge(</code><i>n</i><code>)</code></td>
+        <td>Merge of inner width <i>n</i></td>
+      </tr>
+      <tr class="merge">
+        <td><code>&lt;-&gt;</code></td>
+        <td>Barren root (= <code>merge(0)</code>)</td>
+      </tr>
+      <tr class="permutation">
+        <td><code>@[</code><i>i</i><sub>0</sub><code>, ..., </code><i>i</i><sub><i>m</i>-1</sub>]</code></td>
+        <td>Permutation mapping site <i>k</i> to root <i>i<sub>k</sub></i></td>
+      </tr>
+      <tr class="permutation">
+        <td><code>@@[..., </code><i>i<sub>k</sub></i><code>&amp;[x,...], ...]</code></td>
+        <td>Permutation with local names</td>
+      </tr>
+      <tr class="permutation">
+        <td><code>idp(</code><i>m</i><code>)</code></td>
+        <td>Identity permutation of width <i>m</i></td>
+      </tr>
+      <tr class="operation">
+        <td><code>&lt;[x,...]&gt; P</code></td>
+        <td>Abstract names <code>x</code>,... of a prime <code>P</code></td>
+      </tr>
+      <tr class="operation">
+        <td><code>A * B</code></td>
+        <td>Tensor product</td>
+      </tr>
+      <tr class="operation">
+        <td><code>A || B</code></td>
+        <td>Parallel product</td>
+      </tr>
+      <tr class="operation">
+        <td><code>A `|` B</code></td>
+        <td>Prime product</td>
+      </tr>
+      <tr class="operation">
+        <td><code>**[A,...]</code></td>
+        <td>Tensor procuct of <i>n</i> factors</td>
+      </tr>
+      <tr class="operation">
+        <td><code>|||[A,...]</code></td>
+        <td>Parallel product of <i>n</i> factors</td>
+      </tr>
+      <tr class="operation">
+        <td><code>`|``[A,...]</code></td>
+        <td>Prime product of <i>n</i> factors</td>
+      </tr>
+      <tr class="operation">
+        <td><code>A o B</code></td>
+        <td>Composition</td>
+      </tr>
+      <tr class="precedences">
+        <td colspan="2">
+          Precedence (strongest first):
+	  <code>o</code>, <code>*</code>, <code>||</code>,
+          <code>`|`</code>, <code>&lt;[x,...]&gt; P<code>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

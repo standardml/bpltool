@@ -36,7 +36,13 @@
           <tr>
             <td align="left">
               <%= visibilitytoggler("agent") %>
-	      Agent:</td>
+	      Agent: <a
+	      href="bigraphsyntax"
+              onclick="openhelpwindow ('bigraphsyntax', 'Bigraph syntax', 470, 480); return false;"><img
+	      class="helpicon"
+	      src="/images/Icon_help.gif" 
+              alt=" ? "
+              title="Help for bigraph syntax" /></a></td>
 	    <td align="right">
 	      <input type="button" value="Simplify" onclick="simplifyrequest ();" />
 	    </td>
@@ -58,10 +64,13 @@
 	      <%= visibilitytoggler("rules") %>
 	      Rules:</td>
 	    <td align="right">
-	      <input type="button" value="Add" onclick="addrule ();" />
+	      <input type="button" value="Add" onclick="addrule ();"
+                title="Add a rule" />
 	      <input type="button" class="matchbutton"
+                title="Find one match of any rule"
                 value="1 Match" onclick="matchrequest (-1, 1);" />
 	      <input type="button" class="matchbutton"
+                title="Find all matches of all rules"
                 value="All Matches" onclick="matchrequest (-1, -1);" />
 	      <input type="button" class="stopbutton"
                 value="Stop" disabled="disabled"
@@ -80,10 +89,13 @@
 	          Rule <span class='ruleno'>0</span>:</td>
 		<td align="right">
 		  <input type="button" value="Delete"
+                     title="Delete Rule 0"
 		     onclick="deleterule (getruleno(this));"/>
 		  <input type="button" value="1 Match"
+                     title="Find one match of Rule 0"
 		     onclick="matchrequest (getruleno(this), 1);" />
 		  <input type="button" value="All Matches"
+                     title="Find all matches of Rule 0"
 		     onclick="matchrequest (getruleno(this), -1);" />
 		  <input type="button" value="Stop"
 		disabled="disabled" />
@@ -95,7 +107,14 @@
 	    <div id="rule[0]-redex">
 	      <p class="head">
 	        <%= visibilitytoggler("rule[0]-redex") %>
-                Redex:
+                Redex: <a
+	      href="bigraphsyntax"
+	      class="helpicon"
+              onclick="openhelpwindow ('bigraphsyntax', 'Bigraph syntax', 470, 480); return false;"><img
+	      class="helpicon"
+	      src="/images/Icon_help.gif" 
+              alt=" ? "
+              title="Help for bigraph syntax" /></a>
               </p>
 	      <div id="rule[0]-redex-body" class="body">
                 <textarea name="redex[0]" class="editablecode" rows="1" cols="45"
@@ -106,7 +125,14 @@
 	    <div id="rule[0]-react">
 	      <p class="head">
        	        <%= visibilitytoggler("rule[0]-react") %>
-                Reactum:
+                Reactum: <a
+	      href="bigraphsyntax"
+	      class="helpicon"
+              onclick="openhelpwindow ('bigraphsyntax', 'Bigraph syntax', 470, 480); return false;"><img
+	      class="helpicon"
+	      src="/images/Icon_help.gif" 
+              alt=" ? "
+              title="Help for bigraph syntax" /></a>
               </p>
 	      <div id="rule[0]-react-body" class="body">
                 <textarea name="react[0]" class="editablecode" rows="1" cols="45"
@@ -117,7 +143,14 @@
 	    <div id="rule[0]-inst">
 	      <p class="head">
        	        <%= visibilitytoggler("rule[0]-inst") %>
-                Instantiation:
+                Instantiation: <a
+	      href="instantiationsyntax"
+	      class="helpicon"
+              onclick="openhelpwindow ('instantiationsyntax', 'Instantiation syntax', 875, 100); return false;"><img
+	      class="helpicon"
+	      src="/images/Icon_help.gif" 
+              alt=" ? "
+              title="Help for instantiation syntax" /></a>
               </p>
 	      <div id="rule[0]-inst-body" class="body">
                 <textarea name="inst[0]" class="editablecode" rows="1" cols="45"

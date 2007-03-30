@@ -6,6 +6,12 @@ class BplwebController < ApplicationController
   def index
   end
 
+  def bigraphsyntax
+  end
+
+  def instantiationsyntax
+  end
+
   def matchrequest
     # Make an object to represent the XML-RPC server.
     server = XMLRPC::Client.new( "localhost", "/RPC2", $xmlrpcserverport)
