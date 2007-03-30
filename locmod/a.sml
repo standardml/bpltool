@@ -13,10 +13,8 @@ datatype res = Res of lid
 datatype whereis = WhereIs of dev * (lid -> unit)
 datatype enql = enqL of whereis
 
-fun exchange (r,s) = (* just for typechecking -- remove later *)
-    let val tmp = !r
-    in r:=(!s) ; s:=tmp
-    end
+fun exchange r =
+	fn s => let val tmp = !r in r:=(!s) ; s:=tmp end
 
 fun new () = ref false
 
@@ -24,13 +22,13 @@ val lock = new ()
 
 fun spinlock l =
     let val t = ref true
-        fun loop () = ( exchange(t,l); if !t then loop() else () )
+        fun loop () = ( exchange t l ; if !t then loop() else () )
     in loop ()
     end
 
 fun spinunlock l = 
     let val t = ref false
-    in exchange(t,l)
+    in exchange t l
     end
 
 fun wait i = if i<=0 then () else wait(i-1)
