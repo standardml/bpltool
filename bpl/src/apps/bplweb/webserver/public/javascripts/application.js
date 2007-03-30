@@ -113,14 +113,14 @@ function togglevisibility (id) {
 }
 
 
-function rulechild (title, id, term, insertbody) {
+function rulechild (title, helplink, id, term, insertbody) {
   var titleattr = "";
   if (term) titleattr = "title='Enter " + term + " here' ";
   return ("	    <div id='" + id + "'>\n" +
 "	      <p class='head'>\n" +
 "	        <span class='toggler' target='" + id + "'>" +
                   visibilitytoggler (id) + "</span>\n" +
-"                " + title + ":\n" +
+"                " + title + ": \n" + helplink +
 "              </p>\n" +
 "	      <div id='" + id + "-body' class='body'>\n" +
 (insertbody ? 
@@ -137,6 +137,23 @@ function getruleno (inputnode) {
   return rulenostr [1].valueOf ();
 }
 
+var bigraphhelp = "<a\n" +
+"	      href='bigraphsyntax'\n" +
+"	      class='helpicon'\n" +
+"              onclick='openhelpwindow (\"bigraphsyntax\", \"Bigraph syntax\", 470, 480); return false;'><img\n" +
+"	      class='helpicon'\n" +
+"	      src='/images/Icon_help.gif'\n" + 
+"              alt=' ? '\n" +
+"              title='Help for bigraph syntax' /></a>";
+
+var instantiationhelp = "<a\n" +
+"	      href='instantiationsyntax'\n" +
+"	      class='helpicon'\n" +
+"              onclick='openhelpwindow (\"instantiationsyntax\", \"Instantiation syntax\", 875, 100); return false;'><img\n" +
+"	      class='helpicon'\n" +
+"	      src='/images/Icon_help.gif'\n" + 
+"              alt=' ? '\n" +
+"              title='Help for instantiation syntax' /></a>";
 
 function addrule () {
   var rulesnode = $("rules-body");
@@ -153,10 +170,13 @@ function addrule () {
 "	          Rule <span class='ruleno'>" + nodeno + "</span>:</td>\n" +
 "		<td align='right'>\n" +
 "		  <input type='button' value='Delete'\n" +
+"                   title='Delete this rule'\n" +
 "                   onclick='deleterule (getruleno(this));' />\n" +
 "		  <input type='button' value='1 Match'\n" +
+"                   title='Find one match of this rule'\n" +
 "                   onclick='matchrequest (getruleno(this), 1);' />\n" +
 "		  <input type='button' value='All Matches'\n" +
+"                   title='Find all matches of this rule'\n" +
 "                   onclick='matchrequest (getruleno(this), -1);' />\n" +
 "		  <input type='button' value='Stop'\n" +
 "		disabled='disabled' />\n" +
@@ -165,10 +185,10 @@ function addrule () {
 "	    </table>\n" +
 "	  </p>\n" +
 "	  <div id='rule[" + nodeno + "]-body' class='body'>\n" +
-rulechild ('Redex', "redex[" + nodeno + "]", 'a redex bigraph', true) +
-rulechild ('React', "react[" + nodeno + "]", 'a reactum bigraph', true) +
-rulechild ('Instantiation', "inst[" + nodeno + "]", 'an instantiation', true) +
-rulechild ("<span id='rule[" + nodeno + "]-count" + nodeno +"'>0</span> Matches", "rule[" + nodeno + "]-matches", false, false) +
+rulechild ('Redex', bigraphhelp, "redex[" + nodeno + "]", 'a redex bigraph', true) +
+rulechild ('React', bigraphhelp, "react[" + nodeno + "]", 'a reactum bigraph', true) +
+rulechild ('Instantiation', instantiationhelp, "inst[" + nodeno + "]", 'an instantiation', true) +
+rulechild ("<span id='rule[" + nodeno + "]-count" + nodeno +"'>0</span> Matches", "", "rule[" + nodeno + "]-matches", false, false) +
 "         </div>";
 
   rulesnode.appendChild (rulenode);
@@ -433,12 +453,8 @@ function reactrequest (rule, match) {
             id = result.id;
             deletematches (-1);
             var agentnode = $('agent');
-            var nodetextsize = gettextsize (result.agent);
-            var rows = min (max (nodetextsize.rows, 1), 20);
-            var cols = min (max (nodetextsize.cols + 2, 40), 100);
             agentnode.value = result.agent;
-            agentnode.setAttribute ("cols", String (cols - 1));
-            agentnode.setAttribute ("rows", String (rows - 1));
+            resizenode (agentnode);
             break;
           case 'TIMEOUT':
             alert ("The react request timed out.  Please try again.");
@@ -484,5 +500,5 @@ function simplifyrequest () {
 function openhelpwindow (url, title, width, height) {
   window.open
     (url, 'Help: ' + title,
-     'menubar=no,toolbar=no,location=no,directories=no,scrollbars=yes,resizeable=yes,width=' + width + ',height=' + height);
+     'menubar=no,toolbar=no,location=no,directories=no,scrollbars=yes,resizeable=yes,dependent=yes,width=' + width + ',height=' + height);
 }
