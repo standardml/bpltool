@@ -28,40 +28,40 @@
   <body>
     <table class="help">
       <tr class="ion">
-        <td><code>K[y,...]</code></td>
+        <td><i>K</i><code>[</code><i>y</i><code>,...]</code></td>
 	<td>Ion with control of global arity</td>
       </tr>
       <tr class="ion">
-        <td><code>L[y,...][[x,...],...]</code></td>
+        <td><i>L</i><code>[</code><i>y</i><code>,...][[</code><i>x</i><code>,...],...]</code></td>
 	<td>Ion with control of global/local arity</td>
       </tr>
       <tr class="wiring">
-        <td><code>y/x</code></td>
+        <td><i>y</i><code>/</code><i>x</i></td>
         <td>Renaming link</td>
       </tr>
       <tr class="wiring">
-        <td><code>y//[x,...]</code></td>
+        <td><i>y</i><code>//[</code><i>x</i><code>,...]</code></td>
         <td>Substitution link</td>
       </tr>
       <tr class="wiring">
-        <td><code>y//[]</code></td>
+        <td><i>y</i><code>//[]</code></td>
         <td>Name introduction</td>
       </tr>
       <tr class="wiring">
-        <td><code>-/x</code></td>
+        <td><code>-/</code><i>x</i></td>
         <td>Closure edge</td>
       </tr>
       <tr class="wiring">
-        <td><code>-//[x,...]</code></td>
+        <td><code>-//[</code><i>x</i><code>,...]</code></td>
         <td>Multiple closure edges</td>
       </tr>
       <tr class="wiring">
-        <td><code>idw[x,...]</code></td>
+        <td><code>idw[</code><i>x</i><code>,...]</code></td>
         <td>Identity wiring</td>
       </tr>
       <tr class="concretion">
-        <td><code>`[x,...]`</code></td>
-        <td>Concretion of names <code>x</code>,...</td>
+        <td><code>`[</code><i>x</i><code>,...]`</code></td>
+        <td>Concretion of names <i>x</i>,...</td>
       </tr>
       <tr class="merge">
         <td><code>merge(</code><i>n</i><code>)</code></td>
@@ -76,7 +76,7 @@
         <td>Permutation mapping site <i>k</i> to root <i>i<sub>k</sub></i></td>
       </tr>
       <tr class="permutation">
-        <td><code>@@[..., </code><i>i<sub>k</sub></i><code>&amp;[x,...], ...]</code></td>
+        <td><code>@@[..., </code><i>i<sub>k</sub></i><code>&amp;[</code><i>x</i><code>,...], ...]</code></td>
         <td>Permutation with local names</td>
       </tr>
       <tr class="permutation">
@@ -84,42 +84,42 @@
         <td>Identity permutation of width <i>m</i></td>
       </tr>
       <tr class="operation">
-        <td><code>&lt;[x,...]&gt; P</code></td>
-        <td>Abstract names <code>x</code>,... of a prime <code>P</code></td>
+        <td><code>&lt;[</code><i>x</i><code>,...]&gt; </code><i>P</i></td>
+        <td>Abstract names <i>x</i>,... of a prime <i>P</i></td>
       </tr>
       <tr class="operation">
-        <td><code>A * B</code></td>
+        <td><i>A</i><code> * </code><i>B</i></td>
         <td>Tensor product</td>
       </tr>
       <tr class="operation">
-        <td><code>A || B</code></td>
+        <td><i>A</i><code> || </code><i>B</i></td>
         <td>Parallel product</td>
       </tr>
       <tr class="operation">
-        <td><code>A `|` B</code></td>
+        <td><i>A</i><code> `|` </code><i>B</i></td>
         <td>Prime product</td>
       </tr>
       <tr class="operation">
-        <td><code>**[A,...]</code></td>
+        <td><code>**[</code><i>A</i><code>,...]</code></td>
         <td>Tensor procuct of <i>n</i> factors</td>
       </tr>
       <tr class="operation">
-        <td><code>|||[A,...]</code></td>
+        <td><code>|||[</code><i>A</i><code>,...]</code></td>
         <td>Parallel product of <i>n</i> factors</td>
       </tr>
       <tr class="operation">
-        <td><code>`|``[A,...]</code></td>
+        <td><code>`|``[</code><i>A</i><code>,...]</code></td>
         <td>Prime product of <i>n</i> factors</td>
       </tr>
       <tr class="operation">
-        <td><code>A o B</code></td>
+        <td><i>A</i><code> o </code><i>B</i></td>
         <td>Composition</td>
       </tr>
       <tr class="precedences">
         <td colspan="2">
           Precedence (strongest first):
 	  <code>o</code>, <code>*</code>, <code>||</code>,
-          <code>`|`</code>, <code>&lt;[x,...]&gt; P<code>
+          <code>`|`</code>, <code>&lt;[</code><i>x</i><code>,...]&gt; </code><i>P</i>
         </td>
       </tr>
     </table>
