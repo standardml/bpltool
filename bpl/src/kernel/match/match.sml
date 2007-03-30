@@ -370,159 +370,652 @@ struct
       #1 (check_adjust e (NameMap.fromList [(x',x')]) x x')
 
 
-  (* Match a global discrete prime g to a context G using the PAX rule:
-   * 1) Deconstruct context G = "alpha" : (X + U) -> W.
-   * 2) Find X + Z = rg(g).
-   * 3) Compute X, Z and U from (X + U) and (X + Z).
-   * 4) Let ename' = ename, s_C' = {}, Y = {}.
-   * 5) For each x in W + Z,
-   *    5a) If x in W then x' = alpha^-1(x) else x' = x.
-   *    5b) If x' in X + Z then
-   *          If x in dom(s_C_e) then
-   *            check/adjust ename' so that ename' s_a_e(x') = s_C_e(x).
-   *          else
-   *            if x in dom(s_C_n) then x'' = s_C_n(x) else x'' = x.
-   *            if x in dom(s_a_e) then
-   *              check/adjust ename' and s_C' so that
-   *                ename' s_a_e(x') = s_C'(x'')
-   *            else
-   *              check/adjust s_C' so that s_a_n(x') = s_C'(x'').
-   *        else (* x' in U (implying x in W) *)
-   *          if x in dom(s_C_e) then
-   *            let y = s_C_e(x)
-   *            if y not in rg(ename') then add y to Y.
-   *          else
-   *            if x in dom(s_C_n) then x'' = s_C_n(x) else x'' = x.
-   *            let y = s_C'(x''),
-   *              if necessary by letting y be fresh and adjusting s_C'.
-   *            if y not in (rg(ename') + rg(s_a_n)) then add y to Y.
-   * 6) Return ename', s_C', Y, qs = [(id_Z * (U + X)(U/ * "X"))(X)g].
+  (* Apply a partial renaming ename : X -> to a substitution
+   * s_a_e : -> X \uplus Y
+   * I.e. compute  s_a_e' = (ename * id_Y) s_a_e *)
+  fun app_ename ename s_a_e =
+      let
+        fun link_rename l =
+          case Link.unmk l of
+            {outer = SOME y, inner} =>
+              (case NameMap.lookup ename y of
+                 SOME y' => Link.make {outer = SOME y', inner = inner}
+               | NONE => l)
+          | _ => l
+      in
+        Wiring.make (LinkSet.map link_rename (Wiring.unmk s_a_e))
+      end
+
+  (* lazily generate all permutations of a list
+   * FIXME inefficient! *)
+  fun all_perms []   = lzCons (fn () => ([], lzNil))
+    | all_perms list =
+      let
+        (* We consecutively place each element of the list in
+         * front and permute the remaining elements recursively.*)
+        fun next_permutation _ []          = lzNil
+          | next_permutation pre (e::post) = lzmake (fn () =>
+            lzunmk
+              (lzappend
+                 (lzmap
+                    (fn l => e::l)
+                    (all_perms (foldl (op ::) post pre)))
+                 (next_permutation (e::pre) post)))
+      in
+        next_permutation [] list
+      end
+
+  (* Utility function for converting a partition generator to a lazy list
+   *)
+  fun partgen2lzlist partgen =
+      (lzCons (fn () => (Partition.next partgen, partgen2lzlist partgen)))
+      handle Partition.NoPartitions => lzNil
+  (* Utility function for converting an ordered partition generator to a lazy list
+   *)
+  fun opartgen2lzlist opartgen =
+      (lzCons (fn () => (OrderedPartition.next opartgen, opartgen2lzlist opartgen)))
+      handle OrderedPartition.NoPartitions => lzNil
+  (* same as above, except each part of a partition has at least one element*)
+  fun opartgen2lzlist' opartgen =
+      (lzCons (fn () => (OrderedPartition.next' opartgen, opartgen2lzlist' opartgen)))
+      handle OrderedPartition.NoPartitions => lzNil
+  (* Utility function for converting a nameset subset generator to a lazy list
+   *)
+  fun nssubsetgen2lzlist subsetgen =
+      (lzCons (fn () => (NameSetSubset.next subsetgen, nssubsetgen2lzlist subsetgen)))
+      handle NameSetSubset.NoSubsets => lzNil
+  (* same as above, except the list only has elements of at least size m *)
+  fun nssubsetgen2lzlist' subsetgen m =
+      (lzCons (fn () => (NameSetSubset.next' subsetgen m, nssubsetgen2lzlist' subsetgen m)))
+      handle NameSetSubset.NoSubsets => lzNil
+
+  (* utility functions to make substitution links *)
+  fun mk_slink (y, X) = Link.make {outer = SOME y, inner = X}
+  fun mk_slink' (y, xs) = Link.make {outer = SOME y, inner = NameSet.fromList xs}
+
+  (* Find all substitutions tau that satisfy the equation
+   *
+   *   sigma tau = upsilon
+   * 
+   * given subsitutions sigma and upsilon having the same outer names.
+   * 
+   * The algorithm is as follows:
+   * 
+   * 1) Lay out the links of sigma and upsilon as lists sorted by their
+   *    outer names:
+   *      sigma   = [y_1/X_1, ..., y_m/X_m]
+   *      upsilon = [z_1/V_1, ..., z_n/V_n]
+   * 2) If the lists are of different lengths return NoMatch.
+   * 3) Lad tau_0 = id_Ø
+   * 4) For each pair of links (y_i/X_i, z_i/V_i)
+   *      if y_i <> z_i or |X_i| = 0 <> |V_i| then
+   *        return NoMatch
+   *      else
+   *        if |X_i| = 0 then
+   *          tau_i = tau_i-1
+   *        else
+   *          assign an order to the elements of X_i = [x_i1, ..., x_ik]
+   *          for each ordered partition [V_i1, ..., V_ik] of V_i into k groups
+   *            tau_i = tau_i-1 * \bigox_{j \in {1,...,k}} x_ij/Vij
+   *          is a solution
+   * 5) return {tau = tau_m}
+   * 
+   * FIXME find a better name
+   *)
+  fun find_tau {sigma, upsilon} = lzmake (fn () =>
+      let
+        fun link_compare ({outer = SOME x1, inner = _},
+                          {outer = SOME x2, inner = _}) =
+            Name.compare (x1, x2)
+          | link_compare _ = raise ThisCannotHappen
+                             (* all links of substitutions have outer names *)
+        val yXs = ListSort.sort
+                    link_compare
+                    (map Link.unmk (LinkSet.list (Wiring.unmk sigma)))
+        val zVs = ListSort.sort
+                    link_compare
+                    (map Link.unmk (LinkSet.list (Wiring.unmk upsilon)))
+
+        fun process_link_pair [] [] tau = lzCons (fn () => ({tau = tau}, lzNil))
+          | process_link_pair ({outer = SOME y_i, inner = X_i}::yXs)
+                              ({outer = SOME z_i, inner = V_i}::zVs)
+                              tau =
+            if not (Name.== (y_i, z_i)) orelse
+               (NameSet.size X_i = 0 andalso NameSet.size V_i <> 0) then
+              raise NoMatch
+            else
+              let
+                val x_ijs = NameSet.list X_i
+                val k     = NameSet.size X_i
+                fun process_V_i_partition V_ijs =
+                    let
+                      val xVi_links
+                        = ListPair.map
+                            (fn (x_ij, V_ij) =>
+                                Link.make {outer = SOME x_ij, inner = V_ij})
+                            (x_ijs, V_ijs)
+                    in
+                      process_link_pair
+                        yXs zVs
+                        (Wiring.* (tau, Wiring.make' xVi_links))
+                    end
+              in
+                lzconcat
+                  (lzmap
+                     process_V_i_partition
+                     (lzmap
+                        (map NameSet.fromList)
+                        (opartgen2lzlist
+                           (OrderedPartition.make (NameSet.list V_i) k))))
+              end
+          | process_link_pair _ _ _ = raise NoMatch
+      in
+        lzunmk (process_link_pair yXs zVs Wiring.id_0)
+      end
+      handle NoMatch => Nil)
+
+  (* Find all substitutions tau, some nameset Y, and all renamings ename that
+   * satisfy the equation
+   *
+   *    sigma tau = ename (upsilon * Y)
+   * 
+   * given subsitutions sigma and upsilon.
+   * 
+   * The algorithm is as follows (could be more sophisticated...):
+   *
+   * 1) Lay out the links of sigma and upsilon as lists:
+   *      sigma   = [s_1/X_1, ..., s_m/X_m]
+   *      upsilon = [z_1/V_1, ..., z_n/V_n]
+   * 2) If n > m then return NoMatch
+   * 3) Let Y be a set of fresh names with |Y| = m - n
+   *    and let  Y \cup {z_i} = [w_1, ..., w_m]
+   * 4) For all permutaions pi of m elements
+   *      let ename = {s_i/w_pi(i)}
+   *      the solutions given by
+   *        find_tau {sigma = sigma, upsilon = ename (upsilon * Y)}
+   *      are also solutions to the above equation
+   * 
+   * FIXME might find several equivalent solutions as the permutation of two
+   *       ws is insignificant if they are in Y.
+   * FIXME find a better name
+   *)
+  fun find_tau' {sigma, upsilon} = lzmake (fn () =>
+      let
+        val sigma'   = Wiring.unmk sigma
+        val upsilon' = Wiring.unmk upsilon
+        val m = LinkSet.size sigma'
+        val n = LinkSet.size upsilon'
+      in
+        if n > m then
+          Nil
+        else
+          let
+            val sXs = LinkSet.list sigma'
+            val zVs = LinkSet.list upsilon'
+            val ys = List.tabulate (m - n, fn _ => Name.fresh NONE)
+            val Y = NameSet.fromList ys
+            val wir_Y = Wiring.introduce Y
+            val ws = foldr (fn (l, ws) => (valOf (#outer (Link.unmk l)))::ws)
+                           ys zVs
+            val ss = foldr (fn (l, ss) => (valOf (#outer (Link.unmk l)))::ss)
+                           [] sXs
+            fun process_ws_permutation ws' =
+                let
+                  val ename = NameMap.fromList (ListPair.zip (ss, ws'))
+                  fun add_ename_Y {tau} = {tau = tau, ename = ename, Y = Y}
+                in
+                  lzmap
+                    add_ename_Y
+                    (find_tau {sigma = sigma,
+                               upsilon = app_ename
+                                           ename
+                                           (Wiring.* (upsilon, wir_Y))})
+                end
+          in
+            lzunmk (lzconcat (lzmap process_ws_permutation (all_perms ws)))
+          end
+      end)
+
+  (* find all substitutions rho and tau and all namesets Z
+   * satisfying the equation
+   * 
+   *   rho (id_Z * sigma tau) = upsilon
+   *
+   * given substitutions sigma and upsilon.
+   * 
+   * The algorithm is as follows:
+   *
+   * 1) deconstruct upsilon
+   *      upsilon = [v_1/W_1, ..., v_m/W_m]
+   * 2) let n be the number of links in sigma. 
+   * 3) if m = 0 and n > 0 then return NoMatch
+   * 4) let  rho_0 = tau_0 = id_Ø
+   *         Z_0 = Ø
+   * 5) for each ordered partition  \bigox_{i \in {1,...,m}} s_i  of sigma into m substitutions
+   *      for each link v_i/W_i
+   *        let  s_i : Q_i -> U_i
+   *             Q_i = [q_i1, ..., q_ik]
+   *        if k = 0 then
+   *          let S_i = W_i and X_i = Ø
+   *        else
+   *          find all ordered partitions of W_i = S_i \cup X_i
+   *        for each partition W_i = S_i \cup X_i
+   *          Z_i   = Z_i-1 \cup S_i
+   *          rho_i = rho_i-1 * v_i/(U_i \cup S_i)
+   *          for each ordered partition \bigcup_{j \in {1,...,k}}X_ij of X_i in k groups
+   *            tau_i = tau_i-1 * \bigox q_ij/X_ij
+   * 6) return {rho = rho_m, tau = tau_m, Z = Z_m}
+   * 
+   * FIXME find a better name
+   *)
+  fun find_rho_tau_Z {sigma, upsilon} = lzmake (fn () =>
+      let
+        val sigma'   = Wiring.unmk sigma
+        val upsilon' = Wiring.unmk upsilon
+        val m = LinkSet.size upsilon'
+        val n = LinkSet.size sigma'
+      in
+        if m = 0 andalso n > 0 then
+          Nil
+        else
+          let 
+            val vWs = LinkSet.list upsilon'
+            val sigma_link_list = LinkSet.list sigma'
+
+            fun process_link rho tau Z [] [] =
+                lzCons (fn () => ({rho = rho, tau = tau, Z = Z}, lzNil))
+              | process_link rho tau Z (vW_i::vWs) (s_i::s_is) = lzmake (fn () =>
+                let
+                  val (v_i, W_i) = case Link.unmk vW_i of
+                                     {outer = SOME v_i, inner = W_i} => (v_i, W_i)
+                                   | _ => raise ThisCannotHappen (*upsilon is not a substitution*)
+                  val Q_i  = Wiring.innernames s_i
+                  val q_is = NameSet.list Q_i
+                  val k    = NameSet.size Q_i
+                  val U_i  = Wiring.outernames s_i
+                  (* construct suitable lazy lists of partitions
+                   * of W_i depending on k *)
+                  val W_i_partitions
+                    = if k = 0 then
+                        lzCons (fn () =>
+                                   ({S_i = W_i, X_i = NameSet.empty}, lzNil))
+                      else
+                        lzmap
+                          (fn [s_is, x_is] =>
+                              {S_i = NameSet.fromList s_is,
+                               X_i = NameSet.fromList x_is}
+                            | _ => raise ThisCannotHappen)
+                          (opartgen2lzlist
+                             (OrderedPartition.make (NameSet.list W_i) 2))
+
+                  (* find solutions for each ordered partition of X_i *)
+                  fun process_X_i_partition rho_i Z_i X_ijs =
+                      let
+                        val tau_i
+                          = Wiring.* (tau,
+                                      Wiring.make'
+                                        (ListPair.map
+                                           (fn (q_ij, X_ij) =>
+                                               Link.make {outer = SOME q_ij,
+                                                          inner = X_ij})
+                                           (q_is, X_ijs)))
+                      in
+                        process_link rho_i tau_i Z_i vWs s_is
+                      end
+
+                  (* find solutions for each partition of W_i *)
+                  fun process_W_i_partition {S_i, X_i} =
+                      let
+                        val rho_i
+                          = Wiring.* (rho,
+                                      Wiring.make'
+                                        [Link.make
+                                           {outer = SOME v_i,
+                                            inner = NameSet.union U_i S_i}])
+                        val Z_i = NameSet.union Z S_i
+                      in
+                        lzconcat 
+                          (lzmap
+                             (process_X_i_partition rho_i Z_i)
+                             (lzmap
+                                (map NameSet.fromList)
+                                (opartgen2lzlist
+                                   (OrderedPartition.make
+                                      (NameSet.list X_i)
+                                      k))))
+                      end
+                in
+                  lzunmk (lzconcat (lzmap process_W_i_partition W_i_partitions))
+                end)
+              | process_link _ _ _ _ _ = raise NoMatch
+          in
+            lzunmk
+              (lzconcat
+                 (lzmap
+                    (process_link Wiring.id_0 Wiring.id_0 NameSet.empty vWs)
+                    (lzmap
+                       (map Wiring.make')
+                       (opartgen2lzlist
+                          (OrderedPartition.make sigma_link_list m)))))
+          end
+      end
+      handle NoMatch => Nil)
+
+  (* find all substitutions rho and tau and all namesets Z and some namesets Y
+   * with  sigma : -> Q  and  |Y| <= |Q|  satisfying the equation
+   * 
+   *   rho (id_Z * sigma tau) = upsilon * Y
+   *
+   * given substitutions sigma and upsilon.
+   * 
+   * The algorithm is as follows:
+   *
+   * 1) deconstruct upsilon
+   *      upsilon = [v_1/W_1, ..., v_m/W_m]
+   * 2) let n be the number of links in sigma. 
+   * 3) let  rho_0 = tau_0 = id_Ø
+   *         Z_0 = Ø
+   * 4) for each ordered partition  \bigox_{i \in {1,...,m,m+1}} s_i  of sigma into m + 1 substitutions
+   *      for each link v_i/W_i
+   *        let  s_i : Q_i -> U_i
+   *             Q_i = [q_i1, ..., q_ik]
+   *        if k = 0 then
+   *          let S_i = W_i and X_i = Ø
+   *        else
+   *          find all partitions of W_i = S_i \cup X_i
+   *        for each partition W_i = S_i \cup X_i
+   *          for each ordered partition \bigcup_{j \in {1,...,k}}X_ij of X_i in k groups
+   *            rho_i = rho_i-1 * v_i/(U_i \cup S_i)
+   *            tau_i = tau_i-1 * \bigox q_ij/X_ij
+   *            Z_i   = Z_i-1 \cup S_i
+   *      for each partition  \bigox_{j \in {m+1,...,m+t}} sm_j  of s_m+1  (into any number of partitions)
+   *        let  Y_m = Ø
+   *        for each sm_j : Q_j -> U_j
+   *          Y_j   = Y_j-1 \cup {y_j}     where y_j is fresh
+   *          rho_j = rho_j-1 * y_j/U_j
+   *          tau_j = tau_j-1 * Q_j
+   * 5) return {rho = rho_m+t, tau = tau_m+t, Z = Z_m, Y = Y_m+t}
+   * 
+   * FIXME find a better name
+   *)
+  fun find_rho_tau_Z' {sigma, upsilon} = lzmake (fn () =>
+      let
+        val sigma'   = Wiring.unmk sigma
+        val upsilon' = Wiring.unmk upsilon
+        val m = LinkSet.size upsilon'
+        val n = LinkSet.size sigma'
+      in
+        if m = 0 andalso n > 0 then
+          Nil
+        else
+          let 
+            val vWs = LinkSet.list upsilon'
+            val sigma_link_list = LinkSet.list sigma'
+
+            fun process_s_m_plus_1_partition rho tau Z sm_js =
+                let
+                  fun introduce_name (sm_j, r as {rho, tau, Z, Y}) =
+                      if Wiring.is_id0 sm_j then
+                        r
+                      else
+                        let
+                          val y_j = Name.fresh NONE
+                          val Q_j = Wiring.innernames sm_j
+                          val U_j = Wiring.outernames sm_j
+                        in
+                          {Y = NameSet.insert y_j Y,
+                           rho = Wiring.* (rho, Wiring.make' [mk_slink (y_j, U_j)]),
+                           tau = Wiring.* (tau, Wiring.introduce Q_j),
+                           Z = Z}
+                        end
+                in
+                  foldr
+                    introduce_name
+                    {rho = rho, tau = tau, Z = Z, Y = NameSet.empty}
+                    sm_js
+                end
+
+            fun process_link rho tau Z [] [s_m_plus_1] =
+                lzmap
+                  (process_s_m_plus_1_partition rho tau Z)
+                  (lzmap
+                     (map Wiring.make')
+                     (partgen2lzlist
+                        (Partition.make
+                           (LinkSet.list (Wiring.unmk s_m_plus_1))
+                           (* the number of outer names is the
+                            * maximum number of non-empty partitions *)
+                           (NameSet.size (Wiring.outernames s_m_plus_1)))))
+              | process_link rho tau Z (vW_i::vWs) (s_i::s_is) = lzmake (fn () =>
+                let
+                  val (v_i, W_i) = case Link.unmk vW_i of
+                                     {outer = SOME v_i, inner = W_i} => (v_i, W_i)
+                                   | _ => raise ThisCannotHappen (*upsilon is not a substitution*)
+                  val Q_i  = Wiring.innernames s_i
+                  val q_is = NameSet.list Q_i
+                  val k    = NameSet.size Q_i
+                  val U_i  = Wiring.outernames s_i
+                  (* construct suitable lazy lists of partitions
+                   * of W_i depending on k *)
+                  val W_i_partitions
+                    = if k = 0 then
+                        lzCons (fn () =>
+                                   ({S_i = W_i, X_i = NameSet.empty}, lzNil))
+                      else
+                        lzmap
+                          (fn [s_is, x_is] =>
+                              {S_i = NameSet.fromList s_is,
+                               X_i = NameSet.fromList x_is}
+                            | _ => raise ThisCannotHappen)
+                          (opartgen2lzlist
+                             (OrderedPartition.make (NameSet.list W_i) 2))
+
+                  (* find solutions for each ordered partition of X_i *)
+                  fun process_X_i_partition rho_i Z_i X_ijs =
+                      let
+                        val tau_i
+                          = Wiring.* (tau,
+                                      Wiring.make'
+                                        (ListPair.map
+                                           (fn (q_ij, X_ij) =>
+                                               Link.make {outer = SOME q_ij,
+                                                          inner = X_ij})
+                                           (q_is, X_ijs)))
+                      in
+                        process_link rho_i tau_i Z_i vWs s_is
+                      end
+
+                  (* find solutions for each partition of W_i *)
+                  fun process_W_i_partition {S_i, X_i} =
+                      let
+                        val rho_i
+                          = Wiring.* (rho,
+                                      Wiring.make'
+                                        [Link.make
+                                           {outer = SOME v_i,
+                                            inner = NameSet.union U_i S_i}])
+                        val Z_i = NameSet.union Z S_i
+                      in
+                        lzconcat 
+                          (lzmap
+                             (process_X_i_partition rho_i Z_i)
+                             (lzmap
+                                (map NameSet.fromList)
+                                (opartgen2lzlist
+                                   (OrderedPartition.make
+                                      (NameSet.list X_i)
+                                      k))))
+                      end
+                in
+                  lzunmk (lzconcat (lzmap process_W_i_partition W_i_partitions))
+                end)
+              | process_link _ _ _ _ _ = raise NoMatch
+          in
+            lzunmk
+              (lzconcat
+                 (lzmap
+                    (process_link Wiring.id_0 Wiring.id_0 NameSet.empty vWs)
+                    (lzmap
+                       (map Wiring.make')
+                       (opartgen2lzlist
+                          (OrderedPartition.make sigma_link_list (m + 1))))))
+          end
+      end
+      handle NoMatch => Nil)
+
+  (* Match a global discrete prime g to a context G using the PAX rule.
+   * The main task of this rule is to split sigma_a = sigma (id_Z * alpha tau)
+   * such that the it matches the wiring of s_C.
+   * In terms of the names used in the code, we are looking for solutions to
+   * the equation
+   * 
+   *    Y * (ename * ename'') s_a_e * s_a_n
+   *  = (s_C' (id_Z * s_C_n) * s_C_e) (id_Z * alpha tau)
+   *
+   * where Y, ename', s_C', id_Z, and tau are unknown.
+   *
+   * The approach taken is to split the problem into four smaller problems
+   * 
+   * 1)  s_Ce  tau_e                    =  ename s_ae                
+   * 2)  s_Ce' tau'_e                   =  ename'_e (Q_e * s_ae'_e)  
+   * 3)  s_C'_1 (id_Z * s_Cn tau_n)     =  s_a_n                     
+   * 4)  s_C'_2 (id_Z' * s_Cn' tau'_n)  =  Q_n * s_ae'_n
+   * 
+   * where
+   * 
+   *   ename''  =  ename'_n * ename'_e
+   *   s_a_e    =  s_ae * Q''_n * s_a'n * s_a'e * Q''_e
+   * 
+   *   ename    :  Q_e  -> Y_e
+   *   ename'_n :  Q''_n \uplus Q'_n  ->  Y'_n
+   *   ename'_e :  Q''_e \uplus Q'_e  ->  Y'_e
+   *   s_ae     :  U_e  -> Q_e
+   *   s_a'n    :  U'_n -> Q'_n
+   *   s_a'e    :  U'_e -> Q'_e
+   *   s_a_n    :  U_n  -> Y_n
+   * 
+   *   tau      =  tau_n * tau'_n * tau_e * tau'_e
+   *   alpha    =  alpha_n * alpha'_n * alpha_e * alpha'_e
+   *   s_C_n    =  s_Cn * s_Cn'
+   *   s_C'     =  s_C'1 * s_C'2
+   *   s_C_e    =  s_Ce * s_Ce'
+   * 
+   * FIXME describe algoritm
    *)
   fun matchPAX' {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, g, G} =
       lzmake (fn () => ((*print "PAX' ";*)
       case #Ss (unmkG G) of
         [S] =>
       (case unmkS S of
-        BgBDNF.SCon (i, a) =>
+        BgBDNF.SCon (i, alpha) =>
         (let
-          val XU = Wiring.innernames a
-          val XZ = Interface.glob (outerface g)
-          val X  = NameSet.intersect XU XZ
-          val Z  = NameSet.difference XZ X
-          val U  = NameSet.difference XU X
-          val W  = Wiring.outernames a
-         
-          fun match_name isinW x (ename', rg_ename', s_C', rg_s_C', Y) =
+          val Y_n  = Wiring.outernames s_a_n
+          val Y_e  = NameSet.fromList (NameMap.range ename)
+
+          (* Split s_a_e into the part which has already been matched s_ae
+           * (specified by ename) and the rest s_a_e' *)
+          val {inCod = s_ae, notInCod = s_a_e'}
+            = Wiring.split_outer s_a_e (NameSet.fromList (NameMap.dom ename))
+
+          (* Split alpha into the part related to s_C_n and the part
+           * related to s_C_e
+           * and compute the compositions s_C_n alpha_n and s_C_e alpha_e. *)
+          val {inCod = alpha_n, notInCod = alpha_e}
+            = Wiring.split_outer alpha (Wiring.innernames s_C_n)
+          val s_C_n_alpha = Wiring.* (s_C_n, alpha_n)
+          val s_C_e_alpha = Wiring.* (s_C_e, alpha_e)
+
+          val {inCod = s_Ce, notInCod = s_Ce'}
+            = Wiring.split_outer s_C_e_alpha Y_e
+            
+          (* Generate splits of s_a_e' and s_C_n_alpha
+           * 
+           *   s_a_e'       =  s_ae'_n * s_ae'_e and
+           *   s_C_n_alpha  =  s_Cn * s_Cn'
+           * 
+           * using ordered partitions of their constituents.
+           * Then try to solve the subproblems
+           *
+           * 1)  s_Ce  tau_e                    =  ename s_ae                and
+           * 2)  s_Ce' tau'_e                   =  ename'_e (Q_e * s_ae'_e)  and
+           * 3)  s_C'_1 (id_Z * s_Cn tau_n)     =  s_a_n                     and
+           * 4)  s_C'_2 (id_Z' * s_Cn' tau'_n)  =  Q_n * s_ae'_n
+           *
+           * FIXME should we calculate all solutions to each and then generate combinations?
+           * NB! We calculate the same solutions for each combination...
+           *     Slow but easy and memory preserving...
+           *)
+          val s_C_n_alpha_links = LinkSet.list (Wiring.unmk s_C_n_alpha)
+          val s_a_e'_links      = LinkSet.list (Wiring.unmk s_a_e')
+
+          (* solve (4) and construct result
+           * taue = tau_e * tau'_e *)
+          fun solve_4 s_ae'_n s_Cn' taue ename'_e Q_e
+                      {rho = s_C'_1, tau = tau_n, Z} =
               let
-                val x' = if isinW then Wiring.app_renaming_inverse_x a x else x
+                val tauen = Wiring.* (taue, tau_n)
+                fun to_solution {rho = s_C'_2, tau = tau'_n, Z = Z', Y = Q_n} =
+                    let
+                      val id_Z = Wiring.id_X (NameSet.union Z Z')
+                      val tau  = Wiring.* (tauen, tau'_n)
+                    in
+                      {ename' = NameMap.plus (ename, ename'_e),
+                       Y      = NameSet.union Q_e Q_n,
+                       s_C'   = Wiring.* (s_C'_1, s_C'_2),
+                       qs     = [makeP tau (makeN (Wiring.innernames tau) g)],
+                       tree   = ZAX'}
+                    end
               in
-                if NameSet.member x' XZ then
-                  if Wiring.in_domain x s_C_e then
-                    let
-                      val s_C_e_x   = Wiring.app_renaming_x s_C_e x  handle e => raise e
-                      val s_a_e_x'  = Wiring.app_renaming_x s_a_e x' handle e => raise e
-                      val ename'    = check_adjust' ename' s_a_e_x' s_C_e_x
-                      val rg_ename' = NameSet.insert' s_C_e_x rg_ename'
-                    in
-                      (ename', rg_ename', s_C', rg_s_C', Y)
-                    end
-                  else
-                    let
-                      val x'' = if Wiring.in_domain x s_C_n then
-                                  Wiring.app_renaming_x s_C_n x
- handle e => raise e                                else
-                                  x
-                    in
-                      if Wiring.in_domain x s_a_e then
-                        let
-                          val s_a_e_x' = Wiring.app_renaming_x s_a_e x' handle e => raise e
-                          val (ename', s_C')
-                            = check_adjust ename' s_C' s_a_e_x' x''
-                          val rg_ename'
-                            = NameSet.insert'
-                                (valOf (NameMap.lookup ename' s_a_e_x'))
-                                rg_ename'
-                          val rg_s_C'
-                            = NameSet.insert'
-                                (valOf (NameMap.lookup s_C' x''))
-                                rg_s_C'
-                        in
-                          (ename', rg_ename', s_C', rg_s_C', Y)
-                        end
-                      else
-                        let
-                          val s_a_n_x' = Wiring.app_renaming_x s_a_n x' handle e => raise e
-                          val s_C'     = check_adjust' s_C' x'' s_a_n_x'
-                          val rg_s_C'  = NameSet.insert' s_a_n_x' rg_s_C'
-                        in
-                          (ename', rg_ename', s_C', rg_s_C', Y)
-                        end
-                    end
-                else
-                  if Wiring.in_domain x s_C_e then
-                    let
-                      val y = Wiring.app_renaming_x s_C_e x
-                    in
-                      if not (NameSet.member y rg_ename') then
-                        (ename', rg_ename', s_C', rg_s_C', NameSet.insert y Y)
-                      else
-                        (ename', rg_ename', s_C', rg_s_C', Y)
-                    end
-                  else
-                    let
-                      val x'' = if Wiring.in_domain x s_C_n then
-                                  Wiring.app_renaming_x s_C_n x
-                                else
-                                  x
-                      val (s_C', y, rg_s_C')
-                        = if NameMap.inDomain x'' s_C' then
-                            (s_C', valOf (NameMap.lookup s_C' x''), rg_s_C')
-                          else
-                            let
-                              val y = Name.fresh NONE
-                              val rg_s_C' = NameSet.insert' y rg_s_C'
-                            in
-                              (NameMap.add (x'', y, s_C'), y, rg_s_C')
-                            end
-                    in
-                      if (not (NameSet.member y rg_ename'))
-                        andalso (not (Wiring.in_codomain y s_a_n)) then
-                        (ename', rg_ename', s_C', rg_s_C', NameSet.insert y Y)
-                      else
-                        (ename', rg_ename', s_C', rg_s_C', Y)
-                    end
+                lzmap
+                  to_solution
+                  (find_rho_tau_Z' {sigma   = s_Cn',
+                                    upsilon = s_ae'_n})
               end
+          (* solve (3) and then find solutions for (4) *)
+          fun solve_34 s_ae'_n s_Cn s_Cn' tau_e
+                       {tau = tau'_e, ename = ename'_e, Y = Q_e} =
+              lzconcat
+                (lzmap
+                   (solve_4 s_ae'_n s_Cn' (Wiring.* (tau_e, tau'_e)) ename'_e Q_e)
+                   (find_rho_tau_Z {sigma   = s_Cn,
+                                    upsilon = s_a_n}))
+          (* solve (2) and then find solutions for (3) and (4) *)
+          fun solve_234 s_ae'_n s_ae'_e s_Cn s_Cn' {tau = tau_e} =
+              lzconcat
+                (lzmap
+                   (solve_34 s_ae'_n s_Cn s_Cn' tau_e)
+                   (find_tau' {sigma   = s_Ce',
+                               upsilon = s_ae'_e}))
+          (* solve (1) and then find solutions for (2), (3), and (4) *)
+          fun solve_1234 s_ae'_n s_ae'_e s_Cn s_Cn' =
+              lzconcat
+                (lzmap
+                   (solve_234 s_ae'_n s_ae'_e s_Cn s_Cn')
+                   (find_tau {sigma   = s_Ce,
+                              upsilon = app_ename ename s_ae}))
 
-          val rg_ename = NameSet.fromList (NameMap.range ename)
+          fun process_s_C_n_alpha_split s_ae'_n s_ae'_e [s_Cn, s_Cn'] =
+              solve_1234 s_ae'_n s_ae'_e s_Cn s_Cn'
+            | process_s_C_n_alpha_split _ _ _ = raise ThisCannotHappen
 
-          val (ename', rg_ename', s_C', rg_s_C', Y)
-            = NameSet.fold
-                (match_name false)
-                (NameSet.fold
-                   (match_name true)
-                   (ename, rg_ename, NameMap.empty, NameSet.empty, NameSet.empty)
-                   W)
-                Z
-fun nameMapToString nm
-  = "{ " ^
-    NameMap.Fold
-      (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " ")
-      ""
-      nm ^
-    "}"      
+          fun process_s_a_e'_split [s_ae'_n, s_ae'_e] =
+              lzconcat
+                (lzmap
+                   (process_s_C_n_alpha_split s_ae'_n s_ae'_e)
+                   (lzmap
+                     (map Wiring.make')
+                     (opartgen2lzlist
+                        (OrderedPartition.make s_C_n_alpha_links 2))))
+            | process_s_a_e'_split _ = raise ThisCannotHappen
         in
-(*        print ("g=" ^ BgBDNF.toString g ^ ", G=" ^ BgBDNF.toString G ^
-               "\ns_a_n=" ^ Wiring.toString s_a_n ^ ", s_a_e=" ^ Wiring.toString s_a_e ^
-               ", s_C_n=" ^ Wiring.toString s_C_n ^ ", s_C_e=" ^ Wiring.toString s_C_e ^
-               "\nename=" ^ nameMapToString ename ^ ", ename'=" ^ nameMapToString ename' ^
-               ", s_C'=" ^ nameMapToString s_C' ^ "\n");
-*)
-          Cons ({ename' = ename',
-                 s_C' = Wiring.make_ren s_C',
-                 Y = Y,
-                 qs = [makeP (Wiring.* ((Wiring.introduce U), (Wiring.id_X X)))
-                             (makeN X g)],
-                 tree = PAX'}, lzNil)
+          lzunmk
+            (lzconcat
+               (lzmap
+                  process_s_a_e'_split
+                  (lzmap
+                     (map Wiring.make')
+                     (opartgen2lzlist
+                        (OrderedPartition.make s_a_e'_links 2)))))
         end
         handle NoMatch => Nil)
       | _ => Nil)
@@ -531,6 +1024,7 @@ fun nameMapToString nm
    * 1) Check that g = 1 and G = 1.
    * 2) Return ename' = ename, s_C' = {}, qs = [].
    *)
+(*FIXME is this right? *)
       | [] (* This implies G = 1. *)
       => (case #Ss (unmkG g) of
             [] (* This implies g = 1. *)
@@ -1008,40 +1502,29 @@ fun nameMapToString nm
         val vs = NameSet.list V
         val {outer = y, inner = X} = Link.unmk l
 
-        (* Iterate through the ordered partitions of some W *)
-        fun next_partition partitiongen = lzmake (fn () =>
-            let
-              val Wpart = OrderedPartition.next partitiongen
-              fun to_link (v_j, W_j) =
-                  Link.make {outer = SOME v_j,
-                             inner = NameSet.fromList W_j}
-            in
-              Cons (Wiring.make' (ListPair.map to_link (vs, Wpart)),
-                    (next_partition partitiongen))
-            end
-            handle OrderedPartition.NoPartitions => Nil)
+        fun process_W_opartition Wparts =
+            Wiring.make' (ListPair.map mk_slink' (vs, Wparts))
 
-        (* Iterate through the subsets of X *)
-        fun next_subset subsetgen = lzmake (fn () =>
+        fun process_X_subset W =
             let
-              val W = NameSetSubset.next subsetgen
-              val partitiongen
-                = OrderedPartition.make (NameSet.list W) m
               val Z    = NameSet.difference X W
               val id_Z = Wiring.id_X Z
               val U    = NameSet.union V Z
               val l'   = Wiring.make' [Link.make {outer = y, inner = U}]
               fun insert_tau tau = {tau = tau, id_Z = id_Z, l' = l'}
             in
-              lzunmk (lzappend
-                        (lzmap
-                           insert_tau
-                           (next_partition partitiongen))
-                        (next_subset subsetgen))
+              lzmap
+                insert_tau
+                (lzmap
+                   process_W_opartition 
+                   (opartgen2lzlist
+                      (OrderedPartition.make (NameSet.list W) m)))
             end
-            handle NameSetSubset.NoSubsets => Nil)
       in
-        next_subset (NameSetSubset.make X)
+        lzconcat
+          (lzmap
+             process_X_subset
+             (nssubsetgen2lzlist (NameSetSubset.make X)))
       end
 
   (* As the above except that Z = Ø.
@@ -1054,35 +1537,26 @@ fun nameMapToString nm
    *      tau = \bigox_{j \in {1,...,m}} v_j/X_j
    *      return {l', tau}
    *)
-  fun horizontally_split_link' l V = lzmake (fn () =>
+  fun horizontally_split_link' l V =
       let
         val m  = NameSet.size V
         val vs = NameSet.list V
         val {outer = y, inner = X} = Link.unmk l
 
-        (* Iterate through the partitions of X *)
-        fun next_partition partitiongen = lzmake (fn () =>
-            let
-              val Xpart = OrderedPartition.next partitiongen
-              fun to_link (v_j, X_j) =
-                  Link.make {outer = SOME v_j,
-                             inner = NameSet.fromList X_j}
-            in
-              Cons (Wiring.make' (ListPair.map to_link (vs, Xpart)),
-                    next_partition partitiongen)
-            end
-            handle OrderedPartition.NoPartitions => Nil)
+        fun process_X_opartition Xparts =
+            Wiring.make' (ListPair.map mk_slink' (vs, Xparts))
 
         val l' = Wiring.make' [Link.make {outer = y, inner = V}]
 
         fun insert_tau tau = {tau = tau, l' = l'}
       in
-        lzunmk
+        lzmap
+          insert_tau
           (lzmap
-             insert_tau
-             (next_partition
+             process_X_opartition
+             (opartgen2lzlist
                 (OrderedPartition.make (NameSet.list X) m)))
-      end)
+      end
 
   (* Split a substitution "horizontally" into two substitutions and an
    * identity wiring, where the interface between the two substitutions
@@ -1165,11 +1639,8 @@ fun nameMapToString nm
             @ (map link_rename (LinkSet.list (unmk s_e)))
         val p = length l_notLs
           
-        (* iterate through all ordered partitions of U *)
-        fun next_U_partition partitiongen (ts as {tau_LS, sigma_LS}) =
-            lzmake (fn () =>
+        fun process_U_opartition {tau_LS, sigma_LS} Uparts =
             let
-              val Uparts = OrderedPartition.next partitiongen
               (* Iterate through the links l_notLs and find
                * all combinations of all possible splits.
                * For each combination, calculate the corresponding
@@ -1200,21 +1671,14 @@ fun nameMapToString nm
                   end
                 | link_splits _ _ _ = raise ThisCannotHappen
             in
-              lzunmk
-                (lzappend
-                   (link_splits
-                      l_notLs
-                      Uparts
-                      {tau = tau_LS, id_Z = id_0, sigma = sigma_LS})
-                   (next_U_partition partitiongen ts))
+              link_splits
+                l_notLs
+                Uparts
+                {tau = tau_LS, id_Z = id_0, sigma = sigma_LS}
             end
-            handle OrderedPartition.NoPartitions => Nil)
 
-        (* iterate through the partitons of S *)
-        fun next_S_partition partitiongen U (ts as {tau_LS, sigma_L}) =
-            lzmake (fn () =>
+        fun process_S_partition U {tau_LS, sigma_L} Sparts =
             let
-              val Sparts = Partition.next partitiongen
               val (l_Ss, Y)
                 = foldr
                     (fn (Spart, (l_Ss, Y)) =>
@@ -1236,22 +1700,18 @@ fun nameMapToString nm
               fun insert_Y {tau, id_Z, sigma} =
                   {tau = tau, id_Z = id_Z, sigma = sigma, Y = Y}
             in
-              lzunmk
-                (lzappend
+              lzmap
+                insert_Y
+                (lzconcat
                    (lzmap
-                      insert_Y
-                      (next_U_partition
-                         (OrderedPartition.make (NameSet.list U) p)
-                         {tau_LS = tau_LS, sigma_LS = sigma_L * sigma_S}))
-                   (next_S_partition partitiongen U ts))
+                      (process_U_opartition
+                         {tau_LS = tau_LS, sigma_LS = sigma_L * sigma_S})
+                      (opartgen2lzlist
+                         (OrderedPartition.make (NameSet.list U) p))))
             end
-            handle Partition.NoPartitions => Nil)
 
-        (* iterate through all subsets U of T *)
-        fun next_T_subset subsetgen T (ts as {tau_L, sigma_L}) =
-            lzmake (fn () =>
+        fun process_T_subset T {tau_L, sigma_L} U =
             let
-              val U = NameSetSubset.next subsetgen
               (* the names of S = (V\W)\U must be introduced by
                * tau and substituted to fresh names by sigma.
                * the fresh names are returned in Y such that the
@@ -1259,29 +1719,26 @@ fun nameMapToString nm
               val S = NameSet.difference T U
               val tau_S = introduce S
             in
-              lzunmk
-                (lzappend
-                   (next_S_partition
-                      (Partition.make
-                         (NameSet.list S)
-                         (NameSet.size S))
+              lzconcat
+                (lzmap
+                   (process_S_partition
                       U
                       {tau_LS = tau_L * tau_S, sigma_L = sigma_L})
-                   (next_T_subset subsetgen T ts))
+                   (partgen2lzlist
+                      (Partition.make (NameSet.list S) (NameSet.size S))))
             end
-            handle NameSetSubset.NoSubsets => Nil)
 
-        (* iterate through all ordered partitions of a subset W
-         * of V where all sets in the partition are non-empty *)
-        fun next_W_partition partitiongen T = lzmake (fn () =>
+        fun process_W_opartition T Wparts =
             let
-              val Wparts = OrderedPartition.next' partitiongen
               (* Iterate through the links l_Ls and find
                * all combinations of all possible splits.
                * For each combination, calculate the
                * corresponding tau_L and sigma_L *)
               fun link_splits [] [] ts =
-                  next_T_subset (NameSetSubset.make T) T ts
+                  lzconcat 
+                    (lzmap
+                       (process_T_subset T ts)
+                       (nssubsetgen2lzlist (NameSetSubset.make T)))
                 | link_splits (l_L_i::l_Ls) (Wpart::Wparts) {tau_L, sigma_L} =
                   let
                     (* Split and combine the remaining links recursively
@@ -1304,33 +1761,24 @@ fun nameMapToString nm
                   end
                 | link_splits _ _ _ = raise ThisCannotHappen
             in
-              lzunmk
-                (lzappend
-                   (link_splits
-                      l_Ls
-                      Wparts
-                      {tau_L   = id_0,
-                       sigma_L = id_0})
-                   (next_W_partition partitiongen T))
+              link_splits l_Ls Wparts {tau_L = id_0, sigma_L = id_0}
             end
-            handle OrderedPartition.NoPartitions => Nil)
 
-        (* iterate through all subsets W of V of size >= |L| = k *)
-        fun next_V_subset subsetgen = lzmake (fn () =>
+        fun process_V_subset W =
             let
-              val W = NameSetSubset.next' subsetgen k
               val T = NameSet.difference V W
             in
-              lzunmk
-                (lzappend
-                   (next_W_partition
-                      (OrderedPartition.make (NameSet.list W) k)
-                      T)
-                   (next_V_subset subsetgen))
+              lzconcat
+                (lzmap
+                   (process_W_opartition T)
+                   (opartgen2lzlist'
+                      (OrderedPartition.make (NameSet.list W) k)))
             end
-            handle NameSetSubset.NoSubsets => Nil)
       in
-        next_V_subset (NameSetSubset.make V)
+        lzconcat
+          (lzmap
+             process_V_subset
+             (nssubsetgen2lzlist' (NameSetSubset.make V) k))
       end
 
   (* Match a global discrete prime using the PAX rule:
@@ -1394,7 +1842,16 @@ fun nameMapToString nm
                 s_R = {s_R_e, s_R_n}, e = g, Ps = []}
     = lzmake (fn () => ((*print "ZAX ";*)
       if Wiring.is_id0 s_R_e andalso Wiring.is_id0 s_R_n then
-        let
+(* FIXME is this rignt? /Espen *)
+	        LazyList.Cons 
+	          ({ename' = ename,
+	           s_C = Wiring.* (app_ename ename s_a_e, s_a_n),
+	           Y = NameSet.empty,
+	           E = g,
+	           qs = [],
+	           tree = ZAX},
+	           lzNil)
+(*        let
 	        val XplusZ = Interface.glob (outerface g)
 	      in
 	        LazyList.Cons 
@@ -1407,7 +1864,7 @@ fun nameMapToString nm
 	           tree = ZAX},
 	           lzNil)
 	      end
-	    else
+*)	    else
 	      LazyList.Nil))
     | matchPAX _ = lzNil
 
