@@ -40,6 +40,7 @@
 	      tested interfaces to S and A.
   12/02/2007: Ported range and navigation queries to current setup,
 	      cleaned up code.
+  30/03/2007: Curried the exchange function.
  
   This is the "location model" part L of a Plato-graphical system;
   C || P || A = C || (S || L) || A.
@@ -225,22 +226,20 @@ fun findpath lid1 =
 	       end
 
 (* Spinlock *)
-fun exchange (r,s) = (* just for typechecking -- remove later *)
-    let val tmp = !r
-    in r:=(!s) ; s:=tmp
-    end
+fun exchange r =
+	fn s => let val tmp = !r in r:=(!s) ; s:=tmp end
 
 fun new () = ref false
 
 fun spinlock l =
     let val t = ref true
-        fun loop () = ( exchange(t,l); if !t then loop() else () )
+        fun loop () = ( exchange t l; if !t then loop() else () )
     in loop ()
     end
 
 fun spinunlock l = 
     let val t = ref false
-    in exchange(t,l)
+    in exchange t l
     end
 
 val lock = new ()
