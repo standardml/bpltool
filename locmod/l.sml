@@ -40,8 +40,8 @@
 	      tested interfaces to S and A.
   12/02/2007: Ported range and navigation queries to current setup,
 	      cleaned up code.
-  30/03/2007: Curried the exchange function.
-  10/04/2007: Renamed queue to queueL and exported this.
+  10/04/2007: Renamed queue to queueL and exported this,
+	      likewise for other, by A, needed functions and values.
  
   This is the "location model" part L of a Plato-graphical system;
   C || P || A = C || (S || L) || A.
@@ -52,7 +52,8 @@
 
 ************************************************************************)
 
-(* export enqL,queueL from *)
+(* export spinlockL, spinunlockL, lockL, waitL, queueL, deqL from *)
+(* and also the functions on lists used by A... *)
 
 (* consider making these two an abstract type 'Link' *)
 type lid = int
@@ -226,43 +227,41 @@ fun findpath lid1 =
 		      in SOME(path1' @ path2') end
 	       end
 
+(* just for SML typechecking *)
+fun exchange (r,s) = let val tmp = !r in r:=(!s) ; s:=tmp end
+
 (* Spinlock *)
-fun exchange r =
-	fn s => let val tmp = !r in r:=(!s) ; s:=tmp end
-
-fun new () = ref false
-
-fun spinlock l =
+fun spinlockL l =
     let val t = ref true
-        fun loop () = ( exchange t l; if !t then loop() else () )
+        fun loop () = ( exchange(t,l); if !t then loop() else () )
     in loop ()
     end
 
-fun spinunlock l = 
+fun spinunlockL l = 
     let val t = ref false
-    in exchange t l
+    in exchange(t,l)
     end
 
-val lock = new ()
+val lockL = ref false
 
-fun wait i = if i<=0 then () else wait(i-1)
+fun waitL i = if i<=0 then () else waitL(i-1)
 
 (* Event queue with operations *)
 val queueL = ref []
 
-fun deq () =
-    ( spinlock lock;
+fun deqL () =
+    ( spinlockL lockL;
       (case (!queueL) of [] => NONE
 		      | (q::qs) => let val _ = queueL:=qs 
 				   in SOME(q)
 				   end)
       before
-      spinunlock lock )
+      spinunlockL lockL )
 
 fun enqL e = (* THE interface function *)
-    ( spinlock lock;
-      queue := (!queueL)@[e];
-      spinunlock lock )
+    ( spinlockL lockL;
+      queueL := (!queueL)@[e];
+      spinunlockL lockL )
 
 (* handler functions used by event loop *)
 fun sobs s =
@@ -318,15 +317,15 @@ fun anavig s =
 					  | SOME(p) => f p
 
 (* Event loop *)
-fun loop state =
-    case deq () of
-	NONE => ( wait(100); loop state )
-      | SOME(Obs(d,l)) => loop (sobs state d l)
-      | SOME(Loss(d)) => loop (slost state d)
-      | SOME(WhereIs(d,f)) => ( awhere state d f; loop state )
-      | SOME(FindAll(l,f)) => ( afindall state l f; loop state )
-      | SOME(InRange(d,i,f)) => ( ainrange state d i f; loop state )
-      | SOME(Navig(d,l,f)) => ( anavig state d l f; loop state )
+fun eloop state =
+    case deqL () of
+	NONE => ( waitL(100); eloop state )
+      | SOME(Obs(d,l)) => eloop (sobs state d l)
+      | SOME(Loss(d)) => eloop (slost state d)
+      | SOME(WhereIs(d,f)) => ( awhere state d f; eloop state )
+      | SOME(FindAll(l,f)) => ( afindall state l f; eloop state )
+      | SOME(InRange(d,i,f)) => ( ainrange state d i f; eloop state )
+      | SOME(Navig(d,l,f)) => ( anavig state d l f; eloop state )
 
 
 (***** Tests *****)
@@ -340,18 +339,18 @@ val e2 = enqL(Loss(12));
 val q2 = !queueL;
 val e3 = enqL(WhereIs(15,fn r => enqA(Res r)))
 val q3 = !queueL;
-val o4 = deq();
+val o4 = deqL();
 val q4 = !queueL;
-val o5 = deq();
+val o5 = deqL();
 val q5 = !queueL;
-val o6 = deq();
+val o6 = deqL();
 val q6 = !queueL;
 val o7 = enqL(FindAll(2,fn r => enqA(ListRes r)))
 val q7 = !queueL;
 val o8 = enqL(InRange(12,2,fn r => enqA(ListRes r)))
 val q8 = !queueL;
-val q9 = deq();
-val q10 = deq();
+val q9 = deqL();
+val q10 = deqL();
 
 (* testing interface to S *)
 val s0:hierarchy = #1(state)
