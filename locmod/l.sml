@@ -1,4 +1,4 @@
-(*
+(************************************************************************
 
   Ebbe Elsborg and Henning Niss
 
@@ -41,6 +41,7 @@
   12/02/2007: Ported range and navigation queries to current setup,
 	      cleaned up code.
   30/03/2007: Curried the exchange function.
+  10/04/2007: Renamed queue to queueL and exported this.
  
   This is the "location model" part L of a Plato-graphical system;
   C || P || A = C || (S || L) || A.
@@ -49,9 +50,9 @@
   because the bigraphical image tends to explode sizewise reverting the
   effect of complicated optimisations.
 
-*)
+************************************************************************)
 
-(* export enqL from *)
+(* export enqL,queueL from *)
 
 (* consider making these two an abstract type 'Link' *)
 type lid = int
@@ -247,12 +248,12 @@ val lock = new ()
 fun wait i = if i<=0 then () else wait(i-1)
 
 (* Event queue with operations *)
-val queue = ref []
+val queueL = ref []
 
 fun deq () =
     ( spinlock lock;
-      (case (!queue) of [] => NONE
-		      | (q::qs) => let val _ = queue:=qs 
+      (case (!queueL) of [] => NONE
+		      | (q::qs) => let val _ = queueL:=qs 
 				   in SOME(q)
 				   end)
       before
@@ -260,7 +261,7 @@ fun deq () =
 
 fun enqL e = (* THE interface function *)
     ( spinlock lock;
-      queue:=(!queue)@[e];
+      queue := (!queueL)@[e];
       spinunlock lock )
 
 (* handler functions used by event loop *)
@@ -332,23 +333,23 @@ fun loop state =
 
 (* testing queue operations *)
 val s0 = state;
-val q0 = !queue;
+val q0 = !queueL;
 val e1 = enqL(Obs(15,6));
-val q1 = !queue;
+val q1 = !queueL;
 val e2 = enqL(Loss(12));
-val q2 = !queue;
+val q2 = !queueL;
 val e3 = enqL(WhereIs(15,fn r => enqA(Res r)))
-val q3 = !queue;
+val q3 = !queueL;
 val o4 = deq();
-val q4 = !queue;
+val q4 = !queueL;
 val o5 = deq();
-val q5 = !queue;
+val q5 = !queueL;
 val o6 = deq();
-val q6 = !queue;
+val q6 = !queueL;
 val o7 = enqL(FindAll(2,fn r => enqA(ListRes r)))
-val q7 = !queue;
+val q7 = !queueL;
 val o8 = enqL(InRange(12,2,fn r => enqA(ListRes r)))
-val q8 = !queue;
+val q8 = !queueL;
 val q9 = deq();
 val q10 = deq();
 
