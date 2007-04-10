@@ -3,7 +3,7 @@
 % Bug-fixing and extending Lars Birkedal's encoding of 2005-07-11.
 %
 % Ebbe Elsborg and Henning Niss, 2005-01-03.
-% Revised by Ebbe Elsborg, 2007-03-28.
+% Revised by Ebbe Elsborg, 2007-04-10.
 %
 % In CBV, the activity (evaluation order) for an application node
 % changes during evaluation.
@@ -18,8 +18,8 @@
 % Vars, Cells, Dats, and Cons are pairwise disjoint.
 %
 % Shorthands and notation:
-%  '{C_i(e_i)}^n'  for  'C_0(e_0) | ... | C_n(e_n)'
-%  '{C_i(x_i) => e_i}^n'  for  'C_0(x_0) => e_1 | ... | C_n(x_n) => e_n'
+%  '{C_i e_i}^n'  for  'C_0 e_0 | ... | C_n e_n'
+%  '{C_i x_i) => e_i}^n'  for  'C_0 x_0 => e_1 | ... | C_n x_n => e_n'
 %
 % BNF:
 %  p ::= export a from t | t
@@ -28,12 +28,12 @@
 %  d ::= val x = e | val x = e ; d
 %  e ::= x | e1 e2 | (e1,e2) | fst e | snd e | let val x = e1 in e2 end
 %      | ref e | !e | e1 := e2 | exchange(e1,e2)
-%      | C(e) | case e of {C_i(x_i) => e_i}^n | v
-%  v ::= lam x. e | fix f(x) = e | (v1,v2) | unit | l | C(v) | n
+%      | C e | case e of {C_i x_i => e_i}^n | v
+%  v ::= lam x. e | fix f(x) = e | (v1,v2) | unit | l | C v | n
 %  E ::= [ ] | E e | v E | (E,e) | (v,E) | fst E | snd E
 %       | let val x = E in e end | let val x = v in E end
 %       | ref E | !E | E := e | l := E | exchange(E,e) | exchange(l,E)
-%       | C(E) | case E of {C_i(x_i) => e_i}^n
+%       | C E | case E of {C_i x_i => e_i}^n
 %
 % The evaluation contexts, E, are _certain_ kinds of applications.
 % We model the different kinds of activities for the different 
@@ -51,7 +51,7 @@
 %    let val x = v in e end -> e[v/x]
 %    (lam x. e) v -> e[v/x]
 %    (fix f(x) = e) v -> e[v/x, fix f(x)=e/f]
-%    case C_j(v) of {C_i(x_i) => e_i}^n -> e_j[v/x_j] % j in {0,1,...n}
+%    case C_j v of {C_i x_i => e_i}^n -> e_j[v/x_j] % j in {0,1,...n}
 %    <ref v,s> -> <l,(s,l->v)>	,  l fresh
 %    <!l,s[l->v]> -> <v,s[l->v]>
 %    <l:=v1,s[l->v2]> -> <unit,s[l->v1]>
@@ -107,8 +107,8 @@
 %                              (appr \o id_X)(exp \o id_X)[e2]^exp_X)
 % [unit]^exp_X             = (val | X) unit
 % [n]^exp_X                = (val | X) n
-% [C(e)]^exp_X	           = (C \o id_X)[e]^exp_X
-% [case e of {C_i(x_i) => e_i}^n]^exp_X =
+% [C e]^exp_X	           = (C \o id_X)[e]^exp_X
+% [case e of {C_i x_i => e_i}^n]^exp_X =
 %   (case \o id_X)
 %    ((casel \o id_X)([e]^exp_X) |
 %     (casee_(x0) \o id_X)(C0 \o id_X)(exp \o id_X)([e0]^exp_{X \u {x0}}) |
@@ -166,7 +166,7 @@ signature eMiniml =
 
 using eMiniml
 
-rule app_arg =
+rule app_exp =
   app(appl(val([0]) | appr(exp([1])))
     ->                                
   app(appl(val([0]) | appr([1])))	% now it is ok to evaluate in [1]
@@ -205,15 +205,15 @@ rule let =
     ->
   sub_(x)([1]<x> | def_x(val([0])))
 
-rule pair_1 =
+rule pair_exp =
   pair(pairl(val([0])) | pairr(exp([1]))) 
    ->
-  pair(pairl(val([0])) | pairr([1]))	% now ok to evaluate in [1]
+  pair(pairl(val([0])) | pairr([1]))
 
-rule pair_2 =
+rule pair_val =
   pair(pairl(val([0])) | pairr(val([1])))
    ->
-  val(pair(pairl(val([0])) | pairr(val([1]))))	% mark whole pair as value
+  val(pair(pairl(val([0])) | pairr(val([1]))))
 
 rule fst =
   fst(val(pair(pairl([0]) | pairr([1]))))
@@ -229,7 +229,7 @@ rule snd =
 rule val_C =
   C(val([0]))
     ->
-  val(Ci(val([0])))
+  val(C(val([0])))
 
 % we have a rule for each declared constructor C
 rule case_C =
@@ -247,22 +247,22 @@ rule deref =
     ->
   [0] | l/ || store(cell'_l([0]) | [1])	% [0] value by invariant
 
-rule asgn_1 =
+rule asgn_exp =
   asgn(acell(val(cell_l)) | aval(exp([0])))
     ->
   asgn(acell(val(cell_l)) | aval([0]))
 
-rule asgn_2 =
+rule asgn_store =
   asgn(acell(val(cell_l)) | aval(val([0]))) || store(cell'_l([1]) | [2])
     ->
   val(unit) \o {l} || store(cell'_l(val([0])) | [2])
 
-rule exc_1 =
+rule exc_exp =
   exc(excl(val([0])) | excr(exp([1])))
    ->
   exc(excl(val([0])) | excr([1]))
 
-rule exc_2 =
+rule exc_store =
   exc(excl(val(cell_l1)) | excr(val(cell_l2)))
 	|| store(cell'_l1([0]) | cell'_l2([1]) | [2])
     ->
