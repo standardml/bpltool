@@ -5,7 +5,7 @@
   system; C || P || A = C || (S || L) || A.
 ************************************************************************)
 
-(* export enqA from *)
+(* export enqA,queueA from *)
 
 type lid = int
 type dev = int
