@@ -1,5 +1,5 @@
 (************************************************************************
-  Ebbe Elsborg and Henning Niss, 20/3/2007
+  Ebbe Elsborg and Henning Niss, 10/4/2007
  
   This is the "location-aware application" part A of a Plato-graphical
   system; C || P || A = C || (S || L) || A.
@@ -13,12 +13,11 @@ datatype res = Res of lid
 datatype whereis = WhereIs of dev * (lid -> unit)
 datatype enql = enqL of whereis
 
+(* just for SML typechecking *)
 fun exchange r =
 	fn s => let val tmp = !r in r:=(!s) ; s:=tmp end
 
-fun new () = ref false
-
-val lock = new ()
+val lock = ref false
 
 fun spinlock l =
     let val t = ref true
