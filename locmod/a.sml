@@ -17,43 +17,43 @@ datatype enql = enqL of whereis
 fun exchange r =
 	fn s => let val tmp = !r in r:=(!s) ; s:=tmp end
 
-val lock = ref false
+val lockA = ref false
 
-fun spinlock l =
+fun spinlockA l =
     let val t = ref true
         fun loop () = ( exchange t l ; if !t then loop() else () )
     in loop ()
     end
 
-fun spinunlock l = 
+fun spinunlockA l = 
     let val t = ref false
     in exchange t l
     end
 
-fun wait i = if i<=0 then () else wait(i-1)
+fun waitA i = if i<=0 then () else waitA(i-1)
 
 val queueA = ref []
 
 fun deq () =
-    ( spinlock lock;
+    ( spinlockA lockA;
       (case (!queueA) of [] => NONE
 		      | (q::qs) => let val _ = queueA:=qs 
 				   in SOME(q)
 				   end)
       before
-      spinunlock lock )
+      spinunlockA lockA )
 
 fun enqA e =
-    ( spinlock lock;
+    ( spinlockA lockA;
       queueA := (!queueA)@[e];
-      spinunlock lock )
+      spinunlockA lockA )
 
 fun getRes () =
-    ( spinlock lock;
-      (case (!queueA) of [] => ( wait(100); getRes() )
+    ( spinlockA lockA;
+      (case (!queueA) of [] => ( waitA(100); getRes() )
  	              | (q::qs) => q)
       before
-      spinunlock lock )
+      spinunlockA lockA )
 
 fun whereIs d =
     ( enqL(WhereIs(d,fn r => enqA(Res r)));
