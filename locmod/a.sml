@@ -32,12 +32,12 @@ fun spinunlock l =
 
 fun wait i = if i<=0 then () else wait(i-1)
 
-val queue = ref []
+val queueA = ref []
 
 fun deq () =
     ( spinlock lock;
-      (case (!queue) of [] => NONE
-		      | (q::qs) => let val _ = queue:=qs 
+      (case (!queueA) of [] => NONE
+		      | (q::qs) => let val _ = queueA:=qs 
 				   in SOME(q)
 				   end)
       before
@@ -45,13 +45,13 @@ fun deq () =
 
 fun enqA e =
     ( spinlock lock;
-      queue:=(!queue)@[e];
+      queueA := (!queueA)@[e];
       spinunlock lock )
 
 fun getRes () =
     ( spinlock lock;
-      (case (!queue) of [] => ( wait(100); getRes() )
-		     | (q::qs) => q)
+      (case (!queueA) of [] => ( wait(100); getRes() )
+ 	              | (q::qs) => q)
       before
       spinunlock lock )
 
