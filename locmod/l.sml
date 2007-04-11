@@ -28,7 +28,8 @@
 	      introduced event loop,
 	      introduced a queue with enqueue and dequeue functions,
 	      redefined 'sobs', 'slost', and 'state'.
-	      COMMENT: Do we also need to export aux. function names?
+	      QUESTION: Do we also need to export aux. function names?
+	      ANSWER: Yes, it seems that way.
   30/10/2006: Replaced ~1 with options.
   02/02/2007: Introduced spinlock on queue.
   05/02/2007: Introduced WhereIs event,
