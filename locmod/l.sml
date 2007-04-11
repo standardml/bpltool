@@ -228,18 +228,18 @@ fun findpath lid1 =
 	       end
 
 (* just for SML typechecking *)
-fun exchange (r,s) = let val tmp = !r in r:=(!s) ; s:=tmp end
+fun exchange r = fn s => let val tmp = !r in r:=(!s) ; s:=tmp end
 
 (* Spinlock *)
 fun spinlockL l =
     let val t = ref true
-        fun loop () = ( exchange(t,l); if !t then loop() else () )
+        fun loop () = ( exchange t l; if !t then loop() else () )
     in loop ()
     end
 
 fun spinunlockL l = 
     let val t = ref false
-    in exchange(t,l)
+    in exchange t l
     end
 
 val lockL = ref false
