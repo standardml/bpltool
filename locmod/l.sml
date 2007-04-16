@@ -229,18 +229,18 @@ fun findpath lid1 =
 	       end
 
 (* just for SML typechecking *)
-fun exchange r = fn s => let val tmp = !r in r:=(!s) ; s:=tmp end
+fun exchange (r,s) = let val tmp = !r in r:=(!s) ; s:=tmp end
 
 (* Spinlock *)
 fun spinlockL l =
     let val t = ref true
-        fun loop () = ( exchange t l; if !t then loop() else () )
+        fun loop () = ( exchange(t,l); if !t then loop() else () )
     in loop ()
     end
 
 fun spinunlockL l = 
     let val t = ref false
-    in exchange t l
+    in exchange(t,l)
     end
 
 val lockL = ref false
@@ -318,15 +318,15 @@ fun anavig s =
 					  | SOME(p) => f p
 
 (* Event loop *)
-fun eloop state =
+fun eloop s =
     case deqL () of
-	NONE => ( waitL(100); eloop state )
-      | SOME(Obs(d,l)) => eloop (sobs state d l)
-      | SOME(Loss(d)) => eloop (slost state d)
-      | SOME(WhereIs(d,f)) => ( awhere state d f; eloop state )
-      | SOME(FindAll(l,f)) => ( afindall state l f; eloop state )
-      | SOME(InRange(d,i,f)) => ( ainrange state d i f; eloop state )
-      | SOME(Navig(d,l,f)) => ( anavig state d l f; eloop state )
+	NONE => ( waitL(100); eloop s )
+      | SOME(Obs(d,l)) => eloop (sobs s d l)
+      | SOME(Loss(d)) => eloop (slost s d)
+      | SOME(WhereIs(d,f)) => ( awhere s d f; eloop s )
+      | SOME(FindAll(l,f)) => ( afindall s l f; eloop s )
+      | SOME(InRange(d,i,f)) => ( ainrange s d i f; eloop s )
+      | SOME(Navig(d,l,f)) => ( anavig s d l f; eloop s )
 
 
 (***** Tests *****)
