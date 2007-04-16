@@ -15,19 +15,19 @@ datatype whereis = WhereIs of dev * (lid -> unit)
 datatype enql = enqL of whereis
 
 (* just for SML typechecking *)
-fun exchange r = fn s => let val tmp = !r in r:=(!s) ; s:=tmp end
+fun exchange (r,s) = let val tmp = !r in r:=(!s) ; s:=tmp end
 
 val lockA = ref false
 
 fun spinlockA l =
     let val t = ref true
-        fun loop () = ( exchange t l ; if !t then loop() else () )
+        fun loop () = ( exchange(t,l) ; if !t then loop() else () )
     in loop ()
     end
 
 fun spinunlockA l = 
     let val t = ref false
-    in exchange t l
+    in exchange (t,l)
     end
 
 fun waitA i = if i<=0 then () else waitA(i-1)
