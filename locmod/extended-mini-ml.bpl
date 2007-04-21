@@ -95,9 +95,9 @@
 %                              (pairr \o id_X)(exp \o id_X)[e2]^exp_X
 % [fst e]^exp_X            = (fst \o id_X)[e]^exp_X
 % [snd e]^exp_X            = (snd \o id_X)[e]^exp_X
-% [let val x = e1 in e2]^exp_X = (let \o id_X)
-%			          ((letd \o id_X)[e1]^exp_X |
-%                                  (letb_(x) \o id_X)[e2]^exp_{X \u {x}})
+% [let val x = e1 in e2 end]^exp_X = (let \o id_X)
+%			              ((letd \o id_X)[e1]^exp_X |
+%                                      (letb_(x) \o id_X)[e2]^exp_{X \u {x}})
 % [lam x. e]^exp_X         = (val \o id_X)(lam_(x) \o id_X)[e]^exp_{X \u {x}}
 % [fix f(x) = e]^exp_X     = (val \o id_X)
 %			      (fix_(f,x) \o id_X)[e]^exp_{X \u {f,x}}
