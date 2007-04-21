@@ -3,7 +3,7 @@
 % Bug-fixing and extending Lars Birkedal's encoding of 2005-07-11.
 %
 % Ebbe Elsborg and Henning Niss, 2005-01-03.
-% Revised by Ebbe Elsborg, 2007-04-10.
+% Revised by Ebbe Elsborg, 2007-04-21.
 %
 % In CBV, the activity (evaluation order) for an application node
 % changes during evaluation.
@@ -45,8 +45,7 @@
 %
 % Expressions are evaluated "in" a store s, only mentioned when relevant.
 % We use _explicit_ substitution, [-].
-%
-%    fst (v1,v2) -> v1
+%%    fst (v1,v2) -> v1
 %    snd (v1,v2) -> v2
 %    let val x = v in e end -> e[v/x]
 %    (lam x. e) v -> e[v/x]
@@ -183,22 +182,20 @@ rule app_fix =
           def_f(val(fix_(f,x)[0]<x,f>))) % parallel subst. as two
 	                                 % nested substitutions
 
-rule sub =
-  var_x || def_x(val([0]))
-    ->
-  val([0]) | {x} || def_x(val([0]))
+%rule sub =
+%  var_x || def_x(val([0]))
+%    ->
+%  val([0]) | {x} || def_x(val([0]))
+%
+%rule gc =
+%  sub_(x)([0] | def_x([1]))
+%    ->                     
+%  [0]
 
-rule gc =
-  sub_(x)([0] | def_x([1]))
-    ->                     
-  [0]
-
-rule sub' =
+rule sub' = % there is no gc' rule, on purpose
   var_x || def'_x(val([0]))
     ->
   val([0]) \o {x} || def'_x(val([0]))
-
-% there is no gc' rule, on purpose
 
 rule let =
   let(letd(val([0])) | letb_(x)([1]<x>))
@@ -259,7 +256,7 @@ rule asgn_store =
 
 rule exc_exp =
   exc(excl(val([0])) | excr(exp([1])))
-   ->
+    ->
   exc(excl(val([0])) | excr([1]))
 
 rule exc_store =
@@ -268,3 +265,116 @@ rule exc_store =
     ->
   val(unit) \o {l1,l2}
 	|| store(cell'_l1([1]) | cell'_l2([0])|[2])
+
+% rules for propagating explicit substitutions
+rule sub_varx =
+  sub_(x)(var_x | def_x([0]))
+    ->
+  [0]
+
+rule sub_vary =
+  sub_(x)(var_y | def_x([0]))
+    ->
+  var_y
+
+rule sub_pair =
+  sub_(x)(pair(pairl([0]<x>) | (x)/(y)(pairr([1]<y>))) | def_x([2]))
+    ->
+  pair(pairl(sub_(x)([0]<x> | def_x([2])))
+     | pairr(sub_(y)([1]<y> | def_y([2]))))
+
+rule sub_fst =
+  sub_(x)(fst([0]<x>) | def_x([1]))
+    ->
+  fst(sub_(x)([0]<x> | def_x([1])))
+
+rule sub_snd =
+  sub_(x)(snd([0]<x>) | def_x([1]))
+    ->
+  snd(sub_(x)([0]<x> | def_x([1])))
+
+rule sub_let =
+  sub_(x)(let(letd([0]<x>) | (x)/(z)(letb_(y)([1]<z,y>))) | def_x([2]))
+    ->
+  let(letd(sub_(x)([0]<x>) | def_x([2]))
+    | letb_(y)(sub_(z)([1]<z,y> | def_z([2]))))
+
+rule sub_lam =
+  sub_(x)(lam_(y)([0]<x,y>) | def_x([1]))
+    ->
+  lam_(y)(sub_(x)([0]<x,y> | def_x([1])))
+
+rule sub_fix =
+  sub_(x)(fix_(f,y)([0]<f,y,x>) | def_x([1]))
+    ->
+  fix_(y)(sub_(x)([0]<f,y,x> | def_x([1])))
+
+rule sub_app =
+  sub_(x)(app(appl([0]<x>) | (x)/(y)(appr([1]<y>))) | def_x([2]))
+    ->
+  app(appl(sub_(x)([0]<x> | def_x([2])))
+    | appr(sub_(y)([1]<y> | def_y([2]))))
+
+rule sub_unit =
+  sub_(x)(unit | def_x([0]))
+    ->
+  unit
+
+rule sub_n =
+  sub_(x)(n | def_x([0]))
+    ->
+  n
+
+rule sub_C =
+  sub_(x)(C([0]<x>) | def_x([1]))
+    ->
+  C(sub_(x)([0]<x> | def_x([1])))
+
+rule sub_case =
+  sub_(x)(case(casel([0]<x>) |
+	       (x)/(z0)(casee_(y0)([1]<z0>)) |
+	       ...
+	       (x)/(zn)(casee_(yn)([n]<zn>))) |
+	  def_x([m]))
+    ->
+  case(casel(sub_(x)([0]<x> | def_x([m]))) |
+       casee_(y0)(sub_(z0)([1]<z0> | def_z0([m]))) |
+       ...
+       casee_(yn)(sub_(zn)([1]<zn> | def_zn([m]))))
+
+rule sub_ref =
+  sub_(x)(ref([0]<x>) | def_x([1]))
+    ->
+  ref(sub_(x)([0]<x> | def_x([1])))
+
+rule sub_deref =
+  sub_(x)(deref([0]<x>) | def_x([1]))
+    ->
+  deref(sub_(x)([0]<x> | def_x([1])))
+
+rule sub_asgn =
+  sub_(x)(asgn(acell([0]<x>) | (x)/(y)(aval([1]<y>))) | def_x([2]))
+    ->
+  asgn(acell(sub_(x)([0]<x> | def_x([2])))
+     | aval(sub_(y)([1]<y> | def_y([2]))))
+
+rule sub_exc =
+  sub_(x)(exc(excl([0]<x>) | (x)/(y)(excr([1]<y>))) | def_x([2]))
+    ->
+  exc(excl(sub_(x)([0]<x> | def_x([2])))
+    | excr(sub_(y)([1]<y> | def_y([2]))))
+
+rule sub_val =
+  sub_(x)(val([0]<x>) | def_x([1]))
+    ->
+  val(sub_(x)([0]<x> | def_x([1])))
+
+rule sub_cell =
+  sub_(x)(cell_l | def_x([0]))
+    ->
+  cell_l
+
+rule sub_exp =
+  sub_(x)(exp([0]<x>) | def_x([1]))
+    ->
+  exp(sub_(x)([0]<x> | def_x([1])))
