@@ -3,7 +3,7 @@
 % Bug-fixing and extending Lars Birkedal's encoding of 2005-07-11.
 %
 % Ebbe Elsborg and Henning Niss, 2005-01-03.
-% Revised by Ebbe Elsborg, 2007-04-21.
+% Revised by Ebbe Elsborg, 2007-04-22.
 %
 % In CBV, the activity (evaluation order) for an application node
 % changes during evaluation.
@@ -168,7 +168,7 @@ using eMiniml
 rule app_exp =
   app(appl(val([0]) | appr(exp([1])))
     ->                                
-  app(appl(val([0]) | appr([1])))	% now it is ok to evaluate in [1]
+  app(appl(val([0]) | appr([1])))
 
 rule app_lam =
   app(appl(val(lam_(x)[0]<x>)) | appr(val([1])))
@@ -179,8 +179,7 @@ rule app_fix =
   app(appl(val(fix_(f,x)[0]<x,f>)) | appr(val([1])))
     ->
   sub_(f)(sub_(x)([0]<x,f> | def_x(val([1]))) |
-          def_f(val(fix_(f,x)[0]<x,f>))) % parallel subst. as two
-	                                 % nested substitutions
+          def_f(val(fix_(f,x)[0]<x,f>)))
 
 %rule sub =
 %  var_x || def_x(val([0]))
@@ -192,10 +191,11 @@ rule app_fix =
 %    ->                     
 %  [0]
 
-rule sub' = % there is no gc' rule, on purpose
+% substitution of defnition from a distance
+rule sub' =
   var_x || def'_x(val([0]))
     ->
-  val([0]) \o {x} || def'_x(val([0]))
+  val([0]) \o {x} || def'_x(val([0]))	% \o ensures x not in cod([0])
 
 rule let =
   let(letd(val([0])) | letb_(x)([1]<x>))
@@ -232,7 +232,7 @@ rule val_C =
 rule case_C =
   case(casel(val(C([0]))) | casee_(x)(Ci(exp([1]<x>))) | [2])
     ->
-  sub_(x)([1]<x> | def_x([0]))	% [0] value by invariant
+  sub_(x)([1]<x> | def_x([0]))  % [0] value by invariant
 
 rule ref =
   ref(val([0])) || store([1])
@@ -242,7 +242,7 @@ rule ref =
 rule deref =
   deref(val(cell_l)) || store(cell'_l([0]) | [1])
     ->
-  [0] | l/ || store(cell'_l([0]) | [1])	% [0] value by invariant
+  [0] | l/ || store(cell'_l([0]) | [1])  % [0] value by invariant
 
 rule asgn_exp =
   asgn(acell(val(cell_l)) | aval(exp([0])))
