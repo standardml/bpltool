@@ -1,9 +1,9 @@
 % Encoding of Extended Mini-ML using BINDING bigraphs.
 %
 % Much like for local bigraphs except for some 'abstractions' in the
-% translation.
+% translation. Semantics without substitution at a distance.
 %
-% Ebbe Elsborg, 2007-04-21.
+% Ebbe Elsborg, 2007-04-22.
 %
 % In CBV, the activity (evaluation order) for an application node
 % changes during evaluation.
@@ -45,7 +45,7 @@
 %
 % Expressions are evaluated "in" a store s, only mentioned when relevant.
 % We use _explicit_ substitution, [-].
-%%    fst (v1,v2) -> v1
+%    fst (v1,v2) -> v1
 %    snd (v1,v2) -> v2
 %    let val x = v in e end -> e[v/x]
 %    (lam x. e) v -> e[v/x]
@@ -172,7 +172,7 @@ using beMiniml
 rule app_exp =
   app(appl(val([0]) | appr(exp([1])))
     ->                                
-  app(appl(val([0]) | appr([1])))	% now it is ok to evaluate in [1]
+  app(appl(val([0]) | appr([1])))
 
 rule app_lam =
   app(appl(val(lam_(x)[0]<x>)) | appr(val([1])))
@@ -183,13 +183,12 @@ rule app_fix =
   app(appl(val(fix_(f,x)[0]<x,f>)) | appr(val([1])))
     ->
   sub_(f)(sub_(x)([0]<x,f> | def_x(val([1]))) |
-          def_f(val(fix_(f,x)[0]<x,f>))) % parallel subst. as two
-	                                 % nested substitutions
+          def_f(val(fix_(f,x)[0]<x,f>)))
 
-rule sub' =
-  var_x || def'_x(val([0]))
-    ->
-  val([0]) \o {x} || def'_x(val([0]))
+%rule sub' =
+%  var_x || def'_x(val([0]))
+%    ->
+%  val([0]) \t {x} || def'_x(val([0]))
 
 rule let =
   let(letd(val([0])) | letb_(x)([1]<x>))
@@ -228,25 +227,29 @@ rule case_C =
     ->
   sub_(x)([1]<x> | def_x([0]))	% [0] value by invariant
 
+% do the following wide rules work in binding bigraphs?!
+% ***
 rule ref =
   ref(val([0])) || store([1])
     ->
   /l. val(cell_l) || store(cell'_l(val([0])) | [1])
 
+% ***
 rule deref =
   deref(val(cell_l)) || store(cell'_l([0]) | [1])
     ->
-  [0] | l/ || store(cell'_l([0]) | [1])	% [0] value by invariant
+  [0] \t l/ || store(cell'_l([0]) | [1])  % [0] value by invariant
 
 rule asgn_exp =
   asgn(acell(val(cell_l)) | aval(exp([0])))
     ->
   asgn(acell(val(cell_l)) | aval([0]))
 
+% ***
 rule asgn_store =
   asgn(acell(val(cell_l)) | aval(val([0]))) || store(cell'_l([1]) | [2])
     ->
-  val(unit) \o {l} || store(cell'_l(val([0])) | [2])
+  val(unit) \t l/ || store(cell'_l(val([0])) | [2])
 
 rule exc_exp =
   exc(excl(val([0])) | excr(exp([1])))
