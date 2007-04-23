@@ -271,11 +271,11 @@ fun exp2bg (X:nameset) exp =
 	(ASSIGN tt id X) oo
 	 (((ALOC tt id X) oo (exp2bg X e1)) pp
 	  ((AVAL tt id X) oo (EXP tt id X) oo (exp2bg X e2)))
-      | M.Info(_,e) => exp2bg X e
       | M.Exc e =>
 	(EXC tt id X) oo
 	 (((EXCL tt id X) oo (exp2bg X e1)) pp
 	  ((EXCR tt id X) oo (EXP tt id X) oo (exp2bg X e2)))
+      | M.Info(_,e) => exp2bg X e
       | M.Switch(e, switch, default) =>
         (*
          * [switch e of {C_i => e_i} | _ => e_(n+1)]_X =
