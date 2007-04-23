@@ -3,7 +3,7 @@
 % Much like for local bigraphs except for some 'abstractions' in the
 % translation. Semantics without substitution at a distance.
 %
-% Ebbe Elsborg, 2007-04-22.
+% Ebbe Elsborg, 2007-04-23.
 %
 % In CBV, the activity (evaluation order) for an application node
 % changes during evaluation.
@@ -185,11 +185,6 @@ rule app_fix =
   sub_(f)(sub_(x)([0]<x,f> | def_x(val([1]))) |
           def_f(val(fix_(f,x)[0]<x,f>)))
 
-%rule sub' =
-%  var_x || def'_x(val([0]))
-%    ->
-%  val([0]) \t {x} || def'_x(val([0]))
-
 rule let =
   let(letd(val([0])) | letb_(x)([1]<x>))
     ->
@@ -227,7 +222,6 @@ rule case_C =
     ->
   sub_(x)([1]<x> | def_x([0]))	% [0] value by invariant
 
-% do the following wide rules work in binding bigraphs?!
 % ***
 rule ref =
   ref(val([0])) || store([1])
