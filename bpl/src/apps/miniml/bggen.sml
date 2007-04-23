@@ -50,8 +50,8 @@ functor BGGen(structure BG: BG_ADT
  Mapping from Miniml abstract syntax tree (AST) to BG AST using
  abstract syntax. The mapping produces bgvals.
 
- Henning Niss and Ebbe Elsborg, May 15 2006
- Corresponds to *binding* version of extended-mini-ml.bpl of 24/4-2006
+ Henning Niss and Ebbe Elsborg, April 23 2007
+ Corresponds to binding-extended-mini-ml.bpl of April 22 2007
 *)
 
 structure BgVal   = BG.BgVal
@@ -152,6 +152,9 @@ val ALOC = mkctrl "CALOC"
 val AVAL = mkctrl "CVAL"
 val CASE = mkctrl "CASE"
 val CASEL = mkctrl "CASEL"
+val EXC = mkctrl "EXC"
+val EXCL = mkctrl "EXCR"
+val EXCR = mkctrl "EXCL"
 val SWITCH = mkctrl "SWITCH"
 val SWITCHL = mkctrl "SWITCHL"
 val SWITCHE = mkctrl "SWITCHE"
@@ -159,11 +162,7 @@ val DECONST = mkctrl "DECONST"
 
 fun DEF' (x:name) = makeion "DEF'" [x] []
 
-(* Remark: We do not need to translate configurations <e,sigma>
-because there is no syntactic notion of stores in Miniml, and
-locations only occur during evaluation.
-
-This translation should not be altered, just change the generating
+(* This translation should not be altered, just change the generating
 functions above to match change in BG signatures. *)
 
 fun exp2bg (X:nameset) exp =
@@ -271,8 +270,12 @@ fun exp2bg (X:nameset) exp =
       | M.Assign(e1, e2) =>
 	(ASSIGN tt id X) oo
 	 (((ALOC tt id X) oo (exp2bg X e1)) pp
-	  ((AVAL tt id X) oo (EXP tt id X) oo (exp2bg X e1)))
+	  ((AVAL tt id X) oo (EXP tt id X) oo (exp2bg X e2)))
       | M.Info(_,e) => exp2bg X e
+      | M.Exc e =>
+	(EXC tt id X) oo
+	 (((EXCL tt id X) oo (exp2bg X e1)) pp
+	  ((EXCR tt id X) oo (EXP tt id X) oo (exp2bg X e2)))
       | M.Switch(e, switch, default) =>
         (*
          * [switch e of {C_i => e_i} | _ => e_(n+1)]_X =
