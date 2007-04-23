@@ -53,7 +53,7 @@ sig
       | Ref     of ('info,'pat) exp
       | DeRef   of ('info,'pat) exp
       | Assign  of ('info,'pat) exp * ('info,'pat) exp
-
+      | Exc     of ('info,'pat) exp * ('info,'pat) exp
       (* without surface syntax *)
       | Info    of 'info * ('info,'pat) exp
       | Switch  of ('info, 'pat) exp * 
