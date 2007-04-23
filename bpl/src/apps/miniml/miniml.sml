@@ -54,7 +54,7 @@ struct
       | Ref     of ('info,'pat) exp
       | DeRef   of ('info,'pat) exp
       | Assign  of ('info,'pat) exp * ('info,'pat) exp
-
+      | Exchange of ('info,'pat) exp * ('info,'pat) exp
       (* without surface syntax *)
       | Info    of 'info * ('info,'pat) exp
       | Switch  of ('info, 'pat) exp * 
@@ -165,6 +165,7 @@ struct
 		  | Ref e => paren 2 safe ("ref " ^+ ppe 1 e)
 		  | DeRef e => paren 2 safe ("!" ^+ ppe 1 e)
 		  | Assign(e,e') => paren 2 safe (ppe 1 e ++ ppKw ":=" ++ ppe 1 e')
+		  | Exchange(e,e') => paren 3 safe (ppe 3 e ++ ppe 4 e')
 		  | Info(i,e) => ppe safe e
 	    and ppvalbind (x,e) = ppValbind ppBindInfo (ppe 1) (x,e)
 	in  ppe 1 exp
@@ -259,7 +260,7 @@ struct
 	  | Unit => Unit
 	  | Const(C, e) => Const(C, freshExp freshPat map e)
 	  | App(e1, e2) => 
-	      App(freshExp freshPat map e1,freshExp freshPat map e2)
+	      App(freshExp freshPat map e1, freshExp freshPat map e2)
 	  | Case(e, match) => 
 	      let fun f (p, e) = 
 		      let val (p',map') = freshPat addFresh map p
@@ -283,6 +284,8 @@ struct
 	  | DeRef e => DeRef(freshExp freshPat map e)
 	  | Assign(e1, e2) => 
 	      Assign(freshExp freshPat map e1, freshExp freshPat map e2)
+          | Exchange(e1, e2) =>
+	      Exchange(freshExp freshPat map e1, freshExp freshPat map e2)
 	  | Abs(x, e) =>
 	      let val x' = fresh x
 		  val map' = Map.add(x, x', map)
@@ -335,6 +338,7 @@ struct
 	  | Info(_,e) => [e]
 	  | Deconst(_,e) => [e]
 	  | Assign(e1,e2) => [e1,e2]
+          | Exchange(e1,e2) => [e1,e2]
 	  | App(e1,e2) => [e1,e2]
 	  | PrimOp(_,e1,e2) => [e1,e2]
 	  | Let(_,e1,e2) => [e1,e2]
@@ -375,6 +379,7 @@ struct
 	  | Info(i, e) => Info(i, simplifyExp e)
 	  | Deconst(c, e) => Deconst(c, simplifyExp e)
 	  | Assign(e1,e2) => Assign(simplifyExp e1, simplifyExp e2)
+	  | Exchange(e1,e2) => Exchange(simplifyExp e1, simplifyExp e2)
 	  | App(e1,e2) => App(simplifyExp e1, simplifyExp e2)
 	  | PrimOp(ope, e1,e2) => PrimOp(ope,simplifyExp e1, simplifyExp e2)
 	  | Let(x, e1,e2) => Let(x,simplifyExp e1, simplifyExp e2)
