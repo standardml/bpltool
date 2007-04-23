@@ -3,7 +3,7 @@
 % Bug-fixing and extending Lars Birkedal's encoding of 2005-07-11.
 %
 % Ebbe Elsborg and Henning Niss, 2005-01-03.
-% Revised by Ebbe Elsborg, 2007-04-22.
+% Revised by Ebbe Elsborg, 2007-04-23.
 %
 % In CBV, the activity (evaluation order) for an application node
 % changes during evaluation.
@@ -181,22 +181,6 @@ rule app_fix =
   sub_(f)(sub_(x)([0]<x,f> | def_x(val([1]))) |
           def_f(val(fix_(f,x)[0]<x,f>)))
 
-%rule sub =
-%  var_x || def_x(val([0]))
-%    ->
-%  val([0]) | {x} || def_x(val([0]))
-%
-%rule gc =
-%  sub_(x)([0] | def_x([1]))
-%    ->                     
-%  [0]
-
-% substitution of defnition from a distance
-rule sub' =
-  var_x || def'_x(val([0]))
-    ->
-  val([0]) \o {x} || def'_x(val([0]))	% \o ensures x not in cod([0])
-
 rule let =
   let(letd(val([0])) | letb_(x)([1]<x>))
     ->
@@ -265,6 +249,22 @@ rule exc_store =
     ->
   val(unit) \o {l1,l2}
 	|| store(cell'_l1([1]) | cell'_l2([0])|[2])
+
+%rule sub =
+%  var_x || def_x(val([0]))
+%    ->
+%  val([0]) | {x} || def_x(val([0]))
+%
+%rule gc =
+%  sub_(x)([0] | def_x([1]))
+%    ->                     
+%  [0]
+
+% substitution of definition from a distance
+rule sub' =
+  var_x || def'_x(val([0]))
+    ->
+  val([0]) \o {x} || def'_x(val([0]))	% \o ensures x not in cod([0])
 
 % rules for propagating explicit substitutions
 rule sub_varx =
