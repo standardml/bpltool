@@ -271,7 +271,7 @@ fun exp2bg (X:nameset) exp =
 	(ASSIGN tt id X) oo
 	 (((ALOC tt id X) oo (exp2bg X e1)) pp
 	  ((AVAL tt id X) oo (EXP tt id X) oo (exp2bg X e2)))
-      | M.Exc e =>
+      | M.Exchange(e1, e2) =>
 	(EXC tt id X) oo
 	 (((EXCL tt id X) oo (exp2bg X e1)) pp
 	  ((EXCR tt id X) oo (EXP tt id X) oo (exp2bg X e2)))
