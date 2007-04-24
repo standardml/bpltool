@@ -31,6 +31,10 @@ val Cob = makeBR(B.Com info (C,b))
 val all_a = M.allmatches { agent = Coa , rule = r }
 val all_b = M.allmatches { agent = Cob , rule = r }
 
+val mt_a = M.matches { agent = Coa, rule = r }
+val mt_b = M.matches { agent = Cob, rule = r }
+val _ = LazyList.lzprint M.toString mt_b
+
 val os = openOut("matches.out")
 
 fun printmatches [] = "Done\n"
