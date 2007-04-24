@@ -67,7 +67,7 @@ sig
   val unmk : 'class bgbdnf -> bgval
   (** Regularize a B bgbdnf.
    * @params b
-   * @param  b the BDNF to reqularize
+   * @param  b the BDNF to regularize
    * @exception IrregularBDNF  if b is irregular.
    *)
   val regularize : B bgbdnf -> BR bgbdnf

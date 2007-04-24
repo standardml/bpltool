@@ -111,12 +111,14 @@ sig
 
   sharing type BgBDNF.BR =
                BR =
-               Match.BR
+               Match.BR =
+               Rule.BR
 
   sharing type BgBDNF.bgbdnf =
                bgbdnf =
                Match.bgbdnf =
-               Instantiation.bgbdnf
+               Instantiation.bgbdnf  =
+               Rule.bgbdnf
 
   sharing type Info.info =
                BgTerm.info =
