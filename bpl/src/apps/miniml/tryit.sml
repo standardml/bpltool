@@ -7,12 +7,12 @@ structure P = BG.Permutation
 structure R = BG.Rule
 structure Bdnf = BG.BgBDNF
 structure M = BG.Match
-structure Re = Reaction (structure RuleNameMap = OrderFinMap (BG.Name.Order)
+structure Re = Reaction (structure RuleNameMap = Util.StringMap
                          structure Info = BG.Info
                          structure Interface = BG.Interface
 			 structure Wiring = BG.Wiring
 			 structure BgVal = BG.BgVal
-			 structure BgBFNF = BG.BgBDNF
+			 structure BgBDNF = BG.BgBDNF
 			 structure Match = BG.Match
 			 structure Instantiation = BG.Instantiation
 			 structure Rule = BG.Rule
