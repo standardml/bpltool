@@ -19,6 +19,7 @@ rule: /lib/pp/smlnj/. instantiation-sig /kernel/ast/bgval-sig
   /lib/util/flags /lib/coll/set %NODASHSIG
 match-sig: /lib/pp/smlnj/prettyprint /lib/coll/lazylist
 match: match-sig /kernel/bg/sigs /kernel/ast/sigs /lib/compat/mosml/hash/.
+  /lib/coll/listsort
   /lib/pp/smlnj/. /lib/coll/pp /lib/coll/lzlist /lib/coll/set /lib/coll/map
   /lib/compat/mosml/hash/. /lib/compat/common/. /lib/util/flags
   /lib/util/origin /lib/util/errorhandler-sig /lib/util/debug
