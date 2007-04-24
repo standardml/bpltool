@@ -73,3 +73,6 @@ mml2bg: mml2bg-sig miniml minimlparser pattern desugar matchcompiler
 bplc: %PROGRAM bggen mml2bg /kernel/bg 
    /lib/pp/smlnj/. /lib/util/flags /lib/util/argparse /lib/pp/mak/.
    /lib/util/timings /lib/util/origin /lib/util/printerrorhandler
+
+# Trying out the matching functionality with K-L-M example.
+tryit: %PROGRAM /kernel/match /kernel/bg
