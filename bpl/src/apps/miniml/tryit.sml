@@ -1,4 +1,4 @@
-open TextIO; (* for writing output to terminal *)
+open TextIO; (* for writing output *)
 
 structure BG = BG (structure ErrorHandler = PrintErrorHandler);
 structure B = BG.BgVal
@@ -7,6 +7,17 @@ structure P = BG.Permutation
 structure R = BG.Rule
 structure Bdnf = BG.BgBDNF
 structure M = BG.Match
+structure Re = Reaction (structure RuleNameMap = OrderFinMap (BG.Name.Order)
+                         structure Info = BG.Info
+                         structure Interface = BG.Interface
+			 structure Wiring = BG.Wiring
+			 structure BgVal = BG.BgVal
+			 structure BgBFNF = BG.BgBDNF
+			 structure Match = BG.Match
+			 structure Instantiation = BG.Instantiation
+			 structure Rule = BG.Rule
+			 structure Origin = Origin
+			 structure ErrorHandler = BG.ErrorHandler)
 
 val info = BG.Info.noinfo
 
@@ -19,7 +30,7 @@ val a = B.Ten info [K, L]
 val b = B.Ten info [L, K]
 val C = B.Pri info [M, id_1]
 
-fun makeBR b = Bdnf.regularize (Bdnf.make b)
+fun makeBR bgval = Bdnf.regularize (Bdnf.make bgval)
 
 val K' = makeBR K
 
@@ -28,13 +39,26 @@ val r = R.make' { name = "K-to-L" , redex = K' , react = L }
 val Coa = makeBR(B.Com info (C,a))
 val Cob = makeBR(B.Com info (C,b))
 
+(*
 val all_a = M.allmatches { agent = Coa , rule = r }
 val all_b = M.allmatches { agent = Cob , rule = r }
+*)
 
 val mt_a = M.matches { agent = Coa, rule = r }
 val mt_b = M.matches { agent = Cob, rule = r }
-val _ = LazyList.lzprint M.toString mt_b
 
+fun printMts m =
+    ( print "Matches:\n"
+    ; LazyList.lzprint M.toString m
+    ; print "\n" )
+val _ = print "Pip for Helvede!"
+val _ = printMts mt_a
+val _ = printMts mt_b
+
+val b' = Re.react Cob mt_b
+val _ = print(B.toString(#wirxid(Bdnf.unmk b')))
+
+(*
 val os = openOut("matches.out")
 
 fun printmatches [] = "Done\n"
@@ -46,3 +70,4 @@ val out_b = printmatches all_b
 
 val _ = flushOut(os)
 val _ = closeOut(os)
+*)
