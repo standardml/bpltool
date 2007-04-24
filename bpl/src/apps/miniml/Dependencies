@@ -76,4 +76,5 @@ bplc: %PROGRAM bggen mml2bg /kernel/bg
 
 # Trying out the matching functionality with K-L-M example.
 tryit: %PROGRAM /kernel/bg /lib/coll/lzlist /lib/util/printerrorhandler
-   /kernel/ast/bgval
+   /kernel/ast/bgval /kernel/match/funs /lib/util/origin 
+   /lib/coll/orderfinmap /lib/coll/orderset
