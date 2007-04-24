@@ -17,7 +17,7 @@ structure Re = Reaction (structure RuleNameMap = Util.StringMap
 			 structure Instantiation = BG.Instantiation
 			 structure Rule = BG.Rule
 			 structure Origin = Origin
-			 structure ErrorHandler = BG.ErrorHandler)
+			 structure ErrorHandler = PrintErrorHandler)
 
 val info = BG.Info.noinfo
 
@@ -55,8 +55,15 @@ val _ = print "Pip for Helvede!"
 val _ = printMts mt_a
 val _ = printMts mt_b
 
+(*
 val b' = Re.react Cob mt_b
 val _ = print(B.toString(#wirxid(Bdnf.unmk b')))
+*)
+val b's = LazyList.lzmap (Re.react Cob) mt_b
+val _ = print "Agents resulting from reactions:\n"
+val _ = LazyList.lzprint (B.toString o Bdnf.unmk) b's
+val _ = print "\n"
+
 
 (*
 val os = openOut("matches.out")
