@@ -75,4 +75,4 @@ bplc: %PROGRAM bggen mml2bg /kernel/bg
    /lib/util/timings /lib/util/origin /lib/util/printerrorhandler
 
 # Trying out the matching functionality with K-L-M example.
-tryit: %PROGRAM /kernel/match /kernel/bg
+tryit: %PROGRAM /kernel/bg /lib/util/printerrorhandler /kernel/ast/bgval
