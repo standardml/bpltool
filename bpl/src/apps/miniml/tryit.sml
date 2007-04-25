@@ -30,6 +30,13 @@ val a = B.Ten info [K, L]
 val b = B.Ten info [L, K]
 val C = B.Pri info [M, id_1]
 
+fun prtSimp name =
+ fn bgval => print(name ^ "= " ^ B.toString(B.simplify bgval) ^ "\n")
+
+val _ = prtSimp "a" a
+val _ = prtSimp "b" b
+val _ = prtSimp "C" C
+
 fun makeBR bgval = Bdnf.regularize (Bdnf.make bgval)
 
 val K' = makeBR K
@@ -39,11 +46,6 @@ val r = R.make' { name = "K-to-L" , redex = K' , react = L }
 val Coa = makeBR(B.Com info (C,a))
 val Cob = makeBR(B.Com info (C,b))
 
-(*
-val all_a = M.allmatches { agent = Coa , rule = r }
-val all_b = M.allmatches { agent = Cob , rule = r }
-*)
-
 val mt_a = M.matches { agent = Coa, rule = r }
 val mt_b = M.matches { agent = Cob, rule = r }
 
@@ -51,17 +53,23 @@ fun printMts m =
     ( print "Matches:\n"
     ; LazyList.lzprint M.toString m
     ; print "\n" )
-val _ = print "Pip for Helvede!"
-val _ = printMts mt_a
-val _ = printMts mt_b
 
-(*
-val b' = Re.react Cob mt_b
-val _ = print(B.toString(#wirxid(Bdnf.unmk b')))
-*)
+val b_parts =
+    let val b' = M.unmk (LazyList.lzhd mt_b)
+	val b'_ctx = #context(b')
+	val b'_par = #parameter(b')
+	fun peel x = (B.toString o B.simplify o Bdnf.unmk) x
+    in ["b_ctx= " ^ (peel b'_ctx) ^ "\n",
+	"b_par= " ^ (peel b'_par) ^ "\n"]
+    end
+
+val _ = printMts mt_a
+(*val _ = printMts mt_b*)
+val _ = map print b_parts
+
 val b's = LazyList.lzmap (Re.react Cob) mt_b
 val _ = print "Agents resulting from reactions:\n"
-val _ = LazyList.lzprint (B.toString o Bdnf.unmk) b's
+val _ = LazyList.lzprint (B.toString o B.simplify o Bdnf.unmk) b's
 val _ = print "\n"
 
 
