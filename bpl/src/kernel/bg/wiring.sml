@@ -276,91 +276,6 @@ struct
 	newmap
       end
 
-  fun make' ls =
-      let
-	(* First we create an inverted map, mapping nameedges to sets
-	 * of inner names.
-	 *)
-	val invmap 
-	  = createNameEdgeMap' ()
-	(* addlink adds one link to the inverted map, numbering the
-	 * internal edges (i.e., closed links) sequentially using i.
-	 *)
-	fun addlink (l, (i, insize)) = 
-	    case Link.unmk l of
-	      {outer = SOME outername, inner} =>
-		(case NameEdgeMap.find invmap 
-				       (Name outername) of
-		  SOME innernameset 
-		  => (NameEdgeMap.insert invmap
-					 (Name outername,
-					  NameSet.union inner innernameset);
-		      (i, insize + NameSet.size inner))
-		| NONE
-		  => (NameEdgeMap.insert invmap
-					 (Name outername,
-					  inner);
-		      (i, insize + NameSet.size inner)))
-	    | {outer = NONE, inner} 
-	      => (NameEdgeMap.insert invmap (Closure (i + 1), inner);
-		  (i + 1, insize + NameSet.size inner))
-	(* We add all the links to the inverted map. *)
-	val (_, innernamesize) = foldl addlink (0, 0) ls;
-      in
-	(* And then compute a link'set from it, as well as a
-	 * non-inverted map.
-	 *)
-	(invmap2link'set invmap, invert innernamesize invmap)
-      end
-
-  fun make ls = make' (LinkSet.list ls)
-
-  (*FIXME not necessarily the most efficient way to do it... *)
-  fun make_ren nm =
-      make' (NameMap.Fold
-               (fn ((x, y), ls) =>
-                   (Link.make {outer = SOME y, inner = NameSet.singleton x})
-                   :: ls)
-               [] nm)
-	      
-  fun unmk (link'set, _) = 
-      let
-	fun insertlink {outer = Name y, inner}
-	    = LinkSet.insert (Link.make {outer = SOME y, inner = inner})
-	  | insertlink {outer = Closure _, inner}
-	    = LinkSet.insert (Link.make {outer = NONE, inner = inner})
-      in
-	Link'Set.fold insertlink LinkSet.empty link'set
-      end
-
-  fun innernames (ls, _)
-    = Link'Set.fold 
-	(fn {inner, ...} => NameSet.union inner)
-	NameSet.empty
-	ls
-  fun outernames (ls, _)
-    = Link'Set.fold
-	(fn {outer = Name y, ...} => NameSet.insert y
-	  | _ => fn Y => Y) 
-	NameSet.empty
-	ls
-
-  fun introductions (ls, _)
-    = Link'Set.fold
-        (fn {outer = Name y, inner}
-          => if NameSet.isEmpty inner then 
-               NameSet.insert y
-             else
-               (fn Y => Y)
-          | _ => (fn Y => Y))
-        NameSet.empty
-        ls
-
-  exception InternalError 
-	    of string * nameset NameEdgeMap.hash_table * nameedge * string
-
-  exception CannotExtend of wiring * wiring * nameedge
-
   fun is_id (ls, ht) = 
       let
 	fun is_not_id_link {outer = Name y, inner} _ =
@@ -390,6 +305,17 @@ struct
       in
 	Link'Set.foldUntil is_not_id0_link true ls
       end
+
+	fun ppwire {outer, inner} pps =
+	    (case outer of
+	       SOME y => Name.pp 2 pps y
+	     | NONE => ();
+	     if NameSet.size inner = 1 then
+	       (PrettyPrint.add_string pps "/";
+	       NameSet.apply (Name.pp 2 pps) inner)
+	     else
+	       (PrettyPrint.add_string pps "//";
+	       NameSetPP.ppbr 2 "[" "]" pps inner))
 
   fun pp' lbrack dblslash rbrack idw indent pps (w as (ls, _)) =
       let
@@ -438,6 +364,146 @@ struct
     = PrettyPrint.pp_to_string
         (Flags.getIntFlag "/misc/linewidth") 
         (pp (Flags.getIntFlag "/misc/indent")) w
+
+  exception InnerNameClash of link list * string
+  fun explain_InnerNameClash (InnerNameClash (ls, errtxt)) =
+      [Exp (LVL_USER, Origin.unknown_origin, mk_list_pp "[" "]" ","
+            (fn indent => fn pps => fn l => ppwire (Link.unmk l) pps) ls, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_InnerNameClash _ = raise Match
+  val _ = add_explainer
+            (mk_explainer
+             "Inner name clash when creating a wiring from a collection of links"
+             explain_InnerNameClash)
+
+  exception NotARenaming of wiring * string
+  fun explain_NotARenaming (NotARenaming (w, errtxt)) =
+      [Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data pp w, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_NotARenaming _ = raise Match
+  val _ = add_explainer
+            (mk_explainer "the wiring was expected to be a renaming"
+                          explain_NotARenaming)
+
+  exception NotASubstitution of wiring * string
+  fun explain_NotASubstitution (NotASubstitution (w, errtxt)) =
+      [Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data pp w, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_NotASubstitution _ = raise Match
+  val _ = add_explainer
+            (mk_explainer "the wiring was expected to be a substitution"
+                          explain_NotASubstitution)
+
+
+  fun make' ls =
+      let
+	(* First we create an inverted map, mapping nameedges to sets
+	 * of inner names.
+	 *)
+	val invmap 
+	  = createNameEdgeMap' ()
+	(* addlink adds one link to the inverted map, numbering the
+	 * internal edges (i.e., closed links) sequentially using i.
+	 *)
+	fun addlink (l, (i, insize, innernames)) = 
+	    case Link.unmk l of
+	      {outer = SOME outername, inner} =>
+	      (case NameEdgeMap.find invmap (Name outername) of
+		  	SOME innernameset 
+		  	=> (NameEdgeMap.insert invmap
+					  (Name outername,
+					   NameSet.union inner innernameset);
+		        (i, insize + NameSet.size inner,
+		         NameSet.union inner innernames))
+				| NONE
+		  	=> (NameEdgeMap.insert invmap
+				 	  (Name outername,
+					   inner);
+		       (i, insize + NameSet.size inner,
+		        NameSet.union inner innernames)))
+	    | {outer = NONE, inner} 
+	      => (NameEdgeMap.insert invmap (Closure (i + 1), inner);
+		  			(i + 1, insize + NameSet.size inner,
+		   			NameSet.union inner innernames))
+	(* We add all the links to the inverted map. *)
+	val (_, innernamesize, _) = foldl addlink (0, 0, NameSet.empty) ls;
+      in
+	(* And then compute a link'set from it, as well as a
+	 * non-inverted map.
+	 *)
+	(invmap2link'set invmap, invert innernamesize invmap)
+      end handle NameSet.DuplicatesRemoved
+       => raise InnerNameClash (ls, "in Wiring.make'") 
+
+  fun make ls = make' (LinkSet.list ls)
+
+  (*FIXME not necessarily the most efficient way to do it... *)
+  fun make_ren nm =
+      make' (NameMap.Fold
+               (fn ((x, y), ls) =>
+                   (Link.make {outer = SOME y, inner = NameSet.singleton x})
+                   :: ls)
+               [] nm)
+	      
+  fun unmk (link'set, _) = 
+      let
+	fun insertlink {outer = Name y, inner}
+	    = LinkSet.insert (Link.make {outer = SOME y, inner = inner})
+	  | insertlink {outer = Closure _, inner}
+	    = LinkSet.insert (Link.make {outer = NONE, inner = inner})
+      in
+	Link'Set.fold insertlink LinkSet.empty link'set
+      end
+
+  fun unmk_ren (w as (link'set, _)) = 
+      let
+	fun insertlink {outer = Name y, inner} nm =
+	      (case NameSet.list inner of
+                 [x] => NameMap.add (x, y, nm)
+               | _   => raise NotARenaming (w, "in unmk_ren(1)"))
+	  | insertlink {outer = Closure _, ...} _ =
+	      raise NotARenaming (w, "in unmk_ren(2)")
+      in
+	Link'Set.fold insertlink NameMap.empty link'set
+      end
+
+  fun unmk_sub (w as (link'set, _)) = 
+      let
+				fun insertlink {outer = Name y, inner} nm
+					= NameSet.fold (fn x => fn nm => NameMap.add (x, y, nm)) nm inner
+	  			| insertlink {outer = Closure _, ...} _ =
+	      		raise NotASubstitution (w, "in unmk_sub")
+      in
+				Link'Set.fold insertlink NameMap.empty link'set
+      end
+
+  fun innernames (ls, _)
+    = Link'Set.fold 
+	(fn {inner, ...} => NameSet.union inner)
+	NameSet.empty
+	ls
+  fun outernames (ls, _)
+    = Link'Set.fold
+	(fn {outer = Name y, ...} => NameSet.insert y
+	  | _ => fn Y => Y) 
+	NameSet.empty
+	ls
+
+  fun introductions (ls, _)
+    = Link'Set.fold
+        (fn {outer = Name y, inner}
+          => if NameSet.isEmpty inner then 
+               NameSet.insert y
+             else
+               (fn Y => Y)
+          | _ => (fn Y => Y))
+        NameSet.empty
+        ls
+
+  exception InternalError 
+	    of string * nameset NameEdgeMap.hash_table * nameedge * string
+
+  exception CannotExtend of wiring * wiring * nameedge
 
   (* Algorithm for composing wirings:
    * 1 For each link V |-> y in w1, add y |-> {} to w_inv.
@@ -699,27 +765,6 @@ struct
           raise NotInCodomain (w, NameSet.difference Y Y', "in app_inverse")
       end
 
-  exception NotARenaming of wiring * string
-  fun explain_NotARenaming (NotARenaming (w, errtxt)) =
-      [Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data pp w, []),
-       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
-    | explain_NotARenaming _ = raise Match
-  val _ = add_explainer
-            (mk_explainer "the wiring was expected to be a renaming"
-                          explain_NotARenaming)
-
-  fun unmk_ren (w as (link'set, _)) = 
-      let
-	fun insertlink {outer = Name y, inner} nm =
-	      (case NameSet.list inner of
-                 [x] => NameMap.add (x, y, nm)
-               | _   => raise NotARenaming (w, "in unmk_ren(1)"))
-	  | insertlink {outer = Closure _, ...} _ =
-	      raise NotARenaming (w, "in unmk_ren(2)")
-      in
-	Link'Set.fold insertlink NameMap.empty link'set
-      end
-
   fun app_renaming_x w x =
       case app_x w x of
         SOME y => y
@@ -763,6 +808,29 @@ struct
 			val i_max = NameSet.apply addlink X
     in
 			(invmap2link'set ht_inv, invert (NameSet.size X) ht_inv)
+    end
+
+  (* Algorithm for restricting a wiring, keeping the outer
+   * face:
+   * 1 For each link mapping, remove it if inner name not in X.
+   * 2 For each link, remove inner names not in X.
+	 *)
+  fun restrict' (ls, ht) X =
+    let
+      val htX = createNameHashMap (NameHashMap.numItems ht)
+    in
+      NameHashMap.appi
+        (fn pair as (x, ne) =>
+         if NameSet.member x X then NameHashMap.insert htX pair else ())
+        ht;
+      (Link'Set.fold
+         (fn {outer, inner} => fn ls =>
+          Link'Set.insert
+            {outer = outer, inner = NameSet.intersect inner X}
+            ls)
+       Link'Set.empty
+       ls,
+       htX)
     end
 
   fun split (ls, ht) X =

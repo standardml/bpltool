@@ -408,26 +408,39 @@ struct
   (* Utility function for converting a partition generator to a lazy list
    *)
   fun partgen2lzlist partgen =
-      (lzCons (fn () => (Partition.next partgen, partgen2lzlist partgen)))
-      handle Partition.NoPartitions => lzNil
+(*      (lzCons (fn () => (Partition.next partgen, partgen2lzlist partgen)))
+      handle Partition.NoPartitions => lzNil*)
+      lzmake
+        (fn () =>
+         Cons (Partition.next partgen, partgen2lzlist partgen)
+         handle Partition.NoPartitions => Nil)
+      
   (* Utility function for converting an ordered partition generator to a lazy list
    *)
   fun opartgen2lzlist opartgen =
-      (lzCons (fn () => (OrderedPartition.next opartgen, opartgen2lzlist opartgen)))
-      handle OrderedPartition.NoPartitions => lzNil
+      lzmake
+        (fn () =>
+         Cons (OrderedPartition.next opartgen, opartgen2lzlist opartgen)
+         handle OrderedPartition.NoPartitions => Nil)
   (* same as above, except each part of a partition has at least one element*)
   fun opartgen2lzlist' opartgen =
-      (lzCons (fn () => (OrderedPartition.next' opartgen, opartgen2lzlist' opartgen)))
-      handle OrderedPartition.NoPartitions => lzNil
+      lzmake
+        (fn () =>
+         Cons (OrderedPartition.next' opartgen, opartgen2lzlist' opartgen)
+         handle OrderedPartition.NoPartitions => Nil)
   (* Utility function for converting a nameset subset generator to a lazy list
    *)
   fun nssubsetgen2lzlist subsetgen =
-      (lzCons (fn () => (NameSetSubset.next subsetgen, nssubsetgen2lzlist subsetgen)))
-      handle NameSetSubset.NoSubsets => lzNil
+      lzmake
+        (fn () =>
+         Cons (NameSetSubset.next subsetgen, nssubsetgen2lzlist subsetgen)
+         handle NameSetSubset.NoSubsets => Nil)
   (* same as above, except the list only has elements of at least size m *)
   fun nssubsetgen2lzlist' subsetgen m =
-      (lzCons (fn () => (NameSetSubset.next' subsetgen m, nssubsetgen2lzlist' subsetgen m)))
-      handle NameSetSubset.NoSubsets => lzNil
+      lzmake
+        (fn () =>
+         Cons (NameSetSubset.next' subsetgen m, nssubsetgen2lzlist' subsetgen m)
+         handle NameSetSubset.NoSubsets => Nil)
 
   (* utility functions to make substitution links *)
   fun mk_slink (y, X) = Link.make {outer = SOME y, inner = X}
@@ -446,7 +459,7 @@ struct
    *      sigma   = [y_1/X_1, ..., y_m/X_m]
    *      upsilon = [z_1/V_1, ..., z_n/V_n]
    * 2) If the lists are of different lengths return NoMatch.
-   * 3) Lad tau_0 = id_Ø
+   * 3) Let tau_0 = id_0
    * 4) For each pair of links (y_i/X_i, z_i/V_i)
    *      if y_i <> z_i or |X_i| = 0 <> |V_i| then
    *        return NoMatch
@@ -506,7 +519,8 @@ struct
                      (lzmap
                         (map NameSet.fromList)
                         (opartgen2lzlist
-                           (OrderedPartition.make (NameSet.list V_i) k))))
+                           (OrderedPartition.make (NameSet.list V_i) k)
+                         handle OrderedPartition.NoPartitions => lzNil)))
               end
           | process_link_pair _ _ _ = raise NoMatch
       in
@@ -589,14 +603,14 @@ struct
    *      upsilon = [v_1/W_1, ..., v_m/W_m]
    * 2) let n be the number of links in sigma. 
    * 3) if m = 0 and n > 0 then return NoMatch
-   * 4) let  rho_0 = tau_0 = id_Ø
-   *         Z_0 = Ø
+   * 4) let  rho_0 = tau_0 = id_0
+   *         Z_0 = {}
    * 5) for each ordered partition  \bigox_{i \in {1,...,m}} s_i  of sigma into m substitutions
    *      for each link v_i/W_i
    *        let  s_i : Q_i -> U_i
    *             Q_i = [q_i1, ..., q_ik]
    *        if k = 0 then
-   *          let S_i = W_i and X_i = Ø
+   *          let S_i = W_i and X_i = {}
    *        else
    *          find all ordered partitions of W_i = S_i \cup X_i
    *        for each partition W_i = S_i \cup X_i
@@ -610,8 +624,8 @@ struct
    *)
   fun find_rho_tau_Z {sigma, upsilon} = lzmake (fn () =>
       let
-        val sigma'   = Wiring.unmk sigma
-        val upsilon' = Wiring.unmk upsilon
+        val sigma'   = Wiring.unmk sigma handle e => raise e
+        val upsilon' = Wiring.unmk upsilon handle e => raise e
         val m = LinkSet.size upsilon'
         val n = LinkSet.size sigma'
       in
@@ -619,8 +633,8 @@ struct
           Nil
         else
           let 
-            val vWs = LinkSet.list upsilon'
-            val sigma_link_list = LinkSet.list sigma'
+            val vWs = LinkSet.list upsilon' handle e => raise e
+            val sigma_link_list = LinkSet.list sigma' handle e => raise e
 
             fun process_link rho tau Z [] [] =
                 lzCons (fn () => ({rho = rho, tau = tau, Z = Z}, lzNil))
@@ -629,10 +643,10 @@ struct
                   val (v_i, W_i) = case Link.unmk vW_i of
                                      {outer = SOME v_i, inner = W_i} => (v_i, W_i)
                                    | _ => raise ThisCannotHappen (*upsilon is not a substitution*)
-                  val Q_i  = Wiring.innernames s_i
+                  val Q_i  = Wiring.innernames s_i handle e => raise e
                   val q_is = NameSet.list Q_i
                   val k    = NameSet.size Q_i
-                  val U_i  = Wiring.outernames s_i
+                  val U_i  = Wiring.outernames s_i handle e => raise e
                   (* construct suitable lazy lists of partitions
                    * of W_i depending on k *)
                   val W_i_partitions
@@ -642,12 +656,14 @@ struct
                       else
                         lzmap
                           (fn [s_is, x_is] =>
-                              {S_i = NameSet.fromList s_is,
-                               X_i = NameSet.fromList x_is}
+                              {S_i = NameSet.fromList s_is handle e => raise e,
+                               X_i = NameSet.fromList x_is handle e => raise e}
                             | _ => raise ThisCannotHappen)
                           (opartgen2lzlist
-                             (OrderedPartition.make (NameSet.list W_i) 2))
-
+                             (OrderedPartition.make (NameSet.list W_i) 2)
+                           handle OrderedPartition.NoPartitions => lzNil)
+ handle e => raise e
+ 
                   (* find solutions for each ordered partition of X_i *)
                   fun process_X_i_partition rho_i Z_i X_ijs =
                       let
@@ -660,8 +676,8 @@ struct
                                                           inner = X_ij})
                                            (q_is, X_ijs)))
                       in
-                        process_link rho_i tau_i Z_i vWs s_is
-                      end
+                        process_link rho_i tau_i Z_i vWs s_is handle e => raise e
+                      end handle e => raise e
 
                   (* find solutions for each partition of W_i *)
                   fun process_W_i_partition {S_i, X_i} =
@@ -671,32 +687,34 @@ struct
                                       Wiring.make'
                                         [Link.make
                                            {outer = SOME v_i,
-                                            inner = NameSet.union U_i S_i}])
-                        val Z_i = NameSet.union Z S_i
+                                            inner = (NameSet.union U_i S_i) handle e => raise e}])
+                        val Z_i = NameSet.union Z S_i handle e => raise e
                       in
                         lzconcat 
                           (lzmap
                              (process_X_i_partition rho_i Z_i)
                              (lzmap
-                                (map NameSet.fromList)
+                                (map (fn ls => (NameSet.fromList ls handle e => raise e)))
                                 (opartgen2lzlist
                                    (OrderedPartition.make
                                       (NameSet.list X_i)
-                                      k))))
-                      end
+                                      k)
+                                 handle OrderedPartition.NoPartitions => lzNil)))
+                      end handle e => raise e
                 in
-                  lzunmk (lzconcat (lzmap process_W_i_partition W_i_partitions))
+                  lzunmk (lzconcat (lzmap process_W_i_partition W_i_partitions)) handle e => raise e
                 end)
               | process_link _ _ _ _ _ = raise NoMatch
           in
             lzunmk
               (lzconcat
                  (lzmap
-                    (process_link Wiring.id_0 Wiring.id_0 NameSet.empty vWs)
+                    (process_link Wiring.id_0 Wiring.id_0 NameSet.empty vWs handle e => raise e)
                     (lzmap
                        (map Wiring.make')
                        (opartgen2lzlist
-                          (OrderedPartition.make sigma_link_list m)))))
+                          (OrderedPartition.make sigma_link_list m)
+                        handle OrderedPartition.NoPartitions => lzNil))))
           end
       end
       handle NoMatch => Nil)
@@ -713,14 +731,14 @@ struct
    * 1) deconstruct upsilon
    *      upsilon = [v_1/W_1, ..., v_m/W_m]
    * 2) let n be the number of links in sigma. 
-   * 3) let  rho_0 = tau_0 = id_Ø
-   *         Z_0 = Ø
+   * 3) let  rho_0 = tau_0 = id_0
+   *         Z_0 = {}
    * 4) for each ordered partition  \bigox_{i \in {1,...,m,m+1}} s_i  of sigma into m + 1 substitutions
    *      for each link v_i/W_i
    *        let  s_i : Q_i -> U_i
    *             Q_i = [q_i1, ..., q_ik]
    *        if k = 0 then
-   *          let S_i = W_i and X_i = Ø
+   *          let S_i = W_i and X_i = {}
    *        else
    *          find all partitions of W_i = S_i \cup X_i
    *        for each partition W_i = S_i \cup X_i
@@ -729,7 +747,7 @@ struct
    *            tau_i = tau_i-1 * \bigox q_ij/X_ij
    *            Z_i   = Z_i-1 \cup S_i
    *      for each partition  \bigox_{j \in {m+1,...,m+t}} sm_j  of s_m+1  (into any number of partitions)
-   *        let  Y_m = Ø
+   *        let  Y_m = {}
    *        for each sm_j : Q_j -> U_j
    *          Y_j   = Y_j-1 \cup {y_j}     where y_j is fresh
    *          rho_j = rho_j-1 * y_j/U_j
@@ -785,7 +803,8 @@ struct
                            (LinkSet.list (Wiring.unmk s_m_plus_1))
                            (* the number of outer names is the
                             * maximum number of non-empty partitions *)
-                           (NameSet.size (Wiring.outernames s_m_plus_1)))))
+                           (NameSet.size (Wiring.outernames s_m_plus_1)))
+                      handle Partition.NoPartitions => lzNil))
               | process_link rho tau Z (vW_i::vWs) (s_i::s_is) = lzmake (fn () =>
                 let
                   val (v_i, W_i) = case Link.unmk vW_i of
@@ -808,7 +827,8 @@ struct
                                X_i = NameSet.fromList x_is}
                             | _ => raise ThisCannotHappen)
                           (opartgen2lzlist
-                             (OrderedPartition.make (NameSet.list W_i) 2))
+                             (OrderedPartition.make (NameSet.list W_i) 2)
+                           handle OrderedPartition.NoPartitions => lzNil)
 
                   (* find solutions for each ordered partition of X_i *)
                   fun process_X_i_partition rho_i Z_i X_ijs =
@@ -844,7 +864,8 @@ struct
                                 (opartgen2lzlist
                                    (OrderedPartition.make
                                       (NameSet.list X_i)
-                                      k))))
+                                      k)
+                                 handle OrderedPartition.NoPartitions => lzNil)))
                       end
                 in
                   lzunmk (lzconcat (lzmap process_W_i_partition W_i_partitions))
@@ -858,7 +879,8 @@ struct
                     (lzmap
                        (map Wiring.make')
                        (opartgen2lzlist
-                          (OrderedPartition.make sigma_link_list (m + 1))))))
+                          (OrderedPartition.make sigma_link_list (m + 1))
+                        handle OrderedPartition.NoPartitions => lzNil))))
           end
       end
       handle NoMatch => Nil)
@@ -909,6 +931,15 @@ struct
       (case unmkS S of
         BgBDNF.SCon (i, alpha) =>
         (let
+          (* Remember to trim s_a to fit the outer face of g, as this is
+           * not done explicitly in the PARn rule.
+           *)
+          val s_a_n = Wiring.restrict' s_a_n (glob (outerface g))
+          val s_a_e = Wiring.restrict' s_a_e (glob (outerface g))
+          (*val _ = print ("after : s_a_e = " ^ Wiring.toString s_a_e ^
+                       ", s_a_n = " ^ Wiring.toString s_a_n ^ 
+                       "s_C_e = " ^ Wiring.toString s_C_e ^
+                       ", s_C_n = " ^ Wiring.toString s_C_n ^ "\n")*) 
           val Y_n  = Wiring.outernames s_a_n
           val Y_e  = NameSet.fromList (NameMap.range ename)
 
@@ -922,8 +953,8 @@ struct
            * and compute the compositions s_C_n alpha_n and s_C_e alpha_e. *)
           val {inCod = alpha_n, notInCod = alpha_e}
             = Wiring.split_outer alpha (Wiring.innernames s_C_n)
-          val s_C_n_alpha = Wiring.* (s_C_n, alpha_n)
-          val s_C_e_alpha = Wiring.* (s_C_e, alpha_e)
+          val s_C_n_alpha = Wiring.o (s_C_n, alpha_n)
+          val s_C_e_alpha = Wiring.o (s_C_e, alpha_e)
 
           val {inCod = s_Ce, notInCod = s_Ce'}
             = Wiring.split_outer s_C_e_alpha Y_e
@@ -944,6 +975,9 @@ struct
            * FIXME should we calculate all solutions to each and then generate combinations?
            * NB! We calculate the same solutions for each combination...
            *     Slow but easy and memory preserving...
+					 * FIXME: What if s_ae or s_ae'_e are empty, but s_Ce or s_Ce', respectively,
+					 *     are not?  Should we then add a name introduction to s_ae or s_ae'_e,
+					 *     and return it in Y?
            *)
           val s_C_n_alpha_links = LinkSet.list (Wiring.unmk s_C_n_alpha)
           val s_a_e'_links      = LinkSet.list (Wiring.unmk s_a_e')
@@ -962,10 +996,12 @@ struct
                       {ename' = NameMap.plus (ename, ename'_e),
                        Y      = NameSet.union Q_e Q_n,
                        s_C'   = Wiring.* (s_C'_1, s_C'_2),
-                       qs     = [makeP tau (makeN (Wiring.innernames tau) g)],
-                       tree   = ZAX'}
+                       qs     = [makeP tau (makeN (Wiring.innernames tau) g handle e => raise e)],
+                       tree   = PAX'}
                     end
               in
+              (*print ("s_ae'_n = " ^ Wiring.toString s_ae'_n ^
+                     ", s_Cn' = " ^ Wiring.toString s_Cn' ^ "\n");*)
                 lzmap
                   to_solution
                   (find_rho_tau_Z' {sigma   = s_Cn',
@@ -974,25 +1010,31 @@ struct
           (* solve (3) and then find solutions for (4) *)
           fun solve_34 s_ae'_n s_Cn s_Cn' tau_e
                        {tau = tau'_e, ename = ename'_e, Y = Q_e} =
+              ((*print ("s_Cn = " ^ Wiring.toString s_Cn ^ ", ");*)
               lzconcat
                 (lzmap
                    (solve_4 s_ae'_n s_Cn' (Wiring.* (tau_e, tau'_e)) ename'_e Q_e)
                    (find_rho_tau_Z {sigma   = s_Cn,
-                                    upsilon = s_a_n}))
+                                    upsilon = s_a_n})))
           (* solve (2) and then find solutions for (3) and (4) *)
           fun solve_234 s_ae'_n s_ae'_e s_Cn s_Cn' {tau = tau_e} =
+              ((*print ("s_ae'_e = " ^ Wiring.toString s_ae'_e ^
+                      ", s_Ce' = " ^ Wiring.toString s_Ce' ^ "\n");*)
               lzconcat
                 (lzmap
                    (solve_34 s_ae'_n s_Cn s_Cn' tau_e)
                    (find_tau' {sigma   = s_Ce',
-                               upsilon = s_ae'_e}))
+                               upsilon = s_ae'_e})))
           (* solve (1) and then find solutions for (2), (3), and (4) *)
           fun solve_1234 s_ae'_n s_ae'_e s_Cn s_Cn' =
+              ((*print ("s_ae = " ^ Wiring.toString s_ae ^
+                      ", app_ename ename s_ae = " ^
+                      Wiring.toString (app_ename ename s_ae) ^ ", ");*)
               lzconcat
                 (lzmap
                    (solve_234 s_ae'_n s_ae'_e s_Cn s_Cn')
                    (find_tau {sigma   = s_Ce,
-                              upsilon = app_ename ename s_ae}))
+                              upsilon = app_ename ename s_ae})))
 
           fun process_s_C_n_alpha_split s_ae'_n s_ae'_e [s_Cn, s_Cn'] =
               solve_1234 s_ae'_n s_ae'_e s_Cn s_Cn'
@@ -1003,9 +1045,10 @@ struct
                 (lzmap
                    (process_s_C_n_alpha_split s_ae'_n s_ae'_e)
                    (lzmap
-                     (map Wiring.make')
+                     (map (fn ls => Wiring.make' ls handle e => raise e))
                      (opartgen2lzlist
-                        (OrderedPartition.make s_C_n_alpha_links 2))))
+                        (OrderedPartition.make s_C_n_alpha_links 2)
+                      handle OrderedPartition.NoPartitions => lzNil)))
             | process_s_a_e'_split _ = raise ThisCannotHappen
         in
           lzunmk
@@ -1013,9 +1056,10 @@ struct
                (lzmap
                   process_s_a_e'_split
                   (lzmap
-                     (map Wiring.make')
+                     (map (fn ls => Wiring.make' ls handle e => raise e))
                      (opartgen2lzlist
-                        (OrderedPartition.make s_a_e'_links 2)))))
+                        (OrderedPartition.make s_a_e'_links 2)
+                      handle OrderedPartition.NoPartitions => lzNil))))
         end
         handle NoMatch => Nil)
       | _ => Nil)
@@ -1154,7 +1198,7 @@ struct
 		           [] []
 		           (Permutation.copy pi, perm) (Partition.make ms m) [])
 				end
-    end)
+    end handle e => raise e)
 
   (* Match a global discrete prime to a context using the ION rule:
    * 1) Deconstruct agent g = id * K_y(X) and context G = i * L_u(Z).
@@ -1228,7 +1272,7 @@ struct
                                            p = BgBDNF.makeP vX n,
                                            P = BgBDNF.makeP vZ N}
 
-          fun make_match {ename', s_C', Y, qs, tree} =
+          fun make_match ({ename', s_C', Y, qs, tree}, rest) =
               let
                 val (ename', s_C')
                   = ListPair.foldlEq
@@ -1251,23 +1295,26 @@ struct
                             end
                           else
                             (ename', s_C'))
-                      (ename', Wiring.unmk_ren s_C') (ys, us)
+                      (ename', Wiring.unmk_sub s_C') (ys, us)
                     handle ListPair.UnequalLengths => raise NoMatch
               in
-                {ename' = ename',
-                 s_C' = Wiring.make_ren s_C',
-                 Y = Y,
-                 qs = qs,
-                 tree = ION' tree}
-              end
+                lzCons
+                  (fn () =>
+		                ({ename' = ename',
+		                  s_C' = Wiring.make_ren s_C',
+		                  Y = Y,
+		                  qs = qs,
+		                  tree = ION' tree},
+		                  rest ()))
+              end handle NoMatch => lzNil
         in
-          lzunmk (lzmap make_match premise_matches)
+          lzunmk (lzfoldr make_match lzNil premise_matches)
         end
         handle NoMatch => Nil)
       | _ => Nil)
       | _ => Nil)
       | _ => Nil)
-      | _ => Nil))
+      | _ => Nil) handle e => raise e)
 
   (* Match a global discrete prime using a PAX, MER or ION rule:
    * 1) If PAX rule matches return this match,
@@ -1340,7 +1387,7 @@ struct
              tree = ABS' tree}
       in
         lzunmk (lzmap make_match premise_matches)
-      end)
+      end handle e => raise e)
 
   (* Match a parallel composition to a context using the PARn rule:
    * 1) Let ename_0 = ename.
@@ -1395,7 +1442,7 @@ struct
              tree   = PARe' tree}
       in
         lzunmk (lzmap toPARe' (matchPARn' args))
-      end)
+      end handle e => raise e)
   
   (* Match a tensor product to a context permutation:
    * 1) Infer premise, yielding ename', s_C', qs.
@@ -1415,7 +1462,7 @@ struct
         lzunmk (lzmap toPER' (matchPARe' {ename = ename,
                                           s_a = s_a, s_C = s_C,
                                           es = es, Es = Es}))
-      end)
+      end handle e => raise e)
   
   (* Match a global discrete prime using the SWX rule:
    * If Ps = [P], where P = (id_Z * ^s)(W)G, then
@@ -1472,7 +1519,7 @@ struct
                       g = g, G = G}
       in
         lzunmk (lzfoldr toSWX lzNil matches)
-      end))
+      end) handle e => raise e)
     | matchSWX _ = lzNil
 
   (* Split a link l "horizontally" into a link, a substitution, and an
@@ -1518,7 +1565,8 @@ struct
                 (lzmap
                    process_W_opartition 
                    (opartgen2lzlist
-                      (OrderedPartition.make (NameSet.list W) m)))
+                      (OrderedPartition.make (NameSet.list W) m)
+                    handle OrderedPartition.NoPartitions => lzNil))
             end
       in
         lzconcat
@@ -1527,7 +1575,7 @@ struct
              (nssubsetgen2lzlist (NameSetSubset.make X)))
       end
 
-  (* As the above except that Z = Ø.
+  (* As the above except that Z = {}.
    *
    * The algorithm can thus be simplified to the following:
    *
@@ -1555,7 +1603,8 @@ struct
           (lzmap
              process_X_opartition
              (opartgen2lzlist
-                (OrderedPartition.make (NameSet.list X) m)))
+                (OrderedPartition.make (NameSet.list X) m)
+              handle OrderedPartition.NoPartitions => lzNil))
       end
 
   (* Split a substitution "horizontally" into two substitutions and an
@@ -1707,7 +1756,8 @@ struct
                       (process_U_opartition
                          {tau_LS = tau_LS, sigma_LS = sigma_L * sigma_S})
                       (opartgen2lzlist
-                         (OrderedPartition.make (NameSet.list U) p))))
+                         (OrderedPartition.make (NameSet.list U) p)
+                       handle OrderedPartition.NoPartitions => lzNil)))
             end
 
         fun process_T_subset T {tau_L, sigma_L} U =
@@ -1725,7 +1775,8 @@ struct
                       U
                       {tau_LS = tau_L * tau_S, sigma_L = sigma_L})
                    (partgen2lzlist
-                      (Partition.make (NameSet.list S) (NameSet.size S))))
+                      (Partition.make (NameSet.list S) (NameSet.size S))
+                    handle Partition.NoPartitions => lzNil))
             end
 
         fun process_W_opartition T Wparts =
@@ -1772,7 +1823,8 @@ struct
                 (lzmap
                    (process_W_opartition T)
                    (opartgen2lzlist'
-                      (OrderedPartition.make (NameSet.list W) k)))
+                      (OrderedPartition.make (NameSet.list W) k)
+                    handle OrderedPartition.NoPartitions => lzNil))
             end
       in
         lzconcat
@@ -1829,7 +1881,7 @@ struct
           | _ => Nil
         end
       else
-        Nil))
+        Nil) handle e => raise e)
   (* Match a global discrete prime using the ZAX rule:
    * s, id_e, s |- g, id_0 ~~> g, id_0.
    * 1) Check that s_R_e = s_R_n = id_0 and Ps = []
@@ -1865,7 +1917,7 @@ struct
 	           lzNil)
 	      end
 *)	    else
-	      LazyList.Nil))
+	      LazyList.Nil) handle e => raise e)
     | matchPAX _ = lzNil
 
   (* makefreshlinks returns a list of links vs/Xs, where vs are
@@ -2048,7 +2100,7 @@ struct
       val matches = lzmap toPARn mslz
     in
       lzunmk matches
-    end))
+    end) handle e => raise e)
 
   (* Match a tensor product as a product of tensor products:
    * 1) Compute lengths n and m of agent and redex products.
@@ -2094,7 +2146,7 @@ struct
         end
     in
       lzunmk (nextmatch (firstsplit m n))
-    end))
+    end) handle e => raise e)
 
   (* Match a context permutation:
    * 1) Compute the local inner faces Xss of the redex primes Qs.
@@ -2132,7 +2184,7 @@ struct
         end
     in
       lzunmk (nextmatch (firstperm (map (hd o loc o outerface) Qs)))
-    end))
+    end) handle e => raise e)
 
 
   (* Match a global discrete prime using the MER rule:
@@ -2170,7 +2222,7 @@ struct
       	handle Partition.NoPartitions => lzNil
     in
       lzunmk (try rho)
-    end)
+    end handle e => raise e)
 
   (* Match a global discrete prime using the ION rule, if possible:
    * If it contains 1 top-level molecule, match an ion:
@@ -2244,7 +2296,7 @@ struct
 		        end
 	      end
        | _ => raise AgentNotGround (BgBDNF.unmk g, "in matchDS"))
-      | _ => LazyList.Nil))
+      | _ => LazyList.Nil) handle e => raise e)
   
   (* Match a global discrete prime using a SWX, PAX, MER or ION rule:
    * 1) First
@@ -2320,7 +2372,7 @@ struct
                      Ps = Ps})
     in
       lzunmk matches
-    end))
+    end) handle e => raise e)
 
   (* Match a closure:
    * 1) Open w_a, yielding s_a = s_a_e * s_a_n
@@ -2363,7 +2415,7 @@ struct
           rest ()
     in
       lzunmk (lzfoldr toCLO lzNil matches)
-    end))
+    end) handle e => raise e)
     
   fun matches {agent, rule} = lzmake (fn () =>
     let
@@ -2410,7 +2462,7 @@ struct
          raise MalformedBDNF
                  (BgVal.info w_axid, wrongterm,
                   "matching w_axid in matches")
-    end)
+    end handle e => raise e)
     
     (*********************************)
     (*                               *)

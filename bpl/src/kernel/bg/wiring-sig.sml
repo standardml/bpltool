@@ -40,12 +40,21 @@ sig
    * disjoint, outer names need not be.
    *)
   val make' : link list -> wiring
-  (** Construct a renaming from a map from outer names to inner names.
-   * Inner names must be disjoint, outer names need not be.
+  (** Construct a renaming from a map from inner names to outer names.
+   * The map must be injective.
    *)
   val make_ren : name namemap -> wiring
   (** Deconstruct a wiring. *)
   val unmk : wiring -> linkset
+  (** Deconstruct a substitution into a map from inner to outer names.
+   * @exception NotASubstitution if the wiring is not a substitution.
+   *)
+  val unmk_sub : wiring -> name namemap
+  (** Deconstruct a renaming.
+   * @exception NotARenaming if the wiring is not a renaming.
+   *)
+  val unmk_ren : wiring -> name namemap
+
   (** Test two wirings for equality.
    * @params w1 w2
    * @param w1  the first wiring.
@@ -210,10 +219,6 @@ sig
    * @exception NotARenaming if the wiring is not a renaming.
    *)
   val invert_renaming : wiring -> wiring
-  (** Deconstruct a renaming.
-   * @exception NotARenaming if the wiring is not a renaming.
-   *)
-  val unmk_ren : wiring -> name namemap
 
   (** Restrict a wiring to only map a given set of names.
    * The outer face is trimmed to include only names to which some
@@ -221,6 +226,10 @@ sig
    * will result in a single, closed link.
    *)
   val restrict : wiring -> nameset -> wiring
+  (** Restrict a wiring to only map a given set of names.
+   * The outer face is unchanged.  The inner face is not increased.
+   *)
+  val restrict' : wiring -> nameset -> wiring
   (** Restrict a wiring to only map to a given set of names.
    * The inner face is trimmed to include only names which maps to an
    * outer name.
@@ -228,8 +237,6 @@ sig
   val restrict_outer : wiring -> nameset -> wiring
   (** Split a wiring into two, one that maps from a given domain, and 
    * one that does not map from the domain.
-   * The inner face is trimmed to include only names which maps to an
-   * outer name.
    * @params w X
    * @return {inDom, notInDom} so that w = inDom || notInDom, and the
    *         points of inDom are in X, and the points of notInDom are
