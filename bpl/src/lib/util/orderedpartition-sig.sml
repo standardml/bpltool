@@ -39,7 +39,8 @@ sig
    * @param m     the number of groups in a partition.
    * @return a partition generator
    * @exception NoPartitions if it is impossible to partition
-   *                         list into m groups.
+   *                         list into m groups, i.e., if the
+   *                         list is nonempty and m = 0.
    *)
   val make : 'a list -> int -> 'a opartitiongen
 
