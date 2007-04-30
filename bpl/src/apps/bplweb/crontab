@@ -1,0 +1,6 @@
+# Crontab for restarting web and xmlrpc servers if needed.
+
+MAILTO=panic@itu.dk
+
+40 * * * * cd /home/panic/Research/bplproject/impl/bpl/src/apps/bplweb/xmlrpcserver && ./checkserver.sh
+42 * * * * cd /home/panic/Research/bplproject/impl/bpl/src/apps/bplweb/webserver && ./checkserver.sh
