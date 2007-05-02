@@ -1,12 +1,10 @@
 % Encoding of Extended Mini-ML using BINDING bigraphs.
 %
 % Much like for local bigraphs except for some 'abstractions' in the
-% translation. Semantics without substitution at a distance.
+% translation, and use of tensor product instead of the extension operator.
+% The semantics is very similar to that of new-extended-miniml.bpl.
 %
-% Ebbe Elsborg, 2007-04-23.
-%
-% In CBV, the activity (evaluation order) for an application node
-% changes during evaluation.
+% Ebbe Elsborg, May 2 2007.
 %
 % Sets:
 % n ranges over positive integers and zero.
@@ -35,11 +33,6 @@
 %       | ref E | !E | E := e | l := E | exchange(E,e) | exchange(l,E)
 %       | C E | case E of {C_i x_i => e_i}^n
 %
-% The evaluation contexts, E, are _certain_ kinds of applications.
-% We model the different kinds of activities for the different 
-% application nodes using different controls (activities are associated
-% with controls, hence need different controls, it seems).
-%
 %
 % DYNAMICS:
 %
@@ -61,7 +54,7 @@
 %
 % The store is provided by translation on "system level"!
 % I.e. M = /X . ( C || S || [L]^prog_X || [A]^prog_X ) | store() , where 
-% X = {enqL,enqA}, and store:passive (0->0) belongs to Sig_M.
+% X = {enqL,enqA..}, and store:passive (0->0) belongs to Sig_M.
 %
 % \t denotes tensor product (\otimes in LaTeX), and
 % \u denotes disjoint union (\uplus in LaTeX).
@@ -70,11 +63,12 @@
 % The subscript X on [-] contains the set of free variable names of '-'.
 % The (S) in front of the semantic function [-]^dtypes denotes the
 % signature used, and in this case, updated by the translation.
+% Composition is implicit.
 % The signature is unchanged by all other semantic functions, thus omitted.
 % 'id_X' in BPL notation is 'x_1/x_1,...,x_n/x_n' for X={x_1,...,x_n}.
 %
 % [t]^prog_X               = [t]^dtypes_X
-% [export a from t]^prog_X = (([a]^names_a \o id_X) ([t]^dtypes_{X \u a}))
+% [export a from t]^prog_X = ([a]^names_a \t id_X \t id_1)[t]^dtypes_{X \u a}
 %
 % [a]^names_a = id_a
 %	Notice that these names are added to the outer face.
@@ -85,14 +79,14 @@
 % (S)[d]^dtypes_X                           = (S)[d]^decls_X
 %	Notice how types are thrown away.
 %
-% [val x = e]^decls_X     = def'_x([e]^exp_X)
-% [val x = e ; d]^decls_X = def'_x([e]^exp_X) | [d]^decls_{X \u {x}}
+% [val x = e]^decls_X     = (def'_x \t id_X)[e]^exp_X
+% [val x = e ; d]^decls_X = (def'_x \t id_X)[e]^exp_X | [d]^decls_{X \u {x}}
 % 	Notice how previous declarations can be referenced.
 %
-% [x]^exp_{X\uplus {x}}    = X \t var_x
+% [x]^exp_{X\uplus {x}}    = X/ \t var_x
 % [(e1,e2)]^exp_X          = (pair \t id_X)
 %	                      ((pairl \t id_X)[e1]^exp_X |
-%                              (pairr \t id_X)(exp \t id_X)[e2]^exp_X
+%                              (pairr \t id_X)(exp \t id_X)[e2]^exp_X)
 % [fst e]^exp_X            = (fst \t id_X)[e]^exp_X
 % [snd e]^exp_X            = (snd \t id_X)[e]^exp_X
 % [let val x = e1 in e2 end]^exp_X
@@ -106,8 +100,8 @@
 % [e1 e2]^exp_X            = (app \t id_X)
 %			      ((appl \t id_X)[e1]^exp_X | 
 %                              (appr \t id_X)(exp \t id_X)[e2]^exp_X)
-% [unit]^exp_X             = (val \t X) unit
-% [n]^exp_X                = (val \t X) n
+% [unit]^exp_X             = (val \t X/) unit
+% [n]^exp_X                = (val \t X/) n
 % [C e]^exp_X	           = (C \t id_X)[e]^exp_X
 % [case e of {C_i x_i => e_i}^n]^exp_X =
 %   (case \t id_X)
@@ -161,8 +155,8 @@ signature beMiniml =
     excr : active (0 -> 0)
     store : passive (0 -> 0)
     exp   : passive (0 -> 0)    % delay evaluation
-    sub   : active (1 -> 0)
     def   : active (0 -> 1)
+    defs  : active (0 -> 0)
     def'  : active (0 -> 1)	% non-discardable definition
 
   end
@@ -175,20 +169,19 @@ rule app_exp =
   app(appl(val([0]) | appr([1])))
 
 rule app_lam =
-  app(appl(val(lam_(x)[0]<x>)) | appr(val([1])))
+  app(appl(val(lam_(x)[0]<x>)) | appr(val([1]))) || defs([2])
     ->                                
-  sub_(x)([0]<x> | def_x(val([1])))
+  /x. [0]<x> || defs([2] | def_x(val([1])))
 
 rule app_fix =
-  app(appl(val(fix_(f,x)[0]<x,f>)) | appr(val([1])))
+  app(appl(val(fix_(f,x)[0]<x,f>)) | appr(val([1]))) || defs([2])
     ->
-  sub_(f)(sub_(x)([0]<x,f> | def_x(val([1]))) |
-          def_f(val(fix_(f,x)[0]<x,f>)))
+  /x,f. [0]<x,f> || defs([2] | def_x(val([1])) | def_f(val(fix_(f,x)[0]<x,f>)))
 
 rule let =
   let(letd(val([0])) | letb_(x)([1]<x>))
     ->
-  sub_(x)([1]<x> | def_x(val([0])))
+  /x. [1]<x> || defs(sub_x(val([0])))
 
 rule pair_exp =
   pair(pairl(val([0])) | pairr(exp([1]))) 
@@ -218,28 +211,25 @@ rule val_C =
 
 % we have a rule for each declared constructor C
 rule case_C =
-  case(casel(val(C([0]))) | casee_(x)(Ci(exp([1]<x>))) | [2])
+  case(casel(val(C([0]))) | casee_(x)(Ci(exp([1]<x>))) | [2]) || defs([3])
     ->
-  sub_(x)([1]<x> | def_x([0]))	% [0] value by invariant
+  /x. [1]<x> || defs([3] | def_x([0]))  % [0] value by invariant
 
-% ***
 rule ref =
   ref(val([0])) || store([1])
     ->
   /l. val(cell_l) || store(cell'_l(val([0])) | [1])
 
-% ***
 rule deref =
   deref(val(cell_l)) || store(cell'_l([0]) | [1])
     ->
-  [0] \t l/ || store(cell'_l([0]) | [1])  % [0] value by invariant
+  [0] | l/ || store(cell'_l([0]) | [1])  % [0] value by invariant
 
 rule asgn_exp =
   asgn(acell(val(cell_l)) | aval(exp([0])))
     ->
   asgn(acell(val(cell_l)) | aval([0]))
 
-% ***
 rule asgn_store =
   asgn(acell(val(cell_l)) | aval(val([0]))) || store(cell'_l([1]) | [2])
     ->
@@ -250,122 +240,27 @@ rule exc_exp =
     ->
   exc(excl(val([0])) | excr([1]))
 
+% works because l1,l2 are closed outer names, not bound by a port in the context
 rule exc_store =
   exc(excl(val(cell_l1)) | excr(val(cell_l2)))
 	|| store(cell'_l1([0]) | cell'_l2([1]) | [2])
     ->
-  val(unit) \o {l1,l2}
+  val(unit) \t l1,l2/
 	|| store(cell'_l1([1]) | cell'_l2([0])|[2])
 
-% rules for propagating explicit substitutions
-rule sub_varx =
-  sub_(x)(var_x | def_x([0]))
-    ->
-  [0]
+% works because x is a closed outer name, not bound by a port in the context
+rule def =
+ var_x || def_x(val([0]))
+   ->
+ val([0]) \t x/ || def_x(val([0]))
 
-rule sub_vary =
-  sub_(x)(var_y | def_x([0]))
-    ->
-  var_y
+rule gc =
+ [0] | defs(/x o def_x([1]))
+   ->                     
+ [0]  % can garbage collect when link is idle
 
-rule sub_pair =
-  sub_(x)(pair(pairl([0]<x>) | (x)/(y)(pairr([1]<y>))) | def_x([2]))
+% works because x is a closed outer name, not bound by a port in the context
+rule sub' =
+  var_x || def'_x(val([0]))
     ->
-  pair(pairl(sub_(x)([0]<x> | def_x([2])))
-     | pairr(sub_(y)([1]<y> | def_y([2]))))
-
-rule sub_fst =
-  sub_(x)(fst([0]<x>) | def_x([1]))
-    ->
-  fst(sub_(x)([0]<x> | def_x([1])))
-
-rule sub_snd =
-  sub_(x)(snd([0]<x>) | def_x([1]))
-    ->
-  snd(sub_(x)([0]<x> | def_x([1])))
-
-rule sub_let =
-  sub_(x)(let(letd([0]<x>) | (x)/(z)(letb_(y)([1]<z,y>))) | def_x([2]))
-    ->
-  let(letd(sub_(x)([0]<x>) | def_x([2]))
-    | letb_(y)(sub_(z)([1]<z,y> | def_z([2]))))
-
-rule sub_lam =
-  sub_(x)(lam_(y)([0]<x,y>) | def_x([1]))
-    ->
-  lam_(y)(sub_(x)([0]<x,y> | def_x([1])))
-
-rule sub_fix =
-  sub_(x)(fix_(f,y)([0]<f,y,x>) | def_x([1]))
-    ->
-  fix_(y)(sub_(x)([0]<f,y,x> | def_x([1])))
-
-rule sub_app =
-  sub_(x)(app(appl([0]<x>) | (x)/(y)(appr([1]<y>))) | def_x([2]))
-    ->
-  app(appl(sub_(x)([0]<x> | def_x([2])))
-    | appr(sub_(y)([1]<y> | def_y([2]))))
-
-rule sub_unit =
-  sub_(x)(unit | def_x([0]))
-    ->
-  unit
-
-rule sub_n =
-  sub_(x)(n | def_x([0]))
-    ->
-  n
-
-rule sub_C =
-  sub_(x)(C([0]<x>) | def_x([1]))
-    ->
-  C(sub_(x)([0]<x> | def_x([1])))
-
-rule sub_case =
-  sub_(x)(case(casel([0]<x>) |
-	       (x)/(z0)(casee_(y0)([1]<z0>)) |
-	       ...
-	       (x)/(zn)(casee_(yn)([n]<zn>))) |
-	  def_x([m]))
-    ->
-  case(casel(sub_(x)([0]<x> | def_x([m]))) |
-       casee_(y0)(sub_(z0)([1]<z0> | def_z0([m]))) |
-       ...
-       casee_(yn)(sub_(zn)([1]<zn> | def_zn([m]))))
-
-rule sub_ref =
-  sub_(x)(ref([0]<x>) | def_x([1]))
-    ->
-  ref(sub_(x)([0]<x> | def_x([1])))
-
-rule sub_deref =
-  sub_(x)(deref([0]<x>) | def_x([1]))
-    ->
-  deref(sub_(x)([0]<x> | def_x([1])))
-
-rule sub_asgn =
-  sub_(x)(asgn(acell([0]<x>) | (x)/(y)(aval([1]<y>))) | def_x([2]))
-    ->
-  asgn(acell(sub_(x)([0]<x> | def_x([2])))
-     | aval(sub_(y)([1]<y> | def_y([2]))))
-
-rule sub_exc =
-  sub_(x)(exc(excl([0]<x>) | (x)/(y)(excr([1]<y>))) | def_x([2]))
-    ->
-  exc(excl(sub_(x)([0]<x> | def_x([2])))
-    | excr(sub_(y)([1]<y> | def_y([2]))))
-
-rule sub_val =
-  sub_(x)(val([0]<x>) | def_x([1]))
-    ->
-  val(sub_(x)([0]<x> | def_x([1])))
-
-rule sub_cell =
-  sub_(x)(cell_l | def_x([0]))
-    ->
-  cell_l
-
-rule sub_exp =
-  sub_(x)(exp([0]<x>) | def_x([1]))
-    ->
-  exp(sub_(x)([0]<x> | def_x([1])))
+  val([0]) \t x/ || def'_x(val([0]))
