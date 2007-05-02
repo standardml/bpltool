@@ -20,6 +20,8 @@
 
 (*
  Mapping from BPL abstract syntax tree to BgVal.
+ 
+ Implements bpl/bplproject/doc/projects/contextawareness/plato/bpl-bnf.tex
 *)
 
 open TextIO; (* for writing output *)
