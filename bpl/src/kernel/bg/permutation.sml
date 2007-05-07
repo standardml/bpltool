@@ -154,34 +154,34 @@ struct
 	SOME _ => false
       | NONE => true
 
-  fun pp' lbrack amp rbrack idp indent pps (perm as {width, pi, pi_inv}) =
+  fun pp' at atat lbrack amp rbrack idp indent pps (perm as {width, pi, pi_inv}) =
       let
-				open PrettyPrint
-				val show = add_string pps
-				fun << () = begin_block pps INCONSISTENT indent
-				fun >> () = end_block pps
-				fun brk () = add_break pps (1, 0)
-				val permIsNameless = Array.all (fn (j, X) => NameSet.isEmpty X) pi
-				fun ppmap ((j, X), notfirst) =
-				    (if notfirst then (show ","; brk()) else ();
-				     show (Int.toString j);
-				     if permIsNameless then
-				       ()
-				     else
-				       (show amp;
-				        NameSetPP.ppbr indent lbrack rbrack pps X);
-             true)
+	open PrettyPrint
+	val show = add_string pps
+	fun << () = begin_block pps INCONSISTENT indent
+	fun >> () = end_block pps
+	fun brk () = add_break pps (1, 0)
+	val permIsNameless = Array.all (fn (j, X) => NameSet.isEmpty X) pi
+	fun ppmap ((j, X), notfirst) =
+	    (if notfirst then (show ","; brk()) else ();
+	     show (Int.toString j);
+	     if permIsNameless then
+	       ()
+	     else
+	       (show amp;
+		NameSetPP.ppbr indent lbrack rbrack pps X);
+               true)
       in
 	if is_idn perm then
 	  show (idp ^ "(" ^ Int.toString width ^ ")")
 	else
-	  (<<(); show "[";
+	  (<<(); show ((if permIsNameless then at else atat) ^ "[");
 	   Array.foldl ppmap false pi;
 	   show "]"; >>())
       end
 
-  val pp = pp' "[" "&" "]" "idp"
-  val oldpp = pp' "{" "" "}" "idp_"
+  val pp = pp' "@" "@@" "[" "&" "]" "idp"
+  val oldpp = pp' "" "" "{" "" "}" "idp_"
 
   val toString = PrettyPrint.pp_to_string 60 (pp 2)
 
