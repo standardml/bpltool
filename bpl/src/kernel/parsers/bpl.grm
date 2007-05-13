@@ -1,0 +1,174 @@
+(* Copyright (c) 2007  The BPL Group at the IT University of Copenhagen
+ *
+ * This file is part of BPL.
+ *
+ * BPL is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
+ *
+ * BPL is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BPL; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+ * USA
+ *)
+
+structure T = BPLTerm
+
+%%
+%term EOF
+    | ID of string | INT of int | NAME of string
+    | LPAR | RPAR | LANG | RANG | LBRC | RBRC | LBRK | RBRK | BARREN
+    | SLASH | COMMA | ARROW | COLON | EQUAL | DOT | STAR | COMP | UNDERSCORE
+    | DPAR | PAR
+
+    | ACTIVE | ATOMIC | END | PASSIVE | RULE | SIG | SIGNATURE | USING | VAL
+
+%nonterm
+  Prog of T.prog
+| Dec of T.dec
+| AtDec of T.dec
+| Sig of T.sign
+| SigDefs of T.sigdef list
+| SigDef of T.sigdef
+| CtrlDefs of T.ctrldef list
+| CtrlDef of T.ctrldef
+| CtrlKind of T.ctrlkind
+| Bigraph of T.bigraph
+| OpBigraph of T.bigraph
+| JuxtBigraph of T.bigraph
+| AtBigraph of T.bigraph
+| PortsOpt of T.edge list option
+| Ports of T.edge list
+| EdgeList of T.edge list
+| Edges of T.edge list
+| Wiring of T.wire list
+| Wire of T.wire
+| Rule of T.rule
+
+%pos {pos: int, src: {file: string}}
+%verbose
+%start Prog
+%eop EOF
+%noshift EOF
+
+%name Bpl
+
+%left DPAR STAR
+%left PAR
+%left COMP DOT
+
+%header (functor BplLrValsFun
+		   (structure Token : TOKEN)
+	)
+
+%keyword 
+    ACTIVE ATOMIC END PASSIVE RULE SIG SIGNATURE USING VAL
+
+%%
+
+Prog:
+      SigDefs 
+      USING ID
+      Dec                              ( T.Prog(SigDefs, ID, Dec) )
+
+SigDefs:
+      SigDef SigDefs                   ( SigDef :: SigDefs )
+    |                                  ( [] )
+
+SigDef:
+      SIGNATURE ID EQUAL Sig           ( T.SigDef(ID, Sig) )
+
+Sig:
+      SIG CtrlDefs END                 ( T.Sig(CtrlDefs) )
+
+CtrlDefs:
+      CtrlDef CtrlDefs                 ( CtrlDef :: CtrlDefs )
+    | CtrlDef                          ( [CtrlDef] )
+
+CtrlDef:
+      ID COLON CtrlKind LPAR INT ARROW INT RPAR
+                                       ( T.Ctrl(ID, CtrlKind, INT1, INT2) )
+
+CtrlKind:
+      ACTIVE                           ( T.Active )
+    | PASSIVE                          ( T.Passive )
+    | ATOMIC                           ( T.Atomic )
+
+Dec:
+      AtDec                            ( AtDec )
+    | AtDec Dec                        ( T.Seq(AtDec, Dec) )
+
+AtDec:
+      RULE ID EQUAL Rule               ( T.RuleDec(ID, Rule) )
+    | VAL  ID EQUAL Bigraph            ( T.ValDec(ID, Bigraph) )
+
+Bigraph:
+      OpBigraph                        ( OpBigraph )
+    | SLASH EdgeList DOT Bigraph       ( T.Clo(EdgeList, Bigraph) )
+(*
+    | LBRC  EdgeList RBRC Bigraph    ( BAbs(EdgeList, AtBigraph) )
+*)
+      (* I was thinking that a wiring should be an AtBigraph, but
+         that gives loads of shift/reduce conflicts *)
+    | Wiring                           ( T.Wir(Wiring) )
+
+OpBigraph:
+      JuxtBigraph                      ( JuxtBigraph )
+    | OpBigraph DPAR OpBigraph         ( T.Par (OpBigraph1, OpBigraph2) )
+    | OpBigraph STAR OpBigraph         ( T.Ten (OpBigraph1, OpBigraph2) )
+    | OpBigraph PAR  OpBigraph         ( T.Pri (OpBigraph1, OpBigraph2) )
+    | OpBigraph COMP OpBigraph         ( T.Com (OpBigraph1, OpBigraph2) )
+    | OpBigraph DOT  OpBigraph         ( T.Com (OpBigraph1, OpBigraph2) )
+ 
+JuxtBigraph:
+      AtBigraph                        ( AtBigraph )
+    | JuxtBigraph AtBigraph            ( T.Com (JuxtBigraph, AtBigraph) )
+
+AtBigraph:
+      ID                               ( T.Ion(ID,[],[]) )
+    | ID UNDERSCORE Edges              ( T.Ion(ID,Edges,[]) )
+    | ID UNDERSCORE LPAR Edges RPAR    ( T.Ion(ID,[],Edges) )
+    | ID LANG EdgeList LPAR EdgeList RPAR RANG
+                                       ( T.Ion(ID,EdgeList1,EdgeList2) )
+    | LBRK INT RBRK PortsOpt           ( T.Site(INT, PortsOpt) )
+    | NAME PortsOpt                    ( T.Nsite(NAME, PortsOpt) )
+    | BARREN                           ( T.Empty )
+    | LPAR Bigraph RPAR                ( Bigraph )
+    | INT                              ( if INT = 1 then T.EmptyPri
+                                         else raise Fail("yada yada") )
+      (* Hmm, need to be able to refer to a bigraph by id, but if
+         bigraph identifier and ctrl identifier are the same, how
+         do we know if ID is a ion or a bigraph id? *)
+
+PortsOpt:
+      Ports                            ( SOME Ports )
+    |                                  ( NONE )
+
+Ports:
+      LANG EdgeList RANG               ( EdgeList )
+
+EdgeList:
+      Edges                            ( Edges )
+    |                                  ( [] )
+
+Edges:
+      ID COMMA Edges                   ( ID :: Edges )
+    | ID                               ( [ID] )
+
+Wiring:
+      Wire COMMA Wiring                ( Wire :: Wiring )
+    | Wire                             ( [Wire] )
+
+Wire:
+      ID SLASH ID                      ( T.GRen(ID1,ID2) )
+    | ID SLASH                         ( T.GIdle(ID) )
+    | LBRC ID RBRC SLASH LBRC ID RBRC  ( T.LRen(ID1,ID2) )
+    | LBRC ID RBRC SLASH               ( T.LIdle(ID) )
+Rule:
+      Bigraph ARROW Bigraph            ( T.Rule(Bigraph1,Bigraph2) )

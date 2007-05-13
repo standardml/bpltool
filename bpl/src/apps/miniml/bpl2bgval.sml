@@ -54,50 +54,55 @@ structure Re = Reaction (structure RuleNameMap = Util.StringMap
                          structure ErrorHandler = PrintErrorHandler)
 *)
 
+
+(* I rewrote some of the list-like datatype to be lists, Henning *)
+
+type ctrlid = string
+type namedsite = string
+
 datatype id = Id of string
-	    | CtrlId of string
-	    | NamedSite of string
+	    | CtrlId of ctrlid
+	    | NamedSite of namedsite
 	    | Int of int
-datatype epsilon = Eps
+
+
 datatype wire = IdId of Id * Id
 	      | IdS of Id
 	      | SId of Id
-datatype wirelist = Wirs of wire * wirelist
-		  | epsilon
-datatype wiring = wirelist
-datatype ctrlid = CtrlId
-datatype edges = Edgs of edges * Id
-	       | Id
-datatype edgelist = edges
-		  | epsilon
-datatype ports = Ports of edgelist
+type wiring = wire list
+
+type edge = id
+
+datatype ports = Ports of edge list
+
 datatype bigraph = wiring
 		 | Par of bigraph * bigraph
 		 | Pri of bigraph * bigraph
 		 | Com of bigraph * bigraph
 		 | Emb of bigraph * bigraph
 		 | Ten of bigraph * bigraph
-		 | CtrlId1
-		 | CtrlIdB of CtrlId * edgelist
-		 | CtrlIdF of CtrlId * edgelist
-		 | CtrlIdBF of CtrlId * edgelist * edgelist
-		 | Clo of edgelist * bigraph
-		 | Abs of * edgelist * bigraph
-		 | Site of Int
-		 | Sitep of Int * ports
-		 | Nsite of NamedSite
-		 | Nsitep of NamedSite * ports
-		 | Id
+(*
+		 | CtrlId1 of ctrlid
+		 | CtrlIdB of ctrlid * edge list
+		 | CtrlIdF of ctrlid * edge list
+		 | CtrlIdBF of ctrlid * edge list * edge list
+*)
+                 | Ion of ctrlid * (*binding:*)edge list * (*free:*)edge list
+		 | Clo of edge list * bigraph
+		 | Abs of * edge list * bigraph
+		 | Site of int
+		 | Sitep of int * ports
+		 | Nsite of namedsite
+		 | Nsitep of namedsite * ports
+		 | Id of id
 		 | Empty
 datatype rule = Rule of bigraph * bigraph
 datatype ctrlkind = Active
 		  | Passive
 		  | Atomic
-datatype ctrldef = CtrlId * ctrlkind * Int * Int
-datatype ctrldefs = ctrldefs * ctrldef
-		  | ctrldef
-datatype sig = Sig of ctrldefs
-datatype dec = dec * dec
+datatype ctrldef = Ctrl of ctrlid * ctrlkind * int * int
+datatype sig = Sig of ctrldef list
+datatype dec = Seq of dec * dec
 	     | Rule of Id * rule
 	     | Value of Id * bigraph
 datatype prog = dec

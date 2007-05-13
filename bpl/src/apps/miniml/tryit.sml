@@ -17,7 +17,7 @@ structure Re = Reaction (structure RuleNameMap = Util.StringMap
 			 structure Instantiation = BG.Instantiation
 			 structure Rule = BG.Rule
 			 structure Origin = Origin
-			 structure ErrorHandler = PrintErrorHandler)
+			 structure ErrorHandler = BG.ErrorHandler)
 
 val info = BG.Info.noinfo
 

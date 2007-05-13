@@ -22,3 +22,5 @@ sugar-sig:
 sugar: info-sig /lib/coll/monoset-sig /lib/coll/pp /kernel/bg/sigs bgval-sig
    /lib/util/errorhandler-sig /lib/util/origin /lib/util/debug
    /lib/pp/smlnj/.
+bplterm-sig: /lib/pp/mak/.
+bplterm: bplterm-sig /lib/pp/mak/. /lib/util/util %NODASHSIG
