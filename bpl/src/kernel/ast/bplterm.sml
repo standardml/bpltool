@@ -51,7 +51,7 @@ structure BPLTerm :> BPL_TERM = struct
     datatype ctrlkind = Active
 		      | Passive
 		      | Atomic
-    datatype ctrldef = Ctrl of ctrlid * ctrlkind * int * int
+    datatype ctrldef = Ctrl of ctrlid * ctrlkind * (*binding:*)int * (*free:*)int
     datatype sign = Sig of ctrldef list
     datatype sigdef = SigDef of id * sign
     datatype dec = Seq of dec * dec
@@ -59,11 +59,11 @@ structure BPLTerm :> BPL_TERM = struct
 		 | ValDec of id * bigraph
     datatype prog = Prog of sigdef list * id * dec
 
-    fun flatten0 dec acc =
+    fun flattenDecs0 dec acc =
 	case dec of
-	    Seq(d1, d2) => flatten0 d2 (flatten0 d1 acc)
+	    Seq(d1, d2) => flattenDecs0 d2 (flattenDecs0 d1 acc)
 	  | _ => dec :: acc
-    fun flatten dec = rev(flatten0 dec [])
+    fun flattenDecs dec = rev(flattenDecs0 dec [])
 
     open Pretty
     infixr 5 ^+
@@ -72,23 +72,29 @@ structure BPLTerm :> BPL_TERM = struct
 
     fun ppBigraph b =
 	case b of
-	    Wir w => ppWiring w
+          (* special-case a few combinations *)
+            Com(Ion ion, b) => break(0,1)(ppIon ion,bracket "(#)" (ppBigraph b))
+          (* we now return to our regular program *)
+	  | Wir w => ppWiring w
 	  | Par(b,b') => ppOp "||" b b'
 	  | Pri(b,b') => ppOp "|" b b'
 	  | Com(b,b') => ppOp "o" b b'
 	  | Ten(b,b') => ppOp "*" b b'
-	  | Ion(c, [], []) => ppString c
-	  | Ion(c, fs, bs) => 
-	       ppString c
-	       ++ (bracket "<#>" (ppEdges fs ++ (bracket "(#)" (ppEdges bs))))
+	  | Ion ion => ppIon ion
 	  | Clo(es, b) => ppBinary("/" ^+ ppEdges es, ".", ppBigraph b)
 	  | Abs(es, b) => (bracket "{#}" (ppEdges es)) ++ (ppBigraph b)
 	  | Site(i, NONE) => "[" ^+ ppInt i +^ "]"
+	  | Site(i, SOME ports) => ("[" ^+ ppInt i +^ "]") ++ ppPorts ports
 	  | Nsite(ns, NONE) => ppString ns
+	  | Nsite(ns, SOME ports) => ppString ns ++ ppPorts ports
 	  | Id i => ppString i
 	  | EmptyPri => ppString "1"
 	  | Empty => ppString "()"
     and ppOp ope b b' = ppBinary(ppBigraph b, ope, ppBigraph b')
+    and ppIon (c, [], []) = ppString c 
+      | ppIon (c, fs, bs) =
+	ppString c
+	++ (bracket "<#>" (ppEdges fs ++ (bracket "(#)" (ppEdges bs))))
     and ppEdges es = clist ",#" ppString es
     and ppPorts ps = bracket "<#>" (ppEdges ps)
     and ppWire w =
@@ -101,8 +107,8 @@ structure BPLTerm :> BPL_TERM = struct
     and ppWiring ws = clist ",#" ppWire ws
 
     fun pp (Prog(sign, id, dec)) =
-	let val sign' = empty
-	    val decs = flatten dec
+	let val sign' = makelist(true,"")(map (forcemulti o ppSignature) sign)
+	    val decs = flattenDecs dec
 	    val decs' = makelist(true,"")(map (forcemulti o ppDec) decs)
 	in  makelist (true, "") (map forcemulti
               [sign', "using " ^+ ppString id, decs']
@@ -115,4 +121,13 @@ structure BPLTerm :> BPL_TERM = struct
 	      ppString "rule" ++ (ppString id +^ " =") ++ (ppOp "->" lhs rhs)
 	  | ValDec(id, bigraph) => 
 	      ppString "val" ++ (ppString id +^ " =") ++ ppBigraph bigraph
+    and ppSignature (SigDef(id, Sig ctrldefs)) =
+	close(1,"end")
+	    (("signature " ^+ ppString id +^ " =") ++ ppString "sig"
+	     ++ (makelist(true,"") (map (forcemulti o ppCtrlDef) ctrldefs)))
+    and ppCtrlDef (Ctrl(id, kind, b, f)) =
+	(id ^ " : ") ^+ ppKind kind ++ (ppBinary(ppInt b, "->", ppInt f))
+    and ppKind Atomic = ppString "atomic"
+      | ppKind Passive = ppString "passive"
+      | ppKind Active = ppString "active"
 end (* structure BPLTerm *)
