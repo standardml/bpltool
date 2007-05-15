@@ -19,26 +19,27 @@
  *)
 
 (*
- Mapping from BPL abstract syntax tree to BgVal.
- 
+ Mapping from BPL abstract syntax tree to BgVal. 
  Implements bpl/bplproject/doc/projects/contextawareness/plato/bpl-bnf.tex
 *)
 
-open TextIO; (* for writing output *)
+
+open TextIO;
 
 structure BG = BG (structure ErrorHandler = PrintErrorHandler);
 structure B = BG.BgVal
-structure S = BG.Sugar
+structure Sugar = BG.Sugar
+structure Rule = BG.Rule
+structure Control = BG.Control
+structure Ion = BG.Ion
+structure Name = BG.Name
+structure Wiring  = BG.Wiring
+structure NameSet = BG.NameSet
+structure LinkSet = BG.LinkSet
+
 (*
 structure P = BG.Permutation
-structure NameSet = BG.NameSet
-structure Ion     = BG.Ion
-structure Name    = BG.Name
-structure Control = BG.Control
-structure Wiring  = BG.Wiring
 structure Link    = BG.Link
-structure LinkSet = BG.LinkSet
-structure R       = BG.Rule
 structure Bdnf    = BG.BgBDNF
 structure M       = BG.Match
 structure Re = Reaction (structure RuleNameMap = Util.StringMap
@@ -54,216 +55,215 @@ structure Re = Reaction (structure RuleNameMap = Util.StringMap
                          structure ErrorHandler = PrintErrorHandler)
 *)
 
-
-(* I rewrote some of the list-like datatype to be lists, Henning *)
-
-type ctrlid = string
-type namedsite = string
-
 datatype id = Id of string
-	    | CtrlId of ctrlid
-	    | NamedSite of namedsite
-	    | Int of int
-
-
-datatype wire = IdId of Id * Id
-	      | IdS of Id
-	      | SId of Id
-type wiring = wire list
-
-type edge = id
-
-datatype ports = Ports of edge list
-
-datatype bigraph = wiring
+datatype ctrlid = CtrlId of string
+datatype namedsite = NamedSite of string
+datatype nat = Nat of int
+datatype wire = Global of id * id
+	      | Local of id * id
+	      | IdleG of id
+	      | IdleL of id
+datatype wiring = wire
+		| Wires of wire * wiring
+datatype names = id
+	       | Names of id * names
+datatype namelist = Namelist of names
+datatype ports = Ports of names
+datatype bigraph = Wir of wiring
 		 | Par of bigraph * bigraph
 		 | Pri of bigraph * bigraph
 		 | Com of bigraph * bigraph
 		 | Emb of bigraph * bigraph
 		 | Ten of bigraph * bigraph
-(*
-		 | CtrlId1 of ctrlid
-		 | CtrlIdB of ctrlid * edge list
-		 | CtrlIdF of ctrlid * edge list
-		 | CtrlIdBF of ctrlid * edge list * edge list
-*)
-                 | Ion of ctrlid * (*binding:*)edge list * (*free:*)edge list
-		 | Clo of edge list * bigraph
-		 | Abs of * edge list * bigraph
-		 | Site of int
-		 | Sitep of int * ports
+		 | Ctrl of ctrlid
+		 | CtrlB of ctrlid * ports
+		 | CtrlF of ctrlid * ports
+		 | CtrlBF of ctrlid * ports * ports
+		 | Clo of names * bigraph
+		 | Abs of names * bigraph
+		 | Site of nat
+		 | Sitep of nat * namelist
 		 | Nsite of namedsite
-		 | Nsitep of namedsite * ports
-		 | Id of id
+		 | Nsitep of namedsite * namelist
+		 | id
 		 | Empty
 datatype rule = Rule of bigraph * bigraph
 datatype ctrlkind = Active
 		  | Passive
 		  | Atomic
-datatype ctrldef = Ctrl of ctrlid * ctrlkind * int * int
-datatype sig = Sig of ctrldef list
-datatype dec = Seq of dec * dec
-	     | Rule of Id * rule
-	     | Value of Id * bigraph
-datatype prog = dec
+datatype ctrldef = Cdef of ctrlid * ctrlkind * nat * nat
+datatype ctrldefs = ctrldef
+		  | Cdefs of ctrldef * ctrldefs
+datatype dec = Decs of dec * dec
+	     | Rule of id * rule
+	     | Value of id * bigraph
+datatype signatur = Sig of ctrldefs
+datatype prog = Prog of signatur * dec
 
+val barren = <-> (* barren root *)
 val info = BG.Info.noinfo
-val empty = NameSet.empty
 
 (* operators *)
 infixr || (* parallel product *)
 infixr pp (* prime product *)
 infixr tt (* tensor product *)
 infixr oo (* composition *)
-infixr ++ (* add a name to a nameset not containing it already *)
 fun (b1:bgval) || (b2:bgval) = B.Par info [b1,b2]
 fun (b1:bgval) pp (b2:bgval) = B.Pri info [b1,b2]
 fun (b1:bgval) tt (b2:bgval) = B.Ten info [b1,b2]
 fun (b1:bgval) oo (b2:bgval) = B.Com info (b1, b2)
 
-(* This translation should not be altered, just change the generating
-functions above to match change in BG signatures. *)
-
-fun bpl2bgval (X:nameset) tree =
-    case tree of
-	M.Var x =>
-	let val x' = v2n x in
-	    if NameSet.member x' X
-	    then (VAR x') tt (make_onames (NameSet.remove x' X))
-	    else raise Fail ("Unbound variable " ^ x)
-	end
-      | M.Integer i => Util.abort 19844
-      (*(VAL tt id X) oo (INT i tt make_onames X)*)
-      | M.String s => Util.abort 19845
-      | M.Const(C, e) => (CONST C tt id X) oo (exp2bg X e)
-      | M.Abs(x, e) =>
-	let val x' = v2n x in
-	    (VAL tt id X) oo 
-	    (LAM x' tt id X) oo
-	    (ABS [x'] (exp2bg (x' ++ X) e))
-	end
-      | M.App(e1, e2) =>
-	(APP tt id X) oo
-	 (((APPL tt id X) oo (exp2bg X e1)) pp
-	  ((APPR tt id X) oo (EXP tt id X) oo (exp2bg X e2)))
-      | M.Fix(f, x, e) =>
-	let val x' = v2n x
-	    val f' = v2n f in
-	    (VAL tt id X) oo
-	    (FIX [f',x'] tt id X) oo
-	    (ABS [f',x'] (exp2bg (f' ++ x' ++ X) e))
-	end
-      | M.Case(e, matches) =>
-	let fun f (((Ci,xi),ei), bg) =
-		let val xi' = v2n xi 
-		    val X' = xi' ++ X
-		in  ((CASEE xi' tt id X) oo
-		    (ABS [xi']
-			 ((CONST Ci tt id X') oo
-			 (EXP tt id X') oo
-			 (exp2bg X' ei)))) pp bg
-		end
-	in
-	    (CASE tt id X) oo
-	    (List.foldr f ((CASEL tt id X) oo (exp2bg X e)) matches)
-	end
-      | M.PrimOp(ope, e1, e2) => Util.abort 6
-      | M.Let(x, e1, e2) =>
-	let val x' = v2n x in 
-	(LET tt id X) oo
-	 (((LETD tt id X) oo (exp2bg X e1)) pp
-	  ((LETB x' tt id X) oo (ABS [x'] (exp2bg (x' ++ X) e2))))
-	end
 (*
-      | M.Tuple [e1,e2] =>
-	(PAIR tt id X) oo
-	 (((PAIRL tt id X) oo (exp2bg X e1)) pp
-	  ((PAIRR tt id X) oo (EXP tt id X) oo (exp2bg X e2)))
-      | M.Tuple es => Util.abort 3
-      | M.Proj(1, e) => (FST tt id X) oo (exp2bg X e)
-      | M.Proj(2, e) => (SND tt id X) oo (exp2bg X e)
-      | M.Proj(i, e) => Util.abort 4
+fun getSites1 b numbered =
+    case b of Wir => []
+	    | Par(b1,b2) => (getSites b1) @ (getSites b2)
+	    | Pri(b1,b2) => (getSites b1) @ (getSites b2)
+	    | Com(b1,b2) => (getSites b1) @ (getSites b2)
+	    | Emb(b1,b2) => (getSites b1) @ (getSites b2)
+	    | Ten(b1,b2) => (getSites b1) @ (getSites b2)
+	    | Ctrl(i) => []
+	    | CtrlB(c,p) => []
+	    | CtrlF(c,p) => []
+	    | CtrlBF(c,p1,p2) => []
+	    | Clo(n,b) => getSites b
+	    | Abs(n,b) => getSites b
+	    | Site(n) => if numbered then [n] else []
+	    | Sitep(n,l) => if numbered then [n] else []
+	    | Nsite(s) => if numbered then [] else [s]
+	    | Nsitep(s,l) => if numbered then [] else [s]
+	    | id => []
+	    | Empty => []
+
+fun makeInst s1 s2 =
+    let val s1nums = #1(s1)
+	val s1nams = #2(s1)
+	val s2nums = #1(s2)
+	val s2nams = #2(s2)
+    in todo
+    end
+
+fun calcInst b1 b2 =
+    let val s1 = (getSites b1 true, getSites b1 false)
+	val s2 = (getSites b2 true, getSites b2 false)
+    in makeInst s1 s2 end
 *)
 
-      (* I changed the encoding of tuples slightly - to allow
-         for more than just pairs. HN
+(* aux. functions *)
+fun v2n x = Name.make (String.toString x)
 
-         The idea is that a tuple (e1,e2,...,en) is translated
-         to
+fun mkWir1 ovar =
+    Wiring.make(LinkSet.insert
+		    LinkSet.empty
+		    (Link.make {outer = SOME(v2n ovar),
+				inner = NameSet.empty}))
 
-             TUPLE ( COMP1([[e1]]) | COMP2(EXP([[e2]])) | ... | COMPn(EXP([[en]])) )
+fun mkWir2 ovar ivar =
+    let val link = Link.make
+		       {outer = SOME(v2n out),
+			inner = NameSet.insert empty (v2n inn)}
+	val linkset = NameSet.insert NameSet.empty link
+    in Wiring.make linkset end
 
-         and a projection #i e is translated to
+fun cds2cdList cdefs =
+    case cdefs of Cdef(cid,ck,bp,fp) => [Cdef(cid,ck,bp,fp)]
+		| Cdefs(cd,cds) => cd :: cds2cdList cds
 
-             PROJi ([[e]])
+fun nms2nmList names =
+    case names of ID(s) => [Id(s)]
+		| Names(id,nms) => id :: nms2nmList nms
 
-         We then need to generate rules 
+fun nms2nmSet n = List.map (fn x => NameSet.insert NameSet.empty x)
+			   (nms2nmList n)
 
-             COMPi(val[0]) | COMPi+1(exp[1]) --> COMPi(val[0]) | COMPi+1([1])
+fun lookupKind cid signa =
+    let fun loop [] = NONE
+	  | loop ((i,k,b,f)::p) = if cid = i then SOME k else loop p
+    in loop signa end
 
-         for i = 1,.., n-1 and rules
+fun getBigraph id imap =
+    let fun loop [] = NONE
+          | loop ((i,b)::p) = if id = i then SOME b else loop p
+    in loop imap end
 
-             TUPLE( COMP1(val[0]) | COMP2(val[1]) | ... | COMPn(val[n-1]) )
-             --> val (TUPLE (...) )
-
-         --- one for each size of tuple occurring in the program.
-
-         Finally, we need projections (also one for each kind of
-         projection occurring in the program).
-
-             PROJi( TUPLE( COMPi(val[0]) | [1] ) )
-             -->  [0]
-
-      *)
-      | M.Tuple [] => (VAL tt id X) oo (UNIT tt make_onames X)
-      | M.Tuple (e::es) =>
-	let fun f (e, (p,b)) =
-                (p+1, b pp (COMP p tt id X) oo (EXP tt id X) oo (exp2bg X e))
-	in  (TUPLE tt id X) oo
-               (#2(List.foldr f (2,(COMP 1 tt id X) oo (exp2bg X e)) es))
+fun big2bgval ast maps signa =
+    case ast
+     of Wir(w) =>
+	( case w of Global(out,inn) => mkWir2 out inn
+		  | Local(out,inn) => mkWir2 out inn
+		  | IdleG(x) => mkWir1 x
+		  | IdleL(x) => mkWir1 x )
+      | Par(b1,b2) => (big2bgval b1 maps signa)
+			  || (big2bgval b2 maps signa)
+      | Pri(b1,b2) => (big2bgval b1 maps signa)
+			  pp (big2bgval b2 maps signa)
+      | Com(b1,b2) => (big2bgval b1 maps signa)
+			  oo (big2bgval b2 maps signa)
+      | Emb(b1,b2) => (big2bgval b1 maps signa)
+			  oo (big2bgval b2 maps signa)
+      | Ten(b1,b2) => (big2bgval b1 maps signa)
+			  tt (big2bgval b2 maps signa)
+      | Ctrl(cid) =>
+	( case lookupKind cid signa
+	   of SOME(k) => Sugar.k cid
+	    | NONE => raise Error )
+      | CtrlB(cid,Ports(b)) =>
+	let val boundnames = nms2nmSet b
+	in case lookupKind cid signa
+	    of SOME(k) => Ion.make {ctrl = Control.make(cid,k),
+				    free = [],
+				    bound = boundnames}
+	     | NONE => raise Error
 	end
-      | M.Proj(i, e) => (PROJ i tt id X) oo (exp2bg X e)        
-      | M.Unit => (VAL tt id X) oo (UNIT tt make_onames X)
-      | M.Ref e => (REF tt id X) oo (exp2bg X e)
-      | M.DeRef e => (DEREF tt id X) oo (exp2bg X e)
-      | M.Assign(e1, e2) =>
-	(ASSIGN tt id X) oo
-	 (((ALOC tt id X) oo (exp2bg X e1)) pp
-	  ((AVAL tt id X) oo (EXP tt id X) oo (exp2bg X e2)))
-      | M.Exchange(e1, e2) =>
-	(EXC tt id X) oo
-	 (((EXCL tt id X) oo (exp2bg X e1)) pp
-	  ((EXCR tt id X) oo (EXP tt id X) oo (exp2bg X e2)))
-      | M.Info(_,e) => exp2bg X e
-      | M.Switch(e, switch, default) =>
-        (*
-         * [switch e of {C_i => e_i} | _ => e_(n+1)]_X =
-         *    (switch \o id_X)
-         *       ((switchl \o id_X)([e]_X) |
-         *        (switche \o id_X)(C1 \o id_X)(exp \o id_X)([e1]_X) |
-         *        ...
-         *        (switche \o id_X)(Cn \o id_X)(exp \o id_X)([en]_X) |
-         *
-         * where 1<=i<=n and all C_i belong to some d_k with n_k constructors
-         *
-         *  FIXME: What about default?
-         *)
-	let fun f ((C,e), bg) = 
-		   (SWITCHE tt id X) oo 
-		   ((CONST C tt id X) oo (EXP tt id X) oo (exp2bg X e)) 
-		pp bg
-	in  (SWITCH tt id X) oo
-	    (List.foldr f ((SWITCHL tt id X) oo (exp2bg X e))
-	                (switch)
-            ) (* FIXME: What about default? *)
+      | CtrlF(cid,Ports(f)) =>
+	( case lookupKind cid signa
+	   of SOME(k) => Ion.make {ctrl = Control.make(cid,k),
+				   free = nms2nmlist f,
+				   bound = []}
+	    | NONE => raise Error )
+      | CtrlBF(cid,Ports(b),Ports(f)) =>
+	let val boundnames = List.map nm2nmSet (nms2nmlist b)
+	in case lookupKind cid signa
+	    of SOME(k) => Ion.make {ctrl = Control.make(cid,k),
+				    free = nms2nmlist f,
+				    bound = boundnames}
+	     | NONE => raise Error
 	end
-      | M.Deconst(C, e) => (* FIXME: What about C? *)
-        (* [deconstruct e with C]_X =
-         *    (deconst \o id_X)[e]_X
-         *
-         * rule deconstruct_1 =
-         *    deconst(const([0] | val([1])))
-         *      -> 
-         *    val([1])
-         *)
-	(DECONST tt id X) oo (exp2bg X e)
+      | Clo(n,b) => (S.-//(nms2nmlist n))
+			oo (big2bgval b maps signa)
+      | Abs(n,b) => B.Abs info (nms2nmSet n, big2bgval b maps signa)
+      | Site(num) => todo
+      | Sitep(num,namelist) => todo
+      | Nsite(namedsite) => todo
+      | Nsitep(namedsite,namelist) => todo
+      | Id(i) => case getBigraph i (#1(maps))
+		  of SOME(b) => big2bgval b maps signa
+		   | NONE => raise Error
+      | Empty => barren
+
+(* fix this... *)
+fun dec2bgval ast signa =
+    case ast of Decs(d1,d2) => (bpl2bgval d1 signa)
+			       @ (bpl2bgval d2 signa)
+(*
+      | Rule(i,r) =>
+	let val lhs = makeBR(#1(r))
+	    val rhs = #2(r)
+	    val ins = calcInst lhs rhs
+	in Rule.make { name = i, redex = lhs, react = rhs, inst = ins } end
+      | Value(i,b) => let val b' = big2bgval b ((i,b)::imap) smap
+		      in b' ((i,b')::imap) smap end
+*)
+      | Cdefs(cd,cds) => (bpl2bgval cd maps signa)
+			 :: (bpl2bgval cds maps signa)
+      | Cdef(cid,ck,n1,n2) => Ion.make {ctrl = Control.make(cid,ck),
+					free = map v2n n1,
+					bound = map v2n n2}
+(*
+      | Active => ...
+      | ... => ...
+*)
+
+(* toplevel *)
+fun prog2bgval ast =
+    case ast of Prog(Sig(s),d) => let val signa = cds2cdList s
+				  in (signa, dec2bgval d signa) end
