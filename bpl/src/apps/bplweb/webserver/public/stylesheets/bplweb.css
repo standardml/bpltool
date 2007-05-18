@@ -73,19 +73,22 @@
     tr.permutation + tr.operation td,
     tr.operation + tr.precedences td { border-top: thin dotted blue; }
 
-	p.header p.footer p.copyright{
-		margin-left: 2mm;
+  p.header p.footer div.subfooter {
+    margin-left: 2mm;
     margin-top: 2px;
     margin-bottom: 2px;
-	}
-	p.header {
-		font-style: italic
-	}
+  } 
 
-	p.footer {
+  p.header {
+    max-width: 50em;
+    font-style: italic
+  }
 
-	}
+  p.footer{
+    max-width: 50em;
+  }
 
-	p.copyright {
-    font-size: small;
-	}
+  div.subfooter {
+    max-width: 80em;
+    font-size: x-small;
+  }
