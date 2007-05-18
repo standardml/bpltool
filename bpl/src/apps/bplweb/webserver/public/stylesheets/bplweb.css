@@ -72,3 +72,20 @@
     tr.merge + tr.permutation td,
     tr.permutation + tr.operation td,
     tr.operation + tr.precedences td { border-top: thin dotted blue; }
+
+	p.header p.footer p.copyright{
+		margin-left: 2mm;
+    margin-top: 2px;
+    margin-bottom: 2px;
+	}
+	p.header {
+		font-style: italic
+	}
+
+	p.footer {
+
+	}
+
+	p.copyright {
+    font-size: small;
+	}
