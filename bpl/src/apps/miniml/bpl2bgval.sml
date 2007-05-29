@@ -23,7 +23,6 @@
  Implements bpl/bplproject/doc/projects/contextawareness/plato/bpl-bnf.tex
 *)
 
-
 open TextIO;
 
 structure BG = BG (structure ErrorHandler = PrintErrorHandler);
@@ -55,64 +54,58 @@ structure Re = Reaction (structure RuleNameMap = Util.StringMap
                          structure ErrorHandler = PrintErrorHandler)
 *)
 
-datatype id = Id of string
-datatype ctrlid = CtrlId of string
-datatype namedsite = NamedSite of string
-datatype nat = Nat of int
+(***** BNF *****)
+type id = string
+type ctrlid = string
+type nat = int
+datatype siteId = Num of nat
+		| Var of id
 datatype wire = Global of id * id
 	      | Local of id * id
 	      | IdleG of id
 	      | IdleL of id
-datatype wiring = wire
-		| Wires of wire * wiring
-datatype names = id
-	       | Names of id * names
-datatype namelist = Namelist of names
-datatype ports = Ports of names
-datatype bigraph = Wir of wiring
+type wires = wire list
+type names = id list
+type namelist = Namelist of names
+type ports = names
+datatype bigraph = Wir of wires
 		 | Par of bigraph * bigraph
 		 | Pri of bigraph * bigraph
 		 | Com of bigraph * bigraph
 		 | Emb of bigraph * bigraph
 		 | Ten of bigraph * bigraph
-		 | Ctrl of ctrlid
-		 | CtrlB of ctrlid * ports
-		 | CtrlF of ctrlid * ports
-		 | CtrlBF of ctrlid * ports * ports
+		 | Ctrl of ctrlid * ports * ports
 		 | Clo of names * bigraph
 		 | Abs of names * bigraph
-		 | Site of nat
-		 | Sitep of nat * namelist
-		 | Nsite of namedsite
-		 | Nsitep of namedsite * namelist
-		 | id
+		 | Site of siteId * namelist
+		 | Id of id
 		 | Empty
-datatype rule = Rule of bigraph * bigraph
+type rule = bigraph * bigraph
 datatype ctrlkind = Active
 		  | Passive
 		  | Atomic
 datatype ctrldef = Cdef of ctrlid * ctrlkind * nat * nat
-datatype ctrldefs = ctrldef
-		  | Cdefs of ctrldef * ctrldefs
-datatype dec = Decs of dec * dec
-	     | Rule of id * rule
+datatype ctrldefs = ctrldef list
+datatype dec = Rule of id * rule
 	     | Value of id * bigraph
-datatype signatur = Sig of ctrldefs
-datatype prog = Prog of signatur * dec
+datatype decs = dec list
+type signatur = ctrldefs
+datatype prog = Prog of signatur * decs
 
-val barren = <-> (* barren root *)
+val barren = Sugar.<-> (* barren root *)
 val info = BG.Info.noinfo
 
-(* operators *)
+(* OPERATORS *)
 infixr || (* parallel product *)
 infixr pp (* prime product *)
 infixr tt (* tensor product *)
 infixr oo (* composition *)
-fun (b1:bgval) || (b2:bgval) = B.Par info [b1,b2]
-fun (b1:bgval) pp (b2:bgval) = B.Pri info [b1,b2]
-fun (b1:bgval) tt (b2:bgval) = B.Ten info [b1,b2]
-fun (b1:bgval) oo (b2:bgval) = B.Com info (b1, b2)
+fun (b1:bgval) || (b2:bgval) = Sugar.|| (b1,b2)
+fun (b1:bgval) pp (b2:bgval) = Sugar.'|' (b1,b2)
+fun (b1:bgval) tt (b2:bgval) = Sugar.* (b1,b2)
+fun (b1:bgval) oo (b2:bgval) = Sugar.o (b1,b2)
 
+(***** AUXILIARY FUNCTIONS *****)
 (*
 fun getSites1 b numbered =
     case b of Wir => []
@@ -148,7 +141,8 @@ fun calcInst b1 b2 =
     in makeInst s1 s2 end
 *)
 
-(* aux. functions *)
+fun s2n s = Name.make s
+
 fun v2n x = Name.make (String.toString x)
 
 fun mkWir1 ovar =
@@ -164,14 +158,6 @@ fun mkWir2 ovar ivar =
 	val linkset = NameSet.insert NameSet.empty link
     in Wiring.make linkset end
 
-fun cds2cdList cdefs =
-    case cdefs of Cdef(cid,ck,bp,fp) => [Cdef(cid,ck,bp,fp)]
-		| Cdefs(cd,cds) => cd :: cds2cdList cds
-
-fun nms2nmList names =
-    case names of ID(s) => [Id(s)]
-		| Names(id,nms) => id :: nms2nmList nms
-
 fun nms2nmSet n = List.map (fn x => NameSet.insert NameSet.empty x)
 			   (nms2nmList n)
 
@@ -180,65 +166,57 @@ fun lookupKind cid signa =
 	  | loop ((i,k,b,f)::p) = if cid = i then SOME k else loop p
     in loop signa end
 
-fun getBigraph id imap =
+fun lookupBigraph id idmap =
     let fun loop [] = NONE
           | loop ((i,b)::p) = if id = i then SOME b else loop p
-    in loop imap end
+    in loop idmap end
 
-fun big2bgval ast maps signa =
-    case ast
-     of Wir(w) =>
-	( case w of Global(out,inn) => mkWir2 out inn
-		  | Local(out,inn) => mkWir2 out inn
-		  | IdleG(x) => mkWir1 x
-		  | IdleL(x) => mkWir1 x )
-      | Par(b1,b2) => (big2bgval b1 maps signa)
-			  || (big2bgval b2 maps signa)
-      | Pri(b1,b2) => (big2bgval b1 maps signa)
-			  pp (big2bgval b2 maps signa)
-      | Com(b1,b2) => (big2bgval b1 maps signa)
-			  oo (big2bgval b2 maps signa)
-      | Emb(b1,b2) => (big2bgval b1 maps signa)
-			  oo (big2bgval b2 maps signa)
-      | Ten(b1,b2) => (big2bgval b1 maps signa)
-			  tt (big2bgval b2 maps signa)
-      | Ctrl(cid) =>
-	( case lookupKind cid signa
-	   of SOME(k) => Sugar.k cid
-	    | NONE => raise Error )
-      | CtrlB(cid,Ports(b)) =>
-	let val boundnames = nms2nmSet b
-	in case lookupKind cid signa
-	    of SOME(k) => Ion.make {ctrl = Control.make(cid,k),
-				    free = [],
-				    bound = boundnames}
-	     | NONE => raise Error
-	end
-      | CtrlF(cid,Ports(f)) =>
-	( case lookupKind cid signa
-	   of SOME(k) => Ion.make {ctrl = Control.make(cid,k),
-				   free = nms2nmlist f,
-				   bound = []}
-	    | NONE => raise Error )
-      | CtrlBF(cid,Ports(b),Ports(f)) =>
-	let val boundnames = List.map nm2nmSet (nms2nmlist b)
-	in case lookupKind cid signa
-	    of SOME(k) => Ion.make {ctrl = Control.make(cid,k),
-				    free = nms2nmlist f,
-				    bound = boundnames}
-	     | NONE => raise Error
-	end
-      | Clo(n,b) => (S.-//(nms2nmlist n))
-			oo (big2bgval b maps signa)
-      | Abs(n,b) => B.Abs info (nms2nmSet n, big2bgval b maps signa)
-      | Site(num) => todo
-      | Sitep(num,namelist) => todo
-      | Nsite(namedsite) => todo
-      | Nsitep(namedsite,namelist) => todo
-      | Id(i) => case getBigraph i (#1(maps))
-		  of SOME(b) => big2bgval b maps signa
-		   | NONE => raise Error
-      | Empty => barren
+fun ctrlNotInSig cid = raise Fail("Control does not exist in signature: " ^ cid ^ "\n")
+
+type idmap = (id * bigraph) list
+type sitemap = (int * siteId) list
+
+(***** TRANSLATION *****)
+fun big2bgval ast (maps:idmap*sitemap) signa =
+    let val imap = #1(maps)
+	val smap = #2(maps)
+    (* hmm...need to calculate and insert implicit id wirings *)
+    in case ast
+	of Wir(w) =>
+	   (* hmmm...need to localise some names here? *)
+	   ( case w of Global(out,inn) => mkWir2 out inn
+		     | Local(out,inn) => mkWir2 out inn
+		     | IdleG(x) => mkWir1 x
+		     | IdleL(x) => mkWir1 x )
+	 | Par(b1,b2) => (big2bgval b1 maps signa)
+			     || (big2bgval b2 maps signa)
+	 | Pri(b1,b2) => (big2bgval b1 maps signa)
+			     pp (big2bgval b2 maps signa)
+	 | Com(b1,b2) => (big2bgval b1 maps signa)
+			     oo (big2bgval b2 maps signa)
+	 | Emb(b1,b2) => (big2bgval b1 maps signa)
+			     oo (big2bgval b2 maps signa)
+	 | Ten(b1,b2) => (big2bgval b1 maps signa)
+			     tt (big2bgval b2 maps signa)
+	 | Ctrl(cid,bports,fports) =>
+	   let val boundnames = List.map (nm2nmSet o s2n) bports
+	       val freenames = List.map s2n fports
+	   in case lookupKind cid signa
+	       of SOME(k) => Ion.make {ctrl = Control.make(cid,k),
+				       free = freenames,
+				       bound = boundnames}
+		| NONE => ctrlNotInSig cid
+	   end
+	 | Clo(nms,b) => (S.-//(List.map s2n nms)) 
+			     oo (big2bgval b maps signa)
+	 | Abs(nms,b) => B.Abs info (List.map (nm2nmSet o s2n) nms,
+				     big2bgval b maps signa)
+	 | Site(i,nms) => todo (*(nextNat,i) :: smap) ... *)
+	 | Id(i) =>
+	   ( case getBigraph i imap
+	      of SOME(b) => big2bgval b maps signa
+	       | NONE => raise Fail("Unbound identifier: " ^ i ^ "\n") )
+	 | Empty => barren
 
 (* fix this... *)
 fun dec2bgval ast signa =
