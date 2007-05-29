@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
+using System.IO;
 
 namespace FlowDemo
 {
@@ -17,6 +18,10 @@ namespace FlowDemo
         private Bitmap img;
         private Graphics graph;
         ListedElements elements;
+        string englishPath = "\\Program files\\CFDemo\\";
+        string danishPath = "\\Programmer\\CFDemo\\";
+        bool english = false;
+        bool danish = false;
 
         public Form1()
         {
@@ -26,14 +31,23 @@ namespace FlowDemo
             img = new Bitmap(Screen.PrimaryScreen.WorkingArea.Width, 10000);
             graph = Graphics.FromImage(img);
             graph.Clear(Color.Transparent);
-            
+
+            english = Directory.Exists(englishPath);
+            danish = Directory.Exists(danishPath);
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
             graph.Clear(Color.Transparent);
-            path = "\\Program files\\FlowDemo\\Flow.xml";
-            
+            if (english)
+            {
+                path = englishPath + "Flow.xml";
+            }
+            if (danish)
+            {
+                path = danishPath + "Flow.xml";
+            }
+                        
             elements = ReadXML(path);
             DoDraw();
             exitPoint.X = Screen.PrimaryScreen.WorkingArea.Width / 2;
@@ -43,7 +57,15 @@ namespace FlowDemo
         private void button2_Click(object sender, EventArgs e)
         {
             graph.Clear(Color.Transparent);
-            path = "\\Program files\\FlowDemo\\Flow2.xml";
+            if (english)
+            {
+                path = englishPath + "Flow2.xml";
+            }
+            if (danish)
+            {
+                path = danishPath + "Flow2.xml";
+            }
+
             elements = ReadXML(path);
             DoDraw();
             exitPoint.X = Screen.PrimaryScreen.WorkingArea.Width / 2;
