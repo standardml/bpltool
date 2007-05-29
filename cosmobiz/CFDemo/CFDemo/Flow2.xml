@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<sequence name="seq1">
+  <activity name="act3"/>
+  <Flow name="flow1">
+    <sequence name="seq2">
+      <activity name="act4"/>
+      <activity name="act5"/>
+    </sequence>
+    <sequence name="seq3">
+      <activity name="act6"/>
+    </sequence>
+  </Flow>
+  <activity name="act7"/>
+  <activity name="act8"/>
+  <activity name="act9"/>
+  <Flow name="flow2">
+    <sequence name="seq4">
+      <activity name="act14"/>
+      <activity name="act15"/>
+    </sequence>
+    <sequence name="seq5">
+      <activity name="act16"/>
+      <activity name="act10"/>
+      <activity name="act11"/>
+      <activity name="act12"/>
+      <activity name="act13"/>
+    </sequence>
+  </Flow>
+  <activity name="act17"/>
+  <activity name="act18"/>
+  <activity name="act19"/>
+</sequence>
