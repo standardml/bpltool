@@ -1,4 +1,4 @@
-namespace FlowDemo
+namespace CFDemo
 {
     partial class Form1
     {

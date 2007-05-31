@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Text;
 
-namespace FlowDemo //(http://www.codeproject.com/csharp/iinterfaces_p1.asp)
+namespace CFDemo //(http://www.codeproject.com/csharp/iinterfaces_p1.asp)
 {
     public class Element
     {
