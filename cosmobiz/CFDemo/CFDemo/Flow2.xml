@@ -26,6 +26,45 @@
       <activity name="act13"/>
     </sequence>
   </Flow>
+  <Flow name="flow3">
+    <sequence name="seq34">
+      <activity name="act314"/>
+      <activity name="act315"/>
+    </sequence>
+    <sequence name="seq35">
+      <activity name="act316"/>
+      <activity name="act310"/>
+      <activity name="act311"/>
+      <activity name="act312"/>
+      <activity name="act313"/>
+    </sequence>
+  </Flow>
+  <Flow name="flow4">
+    <sequence name="seq44">
+      <activity name="act414"/>
+      <activity name="act415"/>
+    </sequence>
+    <sequence name="seq45">
+      <activity name="act416"/>
+      <activity name="act410"/>
+      <activity name="act411"/>
+      <activity name="act412"/>
+      <activity name="act413"/>
+    </sequence>
+  </Flow>
+  <Flow name="flow5">
+    <sequence name="seq54">
+      <activity name="act514"/>
+      <activity name="act515"/>
+    </sequence>
+    <sequence name="seq55">
+      <activity name="act516"/>
+      <activity name="act510"/>
+      <activity name="act511"/>
+      <activity name="act512"/>
+      <activity name="act513"/>
+    </sequence>
+  </Flow>
   <activity name="act17"/>
   <activity name="act18"/>
   <activity name="act19"/>
