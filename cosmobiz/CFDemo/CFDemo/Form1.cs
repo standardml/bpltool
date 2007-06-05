@@ -69,7 +69,7 @@ namespace CFDemo
             }
 
             elements = ReadXML(path);
-            img = draw.DoDraw(elements);
+            //img = draw.DoDraw(elements);
             AdjustPictureBox();
             pictureBox1.Image = img;
             draw.PointX = Screen.PrimaryScreen.WorkingArea.Width / 2;
@@ -107,5 +107,27 @@ namespace CFDemo
             
             /////--------------------------------------------------------
         }
+
+        private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
+        {
+            int x = e.X;
+            int y = e.Y;
+
+
+            foreach (Box box in draw.BoxList)
+            {
+                if (box.TopPoint.X <= x && box.TopPoint.Y <= y && box.BottomPoint.X >= x && box.BottomPoint.Y >= y)
+                {
+                    box.ReDraw();
+                    pictureBox1.Image = img;
+                    draw.PointX = Screen.PrimaryScreen.WorkingArea.Width / 2;
+                    draw.PointY = 10;
+                }
+                
+            }
+        }
+
+        
+
     }
 }

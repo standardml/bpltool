@@ -26,16 +26,21 @@ namespace CFDemo
 
         private Bitmap img;
         private Graphics graph;
+
+        public List<Box> BoxList;
+
+
         public Draw()
         {
             exitPoint = new Point(Screen.PrimaryScreen.WorkingArea.Width / 2, 10);
-            
+
             img = new Bitmap(Screen.PrimaryScreen.WorkingArea.Width, 10000);
             graph = Graphics.FromImage(img);
         }
 
         public Bitmap DoDraw(ListedElements elements)
         {
+            BoxList = new List<Box>();
             Point splitPoint = exitPoint;
             bool changeSide = false;
             bool flow = false;
@@ -115,7 +120,7 @@ namespace CFDemo
                         {
                             DrawFlowAdjustment(rightDrawPoint, new Point(rightDrawPoint.X, leftDrawPoint.Y));
                         }
-                        
+
                         DrawJoin(exitPoint, currentSide);
 
                         break;
@@ -129,11 +134,13 @@ namespace CFDemo
 
         private void DrawBox(Point point, Side side)
         {
-            Pen pen = new Pen(Color.Black);
-            int height = 50;
-            int width = 100;
-            int linelength = 30;
-            Rectangle rect;
+
+
+            //Pen pen = new Pen(Color.Black);
+            //int height = 50;
+            //int width = 100;
+            //int linelength = 30;
+            //Rectangle rect;
 
             switch (side)
             {
@@ -149,15 +156,14 @@ namespace CFDemo
                 default:
                     break;
             }
+            Box box = new Box(graph, point);
+            BoxList.Add(box);
+            box.Draw();
 
-            rect = new Rectangle(point.X - width / 2, point.Y + linelength, width, height);
-            graph.DrawLine(pen, point.X, point.Y, point.X, point.Y + linelength);
-            graph.DrawRectangle(pen, rect);
-
-            exitPoint.Y = point.Y + height + linelength;
+            exitPoint.Y = point.Y + box.Height + box.Linelength;
 
 
-            
+
         }
 
         private void DrawSplit(Point point, Side side)
