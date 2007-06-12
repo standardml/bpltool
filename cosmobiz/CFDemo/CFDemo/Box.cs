@@ -32,6 +32,11 @@ namespace CFDemo
             set { bottomPoint = value; }
         }
 
+        public bool Selected
+        {
+            get { return selected; }
+        }
+
         public int Width
         {
             get { return width; }
@@ -47,9 +52,21 @@ namespace CFDemo
             get { return linelength; }
         }
 
+        private string name;
+        public string Name
+        {
+            get { return name; }
+        }
 
+        private string owner;
 
-        public Box(Graphics graph, Point point)
+        public string Owner
+        {
+            get { return owner; }
+            set { owner = value; }
+        }
+
+        public Box(Graphics graph, Point point, string name, string owner)
         {
             this.graph = graph;
             startPoint = point;
@@ -57,6 +74,8 @@ namespace CFDemo
             topPoint.Y = point.Y + linelength;
             bottomPoint.X = point.X + width / 2;
             bottomPoint.Y = point.Y + linelength + height;
+            this.name = name;
+            this.owner = owner;
         }
 
         public override void Draw()
@@ -64,9 +83,8 @@ namespace CFDemo
             pen = new Pen(Color.Black);
             rect = new Rectangle(topPoint.X, topPoint.Y, width, height);
             graph.DrawLine(pen, startPoint.X, startPoint.Y, startPoint.X, startPoint.Y + linelength);
-            //g.DrawString("Welcome C#",new Font("Verdana",20),new SolidBrush(Color.Tomato),40,40);
-
-            //graph.DrawString("Box",new Font("Verdana",20),new SolidBrush(Color.Blue),topPoint.X,topPoint.Y);
+            graph.DrawString(name,new Font("Verdana",5, FontStyle.Regular),new SolidBrush(Color.Tomato),topPoint.X+2,topPoint.Y);
+            graph.DrawString(owner,new Font("Verdana",5,FontStyle.Regular),new SolidBrush(Color.Blue),topPoint.X+2,topPoint.Y+10);
             graph.DrawRectangle(pen, rect);
         }
 

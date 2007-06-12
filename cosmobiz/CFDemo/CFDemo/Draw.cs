@@ -37,13 +37,13 @@ namespace CFDemo
             img = new Bitmap(Screen.PrimaryScreen.WorkingArea.Width, 10000);
             graph = Graphics.FromImage(img);
         }
-
+bool flow = false;
         public Bitmap DoDraw(ListedElements elements)
         {
             BoxList = new List<Box>();
             Point splitPoint = exitPoint;
             bool changeSide = false;
-            bool flow = false;
+            
             Side currentSide = Side.center;
             Point leftDrawPoint = new Point(0, 0);
             Point rightDrawPoint = new Point(0, 0);
@@ -94,11 +94,11 @@ namespace CFDemo
                     case "activity":
                         if (changeSide)
                         {
-                            DrawBox(splitPoint, currentSide);
+                            DrawBox(splitPoint, currentSide, elem.Name, elem.Owner);
                             changeSide = false;
                         }
                         else
-                            DrawBox(exitPoint, currentSide);
+                            DrawBox(exitPoint, currentSide, elem.Name, elem.Owner);
 
                         break;
                     case "Flow":
@@ -132,16 +132,8 @@ namespace CFDemo
             return img;
         }
 
-        private void DrawBox(Point point, Side side)
+        private void DrawBox(Point point, Side side, string name, string owner)
         {
-
-
-            //Pen pen = new Pen(Color.Black);
-            //int height = 50;
-            //int width = 100;
-            //int linelength = 30;
-            //Rectangle rect;
-
             switch (side)
             {
                 case Side.left:
@@ -156,14 +148,14 @@ namespace CFDemo
                 default:
                     break;
             }
-            Box box = new Box(graph, point);
-            BoxList.Add(box);
-            box.Draw();
+            //if (!flow)
+            {
+                Box box = new Box(graph, point, name, owner);
+                BoxList.Add(box);
+                box.Draw();
 
-            exitPoint.Y = point.Y + box.Height + box.Linelength;
-
-
-
+                exitPoint.Y = point.Y + box.Height + box.Linelength; 
+            }
         }
 
         private void DrawSplit(Point point, Side side)
@@ -175,7 +167,7 @@ namespace CFDemo
             //Graphics graph = CreateGraphics();
             graph.DrawLine(pen, point.X, point.Y, point.X, point.Y + linelength);
             graph.DrawLine(pen, leftpoint.X, leftpoint.Y, rightpoint.X, rightpoint.Y);
-
+            
 
             exitPoint.Y = point.Y + linelength;
         }

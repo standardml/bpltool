@@ -53,6 +53,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Box.cs" />
+    <Compile Include="DetailedView.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DetailedView.Designer.cs">
+      <DependentUpon>DetailedView.cs</DependentUpon>
+    </Compile>
     <Compile Include="Draw.cs">
     </Compile>
     <Compile Include="DrawableObject.cs" />
@@ -65,6 +71,10 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="DetailedView.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>DetailedView.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
       <SubType>Designer</SubType>

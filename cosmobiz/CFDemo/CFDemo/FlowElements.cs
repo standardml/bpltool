@@ -8,11 +8,13 @@ namespace CFDemo //(http://www.codeproject.com/csharp/iinterfaces_p1.asp)
     {
         private string name;
         private string type;
+        private string owner;
 
-        public Element(string name, string type)
+        public Element(string name, string type, string owner)
         {
             this.name = name;
             this.type = type;
+            this.owner = owner;
         }
 
         public Element()
@@ -30,6 +32,13 @@ namespace CFDemo //(http://www.codeproject.com/csharp/iinterfaces_p1.asp)
             get { return type; }
             set { type = value; }
         }
+
+        public string Owner
+        {
+            get { return owner; }
+            set { owner = value; }
+        }
+
     }
 
 
@@ -39,7 +48,7 @@ namespace CFDemo //(http://www.codeproject.com/csharp/iinterfaces_p1.asp)
 
     public class ListedElements : IEnumerable
     {
-        Element[] elements = new Element[1]; 
+        Element[] elements = new Element[1];
         int count = 0;
 
         public Element this[int index]

@@ -13,9 +13,9 @@ namespace CFDemo
     public partial class Form1 : Form
     {
         ListedElements elements;
-        
+
         private string path;
-        
+
         Draw draw;
         string englishPath = "\\Program files\\CFDemo\\";
         string danishPath = "\\Programmer\\CFDemo\\";
@@ -45,12 +45,12 @@ namespace CFDemo
             }
 
             elements = ReadXML(path);
-            
-            
+
+
             img = draw.DoDraw(elements);
             AdjustPictureBox();
             pictureBox1.Image = img;
-                
+
 
             draw.PointX = Screen.PrimaryScreen.WorkingArea.Width / 2;
             draw.PointY = 10;
@@ -69,7 +69,7 @@ namespace CFDemo
             }
 
             elements = ReadXML(path);
-            //img = draw.DoDraw(elements);
+            img = draw.DoDraw(elements);
             AdjustPictureBox();
             pictureBox1.Image = img;
             draw.PointX = Screen.PrimaryScreen.WorkingArea.Width / 2;
@@ -84,12 +84,12 @@ namespace CFDemo
             {
                 if (xreader.HasAttributes)
                 {
-                    TempElements.Add(new Element(xreader[0], xreader.Name));
+                    TempElements.Add(new Element(xreader[0], xreader.Name, xreader[1]));
                 }
                 if (xreader.NodeType == XmlNodeType.EndElement)
                 {
 
-                    TempElements.Add(new Element("end" + xreader.LocalName, "end" + xreader.LocalName));
+                    TempElements.Add(new Element("end" + xreader.LocalName, "end" + xreader.LocalName,""));
                 }
             }
             return TempElements;
@@ -98,13 +98,13 @@ namespace CFDemo
         private void AdjustPictureBox()
         {
             /////---------------------kontrolleres et andet sted---------
-            
+
             if (pictureBox1.Height < draw.PointY)
             {
                 pictureBox1.Height = draw.PointY + 2;
             }
-            
-            
+
+
             /////--------------------------------------------------------
         }
 
@@ -118,16 +118,22 @@ namespace CFDemo
             {
                 if (box.TopPoint.X <= x && box.TopPoint.Y <= y && box.BottomPoint.X >= x && box.BottomPoint.Y >= y)
                 {
-                    box.ReDraw();
-                    pictureBox1.Image = img;
+                    //box.ReDraw();
+                    //pictureBox1.Image = img;
                     draw.PointX = Screen.PrimaryScreen.WorkingArea.Width / 2;
                     draw.PointY = 10;
+                    //if (box.Selected)
+                    {
+                        DetailedView dv = new DetailedView(box.Name, box.Owner);
+                        dv.Show();
+                    }
+
                 }
-                
+
             }
         }
 
-        
+
 
     }
 }
