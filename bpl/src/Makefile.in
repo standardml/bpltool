@@ -261,6 +261,9 @@ CMDIRS = $(filter-out lib/pp/smlnj lib/compat/common,$(MOSMAKEDIRS))
 cmclean:
 	for d in $(CMDIRS); do [ -r $$d/Dependencies ] && $(RM) -f $$d/sources.cm; done
 
+cmcacheclean:
+	for d in $(CMDIRS); do [ -r $$d/Dependencies ] && $(RM) -rf $$d/CM; done
+
 mlbclean:
 	$(RM) $(patsubst %/Dependencies,%/mlton.mlb,$(DEPENDENCIES)) 
 
