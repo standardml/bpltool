@@ -71,8 +71,8 @@ struct
 
 end (* structure Parse *)
 
-val _ = 
+(*val _ = 
     let val ast = BPLParser.parseFile (hd(CommandLine.arguments()))
     in  Pretty.ppPrint (BPLTerm.pp ast)
 		       (Pretty.plainOutput ("(*","*)")) TextIO.stdOut
-    end
+    end*)
