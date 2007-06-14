@@ -328,6 +328,9 @@ sig
    *)
   val pp : int -> PrettyPrint.ppstream -> bgval -> unit
   val oldpp : int -> PrettyPrint.ppstream -> bgval -> unit
+  (** Prettyprint a bgval without parentheses around it, using the
+   * long version of link names that include the internal number. *)
+  val pp_unchanged : int -> PrettyPrint.ppstream -> bgval -> unit
   (** Prettyprint a bgval with interfaces, without parentheses around it.
    * @params indent pps t
    * @param indent  Indentation at each block level.
@@ -345,6 +348,10 @@ sig
 
   (** Return a prettyprinted string representation of a bgval. *)
   val toString : bgval -> string
+
+  (** Return a prettyprinted string representation of a bgval, where
+   * link names are shown in their long version with internal numbers. *)
+  val toString_unchanged : bgval -> string
 
   val size : bgval -> int
 

@@ -140,52 +140,56 @@ struct
   val unmk =
       let
 	fun unmk' (v as (VMer (n, i)))
-	    = (BgTerm.Mer (n, (info v)), Interface.m n, Interface.one)
+	    = ((BgTerm.Mer (n, (info v)), Interface.m n, Interface.one) handle e => raise e)
 	  | unmk' (v as (VCon (X, i)))
-	    = (BgTerm.Con (X, (info v)), 
+	    = ((BgTerm.Con (X, (info v)), 
 	       Interface.make {loc = [X], 
 			       glob = NameSet.empty},
-	       Interface.make {loc = [NameSet.empty], glob = X})
+	       Interface.make {loc = [NameSet.empty], glob = X}) handle e => raise e)
 	  | unmk' (v as (VWir (w, i)))
-	    = (BgTerm.Wir (w, (info v)),
+	    = ((BgTerm.Wir (w, (info v)),
 	       Interface.X (Wiring.innernames w),
-	       Interface.X (Wiring.outernames w))
+	       Interface.X (Wiring.outernames w)) handle e => raise e)
 	  | unmk' (v as (VIon (KyX, i)))
-	    = (BgTerm.Ion (KyX, (info v)),
+	    = ((BgTerm.Ion (KyX, (info v)),
 	       Interface.make {loc = [Ion.innernames KyX],
 			       glob = NameSet.empty},
-	       Interface.make {loc = [NameSet.empty], glob = Ion.outernames KyX})
+	       Interface.make {loc = [NameSet.empty], glob = Ion.outernames KyX}) handle e => raise e)
 	  | unmk' (v as (VPer (pi, i)))
-	    = (BgTerm.Per (pi, (info v)), 
+	    = ((BgTerm.Per (pi, (info v)), 
 	       Permutation.innerface pi,
-	       Permutation.outerface pi)
+	       Permutation.outerface pi) handle e => raise e)
 	  | unmk' (v as (VAbs (X, v', (innf, outf, i)))) 
-	    = (BgTerm.Abs (X, #1 (unmk' v'), (info v)), innf, outf)
+	    = ((BgTerm.Abs (X, #1 (unmk' v'), (info v)), innf, outf) handle e => raise e)
 	  | unmk' (v as (VTen (vs, (innf, outf, i)))) 
-	    = (BgTerm.Ten (List.map (#1 o unmk') vs, (info v)), innf, outf)
+	    = ((BgTerm.Ten (List.map (#1 o unmk') vs, (info v)), innf, outf) handle e => raise e)
 	  | unmk' (v as (VCom (v1, v2, (innf, outf, i)))) 
-	    = (BgTerm.Com (#1 (unmk' v1), #1 (unmk' v2), (info v)),
+	    = ((BgTerm.Com (#1 (unmk' v1), #1 (unmk' v2), (info v)),
 	       innf,
-	       outf)
+	       outf) handle e => raise e)
       in
 	unmk'
       end
 
   fun pp' BgTerm_pp indent pps v =
       let
-        val (t, iface, oface) = unmk v
+        val (t, iface, oface) = unmk v handle e => raise e
         (* try to print the interfaces using the names given in the input *)
         val ()
           = (Name.pp_unchanged (Interface.names iface) (Interface.names oface))
             handle Name.PPUnchangedNameClash _ =>
-              Name.pp_unchanged NameSet.empty NameSet.empty
+              (Name.pp_unchanged NameSet.empty NameSet.empty handle e => raise e)
       in
-        BgTerm_pp indent pps t
-      end
+        BgTerm_pp indent pps t handle e => raise e
+      end handle e => raise e
 
   val oldpp = pp' BgTerm.oldpp
   
   val pp = pp' BgTerm.pp
+
+  fun pp_unchanged indent pps v =
+    (Name.pp_unchanged NameSet.empty NameSet.empty;
+     BgTerm.pp indent pps (#1 (unmk v)))
 
   fun ppWithIface (indent:int) pps v =
     let
@@ -227,6 +231,11 @@ struct
     = PrettyPrint.pp_to_string
         (Flags.getIntFlag "/misc/linewidth") 
         (pp (Flags.getIntFlag "/misc/indent"))
+
+  val toString_unchanged
+    = PrettyPrint.pp_to_string
+        (Flags.getIntFlag "/misc/linewidth") 
+        (pp_unchanged (Flags.getIntFlag "/misc/indent"))
 
   val size = BgTerm.size o #1 o unmk
 
