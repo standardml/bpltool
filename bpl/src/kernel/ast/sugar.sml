@@ -68,7 +68,8 @@ type name = string
 type nameset = NameSet.Set
 type bgval = BgVal.bgval
 type arities = {boundarity : int, freearity : int}
-type mapinfo = int * nameset
+type placeinfo = int * Name.name list
+datatype mapinfo = |--> of placeinfo * placeinfo
 type absinfo = nameset
 type ctrlkind = Control.kind
 
@@ -232,8 +233,8 @@ fun --> (boundarity, freearity) = {freearity = freearity,
 				   boundarity = boundarity}
 val <-> = Mer 0
 val op @ = Per o Permutation.make o map (fn j => (j, NameSet.empty))
-val @@ = Per o Permutation.make
-fun & (j, Xs) = (j, NameSet.fromList (map Name.make Xs))
+val @@ = Per o Permutation.make o map (fn (j, Xs) => (j, NameSet.fromList Xs))
+fun & (j, Xs) = (j, map Name.make Xs)
 val merge = Mer
 fun ` Xs _ = Con (NameSet.fromList (map Name.make Xs))
 fun // (y, Xs) = Wir (Wiring.make 
@@ -271,6 +272,40 @@ fun `|` (b1, b2) = Pri [b1, b2]
 val `|`` = Pri
 fun -/ x = "" / x
 fun -// X = // ("", X)
+infix 2 |-->  infix 2 |->
+fun i |-> j = (i, []) |--> (j, [])
+fun ppMapinfo indent pps ((i, xs) |--> (j, ys)) =
+  let
+    open PrettyPrint
+    val show = add_string pps 
+    fun << () = begin_block pps INCONSISTENT indent
+	  fun >> () = end_block pps
+	  fun <<< () = begin_block pps CONSISTENT indent
+	  fun >>> () = end_block pps
+	  fun brk () = add_break pps (1, 0)
+	  fun brk0 () = add_break pps (0, 0)
+  	fun pplist pp_y ys =
+	    (<<(); show "[";
+	     foldl (fn (y, notfirst) => 
+		       (if notfirst then (show ","; brk()) else ();
+			pp_y y;
+			true)) false ys;
+	     show "]"; >>())
+  in
+    <<();
+    (case (xs, ys) of
+      ([], []) =>
+      (show (Int.toString i);
+       brk(); show "|-> ";
+       show (Int.toString j))
+    | _ =>
+      (show (Int.toString i ^ "&");
+       pplist (Name.pp indent pps) xs;
+       brk(); show "|--> ";
+       show (Int.toString j ^ "&");
+       pplist (Name.pp indent pps) ys));
+    >>()
+  end
 val revision
   = hd (String.tokens (fn c => not (Char.isDigit c)) "$LastChangedRevision$")
 end

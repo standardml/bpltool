@@ -28,7 +28,7 @@
  *   infix 5 *   infix 5 ||   infix 5 `|`
  *   infix 4 >
  *   infix 3 &   infix 3 -->
- *   infix 2 =:  infix 2 -:
+ *   infix 2 =:  infix 2 -:   infix 2 |->   infix 2 |-->
  *   nonfix @
  *   nonfix <
  * 
@@ -59,6 +59,7 @@ signature SUGAR =
     type name = string
     type arities
     type mapinfo
+    type placeinfo
     type absinfo
     type ctrlkind
 
@@ -117,9 +118,9 @@ signature SUGAR =
     (** Construct a nameless permutation. *)
     val @ : int list -> bgval
     (** Construct a permutation. *)
-    val @@ : mapinfo list -> bgval
+    val @@ : placeinfo list -> bgval
     (** Operator to put between map index and name set in permuation. *)
-    val & : int * name list -> mapinfo
+    val & : int * name list -> placeinfo
     (** Construct a concretion. *)
     val ` : name list -> 'a -> bgval
     (** Construct a bigraph composition. *)
@@ -144,6 +145,12 @@ signature SUGAR =
     val idw : name list -> bgval
     (** Construct an empty tensor product. *)
     val idx0 : bgval
+    (** Construct a nameless site mapping. *)
+    val |-> : int * int -> mapinfo
+    (** Construct a site mapping. *)
+    val |--> : placeinfo * placeinfo -> mapinfo
+    (** Prettyprint a mapinfo. *)
+    val ppMapinfo : int -> PrettyPrint.ppstream -> mapinfo -> unit
     (** Revision number.*)
     val revision : string
   end
