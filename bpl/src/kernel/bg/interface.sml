@@ -125,7 +125,7 @@ struct
 		     show "],"; >>(); brk());
 		  NameSetPP.pp indent pps glob;
 		  show ">"; >>>())
-      end
+      end handle e => raise e
 
   val op * = x
 

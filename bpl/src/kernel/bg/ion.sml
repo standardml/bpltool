@@ -120,7 +120,7 @@ struct
 	   brk0();
 	   pplist (NameSetPP.ppbr indent lbrack rbrack pps) bound);
 	>>>()
-      end
+      end handle e => raise e
       
   val pp = pp' "[" "]" "[" "]"
   val oldpp = pp' "<" ">" "{" "}"

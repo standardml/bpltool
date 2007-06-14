@@ -178,7 +178,7 @@ struct
 	  (<<(); show ((if permIsNameless then at else atat) ^ "[");
 	   Array.foldl ppmap false pi;
 	   show "]"; >>())
-      end
+      end handle e => raise e
 
   val pp = pp' "@" "@@" "[" "&" "]" "idp"
   val oldpp = pp' "" "" "{" "" "}" "idp_"
