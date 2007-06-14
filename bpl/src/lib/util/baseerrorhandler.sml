@@ -128,4 +128,5 @@ struct
 
   fun explain' e =
       PrettyPrint.pp_to_string (!pageWidth) (pp (!indent)) (explain'' e)
+      handle e => raise e
 end

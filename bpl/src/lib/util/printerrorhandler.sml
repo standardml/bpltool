@@ -46,5 +46,5 @@ struct
         (print "Error: ";
          print (explain' e);
          debug LVL_LOW print_exn_hist ())
-      end
+      end handle e => raise e
 end
