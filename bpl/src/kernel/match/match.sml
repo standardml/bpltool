@@ -1400,6 +1400,60 @@ struct
   and matchPARn' {ename, s_a, s_C, es, Es} = 
       lzmake (fn () =>
       let
+        (* build_matches returns a lazy list of matches.
+         * results is a lazy list of results from preceding factors
+         * (e_0, E_0)...(e_i-1, E_i-1)
+         *)
+        fun build_matches [] [] results = results
+          | build_matches _ [] _ = raise NoMatch
+          | build_matches [] _ _ = raise NoMatch
+          | build_matches (e_i::es) (E_i::Es) results =
+          let
+            (* extend_result extends a single, previous result with all the
+             * possible matches for (e_i, E_i), prepending it to newresults.
+             *)
+            fun extend_result
+                ({ename' = ename_i, s_C', Y, qss, tree = PARn' trees}, newresults)
+              = let
+                  val premise_matches
+                    = matchDG' false 
+                        {ename = ename_i, s_a = s_a, s_C = s_C, g = e_i, G = E_i}
+                  (* add_match combines a single match of (e_i, E_i) with
+                   * a single, previous result, prepending it to newresults.
+                   *)
+                  fun add_match
+                    ({ename', s_C' = s_C'_i, Y = Y_i, qs = qs_i, tree = tree_i},
+                     newresults) =
+                    let
+                      val s_C' = Wiring.++ [s_C'_i, s_C']
+                      val Y = NameSet.union Y_i Y
+                      val qss = qs_i :: qss
+                      val tree = PARn' (tree_i :: trees) 
+                    in
+                      lzCons (fn () =>
+                        ({ename' = ename', s_C' = s_C', Y = Y, qss = qss, tree = tree},
+                         newresults ()))
+                    end
+                    handle Wiring.CannotExtend _ => newresults ()
+                in
+                  lzfoldr add_match (newresults ()) premise_matches
+                end
+              | extend_result _ = raise ThisCannotHappen
+          in
+            build_matches es Es (lzfoldr extend_result lzNil results)
+          end
+        val result_0 = {ename' = ename, s_C' = Wiring.id_0, Y = NameSet.empty,
+              qss = [], tree = PARn' []}
+      in
+        lzunmk
+          (build_matches
+             (rev es)
+             (rev Es)
+             (lzmake (fn () => Cons (result_0, lzNil))))
+      end
+        
+(*              {ename' = ename_i, s_C' = s_C'_i, Y, qss, tree = PARn' trees} =
+      
         fun build_matches [] [] result  = lzmake (fn () => Cons (result, lzNil))
           | build_matches _ [] _ = raise NoMatch
           | build_matches [] _ _ = raise NoMatch
@@ -1411,11 +1465,29 @@ struct
                     {ename = ename_i, s_a = s_a, s_C = s_C, g = e_i, G = E_i}
 
               fun extend_result {ename', s_C', Y = Y', qs, tree} =
-                  {ename' = ename', s_C' = s_C', Y = NameSet.union Y Y',
+                  {ename' = ename', s_C' = Wiring.++ [s_C'_i, s_C'], Y = NameSet.union Y Y',
                    qss = qs :: qss, tree = PARn' (tree :: trees)}
+
+
+              fun extend_result' ({ename', s_C', Y = Y', qs, tree}, mz) =
+                let
+                  val s_C' = Wiring.++ [s_C'_i, s_C']
+                in
+                  lzCons (fn () => ({ename' = ename', s_C' = s_C', Y = NameSet.union Y Y',
+                    qss = qs :: qss, tree = PARn' (tree :: trees)}, mz))
+                end
+                handle Wiring.CannotExtend _ => mz ()
+
+
             in
               lzconcat
                 (lzmap (build_matches es Es o extend_result) premise_matches)
+
+              lzfoldr (extend_results' premise_matches)
+              
+                (lzmap (build_matches es Es o extend_result) premise_matches)
+
+
             end
           | build_matches _ _ {tree, ...} = raise WrongTree tree
       in
@@ -1423,7 +1495,7 @@ struct
           (build_matches es Es
              {ename' = ename, s_C' = Wiring.id_0, Y = NameSet.empty,
               qss = [], tree = PARn' []})
-      end
+      end*)
       handle NoMatch => Nil)
 
   (* Match a tensor product to a context using the PARe rule:
@@ -2092,8 +2164,10 @@ struct
                 end
           val s_C_is = map #s_C matches
           val s_C = Wiring.++ (s_I :: s_C_is)
-          (*val _ = map (fn w => print (Wiring.toString w ^ " ++ ")) s_C_is
-          val _ = print (" = " ^ Wiring.toString s_C ^ "\n")*)
+          (*val _ = print "matchPARn: "
+          val _ = map (fn w => print (Wiring.toString w ^ " ++ ")) s_C_is
+          val _ = print (" = " ^ Wiring.toString s_C ^ "\n")
+          val _ = map (fn qs => (print "["; map (fn q => print ("q = " ^ BgVal.toString_unchanged (BgBDNF.unmk q) ^ "\n")) qs; print "]\n")) qss*)
         in
           {ename' = ename, Y = Y, s_C = s_C, Es = Es, qss = qss, tree = PARn trees}
         end
@@ -2258,6 +2332,7 @@ struct
               val L_new = NameSet.intersect L (Wiring.outernames s_a_n_new)
 		          val Y_e = NameSet.intersect Y (Wiring.innernames s_Y_e)
 		          val s_Y_e_Y = Wiring.app s_Y_e Y_e handle e => raise e
+(*val _ = print ("matchION: WIRING s_Y_n, s_Y_e:\n" ^ Wiring.toString s_Y_n ^ "\n" ^ Wiring.toString s_Y_e ^ "\n");*)
 		          val s_Y = Wiring.|| (s_Y_n, s_Y_e)
 		          val vXs = makefreshlinks Xs
 		          val p = makeP (Wiring.make' vXs) n
@@ -2266,6 +2341,8 @@ struct
 		              val {s = vZ, N, ...} = unmkP P
 		              val vZs =  Wiring.unmk vZ
 		              val Zs = sortlinksby vXs vZs
+(*val _ = print ("matchION: WIRING s_Y, s_C:\n" ^ Wiring.toString s_Y ^ "\n" ^ Wiring.toString s_C ^ "\n");*)
+
 		              val s_C = Wiring.|| (s_Y, s_C)
 		              val ename'
 		                = NameSet.fold
@@ -2372,7 +2449,7 @@ struct
                      Ps = Ps})
     in
       lzunmk matches
-    end) handle e => raise e)
+    end handle e => raise e))
 
   (* Match a closure:
    * 1) Open w_a, yielding s_a = s_a_e * s_a_n
@@ -2401,8 +2478,10 @@ struct
       val is_id_Y_R_x_sigma = Wiring.is_id_x_sigma Y_R
       fun toCLO ({ename', Y, s_C, Es = Qs, pi, qs, tree}, rest) =
         if is_id_Y_R_x_sigma s_C then
-           let
-             val Y_C = NameSet.difference 
+          let
+(*val _ = print ("matchCLO: WIRING s_C: " ^ Wiring.toString s_C ^ "\n");*)
+
+            val Y_C = NameSet.difference 
                        (NameSet.fromList (NameMap.range ename')) Y_R
             val w_C = closelinks Y_C s_C
           in
@@ -2415,9 +2494,9 @@ struct
           rest ()
     in
       lzunmk (lzfoldr toCLO lzNil matches)
-    end) handle e => raise e)
+    end handle e => raise e))
     
-  fun matches {agent, rule} = lzmake (fn () =>
+  fun matches {agent, rule} = lzmake (fn () => (
     let
       val _ = if width (innerface agent) > 0 then
                 raise
@@ -2433,6 +2512,7 @@ struct
       val Y = (glob o outerface) redex
       fun toMatch {w_C, Qs, pi, qs, tree} =
         let
+(*val _ = map (fn q => print ("q = " ^ (BgVal.toString_unchanged (BgBDNF.unmk q)) ^ "\n")) qs*)
           val Xs = map (hd o loc o outerface) Qs
           val Y
             = foldr
@@ -2440,6 +2520,7 @@ struct
                 Y
                 (map (glob o outerface) qs)
         in
+        (*print ("WIRING w_C: " ^ Wiring.toString w_C ^ "\n");*)
           {context
             = BgBDNF.makeB w_C Xs (BgBDNF.makeD (Wiring.id_X Y) Qs pi)handle e=>raise e,
            rule = rule,
@@ -2462,7 +2543,7 @@ struct
          raise MalformedBDNF
                  (BgVal.info w_axid, wrongterm,
                   "matching w_axid in matches")
-    end handle e => raise e)
+    end handle e => raise e))
     
     (*********************************)
     (*                               *)
