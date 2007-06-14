@@ -355,7 +355,7 @@ struct
 		 (<<();
 		  show "("; Link'Set.fold ppwire false ls; show ")";
 		  >>())
-      end
+      end handle e => raise e
 
   fun pp i = pp' "[" "//" "]" "idw" i
   fun oldpp i = pp' "{" "/" "}" "idw_" i
@@ -382,7 +382,7 @@ struct
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
     | explain_NotARenaming _ = raise Match
   val _ = add_explainer
-            (mk_explainer "the wiring was expected to be a renaming"
+            (mk_explainer "The wiring was expected to be a renaming"
                           explain_NotARenaming)
 
   exception NotASubstitution of wiring * string
@@ -391,8 +391,17 @@ struct
        Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
     | explain_NotASubstitution _ = raise Match
   val _ = add_explainer
-            (mk_explainer "the wiring was expected to be a substitution"
+            (mk_explainer "The wiring was expected to be a substitution"
                           explain_NotASubstitution)
+
+  exception NotAWiring of wiring * string
+  fun explain_NotAWiring (NotAWiring (w, errtxt)) =
+      [Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data pp w, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_NotAWiring _ = raise Match
+  val _ = add_explainer
+            (mk_explainer "A wiring was expected, but there was a name clash"
+                          explain_NotAWiring)
 
 
   fun make' ls =
@@ -477,17 +486,19 @@ struct
 				Link'Set.fold insertlink NameMap.empty link'set
       end
 
-  fun innernames (ls, _)
+  fun innernames (w as (ls, _))
     = Link'Set.fold 
 	(fn {inner, ...} => NameSet.union inner)
 	NameSet.empty
 	ls
-  fun outernames (ls, _)
+	handle NameSet.DuplicatesRemoved => raise NotAWiring (w, "in Wiring::innernames()")
+  fun outernames (w as (ls, _))
     = Link'Set.fold
 	(fn {outer = Name y, ...} => NameSet.insert y
 	  | _ => fn Y => Y) 
 	NameSet.empty
 	ls
+	handle NameSet.DuplicatesRemoved => raise NotAWiring (w, "in Wiring::outernames()")
 
   fun introductions (ls, _)
     = Link'Set.fold
@@ -503,7 +514,22 @@ struct
   exception InternalError 
 	    of string * nameset NameEdgeMap.hash_table * nameedge * string
 
-  exception CannotExtend of wiring * wiring * nameedge
+  exception CannotExtend of wiring * wiring * name * nameedge
+  fun explain_CannotExtend (CannotExtend (w1, w2, x, Name y)) =
+      [Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data pp w1, []),
+       Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data pp w2, []),
+       Exp (LVL_LOW, file_origin,
+            mk_string_pp (Name.unmk x ^ " maps to different names"), [])]
+    | explain_CannotExtend (CannotExtend (w1, w2, x, Closure _)) =
+      [Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data pp w1, []),
+       Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data pp w2, []),
+       Exp (LVL_LOW, file_origin,
+            mk_string_pp (Name.unmk x ^
+                          " maps to both name and internal edge"), [])]
+    | explain_CannotExtend _ = raise Match
+  val _ = add_explainer
+            (mk_explainer "Cannot make an extension of these wirings"
+                          explain_CannotExtend)
 
   (* Algorithm for composing wirings:
    * 1 For each link V |-> y in w1, add y |-> {} to w_inv.
@@ -624,8 +650,8 @@ struct
 		 	      if Name.== (y1, y2) then
 		 	        true
 		 	      else
-		 	        raise CannotExtend (w1, w2, Name y2)
-		 	  | SOME (Closure i) => raise CannotExtend (w1, w2, Closure i)
+		 	        raise CannotExtend (w1, w2, x, Name y2)
+		 	  | SOME (Closure i) => raise CannotExtend (w1, w2, x, Closure i)
 		 	  | NONE => (NameHashMap.insert ht (x, Name y1); merged)
 
       (* Merge links  inner |-> y  into lacc, removing it from ls.
@@ -658,14 +684,12 @@ struct
 		   * imax and ls.
 		   *)  
 			fun insertlinks (l as {outer = Name y1, inner}) (imax, ls)
-			  = if NameSet.fold (insertnamelink y1) false inner then
-			      let
-			        val (l, ls) = Link'Set.fold mergelinks (l, ls) ls
-			      in
-			        (imax, Link'Set.insert l ls)
-			      end
-			    else
+			  = (NameSet.fold (insertnamelink y1) false inner;
+			    let
+			      val (l, ls) = Link'Set.fold mergelinks (l, ls) ls
+			    in
 			      (imax, Link'Set.insert l ls)
+			    end)
 			  | insertlinks {outer = Closure i, inner} (imax, ls)
 			  = let
 			      fun addedgeof x (I, imin)
@@ -675,7 +699,7 @@ struct
 			                 if i' < imin then i' else imin)
 			          | NONE => (I, imin)
 			          | SOME (Name y2) =>
-			              raise CannotExtend (w1, w2, Name y2)
+			              raise CannotExtend (w1, w2, x, Name y2)
 			      val (is, imin)
 			        = NameSet.fold addedgeof (IntSet.empty, imax + 1) inner
 			    in

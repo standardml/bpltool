@@ -75,9 +75,9 @@ sig
    *)
   val eq' : nameconstraints -> wiring -> wiring -> nameconstraints option
   (** Signal that two wirings cannot be extended due to a link
-   * clash involving an outer name of the second wiring.
+   * clash involving an inner name, and an outer name of the second wiring.
    *)
-  exception CannotExtend of wiring * wiring * nameedge
+  exception CannotExtend of wiring * wiring * name* nameedge
 
   (** Return the set of inner names of the wiring. *)
   val innernames : wiring -> nameset
@@ -190,11 +190,17 @@ sig
   val app_inverse : wiring -> nameset -> nameset
 
   (** Signal that a wiring is not a renaming.
-   * @params file wiring errtxt
+   * @params wiring errtxt
    * @param wiring  The wiring.
    * @param errtxt  Explanatory error text.
    *)
   exception NotARenaming of wiring * string
+  (** Signal that a wiring has multiple links whose names clash.
+   * @params wiring errtxt
+   * @param wiring  The wiring.
+   * @param errtxt  Explanatory error text.
+   *)
+  exception NotAWiring of wiring * string
   (** Compute the name to which the wiring maps a given name.
    * It is not checked that the wiring is a renaming - only that if the 
    * name is in the domain, then it is mapped to a name in the codomain.
