@@ -53,7 +53,7 @@
   (** Fold a function over all the elements of a lazy list.
    * The result of <br />
    * lzfoldr op init [x1, x2, ...] is <br />
-   * x1 op' (x2 op' (... op' init)), where x op f = x op' (f ()).
+   * x1 op' (x2 op' (... op' init)), where x op g = x op' (g ()).
    * @params f init xs
    * @param f     function with which to fold.
    * @param init  result when folding over an empty list.
