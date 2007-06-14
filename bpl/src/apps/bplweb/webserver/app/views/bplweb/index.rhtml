@@ -32,9 +32,41 @@
     <p class="header"><b>BETA</b> version (see below for details).</p>
 
     <form id="agent-rule-form">
+
+    <div id="fileio">
+      <h2>Examples:</h2>
+      <div id="examples">
+      	<%= render :partial => 'example/examples' %>
+      </div>
+      	<table>
+      	  <tr>
+      	    <td>File:</td>
+	    <td><%= text_field("example", "filename", {'value' => @filename}) %></td>
+      	  </tr>
+	  <tr>
+	    <td>Title:</td>
+	    <td><%= text_field("example", "title", {'value' => @title}) %></td>
+	  </tr>
+	  <tr>
+	    <td>Passwd:</td>
+	    <td><%= password_field("example", "passwd") %></td>
+	  </tr>
+	  <tr>
+	    <td></td>
+	    <td>
+	      <%= submit_to_remote("save", "Save",
+	            {:url => {:controller => "example", :action => "save" }, :update => "examples"}) %>  
+	      <%= submit_to_remote("delete", "Delete",
+	            {:url => {:controller => "example", :action => "delete" }, :update => "examples"}) %>  
+	    </td>
+	  </tr>
+      	</table>
+      	
+    </div>
+
     <div id="agent-div">
       <p class="head">
-        <table width="100%">
+        <table width="70%">
           <tr>
             <td align="left">
               <%= visibilitytoggler("agent") %>
@@ -55,13 +87,13 @@
       <div id="agent-body">
 	  <textarea id="agent" name="agent" class="editablecode"
 	    onkeypress="resizenode (this);" rows="1" cols="55"
-	    title="Enter a ground bigraph here">Get[y][[z]] o (&lt;[z]> z//[] * &lt;->) `|` Send[x,y] o &lt;-></textarea>
+	    title="Enter a ground bigraph here"><%= @agent %></textarea>
       </div>
     </div>
 
     <div id="rules">
       <p class="head">
-        <table width="100%">
+        <table width="70%">
 	  <tr>
 	    <td align="left">
 	      <%= visibilitytoggler("rules") %>
@@ -83,9 +115,10 @@
 	</table>
       </p>
       <div id="rules-body" class="body">
-	<div id="rule[0]">
+      	<%= render :partial => 'rule/list' %>
+	<!-- div id="rule[0]">
 	  <p class="head">
-	    <table width="100%">
+	    <table width="70%">
 	      <tr>
 	        <td align="left">
 	        <%= visibilitytoggler("rule[0]") %>
@@ -170,7 +203,7 @@
               </div>
             </div>
 	  </div>
-	</div>
+	</div -->
       </div>
     </div>
     </form>

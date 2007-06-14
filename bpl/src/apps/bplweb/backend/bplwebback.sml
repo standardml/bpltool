@@ -433,12 +433,10 @@ end
 structure BG = BG (structure ErrorHandler = BPLwebErrorHandler)
 
 structure BPLwebBack = BPLwebBack
-(structure ErrorHandler = BPLwebErrorHandler)
-(*
-  (structure BG = BG)
+  (structure BG = BG
    structure ErrorHandler = BPLwebErrorHandler
    structure SignalHandler = SignalHandler)
-*)
+
 val _
   = ArgParse.parse NONE (Flags.toSpec ())
      (fn s

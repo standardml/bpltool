@@ -1,0 +1,8 @@
+      <% for example in @examples %>
+        <%= link_to example.filename,
+	      {:controller => 'bplweb', :action => 'index',:id => example.id},
+	      {:title => example.title},
+	      :method => :get %><br />
+      <% end %>
+
+      <%= content_tag(:div, @msg, :class => "msg") %>

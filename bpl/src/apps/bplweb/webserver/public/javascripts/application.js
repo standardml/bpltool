@@ -157,12 +157,12 @@ var instantiationhelp = "<a\n" +
 
 function addrule () {
   var rulesnode = $("rules-body");
-  var nodeno = rulesnode.childNodes.length - 2;
+  var nodeno = rulesnode.immediateDescendants ().length;
   var rulenode = document.createElement ("div");
   rulenode.setAttribute ("id", "rule[" + nodeno + "]");
   rulenode.innerHTML =
 "	  <p class='head'>\n" +
-"	    <table width='100%'>\n" +
+"	    <table width='70%'>\n" +
 "	      <tr>\n" +
 "	        <td align='left'>\n" +
 "	        <span class='toggler' target='rule[" + nodeno + "]'>" +

@@ -1,0 +1,90 @@
+<% for i in 0...@rules.length %>
+	<div id="rule[<%=i%>]">
+	  <p class="head">
+	    <table width="70%">
+	      <tr>
+	        <td align="left">
+	        <%= visibilitytoggler("rule[" + i.to_s + "]") %>
+	          Rule <span class='ruleno'><%=i%></span>:</td>
+		<td align="right">
+		  <input type="button" value="Delete"
+                     title="Delete this rule"
+		     onclick="deleterule (getruleno(this));"/>
+		  <input type="button" value="1 Match"
+                     title="Find one match of this rule"
+		     onclick="matchrequest (getruleno(this), 1);" />
+		  <input type="button" value="All Matches"
+                     title="Find all matches of this rule"
+		     onclick="matchrequest (getruleno(this), -1);" />
+		  <input type="button" value="Stop"
+		disabled="disabled" />
+		</td>
+	      </tr>
+	    </table>
+	  </p>
+	  <div id="rule[<%=i%>]-body" class="body">
+	    <div id="rule[<%=i%>]-redex">
+	      <p class="head">
+	        <%= visibilitytoggler("rule[" + i.to_s + "]-redex") %>
+                Redex: <a
+	      href="bigraphsyntax"
+	      class="helpicon"
+              onclick="openhelpwindow ('bigraphsyntax', 'Bigraph syntax', 470, 480); return false;"><img
+	      class="helpicon"
+	      src="/images/Icon_help.gif" 
+              alt=" ? "
+              title="Help for bigraph syntax" /></a>
+              </p>
+	      <div id="rule[<%=i%>]-redex-body" class="body">
+                <textarea name="redex[<%=i%>]" class="editablecode" rows="1" cols="45"
+                  title="Enter a redex bigraph here"
+                  onkeypress="resizenode (this);"><%= @rules[i].redex %></textarea>
+              </div>
+            </div>
+	    <div id="rule[<%=i%>]-react">
+	      <p class="head">
+       	        <%= visibilitytoggler("rule[" + i.to_s + "]-react") %>
+                Reactum: <a
+	      href="bigraphsyntax"
+	      class="helpicon"
+              onclick="openhelpwindow ('bigraphsyntax', 'Bigraph syntax', 470, 480); return false;"><img
+	      class="helpicon"
+	      src="/images/Icon_help.gif" 
+              alt=" ? "
+              title="Help for bigraph syntax" /></a>
+              </p>
+	      <div id="rule[<%=i%>]-react-body" class="body">
+                <textarea name="react[<%=i%>]" class="editablecode" rows="1" cols="45"
+                  title="Enter a reactum bigraph here"
+                  onkeypress="resizenode (this);"><%= @rules[i].react %></textarea>
+              </div>
+            </div>
+	    <div id="rule[<%=i%>]-inst">
+	      <p class="head">
+       	        <%= visibilitytoggler("rule[" + i.to_s + "]-inst") %>
+                Instantiation: <a
+	      href="instantiationsyntax"
+	      class="helpicon"
+              onclick="openhelpwindow ('instantiationsyntax', 'Instantiation syntax', 875, 100); return false;"><img
+	      class="helpicon"
+	      src="/images/Icon_help.gif" 
+              alt=" ? "
+              title="Help for instantiation syntax" /></a>
+              </p>
+	      <div id="rule[<%=i%>]-inst-body" class="body">
+                <textarea name="inst[<%=i%>]" class="editablecode" rows="1" cols="45"
+                  title="Enter an instantiation here"
+                  onkeypress="resizenode (this);"><%= @rules[i].inst %></textarea>
+              </div>
+            </div>
+	    <div id="rule[<%=i%>]-matches">
+	      <p class="head">
+                <%= visibilitytoggler("rule[" + i.to_s + "]-matches") %>
+                Matches:
+              </p>
+	      <div id="rule[<%=i%>]-matches-body" class="body">
+              </div>
+            </div>
+	  </div>
+	</div>
+<% end %>

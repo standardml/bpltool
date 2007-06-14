@@ -4,6 +4,24 @@ $xmlrpcserverport = 3197
 
 class BplwebController < ApplicationController
   def index
+    @example_pages, @examples = paginate :examples, {:per_page => 20, :order => "filename"}
+    params = params()
+    @filename = ''
+    @title = ''
+    @agent = 'Get[y][[z]] o (&lt;[z]> z//[] * &lt;->) `|` Send[x,y] o &lt;->'
+    @rules = [Rule.new(:redex => 'Get[y1][[z1]] `|` Send[x1,y1] o &lt;->',
+                       :react => '(x1//[] * y1/z1 * idp(1)) o `[z1]`',
+                       :inst => '[0 |-&gt; 0]')]
+    if params[:id]
+      begin
+        example = Example.find(params[:id])
+        @filename = example.filename
+        @title = example.title
+        @agent = example.agent
+        @rules = Rule.find(:all, :conditions => ['eid = ?', example.id])
+      rescue ActiveRecord::RecordNotFound
+      end
+    end
   end
 
   def bigraphsyntax

@@ -31,6 +31,7 @@ end
 
 local
   fun getRev s = getOpt (Int.fromString s, 0)
+  val op o = General.o
   val revisions
     = [hd (String.tokens (not o Char.isDigit) "$LastChangedRevision$"),
        BG.revision]
@@ -100,6 +101,14 @@ fun help' [] = ()
 	  \  print_mtv mz         print_mtb mz         Print lazy list of matches with trees\n\
 	  \  explain e                                 Explain exception in detail\n";
 	  help'' topics)
+	| help' ("instantiation" :: topics) = (print
+	  "Instantiations:\n\
+	  \  @[i_0 |-> j_0, ..., i_m-1 |-> j_m-1]      Instantiation mapping redex\n\
+	  \                                              site i_k to reactum site j_k\n\
+	  \  @@[..., i_k&[x_0,...,x_m-1] |--> j_k&[y_0,...,y_m-1], ...]\n\
+	  \                                            Instantiation mapping local redex\n\
+	  \                                              name x_k to reactum name y_k\n";
+	  help'' topics)
   | help' ("example" :: topics) = (print
 	  "Example:\n\
 	  \  let val K = active   (\"K\" =: 2 --> 1)\n\
@@ -125,14 +134,14 @@ fun help topics =
 end
 
 open BG.Sugar
-val oo = General.o
 infix 3 oo
+val op oo = General.o
 infix 7 /   infix 7 //
 infix 6 o
 infix 5 *   infix 5 ||   infix 5 `|`
 infix 4 >
 infix 3 &   infix 3 -->
-infix 2 =:  infix 2 -:
+infix 2 =:  infix 2 -:   infix 2 |->   infix 2 |-->
 nonfix @
 nonfix <
 

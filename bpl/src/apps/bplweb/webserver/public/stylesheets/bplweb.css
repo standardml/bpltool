@@ -92,3 +92,17 @@
     max-width: 80em;
     font-size: x-small;
   }
+
+  div#fileio {
+    display: block;
+    float: right;
+    width: 25%;
+    border: double medium blue;
+    padding: 1ex;
+    font-size: smaller;
+  }
+  
+  div#fileio input[type="text"],
+  div#fileio input[type="password"] { width: 85%; }
+  
+  div.msg { font-size: smaller; color: green; font-family: Arial, Helvetica, sans-serif; }

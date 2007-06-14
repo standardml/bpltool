@@ -43,6 +43,7 @@ local
         (pp (Flags.getIntFlag "/misc/indent"))
   val _ = ipp ["BG","BgVal","bgval"] BG.BgVal.ppWithIface
   val _ = ipp ["BG","Match","derivation"] BG.Match.ppTree
+  val _ = ipp ["BG","Sugar","mapinfo"] BG.Sugar.ppMapinfo
 in
  val _ = print 
   	("\nBPL (revision " ^ BPL_REVISION_STR 
