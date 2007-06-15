@@ -60,6 +60,12 @@ function resizenode (textareanode) {
   textareanode.cols = cols;
 }
 
+function initialresizing () {
+  resizenode($('agent'));
+  var redex_body;
+  for (var i = 0; redex_body = $("redex[" + i + "]"); ++i)
+    resizenode(redex_body);
+}
 
 function editnode (textnode) {
   var textnode = $(textnode);
