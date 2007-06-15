@@ -95,9 +95,10 @@ struct
 
   val noinfo = Info.noinfo
 
-  exception LogicalError of string
-  fun explain_LogicalError (LogicalError errtxt) =
-      [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  exception LogicalError of string * bgval
+  fun explain_LogicalError (LogicalError (errtxt, ls)) =
+      [Exp (LVL_LOW, file_origin, mk_string_pp errtxt,
+       [Exp (LVL_LOW, file_origin, pack_pp_with_data BgVal.pp ls, [])])]
     | explain_LogicalError _ = raise Match
   val _ = add_explainer
             (mk_explainer
@@ -170,12 +171,12 @@ struct
                        (Wiring.unmk_ren wren))
                     handle Wiring.NotARenaming _ =>
                       raise LogicalError
-                              "rho contains an invalid local substitution"
+                              ("rho contains an invalid local renaming", ls)
               in
                 ((reasite, reans), (redsite, redns)) :: maps
               end
             | _ => raise LogicalError
-                           "rho contains an invalid local substitution"
+                           ("rho contains an ill-formed local substitution", ls)
       in
         {I = I, J = J, maps = Array.foldri rho2map [] rho}
       end
@@ -350,7 +351,7 @@ struct
         fun maps2rho maps =
             let
               val id_0 = BgVal.Ten noinfo []
-              val rho = array (m, (~1, id_0))
+              val rho = array (n, (~1, id_0))
                 
               fun add_entry ((redsite, nmap), reasite) =
                   let
@@ -370,6 +371,8 @@ struct
              * redex to site rea of reactum, in the form of a name map. *)
             let
               val X = Xs sub red
+                handle Subscript =>
+                 raise InvalidSiteNumber (map, red, I)
               val Y = Ys sub rea
             in
               if NameSet.size X <> NameSet.size Y then
@@ -389,6 +392,8 @@ struct
              * a corresponding name map.  *)
             let
               val X = Xs sub red
+                handle Subscript =>
+                 raise InvalidSiteNumber (map, red, I)
               val Y = Ys sub rea
 
               val () = if NameSet.size X = NameSet.size Y then ()
@@ -447,7 +452,8 @@ struct
                   (infer_or_verify_namemap ((reasite, []), (reasite, []))))
                  :: acc)
                 []
-          | infer_and_verify_maps reasite acc (maps' as ((map as ((rea, reans), (red, redns)))::mapstl)) =
+          | infer_and_verify_maps reasite
+              acc (maps' as ((map as ((rea, reans), (red, redns)))::mapstl)) =
             if rea < 0 orelse n <= rea then
               raise InvalidSiteNumber (map, rea, J)
             else if red < 0 orelse m <= red then
@@ -514,15 +520,19 @@ struct
         val {ren, Ps} = BgBDNF.unmkDR d
         val Ps = Array.fromList Ps
 
+        val d_outerface = BgBDNF.outerface d
         val d_loc_outerface
-          = Interface.make {loc = Interface.loc (BgBDNF.outerface d),
+          = Interface.make {loc = Interface.loc (d_outerface),
                             glob = NameSet.empty}
 
+        val intros
+          = BgVal.Wir noinfo 
+              (Wiring.make_intro (Interface.glob d_outerface))
         fun copy_P ((i, ls_i), es) =
             (ls_i oo' (BgBDNF.unmk (Ps sub i))) :: es
       in
         if Interface.eq (d_loc_outerface, I) then
-          ren oo' (BgVal.Par noinfo (Array.foldr copy_P [] rho))
+          BgVal.Par noinfo (intros :: Array.foldr copy_P [] rho)
         else
           raise IncompatibleParameter (inst, d)
       end

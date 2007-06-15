@@ -37,8 +37,9 @@ sig
   (** A map specifying which root of the original to copy to
    * a given root of the instance and how to rename the local
    * names of that copy.
-   * For instance, the map
-   *   1&[y1,y2] |--> 0&[x1,x2]
+   *
+   * For instance, the map                                   <br />
+   *   1&[y1,y2] |--> 0&[x1,x2],                             <br />
    * written ((1,[x1,x2]),(0,[y1,y2])), will let root 1 of the instance
    * be a copy of root 0 of the original, where name y1 is renamed to x1,
    * name y2 renamed to x2.
@@ -47,10 +48,11 @@ sig
 
   (** Signal a logical error in the implementation.
    * 
-   * @params errtxt
+   * @params errtxt v
    * @param errtxt  a description of the problem.
+   * @param v       The bgval that caused the error.
    *)
-  exception LogicalError of string
+  exception LogicalError of string * bgval
 
   (** Signal that a local renaming from the local names of  I_i to
    * the local names of J_j cannot be inferred.
@@ -136,16 +138,18 @@ sig
    *)
   exception NonLocalInterface of interface
 
-  (** Construct an instantitation.   For instance,
-   * [1&[y1,y2] |--> 0&[x1,x2], ...]
-   * make I J [((1,[y1,y2]),(0,[x1,x2]))] will let root 1 of the instance
+  (** Construct an instantitation.   Consider 
+   *   [1&[y1,y2] |--> 0&[x1,x2], ...].
+   *
+   * Calling <code>make I J [((1,[y1,y2]),(0,[x1,x2]))]</code> will let root 1
+   * of the instance
    * be a copy of root 0 of the original, where name x1 is renamed to y1,
    * name x2 renamed to y2, and all other variables and roots will be
    * copies of the corresponding entities of the original.
    * 
    * @params I J maps
-   * @param I     the innerface of the instantiation.
-   * @param J     the outerface of the instantiation.
+   * @param I     the innerface (i.e., redex innerface) of the instantiation.
+   * @param J     the outerface (i.e., reactum innerface) of the instantiation.
    * @param maps  the non-trivial maps from sites of J to sites of I.
    *              Mising information is attempted inferred in the
    *              following way:
