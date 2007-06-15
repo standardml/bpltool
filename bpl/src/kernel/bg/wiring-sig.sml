@@ -44,6 +44,9 @@ sig
    * The map must be injective.
    *)
   val make_ren : name namemap -> wiring
+  (** Construct a name introduction from a set of outer names.
+   *)
+  val make_intro : nameset -> wiring
   (** Deconstruct a wiring. *)
   val unmk : wiring -> linkset
   (** Deconstruct a substitution into a map from inner to outer names.

@@ -454,6 +454,14 @@ struct
                    :: ls)
                [] nm)
 	      
+  (*FIXME not necessarily the most efficient way to do it... *)
+  fun make_intro Y =
+      make' (NameSet.fold
+               (fn y => fn ls =>
+                   (Link.make {outer = SOME y, inner = NameSet.empty})
+                   :: ls)
+               [] Y)
+	      
   fun unmk (link'set, _) = 
       let
 	fun insertlink {outer = Name y, inner}
