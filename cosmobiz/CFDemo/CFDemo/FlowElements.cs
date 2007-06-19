@@ -21,6 +21,7 @@ namespace CFDemo //(http://www.codeproject.com/csharp/iinterfaces_p1.asp)
         {
             Name = "name";
             Type = "type";
+            Owner = "";
         }
         public string Name
         {

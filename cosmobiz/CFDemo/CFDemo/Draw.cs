@@ -28,22 +28,24 @@ namespace CFDemo
         private Graphics graph;
 
         public List<Box> BoxList;
+        public List<Split> SplitList;
 
 
         public Draw()
         {
             exitPoint = new Point(Screen.PrimaryScreen.WorkingArea.Width / 2, 10);
 
-            img = new Bitmap(Screen.PrimaryScreen.WorkingArea.Width, 10000);
+            img = new Bitmap(Screen.PrimaryScreen.WorkingArea.Width, 9000);
             graph = Graphics.FromImage(img);
         }
-bool flow = false;
+        bool flow = false;
         public Bitmap DoDraw(ListedElements elements)
         {
             BoxList = new List<Box>();
+            SplitList = new List<Split>();
             Point splitPoint = exitPoint;
             bool changeSide = false;
-            
+
             Side currentSide = Side.center;
             Point leftDrawPoint = new Point(0, 0);
             Point rightDrawPoint = new Point(0, 0);
@@ -113,7 +115,7 @@ bool flow = false;
                         flow = false;
                         currentSide = Side.center;
                         if (leftDrawPoint.Y < rightDrawPoint.Y)
-                        {
+                        {                                  
                             DrawFlowAdjustment(leftDrawPoint, new Point(leftDrawPoint.X, rightDrawPoint.Y));
                         }
                         else if (leftDrawPoint.Y > rightDrawPoint.Y)
@@ -129,7 +131,22 @@ bool flow = false;
                         break;
                 }
             }
+            DrawAll();
+            
             return img;
+        }
+
+        public void DrawAll()
+        {
+            foreach (Box box in BoxList)
+            {
+                box.Draw();
+            }
+            foreach (Split split in SplitList)
+            {
+                split.Draw();
+
+            }
         }
 
         private void DrawBox(Point point, Side side, string name, string owner)
@@ -148,28 +165,30 @@ bool flow = false;
                 default:
                     break;
             }
-            //if (!flow)
-            {
-                Box box = new Box(graph, point, name, owner);
-                BoxList.Add(box);
-                box.Draw();
 
-                exitPoint.Y = point.Y + box.Height + box.Linelength; 
-            }
+            Box box = new Box(graph, point, name, owner);
+            BoxList.Add(box);
+            //box.Draw();
+
+            exitPoint.Y = point.Y + box.Height + box.Linelength;
+
         }
 
         private void DrawSplit(Point point, Side side)
         {
-            Pen pen = new Pen(Color.Black);
-            int linelength = 30;
-            Point leftpoint = new Point(Screen.PrimaryScreen.WorkingArea.Width / 4, point.Y + linelength);
-            Point rightpoint = new Point((Screen.PrimaryScreen.WorkingArea.Width / 4) * 3, point.Y + linelength);
-            //Graphics graph = CreateGraphics();
-            graph.DrawLine(pen, point.X, point.Y, point.X, point.Y + linelength);
-            graph.DrawLine(pen, leftpoint.X, leftpoint.Y, rightpoint.X, rightpoint.Y);
+            Split split = new Split(graph,point);
+
+            split.TopPoint = new Point(Screen.PrimaryScreen.WorkingArea.Width / 4, point.Y);
+            split.BottomPoint = new Point((Screen.PrimaryScreen.WorkingArea.Width / 4) * 3, point.Y + split.LineLength);
             
 
-            exitPoint.Y = point.Y + linelength;
+            //Graphics graph = CreateGraphics();
+            //graph.DrawLine(pen, point.X, point.Y, point.X, point.Y + linelength);
+            //graph.DrawLine(pen, leftpoint.X, leftpoint.Y, rightpoint.X, rightpoint.Y);
+
+            SplitList.Add(split);
+
+            exitPoint.Y = point.Y + split.LineLength;
         }
 
         private void DrawJoin(Point point, Side side)

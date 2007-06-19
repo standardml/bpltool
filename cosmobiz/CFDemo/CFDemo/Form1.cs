@@ -89,7 +89,7 @@ namespace CFDemo
                 if (xreader.NodeType == XmlNodeType.EndElement)
                 {
 
-                    TempElements.Add(new Element("end" + xreader.LocalName, "end" + xreader.LocalName,""));
+                    TempElements.Add(new Element("end" + xreader.LocalName, "end" + xreader.LocalName, ""));
                 }
             }
             return TempElements;
@@ -118,18 +118,23 @@ namespace CFDemo
             {
                 if (box.TopPoint.X <= x && box.TopPoint.Y <= y && box.BottomPoint.X >= x && box.BottomPoint.Y >= y)
                 {
-                    //box.ReDraw();
-                    //pictureBox1.Image = img;
+
                     draw.PointX = Screen.PrimaryScreen.WorkingArea.Width / 2;
                     draw.PointY = 10;
-                    //if (box.Selected)
-                    {
                         DetailedView dv = new DetailedView(box.Name, box.Owner);
                         dv.Show();
-                    }
-
                 }
 
+            }
+
+            foreach (Split split in draw.SplitList)
+            {
+                if (split.TopPoint.X <= x && split.TopPoint.Y<=y && split.BottomPoint.X>=x && split.BottomPoint.Y>=y)
+                {
+                    split.Collapsed = split.Collapsed ^ true;
+                    draw.DrawAll();
+                }
+                
             }
         }
 
