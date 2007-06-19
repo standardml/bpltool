@@ -19,6 +19,7 @@ namespace CFDemo
         private int height = 50;
         private int width = 100;
         private int linelength = 30;
+        private int x;
 
         public Point TopPoint
         {
@@ -66,26 +67,31 @@ namespace CFDemo
             set { owner = value; }
         }
 
-        public Box(Graphics graph, Point point, string name, string owner)
+        public Box(Point point, Graphics graph, string name, string owner, int x)
         {
             this.graph = graph;
+            this.name = name;
+            this.owner = owner;
+            this.x = x;
+            pen = new Pen(Color.Black);
+        }
+
+        public override Point Draw(Point point)
+        {
+            point.X = x;
             startPoint = point;
             topPoint.X = point.X - width / 2;
             topPoint.Y = point.Y + linelength;
             bottomPoint.X = point.X + width / 2;
             bottomPoint.Y = point.Y + linelength + height;
-            this.name = name;
-            this.owner = owner;
-        }
-
-        public override void Draw()
-        {
-            pen = new Pen(Color.Black);
+            
             rect = new Rectangle(topPoint.X, topPoint.Y, width, height);
-            graph.DrawLine(pen, startPoint.X, startPoint.Y, startPoint.X, startPoint.Y + linelength);
+            graph.DrawLine(pen, point.X, point.Y, point.X, point.Y + linelength);
             graph.DrawString(name,new Font("Verdana",5, FontStyle.Regular),new SolidBrush(Color.Tomato),topPoint.X+2,topPoint.Y);
             graph.DrawString(owner,new Font("Verdana",5,FontStyle.Regular),new SolidBrush(Color.Blue),topPoint.X+2,topPoint.Y+10);
             graph.DrawRectangle(pen, rect);
+
+            return new Point(point.X, bottomPoint.Y);
         }
 
         public void ReDraw()

@@ -11,6 +11,12 @@ namespace CFDemo
 
         private enum Side { left, right, center };
         private Point exitPoint;
+        private Point startPoint = new Point(Screen.PrimaryScreen.WorkingArea.Width / 2, 10);
+        public Point StartPoint
+        {
+            get { return startPoint; }
+        }
+
 
         public int PointX
         {
@@ -27,9 +33,9 @@ namespace CFDemo
         private Bitmap img;
         private Graphics graph;
 
-        public List<Box> BoxList;
-        public List<Split> SplitList;
+        public List<DrawableObject> DrawableObjectList;
 
+        bool flow = false;
 
         public Draw()
         {
@@ -38,11 +44,10 @@ namespace CFDemo
             img = new Bitmap(Screen.PrimaryScreen.WorkingArea.Width, 9000);
             graph = Graphics.FromImage(img);
         }
-        bool flow = false;
+
         public Bitmap DoDraw(ListedElements elements)
         {
-            BoxList = new List<Box>();
-            SplitList = new List<Split>();
+            DrawableObjectList = new List<DrawableObject>();
             Point splitPoint = exitPoint;
             bool changeSide = false;
 
@@ -106,7 +111,7 @@ namespace CFDemo
                     case "Flow":
 
                         splitPoint.Y = exitPoint.Y + 31;
-                        DrawSplit(exitPoint, currentSide);
+                        DrawSplit(exitPoint);
                         flow = true;
 
                         break;
@@ -114,8 +119,9 @@ namespace CFDemo
                     case "endFlow":
                         flow = false;
                         currentSide = Side.center;
+
                         if (leftDrawPoint.Y < rightDrawPoint.Y)
-                        {                                  
+                        {
                             DrawFlowAdjustment(leftDrawPoint, new Point(leftDrawPoint.X, rightDrawPoint.Y));
                         }
                         else if (leftDrawPoint.Y > rightDrawPoint.Y)
@@ -123,7 +129,7 @@ namespace CFDemo
                             DrawFlowAdjustment(rightDrawPoint, new Point(rightDrawPoint.X, leftDrawPoint.Y));
                         }
 
-                        DrawJoin(exitPoint, currentSide);
+                        DrawJoin(exitPoint);
 
                         break;
 
@@ -132,86 +138,83 @@ namespace CFDemo
                 }
             }
             DrawAll();
-            
+
             return img;
         }
 
         public void DrawAll()
         {
-            foreach (Box box in BoxList)
+            
+            foreach (DrawableObject obj in DrawableObjectList)
             {
-                box.Draw();
-            }
-            foreach (Split split in SplitList)
-            {
-                split.Draw();
-
+                startPoint = obj.Draw(startPoint);
+                
             }
         }
 
         private void DrawBox(Point point, Side side, string name, string owner)
         {
+            int x = 0;
             switch (side)
             {
                 case Side.left:
-                    point.X = Screen.PrimaryScreen.WorkingArea.Width / 4;
+                    x = Screen.PrimaryScreen.WorkingArea.Width / 4;
                     break;
                 case Side.right:
-                    point.X = (Screen.PrimaryScreen.WorkingArea.Width / 4) * 3;
+                    x = (Screen.PrimaryScreen.WorkingArea.Width / 4) * 3;
                     break;
                 case Side.center:
-                    point.X = Screen.PrimaryScreen.WorkingArea.Width / 2;
+                    x = Screen.PrimaryScreen.WorkingArea.Width / 2;
                     break;
                 default:
                     break;
             }
 
-            Box box = new Box(graph, point, name, owner);
-            BoxList.Add(box);
-            //box.Draw();
+            Box box = new Box(point ,graph, name, owner, x);
+            DrawableObjectList.Add(box);
 
-            exitPoint.Y = point.Y + box.Height + box.Linelength;
+            //exitPoint.Y = point.Y + box.Height + box.Linelength;
 
         }
 
-        private void DrawSplit(Point point, Side side)
+        private void DrawSplit(Point point)
         {
-            Split split = new Split(graph,point);
+            int length = Screen.PrimaryScreen.WorkingArea.Width / 2;
+            Split split = new Split(graph, length);
 
             split.TopPoint = new Point(Screen.PrimaryScreen.WorkingArea.Width / 4, point.Y);
             split.BottomPoint = new Point((Screen.PrimaryScreen.WorkingArea.Width / 4) * 3, point.Y + split.LineLength);
-            
 
-            //Graphics graph = CreateGraphics();
-            //graph.DrawLine(pen, point.X, point.Y, point.X, point.Y + linelength);
-            //graph.DrawLine(pen, leftpoint.X, leftpoint.Y, rightpoint.X, rightpoint.Y);
+            DrawableObjectList.Add(split);
 
-            SplitList.Add(split);
-
-            exitPoint.Y = point.Y + split.LineLength;
+            //exitPoint.Y = point.Y + split.LineLength;
         }
 
-        private void DrawJoin(Point point, Side side)
+        private void DrawJoin(Point point)
         {
-            Pen pen = new Pen(Color.Black);
-            int linelength = 30;
-            Point leftpoint = new Point(Screen.PrimaryScreen.WorkingArea.Width / 4, point.Y + linelength);
-            Point rightpoint = new Point((Screen.PrimaryScreen.WorkingArea.Width / 4) * 3, point.Y + linelength);
-            //Graphics graph = CreateGraphics();
-            graph.DrawLine(pen, leftpoint.X, point.Y, leftpoint.X, leftpoint.Y);
-            graph.DrawLine(pen, rightpoint.X, point.Y, rightpoint.X, rightpoint.Y);
-            graph.DrawLine(pen, leftpoint.X, leftpoint.Y, rightpoint.X, rightpoint.Y);
+            int length = Screen.PrimaryScreen.WorkingArea.Width / 2;
+            
+            Point leftpoint = new Point(Screen.PrimaryScreen.WorkingArea.Width / 4, point.Y);
+            Point rightpoint = new Point((Screen.PrimaryScreen.WorkingArea.Width / 4) * 3, point.Y);
+
+            Join join = new Join(graph, length);
 
 
-            exitPoint.Y = point.Y + linelength;
+            DrawableObjectList.Add(join);
+
+
+
+            //exitPoint.Y = point.Y + join.LineLength;
         }
+
 
         private void DrawFlowAdjustment(Point startPoint, Point endPoint)
         {
             Pen pen = new Pen(Color.Black);
             graph.DrawLine(pen, startPoint.X, startPoint.Y, endPoint.X, endPoint.Y);
 
-            exitPoint.Y = endPoint.Y;
+            //exitPoint.Y = endPoint.Y;
         }
+
     }
 }

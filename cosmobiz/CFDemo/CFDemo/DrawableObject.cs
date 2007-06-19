@@ -9,7 +9,7 @@ namespace CFDemo
     {
         protected enum Side { left, right, center };
 
-        public abstract void Draw();
+        public abstract Point Draw(Point point);
 
     }
 }

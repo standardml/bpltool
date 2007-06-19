@@ -46,14 +46,8 @@ namespace CFDemo
 
             elements = ReadXML(path);
 
+            CallDraw();
 
-            img = draw.DoDraw(elements);
-            AdjustPictureBox();
-            pictureBox1.Image = img;
-
-
-            draw.PointX = Screen.PrimaryScreen.WorkingArea.Width / 2;
-            draw.PointY = 10;
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -69,12 +63,19 @@ namespace CFDemo
             }
 
             elements = ReadXML(path);
+            CallDraw();
+        }
+
+        public void CallDraw()
+        {
             img = draw.DoDraw(elements);
             AdjustPictureBox();
             pictureBox1.Image = img;
             draw.PointX = Screen.PrimaryScreen.WorkingArea.Width / 2;
             draw.PointY = 10;
         }
+
+
 
         private ListedElements ReadXML(string path)
         {
@@ -99,9 +100,9 @@ namespace CFDemo
         {
             /////---------------------kontrolleres et andet sted---------
 
-            if (pictureBox1.Height < draw.PointY)
+            if (pictureBox1.Height < draw.StartPoint.Y)
             {
-                pictureBox1.Height = draw.PointY + 2;
+                pictureBox1.Height = draw.StartPoint.Y + 2;
             }
 
 
@@ -114,28 +115,35 @@ namespace CFDemo
             int y = e.Y;
 
 
-            foreach (Box box in draw.BoxList)
+            foreach (DrawableObject obj in draw.DrawableObjectList)
             {
-                if (box.TopPoint.X <= x && box.TopPoint.Y <= y && box.BottomPoint.X >= x && box.BottomPoint.Y >= y)
+                if (obj is Box)
                 {
+                    Box box = (Box)obj;
+                    if (box.TopPoint.X <= x && box.TopPoint.Y <= y && box.BottomPoint.X >= x && box.BottomPoint.Y >= y)
+                    {
 
-                    draw.PointX = Screen.PrimaryScreen.WorkingArea.Width / 2;
-                    draw.PointY = 10;
+                        draw.PointX = Screen.PrimaryScreen.WorkingArea.Width / 2;
+                        draw.PointY = 10;
                         DetailedView dv = new DetailedView(box.Name, box.Owner);
                         dv.Show();
+                    }
                 }
 
-            }
 
+            }
+            /*
             foreach (Split split in draw.SplitList)
             {
-                if (split.TopPoint.X <= x && split.TopPoint.Y<=y && split.BottomPoint.X>=x && split.BottomPoint.Y>=y)
+                if (split.TopPoint.X <= x && split.TopPoint.Y <= y && split.BottomPoint.X >= x && split.BottomPoint.Y >= y)
                 {
                     split.Collapsed = split.Collapsed ^ true;
-                    draw.DrawAll();
+                    
                 }
-                
+
             }
+            CallDraw();
+            */
         }
 
 
