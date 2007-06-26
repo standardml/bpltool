@@ -50,16 +50,16 @@ namespace CFDemo
 
         public override Point Draw(Point point)
         {
-            topPoint.X = point.X - (length / 2);
+            topPoint.X = length / 2;
             topPoint.Y = point.Y;
-            bottomPoint.X = point.X + (length / 2);
+            bottomPoint.X = length + (length / 2);
             bottomPoint.Y = point.Y + linelength;
 
             pen = new Pen(Color.Black);
-            graph.DrawLine(pen, point.X, point.Y, point.X, point.Y + linelength);
+            graph.DrawLine(pen, length, point.Y, length, point.Y + linelength);
             graph.DrawLine(pen, topPoint.X, topPoint.Y + linelength, bottomPoint.X, bottomPoint.Y);
 
-            return new Point(point.X, point.Y + linelength + 1);
+            return new Point(length, point.Y + linelength + 1);
             //Point leftpoint = new Point(Screen.PrimaryScreen.WorkingArea.Width / 4, point.Y + lineLength);
             //Point rightpoint = new Point((Screen.PrimaryScreen.WorkingArea.Width / 4) * 3, point.Y + lineLength);
             //Graphics graph = CreateGraphics();

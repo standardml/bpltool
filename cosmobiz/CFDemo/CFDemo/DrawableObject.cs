@@ -8,6 +8,7 @@ namespace CFDemo
     public abstract class DrawableObject
     {
         protected enum Side { left, right, center };
+        public bool draw = true;
 
         public abstract Point Draw(Point point);
 

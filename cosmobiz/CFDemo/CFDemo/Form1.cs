@@ -68,14 +68,15 @@ namespace CFDemo
 
         public void CallDraw()
         {
-            img = draw.DoDraw(elements);
-            AdjustPictureBox();
-            pictureBox1.Image = img;
+
+
             draw.PointX = Screen.PrimaryScreen.WorkingArea.Width / 2;
             draw.PointY = 10;
+            img = draw.InterpretElements(elements);
+            //draw.DrawAll();
+            AdjustPictureBox();
+            pictureBox1.Image = img;
         }
-
-
 
         private ListedElements ReadXML(string path)
         {
@@ -113,12 +114,17 @@ namespace CFDemo
         {
             int x = e.X;
             int y = e.Y;
-
+            bool doDraw = true;
 
             foreach (DrawableObject obj in draw.DrawableObjectList)
             {
+
                 if (obj is Box)
                 {
+                    if (obj.draw != doDraw)
+                    {
+                        obj.draw = doDraw;
+                    }
                     Box box = (Box)obj;
                     if (box.TopPoint.X <= x && box.TopPoint.Y <= y && box.BottomPoint.X >= x && box.BottomPoint.Y >= y)
                     {
@@ -131,19 +137,28 @@ namespace CFDemo
                 }
 
 
-            }
-            /*
-            foreach (Split split in draw.SplitList)
-            {
-                if (split.TopPoint.X <= x && split.TopPoint.Y <= y && split.BottomPoint.X >= x && split.BottomPoint.Y >= y)
+                if (obj is Split)
                 {
-                    split.Collapsed = split.Collapsed ^ true;
-                    
+                    Split split = (Split)obj;
+                    if (split.TopPoint.X <= x && split.TopPoint.Y <= y && split.TopPoint.X + 20 >= x && split.TopPoint.Y + 20 >= y)
+                    {
+                        split.Collapsed = split.Collapsed ^ true;
+                        Console.WriteLine("w2");
+                    }
+                    if (split.Collapsed)
+                    {
+                        doDraw = false;
+                    }
                 }
 
+                if (obj is Join)
+                {
+                    doDraw = true;
+                }
             }
-            CallDraw();
-            */
+            
+            draw.DrawElements();
+            pictureBox1.Refresh();
         }
 
 

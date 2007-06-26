@@ -10,8 +10,9 @@ namespace CFDemo
     {
 
         private enum Side { left, right, center };
-        private Point exitPoint;
+        private Point exitPoint = new Point(Screen.PrimaryScreen.WorkingArea.Width / 2, 10);
         private Point startPoint = new Point(Screen.PrimaryScreen.WorkingArea.Width / 2, 10);
+        private Point splitPoint;
         public Point StartPoint
         {
             get { return startPoint; }
@@ -41,21 +42,22 @@ namespace CFDemo
         {
             exitPoint = new Point(Screen.PrimaryScreen.WorkingArea.Width / 2, 10);
 
-            img = new Bitmap(Screen.PrimaryScreen.WorkingArea.Width, 9000);
+            img = new Bitmap(Screen.PrimaryScreen.WorkingArea.Width, 8000);
             graph = Graphics.FromImage(img);
         }
 
-        public Bitmap DoDraw(ListedElements elements)
+        public Bitmap InterpretElements(ListedElements elements)
         {
             DrawableObjectList = new List<DrawableObject>();
-            Point splitPoint = exitPoint;
+
             bool changeSide = false;
 
             Side currentSide = Side.center;
             Point leftDrawPoint = new Point(0, 0);
             Point rightDrawPoint = new Point(0, 0);
-            exitPoint.X = Screen.PrimaryScreen.WorkingArea.Width / 2;
-            exitPoint.Y = 10;
+            Point splitPoint = exitPoint;
+            startPoint = exitPoint;
+
             graph.Clear(Color.Transparent);
 
             foreach (Element elem in elements)
@@ -137,19 +139,23 @@ namespace CFDemo
                         break;
                 }
             }
-            DrawAll();
+            DrawElements();
 
             return img;
         }
 
-        public void DrawAll()
+        public void DrawElements()
         {
-            
+            startPoint = exitPoint;
+            graph.Clear(Color.Transparent);
             foreach (DrawableObject obj in DrawableObjectList)
             {
-                startPoint = obj.Draw(startPoint);
-                
+                if (obj.draw)
+                {
+                    startPoint = obj.Draw(startPoint);
+                }
             }
+
         }
 
         private void DrawBox(Point point, Side side, string name, string owner)
@@ -170,7 +176,7 @@ namespace CFDemo
                     break;
             }
 
-            Box box = new Box(point ,graph, name, owner, x);
+            Box box = new Box(point, graph, name, owner, x);
             DrawableObjectList.Add(box);
 
             //exitPoint.Y = point.Y + box.Height + box.Linelength;
@@ -193,7 +199,7 @@ namespace CFDemo
         private void DrawJoin(Point point)
         {
             int length = Screen.PrimaryScreen.WorkingArea.Width / 2;
-            
+
             Point leftpoint = new Point(Screen.PrimaryScreen.WorkingArea.Width / 4, point.Y);
             Point rightpoint = new Point((Screen.PrimaryScreen.WorkingArea.Width / 4) * 3, point.Y);
 

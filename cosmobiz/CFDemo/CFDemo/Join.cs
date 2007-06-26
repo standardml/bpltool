@@ -7,7 +7,7 @@ namespace CFDemo
 {
     class Join : DrawableObject
     {
-        private Point point;
+        //private Point point;
         private Graphics graph;
         private Pen pen;
         private int linelength = 30;
@@ -42,10 +42,11 @@ namespace CFDemo
 
         public override Point Draw(Point point)
         {
-            leftpoint.X = point.X - (length);
+            
+            leftpoint.X = length / 2;
             leftpoint.Y = point.Y;
-            rightpoint.X = point.X;
-            rightpoint.Y = leftpoint.Y + linelength + 1;
+            rightpoint.X = length + length /2;
+            rightpoint.Y = leftpoint.Y + linelength;
 
             pen = new Pen(Color.Black);
 
