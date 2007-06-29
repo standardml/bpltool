@@ -71,6 +71,8 @@ print "running matcher worker thread...\n"
           print "sending signal INT to bplwebback...\n"
           $stdout.flush
           Process.kill("SIGINT", matcher.pid)
+          print "signal INT sent to bplwebback.\n"
+          $stdout.flush
           if react['rule'] && react['match']
             rule = react['rule']
             match = react['match']
