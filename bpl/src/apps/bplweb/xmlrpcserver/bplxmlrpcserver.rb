@@ -78,11 +78,13 @@ print "running matcher worker thread...\n"
             match = react['match']
             print("sending to bplwebback:\n" +
                   "REACT\nRULENO:#{rule}\nMATCHNO:#{match}\nENDREACT\n")
+            $stdout.flush
             matcher.puts("REACT\nRULENO:#{rule}\nMATCHNO:#{match}\nENDREACT\n")
             matcher.flush
           elsif !(defined? agent) || !(defined? rules) ||
               agent != matching.agent || rules != matching.rules
             print "new agent or rules\n"
+            $stdout.flush
             agent        = matching.agent
             rules        = matching.rules
             rulestomatch = matching.rulestomatch
@@ -125,6 +127,7 @@ print "running matcher worker thread...\n"
             end
           elsif rulestomatch != matching.rulestomatch
             print "new rules to match: #{rulestomatch}\n"
+            $stdout.flush
             rulestomatch = matching.rulestomatch
             matchcount   = matching.matchcount
             print "sending to bplwebback: USERULES:#{rulestomatch}\nMATCHCOUNT:#{matchcount}\n"
@@ -134,6 +137,7 @@ print "running matcher worker thread...\n"
             matcher.flush
           elsif matchcount != matching.matchcount
             print "new match count: #{matchcount}\n"
+            $stdout.flush
             matchcount   = matching.matchcount
             print "sending to bplwebback: MATCHCOUNT:#{matchcount}\n"
             matcher.puts
@@ -141,6 +145,7 @@ print "running matcher worker thread...\n"
             matcher.flush
           else
             print "Do nothing.\n"
+            $stdout.flush
           end
         end
       }
