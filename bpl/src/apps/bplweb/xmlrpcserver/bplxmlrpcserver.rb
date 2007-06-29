@@ -181,6 +181,7 @@ print "running result worker thread...\n"
             end
             line = matcher.gets
         print "result worker thread reading from bplwebback: #{line}"
+            $stdout.flush
             curr = ""
             while line.strip.upcase != "END"
               case line
@@ -204,6 +205,7 @@ print "running result worker thread...\n"
             rulenum = rule.to_i
             results[rulenum] = {} unless results[rulenum]
             print "result worker storing result (#{rulenum},#{match}): #{result}\n"
+            $stdout.flush
             results[rulenum][match.to_i] = result
           when "NOMOREMATCHES"
             rule = ""
@@ -234,6 +236,7 @@ print "running result worker thread...\n"
               line = matcher.gets
               print "result worker thread reading from bplwebback: #{line}"
             end
+            $stdout.flush
             rulenum = rule.to_i
             if rulenum < 0
               foundall[0] = matches.to_i
@@ -261,6 +264,7 @@ print "running result worker thread...\n"
             end
             newagent = newagent.strip
             print "result worker storing new agent '#{newagent}'"
+            $stdout.flush
             react['newagent'] = newagent
           when "ERROR"
             errtxt = ""
@@ -283,15 +287,18 @@ print "running result worker thread...\n"
               line = matcher.gets
             end
             print "result worker storing error #{errtxt}"
+            $stdout.flush
             errors.push errtxt
           else
             errors.push line
             print "result worker storing error #{line}"
+            $stdout.flush
         end
         resultsflag.broadcast
       end
     }
     print "worker threads end.\n"
+    $stdout.flush
   end
 end
 
