@@ -347,6 +347,8 @@ print "matchrequest1 ([" + id['sessionid'].to_s + ", " +
     @mutex.synchronize {
       if id['matchingid'] >= 0 && id['matchingid'] < @id['matchingid'] ||
           requestno < @requestno # out-of-order (i.e., late) request
+print "matchrequest1 received request #{requestno} AFTER request #{@requestno}, so TIMEOUT is returned.\n"
+$stdout.flush
         return {'type' => "TIMEOUT", 'id' => @id} 
       end
       if requestno == @requestno # repeated request
