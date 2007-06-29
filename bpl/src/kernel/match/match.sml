@@ -88,6 +88,9 @@ struct
   open Debug
   open ErrorHandler
 
+  (* fun print' s = TextIO.output(TextIO.stdErr, s) (* For debugging *) *)
+  fun print' s = ()
+
   val file_origin = Origin.mk_file_origin
                       "$BPL/src/kernel/match/match.sml"
                       Origin.NOPOS
@@ -924,8 +927,8 @@ struct
    * 
    * FIXME describe algoritm
    *)
-  fun matchPAX' {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, g, G} =
-      lzmake (fn () => ((*print "PAX' ";*)
+  fun matchPAX' lvl {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, g, G} =
+      lzmake (fn () => (print' (Int.toString lvl ^ " PAX' ");
       case #Ss (unmkG G) of
         [S] =>
       (case unmkS S of
@@ -936,7 +939,7 @@ struct
            *)
           val s_a_n = Wiring.restrict' s_a_n (glob (outerface g))
           val s_a_e = Wiring.restrict' s_a_e (glob (outerface g))
-          (*val _ = print ("after : s_a_e = " ^ Wiring.toString s_a_e ^
+          (*val _ = print' ("after : s_a_e = " ^ Wiring.toString s_a_e ^
                        ", s_a_n = " ^ Wiring.toString s_a_n ^ 
                        "s_C_e = " ^ Wiring.toString s_C_e ^
                        ", s_C_n = " ^ Wiring.toString s_C_n ^ "\n")*) 
@@ -1000,7 +1003,7 @@ struct
                        tree   = PAX'}
                     end
               in
-              (*print ("s_ae'_n = " ^ Wiring.toString s_ae'_n ^
+              (*print' ("s_ae'_n = " ^ Wiring.toString s_ae'_n ^
                      ", s_Cn' = " ^ Wiring.toString s_Cn' ^ "\n");*)
                 lzmap
                   to_solution
@@ -1010,7 +1013,7 @@ struct
           (* solve (3) and then find solutions for (4) *)
           fun solve_34 s_ae'_n s_Cn s_Cn' tau_e
                        {tau = tau'_e, ename = ename'_e, Y = Q_e} =
-              ((*print ("s_Cn = " ^ Wiring.toString s_Cn ^ ", ");*)
+              ((*print' ("s_Cn = " ^ Wiring.toString s_Cn ^ ", ");*)
               lzconcat
                 (lzmap
                    (solve_4 s_ae'_n s_Cn' (Wiring.* (tau_e, tau'_e)) ename'_e Q_e)
@@ -1018,7 +1021,7 @@ struct
                                     upsilon = s_a_n})))
           (* solve (2) and then find solutions for (3) and (4) *)
           fun solve_234 s_ae'_n s_ae'_e s_Cn s_Cn' {tau = tau_e} =
-              ((*print ("s_ae'_e = " ^ Wiring.toString s_ae'_e ^
+              ((*print' ("s_ae'_e = " ^ Wiring.toString s_ae'_e ^
                       ", s_Ce' = " ^ Wiring.toString s_Ce' ^ "\n");*)
               lzconcat
                 (lzmap
@@ -1027,7 +1030,7 @@ struct
                                upsilon = s_ae'_e})))
           (* solve (1) and then find solutions for (2), (3), and (4) *)
           fun solve_1234 s_ae'_n s_ae'_e s_Cn s_Cn' =
-              ((*print ("s_ae = " ^ Wiring.toString s_ae ^
+              ((*print' ("s_ae = " ^ Wiring.toString s_ae ^
                       ", app_ename ename s_ae = " ^
                       Wiring.toString (app_ename ename s_ae) ^ ", ");*)
               lzconcat
@@ -1104,14 +1107,15 @@ struct
    * or partitions left, respectively
    *)
    (* NOT FULLY IMPLEMENTED YET! *)
-  and matchMER' {ename, s_a, s_C, g, G} = lzmake (fn () =>
-    let (*val _ = print "MER' ";*)
+  and matchMER' lvl {ename, s_a, s_C, g, G} = lzmake (fn () =>
+    let val _ = print' (Int.toString lvl ^ " MER' ");
       val ms = #Ss (unmkG g)
       val n = length ms
       val Ss = #Ss (unmkG G)
 	    val m = length Ss
     in
-      if n <= 1 orelse (n > 0 andalso m = 0) then
+      if (* n <= 1 orelse *) (* panic@itu.dk 28.06.2007: Enable matching a=K 1, R=K*id *) 
+        (n > 0 andalso m = 0) then
         LazyList.Nil
       else
         let
@@ -1122,7 +1126,7 @@ struct
 		            val es = map makeG mss
 		            val Es = map (makeG o (fn S => [S])) (Permutation.permute pi Ss)
 		            val premise_matches
-		                = matchPER' {ename = ename,
+		                = matchPER' (lvl + 1) {ename = ename,
 		                             s_a = s_a, s_C = s_C,
 		                             es = es, Es = Es,
 		                             pi = pibar}
@@ -1220,11 +1224,12 @@ struct
    *          check/update s_C' so that s_a_n(yi) = s_C'(u').
    * 8) Return ename', s_C', qs.
    *)
-  and matchION' {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, g, G} =
-      lzmake (fn () => ((*print ("ION': s_a_e=" ^ Wiring.toString s_a_e ^ "\ns_a_n="
-      ^ Wiring.toString s_a_n ^ "\ng=" ^ BgBDNF.toString g ^ "\ns_C_e="
+  and matchION' lvl {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, g, G} =
+      lzmake (fn () => (print' (Int.toString lvl ^ " ION' "); (*print'(": s_a_e=" ^ Wiring.toString s_a_e ^ "\ns_a_n="
+      ^ Wiring.toString s_a_n ^ "\n");*) print' ("g=" ^ BgBDNF.toString g ^ "\n");
+      (*print' ("s_C_e="
       ^ Wiring.toString s_C_e ^ "\ns_C_n="
-      ^ Wiring.toString s_C_n ^ "\nG=" ^ BgBDNF.toString G ^ "\n");*)
+      ^ Wiring.toString s_C_n ^ "\n");*) print' ("G=" ^ BgBDNF.toString G ^ "\n");
       case #Ss (unmkG g) of
         [s] =>
       (case unmkS s of
@@ -1267,7 +1272,7 @@ struct
                  ([], []) (Xs, Zs))
               handle ListPair.UnequalLengths => raise NoMatch
 
-          val premise_matches = matchABS' {ename = ename'',
+          val premise_matches = matchABS' (lvl + 1) {ename = ename'',
                                            s_a = s_a, s_C = s_C,
                                            p = BgBDNF.makeP vX n,
                                            P = BgBDNF.makeP vZ N}
@@ -1324,16 +1329,17 @@ struct
    *    (to avoid infinite recursion via MER-PAR-PARe-PARn),
    *    return any MER rule matches.
    *)
-  and matchDG' allowMER (args as {ename, s_a, s_C, g, G}) =
+  and matchDG' allowMER lvl (args as {ename, s_a, s_C, g, G}) =
     lzmake (fn () =>
-      case lzunmk (matchPAX' args) of
+      case lzunmk (matchPAX' lvl args) of
         mz as (LazyList.Cons _) => mz
       | _
-      => case (lzunmk (matchION' args), allowMER) of
+      => case (lzunmk (matchION' lvl args), allowMER) of
            (mz as (LazyList.Cons _), _) => mz
          | (_, true)
          => (case #Ss (unmkG g) of
-               (_ :: _ :: _) => lzunmk (matchMER' args)
+               ((*_ :: *) (* panic@itu.dk 28.06.2007: Enable matching a=K 1, R=K*id *)
+                _ :: _) => lzunmk (matchMER' lvl args)
              | _ => Nil)
          | _ => Nil)
          
@@ -1359,9 +1365,10 @@ struct
    * 5) Restrict s_C' by removing inner points that are in W.
    * 6) Return ename', s_C', qs.
    *)
-  and matchABS' {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, p, P} =
+  and matchABS' lvl {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, p, P} =
       lzmake (fn () =>
       let
+      val _ = print' (Int.toString lvl ^ " ABS' ")
         val {s = s_a_L, N = n, ...} = BgBDNF.unmkP p
         val {s = s_C_L, N = N, ...} = BgBDNF.unmkP P
         val {absnames = Z, G = g} = BgBDNF.unmkN n
@@ -1370,7 +1377,7 @@ struct
         val s_a_n' = Wiring.* (s_a_n, s_a_L)
         val s_C_n' = Wiring.* (s_C_n, s_C_L)
 
-        val premise_matches = matchDG' true
+        val premise_matches = matchDG' true (lvl + 1)
                                        {ename = ename,
                                         s_a = {s_a_e = s_a_e, s_a_n = s_a_n'},
                                         s_C = {s_C_e = s_C_e, s_C_n = s_C_n'},
@@ -1397,9 +1404,10 @@ struct
    *      returning NOMATCH if impossible.
    * 4) Return ename' = ename_n, s_C', qss = [qs_0, ..., qs_n-1]
    *)
-  and matchPARn' {ename, s_a, s_C, es, Es} = 
+  and matchPARn' lvl {ename, s_a, s_C, es, Es} = 
       lzmake (fn () =>
       let
+      val _ = print' (Int.toString lvl ^ " PARn' ")
         (* build_matches returns a lazy list of matches.
          * results is a lazy list of results from preceding factors
          * (e_0, E_0)...(e_i-1, E_i-1)
@@ -1416,7 +1424,7 @@ struct
                 ({ename' = ename_i, s_C', Y, qss, tree = PARn' trees}, newresults)
               = let
                   val premise_matches
-                    = matchDG' false 
+                    = matchDG' false (lvl + 1)
                         {ename = ename_i, s_a = s_a, s_C = s_C, g = e_i, G = E_i}
                   (* add_match combines a single match of (e_i, E_i) with
                    * a single, previous result, prepending it to newresults.
@@ -1503,9 +1511,10 @@ struct
    * 2) Let qs = concat qss.
    * 3) Return ename', s_C', qs.
    *)
-  and matchPARe' (args as {ename, s_a, s_C, es, Es}) =
+  and matchPARe' lvl (args as {ename, s_a, s_C, es, Es}) =
       lzmake (fn () =>
       let
+      val _ = print' (Int.toString lvl ^ " PARe' ")
         fun toPARe' {ename', s_C', Y, qss, tree} =
             {ename' = ename',
              s_C'   = s_C',
@@ -1513,7 +1522,7 @@ struct
              qs     = List.concat qss,
              tree   = PARe' tree}
       in
-        lzunmk (lzmap toPARe' (matchPARn' args))
+        lzunmk (lzmap toPARe' (matchPARn' (lvl + 1) args))
       end handle e => raise e)
   
   (* Match a tensor product to a context permutation:
@@ -1521,9 +1530,10 @@ struct
    * 2) Permute qs by pi, yielding qs' so that qs'_i = qs_pi(i).
    * 3) Return ename', s_C, qs'.
    *)
-  and matchPER' {ename, s_a, s_C, es, Es, pi} =
+  and matchPER' lvl {ename, s_a, s_C, es, Es, pi} =
       lzmake (fn () =>
       let
+      val _ = print' (Int.toString lvl ^ " PER' ")
         fun toPER' {ename', s_C', Y, qs, tree} =
             {ename' = ename',
              s_C'   = s_C',
@@ -1531,7 +1541,7 @@ struct
              qs     = Permutation.permute pi qs,
              tree   = PER' tree}
       in
-        lzunmk (lzmap toPER' (matchPARe' {ename = ename,
+        lzunmk (lzmap toPER' (matchPARe' (lvl + 1) {ename = ename,
                                           s_a = s_a, s_C = s_C,
                                           es = es, Es = Es}))
       end handle e => raise e)
@@ -1552,7 +1562,7 @@ struct
   fun matchSWX {ename, 
                 s_a = {s_a_e, s_a_n}, L,
                 s_R = {s_R_e, s_R_n}, e = g, Ps = [P]}
-    = lzmake (fn () => ((*print "SWX ";*)
+    = lzmake (fn () => (print' "SWX ";
       let
         val {id_Z, Y = U, s, X = W, N} = unmkP P
         val {absnames = W, G} = unmkN N
@@ -1560,7 +1570,7 @@ struct
         val s_C_n = Wiring.* (s, s_R_n)
         val id_Y_C_e = Wiring.id_X (Wiring.outernames s_C_e)
         val i = BgBDNF.info P
-        fun toSWX ({ename', s_C', Y, qs, tree}, rest) = ((*print ("SWX: s_C'=" ^ Wiring.toString s_C'
+        fun toSWX ({ename', s_C', Y, qs, tree}, rest) = ((*print' ("SWX: s_C'=" ^ Wiring.toString s_C'
         ^ "\ns_R_e=" ^ Wiring.toString s_R_e
         ^ "\ns_R_n=" ^ Wiring.toString s_R_n
         ^ "\nP=" ^ BgBDNF.toString P
@@ -1583,7 +1593,7 @@ struct
                 rest ()
             end)
         val matches
-          = matchDG' true 
+          = matchDG' true 0
                      {ename = ename,
                       s_a = {s_a_e = s_a_e,
                              s_a_n = s_a_n},
@@ -1918,7 +1928,7 @@ struct
   fun matchPAX {ename,
                 s_a = {s_a_e, s_a_n}, L,
                 s_R = {s_R_e, s_R_n}, e = g, Ps = [P]}
-    = lzmake (fn () => ((*print "PAX ";*)
+    = lzmake (fn () => (print' "PAX ";
       if Wiring.is_id0 s_R_e andalso Wiring.is_id0 s_R_n then
         let
           val {s, N, id_Z, Y = V, ...} = unmkP P
@@ -1964,7 +1974,7 @@ struct
     | matchPAX {ename,
                 s_a = {s_a_e, s_a_n}, L,
                 s_R = {s_R_e, s_R_n}, e = g, Ps = []}
-    = lzmake (fn () => ((*print "ZAX ";*)
+    = lzmake (fn () => (print' "ZAX ";
       if Wiring.is_id0 s_R_e andalso Wiring.is_id0 s_R_n then
 (* FIXME is this rignt? /Espen *)
 	        LazyList.Cons 
@@ -2071,7 +2081,7 @@ struct
   fun matchPARn
       {matchE, ename, 
        s_a = {s_a_e, s_a_n}, L, s_R as {s_R_e, s_R_n},
-       es, Pss} = lzmake (fn () => ((*print "PARn ";*)
+       es, Pss} = lzmake (fn () => (print' "PARn ";
     let
       val Ys = map (glob o outerface) es
       val s_a_es = map (Wiring.restrict s_a_e) Ys
@@ -2164,10 +2174,10 @@ struct
                 end
           val s_C_is = map #s_C matches
           val s_C = Wiring.++ (s_I :: s_C_is)
-          (*val _ = print "matchPARn: "
-          val _ = map (fn w => print (Wiring.toString w ^ " ++ ")) s_C_is
-          val _ = print (" = " ^ Wiring.toString s_C ^ "\n")
-          val _ = map (fn qs => (print "["; map (fn q => print ("q = " ^ BgVal.toString_unchanged (BgBDNF.unmk q) ^ "\n")) qs; print "]\n")) qss*)
+          (*val _ = print' "matchPARn: "
+          val _ = map (fn w => print' (Wiring.toString w ^ " ++ ")) s_C_is
+          val _ = print' (" = " ^ Wiring.toString s_C ^ "\n")
+          val _ = map (fn qs => (print' "["; map (fn q => print' ("q = " ^ BgVal.toString_unchanged (BgBDNF.unmk q) ^ "\n")) qs; print' "]\n")) qss*)
         in
           {ename' = ename, Y = Y, s_C = s_C, Es = Es, qss = qss, tree = PARn trees}
         end
@@ -2184,7 +2194,7 @@ struct
    * 4) Concatenate the resulting qss and return the result.
    *)
   fun matchPARe {matchE, ename, s_a, L, s_R, es, Ps}
-    = lzmake (fn () => ((*print "PARe ";*)
+    = lzmake (fn () => (print' "PARe ";
     let
       val n = length es
       val m = length Ps
@@ -2230,7 +2240,7 @@ struct
    *    2c) Permute qs by pibar and return the result.
    *)
   fun matchPER {matchE, ename, s_a, L, s_R, es, Qs}
-    = lzmake (fn () => ((*print "PER ";*)
+    = lzmake (fn () => (print' "PER ";
     let
       val Xss = map (loc o innerface) Qs
       fun nextmatch perm =
@@ -2272,7 +2282,7 @@ struct
    *)
   fun matchMER (args as {ename, s_a, L, s_R, e = g, Ps}) =
     lzmake (fn () =>
-    let (*val _ =  print "MER "*)
+    let val _ =  print' "MER "
       val {idxmerge, Ss = ms} = unmkG g
       val m = length Ps + 1
       val rho = Partition.make ms m
@@ -2283,7 +2293,7 @@ struct
       fun try rho =
         let
           val mss = Partition.next rho
-          (*val _ = print ("match.sml: DEBUG: Partitioning " ^ Int.toString (length ms)
+          (*val _ = print' ("match.sml: DEBUG: Partitioning " ^ Int.toString (length ms)
           ^ " into [ " ^ concat (map (fn ms => Int.toString (length ms) ^ " ") mss)
           ^ "].\n")*)
           val gs = map makeG mss
@@ -2315,7 +2325,7 @@ struct
    *)
   and matchION (args as {ename, 
                          s_a as {s_a_e, s_a_n}, L, s_R, e = g, Ps})
-    = lzmake (fn () => ((*print "ION ";*)
+    = lzmake (fn () => (print' "ION ";
     case unmkG g of  {Ss = [s], ...} =>
       (case unmkS s of BgBDNF.SMol m =>
         let
@@ -2332,7 +2342,7 @@ struct
               val L_new = NameSet.intersect L (Wiring.outernames s_a_n_new)
 		          val Y_e = NameSet.intersect Y (Wiring.innernames s_Y_e)
 		          val s_Y_e_Y = Wiring.app s_Y_e Y_e handle e => raise e
-(*val _ = print ("matchION: WIRING s_Y_n, s_Y_e:\n" ^ Wiring.toString s_Y_n ^ "\n" ^ Wiring.toString s_Y_e ^ "\n");*)
+(*val _ = print' ("matchION: WIRING s_Y_n, s_Y_e:\n" ^ Wiring.toString s_Y_n ^ "\n" ^ Wiring.toString s_Y_e ^ "\n");*)
 		          val s_Y = Wiring.|| (s_Y_n, s_Y_e)
 		          val vXs = makefreshlinks Xs
 		          val p = makeP (Wiring.make' vXs) n
@@ -2341,7 +2351,7 @@ struct
 		              val {s = vZ, N, ...} = unmkP P
 		              val vZs =  Wiring.unmk vZ
 		              val Zs = sortlinksby vXs vZs
-(*val _ = print ("matchION: WIRING s_Y, s_C:\n" ^ Wiring.toString s_Y ^ "\n" ^ Wiring.toString s_C ^ "\n");*)
+(*val _ = print' ("matchION: WIRING s_Y, s_C:\n" ^ Wiring.toString s_Y ^ "\n" ^ Wiring.toString s_C ^ "\n");*)
 
 		              val s_C = Wiring.|| (s_Y, s_C)
 		              val ename'
@@ -2418,7 +2428,7 @@ struct
    *)  
   and matchABS {ename,
                 s_a = {s_a_e, s_a_n}, L, s_R as {s_R_e, s_R_n}, e = p, Ps}
-    = lzmake (fn () => ((*print "ABS ";*)
+    = lzmake (fn () => (print' "ABS ";
     let
       val {Y = W, s = s_a_L, N = n, ...} = unmkP p
       val {absnames = Z, G = g} = unmkN n
@@ -2460,7 +2470,7 @@ struct
    * 4) Check that s_C = id_{Y_R} * s'_C
    * 5) Return a new w_C as s'_C where links Y_C are closed.
    *)
-  fun matchCLO {w_a, w_R, ps, Ps} = lzmake (fn () => ((*print "CLO ";*)
+  fun matchCLO {w_a, w_R, ps, Ps} = lzmake (fn () => (print' "CLO ";
     let
       open Wiring
       val {opened = s_a_e, rest = s_a_n, ...}
@@ -2479,7 +2489,7 @@ struct
       fun toCLO ({ename', Y, s_C, Es = Qs, pi, qs, tree}, rest) =
         if is_id_Y_R_x_sigma s_C then
           let
-(*val _ = print ("matchCLO: WIRING s_C: " ^ Wiring.toString s_C ^ "\n");*)
+(*val _ = print' ("matchCLO: WIRING s_C: " ^ Wiring.toString s_C ^ "\n");*)
 
             val Y_C = NameSet.difference 
                        (NameSet.fromList (NameMap.range ename')) Y_R
@@ -2498,6 +2508,9 @@ struct
     
   fun matches {agent, rule} = lzmake (fn () => (
     let
+    val _ = print' ("-----\nagent = " ^ BgBDNF.toString agent ^
+      "\nredex = " ^ BgBDNF.toString (#redex (Rule.unmk rule)) ^
+      "\n-----\n")
       val _ = if width (innerface agent) > 0 then
                 raise
                   AgentNotGround
@@ -2512,7 +2525,7 @@ struct
       val Y = (glob o outerface) redex
       fun toMatch {w_C, Qs, pi, qs, tree} =
         let
-(*val _ = map (fn q => print ("q = " ^ (BgVal.toString_unchanged (BgBDNF.unmk q)) ^ "\n")) qs*)
+(*val _ = map (fn q => print' ("q = " ^ (BgVal.toString_unchanged (BgBDNF.unmk q)) ^ "\n")) qs*)
           val Xs = map (hd o loc o outerface) Qs
           val Y
             = foldr
@@ -2520,14 +2533,14 @@ struct
                 Y
                 (map (glob o outerface) qs)
         in
-        (*print ("WIRING w_C: " ^ Wiring.toString w_C ^ "\n");*)
+        (*print' ("WIRING w_C: " ^ Wiring.toString w_C ^ "\n");*)
           {context
             = BgBDNF.makeB w_C Xs (BgBDNF.makeD (Wiring.id_X Y) Qs pi)handle e=>raise e,
            rule = rule,
            parameter = BgBDNF.makeDR Wiring.id_0 qs,
            tree = tree}
         end
-    in
+    val result = 
       case bgvalmatch (PTen [PWir, PVar]) w_axid of
       MTen [MWir w_a, _] =>
         (case bgvalmatch (PTen [PWir, PVar]) w_Rxid of
@@ -2543,6 +2556,10 @@ struct
          raise MalformedBDNF
                  (BgVal.info w_axid, wrongterm,
                   "matching w_axid in matches")
+    in
+      (*print' ("==> Matchcount: " ^
+        (Int.toString o length o lztolist o lzmake) (fn () => result) ^ "\n");*)
+      result
     end handle e => raise e))
     
     (*********************************)
