@@ -39,6 +39,7 @@ print "running matcher worker thread...\n"
       mutex.synchronize {
         while true
           print "matcher worker going to sleep...\n"
+          $stdout.flush
           worker.wait(mutex)
           print "matcher worker thread waking up...\n"
           #print "IO === matcher = "
@@ -125,6 +126,7 @@ print "running matcher worker thread...\n"
               matcher.puts(line + "\n")
               matcher.flush()
             end
+            $stdout.flush
           elsif rulestomatch != matching.rulestomatch
             print "new rules to match: #{rulestomatch}\n"
             $stdout.flush
