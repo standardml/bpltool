@@ -137,6 +137,8 @@ print "running matcher worker thread...\n"
             matcher.puts
             ("REMATCH\nMATCHCOUNT:#{matchcount}\nENDREMATCH\n")
             matcher.flush
+          else
+            print "Do nothing.\n"
           end
         end
       }
