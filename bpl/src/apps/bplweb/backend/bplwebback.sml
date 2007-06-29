@@ -149,6 +149,7 @@ struct
       fun domatch (SOME agentstr, SOME rulesstr,
                    SOME userulesstr, SOME matchcountstr) =
         let
+          (*val _ = TextIO.output (stdErr, "bplwebback::domatch called.\n")*)
           val _ =
             agent := SOME
                       (BgBDNF.regularize 
@@ -163,6 +164,10 @@ val _ = TextIO.output (stdErr, "userules = " ^ Int.toString userules
 	^ ", matchcount = " ^ Int.toString matchcount ^ "\n")
           fun mkfmz agent rule
             = (0, Match.matches {agent = agent, rule = rule}, [])
+(*val _ = TextIO.output (stdErr, "agent = "
+  ^ BgBDNF.toString (valOf (!agent)) ^ "\n")
+val _ = TextIO.output (stdErr, "rules = "
+  ^ concat (map Rule.toString (!rules)) ^ "\n")*)
           val fmzs = map (mkfmz (valOf (!agent))) (!rules)
           val (_, rfmzs)
             = foldl
@@ -297,10 +302,13 @@ val _ = TextIO.output (stdErr, "userules = " ^ Int.toString userules
                     (BgVal.make
                       BgTerm.info
                         (parseStr BGTERM "agent" agentstr))))
+          val oldval = Flags.getBoolFlag "/kernel/bg/name/strip"
         in
+          Flags.setBoolFlag "/kernel/bg/name/strip" true;
           print
             ("SIMPLIFIEDAGENT\n" ^ BgVal.toString simplifiedagent
-             ^ "\nEND\n")
+             ^ "\nEND\n");
+          Flags.setBoolFlag "/kernel/bg/name/strip" oldval
         end
         | dosimplify NONE = log "Agent not specified!"
       
@@ -355,6 +363,7 @@ val _ = TextIO.output (stdErr, "userules = " ^ Int.toString userules
         		evalmatch (agent, rules, userules, SOME (getrest 10 upline))
         	else if String.isPrefix "ENDMATCH" upline then
         		domatch (agent, rules, userules, matchcount)
+            (*before TextIO.output (stdErr, "bplwebback::domatch returned.\n")*)
         	else if null (String.tokens Char.isSpace line) then
         	  evalmatch (agent, rules, userules, matchcount)
         	else
@@ -404,7 +413,8 @@ val _ = TextIO.output (stdErr, "userules = " ^ Int.toString userules
         		    handle Subscript => false)
         		  andalso (size line < 6 orelse
         		           not (Char.isAlpha (String.sub (line, 5)))) then
-        		  (evalmatch (NONE, NONE, NONE, NONE))
+        		  ((*TextIO.output (stdErr, "bplwebback: calling evalmatch.\n");*)
+        		   (evalmatch (NONE, NONE, NONE, NONE)))
         		  handle e => BPLwebErrorHandler.explain e
         		  handle _ => ()
         	  else if String.substring (line, 0, 5) = "REACT"
