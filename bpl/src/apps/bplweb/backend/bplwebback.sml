@@ -192,7 +192,7 @@ val _ = TextIO.output (stdErr, "rules = "
 					      val result : match lazycell option ref = ref NONE
               in
 						    if interrupted (fn () => result := SOME (lzunmk mz)) then
-						      ()
+						      TextIO.output (stdErr, "Matching was interrupted.\n")
 						    else
 							  	case !result of
 							  	  SOME Nil
