@@ -31,7 +31,7 @@ sig
   val ekam : name -> string
   (** Construct a fresh name possibly based on another name. *)
   val fresh : name option -> name
-  (** Deconstruct a name. *)
+  (** Deconstruct a name.  The returned string may include an internal id. *)
   val unmk : name -> string
   (** Calculate a hash for the given name. *)
   val hash : name -> word

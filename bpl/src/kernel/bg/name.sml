@@ -115,7 +115,22 @@ struct
   fun ekam ((_, s) : name) = s
   fun unmk ((id, s) : name) =
       s ^ "_" ^ (String.map Char.toLower (Word.toString id))
-
+  fun stripunmk ((id, s) : name) =
+    let
+      fun strip' [] = NONE
+        | strip' (#"_" :: (cs as _ :: _))
+        = (case strip' cs of
+             NONE => SOME []
+           | SOME cs => SOME (#"_" :: cs))
+        | strip' (cs as (c :: cs'))
+        = (case strip' cs' of
+             NONE => if Char.isHexDigit c then NONE else SOME cs
+           | SOME cs' => SOME (c :: cs'))
+      fun strip s = case strip' s of NONE => s | SOME s => s
+    in
+      unmk (id, (implode o strip o explode) s)
+    end
+    
   structure Order : ORDERING =
   struct 
     type T = name 
@@ -216,15 +231,28 @@ struct
         NameSet.apply check_name (!pp_unchanged_names)
       end
  
+  val _ = Flags.makeBoolFlag
+            {name = "/kernel/bg/name/strip",
+             default = false,
+             short = "", long = "strip-names",
+             arg = "",
+             desc = "Strip trailing _xx off original names when printing (xx are hex digits)"}
  
   fun pp indent pps n =
+    let
+      val unmk =
+        if Flags.getBoolFlag "/kernel/bg/name/strip" then
+          stripunmk
+        else
+          unmk
+    in
       if NameSet.member n (!pp_unchanged_names) then
         PrettyPrint.add_string pps (ekam n)
       else
         case NameHash.find pp_changed_map n of
           NONE => PrettyPrint.add_string pps (unmk n)
         | SOME n' => PrettyPrint.add_string pps (unmk n')
-
+    end
 
   fun explain_PPUnchangedNameClash (PPUnchangedNameClash (n1, n2)) =
       Exp (LVL_USER, Origin.unknown_origin, pp_nothing,
