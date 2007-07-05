@@ -33,7 +33,7 @@ fun ion2bg ion = B.Ion info ion
 
 (* signature *)
 fun lam x = ion2bg (Ion.make {ctrl = C.make("lam", C.Active),
-			      free = [x], bound = []})
+			      free = [s2n x], bound = []})
 fun var x = ion2bg (Ion.make {ctrl = C.make("var", C.Atomic),
 			      free = [x], bound = []})
 fun def x = ion2bg (Ion.make {ctrl = C.make("def", C.Active),
@@ -50,13 +50,11 @@ val app = let val a = ion2bg (Ion.make {ctrl = C.make("app", C.Active),
 (* example: (\x.xx) k , k is a constant *)
 val var_x = var (s2n "x")
 val par_xx = S.|| (var_x, var_x)
-val id_x = S.idw [s2n "x"]
-    (*B.Wir info (Wiring.make' [Link.make {outer = SOME(s2n "x"),
-					   inner = Nameset.Set.empty}])*)
+val id_x = S.idw ["x"]
 val app' = S.* (app, id_x)
-val lam_xx = S.o (lam x, S.o (app', par_xx))
+val lam_xx = S.o (lam "x", S.o (app', par_xx))
 val k = S.atomic0 "k"
-val term  = S.o (app', S.* lam_xx k)
+val term  = S.o (app', S.* (lam_xx, k))
 
 (*here
 val id_1 = B.Per info (P.id_n 1)
