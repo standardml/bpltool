@@ -1,4 +1,4 @@
-(* README: Do 'make' from impl/bpl/src ! *)
+(* README: Do 'make lambda-pure' from impl/bpl/src ! *)
 
 (*open TextIO;*)
 
@@ -10,6 +10,10 @@ structure R = BG.Rule
 structure Bdnf = BG.BgBDNF
 structure M = BG.Match
 structure C = BG.Control
+structure Name = BG.Name
+structure Ion = BG.Ion
+structure Wiring = BG.Wiring
+structure Link = BG.Link
 structure Re = Reaction (structure RuleNameMap = Util.StringMap
                          structure Info = BG.Info
                          structure Interface = BG.Interface
@@ -20,43 +24,43 @@ structure Re = Reaction (structure RuleNameMap = Util.StringMap
 			 structure Instantiation = BG.Instantiation
 			 structure Rule = BG.Rule
 			 structure Origin = Origin
-			 structure ErrorHandler = BG.ErrorHandler)
+			 structure ErrorHandler = PrintErrorHandler)
 
 val info = BG.Info.noinfo
+fun s2n s = Name.make s
 fun v2n x = Name.make (String.toString x)
+fun ion2bg ion = B.Ion info ion
 
 (* signature *)
-fun lam x = B.Ion info
-		  (Ion.make {ctrl = C.make "lam" C.kind.Active,
-			     free = [v2n x], bound = []})
-fun var x = B.Ion info
-		  Ion.make {ctrl = C.make "var" C.kind.Atomic,
-			    free = [v2n x], bound = []}
-fun def x = B.Ion info
-		  Ion.make {ctrl = C.make "def" C.kind.Active,
-			    free = [v2n x], bound = []}
+fun lam x = ion2bg (Ion.make {ctrl = C.make("lam", C.Active),
+			      free = [x], bound = []})
+fun var x = ion2bg (Ion.make {ctrl = C.make("var", C.Atomic),
+			      free = [x], bound = []})
+fun def x = ion2bg (Ion.make {ctrl = C.make("def", C.Active),
+			      free = [x], bound = []})
 
-val appl = B.Ion info
-		 Ion.make {ctrl = C.make "appl" C.kind.Active,
-			   free = [], bound = []}
-val appr = B.Ion info
-		 Ion.make {ctrl = C.make "appr" C.kind.Active,
-			   free = [], bound = []}
-val app = B.Ion info
-		Ion.make {ctrl = C.make "app" (S.| (appl, appr)),
-			  free = [], bound = []}
-
-val id_1 = B.Per info (P.id_n 1)
+val appl = ion2bg (Ion.make {ctrl = C.make("appl", C.Active),
+			     free = [], bound = []})
+val appr = ion2bg (Ion.make {ctrl = C.make("appr", C.Active),
+			     free = [], bound = []})
+val app = let val a = ion2bg (Ion.make {ctrl = C.make("app", C.Active),
+					free = [], bound = []})
+	  in S.o (a, (S.`|` (appl, appr))) end
 
 (* example: (\x.xx) k , k is a constant *)
-val par_xx = S.|| (var x, var x)
-val id_x = S.idw [x]
+val var_x = var (s2n "x")
+val par_xx = S.|| (var_x, var_x)
+val id_x = S.idw [s2n "x"]
+    (*B.Wir info (Wiring.make' [Link.make {outer = SOME(s2n "x"),
+					   inner = Nameset.Set.empty}])*)
 val app' = S.* (app, id_x)
 val lam_xx = S.o (lam x, S.o (app', par_xx))
 val k = S.atomic0 "k"
 val term  = S.o (app', S.* lam_xx k)
 
 (*here
+val id_1 = B.Per info (P.id_n 1)
+
 val a = B.Ten info [K, L]
 val b = B.Ten info [L, K]
 val C = B.Pri info [M, id_1]
