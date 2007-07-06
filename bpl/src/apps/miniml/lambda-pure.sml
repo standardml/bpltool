@@ -74,14 +74,20 @@ structure Re = Reaction (structure RuleNameMap = Util.StringMap
 			 structure Origin = Origin
 			 structure ErrorHandler = PrintErrorHandler)
 
+(* useful constants *)
 val info = BG.Info.noinfo
+val barren = S.<->
 val id_1 = B.Per info (P.id_n 1)
+
+(* shorthand functions *)
 fun s2n s = Name.make s
 fun n2s n = Name.unmk n
 fun v2n x = Name.make (String.toString x)
 fun ion2bg ion = B.Ion info ion
 
-fun getInner b = let val (b,i,out) = B.unmk b in i end
+(* interface functions *)
+fun getInner b = let val (b,inn,out) = B.unmk b in inn end
+fun getOuter b = let val (b,inn,out) = B.unmk b in out end
 fun isGround b = let val (bgterm,inner,outer) = B.unmk b
 		 in Iface.eq (inner, Iface.zero) end
 
@@ -105,24 +111,35 @@ fun printLoc l =
 	     of [] => print ""
 	      | (x::xs) => if flag then ( printNameset x ; loop xs false )
 			   else ( print "," ; printNameset x ; loop xs false )
-    in loop l true end
+    in ( print "(" ; loop l true ; print ")") end
 
 fun printGlob s = printNameset s
 
-fun printIface i = let val i_parts = Iface.unmk i
-		       val w = #width(i_parts)
-		       val l = #loc(i_parts)
-		       val g = #glob(i_parts)
-		   in ( print "<"
-		      ; printWidth w ; print ", "
-		      ; printLoc l ; print ", "
-		      ; printGlob g ; print ">\n") end
-		   
+fun printIface i = 
+    let val i_parts = Iface.unmk i
+	val w = #width(i_parts)
+	val l = #loc(i_parts)
+	val g = #glob(i_parts)
+    in ( print "<"
+       ; printWidth w ; print ", " ; printLoc l ; print ", " ; printGlob g
+       ; print ">\n") end
+
+fun printIfaces t i j =
+    ( print(t ^ " : ")
+    ; printIface i
+    ; print " -> "
+    ; printIface j
+    ; print "\n")
+
+fun prtSimp name =
+ fn bgval => print(name ^ "= " ^ B.toString(B.simplify bgval) ^ "\n")
+
 (* SIGNATURE *)
 fun lam x = ion2bg (Ion.make {ctrl = C.make("lam", C.Active),
 			      free = [x], bound = []})
-fun var x = ion2bg (Ion.make {ctrl = C.make("var", C.Atomic),
-			      free = [x], bound = []})
+fun var x = S.o (ion2bg (Ion.make {ctrl = C.make("var", C.Atomic),
+			      free = [x], bound = []}),
+		barren)
 fun def x = ion2bg (Ion.make {ctrl = C.make("def", C.Active),
 			      free = [x], bound = []})
 
@@ -147,7 +164,7 @@ val lam_xx = S.o (lam_x', S.o (app', par_xx)) (*not composable!*)
 val var_y = var(s2n "y")
 val par_yy = S.|| (var_y, var_y)
 val id_y = S.idw ["y"]
-val app' = S.* (app, id_y) (*y is then in inner face of whole app??*)
+val app' = S.* (app, id_y)
 val lam_x = lam(s2n "x")
 val lam_x' = S.* (lam_x, id_y)
 val x_slash_xy = S.* (S.// ("x", ["x","y"]), id_1)
@@ -158,29 +175,17 @@ val k = S.atomic0 "k"
 
 val term  = S.o (app, S.* (lam_xx, k))
 
-val _ = print("var_y is ground: " ^ Bool.toString(isGround(var_y)) ^ "\n")
-val _ = (print "var_y inner: " ; printIface (getInner var_y) )
-val _ = print("par_yy is ground: " ^ Bool.toString(isGround(par_yy)) ^ "\n")
-val _ = print("app' is ground: " ^ Bool.toString(isGround(app')) ^ "\n")
-val _ = print("term is ground: " ^ Bool.toString(isGround(term)) ^ "\n")
-
-(* aux. functions *)
-fun prtSimp name =
- fn bgval => print(name ^ "= " ^ B.toString(B.simplify bgval) ^ "\n")
-
-fun makeBR bgval = Bdnf.regularize (Bdnf.make bgval)
-
 val _ = prtSimp "(Lx.x x) k " term
+val _ = printIfaces "term" (getInner term) (getOuter term)
+
+(* aux. function *)
+fun makeBR bgval = Bdnf.regularize (Bdnf.make bgval)
 
 (* RULES *)
 val var_x = var(s2n "x")
 val def_x = def(s2n "x")
-val barren = S.<->
 val id_x = S.idw ["x"]
 val set_x = NameSet.insert (s2n "x") NameSet.empty
-(*val iface_0x = Iface.X set_x*)
-(*val iface_0x = Iface.* (Iface.zero, Iface.make {loc = [set_x] ,
-						glob = NameSet.empty})*)
 val redex_innerface_C = Iface.m 1
 val react_innerface_C = Iface.m 2
 val instC = Inst.make { I = redex_innerface_C ,
@@ -212,12 +217,11 @@ fun printMts m =
 
 (*fun handler e r = r before TextIO.print (BaseErrorHandler.explain' e)*)
 
-val mts = M.matches { agent = makeBR term, rule = ruleA }
-(*
-val _ = printMts mts
+val mtsA = M.matches { agent = makeBR term, rule = ruleA }
+val _ = printMts mtsA
 
 val term_parts =
-    let val term' = M.unmk (LazyList.lzhd mts)
+    let val term' = M.unmk (LazyList.lzhd mtsA)
 	val term'_ctx = #context(term')
 	val term'_par = #parameter(term')
 	fun peel x = (B.toString o B.simplify o Bdnf.unmk) x
@@ -227,11 +231,11 @@ val term_parts =
 
 val _ = map print term_parts
 
-val terms = LazyList.lzmap (Re.react (makeBR term)) mts
+val terms = LazyList.lzmap (Re.react (makeBR term)) mtsA
 val _ = print "Agents resulting from reactions:\n"
 val _ = LazyList.lzprint (B.toString o B.simplify o Bdnf.unmk) terms
 val _ = print "\n"
-*)
+
 (*
 open TextIO;
 
