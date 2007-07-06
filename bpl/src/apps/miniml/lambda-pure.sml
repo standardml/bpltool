@@ -1,9 +1,9 @@
 (***************************************************************************
- Ebbe Elsborg, 5/7-2007
-
+ Ebbe Elsborg, 6/7-2007
+ ---------------------------------------------------------------------------
  Compile: Do 'make lambda-pure' in 'impl/bpl/src'
  Run: Do './lambda-pure' in 'impl/bpl/src'
-
+ ---------------------------------------------------------------------------
  Encoding of lambda calculus with explicit substitution "at a distance"
  in PURE bigraphs.
 
@@ -47,7 +47,7 @@
 
 ****************************************************************************)
 
-structure BG = BG (structure ErrorHandler = PrintErrorHandler);
+structure BG = BG (structure ErrorHandler = PrintErrorHandler)
 structure B = BG.BgVal
 structure S = BG.Sugar
 structure P = BG.Permutation
@@ -77,9 +77,47 @@ structure Re = Reaction (structure RuleNameMap = Util.StringMap
 val info = BG.Info.noinfo
 val id_1 = B.Per info (P.id_n 1)
 fun s2n s = Name.make s
+fun n2s n = Name.unmk n
 fun v2n x = Name.make (String.toString x)
 fun ion2bg ion = B.Ion info ion
 
+fun getInner b = let val (b,i,out) = B.unmk b in i end
+fun isGround b = let val (bgterm,inner,outer) = B.unmk b
+		 in Iface.eq (inner, Iface.zero) end
+
+(* printing *)
+fun printWidth w = print(Int.toString w)
+fun printName n = print(", " ^ (n2s n))
+fun printNameset set =
+    let fun loop set strAcc flag =
+	    if NameSet.size set = 0 then strAcc
+	    else let val member = NameSet.someElement set
+		     val set' = NameSet.remove member set
+		 in if flag (* at first member *)
+		    then loop set' (strAcc ^ (n2s member)) false
+		    else loop set' (strAcc ^ "," ^ (n2s member)) false
+		 end
+    in print ("{" ^ (loop set "" true) ^ "}") end
+
+fun printLoc l =
+    let fun loop list flag =
+	    case list
+	     of [] => print ""
+	      | (x::xs) => if flag then ( printNameset x ; loop xs false )
+			   else ( print "," ; printNameset x ; loop xs false )
+    in loop l true end
+
+fun printGlob s = printNameset s
+
+fun printIface i = let val i_parts = Iface.unmk i
+		       val w = #width(i_parts)
+		       val l = #loc(i_parts)
+		       val g = #glob(i_parts)
+		   in ( print "<"
+		      ; printWidth w ; print ", "
+		      ; printLoc l ; print ", "
+		      ; printGlob g ; print ">\n") end
+		   
 (* SIGNATURE *)
 fun lam x = ion2bg (Ion.make {ctrl = C.make("lam", C.Active),
 			      free = [x], bound = []})
@@ -109,16 +147,22 @@ val lam_xx = S.o (lam_x', S.o (app', par_xx)) (*not composable!*)
 val var_y = var(s2n "y")
 val par_yy = S.|| (var_y, var_y)
 val id_y = S.idw ["y"]
-val app' = S.* (app, id_y)
+val app' = S.* (app, id_y) (*y is then in inner face of whole app??*)
 val lam_x = lam(s2n "x")
 val lam_x' = S.* (lam_x, id_y)
 val x_slash_xy = S.* (S.// ("x", ["x","y"]), id_1)
-val close_x = S.* (S./ ("", "x"), id_1)
+val close_x = S.* (S.-/ "x", id_1)
 val join_xy = S.o (close_x, x_slash_xy)
 val lam_xx = S.o (join_xy, S.o (lam_x', S.o (app', par_yy)))
 val k = S.atomic0 "k"
 
 val term  = S.o (app, S.* (lam_xx, k))
+
+val _ = print("var_y is ground: " ^ Bool.toString(isGround(var_y)) ^ "\n")
+val _ = (print "var_y inner: " ; printIface (getInner var_y) )
+val _ = print("par_yy is ground: " ^ Bool.toString(isGround(par_yy)) ^ "\n")
+val _ = print("app' is ground: " ^ Bool.toString(isGround(app')) ^ "\n")
+val _ = print("term is ground: " ^ Bool.toString(isGround(term)) ^ "\n")
 
 (* aux. functions *)
 fun prtSimp name =
@@ -134,10 +178,15 @@ val def_x = def(s2n "x")
 val barren = S.<->
 val id_x = S.idw ["x"]
 val set_x = NameSet.insert (s2n "x") NameSet.empty
-val iface_0x = Iface.* (Iface.zero, Iface.X set_x)
-val instC = Inst.make { I = Iface.m 2 ,
-			J = Iface.* (Iface.m 2, iface_0x) ,
+(*val iface_0x = Iface.X set_x*)
+(*val iface_0x = Iface.* (Iface.zero, Iface.make {loc = [set_x] ,
+						glob = NameSet.empty})*)
+val redex_innerface_C = Iface.m 1
+val react_innerface_C = Iface.m 2
+val instC = Inst.make { I = redex_innerface_C ,
+			J = react_innerface_C ,
 			maps = [((0,[]), (0,[])), ((1,[]), (0,[]))] }
+
 val redexA = S.o (S.* (app, id_x), S.|| (lam_x, id_1))
 val reactA = S.`|` (id_1, def_x)
 val ruleA = R.make' { name = "A" , redex = makeBR redexA , react = reactA }
@@ -161,7 +210,11 @@ fun printMts m =
     ; LazyList.lzprint M.toString m
     ; print "\n" )
 
+(*fun handler e r = r before TextIO.print (BaseErrorHandler.explain' e)*)
+
 val mts = M.matches { agent = makeBR term, rule = ruleA }
+(*
+val _ = printMts mts
 
 val term_parts =
     let val term' = M.unmk (LazyList.lzhd mts)
@@ -172,14 +225,13 @@ val term_parts =
 	"term_par= " ^ (peel term'_par) ^ "\n"]
     end
 
-val _ = printMts mts
 val _ = map print term_parts
 
 val terms = LazyList.lzmap (Re.react (makeBR term)) mts
 val _ = print "Agents resulting from reactions:\n"
 val _ = LazyList.lzprint (B.toString o B.simplify o Bdnf.unmk) terms
 val _ = print "\n"
-
+*)
 (*
 open TextIO;
 
