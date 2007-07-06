@@ -138,7 +138,6 @@ val iface_0x = Iface.* (Iface.zero, Iface.X set_x)
 val instC = Inst.make { I = Iface.m 2 ,
 			J = Iface.* (Iface.m 2, iface_0x) ,
 			maps = [((0,[]), (0,[])), ((1,[]), (0,[]))] }
-
 val redexA = S.o (S.* (app, id_x), S.|| (lam_x, id_1))
 val reactA = S.`|` (id_1, def_x)
 val ruleA = R.make' { name = "A" , redex = makeBR redexA , react = reactA }
