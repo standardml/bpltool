@@ -1,5 +1,5 @@
 (***************************************************************************
- Ebbe Elsborg, 6/7-2007
+ Ebbe Elsborg, 5/7-2007
  ---------------------------------------------------------------------------
  Compile: Do 'make lambda-pure' in 'impl/bpl/src'
  Run: Do './lambda-pure' in 'impl/bpl/src'
@@ -38,10 +38,9 @@
   - | is prime product, and
   - || is parallel product.
 
-
   Name Redex                           Reactum        Eta         Iota
   ---------------------------------------------------------------------------
-  A    (app \ id_x)(lam_x || id_1) ==> id_1 || def_x  {0->0,1->1} (Id_Ø,Id_Ø)
+  A    (app \ id_x)(lam_x || id_1) ==> id_1 | def_x   {0->0,1->1} (Id_Ø,Id_Ø)
   C    var_x || def_x              ==> id_1 || def_x  {0->0,1->0} (Id_Ø,Id_Ø)
   D    (/x \t id_1) def_x          ==> 1              {}          ()
 
@@ -131,8 +130,18 @@ fun printIfaces t i j =
     ; printIface j
     ; print "\n")
 
-fun prtSimp name =
- fn bgval => print(name ^ "= " ^ B.toString(B.simplify bgval) ^ "\n")
+fun prtSimp name bgval =
+    print(name ^ "= " ^ B.toString(B.simplify bgval) ^ "\n")
+
+fun printMts m =
+    ( print "Matches:\n"
+    ; LazyList.lzprint M.toString m
+    ; print "\n" )
+
+fun printRes tname agents =
+    ( print("\nAgent(s) resulting from reaction(s) on " ^ tname ^ ":\n")
+    ; LazyList.lzprint (B.toString o B.simplify o Bdnf.unmk) agents
+    ; print "\n" )
 
 (* SIGNATURE *)
 fun lam x = ion2bg (Ion.make {ctrl = C.make("lam", C.Active),
@@ -152,7 +161,8 @@ val app = let val a = ion2bg (Ion.make {ctrl = C.make("app", C.Active),
 	  in S.o (a, (S.`|` (appl, appr))) end
 
 (* example: (\x.xx) k , k is a constant *)
-(*
+
+(* STUDY THIS!!!
 val var_x = var(s2n "x")
 val par_xx = S.|| (var_x, var_x)
 val id_x = S.idw ["x"]
@@ -161,6 +171,7 @@ val lam_x = lam(s2n "x")
 val lam_x' = S.`|` (lam_x, id_x)
 val lam_xx = S.o (lam_x', S.o (app', par_xx)) (*not composable!*)
 *)
+
 val var_y = var(s2n "y")
 val par_yy = S.|| (var_y, var_y)
 val id_y = S.idw ["y"]
@@ -201,41 +212,93 @@ val reactC = S.|| (id_1, def_x)
 val ruleC = R.make { name = "C" , redex = makeBR redexC , react = reactC,
 		     inst = instC }
 
-val redexD = S.o (S.* (S./ ("", "x"), id_1), def_x)
+val redexD = S.o (S.* (S.-/ "x", id_1), def_x)
 val reactD = barren
 val ruleD = R.make' { name = "D" , redex = makeBR redexD , react = reactD }
 
-(* MATCHES *)
+(* REACTIONS *)
 (* example:
    (\x.x x) k --1> (x x)<x:=k> --2> (k x)<x:=k> --2> (k k)<x:=k> --3> k k
 *)
 
-fun printMts m =
-    ( print "Matches:\n"
-    ; LazyList.lzprint M.toString m
-    ; print "\n" )
-
 (*fun handler e r = r before TextIO.print (BaseErrorHandler.explain' e)*)
 
-val mtsA = M.matches { agent = makeBR term, rule = ruleA }
-val _ = printMts mtsA
-
-val term_parts =
-    let val term' = M.unmk (LazyList.lzhd mtsA)
-	val term'_ctx = #context(term')
-	val term'_par = #parameter(term')
+fun parts agent matches =
+    let val agent' = M.unmk (LazyList.lzhd matches)
+	val agent'_ctx = #context(agent')
+	val agent'_par = #parameter(agent')
 	fun peel x = (B.toString o B.simplify o Bdnf.unmk) x
-    in ["term_ctx= " ^ (peel term'_ctx) ^ "\n",
-	"term_par= " ^ (peel term'_par) ^ "\n"]
-    end
+    in ["agent_ctx= " ^ (peel agent'_ctx) ^ "\n",
+	"agent_par= " ^ (peel agent'_par) ^ "\n"] end
 
-val _ = map print term_parts
+fun lzlength l = Int.toString(List.length(LazyList.lztolist l))
 
-val terms = LazyList.lzmap (Re.react (makeBR term)) mtsA
-val _ = print "Agents resulting from reactions:\n"
-val _ = LazyList.lzprint (B.toString o B.simplify o Bdnf.unmk) terms
-val _ = print "\n"
+(* (lx.x x) --1> (x x)<x:=k> *)
+val mtsA = M.matches { agent = makeBR term , rule = ruleA }
+(*
+val _ = printMts mtsA
+val _ = map print (parts term mtsA)
+*)
+val terms' = LazyList.lzmap (Re.react (makeBR term)) mtsA
+val _ = printRes "term" terms'
 
+(* (x x)<x:=k> --2> (k x)<x:=k> *)
+val _ = print("\n")
+val term' = LazyList.lzhd terms' (* the resulting agent we want *)
+val mtsC = M.matches { agent = term' , rule = ruleC }
+(*
+val _ = printMts mtsC
+val _ = print("length(mtsC) = " ^ (lzlength mtsC) ^ "\n")
+*)
+val terms'' = LazyList.lzmap (Re.react term') mtsC
+(*
+val _ = print("length(terms'') = " ^ (lzlength terms'') ^ "\n")
+*)
+val _ = printRes "term'" terms''
+
+(* (k x)<x:=k> --2> (k k)<x:=k> *)
+(*
+val _ = print("\n")
+*)
+val term'' = LazyList.lzhd terms'' (* the resulting agent we want *)
+(* print all the matches
+val mtsC2 = LazyList.lzmap
+		(fn t => M.matches { agent = t , rule = ruleC }) terms''
+*)
+val mtC2 = M.matches { agent = term'' , rule = ruleC }
+(*
+val _ = print("length(mtC2) = " ^ (lzlength mtC2) ^ "\n")
+val _ = printMts mtC2
+*)
+val terms''' = LazyList.lzmap (Re.react term'') mtC2
+(*
+val _ = print("length(terms''') = " ^ (lzlength terms''') ^ "\n")
+*)
+val _ = printRes "term''" terms'''
+
+(* (k k)<x:=k> --3> (k k) *)
+(*
+val _ = print("\n")
+*)
+val term''' = LazyList.lzhd terms''' (* the resulting agent we want *)
+val mtD = M.matches { agent = term''' , rule = ruleD }
+val _ = lzlength(mtD)
+(*val _ = print("length(mtD) = " ^ (lzlength mtD) ^ "\n")*)
+(*
+	handle exn => ( let val w = #1(exn)
+			    val n = #2(exn)
+			    val s = #3(exn)
+			in print("w=" ^ (Wiring.toString w) ^
+				 "n=" ^ (n2s n) ^ " " ^
+				 "s=" ^ s ^ "\n")
+			end )
+*)
+(*
+val _ = printMts mtC2
+val terms''' = LazyList.lzmap (Re.react term'') mtC2
+val _ = print("length(terms''') = " ^ (lzlength terms''') ^ "\n")
+val _ = printRes "term''" terms'''
+*)
 (*
 open TextIO;
 
