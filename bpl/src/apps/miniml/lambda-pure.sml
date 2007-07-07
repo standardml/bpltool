@@ -22,12 +22,12 @@
   - Reaction rules
 
   lam : active(1)
-  app : active(0) , derived (ordered children '1' and '2')
+  app : active(0) , derived (ordered children 'appl' and 'appr')
   var : atomic(1)
   def : active(1)
 
   [x]_X\u{x}  = var_x \t X
-! [\x.M]_X    = (/x \t id_1 \t id_X)(lam_x | id_X\u{x})[M]_X\u{x}
+  [\x.M]_X    = (/x \t id_1 \t id_X)(lam_x || id_X\u{x})[M]_X\u{x}
   [M N]_X     = (app \t id_X)([M]_X || [N]_X)
   [M<x:=N>]_X = (/x \t id_1 \t id_X)([M]_X\u{x} | (def_x \t id_X)[N]_X)
 
@@ -161,17 +161,17 @@ val app = let val a = ion2bg (Ion.make {ctrl = C.make("app", C.Active),
 	  in S.o (a, (S.`|` (appl, appr))) end
 
 (* example: (\x.xx) k , k is a constant *)
-
-(* STUDY THIS!!!
 val var_x = var(s2n "x")
 val par_xx = S.|| (var_x, var_x)
 val id_x = S.idw ["x"]
 val app' = S.* (app, id_x)
 val lam_x = lam(s2n "x")
-val lam_x' = S.`|` (lam_x, id_x)
-val lam_xx = S.o (lam_x', S.o (app', par_xx)) (*not composable!*)
-*)
+val lam_x' = S.|| (lam_x, id_x)
+val lam_xx = S.o (S.* (S.-/ "x", id_1), S.o (lam_x', S.o (app', par_xx)))
+val k = S.atomic0 "k"
+val term = S.o (app, S.* (lam_xx, k))
 
+(*
 val var_y = var(s2n "y")
 val par_yy = S.|| (var_y, var_y)
 val id_y = S.idw ["y"]
@@ -183,8 +183,8 @@ val close_x = S.* (S.-/ "x", id_1)
 val join_xy = S.o (close_x, x_slash_xy)
 val lam_xx = S.o (join_xy, S.o (lam_x', S.o (app', par_yy)))
 val k = S.atomic0 "k"
-
 val term  = S.o (app, S.* (lam_xx, k))
+*)
 
 val _ = prtSimp "(Lx.x x) k " term
 val _ = printIfaces "term" (getInner term) (getOuter term)
@@ -193,9 +193,7 @@ val _ = printIfaces "term" (getInner term) (getOuter term)
 fun makeBR bgval = Bdnf.regularize (Bdnf.make bgval)
 
 (* RULES *)
-val var_x = var(s2n "x")
 val def_x = def(s2n "x")
-val id_x = S.idw ["x"]
 val set_x = NameSet.insert (s2n "x") NameSet.empty
 val redex_innerface_C = Iface.m 1
 val react_innerface_C = Iface.m 2
@@ -257,9 +255,6 @@ val _ = print("length(terms'') = " ^ (lzlength terms'') ^ "\n")
 val _ = printRes "term'" terms''
 
 (* (k x)<x:=k> --2> (k k)<x:=k> *)
-(*
-val _ = print("\n")
-*)
 val term'' = LazyList.lzhd terms'' (* the resulting agent we want *)
 (* print all the matches
 val mtsC2 = LazyList.lzmap
@@ -277,28 +272,17 @@ val _ = print("length(terms''') = " ^ (lzlength terms''') ^ "\n")
 val _ = printRes "term''" terms'''
 
 (* (k k)<x:=k> --3> (k k) *)
-(*
-val _ = print("\n")
-*)
 val term''' = LazyList.lzhd terms''' (* the resulting agent we want *)
 val mtD = M.matches { agent = term''' , rule = ruleD }
 val _ = lzlength(mtD)
-(*val _ = print("length(mtD) = " ^ (lzlength mtD) ^ "\n")*)
 (*
-	handle exn => ( let val w = #1(exn)
-			    val n = #2(exn)
-			    val s = #3(exn)
-			in print("w=" ^ (Wiring.toString w) ^
-				 "n=" ^ (n2s n) ^ " " ^
-				 "s=" ^ s ^ "\n")
-			end )
-*)
-(*
+val _ = print("length(mtD) = " ^ (lzlength mtD) ^ "\n")
 val _ = printMts mtC2
 val terms''' = LazyList.lzmap (Re.react term'') mtC2
 val _ = print("length(terms''') = " ^ (lzlength terms''') ^ "\n")
 val _ = printRes "term''" terms'''
 *)
+
 (*
 open TextIO;
 
