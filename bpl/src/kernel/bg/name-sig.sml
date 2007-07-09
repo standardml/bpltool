@@ -35,6 +35,11 @@ sig
   val unmk : name -> string
   (** Calculate a hash for the given name. *)
   val hash : name -> word
+  (** Reset the internal representation.  NOTE: Reusing names created
+   * before a call to reset (or bigraphs containing these old names)
+   * can produce incorrect results!
+   *)
+  val reset : unit -> unit
  
   (** Test for name equality.  Any module implementing this operator
    * must satisfy <code>make x == make x</code> for any valid x.

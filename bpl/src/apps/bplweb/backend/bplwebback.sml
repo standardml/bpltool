@@ -150,6 +150,7 @@ struct
                    SOME userulesstr, SOME matchcountstr) =
         let
           (*val _ = TextIO.output (stdErr, "bplwebback::domatch called.\n")*)
+          val _ = Name.reset ()
           val _ =
             agent := SOME
                       (BgBDNF.regularize 

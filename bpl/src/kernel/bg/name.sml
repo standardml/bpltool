@@ -84,7 +84,12 @@ struct
       : (name * word list) StringHash.hash_table
 
   (* insert the special fresh name in the map *)
-  val () = StringHash.insert name_map ("__fresh", (fresh_name, []))
+  fun reset () =
+    (next_id := 0w1;
+     StringHash.clear name_map;
+     StringHash.insert name_map ("__fresh", (fresh_name, [])))
+
+  val () = reset ()
 
   fun fresh (SOME (n as (_, s))) =
       (case StringHash.find name_map s of
