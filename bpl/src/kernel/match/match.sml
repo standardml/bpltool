@@ -81,6 +81,7 @@ functor Match'(
   ) : MATCH
   where type info            = Info.info
     and type 'class bgbdnf   = 'class BgBDNF.bgbdnf
+    and type B               = BgBDNF.B
     and type BR              = BgBDNF.BR
     and type DR              = BgBDNF.DR
     and type nameset         = NameSet.Set =
@@ -2755,6 +2756,7 @@ functor Match (
   ) :> MATCH
   where type info            = Info.info
     and type 'class bgbdnf   = 'class BgBDNF.bgbdnf
+    and type B               = BgBDNF.B
     and type BR              = BgBDNF.BR
     and type DR              = BgBDNF.DR
     and type nameset         = NameSet.Set =

@@ -2,5 +2,6 @@
 # INCLUDE=../../../lib/util
 # INCLUDE=../../../lib/smlunit
 
-matchTest: /lib/smlunit/. /kernel/bpl /lib/util/errormsg
-   /lib/util/origin-sig
+matchTest: /lib/smlunit/. /kernel/bpl /kernel/bgadt-sig /kernel/bgadt /lib/util/errormsg
+   /lib/util/origin /lib/util/errorhandler-sig /lib/pp/smlnj/.
+   /lib/coll/lazylist

@@ -102,6 +102,7 @@ sig
                D
 
   sharing type BgBDNF.B =
+               Match.B =
                B
 
   sharing type BgBDNF.DR =
