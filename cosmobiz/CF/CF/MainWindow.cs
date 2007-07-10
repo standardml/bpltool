@@ -17,7 +17,7 @@ namespace CF
         public MainWindow()
         {
             InitializeComponent();
-            PerformReadXML();
+            //PerformReadXML();
 
         }
         private void PerformReadXML()
@@ -57,6 +57,25 @@ namespace CF
                 }
             }
             return TempElements;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            /*
+            int number = int.Parse(textBox1.Text);
+            Sequence seq = new Sequence(number);
+
+            //seq.Click += handler;
+            seq.Enabled = true;
+            Point point = new Point(number, number);
+            seq.Location = point;
+            this.Controls.Add(seq);
+            */
+        }
+
+        public void UserControlCounter(int number)
+        {
+            number_la.Text = number.ToString();
         }
     }
 }
