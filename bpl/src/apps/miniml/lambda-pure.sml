@@ -219,8 +219,6 @@ val ruleD = R.make' { name = "D" , redex = makeBR redexD , react = reactD }
    (\x.x x) k --1> (x x)<x:=k> --2> (k x)<x:=k> --2> (k k)<x:=k> --3> k k
 *)
 
-(*fun handler e r = r before TextIO.print (BaseErrorHandler.explain' e)*)
-
 fun parts agent matches =
     let val agent' = M.unmk (LazyList.lzhd matches)
 	val agent'_ctx = #context(agent')
@@ -230,6 +228,8 @@ fun parts agent matches =
 	"agent_par= " ^ (peel agent'_par) ^ "\n"] end
 
 fun lzlength l = Int.toString(List.length(LazyList.lztolist l))
+
+fun handler exn = print (BaseErrorHandler.explain' exn)
 
 (* (lx.x x) --1> (x x)<x:=k> *)
 val mtsA = M.matches { agent = makeBR term , rule = ruleA }
@@ -273,9 +273,13 @@ val _ = printRes "term''" terms'''
 
 (* (k k)<x:=k> --3> (k k) *)
 val term''' = LazyList.lzhd terms''' (* the resulting agent we want *)
+val mtD = M.amatch { agent = term''' , rule = ruleD }
+val _ = case mtD of NONE => print "No matches!\n"
+		  | SOME(m) => ( print(M.toString(m))
+		    handle e => handler e )
+(*
 val mtD = M.matches { agent = term''' , rule = ruleD }
 val _ = lzlength(mtD)
-(*
 val _ = print("length(mtD) = " ^ (lzlength mtD) ^ "\n")
 val _ = printMts mtC2
 val terms''' = LazyList.lzmap (Re.react term'') mtC2
