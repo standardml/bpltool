@@ -1393,7 +1393,7 @@ struct
                 (info b1, wrongterm, "matching BR in eqBR")
 
   (* determine which normal form b1 matches and call the right function *)
-  fun eq' C b1 b2 =
+  fun eq'' C b1 b2 =
       case match PCns b1 of
         MCom (MVal com1, MVal com2) => (* M, S, G, P, B, or BR *)
         (case match PCns com2 of
@@ -1440,6 +1440,70 @@ struct
       | wrongterm =>
         raise MalformedBDNF (info b1, wrongterm, "matching in eq")
 
+  fun eq' b1 b2 =
+    let
+      exception InterfacesDiffer
+    in
+      let
+        val iface1 = innerface b1
+        val iface2 = innerface b2
+        val oface1 = outerface b1
+        val oface2 = outerface b2
+        val X1     = Interface.names iface1
+        val Y1     = Interface.names oface1
+        val X2     = Interface.names iface2
+        val Y2     = Interface.names oface2
+        fun insert lt =
+          let
+            fun ins x [] = [x]
+              | ins x (x' :: xs)
+              = if lt (x, x') then
+                  x :: x' :: xs
+                else if lt (x', x) then
+                  x' :: ins x xs
+                else x' :: xs
+          in
+            ins
+          end
+
+        fun lt (x, x') = Name.ekam x < Name.ekam x'
+
+        val xs1 = NameSet.fold (insert lt) [] X1
+        val xs2 = NameSet.fold (insert lt) [] X2
+        val ys1 = NameSet.fold (insert lt) [] Y1
+        val ys2 = NameSet.fold (insert lt) [] Y2
+        
+        fun mkConstraints [] [] = Constraints.empty
+          | mkConstraints [] (_ :: _) = raise InterfacesDiffer
+          | mkConstraints (_ :: _) [] = raise InterfacesDiffer
+          | mkConstraints (x :: xs) (x' :: xs')
+          = if Name.ekam x = Name.ekam x' then
+              let
+                val X = NameSet.singleton x
+                val X' = NameSet.singleton x'
+                val _ = print ("[" ^ Name.unmk x ^ "=" ^ Name.unmk x' ^ "] ")
+                val C = mkConstraints xs xs'
+              in
+                Constraints.add ((X,X'), C)
+              end
+            else
+              raise InterfacesDiffer
+
+        val Ci = mkConstraints xs1 xs2
+        val Co = mkConstraints ys1 ys2
+      in
+        if Interface.eq (iface1, iface2)
+          andalso Interface.eq (oface1, oface2)
+        then
+          case eq'' Ci b1 b2 of
+            SOME Co' => (print "\n\n***** CONSTRAINTS RETURNED ******\n\n";
+            Constraints.are_combineable (Co, Co'))
+          | NONE     => false
+        else 
+          false
+      end handle InterfacesDiffer => (print "\nInterfacesDiffer\n"; false)
+    end
+    
   fun eq b1 b2 =
       let
         val iface1 = innerface b1
@@ -1462,7 +1526,7 @@ struct
         if Interface.eq (iface1, iface2)
           andalso Interface.eq (oface1, oface2)
         then
-          case eq' Ci b1 b2 of
+          case eq'' Ci b1 b2 of
             SOME Co' => Constraints.are_combineable (Co, Co')
           | NONE     => false
         else 

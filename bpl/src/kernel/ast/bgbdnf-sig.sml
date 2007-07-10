@@ -80,6 +80,17 @@ sig
    *)
   val eq : 'class bgbdnf -> 'class bgbdnf -> bool
 
+  (** Test two BDNFs for equality modulo structural congruence,
+   * internal names and internal representation of outer names.
+   * If, say, b1 has outer name y internally represented as y_42,
+   * and b2 has outer name y internally represented as y_17,
+   * eq' will assume they are the same name. 
+   * @params b1 b2
+   * @param b1  the first bigraph.
+   * @param b2  the second bigraph.
+   *)
+  val eq' : 'class bgbdnf -> 'class bgbdnf -> bool
+
   (** Sum type for singular top-level nodes. The renaming concretion is
       represented by just the renaming. *)
   datatype stlnode =

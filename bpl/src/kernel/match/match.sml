@@ -90,7 +90,7 @@ struct
   open ErrorHandler
 
   (* fun print' s = TextIO.output(TextIO.stdErr, s) (* For debugging *) *)
-  fun print' s = ()
+  fun print' s = () *
 
   val file_origin = Origin.mk_file_origin
                       "$BPL/src/kernel/match/match.sml"
@@ -929,21 +929,35 @@ struct
    * FIXME describe algoritm
    *)
   fun matchPAX' lvl {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, g, G} =
-      lzmake (fn () => (print' (Int.toString lvl ^ " PAX' ");
+      lzmake (fn () => (print' (Int.toString lvl ^ " PAX' "
+        ^ "g = " ^ BgBDNF.toString g ^ "\nG = " ^ BgBDNF.toString G
+        ^ "\ns_a_e = " ^ Wiring.toString s_a_e
+        ^ "\ns_a_n = " ^ Wiring.toString s_a_n
+        ^ "\ns_C_e = " ^ Wiring.toString s_C_e
+        ^ "\ns_C_n = " ^ Wiring.toString s_C_n
+        ^ "\nename = " ^ NameMap.Fold
+         (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s) "" ename ^ ".\n");
       case #Ss (unmkG G) of
         [S] =>
       (case unmkS S of
         BgBDNF.SCon (i, alpha) =>
         (let
-          (* Remember to trim s_a to fit the outer face of g, as this is
-           * not done explicitly in the PARn rule.
+          (* Remember to trim s_a and s_C to fit the outer face of g and
+           * alpha * id_Z, as this is
+           * not done explicitly in the PARn and ION rules.
            *)
-          val s_a_n = Wiring.restrict' s_a_n (glob (outerface g))
-          val s_a_e = Wiring.restrict' s_a_e (glob (outerface g))
-          (*val _ = print' ("after : s_a_e = " ^ Wiring.toString s_a_e ^
+          val XZ = glob (outerface g)
+          val s_a_n = Wiring.restrict' s_a_n (XZ)
+          val s_a_e = Wiring.restrict' s_a_e (XZ)
+          (* FIXME: The following should really be W+Z! *)
+          val WXZ = NameSet.union (Wiring.outernames alpha) XZ
+          val s_C_n = Wiring.restrict' s_C_n (WXZ)
+          val s_C_e = Wiring.restrict' s_C_e (WXZ)
+
+          val _ = print' ("after : s_a_e = " ^ Wiring.toString s_a_e ^
                        ", s_a_n = " ^ Wiring.toString s_a_n ^ 
-                       "s_C_e = " ^ Wiring.toString s_C_e ^
-                       ", s_C_n = " ^ Wiring.toString s_C_n ^ "\n")*) 
+                       ", s_C_e = " ^ Wiring.toString s_C_e ^
+                       ", s_C_n = " ^ Wiring.toString s_C_n ^ "\n") 
           val Y_n  = Wiring.outernames s_a_n
           val Y_e  = NameSet.fromList (NameMap.range ename)
 

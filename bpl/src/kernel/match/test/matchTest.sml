@@ -74,7 +74,7 @@ in
    *)
   val tests = [
     ("Matching with id_Z nonempty",
-     {agent = (K1[y] * z/z) o L1[z] o <->,
+     {agent = (K1[x] * z/z) o L1[z] o <->,
       redex = K1[x]},
      [{context   = idp(1) * idw[z,x],
        parameter = L1[z] o <->}]) 
@@ -127,9 +127,19 @@ end
         let
           val {context = context_m, parameter = parameter_m, ...}
             = Match.unmk m
+          val result =
+            BgBDNF.eq' context context_m andalso
+            BgBDNF.eq' parameter parameter_m
+          val ctx = BgVal.toString_unchanged (BgBDNF.unmk context)
+          val ctx_m = BgVal.toString_unchanged (BgBDNF.unmk context_m)
+          val par = BgVal.toString_unchanged (BgBDNF.unmk parameter)
+          val par_m = BgVal.toString_unchanged (BgBDNF.unmk parameter_m)
         in
-          BgBDNF.eq context context_m andalso
-          BgBDNF.eq parameter parameter_m
+          (if result then
+             print (ctx ^ " =\n" ^ ctx_m ^ " &&\n" ^ par ^ " =\n" ^ par_m ^ "\n")
+           else
+             print (ctx ^ " <>\n" ^ ctx_m ^ " ||\n" ^ par ^ " <>\n" ^ par_m ^ "\n"));
+          result
         end
     in
       (label,
