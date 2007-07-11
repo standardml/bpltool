@@ -171,21 +171,6 @@ val lam_xx = S.o (S.* (S.-/ "x", id_1), S.o (lam_x', S.o (app', par_xx)))
 val k = S.atomic0 "k"
 val term = S.o (app, S.* (lam_xx, k))
 
-(*
-val var_y = var(s2n "y")
-val par_yy = S.|| (var_y, var_y)
-val id_y = S.idw ["y"]
-val app' = S.* (app, id_y)
-val lam_x = lam(s2n "x")
-val lam_x' = S.* (lam_x, id_y)
-val x_slash_xy = S.* (S.// ("x", ["x","y"]), id_1)
-val close_x = S.* (S.-/ "x", id_1)
-val join_xy = S.o (close_x, x_slash_xy)
-val lam_xx = S.o (join_xy, S.o (lam_x', S.o (app', par_yy)))
-val k = S.atomic0 "k"
-val term  = S.o (app, S.* (lam_xx, k))
-*)
-
 val _ = prtSimp "(Lx.x x) k " term
 val _ = printIfaces "term" (getInner term) (getOuter term)
 
@@ -273,11 +258,14 @@ val _ = printRes "term''" terms'''
 
 (* (k k)<x:=k> --3> (k k) *)
 val term''' = LazyList.lzhd terms''' (* the resulting agent we want *)
+val _ = print(B.toString(Bdnf.unmk term''') ^ "\n")
+(*
 val mtD = M.amatch { agent = term''' , rule = ruleD }
+
 val _ = case mtD of NONE => print "No matches!\n"
 		  | SOME(m) => ( print(M.toString(m))
 		    handle e => handler e )
-(*
+
 val mtD = M.matches { agent = term''' , rule = ruleD }
 val _ = lzlength(mtD)
 val _ = print("length(mtD) = " ^ (lzlength mtD) ^ "\n")
