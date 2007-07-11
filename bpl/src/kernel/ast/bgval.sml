@@ -845,13 +845,13 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
                       else
                         raise 
                           NotPrimeable
-                            (vs, "while computing parallel product in Par"))
+                            (vs, "while computing prime product in Pri"))
                   NameSet.empty 
                   (map innerface vs)
 	        handle DuplicatesRemoved
 	        => raise 
                      NotPrimeable
-                       (vs, "while computing parallel product in Par")
+                       (vs, "while computing prime product in Pri")
 	(* Ys is a list of pairs of (outer, outer local) name sets. *)
 	val Ys = map (locglobnames o outerface) vs
 	(* clashnames are names in 2 or more interfaces, allnames

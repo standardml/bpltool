@@ -84,6 +84,8 @@ functor BgBDNF'(structure Info : INFO
     and type bgval          = BgVal.bgval 
     and type bgmatch        = BgVal.bgmatch =
 struct
+  fun print' x = ()
+  (* val print' = print *)
   open BgVal
   type Immutable = BgVal.Immutable
   type ion = Ion.ion
@@ -1095,7 +1097,15 @@ struct
 
   structure Constraints = NameBijectionConstraints
 
-  fun eqM C b1 pi1 b2 pi2 =
+  fun printconstraints C =
+    app (fn (X,Y) => 
+          (NameSet.apply (fn x => print' (Name.unmk x ^ " ")) X;
+           print' "= ";
+           NameSet.apply (fn y => print' (Name.unmk y ^ " ")) Y))
+        (Constraints.list C)
+
+
+  fun eqM C b1 pi1 b2 pi2 =(print' "eqM ";
       case match (PCom (PTen [PWir, PIon], PVar)) b1 of
         MCom (MTen [MWir idZ1, MIon KyX1], MVal N1) =>
      (case match (PCom (PTen [PWir, PIon], PVar)) b2 of
@@ -1115,7 +1125,7 @@ struct
          (case Constraints.restrict (CN', (KyX1_inner_ns, KyX2_inner_ns)) of
             SOME CKyX =>
          (case Ion.eq' CKyX KyX1 KyX2 of
-            SOME CKyX' => SOME (Constraints.plus (CidZ', CKyX'))
+            SOME CKyX' => SOME (Constraints.plus (CidZ', CKyX') handle e => raise e)
           | NONE => NONE)
           | NONE => NONE)
           | NONE => NONE)
@@ -1125,16 +1135,16 @@ struct
       | wrongterm => NONE) (* b2 is not on M BDNF form *)
       | wrongterm =>
         raise MalformedBDNF
-                (info b1, wrongterm, "matching M in eqM")
-  and eqS C b1 pi1 b2 pi2 =
+                (info b1, wrongterm, "matching M in eqM")) handle e => raise e
+  and eqS C b1 pi1 b2 pi2 =(print' "eqS ";
       case match (PCom (PTen [PWir, PVar], PCon)) b1 of
         MCom (MTen [MWir a1, _], MCon _) =>
      (case match (PCom (PTen [PWir, PVar], PCon)) b2 of
         MCom (MTen [MWir a2, _], MCon _) =>
         Wiring.eq' C a1 a2
       | wrongterm => NONE) (* b2 is not on (the same) S BDNF form *)
-      | _ => eqM C b1 pi1 b2 pi2 (* b1 must be on M BDNF form *)
-  and eqG C b1 pi1 b2 pi2 =
+      | _ => eqM C b1 pi1 b2 pi2 (* b1 must be on M BDNF form *)) handle e => raise e
+  and eqG C b1 pi1 b2 pi2 =(print' "eqG ";
       case match (PCom (PTen [PWir, PMer], PTns)) b1 of
         MCom (MTen [MWir idY1, MMer n1], MTns Ss1) =>
      (case match (PCom (PTen [PWir, PMer], PTns)) b2 of
@@ -1153,7 +1163,7 @@ struct
                   SOME CS =>
                (case eqS CS S1 pi1 S2 pi2 of
                   SOME CS' => eqSs Cpi Ss1 pis1 Ss2 pis2
-                                   (Constraints.plus (CSs', CS'))
+                                   (Constraints.plus (CSs', CS') handle e => raise e)
                 | NONE => NONE)
                 | NONE => NONE
               end
@@ -1190,8 +1200,8 @@ struct
       | wrongterm => NONE) (* b2 is not on G BDNF form *)
       | wrongterm =>
         raise MalformedBDNF
-                (info b1, wrongterm, "matching G in eqG")
-  and eqN C b1 pi1 b2 pi2 =
+                (info b1, wrongterm, "matching G in eqG")) handle e => raise e
+  and eqN C b1 pi1 b2 pi2 =(print' "eqN ";
       case match (PAbs PVar) b1 of
         MAbs (X1, MVal G1) =>
      (case match (PAbs PVar) b2 of
@@ -1202,11 +1212,11 @@ struct
           val allns1 = Interface.names (outerface b1)
           val notX1  = NameSet.difference allns1 X1
           val allns2 = Interface.names (outerface b2)
-          val notX2  = NameSet.difference allns1 X2
+          val notX2  = NameSet.difference allns2 X2
           val C''    = Constraints.from_list [(X1, X2), (notX1, notX2)]
         in
           if NameSet.size X1 = NameSet.size X2 then
-            Constraints.combine (C', C'')
+            Constraints.combine (C', C'') handle e => raise e
           else 
             NONE
         end
@@ -1214,8 +1224,8 @@ struct
       | wrongterm => NONE) (* b2 is not on N BDNF form *)
       | wrongterm =>
         raise MalformedBDNF
-                (info b1, wrongterm, "matching N in eqN")
-  fun eqP C b1 pi1 b2 pi2 =
+                (info b1, wrongterm, "matching N in eqN")) handle e => raise e
+  fun eqP C b1 pi1 b2 pi2 =(print' "eqP ";
       case match (PCom (PTen [PWir, PAbs (PCom (PTen [PWir, PVar], PCon))],
                         PVar)) b1 of
         MCom (MTen [MWir idZ1, MAbs (_, MCom (MTen [MWir yX1, _], MCon X1))],
@@ -1237,7 +1247,7 @@ struct
          (case Constraints.restrict (CN', (X1, X2)) of
             SOME CyX =>
          (case Wiring.eq' CyX yX1 yX2 of
-            SOME CyX' => SOME (Constraints.plus (CidZ', CyX'))
+            SOME CyX' => SOME (Constraints.plus (CidZ', CyX') handle e => raise e)
           | NONE => NONE)
           | NONE => NONE)
           | NONE => NONE)
@@ -1247,8 +1257,8 @@ struct
       | wrongterm => NONE) (* b2 is not on P BDNF form *)
       | wrongterm =>
         raise MalformedBDNF
-                (info b1, wrongterm, "matching P in eqP")
-  fun eqD C b1 b2 =
+                (info b1, wrongterm, "matching P in eqP")) handle e => raise e
+  fun eqD C b1 b2 =(print' "eqD ";
       case match (PTen [PWir, PCom (PTns, PPer)]) b1 of
         MTen [MWir a1, MCom (MTns Ps1, MPer pi1)] =>
      (case match (PTen [PWir, PCom (PTns, PPer)]) b2 of
@@ -1283,14 +1293,14 @@ struct
                       SOME CP =>
                    (case eqP CP P1 pi1 P2 pi2 of
                       SOME CP' => eqPs Ps1 pis1 Ps2 pis2
-                                       (Constraints.plus (CPs', CP'))
+                                       (Constraints.plus (CPs', CP') handle e => raise e)
                     | NONE => NONE)
                     | NONE => NONE
                   end
                 | eqPs _ _ _ _ _ = NONE
             in
               case eqPs Ps1 minor_pis1 Ps2 minor_pis2 Constraints.empty of
-                SOME CPs' => SOME (Constraints.plus (Ca', CPs'))
+                SOME CPs' => SOME (Constraints.plus (Ca', CPs') handle e => raise e)
               | NONE => NONE
             end
           | NONE => NONE)
@@ -1301,8 +1311,8 @@ struct
       | wrongterm => NONE) (* b2 is not on D BDNF form *)
       | wrongterm =>
         raise MalformedBDNF
-                (info b1, wrongterm, "matching D in eqD")
-  fun eqB C b1 b2 =
+                (info b1, wrongterm, "matching D in eqD")) handle e => raise e
+  fun eqB C b1 b2 =(print' "eqB ";
       case match (PCom (PTen [PWir, PPer], PVar)) b1 of
         MCom (MTen [MWir w1, MPer id_X1], MVal D1) =>
      (case match (PCom (PTen [PWir, PPer], PVar)) b2 of
@@ -1324,7 +1334,7 @@ struct
             (case Constraints.restrict (C', (id_X1_inner_ns, id_X2_inner_ns)) of
                SOME Cid_X =>
             (case Permutation.eq' Cid_X id_X1 id_X2 of
-               SOME Cid_X' => SOME (Constraints.plus (Cw', Cid_X'))
+               SOME Cid_X' => SOME (Constraints.plus (Cw', Cid_X') handle e => raise e)
              | NONE => NONE)
              | NONE => NONE)
              | NONE => NONE)
@@ -1334,7 +1344,7 @@ struct
       | wrongterm => NONE) (* b2 is not on B BDNF form *)
       | wrongterm =>
         raise MalformedBDNF
-                (info b1, wrongterm, "matching B in eqB")
+                (info b1, wrongterm, "matching B in eqB")) handle e => raise e
   fun eqDR C b1 b2 =
       (* convert to, and compare on, D form *)
       case match (PTen [PWir, PTns]) b1 of
@@ -1380,7 +1390,7 @@ struct
             (case Constraints.restrict (C', (id_X1_inner_ns, id_X2_inner_ns)) of
                SOME Cid_X =>
             (case Permutation.eq' Cid_X id_X1 id_X2 of
-               SOME Cid_X' => SOME (Constraints.plus (Cw', Cid_X'))
+               SOME Cid_X' => SOME (Constraints.plus (Cw', Cid_X') handle e => raise e)
              | NONE => NONE)
              | NONE => NONE)
              | NONE => NONE)
@@ -1461,7 +1471,8 @@ struct
                   x :: x' :: xs
                 else if lt (x', x) then
                   x' :: ins x xs
-                else x' :: xs
+                else
+                  x' :: xs
           in
             ins
           end
@@ -1481,7 +1492,7 @@ struct
               let
                 val X = NameSet.singleton x
                 val X' = NameSet.singleton x'
-                val _ = print ("[" ^ Name.unmk x ^ "=" ^ Name.unmk x' ^ "] ")
+                (*val _ = print' ("[" ^ Name.unmk x ^ "=" ^ Name.unmk x' ^ "] ")*)
                 val C = mkConstraints xs xs'
               in
                 Constraints.add ((X,X'), C)
@@ -1492,16 +1503,17 @@ struct
         val Ci = mkConstraints xs1 xs2
         val Co = mkConstraints ys1 ys2
       in
+        (* This doesn't work because internal representations, not original
+           names, are compared:
         if Interface.eq (iface1, iface2)
           andalso Interface.eq (oface1, oface2)
-        then
+        then *)
           case eq'' Ci b1 b2 of
-            SOME Co' => (print "\n\n***** CONSTRAINTS RETURNED ******\n\n";
-            Constraints.are_combineable (Co, Co'))
+            SOME Co' => Constraints.are_combineable (Co, Co')
           | NONE     => false
-        else 
-          false
-      end handle InterfacesDiffer => (print "\nInterfacesDiffer\n"; false)
+        (*else 
+          false*)
+      end handle InterfacesDiffer => false
     end
     
   fun eq b1 b2 =
