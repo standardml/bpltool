@@ -90,7 +90,7 @@ struct
   open ErrorHandler
 
   (* fun print' s = TextIO.output(TextIO.stdErr, s) (* For debugging *) *)
-  fun print' s = () *
+  fun print' s = () 
 
   val file_origin = Origin.mk_file_origin
                       "$BPL/src/kernel/match/match.sml"
