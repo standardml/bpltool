@@ -51,7 +51,7 @@ sig
    *)
   exception Overlap of constraints * set * set
   (** Add the constraint (S, T) to the set of constraints C.
-   * (S \cap dom(C)) = Ø  and  (T \cap rng(C)) = Ø  is required
+   * (S \cap dom(C)) = Ã˜  and  (T \cap rng(C)) = Ã˜  is required
    * 
    * @params S T C
    * @param S  The domain set.
@@ -65,11 +65,11 @@ sig
   val add : (set * set) * constraints -> constraints
   (** Add a list of constraints [(S1, T1), ..., (Sn, Tn)] to the set of
    * constraints C.
-   * (Si \cap dom(C)) = Ø  and  (Ti \cap rng(C)) = Ø  is required and
+   * (Si \cap dom(C)) = Ã˜  and  (Ti \cap rng(C)) = Ã˜  is required and
    * the Sis should be pairwise disjoint (ditto for the Tis).
    * 
    * @params cs C
-   * @param cs  the list of constraints.
+   * @param cs  The list of constraints.
    * @param C   The constraint set.
    * @exception InvalidConstraint  if |Si| <> |Ti| for some i.
    * @exception Overlap            if the domain and/or codomain of two
@@ -85,6 +85,11 @@ sig
    *                               constraints overlap.
    *)
   val from_list : (set * set) list -> constraints
+  (** Return a constraint set as a list of constraints.
+   * @param C   The constraint set.
+   * @returns   The list of constraints.
+   *)
+  val list : constraints -> (set * set) list
   (** Signal that two sets of constraints are incompatible, e.g. they
    * have overlapping (plus) or  different (combine) domains and/or codomains.
    * 

@@ -1267,7 +1267,8 @@ struct
                     if Wiring.in_domain ui s_C_e handle e => raise e then
                       check_adjust'
                         ename''
-                        (Wiring.app_renaming_x s_a_e yi handle e => raise e)
+                        (Wiring.app_renaming_x s_a_e yi
+                         handle Wiring.NotInDomain _ => raise NoMatch)
                         (Wiring.app_renaming_x s_C_e ui handle e => raise e)
                     else
                       ename'')

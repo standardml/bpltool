@@ -30,6 +30,7 @@ functor MatchTest (
       and type break_style = PrettyPrint.break_style
       and type origin      = Origin.origin) =
 struct
+
 open LazyList
 structure BGADT :> BG_ADT = BGADT (structure ErrorHandler = ErrorHandler)
               
@@ -77,7 +78,11 @@ in
      {agent = (K1[x] * z/z) o L1[z] o <->,
       redex = K1[x]},
      [{context   = idp(1) * idw[z,x],
-       parameter = L1[z] o <->}]) 
+       parameter = L1[z] o <->}]),
+    ("Internal redex edge should not match agent name",
+     {agent=(x/x * merge(2)) o (K0 o merge(2) o (K0 o <-> * K0 o <->) * K1[x] o K0 o <->),
+      redex=(-/x * idp(1)) o K1[x]},
+     [])
   ]
 end
   
@@ -130,27 +135,36 @@ end
           val result =
             BgBDNF.eq' context context_m andalso
             BgBDNF.eq' parameter parameter_m
-          val ctx = BgVal.toString_unchanged (BgBDNF.unmk context)
+          (*val ctx = BgVal.toString_unchanged (BgBDNF.unmk context)
           val ctx_m = BgVal.toString_unchanged (BgBDNF.unmk context_m)
           val par = BgVal.toString_unchanged (BgBDNF.unmk parameter)
-          val par_m = BgVal.toString_unchanged (BgBDNF.unmk parameter_m)
+          val par_m = BgVal.toString_unchanged (BgBDNF.unmk parameter_m)*)
         in
-          (if result then
+          (*(if result then
              print (ctx ^ " =\n" ^ ctx_m ^ " &&\n" ^ par ^ " =\n" ^ par_m ^ "\n")
            else
-             print (ctx ^ " <>\n" ^ ctx_m ^ " ||\n" ^ par ^ " <>\n" ^ par_m ^ "\n"));
+             print (ctx ^ " <>\n" ^ ctx_m ^ " ||\n" ^ par ^ " <>\n" ^ par_m ^ "\n"));*)
           result
         end
     in
       (label,
        fn () =>
-         if lzsubset match_eq matches gotmatches then
-           ()
-         else
-           Assert.fail 
-             ("expected matches not found for a = "
+         if null matches then
+           case lzunmk gotmatches of
+             Nil => ()
+           | _ =>
+             Assert.fail
+               ("expected no matches for a = "
               ^ BgVal.toString agent
-              ^ ", R = " ^ BgVal.toString redex))
+              ^ ", R = " ^ BgVal.toString redex)
+         else
+           if lzsubset match_eq matches gotmatches then
+             ()
+           else
+             Assert.fail 
+               ("expected matches not found for a = "
+                ^ BgVal.toString agent
+                ^ ", R = " ^ BgVal.toString redex))
     end
 
   val suite = (fn () => Test.labelTests (map mkTest tests))
