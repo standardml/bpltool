@@ -239,6 +239,11 @@ sig
    * The outer face is unchanged.  The inner face is not increased.
    *)
   val restrict' : wiring -> nameset -> wiring
+  (** Restrict a wiring to only map a given set of names.
+   * The outer face is trimmed to include only names to which some
+   * inner name maps.  The inner face is not increased.
+   *)
+  val restrict'' : wiring -> nameset -> wiring
   (** Restrict a wiring to only map to a given set of names.
    * The inner face is trimmed to include only names which maps to an
    * outer name.

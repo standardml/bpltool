@@ -865,6 +865,35 @@ struct
        htX)
     end
 
+  (* Algorithm for restricting a wiring, trimming the outer
+   * face:
+   * 1 For each link mapping, remove it if inner name not in X.
+   * 2 For each link, remove inner names not in X
+   *   2a If empty name set, remove link.
+	 *)
+  fun restrict'' (ls, ht) X =
+    let
+      val htX = createNameHashMap (NameHashMap.numItems ht)
+    in
+      NameHashMap.appi
+        (fn pair as (x, ne) =>
+         if NameSet.member x X then NameHashMap.insert htX pair else ())
+        ht;
+      (Link'Set.fold
+         (fn {outer, inner} => fn ls =>
+          let
+            val inner = NameSet.intersect inner X
+          in
+            if NameSet.isEmpty inner then
+              ls
+            else
+              Link'Set.insert {outer = outer, inner = inner} ls
+          end)
+       Link'Set.empty
+       ls,
+       htX)
+    end
+
   fun split (ls, ht) X =
     let
       val ht0 = createNameHashMap (2 * Link'Set.size ls)
