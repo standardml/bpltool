@@ -7,6 +7,7 @@ if ps -f x | grep "$command" > /dev/null
 then
   true
 else
-  ./start.sh &
+  echo Restarting XMLRPC server
+  ./start.sh > /dev/null 2>&1 &
 fi
 

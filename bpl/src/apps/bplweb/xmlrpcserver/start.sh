@@ -39,6 +39,6 @@ while true
 do
   ruby bplxmlrpcserver.rb >> bplxmlrpcserver.log 2>&1 &
   pid=$!
-  read < restart
+  read dummy < restart
   kill $pid
 done

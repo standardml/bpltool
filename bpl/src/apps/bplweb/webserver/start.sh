@@ -24,6 +24,10 @@
 # whenever a line of arbitrary text is read from the pipe,
 # restart the server.
 
+export RUBYLIB=$HOME/share/rubygems/local/lib/site_ruby/1.8
+export RUBYOPT=-rrubygems
+export GEM_HOME=$HOME/share/rubygems/gemrepo
+
 if [ -e restart ]
 then
   if [ ! -p restart ] 
@@ -39,6 +43,6 @@ while true
 do
   ruby script/server -p 8080 >> log/webserver.log 2>&1 &
   pid=$!
-  read < restart
+  read dummy < restart
   kill $pid
 done
