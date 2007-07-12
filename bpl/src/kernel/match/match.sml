@@ -90,7 +90,7 @@ struct
   open ErrorHandler
 
   (* fun print' s = TextIO.output(TextIO.stdErr, s) (* For debugging *) *)
-  fun print' s = () 
+  fun print' s = ()
 
   val file_origin = Origin.mk_file_origin
                       "$BPL/src/kernel/match/match.sml"
@@ -945,14 +945,15 @@ struct
           (* Remember to trim s_a and s_C to fit the outer face of g and
            * alpha * id_Z, as this is
            * not done explicitly in the PARn and ION rules.
+           * FIXME: Should the next 4 applications of restrict'' be restrict' ?
            *)
           val XZ = glob (outerface g)
-          val s_a_n = Wiring.restrict' s_a_n (XZ)
-          val s_a_e = Wiring.restrict' s_a_e (XZ)
-          (* FIXME: The following should really be W+Z! *)
+          val s_a_n = Wiring.restrict'' s_a_n (XZ)
+          val s_a_e = Wiring.restrict'' s_a_e (XZ)
+          (* FIXME: The following should really be W+Z, not W+X+Z! *)
           val WXZ = NameSet.union (Wiring.outernames alpha) XZ
-          val s_C_n = Wiring.restrict' s_C_n (WXZ)
-          val s_C_e = Wiring.restrict' s_C_e (WXZ)
+          val s_C_n = Wiring.restrict'' s_C_n (WXZ)
+          val s_C_e = Wiring.restrict'' s_C_e (WXZ)
 
           val _ = print' ("after : s_a_e = " ^ Wiring.toString s_a_e ^
                        ", s_a_n = " ^ Wiring.toString s_a_n ^ 
@@ -1070,6 +1071,13 @@ struct
             | process_s_a_e'_split _ = raise ThisCannotHappen
         in
           lzunmk
+            (lzmap
+              (fn m as {ename', s_C', ...}
+               => (print' (Int.toString lvl ^ " PAX':OK! ename' = "
+                   ^ NameMap.Fold
+                      (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y
+                           ^ " " ^ s) "" ename'
+                   ^ ", s_C' = " ^ Wiring.toString s_C' ^ ".\n"); m))
             (lzconcat
                (lzmap
                   process_s_a_e'_split
@@ -1077,7 +1085,7 @@ struct
                      (map (fn ls => Wiring.make' ls handle e => raise e))
                      (opartgen2lzlist
                         (OrderedPartition.make s_a_e'_links 2)
-                      handle OrderedPartition.NoPartitions => lzNil))))
+                      handle OrderedPartition.NoPartitions => lzNil)))))
         end
         handle NoMatch => Nil)
       | _ => Nil)

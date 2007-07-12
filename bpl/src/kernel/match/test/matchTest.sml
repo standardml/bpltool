@@ -62,6 +62,7 @@ local
   val M11 = atomic   ("M11" =: 1 --> 1)
 
   val (x, y, z, u, w) = ("x", "y", "z", "u", "w")
+  val (y_4,y_5,x_6,x_7) = ("y_4","y_5","x_6","x_7")
 in
   (** The list of tests.  Each entry consists of:
    * A label describing the test,
@@ -80,9 +81,23 @@ in
      [{context   = idp(1) * idw[z,x],
        parameter = L1[z] o <->}]),
     ("Internal redex edge should not match agent name",
-     {agent=(x/x * merge(2)) o (K0 o merge(2) o (K0 o <-> * K0 o <->) * K1[x] o K0 o <->),
-      redex=(-/x * idp(1)) o K1[x]},
-     [])
+     {agent = (x/x * merge(2)) o (K0 o merge(2) o (K0 o <-> * K0 o <->) * K1[x] o K0 o <->),
+      redex = (-/x * idp(1)) o K1[x]},
+     []),
+    ("Pi calculus reaction rule",
+     {agent = (idw[y,z] * K0) o (K1[y] * idw[z]) o M1[z]
+          `|` (idw[y]   * K0) o L1[y] o <->,
+      redex =  (x/x * K0) o (K1[x] `|` idp(1))
+           `|` (x/x * K0) o (L1[x]  `|` idp(1))},
+     [{context   = y/x * z/z * idp(1),
+       parameter = M1[z] * <-> * <-> * <->}]),
+    ("Pi calculus reaction rule with nonengaged parts",
+     {agent = (idw[y,z] * K0 o merge(2)) o (M0 * K1[y] * idw[z]) o M1[z]
+          `|` (idw[y]   * K0 o merge(2)) o (L0 o <-> * L1[y]) o K0 o <->,
+      redex =  (x/x * K0) o (K1[x] `|` idp(1))
+           `|` (x/x * K0) o (L1[x]  `|` idp(1))},
+     [{context   = y/x * z/z * idp(1),
+       parameter = M1[z] * M0 * K0 o <-> * L0 o <->}])
   ]
 end
   
@@ -109,9 +124,17 @@ end
            inst = inst_id redex}
       val gotmatches = Match.matches
         {agent = BgBDNF.regularize (BgBDNF.make agent), rule = rule}
+      (* lzsubset eq xs yz checks whether xs is a subset of yz, using
+       * eq comparison.  It returns the boolean result, elements of
+       * yz that were evaluated, and the remaining elements of yz.
+       *)
       fun lzsubset eq xs yz =
         let
-          fun lzss [] _ _ _ = true
+          (* lzss xs ys zs yz tests whether elements of xs are in
+           * ys, or, if not, they are in yz.  Elements of yz are
+           * only evaluated once, then put into zs.
+           *)
+          fun lzss [] _ zs yz = (true, zs, yz)
             | lzss (x :: xs) (y :: ys) zs yz
             = if eq (x, y) then
                 lzss xs zs zs yz
@@ -119,7 +142,7 @@ end
                 lzss (x :: xs) ys zs yz
             | lzss (x :: xs) [] zs yz
             = (case lzunmk yz of
-                 Nil => false
+                 Nil => (false, zs, yz)
                | Cons (y, yz') =>
                  if eq (x, y) then
                    lzss xs (y :: zs) (y :: zs) yz'
@@ -152,19 +175,29 @@ end
          if null matches then
            case lzunmk gotmatches of
              Nil => ()
-           | _ =>
+           | Cons (m, _) =>
              Assert.fail
                ("expected no matches for a = "
               ^ BgVal.toString agent
-              ^ ", R = " ^ BgVal.toString redex)
+              ^ ", R = " ^ BgVal.toString redex
+              ^ "\but found\ncontext = "
+              ^ BgBDNF.toString (#context (Match.unmk' m))
+              ^ "\nparameter = "
+              ^ BgBDNF.toString (#parameter (Match.unmk' m)))
          else
-           if lzsubset match_eq matches gotmatches then
-             ()
-           else
-             Assert.fail 
-               ("expected matches not found for a = "
-                ^ BgVal.toString agent
-                ^ ", R = " ^ BgVal.toString redex))
+           let
+             val (allmatchesfound, ms, mz)
+               = lzsubset match_eq matches gotmatches
+           in
+             if allmatchesfound then
+               ()
+             else
+               Assert.fail 
+                 ("expected matches not among "
+                  ^ Int.toString (length ms) ^ " found matches for\na = "
+                  ^ BgVal.toString agent
+                  ^ "\nR = " ^ BgVal.toString redex)
+           end)
     end
 
   val suite = (fn () => Test.labelTests (map mkTest tests))
