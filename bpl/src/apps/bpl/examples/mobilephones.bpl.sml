@@ -1,68 +1,84 @@
-(* Mobile phones example from Robin Milner's
- * pi-book.
+(* Copyright (c) 2007  The BPL Group at the IT University of Copenhagen
+ *
+ * This file is part of BPL.
+ *
+ * BPL is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
+ *
+ * BPL is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BPL; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+ * USA
+ *)
+ 
+ (* Mobile phones example from Robin Milner:
+ * "Communicating and Mobile Systems: the Pi Calculus,"
+ * Cambridge University Press, 1999.
  *)
 
-OS.FileSys.chDir "..";
-use "smlnj.sml";
+use "pi.bpl.sml";
 Flags.setIntFlag "/debug/level" 10;
-val id_0 = idp(0)
-val id_1 = idp(1)
 
-(* Pi calculus reaction rule controls *)
-val Sum  = passive0 ("Sum")
-val Send0 = passive ("Send0" -: 1)
-val Get0  = passive ("Get0"  -: 1)
-val Send1 = passive ("Send1" -: 2)
-val Get1  = passive ("Get1"  =: 1 --> 1)
-val Send2 = passive ("Send2" -: 3)
-val Get2  = passive ("Get2"  =: 2 --> 1)
+(* Pi calculus reaction rule controls for communicating 0 or 2 names. *)
+val Send0 = Send 0
+val Get0  = Get 0
+val Send2 = Send 2
+val Get2  = Get 2
 
-(* Pi calculus reaction rule link names *)
-val ( x,  y,  y1,  y2,  z,  z1,  z2)
-  = ("x","y","y1","y2","z","z1","z2")
+(* Pi calculus reaction rules *)
+val REACT0 = REACT 0
+val REACT2 = REACT 2
+val rules = [REACT0, REACT2]
 
-(* Polyadic (up to 2) pi calculus reaction rules *)
-val REACT0 =
-  {redex = (x/x * Sum) o (Send0[x] `|` idp(1))
-       `|` (x/x * Sum) o (Get0[x]  `|` idp(1)),
-   react = x//[] * merge(2),
-   inst  = [0 |-> 0, 1 |-> 2]}
-val REACT1 =
-  {redex = (idw[x,y] * Sum) o (Send1[x,y]   `|` idp(1))
-            `|` (x/x * Sum) o (Get1[x][[z]] `|` idp(1)),
-   react = (x//[] * y/z * idp(1)) o (idp(1) `|` `[z]`),
-   inst  = [0 |-> 0, 1 |-> 2]}
-val REACT2 =
-  {redex = (idw[x,y1,y2] * Sum) o (Send2[x,y1,y2]   `|` idp(1))
-                `|` (x/x * Sum) o (Get2[x][[z1],[z2]] `|` idp(1)),
-   react = (x//[] * y1/z1 * y2/z2 * idp(1)) o (idp(1) `|` `[z1,z2]`),
-   inst  = [0 |-> 0, 1 |-> 2]}
-val rules = [REACT0, REACT1, REACT2]
-
-(* System controls *)
-val Car   = passive ("Car" -: 2)
-val Trans = passive ("Trans" -: 4)
-val IdTrans = passive ("IdTrans" -: 2)
-val Control1 = passive0 ("Control1")
-val Control2 = passive0 ("Control2")
+(* Components controls *)
+val Car      = atomic ("Car" -: 2)
+val Trans    = atomic ("Trans" -: 4)
+val Idtrans  = atomic ("Idtrans" -: 2)
+val Control  = atomic ("Control" -: 8)
 
 (* System link names *)
-val ( talk1,  talk2,  switch1,  switch2,  t,  s,  gain1,  lose1,  gain2,  lose2)
+val ( talk1,  talk2,  switch1,  switch2,  t,  s,  gain1,  lose1,  gain2,  lose2 )
   = ("talk1","talk2","switch1","switch2","t","s","gain1","lose1","gain2","lose2")
 
-(* System *)
-val agent = 
-    (idw[talk1,switch1] * Sum)
-    o ((Send0[talk1] || idw[talk1,switch1]) o Car[talk1,switch1] o <->
-       `|` Get2[switch1][[t],[s]] o (<[t,s]> Car[t,s] o <->))
-`|` (idw[talk1,switch1,gain1,lose1] * Sum)
-    o ((Get0[talk1] || idw[talk1,switch1,gain1,lose1])
-       o Trans[talk1,switch1,gain1,lose1] o <->
-       `|` (Get2[lose1][[t],[s]] || idw[switch1,gain1,lose1])
-           o (<[t,s]> (Send2[switch1,t,s] * idw[gain1,lose1]) o IdTrans[gain1,lose1] o <->))
-`|` (Get2[gain2][[t],[s]] || idw[gain2,lose2]) o (<[t,s]> Trans[t,s,gain2,lose2] o <->)
-`|` (idw[lose1,talk2,switch2,gain2] * Sum)
-    o (Send2[lose1,talk2,switch2] || idw[gain2,talk2,switch2])
-    o Send2[gain2,talk2,switch2] o Control2 o <->
+(* Component definition rules *)
+val ( talk,  switch,  gain,  lose )
+  = ("talk","switch","gain","lose")
+val DEF_Car =
+  {name  = "def_Car", 
+   redex = Car[talk,switch],
+   react = Sum o (Send0[talk] o Car[talk,switch]
+                  `|` Get2[switch][[t],[s]] o (<[t,s]> Car[t,s])),
+   inst  = @[]}
+val DEF_Trans =
+  {name  = "def_Trans",
+   redex = Trans[talk,switch,gain,lose],
+   react = Sum o (Get0[talk][] o Trans[talk,switch,gain,lose]
+                  `|` Get2[lose][[t],[s]]
+                      o (<[t,s]> Send2[switch,t,s] o Idtrans[gain,lose])),
+   inst  = @[]}
+val DEF_Idtrans =
+  {name  = "def_Idtrans",
+   redex = Idtrans[gain, lose],
+   react = Get2[gain][[t],[s]] o (<[t,s]> Trans[t,s,gain,lose]),
+   inst  = @[]}
+val DEF_Control =
+  {name  = "def_Control",
+   redex = Control[lose1,talk2,switch2,gain2,lose2,talk1,switch1,gain1],
+   react = Send2[lose1,talk2,switch2] o Send2[gain2,talk2,switch2]
+           o Control[lose2,talk1,switch1,gain1,lose1,talk2,switch2,gain2],
+   inst  = @[]}
 
-  
+(* System *)
+val System1 =
+  -//[talk1,switch1,gain1,lose1,talk2,switch2,gain2,lose2]
+  o (    Car[talk1,switch1] 
+     `|` Trans[talk1,switch1,gain1,lose1]
+     `|` Idtrans[gain2,lose2]
+     `|` Control[lose1,talk2,switch2,gain2,lose2,talk1,switch1,gain1])handle e=>explain e
