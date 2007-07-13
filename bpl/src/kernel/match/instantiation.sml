@@ -512,8 +512,6 @@ struct
 
   fun instantiate (inst as {I, J, rho}) d =
       let
-        infix 5 **
-        fun b1 ** b2 = BgVal.Ten noinfo [b1, b2]
         val oo' = BgVal.Com' noinfo
         infix 7 oo'
         
