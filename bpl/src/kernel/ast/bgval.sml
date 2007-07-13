@@ -430,27 +430,6 @@ struct
 	raise NotComposable 
 		(v1, v2, "Interface mismatch for composition in Com")
 
-  fun Com' i (v1, v2) =
-      let
-        val i1 = innerface v1
-        val i2 = innerface v2
-        val o1 = outerface v1
-        val o2 = outerface v2
-        val X = NameSet.difference (Interface.glob o2) (Interface.glob i1)
-        val v1'
-          = if Interface.width i1 = 0 then
-              Ten i [v1, Wir i (Wiring.id_X X),
-                         Per i (Permutation.id (Interface.loc o2))]
-            else
-              Ten i [v1, Wir i (Wiring.id_X X)]
-      in
-        if arecomposable v1' v2 then 
-	  VCom (v1', v2, (i2, outerface v1', i))
-        else
-	  raise NotComposable 
-		  (v1, v2, "Interface mismatch for composition in Com'")
-      end
-
   datatype bgpat =
 	   PVar
 	 | PCns
@@ -742,18 +721,8 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	 :: lsinv)
       end
 	
-  fun Par i vs =
+  fun Par' i vs =
       let
-        (* Parallel product is only defined if the inner names are
-           disjoint. *)
-	val _ = foldl
-                  (fn (X, all) => NameSet.union X all)
-                  NameSet.empty 
-                  (map (Interface.names o innerface) vs)
-	        handle DuplicatesRemoved
-	        => raise 
-                     NotParallelisable
-                       (vs, "while computing parallel product in Par")
 
 	(* Ys is a list of pairs of (outer, outer local) name sets. *)
 	val Ys = map (locglobnames o outerface) vs
@@ -828,6 +797,52 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	  in
 	    Com i (A, Ten i (map mkwxB wBvs))
 	  end
+      end
+
+  fun Par i vs =
+    let
+      (* Parallel product is only defined if the inner names are
+         disjoint. *)
+      val _ = foldl
+                  (fn (X, all) => NameSet.union X all)
+                  NameSet.empty 
+                  (map (Interface.names o innerface) vs)
+	        handle DuplicatesRemoved
+	        => raise NotParallelisable
+                     (vs, "while computing parallel product in Par")
+    in
+      Par' i vs
+    end 
+
+  fun Com' i (v1, v2) =
+      let
+        val i1 = innerface v1
+        val i2 = innerface v2
+        val o1 = outerface v1
+        val o2 = outerface v2
+        val X = NameSet.difference (Interface.glob o2) (Interface.glob i1)
+        fun disjoint X Y =
+          (NameSet.union X Y; true)
+          handle NameSet.DuplicatesRemoved => false 
+        val (v1', o1') =
+          if NameSet.isEmpty X then
+            (v1, o1)
+          else
+            let
+              val v1' =
+                if not (disjoint (Interface.names o1) X) then
+                  Par' i [v1, Wir i (Wiring.id_X X)]
+                else
+                  Ten i [v1, Wir i (Wiring.id_X X)]
+            in
+              (v1', outerface v1')
+            end
+      in
+        if arecomposable v1' v2 then 
+          VCom (v1', v2, (i2, o1', i))
+        else
+          raise NotComposable 
+            (v1, v2, "Interface mismatch for composition in Com'")
       end
 
   fun Pri i vs =
@@ -946,7 +961,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	  | make' (t as (BgTerm.Par (ts, _)))
             = Par (t2i t) (List.map make' ts)
 	  | make' (t as (BgTerm.Com (t1, t2, _))) 
-	    = Com (t2i t) (make' t1, make' t2)
+	    = Com' (t2i t) (make' t1, make' t2)
       in
 	make'
       end
@@ -995,7 +1010,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	            => (Wiring.* (w, w'),
 	                SOME (case i' of SOME _ => i | NONE => i''),
 	                vs')
-	            | v => (w', i', v :: vs)
+	            | v => (w', i', v :: vs')
 	          end
 	      val (w, iw, vs) = extractwiring vs
 	      val vs

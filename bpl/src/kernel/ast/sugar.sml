@@ -98,7 +98,7 @@ val Abs = BgVal.Abs Info.noinfo
 val Ten = BgVal.Ten Info.noinfo
 val Par = BgVal.Par Info.noinfo
 val Pri = BgVal.Pri Info.noinfo
-val Com = BgVal.Com Info.noinfo
+val Com = BgVal.Com' Info.noinfo
 
 fun active k = k Control.Active
 fun active0 K

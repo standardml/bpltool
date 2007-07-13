@@ -134,7 +134,8 @@ sig
    *                           from outer face of b_2.
    *)
   val Com : info -> bgval * bgval -> bgval
-  (** Construct (b_1 * id_X) b_2 = a composition of a pair of bigraphs,
+  (** Construct a bigraph equivalent to (b_1 || id_X) b_2, that is,
+   * a composition of a pair of bigraphs,
    * where X is the set of global outer names of b_2 which are not
    * global inner names of b_1.
    * @exception NotComposable  if the inner face of b_1 is different
