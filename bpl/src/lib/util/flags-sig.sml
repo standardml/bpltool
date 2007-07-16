@@ -18,13 +18,27 @@
  * USA
  *)
 
+(** Runtime flags also settable via command line switches.
+ * @version $LastChangedRevision$
+ *)
 signature FLAGS = sig
 
+  (** Flag type.
+   * @param name    Flag name, e.g. "/kernel/ast/bgterm/hideids" or "/dump/bgvals".
+   * @param desc    Human readable description of the flag.
+   * @param short   One-letter command line switch, e.g. "o".
+   * @param long    Long version of the command line switch, e.g., "output-file".
+   * @param arg     Optional argument name, e.g. N or FILENAME.
+   * @param default Default flag value.
+   *)
     type 'a flag_info 
       = {name:string,desc:string,
 	 short:string,long:string,arg:string,
 	 default:'a}
 
+  (** Signal that a given flag name does not refer to an existing
+   * flag in the current scope.
+   *)
     exception FlagNotFound
 
     val makeIntFlag : int flag_info -> int ref
@@ -41,11 +55,13 @@ signature FLAGS = sig
     val setStringFlag : string -> string -> unit
     val getStringFlag : string -> string
 
-    
+    (** List the default value for each flag. *)
     val listDefaults : TextIO.outstream -> unit
+    (** List the current value for each flag if not default. *)
     val listChanged : TextIO.outstream -> unit
-
+    (** Return a description of command line switches. *)
     val usage : unit -> string list
+    (** Create an ArgParse specification from the current set of flags. *)
     val toSpec : unit -> (string * ArgParse.spec) list
 
 end (* signature FLAGS *)
