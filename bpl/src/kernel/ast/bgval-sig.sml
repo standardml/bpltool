@@ -134,11 +134,13 @@ sig
    *                           from outer face of b_2.
    *)
   val Com : info -> bgval * bgval -> bgval
-  (** Construct a bigraph equivalent to (b_1 || id_X) b_2, that is,
-   * a composition of a pair of bigraphs,
-   * where X is the set of global outer names of b_2 which are not
-   * global inner names of b_1.
-   * @exception NotComposable  if the inner face of b_1 is different
+  (** Construct a bigraph equivalent to (b_1 || id) b_2, that is,
+   * a composition of a pair of bigraphs, where id is an appropriate
+   * identity allowing composition.  This will only work when the
+   * inner width of b_1 matches the outer width of b_2, or if b_1
+   * is a wiring.
+   * @exception NotComposable  if the inner face of b_1 is positive and
+   *                           different
    *                           from outer face of b_2 (b_1 is allowed
    *                           to have only a subset of the global outer
    *                           names of b_2 as global inner names).
