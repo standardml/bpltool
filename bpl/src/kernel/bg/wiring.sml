@@ -334,7 +334,7 @@ struct
 	    (if notfirst then (brk(); show "* ") else ();
 	     case outer of
 	       Name y => Name.pp indent pps y
-	     | _ => ();
+	     | _ => show "-";
 	     if NameSet.size inner = 1 then
 	       (show "/";
 	       NameSet.apply (Name.pp indent pps) inner)
