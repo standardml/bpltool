@@ -35,11 +35,38 @@ functor BgTerm'(structure Info : INFO
 		structure NameSet : MONO_SET
 		structure NameSetPP : COLLECTIONPRETTYPRINT
                   where type ppstream    = PrettyPrint.ppstream
+    structure ErrorHandler : ERRORHANDLER
+        where type ppstream    = PrettyPrint.ppstream
+          and type break_style = PrettyPrint.break_style
+          and type origin      = Origin.origin
 		sharing type NameSet.Set =
                              Wiring.nameset =
                              NameSetPP.collection)
       : BGTERM =
 struct
+  open Debug
+  open ErrorHandler
+  val file_origin = Origin.mk_file_origin
+                      "$BPL/src/kernel/ast/bgterm.sml"
+                      Origin.NOPOS
+  fun mk_explainer errtitle (explainer : exn -> explanation list) e =
+      Exp (LVL_USER, Origin.unknown_origin, mk_string_pp errtitle,
+           explainer e)
+
+  val _ = Flags.makeBoolFlag {
+    name = "/kernel/ast/bgterm/ppids",
+    desc = "Explicitly display identities in tensor products",
+    short = "",
+    long = "--ppids",
+    arg = "",
+    default = true}
+  val _ = Flags.makeBoolFlag {
+    name = "/kernel/ast/bgterm/pp0abs",
+    desc = "Explicitly display empty-set abstractions",
+    short = "",
+    long = "--pp0abs",
+    arg = "",
+    default = true}
   type info = Info.info
   type nameset = NameSet.Set
   type ion = Ion.ion
@@ -100,8 +127,144 @@ struct
         eq b11 b21 andalso eq b12 b22
     | eq _ _                                              = false
 
+  exception NotImplemented of bgterm * string
+
+  (* Determine whether t = 1 * ... * 1 *)
+  fun is_n (Mer (0, _))    = true
+    | is_n (Mer _)         = false
+    | is_n (Con _)         = false
+    | is_n (Wir (w, _))    = Wiring.is_id0 w
+    | is_n (Ion _)         = false
+    | is_n (Per (pi, _))   = Permutation.is_id0 pi
+    | is_n (Abs (X, t, _)) = NameSet.isEmpty X andalso is_n t
+    | is_n (Ten (ts, _))   = List.all is_n ts
+    | is_n (Par (ts, _))   = List.all is_n ts
+    | is_n (Pri (ts, _))   = List.all is_n ts
+    | is_n (t as (Com _))          
+      = raise NotImplemented (t, "is_n for composition")
+  (* Determine whether (X)t is the identity. *)
+  fun is_concretion_of X (Mer (1, _))     = NameSet.isEmpty X
+    | is_concretion_of X (Mer _)          = false
+    | is_concretion_of X (Con (Y, _))     = NameSet.eq X Y
+    | is_concretion_of X (Wir _)          = false
+    | is_concretion_of X (Ion _)          = false
+    | is_concretion_of X (Per (pi, _))    = NameSet.isEmpty X andalso
+		  			   Permutation.is_id pi
+    | is_concretion_of X (Abs (Y, t, _))  
+      = is_concretion_of (NameSet.union X Y) t
+    | is_concretion_of X (Ten ([t], _))   = is_concretion_of X t
+    | is_concretion_of _ (Ten _)          = false
+    | is_concretion_of X (Par ([t], _))   = is_concretion_of X t
+    | is_concretion_of _ (Par _)          = false
+    | is_concretion_of X (Pri (ts, _))    = is_n_x_concretion_of X ts
+    | is_concretion_of X (t as (Com _))          
+      = raise NotImplemented (t, "is_concretion_of for composition")
+  and is_n_x_concretion_of X [] = false
+    | is_n_x_concretion_of X (t :: ts)
+    = if is_n t then
+        is_n_x_concretion_of X ts
+      else if is_concretion_of X t then
+        List.all is_n ts
+      else
+        false
+
+  fun is_idw (Mer _)        = false
+    | is_idw (Con _)        = false
+    | is_idw (Wir (w, _))   = Wiring.is_id w
+    | is_idw (Ion _)        = false
+    | is_idw (Per (pi, _))  = Permutation.width pi = 0
+    | is_idw (Abs _)        = false
+    | is_idw (Ten (ts, _))  = List.all is_idw ts
+    | is_idw (Par (ts, _))  = List.all is_idw ts
+    | is_idw (Pri (ts, _))  = List.all is_idw ts
+    | is_idw (t as (Com _))
+    = raise NotImplemented (t, "is_idw for composition")
+
+  fun is_id1_x_idw (Mer (1, _))    = true
+    | is_id1_x_idw (Mer _)         = false 
+    | is_id1_x_idw (Con (X, _))    = NameSet.isEmpty X
+    | is_id1_x_idw (Wir (w, _))    = Wiring.is_id w
+    | is_id1_x_idw (Ion _)         = false
+    | is_id1_x_idw (Per (pi, _))   = Permutation.width pi = 1
+    | is_id1_x_idw (Abs (X, t, _)) = is_concretion_of X t
+    | is_id1_x_idw (Ten (ts, _))   = is_id1_x_idw_list ts 
+    | is_id1_x_idw (Par (ts, _))   = is_id1_x_idw_list ts 
+    | is_id1_x_idw (Pri (ts, _))   = is_id1_x_n_x_idw_list ts
+    | is_id1_x_idw (t as (Com _)) = raise NotImplemented
+	  			 (t, "is_id1_x_idw for composition")
+	and is_id1_x_idw_list [] = false
+	  | is_id1_x_idw_list (t :: ts)
+	  = if is_idw t then
+	      is_id1_x_idw_list ts
+	    else if is_id1_x_idw t then
+	      List.all is_idw ts
+	    else
+	      false
+	and is_id1_x_n_x_idw (Mer (1, _))    = true
+    | is_id1_x_n_x_idw (Mer _)         = false 
+    | is_id1_x_n_x_idw (Con (X, _))    = NameSet.isEmpty X
+    | is_id1_x_n_x_idw (Wir (w, _))    = Wiring.is_id w
+    | is_id1_x_n_x_idw (Ion _)         = false
+    | is_id1_x_n_x_idw (Per (pi, _))   = Permutation.width pi = 1
+    | is_id1_x_n_x_idw (Abs (X, t, _)) = is_concretion_of X t
+    | is_id1_x_n_x_idw (Ten (ts, _))   = is_id1_x_n_x_idw_list ts 
+    | is_id1_x_n_x_idw (Par (ts, _))   = is_id1_x_n_x_idw_list ts 
+    | is_id1_x_n_x_idw (Pri (ts, _))   = is_id1_x_n_x_idw_list ts
+    | is_id1_x_n_x_idw (t as (Com _)) = raise NotImplemented
+	  			 (t, "is_id1_x_n_x_idw for composition")
+	and is_id1_x_n_x_idw_list [] = false
+	  | is_id1_x_n_x_idw_list (t ::  ts)
+	  = if is_idw t orelse is_n t then
+	      is_id1_x_n_x_idw_list ts
+	    else if is_id1_x_n_x_idw t then
+	      List.all (fn t => is_idw t orelse is_n t) ts
+	    else
+	      false
+
+  fun is_id (Mer (1, _))    = true
+    | is_id (Mer _)         = false
+    | is_id (Con (X, _))    = NameSet.isEmpty X
+    | is_id (Wir (w, _))    = Wiring.is_id w
+    | is_id (Ion _)         = false
+    | is_id (Per (pi, _))   = Permutation.is_id pi
+    | is_id (Abs (X, t, _)) = is_concretion_of X t
+    | is_id (Ten (ts, _))   = List.all is_id ts
+    | is_id (Pri (ts, _))   = is_id1_x_idw_list ts
+    | is_id (Par (ts, _))   = List.all is_id ts
+    | is_id (t as (Com _))  = raise NotImplemented
+	  			 (t, "is_id for composition")
+
+  fun width (Mer _)         = 1
+    | width (Con _)         = 1
+    | width (Wir _)         = 0
+    | width (Ion _)         = 1
+    | width (Per (pi, _))   = Permutation.width pi
+    | width (Abs _)         = 1
+    | width (Ten (ts, _))   = foldr (fn (t, n) => width t + n) 0 ts
+    | width (Par (ts, _))   = foldr (fn (t, n) => width t + n) 0 ts
+    | width (Pri _)         = 1
+    | width (Com (t, _, _)) = width t
+
+  exception ThisCannotHappen
+
+  fun widest [] = raise ThisCannotHappen
+    | widest (t :: ts)
+    = let
+        fun w (widestt, n) [] = widestt
+          | w (widestt, n) (t :: ts)
+          = let
+              val n_t = width t
+            in
+              w (if n_t > n then (t, n_t) else (widestt, n)) ts
+            end
+      in
+        w (t, width (t : bgterm)) ts
+      end
+
   fun pp indent pps =
     let
+      val ppids = Flags.getBoolFlag "/kernel/ast/bgterm/ppids"
+      val pp0abs = Flags.getBoolFlag "/kernel/ast/bgterm/pp0abs"
       open PrettyPrint
       val PrMax = 9
       val PrCom = 6
@@ -115,7 +278,7 @@ struct
       fun >> () = end_block pps
       fun brk () = add_break pps (1, 0)
       fun brk0 () = add_break pps (0, 0)
-      fun brkindent () = add_break pps (0, indent)
+      fun brkindent () = add_break pps (1, indent)
       (* Pretty print using precedences.  Operator precedences
        * (highest binds tightest):
        *  8 (X) abstraction (only affects expressions to the right)
@@ -149,28 +312,44 @@ struct
             | pp' (Ion (KyX, _)) = (Ion.pp indent pps KyX handle e => raise e)
             | pp' (Per (pi, _)) = (Permutation.pp indent pps pi handle e => raise e)
             | pp' (Abs (X, b, _))
-            = (let
-                val (showlpar, pal', par', prr', showrpar) = 
-                  if prr < PrAbs orelse
-                    pal >= PrAbs orelse
-                    par > PrAbs then 
-                    (fn () => show "(", 
-                     PrMin, PrMin, PrMax,
-                     fn () => show ")")
+            = ((if pp0abs orelse not (NameSet.isEmpty X) then
+                  let
+                    val (showlpar, pal', par', prr', showrpar) = 
+                      if prr < PrAbs orelse
+                        pal >= PrAbs orelse
+                        par > PrAbs then 
+                        (fn () => show "(", 
+                         PrMin, PrMin, PrMax,
+                         fn () => show ")")
+                      else
+                        (fn () => (), PrMin, par, prr, fn () => ())
+                  in
+                    <<(); 
+                    showlpar();
+                    show "<"; NameSetPP.ppbr indent "[" "]" pps X; show ">";
+                    brkindent();
+                    ppp pal' par' prr' b;
+                    showrpar();
+                    >>()
+                  end
+                else
+                  ppp pal par prr b)
+               handle e => raise e)
+            | pp' (Ten (bs, i)) =
+              (let
+                val bs' =
+                  if ppids then
+                    bs
                   else
-                    (fn () => (), PrMin, par, prr, fn () => ())
+                    List.filter
+                      (fn b => not (is_id b) handle NotImplemented _ => true)
+                      bs
               in
-                <<(); 
-                showlpar();
-                show "<"; NameSetPP.ppbr indent "[" "]" pps X; show ">";
-                brkindent();
-                ppp pal' par' prr' b;
-                showrpar();
-                >>()
-              end handle e => raise e)
-            | pp' (Ten (bs, _)) =
-              ((case bs of
-                 [] => show "idx0"
+                case bs' of
+                 []
+               => (case bs of
+                     [] => show "idx0"
+                   | bs => pp' (widest bs))
                | [b] => pp' b
                | (b :: bs) => 
                  let
@@ -185,13 +364,14 @@ struct
                         ppp PrTen PrTen PrTen b;
                         mappp (b' :: bs))
                  in
-                   showlpar();
-                   <<();
-                   ppp pal' PrTen PrTen b;
-                   mappp bs;
-                   showrpar();
-                   >>()
-                 end) handle e => raise e)
+                     showlpar();
+                     <<();
+                     ppp pal' PrTen PrTen b;
+                     mappp bs;
+                     showrpar();
+                     >>()
+                 end
+               end handle e => raise e)
             | pp' (Pri (bs, _)) =
               ((case bs of
                  [] => show "<->"
@@ -416,6 +596,13 @@ struct
           ppp PrMin PrMin PrMax
         end handle e => raise e
 
+  fun explain_NotImplemented (NotImplemented (v, errtxt)) =
+      [Exp (LVL_USER, Info.origin (info v), pack_pp_with_data pp v, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    | explain_NotImplemented _ = raise Match
+  val _ = add_explainer
+            (mk_explainer "feature not implemented"
+                          explain_NotImplemented)
   fun size bg =
       case bg of
 	  Mer _ => 1
@@ -439,6 +626,10 @@ functor BgTerm (structure Info : INFO
 		structure NameSet : MONO_SET
 		structure NameSetPP : COLLECTIONPRETTYPRINT
                   where type ppstream    = PrettyPrint.ppstream
+    structure ErrorHandler : ERRORHANDLER
+        where type ppstream    = PrettyPrint.ppstream
+          and type break_style = PrettyPrint.break_style
+          and type origin      = Origin.origin
 		sharing type NameSet.Set =
                              Wiring.nameset =
                              NameSetPP.collection)
@@ -455,6 +646,7 @@ struct
                              structure Wiring = Wiring
                              structure Permutation = Permutation
                              structure NameSet = NameSet
-                             structure NameSetPP = NameSetPP)
+                             structure NameSetPP = NameSetPP
+                             structure ErrorHandler = ErrorHandler)
   open BgTerm
 end

@@ -111,7 +111,8 @@ structure BgTerm
        structure Wiring      = Wiring
        structure Permutation = Permutation
        structure NameSet     = NameSet
-       structure NameSetPP   = NameSetPP)
+       structure NameSetPP   = NameSetPP
+       structure ErrorHandler = ErrorHandler)
 
 structure BgVal 
   = BgVal'

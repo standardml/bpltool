@@ -6,7 +6,9 @@ funs = info bgterm bgval bgbdnf sugar
 info-sig: /lib/util/origin
 info: info-sig /lib/util/origin %NODASHSIG
 bgterm-sig: /lib/pp/smlnj/prettyprint
-bgterm: info-sig /lib/pp/smlnj/. /lib/coll/pp /lib/coll/set /kernel/bg/sigs
+bgterm: info-sig /lib/pp/smlnj/.  /lib/util/errorhandler-sig 
+   /lib/util/origin /lib/util/debug /lib/util/flags
+   /lib/coll/pp /lib/coll/set /kernel/bg/sigs
 bgval-sig: /lib/pp/smlnj/prettyprint
 bgval: info-sig /lib/pp/smlnj/. /lib/coll/monoset-sig /lib/coll/pp
    bgterm-sig /kernel/bg/sigs /lib/util/errorhandler-sig
