@@ -89,7 +89,7 @@ struct
   open Debug
   open ErrorHandler
 
-  (* fun print' s = TextIO.output(TextIO.stdErr, s) (* For debugging *) *)
+  (*fun print' s = TextIO.output(TextIO.stdErr, s) (* For debugging *) *)
   fun print' s = ()
 
   val file_origin = Origin.mk_file_origin
@@ -1303,6 +1303,11 @@ struct
 
           fun make_match ({ename', s_C', Y, qs, tree}, rest) =
               let
+              val _ = print' ("\nBEFORE: ename' = " ^
+              NameMap.Fold (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s) "" ename'
+              ^ "s_C' = " ^ Wiring.toString s_C' ^ "\n")
+              
+               
                 val (ename', s_C')
                   = ListPair.foldlEq
                       (fn (yi, ui, (ename', s_C')) =>
@@ -1326,6 +1331,11 @@ struct
                             (ename', s_C'))
                       (ename', Wiring.unmk_sub s_C') (ys, us)
                     handle ListPair.UnequalLengths => raise NoMatch
+              val _ = print' ("\nAFTER: ename' = " ^
+              NameMap.Fold (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s) "" ename'
+              ^ "s_C' = " ^
+              NameMap.Fold (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s) "" s_C'
+              ^ "\n")
               in
                 lzCons
                   (fn () =>
@@ -2203,7 +2213,7 @@ struct
           val _ = print' (" = " ^ Wiring.toString s_C ^ "\n")
           val _ = map (fn qs => (print' "["; map (fn q => print' ("q = " ^ BgVal.toString_unchanged (BgBDNF.unmk q) ^ "\n")) qs; print' "]\n")) qss*)
         in
-          {ename' = ename, Y = Y, s_C = s_C, Es = Es, qss = qss, tree = PARn trees}
+          {ename' = ename', Y = Y, s_C = s_C, Es = Es, qss = qss, tree = PARn trees}
         end
       val matches = lzmap toPARn mslz
     in
@@ -2513,11 +2523,14 @@ struct
       fun toCLO ({ename', Y, s_C, Es = Qs, pi, qs, tree}, rest) =
         if is_id_Y_R_x_sigma s_C then
           let
-(*val _ = print' ("matchCLO: WIRING s_C: " ^ Wiring.toString s_C ^ "\n");*)
-
-            val Y_C = NameSet.difference 
-                       (NameSet.fromList (NameMap.range ename')) Y_R
+            val Y_a = (NameSet.fromList (NameMap.range ename'))
+            val Y_C = NameSet.difference Y_a Y_R
             val w_C = closelinks Y_C s_C
+val _ = print' ("matchCLO: s_C = " ^ Wiring.toString s_C ^ 
+                ", Y_C = [ " ^ NameSet.fold (fn n => fn s => Name.unmk n ^ " " ^ s) "] " Y_C ^
+                ", Y_a = [ " ^ NameSet.fold (fn n => fn s => Name.unmk n ^ " " ^ s) "] " Y_a ^
+                ", Y_R = [ " ^ NameSet.fold (fn n => fn s => Name.unmk n ^ " " ^ s) "]\n" Y_R)
+
           in
             lzCons
               (fn () =>
@@ -2592,13 +2605,19 @@ struct
     (*                               *)
     (*********************************)
 
-  fun amatch agentredex =
-    case lzunmk (matches agentredex) of
-      Nil => NONE
-    | Cons (m, ms) => SOME m
+  fun rrmatches {agent, rules} =
+    lzmerge (map (fn rule => matches {agent = agent, rule = rule}) rules)
 
-  val allmatches : {agent : BR bgbdnf, rule : rule}
-                 -> match list = lztolist o matches
+  local
+    fun lzhdoption xz =
+      case lzunmk xz of Nil => NONE | Cons (x, _) => SOME x
+  in
+    val amatch   = lzhdoption o   matches
+    val arrmatch = lzhdoption o rrmatches
+  end
+
+  val allmatches   = lztolist o   matches
+  val allrrmatches = lztolist o rrmatches
   
   fun ppTree indent pps tree =
   let

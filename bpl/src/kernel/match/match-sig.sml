@@ -50,22 +50,48 @@ sig
                        
   (** Compute a lazy list of matches of a redex in an agent. *)
   val matches : {agent : BR bgbdnf, rule : rule} -> match lazylist
+                       
+  (** Compute a lazy list of matches of redexes in an agent, in a round-
+   * robin fashion.  Each rule is tried in turn; the first one matching
+   * produces the first returned match, then the next rule is tried, and
+   * if it matches, it produces the second returned match, etc.
+   *)
+  val rrmatches : {agent : BR bgbdnf, rules : rule list} -> match lazylist
 
-  (** Infer a match of a redex in an agent.
-   * @params {agent, redex}
+  (** Infer a match of a rule redex in an agent.
+   * @params {agent, rule}
    * @param agent      the bigraph agent in which a match is searched.
-   * @param redex      the redex to match.
+   * @param rule       the rule containing the redex to match.
    * @return SOME match if a match is found, NONE otherwise.
    *)
   val amatch : {agent : BR bgbdnf, rule : rule} -> match option
 
-  (** Infer all matches of a redex in an agent.
-   * @params {agent, redex}
+  (** Infer a match of a rule redex in an agent, in a round-robin 
+   * fashion.  The first rule with a matching redex produces the returned
+   * match, if any.
+   * @params {agent, rules}
+   * @param agent      the bigraph agent in which a match is searched.
+   * @param rules      the rules containing the redexes to match.
+   * @return SOME match if a match is found, NONE otherwise.
+   *)
+  val arrmatch : {agent : BR bgbdnf, rules : rule list} -> match option
+
+  (** Infer all matches of a rule redex in an agent.
+   * @params {agent, rule}
    * @param agent   the bigraph agent in which a match is searched.
-   * @param redex   the redex to match.
+   * @param rule    the rule containing the redex to match.
    * @return a list of matches, empty if redex does not match.
    *)
   val allmatches : {agent : BR bgbdnf, rule : rule} -> match list
+
+  (** Infer all matches of a some rule redexes in an agent, in a
+   * round-robin fashion. @see rrmatches.
+   * @params {agent, rules}
+   * @param agent   the bigraph agent in which a match is searched.
+   * @param rules   the rules containing the redexes to match.
+   * @return a list of matches, empty if no redexes match.
+   *)
+  val allrrmatches : {agent : BR bgbdnf, rules : rule list} -> match list
 
   (** Prettyprint an inference tree.
    * @params indent pps t

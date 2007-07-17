@@ -771,7 +771,7 @@ struct
     | _ => NONE
 
   fun app w X =
-      NameSet.fold ((fn (SOME n) => (fn Y => NameSet.insert n Y) 
+      NameSet.fold ((fn (SOME n) => (fn Y => NameSet.insert' n Y) 
 		     | NONE => fn Y => Y)
 		    o app_x w)
 		   NameSet.empty
