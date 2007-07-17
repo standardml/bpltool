@@ -1,7 +1,7 @@
 # INCLUDE=../../lib/coll
 # INCLUDE=../bg
-sigs = info-sig bgterm-sig bgval-sig bgbdnf-sig sugar-sig
-funs = info bgterm bgval bgbdnf sugar
+sigs = info-sig bgterm-sig bgval-sig bgbdnf-sig
+funs = info bgterm bgval bgbdnf
 
 info-sig: /lib/util/origin
 info: info-sig /lib/util/origin %NODASHSIG
@@ -20,9 +20,5 @@ bgbdnf: info-sig /lib/coll/monoset-sig /lib/coll/pp /kernel/bg/sigs
    /lib/util/origin /lib/util/debug /lib/util/flags
    /lib/coll/bijectionconstraints-sig
 #ppbg bgterm-sig /lib/pp/smlnj/. %NODASHSIG
-sugar-sig:
-sugar: info-sig /lib/coll/monoset-sig /lib/coll/pp /kernel/bg/sigs bgval-sig
-   /lib/util/errorhandler-sig /lib/util/origin /lib/util/debug
-   /lib/pp/smlnj/.
 bplterm-sig: /lib/pp/mak/.
 bplterm: bplterm-sig /lib/pp/mak/. /lib/util/util %NODASHSIG

@@ -132,6 +132,9 @@ struct
 	fun >> () = end_block pps
 	fun brk () = add_break pps (1, 0)
       in
+        if ListPair.allEq Name.== (reans, redns) then
+          pp_map indent pps ((reasite, []), (redsite, []))
+        else
         (  <<()
          ; show (Int.toString reasite)
          ; show "&"
@@ -494,6 +497,24 @@ struct
       end
 
   fun make' {I, J} = make {I = I, J = J, maps = []}
+
+  fun trivial {I, J, rho} = 
+    let
+      open BgVal
+      fun nontrivial (reasite, (redsite, ls)) =
+        reasite <> redsite orelse
+        case match (PAbs (PCom (PTen [PWir, PVar], PVar))) ls of
+          MAbs (_, MCom (MTen [MWir wren, _], _)) =>
+          not (Wiring.is_id wren)
+        | _ =>
+          raise LogicalError
+            ("rho contains an ill-formed \
+            \local substitution in Instantiation.trivial", ls)
+     in
+       case Array.findi nontrivial rho of
+         NONE => true
+       | SOME _ => false
+     end
 
   exception IncompatibleParameter of inst * DR bgbdnf
   fun explain_IncompatibleParameter (IncompatibleParameter (inst, d)) =

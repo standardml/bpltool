@@ -136,12 +136,12 @@ end
 open BG.Sugar
 infix 3 oo
 val op oo = General.o
-infix 7 /   infix 7 //
+infix 7 /  infix 7 //
 infix 6 o
-infix 5 *   infix 5 ||   infix 5 `|`
+infix 5 *  infix 5 ||  infix 5 `|`
 infix 4 >
-infix 3 &   infix 3 -->
-infix 2 =:  infix 2 -:   infix 2 |->   infix 2 |-->
+infix 3 &  infix 3 --> infix 3 --   infix 3 --|>  infix 3----|>
+infix 2 =: infix 2 -:  infix 2 |->  infix 2 |-->  infix 2 :::
 nonfix @
 nonfix <
 
@@ -180,6 +180,23 @@ fun match_v {agent, redex}
                    redex = redex,
                    react = react}}
     end
+fun react_b {agent, rules} =
+  case BG.Match.arrmatch {agent = regl_b agent, rules = rules} of
+    NONE => NONE
+  | SOME m =>
+    let
+      open BG
+      val {context, rule, parameter} = Match.unmk m
+      val {react, inst, ...} = Rule.unmk rule
+      val instparm = Instantiation.instantiate inst parameter
+      val Z = Interface.glob (BgVal.outerface parameter)
+      val id_Z = BgVal.Wir Info.noinfo (Wiring.id_X Z)
+    in
+      SOME (context o (id_Z * react) o instparm)
+    end
+fun react_v {agent, rules} =
+  react_b {agent = norm_v agent, rules = rules}
+
 val simpl_v = BG.BgVal.simplify
 fun simpl_b b = simpl_v (denorm_b b) 
 val str_b = BG.BgBDNF.toString
@@ -204,3 +221,11 @@ in
   fun print_mtv mz = print_m0 mz BG.Match.toStringWithTree'
 end
 fun explain e = (BG.ErrorHandler.explain e; raise e);
+fun step (SOME agent) rules =
+ (case react_v {agent=agent, rules=rules} of
+    NONE => NONE
+  | SOME agent => SOME (simpl_v (simpl_v agent)))
+  handle e=>explain e;
+fun use_shorthands flag =
+ (Flags.setBoolFlag "/kernel/ast/bgterm/ppids" (not flag);
+  Flags.setBoolFlag "/kernel/ast/bgterm/pp0abs" (not flag)) 

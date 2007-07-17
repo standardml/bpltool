@@ -32,6 +32,9 @@ functor Sugar'(structure Info : INFO
 	       structure Wiring : WIRING
 	       structure Permutation : PERMUTATION
 	       structure BgVal : BGVAL
+	       structure BgBDNF : BGBDNF
+	       structure Rule : RULE
+	       structure Instantiation : INSTANTIATION
 	       structure ErrorHandler : ERRORHANDLER
                  where type ppstream    = PrettyPrint.ppstream
                    and type break_style = PrettyPrint.break_style
@@ -42,7 +45,8 @@ functor Sugar'(structure Info : INFO
                sharing type Name.name = 
 			    NameSet.elt =
 			    Link.name =
-			    Ion.name
+			    Ion.name =
+			    Instantiation.name
                sharing type NameSet.Set = 
 			    Interface.nameset =
 			    BgVal.nameset =
@@ -51,7 +55,8 @@ functor Sugar'(structure Info : INFO
 			    Wiring.nameset =
 			    Permutation.nameset
 	       sharing type Interface.interface =
-			    BgVal.interface
+			    BgVal.interface =
+			    Instantiation.interface
                sharing type Link.link = LinkSet.elt
                sharing type LinkSet.Set = Wiring.linkset
 	       sharing type Control.control = Ion.control
@@ -60,6 +65,12 @@ functor Sugar'(structure Info : INFO
                sharing type Permutation.permutation = BgVal.permutation
                sharing type Permutation.Immutable = BgVal.Immutable
 	       sharing type NameSet.Set = NameSetPP.collection
+	       sharing type BgVal.bgval =
+	        BgBDNF.bgval =
+	        Rule.bgval
+	       sharing type BgBDNF.bgbdnf = Rule.bgbdnf
+	       sharing type BgBDNF.BR = Rule.BR
+	       sharing type Instantiation.inst = Rule.inst
 	       ) : SUGAR 
 where type bgval = BgVal.bgval =
 struct
@@ -72,6 +83,8 @@ type placeinfo = int * Name.name list
 datatype mapinfo = |--> of placeinfo * placeinfo
 type absinfo = nameset
 type ctrlkind = Control.kind
+type rule = Rule.rule
+type redexinst = bgval * mapinfo list
 
 open Debug
 open ErrorHandler
@@ -274,6 +287,31 @@ fun -/ x = "" / x
 fun -// X = // ("", X)
 infix 2 |-->  infix 2 |->
 fun i |-> j = (i, []) |--> (j, [])
+infix 3 --  infix 3 --|>
+fun redex -- mapinfos = (redex, mapinfos)
+fun (redex, mapinfos) --|> react =
+  let
+    val I = BgVal.innerface redex
+    val J = BgVal.innerface react
+    val redex = BgBDNF.regularize (BgBDNF.make redex)
+    val inst = Instantiation.make
+     {I = I,
+      J = J,
+      maps = map (fn i |--> j => (i, j)) mapinfos}
+  in
+    Rule.make {name = "", redex = redex, react = react, inst = inst}
+  end
+infix 3 ----|>
+fun redex ----|> react = redex --[]--|> react
+infix 2 :::
+fun rulename ::: rule =
+  let
+    val {redex, inst, react, ...} = Rule.unmk rule
+  in
+    Rule.make 
+     {name = rulename, redex = redex, inst = inst, react = react}
+  end
+  
 fun ppMapinfo indent pps ((i, xs) |--> (j, ys)) =
   let
     open PrettyPrint
@@ -322,6 +360,9 @@ functor Sugar (structure Info : INFO
 	       structure Wiring : WIRING
 	       structure Permutation : PERMUTATION
 	       structure BgVal : BGVAL
+	       structure BgBDNF : BGBDNF
+	       structure Rule : RULE
+	       structure Instantiation : INSTANTIATION
 	       structure ErrorHandler : ERRORHANDLER
                  where type ppstream    = PrettyPrint.ppstream
                    and type break_style = PrettyPrint.break_style
@@ -332,7 +373,8 @@ functor Sugar (structure Info : INFO
                sharing type Name.name = 
 			    NameSet.elt =
 			    Link.name =
-			    Ion.name
+			    Ion.name =
+			    Instantiation.name
                sharing type NameSet.Set = 
 			    Interface.nameset =
 			    BgVal.nameset =
@@ -341,7 +383,8 @@ functor Sugar (structure Info : INFO
 			    Wiring.nameset =
 			    Permutation.nameset
 	       sharing type Interface.interface =
-			    BgVal.interface
+			    BgVal.interface =
+			    Instantiation.interface
                sharing type Link.link = LinkSet.elt
                sharing type LinkSet.Set = Wiring.linkset
 	       sharing type Control.control = Ion.control
@@ -350,6 +393,12 @@ functor Sugar (structure Info : INFO
                sharing type Permutation.permutation = BgVal.permutation
                sharing type Permutation.Immutable = BgVal.Immutable
 	       sharing type NameSet.Set = NameSetPP.collection
+	       sharing type BgVal.bgval =
+	        BgBDNF.bgval =
+	        Rule.bgval
+	       sharing type BgBDNF.bgbdnf = Rule.bgbdnf
+	       sharing type BgBDNF.BR = Rule.BR
+	       sharing type Instantiation.inst = Rule.inst
 	       ) :> SUGAR 
 where type bgval = BgVal.bgval =
 struct
@@ -364,6 +413,9 @@ struct
 			   structure Wiring = Wiring
 			   structure Permutation = Permutation
 			   structure BgVal = BgVal
+	       structure BgBDNF = BgBDNF
+	       structure Rule = Rule
+	       structure Instantiation = Instantiation
 			   structure ErrorHandler = ErrorHandler
 			   structure NameSetPP = NameSetPP)
   open Sugar

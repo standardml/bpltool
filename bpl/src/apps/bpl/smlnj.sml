@@ -44,6 +44,7 @@ local
   val _ = ipp ["BG","BgVal","bgval"] BG.BgVal.ppWithIface
   val _ = ipp ["BG","Match","derivation"] BG.Match.ppTree
   val _ = ipp ["BG","Sugar","mapinfo"] BG.Sugar.ppMapinfo
+  val _ = ipp ["BG","Rule","rule"] BG.Rule.pp
 in
  val _ = print 
   	("\nBPL (revision " ^ BPL_REVISION_STR 

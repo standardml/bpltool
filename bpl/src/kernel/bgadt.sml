@@ -209,18 +209,21 @@ val indent = ref 1
 
 structure Sugar 
   = Sugar'
-      (structure Info         = Info
-       structure Control      = Control
-       structure Name         = Name
-       structure NameSet      = NameSet
-       structure NameSetPP    = NameSetPP
-       structure Interface    = Interface
-       structure Link         = Link
-       structure LinkSet      = LinkSet
-       structure Ion          = Ion
-       structure Wiring       = Wiring
-       structure Permutation  = Permutation
-       structure BgVal        = BgVal
+      (structure Info          = Info
+       structure Control       = Control
+       structure Name          = Name
+       structure NameSet       = NameSet
+       structure NameSetPP     = NameSetPP
+       structure Interface     = Interface
+       structure Link          = Link
+       structure LinkSet       = LinkSet
+       structure Ion           = Ion
+       structure Wiring        = Wiring
+       structure Permutation   = Permutation
+       structure BgVal         = BgVal
+       structure BgBDNF        = BgBDNF
+       structure Rule          = Rule
+       structure Instantiation = Instantiation
        structure ErrorHandler = ErrorHandler)
 
 fun getRev s = getOpt (Int.fromString s, 0)

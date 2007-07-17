@@ -35,11 +35,12 @@ fun REACT n =
     val ys = List.tabulate (n, fn i => "y" ^ Int.toString i)
     val zs = List.tabulate (n, fn i => "z" ^ Int.toString i)
     val yzs = ListPair.zip (ys, zs)
-  in
-    {redex = Sum o (Send(n)(x :: ys)                `|` idp(1))
-         `|` Sum o (Get(n)[x](map (fn z => [z]) zs) `|` idp(1)),
-     react =
-       foldr (fn ((y, z), product) => y/z * product) (x//[] * idp(1)) yzs
-       o (idp(1) `|` `zs`),
-     inst  = [0 |-> 0, 1 |-> 2]}
+    val redex =
+          Sum o (Send(n)(x :: ys)                `|` idp(1))
+      `|` Sum o (Get(n)[x](map (fn z => [z]) zs) `|` idp(1))
+    val react =
+      foldr (fn ((y, z), product) => y/z * product) (x//[] * idp(1)) yzs
+      o (idp(1) `|` `zs`)
+  in  
+    redex --[0 |-> 0, 1 |-> 2]--|> react
   end

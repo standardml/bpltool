@@ -196,6 +196,9 @@ sig
    *)
   val unmk : inst -> {I : interface, J : interface, maps : map list}
 
+  (** Determine whether the instantiation is trivial, i.e., an identity map. *)
+  val trivial : inst -> bool
+  
   (** Signal that the parameter d does not match the innerface of
    * the instantiation inst.
    * 

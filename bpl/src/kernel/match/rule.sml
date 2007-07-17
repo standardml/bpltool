@@ -42,7 +42,8 @@ struct
   type 'a bgbdnf = 'a BgBDNF.bgbdnf
   type BR = BgBDNF.BR
   type inst = Instantiation.inst
-  type rule = {name : string, redex : BR bgbdnf, react : bgval, inst : inst}
+  datatype rule =
+    Rule of {name : string, redex : BR bgbdnf, react : bgval, inst : inst}
   (** Construct a rule.  The instantiation must be compatible
    * with redex and reactum inner faces, i.e., instantiate the
    * inner face of reactum from the inner face of redex.
@@ -51,7 +52,7 @@ struct
    * @param react  Reactum bigraph
    * @param inst   Instantiation
    *)
-  fun make r = r
+  fun make r = Rule r
   fun make' {name, redex, react} =
       let
         val I
@@ -61,18 +62,45 @@ struct
           = Interface.make {loc = Interface.loc (BgVal.innerface react),
                             glob = NameSet.empty}
       in
-        {name = name, redex = redex, react = react,
-         inst = Instantiation.make' {I = I, J = J}}
+        Rule
+         {name = name, redex = redex, react = react,
+          inst = Instantiation.make' {I = I, J = J}}
       end
   (** Deconstruct a rule. @see make. *)
-  fun unmk r = r
+  fun unmk (Rule r) = r
   (** Prettyprint a rule.
    * @params indent pps r
    * @param indent  Indentation at each block level.
    * @param pps     Prettyprint stream on which to output.
    * @param r       The rule to output.
    *)
-  fun pp indent pps {name, redex, react, inst} =
+  fun pp indent pps (Rule {name, redex, react, inst}) =
+    let
+      open PrettyPrint
+      val show = add_string pps
+      fun << () = begin_block pps CONSISTENT 0
+      fun <<< () = begin_block pps INCONSISTENT 0
+      fun >> () = end_block pps
+      fun >>> () = end_block pps
+      fun brk () = add_break pps (1, 1)
+      fun brk0 () = add_break pps (1, 0)
+    in
+      <<<();
+      if name <> "" then (show name; brk(); show ":::"; brk()) else ();
+      <<();
+      BgBDNF.pp indent pps redex; brk0();
+      show "--";
+      if Instantiation.trivial inst then
+        ()
+      else
+        Instantiation.pp indent pps inst;
+      show "--|>"; brk0();
+      BgVal.pp indent pps react;
+      >>();
+      >>>()
+    end
+    
+  fun oldpp indent pps (Rule {name, redex, react, inst}) =
     let
       open PrettyPrint
       val show = add_string pps

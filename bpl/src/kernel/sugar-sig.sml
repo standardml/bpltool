@@ -23,12 +23,12 @@
  * (print o BG.bgvalToString)
  * let
  *   open BG.Sugar
- *   infix 7 /   infix 7 //
+ *   infix 7 /  infix 7 //
  *   infix 6 o
- *   infix 5 *   infix 5 ||   infix 5 `|`
+ *   infix 5 *  infix 5 ||  infix 5 `|`
  *   infix 4 >
- *   infix 3 &   infix 3 -->
- *   infix 2 =:  infix 2 -:   infix 2 |->   infix 2 |-->
+ *   infix 3 &  infix 3 --> infix 3 --   infix 3 --|>  infix 3----|>
+ *   infix 2 =: infix 2 -:  infix 2 |->  infix 2 |-->  infix 2 :::
  *   nonfix @
  *   nonfix <
  * 
@@ -40,6 +40,13 @@
  *   val N3 = atomic0 ("N3")
  * 
  *   val (x, y, z, u, w) = ("x", "y", "z", "u", "w")
+ *
+ *   val rule1 =
+ *     "FirstRule" ::: L[x,y][[z],[]] ----|> `[z]` * x//[] * y//[]
+ *   val rule2 = "SecondRule" :::
+ *     K[x,y,z] * `[u,w]`
+ *     --[1&[x,y] |--> 1&[u,w], 2 |-> 1]--|>
+ *     idp(1) * `[x,y]` * `[u,w]` * z//[]
  * in
  *   (x/y  *  (idp(1) * z//[x,z]) o `[z,x]`)
  *    o (<[x,z]> (idw[x,y,z] * merge(6)) o 
@@ -62,6 +69,8 @@ signature SUGAR =
     type placeinfo
     type absinfo
     type ctrlkind
+    type rule
+    type redexinst
 
     (** Singal detection of an ion with duplicate names.
      * @params K ys Xs errtxt
@@ -149,6 +158,14 @@ signature SUGAR =
     val |-> : int * int -> mapinfo
     (** Construct a site mapping. *)
     val |--> : placeinfo * placeinfo -> mapinfo
+    (** Partially construct a rule. *)
+    val -- : bgval * mapinfo list -> redexinst
+    (** Construct an anonymous rule with a specified instantiation. *)
+    val --|> : redexinst * bgval -> rule
+    (** Construct an anonymous rule with a trivial instantiation. *)
+    val ----|> : bgval * bgval -> rule
+    (** Give a name to a rule. *)
+    val ::: : string * rule -> rule
     (** Prettyprint a mapinfo. *)
     val ppMapinfo : int -> PrettyPrint.ppstream -> mapinfo -> unit
     (** Revision number.*)
