@@ -224,7 +224,7 @@ fun explain e = (BG.ErrorHandler.explain e; raise e);
 fun step (SOME agent) rules =
  (case react_v {agent=agent, rules=rules} of
     NONE => NONE
-  | SOME agent => SOME (simpl_v (simpl_v agent)))
+  | SOME agent => SOME (simpl_b (norm_v agent)))
   handle e=>explain e;
 fun use_shorthands flag =
  (Flags.setBoolFlag "/kernel/ast/bgterm/ppids" (not flag);
