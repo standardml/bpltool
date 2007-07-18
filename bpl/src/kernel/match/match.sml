@@ -89,7 +89,7 @@ struct
   open Debug
   open ErrorHandler
 
-  (*fun print' s = TextIO.output(TextIO.stdErr, s) (* For debugging *) *)
+  (* fun print' s = TextIO.output(TextIO.stdErr, s) (* For debugging *) *)
   fun print' s = ()
 
   val file_origin = Origin.mk_file_origin
@@ -1740,7 +1740,7 @@ struct
    *
    *   s = Y * (ename * id_Q) s_e * s_n
    *
-   * where Q is the set of outer names of s_n not in the domain of
+   * where Q is the set of outer names of s_e not in the domain of
    * ename.
    *
    * The links of s_n that must pass through tau is identified by their
@@ -1976,8 +1976,19 @@ struct
                    andalso NameSet.size V >= NameSet.size L
                  then
                    let
+                     val s_a_e' = Wiring.restrict s_a_e (glob (outerface g))
+                     val Q_s_a_e' = Wiring.outernames s_a_e'
+                     val ename' =
+                       NameSet.fold
+                        (fn x => fn ename =>
+                         NameMap.add' (x, x, ename)
+                         handle NameMap.DATACHANGED => ename)
+                         ename
+                         Q_s_a_e'
+                         val _ = print' ("\nename' = " ^
+                           NameMap.Fold (fn ((x,y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s) "\n" ename')
                      fun toPAX {tau, id_Z, sigma, Y} =
-                         {ename' = ename,
+                         {ename' = ename',
                           s_C = sigma,
                           Y = Y,
                           E = makeG [makeS (SCon (i, Wiring.id_X V))],
@@ -2010,15 +2021,28 @@ struct
                 s_R = {s_R_e, s_R_n}, e = g, Ps = []}
     = lzmake (fn () => (print' "ZAX ";
       if Wiring.is_id0 s_R_e andalso Wiring.is_id0 s_R_n then
+        let
+          val s_C = Wiring.* (app_ename ename s_a_e, s_a_n)
+          val s_a_e' = Wiring.restrict s_a_e (glob (outerface g))
+          val Q_s_a_e' = Wiring.outernames s_a_e'
+          val ename' =
+            NameSet.fold
+             (fn x => fn ename =>
+              NameMap.add' (x, x, ename)
+              handle NameMap.DATACHANGED => ename)
+              ename
+              Q_s_a_e'
+        in
 (* FIXME is this rignt? /Espen *)
 	        LazyList.Cons 
-	          ({ename' = ename,
-	           s_C = Wiring.* (app_ename ename s_a_e, s_a_n),
+	          ({ename' = ename',
+	           s_C = s_C,
 	           Y = NameSet.empty,
 	           E = g,
 	           qs = [],
 	           tree = ZAX},
 	           lzNil)
+	      end
 (*        let
 	        val XplusZ = Interface.glob (outerface g)
 	      in
@@ -2393,6 +2417,10 @@ struct
 		                    (fn y => fn ename => NameMap.add' (y, y, ename))
 		                    ename'
 		                    s_Y_e_Y
+		           val _ = print' ("matchION: ename' = { " ^
+		             NameMap.Fold (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s) "}" ename'
+		             ^ "s_Y_e_Y = {" ^ NameSet.fold (fn x => fn s => Name.unmk x ^ " " ^ s) "}" s_Y_e_Y
+		             ^ "\n") 
 		              val KyZ = Ion.make {ctrl = ctrl, free = ys, bound = Zs}
 		              val G = makeG [makeS (SMol (makeM KyZ N))]
 		            in
