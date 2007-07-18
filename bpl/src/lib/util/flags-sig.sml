@@ -57,7 +57,7 @@ signature FLAGS = sig
 
     (** List the default value for each flag. *)
     val listDefaults : TextIO.outstream -> unit
-    (** List the current value for each flag if not default. *)
+    (** List the default value for each flag if currently not default. *)
     val listChanged : TextIO.outstream -> unit
     (** Return a description of command line switches. *)
     val usage : unit -> string list
