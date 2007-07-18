@@ -32,12 +32,21 @@ functor Rule (structure Interface : INTERFACE
                            BgVal.interface =
                            BgBDNF.interface =
                            Instantiation.interface
+              sharing type BgVal.bgval =
+                           BgBDNF.bgval
              ) : RULE
               where type bgval = BgVal.bgval
                 and type 'a bgbdnf = 'a BgBDNF.bgbdnf
                 and type BR = BgBDNF.BR
                 and type inst = Instantiation.inst =
 struct
+  val _ = Flags.makeBoolFlag {
+    name = "/kernel/match/rule/ppsimpleredex",
+    desc = "Simplify redex when displaying rules",
+    short = "",
+    long = "--ppsimpleredex",
+    arg = "",
+    default = true}
   type bgval = BgVal.bgval
   type 'a bgbdnf = 'a BgBDNF.bgbdnf
   type BR = BgBDNF.BR
@@ -88,7 +97,11 @@ struct
       <<<();
       if name <> "" then (show name; brk(); show ":::"; brk()) else ();
       <<();
-      BgBDNF.pp indent pps redex; brk0();
+      if Flags.getBoolFlag "/kernel/match/rule/ppsimpleredex" then
+        BgVal.pp indent pps (BgVal.simplify (BgBDNF.unmk redex))
+      else
+        BgBDNF.pp indent pps redex;
+      brk0();
       show "--";
       if Instantiation.trivial inst then
         ()
