@@ -331,17 +331,24 @@ struct
 	     | _ => ();
 	     true)
 	fun ppwire {outer, inner} notfirst =
+	  let
+	    val innercount = NameSet.size inner;
+	  in
 	    (if notfirst then (brk(); show "* ") else ();
-	     case outer of
-	       Name y => Name.pp indent pps y
-	     | _ => show "-";
-	     if NameSet.size inner = 1 then
+	     case (outer, innercount) of
+	       (Name y, _) => Name.pp indent pps y
+	     | (_, 1) => show "-"
+	     | _ => show "(-/x o x";
+	     if innercount = 1 then
 	       (show "/";
 	       NameSet.apply (Name.pp indent pps) inner)
 	     else
 	       (show dblslash;
 	       NameSetPP.ppbr indent lbrack rbrack pps inner);
+	     (case (outer, innercount) of
+	       (Name _, _) => () | (_, 1) => () | _ => show ")");
 	     true)
+	  end
       in
 	case Link'Set.size ls of
 	  0 => show (idw ^ "0")

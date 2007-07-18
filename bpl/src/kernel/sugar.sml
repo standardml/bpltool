@@ -250,16 +250,25 @@ val @@ = Per o Permutation.make o map (fn (j, Xs) => (j, NameSet.fromList Xs))
 fun & (j, Xs) = (j, map Name.make Xs)
 val merge = Mer
 fun ` Xs _ = Con (NameSet.fromList (map Name.make Xs))
-fun // (y, Xs) = Wir (Wiring.make 
-			(LinkSet.singleton 
-			   (Link.make 
-			      {outer 
-			       = if y = "" then
-				   NONE
-				 else
-				   SOME (Name.make y),
-			       inner = NameSet.fromList 
-					 (map Name.make Xs)})))
+fun // (y, Xs) = 
+  let
+    val ls = 
+      if y = "" then
+        LinkSet.fromList
+         (map 
+           (fn x =>
+            Link.make 
+             {outer = NONE,
+              inner = NameSet.singleton (Name.make x)})
+            Xs)
+      else
+       (LinkSet.singleton 
+			  (Link.make 
+			    {outer = SOME (Name.make y),
+			     inner = NameSet.fromList (map Name.make Xs)}))
+	in
+    Wir (Wiring.make ls)
+  end
 fun op / (y, x) = Wir (Wiring.make 
 			 (LinkSet.singleton 
 			    (Link.make 
