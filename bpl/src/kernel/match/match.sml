@@ -903,21 +903,22 @@ struct
    * The approach taken is to split the problem into four smaller problems
    * 
    * 1)  s_Ce  tau_e                    =  ename s_ae                
-   * 2)  s_Ce' tau'_e                   =  ename'_e (Q_e * s_ae'_e)  
+   * 2)  s_Ce' tau'_e                   =  ename'_e (Q''_e * s_ae'_e)  
    * 3)  s_C'_1 (id_Z * s_Cn tau_n)     =  s_a_n                     
-   * 4)  s_C'_2 (id_Z' * s_Cn' tau'_n)  =  Q_n * s_ae'_n
+   * 4)  s_C'_2 (id_Z' * s_Cn' tau'_n)  =  ename'_n (Q''_n * s_ae'_n)
+   *                                    =            Q''_n * s_ae'_n
    * 
    * where
    * 
    *   ename''  =  ename'_n * ename'_e
-   *   s_a_e    =  s_ae * Q''_n * s_a'n * s_a'e * Q''_e
+   *   s_a_e    =  s_ae * Q''_n * s_ae'_n * s_ae'_e * Q''_e
    * 
    *   ename    :  Q_e  -> Y_e
-   *   ename'_n :  Q''_n \uplus Q'_n  ->  Y'_n
+   *   ename'_n :  Q''_n \uplus Q'_n  ->  Y'_n  is an identity
    *   ename'_e :  Q''_e \uplus Q'_e  ->  Y'_e
    *   s_ae     :  U_e  -> Q_e
-   *   s_a'n    :  U'_n -> Q'_n
-   *   s_a'e    :  U'_e -> Q'_e
+   *   s_ae'_n  :  U'_n -> Q'_n
+   *   s_ae'_e  :  U'_e -> Q'_e
    *   s_a_n    :  U_n  -> Y_n
    * 
    *   tau      =  tau_n * tau'_n * tau_e * tau'_e
@@ -944,7 +945,7 @@ struct
         (let
           (* Remember to trim s_a and s_C to fit the outer face of g and
            * alpha * id_Z, as this is
-           * not done explicitly in the PARn and ION rules.
+           * not done explicitly in the PARn (and ION?) rules.
            * FIXME: Should the next 4 applications of restrict'' be restrict' ?
            *)
           val XZ = glob (outerface g)
@@ -1003,17 +1004,24 @@ struct
 
           (* solve (4) and construct result
            * taue = tau_e * tau'_e *)
-          fun solve_4 s_ae'_n s_Cn' taue ename'_e Q_e
+          fun solve_4 s_ae'_n s_Cn' taue ename'_e Q''_e
                       {rho = s_C'_1, tau = tau_n, Z} =
               let
                 val tauen = Wiring.* (taue, tau_n)
-                fun to_solution {rho = s_C'_2, tau = tau'_n, Z = Z', Y = Q_n} =
+                fun to_solution {rho = s_C'_2, tau = tau'_n, Z = Z', Y = Q''_n} =
                     let
-                      val id_Z = Wiring.id_X (NameSet.union Z Z')
-                      val tau  = Wiring.* (tauen, tau'_n)
+                      val id_Z     = Wiring.id_X (NameSet.union Z Z')
+                      val tau      = Wiring.* (tauen, tau'_n)
+                      val Y'_n     = Wiring.outernames s_C'_2
+                      val ename'_n =
+                        NameSet.fold
+                         (fn y => fn ename'_n => NameMap.add (y, y, ename'_n))
+                          NameMap.empty
+                          Y'_n
                     in
-                      {ename' = NameMap.plus (ename, ename'_e),
-                       Y      = NameSet.union Q_e Q_n,
+                      {ename' = NameMap.plus
+                                 (NameMap.plus (ename, ename'_e), ename'_n),
+                       Y      = NameSet.union Q''_e Q''_n,
                        s_C'   = Wiring.* (s_C'_1, s_C'_2),
                        qs     = [makeP tau (makeN (Wiring.innernames tau) g handle e => raise e)],
                        tree   = PAX'}
@@ -1028,11 +1036,11 @@ struct
               end
           (* solve (3) and then find solutions for (4) *)
           fun solve_34 s_ae'_n s_Cn s_Cn' tau_e
-                       {tau = tau'_e, ename = ename'_e, Y = Q_e} =
+                       {tau = tau'_e, ename = ename'_e, Y = Q''_e} =
               ((*print' ("s_Cn = " ^ Wiring.toString s_Cn ^ ", ");*)
               lzconcat
                 (lzmap
-                   (solve_4 s_ae'_n s_Cn' (Wiring.* (tau_e, tau'_e)) ename'_e Q_e)
+                   (solve_4 s_ae'_n s_Cn' (Wiring.* (tau_e, tau'_e)) ename'_e Q''_e)
                    (find_rho_tau_Z {sigma   = s_Cn,
                                     upsilon = s_a_n})))
           (* solve (2) and then find solutions for (3) and (4) *)

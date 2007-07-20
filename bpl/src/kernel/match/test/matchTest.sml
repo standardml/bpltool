@@ -37,6 +37,8 @@ structure BGADT :> BG_ADT = BGADT (structure ErrorHandler = ErrorHandler)
 open BGADT
 open Assert
 
+datatype 'a expected = HAS of 'a | JUST of 'a
+
 local
   open Sugar
   infix 7 /   infix 7 //
@@ -51,17 +53,20 @@ local
   val K0  = active0  ("K0")
   val K1  = active   ("K1" -: 1)
   val K2  = active   ("K2" -: 2)
+  val K10 = active   ("K10" =: 1 --> 0)
   val K11 = active   ("K11" =: 1 --> 1)
   val L0  = passive0 ("L0")
   val L1  = passive  ("L1" -: 1)
   val L2  = passive  ("L2" -: 2)
+  val L10 = passive  ("L10" =: 1 --> 0)
   val L11 = passive  ("L11" =: 1 --> 1)
   val M0  = atomic0  ("M0")
   val M1  = atomic   ("M1" -: 1)
   val M2  = atomic   ("M2" -: 2)
+  val M10 = atomic   ("M10" =: 1 --> 0)
   val M11 = atomic   ("M11" =: 1 --> 1)
 
-  val (x, y, z, u, w) = ("x", "y", "z", "u", "w")
+  val (x, y, z, u, v, w) = ("x", "y", "z", "u", "v", "w")
   val (y_4,y_5,x_6,x_7) = ("y_4","y_5","x_6","x_7")
 in
   (** The list of tests.  Each entry consists of:
@@ -78,41 +83,58 @@ in
     ("Matching with id_Z nonempty",
      {agent = (K1[x] * z/z) o L1[z] o <->,
       redex = K1[x]},
-     [{context   = idp(1) * idw[z,x],
-       parameter = L1[z] o <->}]),
+     HAS [{context   = idp(1) * idw[z,x], parameter = L1[z] o <->}]),
     ("Internal redex edge should not match agent name",
      {agent = (x/x * merge(2)) o (K0 o merge(2) o (K0 o <-> * K0 o <->) * K1[x] o K0 o <->),
       redex = (-/x * idp(1)) o K1[x]},
-     []),
+     JUST []),
     ("Internal agent edges ending up in context",
      {agent = (-/x * idp(1)) o M1[x],
       redex = idx0},
-     [{context = (-/x * idp(1)) o M1[x],
-       parameter = idx0}]),
+     HAS [{context = (-/x * idp(1)) o M1[x], parameter = idx0}]),
     ("Internal agent edges ending up in context, node in parameter",
      {agent = (-/x * idp(1)) o M1[x],
       redex = idp(1)},
-     [{context = (-/x * idp(1)),
-       parameter = M1[x]}]),
+     HAS [{context = (-/x * idp(1)), parameter = M1[x]}]),
     ("Matching internal agent edges with redex names with node in context",
      {agent = (-/x * idp(1)) o M1[x] * M0,
       redex = M0},
-     [{context = (-/x * idp(2)) o (M1[x] * `[]`),
-       parameter = idx0}]),
+     HAS [{context = (-/x * idp(2)) o (M1[x] * `[]`), parameter = idx0}]),
+    ("Matching internal agent edges with redex names with node in parameter",
+     {agent = (-/x o x//[x,y] * idp(1)) o (y/y * K1[x]) o M1[y],
+      redex = K1[u]},
+     HAS [{context = -/x o x//[u,y] * idp(1), parameter = M1[y]}]),
+    ("Matching internal agent edges: siblings with nested linked parameter",
+     {agent = (-/x o x//[x,y,z] * merge(2)) o ((z/z * K1[x]) o M1[z] * M1[y]),
+      redex = (      w//[u,v]   * merge(2)) o (       K1[u]          * M1[v])},
+     HAS [{context = -/x o x//[w,z] * idp(1), parameter = M1[z]}]),
+    ("Matching internal agent edges: siblings with nested linked parameter (swapped)",
+     {agent = (-/x o x//[x,y,z] * merge(2)) o (M1[y] * (z/z * K1[x]) o M1[z]),
+      redex = (      w//[u,v]   * merge(2)) o (M1[v] *        K1[u]         )},
+     HAS [{context = -/x o x//[w,z] * idp(1), parameter = M1[z]}]),
+    ("Matching internal agent edges: siblings with nested linked parameters",
+     {agent = (-/x o x//[x,y] * merge(2)) o ((x/x * K0) o M1[x] * (y/y * K0) o M1[y]),
+      redex = (                 merge(2)) o (       K0          *        K0         )},
+     HAS [{context = -/x o x//[w,z] * idp(1), parameter = M1[w] * M1[z]}]),
+    ("Matching bound links",
+     {agent = K10[][[x]] o (<[x]> M1[x]),
+      redex = K10[][[y]]},
+     JUST [{context = idp(1), parameter = <[y]> M1[y]}]),
     ("Pi calculus reaction rule",
      {agent = (idw[y,z] * K0) o (K1[y] * idw[z]) o M1[z]
           `|` (idw[y]   * K0) o L1[y] o <->,
       redex =  (x/x * K0) o (K1[x] `|` idp(1))
            `|` (x/x * K0) o (L1[x]  `|` idp(1))},
-     [{context   = y/x * z/z * idp(1),
-       parameter = M1[z] * <-> * <-> * <->}]),
+     HAS
+       [{context   = y/x * z/z * idp(1),
+         parameter = M1[z] * <-> * <-> * <->}]),
     ("Pi calculus reaction rule with nonengaged parts",
      {agent = (idw[y,z] * K0 o merge(2)) o (M0 * K1[y] * idw[z]) o M1[z]
           `|` (idw[y]   * K0 o merge(2)) o (L0 o <-> * L1[y]) o K0 o <->,
       redex =  (x/x * K0) o (K1[x] `|` idp(1))
            `|` (x/x * K0) o (L1[x]  `|` idp(1))},
-     [{context   = y/x * z/z * idp(1),
-       parameter = M1[z] * M0 * K0 o <-> * L0 o <->}])
+     HAS [{context   = y/x * z/z * idp(1),
+           parameter = M1[z] * M0 * K0 o <-> * L0 o <->}])
   ]
 end
   
@@ -123,13 +145,15 @@ end
   
   fun mkTest (label, {agent, redex}, matches) =
     let
+      fun insidebox f (JUST ms) = JUST (f ms)
+        | insidebox f (HAS ms)  = HAS (f ms)
       fun normalise {context, parameter}
         = {context = BgBDNF.make context,
            parameter
              = #D 
                  (BgBDNF.unmkBR
                    (BgBDNF.regularize (BgBDNF.make parameter)))} 
-      val matches = map normalise matches
+      val matches = insidebox (map normalise) matches
       val rule =
         Rule.make
           {name = "Testrule",
@@ -184,22 +208,57 @@ end
              print (ctx ^ " <>\n" ^ ctx_m ^ " ||\n" ^ par ^ " <>\n" ^ par_m ^ "\n"));*)
           result
         end
+      fun listsubset xs ys =
+        List.all
+         (fn x =>
+            case List.find (fn y => match_eq (y, x)) ys of
+              SOME _ => true
+            | _ => false)
+          xs
+      fun listfind eq x [] = ([], false)
+        | listfind eq x (y :: ys) =
+          let
+            val (ys', found) = listfind eq x ys
+          in
+            if eq (x, y) then
+              (ys', true)
+            else
+              (y :: ys', found)
+          end
+       (* List equality with unique elements in first list. *)
+       fun listeq eq [] [] = true
+         | listeq eq [] (_ :: _) = false
+         | listeq eq (x :: xs) ys =
+           let
+             val (ys', found) = listfind eq x ys
+           in
+             found andalso listeq eq xs ys'
+           end
     in
       (label,
        fn () =>
-         if null matches then
-           case lzunmk gotmatches of
-             Nil => ()
-           | Cons (m, _) =>
+         case matches of
+           JUST [] =>
+            (case lzunmk gotmatches of
+               Nil => ()
+             | Cons (m, _) =>
+               Assert.fail
+                 ("expected no matches for a = "
+                ^ BgVal.toString agent
+                ^ ", R = " ^ BgVal.toString redex
+                ^ "\but found\ncontext = "
+                ^ BgBDNF.toString (#context (Match.unmk' m))
+                ^ "\nparameter = "
+                ^ BgBDNF.toString (#parameter (Match.unmk' m))))
+         | JUST matches =>
+           if listeq match_eq matches (lztolist gotmatches) then
+             ()
+           else
              Assert.fail
-               ("expected no matches for a = "
-              ^ BgVal.toString agent
-              ^ ", R = " ^ BgVal.toString redex
-              ^ "\but found\ncontext = "
-              ^ BgBDNF.toString (#context (Match.unmk' m))
-              ^ "\nparameter = "
-              ^ BgBDNF.toString (#parameter (Match.unmk' m)))
-         else
+              ("unexpected or missing matches for\na = "
+               ^ BgVal.toString agent
+               ^ "\nR = " ^ BgVal.toString redex)
+         | HAS matches =>
            let
              val (allmatchesfound, ms, mz)
                = lzsubset match_eq matches gotmatches
