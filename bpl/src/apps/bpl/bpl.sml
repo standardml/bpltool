@@ -171,7 +171,7 @@ fun match_b {agent, redex}
 fun match_v {agent, redex}
   = let
       val redex = regl_v redex
-      val react = denorm_b redex
+      val react = simpl_b redex
     in
       match_rbdnf
         {agent = regl_v agent,
@@ -220,12 +220,27 @@ in
   fun print_mv mz = print_m0 mz BG.Match.toString'
   fun print_mtv mz = print_m0 mz BG.Match.toStringWithTree'
 end
+
 fun explain e = (BG.ErrorHandler.explain e; raise e);
-fun step (SOME agent) rules =
- (case react_v {agent=agent, rules=rules} of
-    NONE => NONE
-  | SOME agent => SOME (simpl_b (norm_v agent)))
-  handle e=>explain e;
+
+datatype agentbox
+  = INITIAL of bgval
+  | REACTED of bgval
+  | NOMATCH of bgval
+fun step boxagent rules =
+  let
+    fun get_agent (INITIAL agent) = agent
+      | get_agent (REACTED agent) = agent
+      | get_agent (NOMATCH agent) = agent
+    val agent = get_agent boxagent
+  in
+   case
+     react_v {agent=agent, rules=rules} handle e => (explain e; NONE)
+   of
+      NONE => NOMATCH agent
+    | SOME agent => REACTED (simpl_b (norm_v agent))
+  end
+
 fun use_shorthands flag =
  (Flags.setBoolFlag "/kernel/ast/bgterm/ppids" (not flag);
   Flags.setBoolFlag "/kernel/ast/bgterm/pp0abs" (not flag)) 

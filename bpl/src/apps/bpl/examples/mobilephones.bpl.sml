@@ -25,7 +25,8 @@
 
 use "pi.bpl.sml";
 Flags.setIntFlag "/debug/level" 10;
-use_shorthands true;
+SMLofNJ.Internals.GC.messages false;
+use_shorthands false;
 
 (* Pi calculus reaction rule controls for communicating 0 or 2 names. *)
 val Send0 = Send 0
@@ -63,26 +64,35 @@ val DEF_Trans = "def_Trans" :::
   ----|>
   Sum o (Get0[talk][] o Trans[talk,switch,gain,lose]
          `|` Get2[lose][[t],[s]]
-             o (<[t,s]> Send2[switch,t,s] o Idtrans[gain,lose]))
+             o (<[t,s]> Sum o Send2[switch,t,s] o Idtrans[gain,lose]))
 
 val DEF_Idtrans = "def_Idtrans" :::
   Idtrans[gain, lose]
   ----|>
-  Get2[gain][[t],[s]] o (<[t,s]> Trans[t,s,gain,lose])
+  Sum o Get2[gain][[t],[s]] o (<[t,s]> Trans[t,s,gain,lose])
 
 val DEF_Control = "def_Control" :::
   Control[lose1,talk2,switch2,gain2,lose2,talk1,switch1,gain1]
   ----|>
-  Send2[lose1,talk2,switch2] o Send2[gain2,talk2,switch2]
+  Sum o Send2[lose1,talk2,switch2] o Sum o Send2[gain2,talk2,switch2]
   o Control[lose2,talk1,switch1,gain1,lose1,talk2,switch2,gain2]
 
 val defrules = [DEF_Car, DEF_Trans, DEF_Idtrans, DEF_Control]
 
 (* System *)
-val System1 = simpl_v (simpl_v (
-  -//[talk1,switch1,gain1,lose1,talk2,switch2,gain2,lose2]
+val System1 = INITIAL (simpl_b (norm_v (
+  -//[(*talk1,switch1,gain1,lose1,talk2,switch2,gain2,lose2*)]
   o (    Car[talk1,switch1] 
      `|` Trans[talk1,switch1,gain1,lose1]
      `|` Idtrans[gain2,lose2]
-     `|` Control[lose1,talk2,switch2,gain2,lose2,talk1,switch1,gain1])))
+     `|` Control[lose1,talk2,switch2,gain2,lose2,talk1,switch1,gain1]
+     ))))
   handle e=>explain e
+
+
+val K0  = active0("K0")
+val K1  = active("K1" -: 1)
+val K10 = active("K10" =: 1 --> 0)
+val M0  = atomic0("M0")
+val M1  = atomic("M1" -: 1)
+val (x,y,z,u)=("x","y","z","u")
