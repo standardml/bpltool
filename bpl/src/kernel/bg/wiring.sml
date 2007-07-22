@@ -870,6 +870,29 @@ struct
        htX)
     end
 
+  (* Algorithm for restricting a wiring, keeping the outer
+   * face:
+   * 1 For each link mapping, remove it if inner name in X.
+   * 2 For each link, remove inner names in X.
+	 *)
+  fun domdiff' (ls, ht) X =
+    let
+      val htX = createNameHashMap (NameHashMap.numItems ht)
+    in
+      NameHashMap.appi
+        (fn pair as (x, ne) =>
+         if NameSet.member x X then () else NameHashMap.insert htX pair)
+        ht;
+      (Link'Set.fold
+         (fn {outer, inner} => fn ls =>
+          Link'Set.insert
+            {outer = outer, inner = NameSet.difference inner X}
+            ls)
+       Link'Set.empty
+       ls,
+       htX)
+    end
+
   (* Algorithm for restricting a wiring, trimming the outer
    * face:
    * 1 For each link mapping, remove it if inner name not in X.
@@ -888,6 +911,35 @@ struct
          (fn {outer, inner} => fn ls =>
           let
             val inner = NameSet.intersect inner X
+          in
+            if NameSet.isEmpty inner then
+              ls
+            else
+              Link'Set.insert {outer = outer, inner = inner} ls
+          end)
+       Link'Set.empty
+       ls,
+       htX)
+    end
+
+  (* Algorithm for restricting a wiring, trimming the outer
+   * face:
+   * 1 For each link mapping, remove it if inner name in X.
+   * 2 For each link, remove inner names in X
+   *   2a If empty name set, remove link.
+	 *)
+  fun domdiff'' (ls, ht) X =
+    let
+      val htX = createNameHashMap (NameHashMap.numItems ht)
+    in
+      NameHashMap.appi
+        (fn pair as (x, ne) =>
+         if NameSet.member x X then () else NameHashMap.insert htX pair)
+        ht;
+      (Link'Set.fold
+         (fn {outer, inner} => fn ls =>
+          let
+            val inner = NameSet.difference inner X
           in
             if NameSet.isEmpty inner then
               ls
