@@ -1399,11 +1399,17 @@ struct
   (* Match a prime to a context using the ABS rule:
    * 1) Deconstruct agent p = (id * ^s_a_L)(Z)g and
    *    context P = (id * ^s_C_L)(U)G.
-   * 2) Compute s_a_n' = s_a_n * s_a_L
-   *    and s_C_n' = s_C_n * s_C_L.
-   * 3) Using ename, s_a = {s_a_e, s_a_n'}, s_C = {s_C_e, s_C_n'},
+   * # 22.07.2007 panic@itu.dk: Gives wrong results at PAX',
+   * #   using id_Z to link points in parameter with links
+   * #   bound in redex:
+   * #     2) Compute s_a_n' = s_a_n * s_a_L
+   * #        and s_C_n' = s_C_n * s_C_L.
+   * 2) Let W = outernames(s_C_L) = outernames(s_a_L).
+   * 3) Compute s_a_e' = s_a_e * s_a_L
+   *    and ename'' = ename + id_W
+   *    and s_C_e' = s_C_e * s_C_L
+   * 4) Using ename'', s_a = {s_a_e, s_a_n'}, s_C = {s_C_e, s_C_n'},
    *    infer premise, yielding ename', s_C', qs.
-   * 4) Let W = outernames(s_C_L).
    * 5) Restrict s_C' by removing inner points that are in W.
    * 6) Return ename', s_C', qs.
    *)
@@ -1415,25 +1421,28 @@ struct
         val {s = s_C_L, N = N, ...} = BgBDNF.unmkP P
         val {absnames = Z, G = g} = BgBDNF.unmkN n
         val {absnames = U, G = G} = BgBDNF.unmkN N
+        val W = Wiring.outernames s_C_L
+        val s_a_e' = Wiring.* (s_a_e, s_a_L)
+        val s_C_e' = Wiring.* (s_C_e, s_C_L)
+        val ename'' =
+          NameSet.fold
+           (fn w => fn ename => NameMap.add' (w, w, ename))
+           ename
+           W
 
-        val s_a_n' = Wiring.* (s_a_n, s_a_L)
-        val s_C_n' = Wiring.* (s_C_n, s_C_L)
-
-        val premise_matches = matchDG' true (lvl + 1)
-                                       {ename = ename,
-                                        s_a = {s_a_e = s_a_e, s_a_n = s_a_n'},
-                                        s_C = {s_C_e = s_C_e, s_C_n = s_C_n'},
-                                        g = g, G = G}
+        val premise_matches =
+          matchDG' true (lvl + 1)
+           {ename = ename'',
+            s_a   = {s_a_e = s_a_e', s_a_n = s_a_n},
+            s_C   = {s_C_e = s_C_e', s_C_n = s_C_n},
+            g = g, G = G}
 
         fun make_match {ename', s_C', Y, qs, tree} =
             {ename' = ename',
-             s_C' = Wiring.restrict s_C' (*FIXME be smarter...*)
-                      (NameSet.difference
-                         (Wiring.innernames s_C')
-                         (Wiring.outernames s_C_L)),
-             Y = Y,
-             qs = qs,
-             tree = ABS' tree}
+             s_C'   = Wiring.domdiff' s_C' W,
+             Y      = Y,
+             qs     = qs,
+             tree   = ABS' tree}
       in
         lzunmk (lzmap make_match premise_matches)
       end handle e => raise e)
@@ -2592,9 +2601,9 @@ val _ = print' ("matchCLO: s_C = " ^ Wiring.toString s_C ^
                 ()
       val {name, redex, react, inst} = Rule.unmk rule
       val {wirxid = w_axid, D = D_a} = unmkBR agent
-      val ps = #Ps (unmkDR D_a)
+      val ps = #Ps (unmkDR D_a) handle e => raise e
       val {wirxid = w_Rxid, D = D_R} = unmkBR redex
-      val Ps = #Ps (unmkDR D_R)
+      val Ps = #Ps (unmkDR D_R) handle e => raise e
       val Y = (glob o outerface) redex
       fun toMatch {w_C, Qs, pi, qs, tree} =
         let
