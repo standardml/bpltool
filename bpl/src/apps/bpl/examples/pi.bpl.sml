@@ -42,5 +42,5 @@ fun REACT n =
       foldr (fn ((y, z), product) => y/z * product) (x//[] * idp(1)) yzs
       o (idp(1) `|` `zs`)
   in  
-    redex --[0 |-> 0, 1 |-> 2]--|> react
+    ("REACT" ^ Int.toString n) ::: redex --[0 |-> 0, 1 |-> 2]--|> react
   end

@@ -204,6 +204,23 @@ structure Match = Match'
    structure LazyList     = LazyList
    structure ErrorHandler = ErrorHandler)
 
+structure RuleNameMap = OrderFinMap
+  (type T = string
+   fun lt s1 s2 = (s1 : T) < s2)
+
+structure Reaction = Reaction
+  (structure RuleNameMap   = RuleNameMap
+   structure Info          = Info
+   structure Interface     = Interface
+   structure Wiring        = Wiring
+   structure BgVal         = BgVal
+   structure BgBDNF        = BgBDNF
+   structure Match         = Match
+   structure Instantiation = Instantiation
+   structure Rule          = Rule
+   structure Origin        = Origin
+   structure ErrorHandler  = ErrorHandler)
+
 val pageWidth = ref 70
 val indent = ref 1
 

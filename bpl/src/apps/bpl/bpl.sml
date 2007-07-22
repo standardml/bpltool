@@ -155,6 +155,8 @@ val norm_v = BG.BgBDNF.make
 val denorm_b = BG.BgBDNF.unmk
 val regl_b = BG.BgBDNF.regularize
 fun regl_v v = regl_b (norm_v v)
+val simpl_v = BG.BgVal.simplify
+fun simpl_b b = simpl_v (denorm_b b) 
 val match_rbdnf = BG.Match.matches
 fun match_b {agent, redex}
   = let
@@ -197,8 +199,6 @@ fun react_b {agent, rules} =
 fun react_v {agent, rules} =
   react_b {agent = norm_v agent, rules = rules}
 
-val simpl_v = BG.BgVal.simplify
-fun simpl_b b = simpl_v (denorm_b b) 
 val str_b = BG.BgBDNF.toString
 val str_v = BG.BgVal.toString
 fun print_b b = print (str_b b)
@@ -223,23 +223,12 @@ end
 
 fun explain e = (BG.ErrorHandler.explain e; raise e);
 
-datatype agentbox
-  = INITIAL of bgval
-  | REACTED of bgval
-  | NOMATCH of bgval
-fun step boxagent rules =
-  let
-    fun get_agent (INITIAL agent) = agent
-      | get_agent (REACTED agent) = agent
-      | get_agent (NOMATCH agent) = agent
-    val agent = get_agent boxagent
-  in
-   case
-     react_v {agent=agent, rules=rules} handle e => (explain e; NONE)
-   of
-      NONE => NOMATCH agent
-    | SOME agent => REACTED (simpl_b (norm_v agent))
-  end
+open BG.Reaction
+infixr 4 TIMES_DO
+infix  3 ++
+infix  2 ORTHEN
+infixr 1 THEN
+infixr 1 ELSE
 
 fun use_shorthands flag =
  (Flags.setBoolFlag "/kernel/ast/bgterm/ppids" (not flag);

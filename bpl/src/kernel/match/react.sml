@@ -28,54 +28,69 @@
  * @version $LastChangedRevision$
  *)
 
-functor Reaction (structure RuleNameMap : MONO_FINMAP
-                  where type dom = string
-                  structure Info : INFO
-                  structure Interface : INTERFACE
-                  structure Wiring : WIRING
-                  structure BgVal : BGVAL
-                  structure BgBDNF : BGBDNF
-                  structure Match : MATCH
-                  structure Instantiation : INSTANTIATION
-                  structure Rule : RULE
-                  structure Origin : ORIGIN
-              		structure ErrorHandler : ERRORHANDLER
-                  where type ppstream    = PrettyPrint.ppstream
-                    and type break_style = PrettyPrint.break_style
-                    and type origin      = Origin.origin
-                  sharing type Match.rule = Rule.rule
-                  sharing type Wiring.nameset = Interface.nameset
-                  sharing type Wiring.wiring = BgVal.wiring
-                  sharing type BgBDNF.bgbdnf =
-                               Match.bgbdnf =
-                               Instantiation.bgbdnf =
-                               Rule.bgbdnf
-                  sharing type BgBDNF.DR =
-                               Match.DR =
-                               Instantiation.DR
-                  sharing type BgBDNF.BR = Rule.BR
-                                     = Match.BR
-                  sharing type BgVal.bgval =
-                               BgBDNF.bgval =
-                               Instantiation.bgval =
-                               Rule.bgval
-                  sharing type Instantiation.inst = Rule.inst
-                  sharing type Info.info = BgBDNF.info
-                                     = BgVal.info
-                  sharing type Interface.interface = BgBDNF.interface) =
+functor Reaction (
+  structure RuleNameMap : MONO_FINMAP
+  where type dom = string
+  structure Info : INFO
+  structure Interface : INTERFACE
+  structure Wiring : WIRING
+  structure BgVal : BGVAL
+  structure BgBDNF : BGBDNF
+  structure Match : MATCH
+  structure Instantiation : INSTANTIATION
+  structure Rule : RULE
+  structure Origin : ORIGIN
+  structure ErrorHandler : ERRORHANDLER
+      where type ppstream    = PrettyPrint.ppstream
+        and type break_style = PrettyPrint.break_style
+        and type origin      = Origin.origin
+  sharing type Match.rule = Rule.rule
+  sharing type Wiring.nameset = Interface.nameset
+  sharing type Wiring.wiring = BgVal.wiring
+  sharing type BgBDNF.bgbdnf =
+               Match.bgbdnf =
+               Instantiation.bgbdnf =
+               Rule.bgbdnf
+  sharing type BgBDNF.DR =
+               Match.DR =
+               Instantiation.DR
+  sharing type BgBDNF.BR =
+               Rule.BR =
+               Match.BR
+  sharing type BgVal.bgval =
+               BgBDNF.bgval =
+               Instantiation.bgval =
+               Rule.bgval
+  sharing type Instantiation.inst = Rule.inst
+  sharing type Info.info =
+               BgBDNF.info =
+               BgVal.info
+  sharing type Interface.interface = BgBDNF.interface)
+  :> REACTION
+  where type rulename = string
+         and type rule = Rule.rule
+         and type 'a rulenamemap = 'a RuleNameMap.map
+         and type match = Match.match
+         and type bgval = BgVal.bgval
+         and type 'a bgbdnf = 'a BgBDNF.bgbdnf
+         and type BR = BgBDNF.BR =
 struct
   open LazyList
   open Debug
   open ErrorHandler
   type rulename = string
   type 'a rulenamemap = 'a RuleNameMap.map
+  type bgval  = BgVal.bgval
   type 'a bgbdnf = 'a BgBDNF.bgbdnf
   type BR        = BgBDNF.BR
-  type agent     = BR bgbdnf
-  type match = Match.match
-  type rule = Rule.rule
-  type matches = match lazylist
-  val noinfo = Info.noinfo
+  type agent     = bgval
+  type match     = Match.match
+  type rule      = Rule.rule
+  type rules     = rule rulenamemap
+  type matches   = match lazylist
+  val noinfo     = Info.noinfo
+
+  exception ThisCannotHappen
 
   datatype action
    = MATCH of match * ((rule * matches) rulenamemap -> action)
@@ -109,17 +124,19 @@ struct
       val context = BgBDNF.unmk context
       val newagent = context o (react * id_Z) o instantiation
     in
-      BgBDNF.regularize (BgBDNF.make newagent)
+      newagent
     end
 
-  (** Run a system of reaction rules, using a tactic, on an agent.
-   * @params R t a
-   * @param R  The reaction rules.
-   * @param t  The tactic to use.
-   * @param a  The agent to use.
-   * @return   The resulting agent.
-   *)
-  fun run rules tactic agent =
+  fun mkrules nrs = 
+    foldl
+      (fn ((name, rule), map) => RuleNameMap.add (name, rule, map))
+      RuleNameMap.empty
+      nrs
+
+  val mkdefaultrules =
+    mkrules o map (fn rule => (#name (Rule.unmk rule), rule))
+
+(*  fun run rules tactic agent =
     let
       fun addmatch rule
         = (rule, Match.matches {agent = agent, rule = rule})
@@ -130,6 +147,35 @@ struct
       => run rules next_tactic (react agent match)
       | _ => agent
     end
+*)
+
+  fun steps' f g rules tactic agent =
+    let
+      fun addmatch rule =
+       (rule,
+        Match.matches {
+          agent = BgBDNF.regularize (BgBDNF.make agent),
+          rule = rule})
+      val rulematches = RuleNameMap.composemap addmatch rules
+    in
+      case tactic rulematches of
+        MATCH (match, next_tactic)
+      => f match agent (steps' f g rules next_tactic (react agent match))
+      | _ => g agent
+    end
+
+  val run =
+    steps'
+      (fn _ => fn _ => fn a => a)
+      (fn a => BgVal.simplify (BgBDNF.unmk (BgBDNF.make a))) 
+
+  val steps =
+    steps'
+     (fn m => fn a => (fn [] => raise ThisCannotHappen
+      | ((_, a') :: aas) =>
+        ("INITIAL:", BgVal.simplify a) ::
+        (#name (Rule.unmk (#rule (Match.unmk m))), a') :: aas))
+     (fn a => [("", BgVal.simplify (BgBDNF.unmk (BgBDNF.make a)))])
 
   fun finish _ = FINISH    
 
@@ -183,6 +229,7 @@ struct
     | FAIL => t2 rulematches
     | FINISH => FINISH
 
+  type ifbranches = {thent : tactic, elset : tactic}
   infixr 1 THEN
   infixr 1 ELSE
   fun IF t = t
@@ -233,4 +280,7 @@ struct
    (* NOT IMPLEMENTED YET! *)
   fun ask_user (ui : ((PrettyPrint.ppstream -> unit) * string) list -> string) =
     fail
+    
+  val revision =
+    hd (String.tokens (not o Char.isDigit) "$LastChangedRevision$")
 end

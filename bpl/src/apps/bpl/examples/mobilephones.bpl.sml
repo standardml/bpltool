@@ -26,7 +26,7 @@
 use "pi.bpl.sml";
 Flags.setIntFlag "/debug/level" 10;
 SMLofNJ.Internals.GC.messages false;
-use_shorthands false;
+use_shorthands true;
 
 (* Pi calculus reaction rule controls for communicating 0 or 2 names. *)
 val Send0 = Send 0
@@ -53,25 +53,25 @@ val ( talk1,  talk2,  switch1,  switch2,  t,  s,  gain1,  lose1,  gain2,  lose2 
 val ( talk,  switch,  gain,  lose )
   = ("talk","switch","gain","lose")
 
-val DEF_Car = "def_Car" ::: 
+val DEF_Car = "DEF_Car" ::: 
   Car[talk,switch]
   ----|>
   Sum o (Send0[talk] o Car[talk,switch]
          `|` Get2[switch][[t],[s]] o (<[t,s]> Car[t,s]))
 
-val DEF_Trans = "def_Trans" :::
+val DEF_Trans = "DEF_Trans" :::
   Trans[talk,switch,gain,lose]
   ----|>
   Sum o (Get0[talk][] o Trans[talk,switch,gain,lose]
          `|` Get2[lose][[t],[s]]
              o (<[t,s]> Sum o Send2[switch,t,s] o Idtrans[gain,lose]))
 
-val DEF_Idtrans = "def_Idtrans" :::
+val DEF_Idtrans = "DEF_Idtrans" :::
   Idtrans[gain, lose]
   ----|>
   Sum o Get2[gain][[t],[s]] o (<[t,s]> Trans[t,s,gain,lose])
 
-val DEF_Control = "def_Control" :::
+val DEF_Control = "DEF_Control" :::
   Control[lose1,talk2,switch2,gain2,lose2,talk1,switch1,gain1]
   ----|>
   Sum o Send2[lose1,talk2,switch2] o Sum o Send2[gain2,talk2,switch2]
@@ -79,20 +79,36 @@ val DEF_Control = "def_Control" :::
 
 val defrules = [DEF_Car, DEF_Trans, DEF_Idtrans, DEF_Control]
 
-(* System *)
-val System1 = INITIAL (simpl_b (norm_v (
-  -//[(*talk1,switch1,gain1,lose1,talk2,switch2,gain2,lose2*)]
-  o (    Car[talk1,switch1] 
-     `|` Trans[talk1,switch1,gain1,lose1]
-     `|` Idtrans[gain2,lose2]
-     `|` Control[lose1,talk2,switch2,gain2,lose2,talk1,switch1,gain1]
-     ))))
-  handle e=>explain e
+(* All rules *)
+val rules = mkdefaultrules (List.@ (defrules, pirules))
 
+(* Tactics *)
+val TAC_talk =
+  react_rule "DEF_Car"     ++
+  react_rule "DEF_Trans"   ++
+  react_rule "REACT0"         (* Car talks.                     *)
+val TAC_switch =
+  react_rule "DEF_Control" ++
+  react_rule "DEF_Trans"   ++
+  react_rule "REACT2"      ++ (* Control tells Trans to lose.   *)
+  react_rule "DEF_Idtrans" ++
+  react_rule "REACT2"      ++ (* Control tells Idtrans to gain. *)
+  react_rule "DEF_Car"     ++
+  react_rule "REACT2"         (* Trans tells Car to switch.     *)
+
+(* System *)
+val System1 = simpl_b (norm_v (
+  (*-//[talk1,switch1,gain1,lose1,talk2,switch2,gain2,lose2] o *)
+  (    Car[talk1,switch1] 
+   `|` Trans[talk1,switch1,gain1,lose1]
+   `|` Idtrans[gain2,lose2]
+   `|` Control[lose1,talk2,switch2,gain2,lose2,talk1,switch1,gain1]
+   )))
+  handle e=>explain e
 
 val K0  = active0("K0")
 val K1  = active("K1" -: 1)
 val K10 = active("K10" =: 1 --> 0)
 val M0  = atomic0("M0")
 val M1  = atomic("M1" -: 1)
-val (x,y,z,u)=("x","y","z","u")
+val (x,y,z,u,v,w)=("x","y","z","u","v","w")

@@ -20,11 +20,13 @@
 
 (** Reaction and tactic functions.
  * Suggested precedence for infix operators:
+ * <pre>
  *  infixr 4 TIMES_DO
- *  infixl 3 ++
- *  infixl 2 ORTHEN
+ *  infix  3 ++
+ *  infix  2 ORTHEN
  *  infixr 1 THEN
  *  infixr 1 ELSE
+ * </pre>
  * @version $LastChangedRevision$
  *)
 
@@ -34,7 +36,7 @@ sig
   type 'a bgbdnf
   type bgval
   type BR
-  type agent = BR bgbdnf
+  type agent = bgval
   type match
   type rulename
   type 'a rulenamemap
@@ -58,14 +60,31 @@ sig
   (** Perform a single reaction step induced by a match. *)  
   val react : agent -> match -> agent
 
+  (** Construct a rule map. *)
+  val mkrules : (rulename * rule) list -> rules
+
+  (** Construct a rule map, using default names. *)
+  val mkdefaultrules : rule list -> rules
+
   (** Run a system of reaction rules, using a tactic, on an agent.
    * @params R t a
    * @param R  The reaction rules.
    * @param t  The tactic to use.
-   * @param a  The agent to use.
+   * @param a  The initial agent to use.
    * @return   The resulting agent.
    *)
   val run : rules -> tactic -> agent -> agent
+
+  (** Return the steps (applied rules on which agents)
+   * resulting from running a system
+   * of reaction rules, using a tactic, on an agent.
+   * @params R t a
+   * @param R  The reaction rules.
+   * @param t  The tactic to use.
+   * @param a  The initial agent to use.
+   * @return   The resulting steps.
+   *)
+  val steps : rules -> tactic -> agent -> (rulename * agent) list
 
   (** Finish tactic. *)
   val finish : tactic
@@ -75,7 +94,7 @@ sig
   val react_rule_any : tactic
   (** Apply a named rule; fail if it does not match. *)
   val react_rule : rulename -> tactic
-  (** Apply t1, followed by t2. *)
+  (** Apply t1, followed by t2, even if t1 fails. *)
   val ++ : (tactic * tactic) -> tactic
   (** TRY t1 ORTHEN t2:  If t1 fails, apply t2 to its result. *)
   val TRY : tactic -> tactic

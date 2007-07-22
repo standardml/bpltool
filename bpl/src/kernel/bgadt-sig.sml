@@ -58,13 +58,14 @@ sig
   (** Reaction rule *)
   type rule
 
-  structure Info   : INFO
-  structure BgTerm : BGTERM
-  structure BgVal  : BGVAL
-  structure BgBDNF : BGBDNF
-  structure Match  : MATCH
+  structure Info          : INFO
+  structure BgTerm        : BGTERM
+  structure BgVal         : BGVAL
+  structure BgBDNF        : BGBDNF
+  structure Match         : MATCH
   structure Instantiation : INSTANTIATION
   structure Rule          : RULE
+  structure Reaction      : REACTION
 
   structure Interface   : INTERFACE
   structure Ion         : ION
@@ -113,13 +114,15 @@ sig
   sharing type BgBDNF.BR =
                BR =
                Match.BR =
-               Rule.BR
+               Rule.BR =
+               Reaction.BR
 
   sharing type BgBDNF.bgbdnf =
                bgbdnf =
                Match.bgbdnf =
                Instantiation.bgbdnf  =
-               Rule.bgbdnf
+               Rule.bgbdnf =
+               Reaction.bgbdnf 
 
   sharing type Info.info =
                BgTerm.info =
@@ -136,11 +139,16 @@ sig
                BgBDNF.bgval =
                Instantiation.bgval =
                Sugar.bgval =
-               Rule.bgval
+               Rule.bgval =
+               Reaction.bgval
 
   sharing type rule =
                Rule.rule =
-               Match.rule
+               Match.rule =
+               Reaction.rule
+
+  sharing type Match.match =
+               Reaction.match
 
   sharing type Instantiation.inst =
                Rule.inst
