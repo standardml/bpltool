@@ -3,8 +3,8 @@
 # INCLUDE=../../lib/coll
 # INCLUDE=../../lib/pp/smlnj
 
-sigs = match-sig react-sig rule-sig instantiation-sig
-funs = match react rule instantiation
+sigs = match-sig reaction-sig rule-sig instantiation-sig
+funs = match reaction rule instantiation
 
 instantiation-sig: /lib/pp/smlnj/prettyprint
 instantiation: instantiation-sig /lib/pp/smlnj/. /kernel/bg/name-sig
@@ -25,8 +25,8 @@ match: match-sig /kernel/bg/sigs /kernel/ast/sigs /lib/compat/mosml/hash/.
   /lib/util/origin /lib/util/errorhandler-sig /lib/util/debug
   /lib/util/partition /lib/util/orderedpartition /lib/util/subset
   rule-sig %NODASHSIG
-react-sig: /lib/coll/lazylist /lib/pp/smlnj/prettyprint
-react: react-sig /lib/coll/lazylist /lib/coll/monofinmap-sig
+reaction-sig: /lib/coll/lazylist /lib/pp/smlnj/prettyprint
+reaction: reaction-sig /lib/coll/lazylist /lib/coll/monofinmap-sig
   /lib/pp/smlnj/prettyprint /kernel/ast/sigs instantiation-sig
   /lib/util/origin-sig /lib/util/errorhandler-sig
   rule-sig match-sig /kernel/bg/sigs /lib/util/debug %NODASHSIG
