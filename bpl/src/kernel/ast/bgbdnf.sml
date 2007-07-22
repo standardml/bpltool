@@ -415,7 +415,7 @@ struct
              {wirxid = wirxid, D = D}
       | wrongterm => 
           raise MalformedRBDNF 
-                  (info B, wrongterm, "matching B in unmkRB")
+                  (info B, wrongterm, "matching B in unmkBR")
 
   fun unmkDR D =
       case match (PTen [PVar, PTns]) D of
@@ -423,7 +423,7 @@ struct
              {ren = ren, Ps = Ps}
       | wrongterm => 
           raise MalformedRBDNF 
-                  (info D, wrongterm, "matching D in unmkRD")
+                  (info D, wrongterm, "matching D in unmkDR")
 
   fun innerface (b : 'class bgbdnf) = BgVal.innerface b
 
