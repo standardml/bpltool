@@ -32,6 +32,7 @@ signature BGTERM =
 sig
   type info
   type nameset
+  type control
   type ion
   type Immutable
   type 'kind permutation
@@ -71,6 +72,17 @@ sig
    * @param b2  the second bigraph term.
    *)
   val eq : bgterm -> bgterm -> bool
+  (** Indicate that an unlisted control was encountered. *)
+  exception UnknownControl of bgterm
+  (** Indicate that a control was applied to a wrong number of free
+   * names or bound name sets.
+   *)
+  exception WrongArity of bgterm
+  (** Replace controls.  Each ion control is looked up by name in
+   * the control table and replaced by that entry.
+   * @exception  UnknownControl if the term contains a control not listed.
+   *)
+  val replacecontrols : control list -> bgterm -> bgterm
   (** Prettyprint a bgterm without parentheses around it.
    * @params indent pps t
    * @param indent  Indentation at each block level.

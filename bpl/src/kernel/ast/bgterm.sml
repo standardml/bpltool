@@ -30,6 +30,7 @@
  *)
 functor BgTerm'(structure Info : INFO
 		structure Ion : ION
+		structure Control : CONTROL
 		structure Wiring : WIRING
 		structure Permutation : PERMUTATION
 		structure NameSet : MONO_SET
@@ -41,7 +42,8 @@ functor BgTerm'(structure Info : INFO
           and type origin      = Origin.origin
 		sharing type NameSet.Set =
                              Wiring.nameset =
-                             NameSetPP.collection)
+                             NameSetPP.collection
+    sharing type Ion.control = Control.control)
       : BGTERM =
 struct
   open Debug
@@ -69,6 +71,7 @@ struct
     default = true}
   type info = Info.info
   type nameset = NameSet.Set
+  type control = Control.control
   type ion = Ion.ion
   type Immutable = Permutation.Immutable
   type 'kind permutation = 'kind Permutation.permutation
@@ -126,6 +129,26 @@ struct
     | eq (Com (b11, b12, _)) (Com (b21, b22, _))          =
         eq b11 b21 andalso eq b12 b22
     | eq _ _                                              = false
+
+  exception UnknownControl of bgterm
+  exception WrongArity of bgterm
+
+  fun replacecontrols ctrllist =
+    let
+      fun replace (t as Ion (ion, i)) = (
+          Ion (Ion.replacecontrol ctrllist ion, i)
+          handle Ion.WrongArity _ => raise WrongArity t
+               | Ion.UnknownControl _ => raise UnknownControl t) 
+        | replace (Abs (X, t, i)) = Abs (X, replace t, i)
+        | replace (Ten (ts, i)) = Ten (map replace ts, i)
+        | replace (Pri (ts, i)) = Pri (map replace ts, i)
+        | replace (Par (ts, i)) = Par (map replace ts, i)
+        | replace (Com (t1, t2, i))
+        = Com (replace t1, replace t2, i)
+        | replace t = t
+    in
+      replace
+    end
 
   exception NotImplemented of bgterm * string
 
@@ -603,6 +626,22 @@ struct
   val _ = add_explainer
             (mk_explainer "feature not implemented"
                           explain_NotImplemented)
+  fun explain_UnknownControl (UnknownControl t) =
+      [Exp (LVL_USER, Info.origin (info t), pack_pp_with_data pp t, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp "in BgTerm.replacecontrols", [])]
+    | explain_UnknownControl _ = raise Match
+  val _ = add_explainer
+            (mk_explainer "The ion control name has not been declared"
+                          explain_UnknownControl)
+  fun explain_WrongArity (WrongArity t) =
+      [Exp (LVL_USER, Info.origin (info t), pack_pp_with_data pp t, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp "in BgTerm.replacecontrols", [])]
+    | explain_WrongArity _ = raise Match
+  val _ = add_explainer
+            (mk_explainer
+              "Ion control arity does not match the number \
+              \of free names or bound name sets"
+                          explain_WrongArity)
   fun size bg =
       case bg of
 	  Mer _ => 1
@@ -621,6 +660,7 @@ end
 
 functor BgTerm (structure Info : INFO
 		structure Ion : ION
+		structure Control : CONTROL
 		structure Wiring : WIRING
 		structure Permutation : PERMUTATION
 		structure NameSet : MONO_SET
@@ -632,7 +672,8 @@ functor BgTerm (structure Info : INFO
           and type origin      = Origin.origin
 		sharing type NameSet.Set =
                              Wiring.nameset =
-                             NameSetPP.collection)
+                             NameSetPP.collection
+    sharing type Ion.control = Control.control)
       :> BGTERM where type info = Info.info
                   and type wiring = Wiring.wiring
                   and type 'kind permutation = 'kind Permutation.permutation
@@ -643,6 +684,7 @@ functor BgTerm (structure Info : INFO
 struct
   structure BgTerm = BgTerm'(structure Info = Info
                              structure Ion = Ion
+                             structure Control = Control
                              structure Wiring = Wiring
                              structure Permutation = Permutation
                              structure NameSet = NameSet

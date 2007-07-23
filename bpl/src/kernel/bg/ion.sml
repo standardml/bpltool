@@ -49,6 +49,36 @@ struct
       foldl (fn (Xs, X) => NameSet.union X Xs) NameSet.empty bound
   fun outernames ({ctrl, free, bound}) = NameSet.fromList free
 
+  exception WrongArity of ion
+
+  exception UnknownControl of ion
+
+  fun replacecontrol ctrllist (ion as {ctrl, free, bound}) =
+    let
+      fun lookup c =
+        let
+          val cname = Control.name c
+          fun lk [] = raise UnknownControl ion
+            | lk (c' :: cs) =
+              if cname = Control.name c' then
+                c'
+              else
+                lk cs
+        in
+          lk ctrllist
+        end
+      val ctrl = lookup ctrl
+    in
+      if Control.bound ctrl <> length bound orelse
+        Control.free ctrl <> length free then
+        raise WrongArity ion
+      else
+        {ctrl = ctrl, free = free, bound = bound}
+    end
+
+
+
+
   fun eq {ctrl = ctrl1, free = free1, bound = bound1}
          {ctrl = ctrl2, free = free2, bound = bound2} =
       Control.eq ctrl1 ctrl2

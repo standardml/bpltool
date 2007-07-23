@@ -108,6 +108,7 @@ structure BgTerm
   = BgTerm'
       (structure Info        = Info
        structure Ion         = Ion
+       structure Control     = Control
        structure Wiring      = Wiring
        structure Permutation = Permutation
        structure NameSet     = NameSet

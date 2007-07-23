@@ -45,6 +45,17 @@ sig
    * @see make.
    *)
   val unmk : ion -> {ctrl : control, free : name list, bound : nameset list}
+  (** Signal that the ion control arity does not match the number of free
+   * names or bound name sets.
+   *)
+  exception WrongArity of ion
+  (** Signal that the ion has an unknown control. *)
+  exception UnknownControl of ion
+  (** Replace the control, looking up the current control name in
+   * a list of controls, and replaced by the matching entry.
+   * @exception  UnknownControl if the ion control name is not listed.
+   *)
+  val replacecontrol : control list -> ion -> ion
   (** Test two ions for equality.
    * @params i1 i2
    * @param i1  the first ion.
