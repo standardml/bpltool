@@ -133,7 +133,7 @@ struct
            | SOME cs' => SOME (c :: cs'))
       fun strip s = case strip' s of NONE => s | SOME s => s
     in
-      unmk (id, (implode o strip o explode) s)
+      unmk (id, (implode o strip o strip o explode) s)
     end
     
   structure Order : ORDERING =
