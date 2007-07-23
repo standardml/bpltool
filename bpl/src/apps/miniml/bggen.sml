@@ -77,8 +77,12 @@ type name = BG.Name.name
 type nameset = NameSet.Set
 
 fun makeion (c:string) (f:name list) (b:nameset list) =
-    B.Ion info (Ion.make {ctrl = Control.make (c, Control.Active),
-                          free = f, bound = b})
+    B.Ion info (
+      Ion.make {
+        ctrl =
+          Control.make (c, Control.Active, length b, length f),
+        free = f,
+        bound = b})
 
 fun mkctrl (c:string) = makeion c [] []
 

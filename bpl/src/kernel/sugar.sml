@@ -115,17 +115,17 @@ val Com = BgVal.Com' Info.noinfo
 
 fun active k = k Control.Active
 fun active0 K
-  = Ion (Ion.make {ctrl = Control.make (K, Control.Active),
+  = Ion (Ion.make {ctrl = Control.make (K, Control.Active, 0, 0),
                    free = [], bound = []}) 
 
 fun passive k = k Control.Passive
 fun passive0 K
-  = Ion (Ion.make {ctrl = Control.make (K, Control.Passive),
+  = Ion (Ion.make {ctrl = Control.make (K, Control.Passive, 0, 0),
                    free = [], bound = []}) 
 
 fun atomic k = k Control.Atomic
 fun atomic0 K
-  = Com (Ion (Ion.make {ctrl = Control.make (K, Control.Atomic),
+  = Com (Ion (Ion.make {ctrl = Control.make (K, Control.Atomic, 0, 0),
                         free = [], bound = []}), 
 	 Mer 0)
 
@@ -190,7 +190,7 @@ fun =: (K, {freearity, boundarity}) kind free bound =
         val ion
 	        = Ion
 	            (Ion.make
-	            {ctrl  = Control.make (K, kind),
+	            {ctrl  = Control.make (K, kind, boundarity, freearity),
 	             free  = map Name.make free, 
 	             bound = map (NameSet.fromList o map Name.make) bound})
 	          handle 
@@ -224,7 +224,7 @@ fun -: (K, freearity) kind free =
       let
         val ion
 	        = Ion 
-	            (Ion.make {ctrl = Control.make (K, kind),
+	            (Ion.make {ctrl = Control.make (K, kind, 0, freearity),
 		                     free = map Name.make free, 
 		                     bound = []})
       in

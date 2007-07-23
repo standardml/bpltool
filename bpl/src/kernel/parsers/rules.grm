@@ -84,6 +84,7 @@ Notes:
 open BgTerm
 
 type control = Control.control
+type kind = Control.kind
 type name = Name.name
 type link = Link.link
 type nameset = NameSet.Set
@@ -100,6 +101,7 @@ datatype fieldval = REDEX    of bgterm
 type rulefield = {name : string, value : fieldval}
 datatype parserresult = BGTERMRESULT of bgterm
                       | RULESRESULT of rule list
+                      | SIGRESULT of control list
 
 (** Signal that a set with duplicate names has been encountered. 
  * @params smlfile leftpos rightpos errtxt
@@ -204,9 +206,10 @@ fun nset2idlinkset nset =
       nset
 
 %%
-%term EOF | BGTERM | RULELIST
+%term EOF | BGTERM | RULELIST | SIGNATURE
 	 | ID of string | INT of int | CTRLID of string | STRING of string
-	 | AMP | EQ | MAPSTO | MAPPSTO
+	 | ACTIVE | PASSIVE | ATOMIC
+	 | AMP | EQ | MAPSTO | MAPPSTO | DASHCOLON | EQCOLON | RARROW
 	 | NAME | REDEX | REACT | INST
 	 | MERGE
 	 | LPAREN | RPAREN | LBRACK | RBRACK | LBRACE | RBRACE | GT | LT
@@ -216,6 +219,11 @@ fun nset2idlinkset nset =
 
 %nonterm
   start of parserresult
+| ctrl of control
+| ctrllist of control list
+| ctrls of control list
+| kind of kind
+| cdata of (string * int * int)
 | rule of rule
 | rulelist of rule list
 | rules of rule list
@@ -315,6 +323,26 @@ fun nset2idlinkset nset =
 %%
 start : BGTERM bg             (BGTERMRESULT bg)
       | RULELIST rulelist     (RULESRESULT rulelist)
+      | SIGNATURE ctrllist    (SIGRESULT ctrllist)
+
+ctrllist : LBRACK ctrls RBRACK (ctrls)
+         | LBRACK RBRACK      ([])
+
+ctrls : ctrl                  ([ctrl])
+      | ctrl COMMA ctrls      (ctrl :: ctrls)
+
+ctrl : kind LPAREN cdata RPAREN
+                              (Control.make
+                                 (#1 cdata, kind, #2 cdata, #3 cdata))
+
+kind : ACTIVE                 (Control.Active)
+     | PASSIVE                (Control.Passive)
+     | ATOMIC                 (Control.Atomic)
+
+cdata : CTRLID                ((CTRLID, 0, 0))
+      | CTRLID DASHCOLON int  ((CTRLID, 0, int))
+      | CTRLID EQCOLON int RARROW int
+                              ((CTRLID, int1, int2))
 
 rulelist : LBRACK rules RBRACK (rules)
          | LBRACK RBRACK      ([])
@@ -424,7 +452,7 @@ nset    : LBRACK names RBRACK (NameSet.fromList (names)
 					  ("bg.grm", (LBRACKleft, RBRACKright),
 					   "while parsing"))
 
-ctrlid	: CTRLID	      (Control.make (CTRLID, Control.Active))
+ctrlid	: CTRLID	      (Control.make (CTRLID, Control.Active, 0, 0))
 
 link	: DASHSLASHSLASH nset	        (Link.make {outer = NONE, inner = nset})
         | id SLASH id	%prec SLASH	(Link.make {outer = SOME (Name.make id1), 
