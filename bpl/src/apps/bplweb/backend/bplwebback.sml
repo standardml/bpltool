@@ -136,6 +136,7 @@ struct
         else
           case Int.fromString str of SOME i => i | NONE => ~1
       
+      val signatur : Control.control list ref = ref []
       val agent : BR bgbdnf option ref = ref NONE
       val rules : rule list ref = ref []
       (* Each array element is (i, mz, ms), where i is the number of
@@ -146,11 +147,12 @@ struct
       val matches : (int * match lazylist * match list) array ref
         = ref (Array.fromList [])
       
-      fun domatch (SOME agentstr, SOME rulesstr,
+      fun domatch (SOME signaturestr, SOME agentstr, SOME rulesstr,
                    SOME userulesstr, SOME matchcountstr) =
         let
           (*val _ = TextIO.output (stdErr, "bplwebback::domatch called.\n")*)
           val _ = Name.reset ()
+          val _ = signatur := parseStr SIGNATURE "signature" signaturestr
           val _ =
             agent := SOME
                       (BgBDNF.regularize 
@@ -260,10 +262,11 @@ val _ = TextIO.output (stdErr, "rules = "
             (List.drop (rfmzs, (if userules < 0 then 0 else userules)))
             []
         end
-        | domatch (NONE, _, _, _) = log "Agent not specified!"
-        | domatch (_, NONE, _, _) = log "Rules not specified!"
-        | domatch (_, _, NONE, _) = log "Userules not specified!"
-        | domatch (_, _, _, NONE) = log "Matchcount not specified!"
+        | domatch (NONE, _, _, _, _) = log "Signature not specified!"
+        | domatch (_, NONE, _, _, _) = log "Agent not specified!"
+        | domatch (_, _, NONE, _, _) = log "Rules not specified!"
+        | domatch (_, _, _, NONE, _) = log "Userules not specified!"
+        | domatch (_, _, _, _, NONE) = log "Matchcount not specified!"
         
       fun doreact (SOME ruleno, SOME matchno) =
         let
@@ -347,26 +350,28 @@ val _ = TextIO.output (stdErr, "rules = "
           String.extract (line, alnumcol col, NONE)
         end
       
-      fun evalmatch (agent, rules, userules, matchcount) =
+      fun evalmatch (signatur, agent, rules, userules, matchcount) =
       	let
       	  val line
       	    = case inputLineNoBuf () of
       	        SOME s => s | NONE => raise Expected "ENDMATCH"
       	  val upline = String.translate (String.str o Char.toUpper) line
         in
-        	if String.isPrefix "AGENT" upline then
-        		evalmatch (SOME (getuntil "ENDAGENT"), rules, userules, matchcount)
+        	if String.isPrefix "SIGNATURE" upline then
+        		evalmatch (SOME (getuntil "ENDSIGNATURE"), agent, rules, userules, matchcount)
+        	else if String.isPrefix "AGENT" upline then
+        		evalmatch (signatur, SOME (getuntil "ENDAGENT"), rules, userules, matchcount)
         	else if String.isPrefix "RULES" upline then
-        		evalmatch (agent, SOME (getuntil "ENDRULES"), userules, matchcount)
+        		evalmatch (signatur, agent, SOME (getuntil "ENDRULES"), userules, matchcount)
         	else if String.isPrefix "USERULES" upline then
-        		evalmatch (agent, rules, SOME (getrest 8 upline), matchcount)
+        		evalmatch (signatur, agent, rules, SOME (getrest 8 upline), matchcount)
         	else if String.isPrefix "MATCHCOUNT" upline then
-        		evalmatch (agent, rules, userules, SOME (getrest 10 upline))
+        		evalmatch (signatur, agent, rules, userules, SOME (getrest 10 upline))
         	else if String.isPrefix "ENDMATCH" upline then
-        		domatch (agent, rules, userules, matchcount)
+        		domatch (signatur, agent, rules, userules, matchcount)
             (*before TextIO.output (stdErr, "bplwebback::domatch returned.\n")*)
         	else if null (String.tokens Char.isSpace line) then
-        	  evalmatch (agent, rules, userules, matchcount)
+        	  evalmatch (signatur, agent, rules, userules, matchcount)
         	else
         		log ("Unrecognised input line: " ^ line)
         end
@@ -415,7 +420,7 @@ val _ = TextIO.output (stdErr, "rules = "
         		  andalso (size line < 6 orelse
         		           not (Char.isAlpha (String.sub (line, 5)))) then
         		  ((*TextIO.output (stdErr, "bplwebback: calling evalmatch.\n");*)
-        		   (evalmatch (NONE, NONE, NONE, NONE)))
+        		   (evalmatch (NONE, NONE, NONE, NONE, NONE)))
         		  handle e => BPLwebErrorHandler.explain e
         		  handle _ => ()
         	  else if String.substring (line, 0, 5) = "REACT"

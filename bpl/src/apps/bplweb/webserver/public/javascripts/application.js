@@ -61,10 +61,14 @@ function resizenode (textareanode) {
 }
 
 function initialresizing () {
+  resizenode($('signature'));
   resizenode($('agent'));
   var redex_body;
   for (var i = 0; redex_body = $("redex[" + i + "]"); ++i)
     resizenode(redex_body);
+  var react_body;
+  for (var i = 0; react_body = $("react[" + i + "]"); ++i)
+    resizenode(react_body);
 }
 
 function editnode (textnode) {

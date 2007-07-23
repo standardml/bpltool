@@ -153,6 +153,8 @@ type bgterm = BgTerm.bgterm
 
 type bgval = BgVal.bgval
 
+type control = Control.control
+
 type M = BgBDNF.M
 type S = BgBDNF.S
 type G = BgBDNF.G

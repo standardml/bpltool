@@ -83,9 +83,11 @@ print "running matcher worker thread...\n"
             matcher.puts("REACT\nRULENO:#{rule}\nMATCHNO:#{match}\nENDREACT\n")
             matcher.flush
           elsif !(defined? agent) || !(defined? rules) ||
+              signature != matching.signature ||
               agent != matching.agent || rules != matching.rules
             print "new agent or rules\n"
             $stdout.flush
+            signature    = matching.signature
             agent        = matching.agent
             rules        = matching.rules
             rulestomatch = matching.rulestomatch
@@ -109,10 +111,14 @@ print "running matcher worker thread...\n"
             }
             rules_formatted += "]"
             print "sending to bplwebback:\n"
-            #print("MATCH\nAGENT\n#{agent}\nENDAGENT\n" +
+            #print("MATCH\nSIGNATURE\n[#{signature}]\nENDSIGNATURE\n" +
+            #  "AGENT\n#{agent}\nENDAGENT\n" +
             #  "RULES\n#{rules}\nENDRULES\nUSERULES:#{rulestomatch}\n" +
             #  "MATCHCOUNT:#{matchcount}\nENDMATCH\n")
             for line in ["MATCH",
+                          "SIGNATURE",
+                          "[#{signature}]",
+                          "ENDSIGNATURE",
                           "AGENT",
                           "#{agent}",
                           "ENDAGENT",
@@ -318,11 +324,12 @@ noresult = { 'ruleno' => -1, 'matchno' => -1, 'match' => emptymatch }
 # The worker must be signaled when a change in the job has
 # occurred.
 class Matching
-  attr_reader :id, :agent, :rules, :matchcount, :rulestomatch,
+  attr_reader :id, :signature, :agent, :rules, :matchcount, :rulestomatch,
   :react, :requestno, :results, :found, :foundall, :errors,
   :mutex, :worker, :resultsflag
   def initialize (id)
     @id           = id        # Matching ID (determines agent & rules)
+    @signature    = ""        # Signature for use in agent
     @agent        = ""        # Agent in which to match...
     @rules        = ""        # ...one or more rules
     @matchcount   = -1        # Requested matches, -1 means 'all'
@@ -339,7 +346,7 @@ class Matching
     Worker.new self # Start the worker threads
   end
 
-  def matchrequest1 (id, agent, rules,
+  def matchrequest1 (id, signature, agent, rules,
                     matchcount, rulestomatch, requestno)
 print "matchrequest1 ([" + id['sessionid'].to_s + ", " +
       id['matchingid'].to_s + "], " + matchcount.to_s + ", " +
@@ -356,9 +363,10 @@ $stdout.flush
       end
       @requestno = requestno
 
+print "signature = '" + signature.to_s + "',  @signature = '" + @signature.to_s + "'\n"
 print "agent = '" + agent.to_s + "',  @agent = '" + @agent.to_s + "'\n"
 
-      if agent == @agent && rules == @rules
+      if signature == @signature && agent == @agent && rules == @rules
         # similar request
         if @matchcount < matchcount || (@matchcount > 0 && matchcount < 0)
           @matchcount = matchcount
@@ -370,6 +378,7 @@ print "agent = '" + agent.to_s + "',  @agent = '" + @agent.to_s + "'\n"
         print "matchrequest starting new matching...\n"
         # New matching because agent or rules differ
         @id['matchingid'] += 1
+        @signature = signature
         @agent = agent
         @rules = rules
         @matchcount = matchcount
@@ -513,13 +522,13 @@ class Serverobj
     @matchingssessionidflag = ConditionVariable.new
   end
 
-  def matchrequest (id, agent, rules,
+  def matchrequest (id, signature, agent, rules,
                     matchcount, rulestomatch, requestno)
     print "matchrequest ([" + id['sessionid'].to_s + ", " +
       id['matchingid'].to_s + "], " + requestno.to_s + ")\n"
     print "args: "
-    print  [id, agent, rules,
-                    matchcount, rulestomatch, requestno]
+    print  [id, signature, agent, rules,
+                    matchcount, rulestomatch, requestno].join(",")
     print "\n"
     sessionid = id['sessionid'].to_i
     matching = nil
@@ -538,7 +547,7 @@ class Serverobj
     }
     id = {'sessionid' => sessionid, 'matchingid' => id['matchingid']}
     if matching
-      return matching.matchrequest1(id, agent, rules, matchcount,
+      return matching.matchrequest1(id, signature, agent, rules, matchcount,
                                    rulestomatch, requestno)
     end
     print "matchrequest making new Matching object for session "
@@ -548,7 +557,7 @@ class Serverobj
     matching = Matching.new(id)
     @matchings[sessionid] = matching
     @matchingssessionidflag.broadcast
-    return matching.matchrequest1(id, agent, rules, matchcount, 
+    return matching.matchrequest1(id, signature, agent, rules, matchcount, 
                                   rulestomatch, requestno)
   end
 
@@ -684,15 +693,16 @@ server = XMLRPC::Server.new(3197)
 interface =
   # no XMLRPC prefix
   XMLRPC::interface("") {
-  add_method("struct matchrequest (struct, string, array, int, int, int)",
+  add_method("struct matchrequest (struct, string, string, array, int, int, int)",
              # return: {type, {sessionid, matchingid}}
              # {sessionid, matchingid}
+             # signature
              # agent
              # rules
              # matchcount
              # rulestomatch
              # requestno
-             "matchrequest({sessionid, matchingid}, agent, rules, matchcount, rulestomatch, requestno)
+             "matchrequest({sessionid, matchingid}, signature, agent, rules, matchcount, rulestomatch, requestno)
   returns a {type, {sessionid, matchingid}}
   where type is 'OK' or 'TimeOut'",
              "matchrequest")
@@ -719,12 +729,12 @@ server.add_handler("resultrequest", ["struct", "struct", "int", "int"],
 }
 
 server.add_handler("matchrequest", 
-                   ['struct', 'struct', 'string', 'array', 'int', 'int', 'int'],
-                   "matchrequest({sessionid, matchingid}, agent, rules, matchcount, rulestomatch, requestno)
+                   ['struct', 'struct', 'string', 'string', 'array', 'int', 'int', 'int'],
+                   "matchrequest({sessionid, matchingid}, signature, agent, rules, matchcount, rulestomatch, requestno)
   returns a {type, {sessionid, matchingid}}
   where type is 'OK' or 'TimeOut'") {
-  |id, agent, rules, matchcount, rulestomatch, requestno|
-  serverobj.matchrequest(id, agent, rules,
+  |id, signature, agent, rules, matchcount, rulestomatch, requestno|
+  serverobj.matchrequest(id, signature, agent, rules,
                                 matchcount, rulestomatch, requestno)
 }
 

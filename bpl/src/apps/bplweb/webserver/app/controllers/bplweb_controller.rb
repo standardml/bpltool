@@ -8,6 +8,7 @@ class BplwebController < ApplicationController
     params = params()
     @filename = ''
     @title = ''
+    @signature = 'passive(Get =: 1 --> 1), passive(Send -: 2)'
     @agent = 'Get[y][[z]] o (&lt;[z]> z//[] * &lt;->) `|` Send[x,y] o &lt;->'
     @rules = [Rule.new(:redex => 'Get[y1][[z1]] `|` Send[x1,y1] o &lt;->',
                        :react => '(x1//[] * y1/z1 * idp(1)) o `[z1]`',
@@ -15,10 +16,11 @@ class BplwebController < ApplicationController
     if params[:id]
       begin
         example = Example.find(params[:id])
-        @filename = example.filename
-        @title = example.title
-        @agent = example.agent
-        @rules = Rule.find(:all, :conditions => ['eid = ?', example.id])
+        @filename  = example.filename
+        @title     = example.title
+        @signature = example.signature
+        @agent     = example.agent
+        @rules     = Rule.find(:all, :conditions => ['eid = ?', example.id])
       rescue ActiveRecord::RecordNotFound
       end
     end
@@ -43,10 +45,11 @@ class BplwebController < ApplicationController
       'matchingid' => params ['matchingid'].to_i}
 
 
-    agent = params ['agent']
-    redex = params ['redex']
-    react = params ['react']
-    inst = params ['inst']
+    signature = params ['signature']
+    agent     = params ['agent']
+    redex     = params ['redex']
+    react     = params ['react']
+    inst     = params ['inst']
     rules = Array.new
     i = 0
     while true
@@ -72,7 +75,7 @@ class BplwebController < ApplicationController
 print "matchrequest " + requestno.to_s + " calling server...\n"
     begin
       # Call the remote server and get our result
-      @result = server.call("matchrequest", id, agent, rules,
+      @result = server.call("matchrequest", id, signature, agent, rules,
                             matchcount, rulestomatch, requestno)
       if @result['type'] == 'OK'
         session[:id] = @result ['id']['sessionid'].to_i 

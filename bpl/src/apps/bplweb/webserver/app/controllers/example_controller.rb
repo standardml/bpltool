@@ -59,11 +59,12 @@ class ExampleController < ApplicationController
       if example == nil
         example = Example.new(edata)
       else
-        example.filename = edata[:filename]
-        example.title = edata[:title]
-        example.agent = params[:agent]
-        example.passwd = edata[:passwd]
+        example.filename  = edata[:filename]
+        example.title     = edata[:title]
+        example.passwd    = edata[:passwd]
       end 
+      example.signature = params[:signature]
+      example.agent     = params[:agent]
       example.save!
       Rule.delete_all ["eid = ?", example.id]
       redexes = params[:redex]

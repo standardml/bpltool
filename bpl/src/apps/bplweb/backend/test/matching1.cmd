@@ -1,5 +1,8 @@
 
 MATCH
+SIGNATURE
+[active0(K), passive0(L)]
+ENDSIGNATURE
 AGENT
 K o L o 1
 ENDAGENT

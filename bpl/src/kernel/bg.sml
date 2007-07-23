@@ -141,10 +141,13 @@ local
     | mkbgterm _ = raise ThisCannotHappen
   fun mkrules (RULESRESULT rules) = rules
     | mkrules _ = raise ThisCannotHappen
+  fun mksignature (SIGRESULT ctrllist) = ctrllist
+    | mksignature _ = raise ThisCannotHappen
 in
   type 'a kind
     = ((int * int) -> (Tokens.svalue, int) Tokens.token)
     * (parserresult -> 'a)
+  val SIGNATURE = (Tokens.SIGNATURE, mksignature)
   val BGTERM = (Tokens.BGTERM, mkbgterm)
   val RULES = (Tokens.RULELIST, mkrules)
 end

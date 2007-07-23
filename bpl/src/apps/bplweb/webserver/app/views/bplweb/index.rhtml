@@ -64,6 +64,30 @@
       	
     </div>
 
+    <div id="signature-div">
+      <p class="head">
+        <table width="70%">
+          <tr>
+            <td align="left">
+              <%= visibilitytoggler("signature") %>
+	      Signature: <a
+	      href="signaturesyntax"
+	      class="helpicon"
+              onclick="openhelpwindow ('signaturesyntax', 'Signature syntax', 470, 200); return false;"><img
+	      class="helpicon"
+	      src="/images/Icon_help.gif" 
+              alt=" ? "
+              title="Help for signature syntax" /></a></td>
+	  </tr>
+	</table>
+      </p>
+      <div id="signature-body">
+	  <textarea id="signature" name="signature" class="editablecode"
+	    onkeypress="resizenode (this);" rows="1" cols="55"
+	    title="Enter a signature here"><%= @signature %></textarea>
+      </div>
+    </div>
+
     <div id="agent-div">
       <p class="head">
         <table width="70%">

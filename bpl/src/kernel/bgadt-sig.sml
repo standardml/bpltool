@@ -55,8 +55,10 @@ sig
   type BR
   (** Bigraphs on {M,S,G,N,P,D,DR,B,BR} BDNF form. *)
   type 'class bgbdnf
-  (** Reaction rule *)
+  (** Reaction rule. *)
   type rule
+  (** Control. *)
+  type control
 
   structure Info          : INFO
   structure BgTerm        : BGTERM
@@ -146,6 +148,9 @@ sig
                Rule.rule =
                Match.rule =
                Reaction.rule
+
+  sharing type control =
+               Control.control
 
   sharing type Match.match =
                Reaction.match
