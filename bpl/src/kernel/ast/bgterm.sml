@@ -234,6 +234,8 @@ struct
     | is_id (t as (Com _))  = raise NotImplemented
 	  			 (t, "is_id for composition")
 
+  fun is_id' t = is_id t handle NotImplemented _ => false
+
   fun width (Mer _)         = 1
     | width (Con _)         = 1
     | width (Wir _)         = 0
@@ -341,9 +343,7 @@ struct
                   if ppids then
                     bs
                   else
-                    List.filter
-                      (fn b => not (is_id b) handle NotImplemented _ => true)
-                      bs
+                    List.filter (not o is_id') bs
               in
                 case bs' of
                  []

@@ -785,10 +785,10 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 		    else 
 		      Ten i [w_inv, Per i (Permutation.** (map #2 wBvs))]
 	    fun mkwxB (w, B, v) 
-	      = if Permutation.is_id B andalso is_id w then
+	      = if Permutation.is_id B andalso is_id' w then
 		  v
 		else
-		  if is_id0 w then
+		  if is_id0' w then
 		    Com i (Per i B, v)
 		  else if Permutation.is_id0 B then
 		    Com i (w, v)
@@ -1069,7 +1069,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	      | (VTen (vs1, (innf1, _, _)), VTen (vs2, _)) =>
           (case (vs1, vs2) of
              ([VWir (w1, _), v1], [VWir (w2, _), v2]) =>
-             if is_id v1
+             if is_id' v1
              andalso NameSet.isEmpty (Interface.names (outerface v2)) then
                VTen ([VWir (Wiring.o (w1, w2), i), v2], ioi)
              else
@@ -1215,7 +1215,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	           else
 	             VCom (v1', v2', ioi))
 	      | (VTen ([VWir (w, _), v], _), VIon (KyX, _))
-	      => if is_id v andalso Wiring.is_renaming w then
+	      => if is_id' v andalso Wiring.is_renaming w then
 	           let
 	             val {ctrl, free, bound} = Ion.unmk KyX
 	             val free = map (Option.valOf o Wiring.app_x w) free
