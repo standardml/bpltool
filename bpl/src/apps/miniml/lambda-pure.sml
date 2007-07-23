@@ -140,23 +140,23 @@ fun printMts m =
 
 fun printRes tname agents =
     ( print("\nAgent(s) resulting from reaction(s) on " ^ tname ^ ":\n")
-    ; LazyList.lzprint (B.toString o B.simplify o Bdnf.unmk) agents
+    ; LazyList.lzprint (B.toString o B.simplify) agents
     ; print "\n" )
 
 (* SIGNATURE *)
-fun lam x = ion2bg (Ion.make {ctrl = C.make("lam", C.Active),
+fun lam x = ion2bg (Ion.make {ctrl = C.make("lam", C.Active, 1, 0),
 			      free = [x], bound = []})
-fun var x = S.o (ion2bg (Ion.make {ctrl = C.make("var", C.Atomic),
-			      free = [x], bound = []}),
-		barren)
-fun def x = ion2bg (Ion.make {ctrl = C.make("def", C.Active),
+fun var x = S.o (ion2bg (Ion.make {ctrl = C.make("var", C.Atomic, 1, 0),
+				   free = [x], bound = []}),
+		 barren)
+fun def x = ion2bg (Ion.make {ctrl = C.make("def", C.Active, 1, 0),
 			      free = [x], bound = []})
 
-val appl = ion2bg (Ion.make {ctrl = C.make("appl", C.Active),
+val appl = ion2bg (Ion.make {ctrl = C.make("appl", C.Active, 0, 0),
 			     free = [], bound = []})
-val appr = ion2bg (Ion.make {ctrl = C.make("appr", C.Active),
+val appr = ion2bg (Ion.make {ctrl = C.make("appr", C.Active, 0, 0),
 			     free = [], bound = []})
-val app = let val a = ion2bg (Ion.make {ctrl = C.make("app", C.Active),
+val app = let val a = ion2bg (Ion.make {ctrl = C.make("app", C.Active, 0, 0),
 					free = [], bound = []})
 	  in S.o (a, (S.`|` (appl, appr))) end
 
@@ -222,13 +222,13 @@ val mtsA = M.matches { agent = makeBR term , rule = ruleA }
 val _ = printMts mtsA
 val _ = map print (parts term mtsA)
 *)
-val terms' = LazyList.lzmap (Re.react (makeBR term)) mtsA
+val terms' = LazyList.lzmap (Re.react term) mtsA
 val _ = printRes "term" terms'
 
 (* (x x)<x:=k> --2> (k x)<x:=k> *)
 val _ = print("\n")
 val term' = LazyList.lzhd terms' (* the resulting agent we want *)
-val mtsC = M.matches { agent = term' , rule = ruleC }
+val mtsC = M.matches { agent = makeBR term' , rule = ruleC }
 (*
 val _ = printMts mtsC
 val _ = print("length(mtsC) = " ^ (lzlength mtsC) ^ "\n")
@@ -245,7 +245,7 @@ val term'' = LazyList.lzhd terms'' (* the resulting agent we want *)
 val mtsC2 = LazyList.lzmap
 		(fn t => M.matches { agent = t , rule = ruleC }) terms''
 *)
-val mtC2 = M.matches { agent = term'' , rule = ruleC }
+val mtC2 = M.matches { agent = makeBR term'' , rule = ruleC }
 (*
 val _ = print("length(mtC2) = " ^ (lzlength mtC2) ^ "\n")
 val _ = printMts mtC2
@@ -256,19 +256,16 @@ val _ = print("length(terms''') = " ^ (lzlength terms''') ^ "\n")
 *)
 val _ = printRes "term''" terms'''
 
-(* (k k)<x:=k> --3> (k k) *)
+(* (k k)<x:=k> --3> k k *)
 val term''' = LazyList.lzhd terms''' (* the resulting agent we want *)
-val _ = print(B.toString(Bdnf.unmk term''') ^ "\n")
+val _ = print("term''' =\n" ^ B.toString(term''') ^ "\n")
+val mtD = M.amatch { agent = makeBR term''' , rule = ruleD }
 (*
-val mtD = M.amatch { agent = term''' , rule = ruleD }
-
 val _ = case mtD of NONE => print "No matches!\n"
 		  | SOME(m) => ( print(M.toString(m))
 		    handle e => handler e )
 
-val mtD = M.matches { agent = term''' , rule = ruleD }
-val _ = lzlength(mtD)
-val _ = print("length(mtD) = " ^ (lzlength mtD) ^ "\n")
+val _ = print("length(mtsD) = " ^ (lzlength mtsD) ^ "\n")
 val _ = printMts mtC2
 val terms''' = LazyList.lzmap (Re.react term'') mtC2
 val _ = print("length(terms''') = " ^ (lzlength terms''') ^ "\n")
