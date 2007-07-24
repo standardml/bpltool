@@ -80,7 +80,7 @@ in
    * succeed.
    *)
   val tests = [
-    ("Matching empty agent",
+    ("Matching empty agent with nonempty redex",
      {agent = -//[],
       redex = K0},
      JUST []),

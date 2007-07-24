@@ -2304,7 +2304,7 @@ struct
           lzappend matches (lzmake next)
         end
     in
-      lzunmk (nextmatch (firstsplit m n))
+      lzunmk (nextmatch (firstsplit m n)) handle NoMoreSplits => Nil
     end) handle e => raise e)
 
   (* Match a context permutation:
