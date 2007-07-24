@@ -299,14 +299,14 @@ sig
   val is_id0 : wiring -> bool
   (** Determine whether some wiring can be written w = id_Y x sigma,
    * where sigma is a substitution (i.e., no closed links).
-   * @params w Y
+   * @params Y w
    *)
   val is_id_x_sigma : nameset -> wiring -> bool
   (** Determine whether some wiring can be written w = id_Y x sigma,
    * where sigma is a substitution (i.e., no closed links), returning
    * SOME sigma.
    * If the wiring cannot be written on this form, NONE is returned.
-   * @params w Y
+   * @params Y w
    *)
   val remove_id_Y : nameset -> wiring -> wiring option
   (** Determine whether some wiring is a renaming. *)
