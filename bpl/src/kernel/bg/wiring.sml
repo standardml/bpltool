@@ -1160,7 +1160,7 @@ struct
       fun is_id_y y _ =
         case NameHashMap.find ht y of
           SOME (Name y')
-           => let val OK = y' = y
+           => let val OK = Name.== (y', y)
               in (not OK, OK) end
         | _ => (true, false)
     in
@@ -1168,6 +1168,43 @@ struct
       andalso
       NameSet.foldUntil is_id_y true Y
     end            
+
+  fun remove_id_Y Y (ls, ht) =
+    let
+      fun filteroutY (l as {outer = Name y, inner}) (SOME ls)
+        = if NameSet.member y Y then
+            if NameSet.size inner = 1 then
+              (false, SOME ls)
+            else
+              (true, NONE)
+          else
+            (false, SOME (Link'Set.insert l ls))
+        | filteroutY _ _ = (true, NONE)
+    in
+      case Link'Set.foldUntil filteroutY (SOME Link'Set.empty) ls of
+        SOME ls =>
+        let
+          val ht' =
+            createNameHashMap
+              (NameHashMap.numItems ht - NameSet.size Y)
+          fun rm_id_Y y _ =
+            case NameHashMap.find ht y of
+              SOME (Name y') =>
+              let
+                val OK = Name.== (y', y)
+              in
+                if OK then NameHashMap.insert ht' (y, Name y') else ();
+                (not OK, OK)
+              end
+            | _ => (true, false)
+        in
+          if NameSet.foldUntil rm_id_Y true Y then
+            SOME (ls, ht')
+          else
+            NONE
+        end
+      | NONE => NONE
+    end
 
   fun is_renaming (ls, ht) =
     let

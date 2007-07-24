@@ -89,7 +89,7 @@ struct
   open Debug
   open ErrorHandler
 
-  (* fun print' s = TextIO.output(TextIO.stdErr, s) (* For debugging *) *)
+  (* fun print' s = TextIO.output(TextIO.stdErr, s) (* For debugging *) *) 
   fun print' s = ()
 
   val file_origin = Origin.mk_file_origin
@@ -1311,7 +1311,7 @@ struct
 
           fun make_match ({ename', s_C', Y, qs, tree}, rest) =
               let
-              val _ = print' ("\nBEFORE: ename' = " ^
+              val _ = print' ("\nION' BEFORE: ename' = " ^
               NameMap.Fold (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s) "" ename'
               ^ "s_C' = " ^ Wiring.toString s_C' ^ "\n")
               
@@ -1339,7 +1339,7 @@ struct
                             (ename', s_C'))
                       (ename', Wiring.unmk_sub s_C') (ys, us)
                     handle ListPair.UnequalLengths => raise NoMatch
-              val _ = print' ("\nAFTER: ename' = " ^
+              val _ = print' ("ION' AFTER: ename' = " ^
               NameMap.Fold (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s) "" ename'
               ^ "s_C' = " ^
               NameMap.Fold (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s) "" s_C'
@@ -2564,14 +2564,15 @@ struct
                     s_R = {s_R_e = s_R_e, s_R_n = s_R_n},
                     es = ps,
                     Qs = Ps}
-      val is_id_Y_R_x_sigma = Wiring.is_id_x_sigma Y_R
+      val remove_id_Y = Wiring.remove_id_Y Y_R
       fun toCLO ({ename', Y, s_C, Es = Qs, pi, qs, tree}, rest) =
-        if is_id_Y_R_x_sigma s_C then
+        case remove_id_Y s_C of
+          SOME s'_C =>
           let
             val Y_a = (NameSet.fromList (NameMap.range ename'))
             val Y_C = NameSet.difference Y_a Y_R
-            val w_C = closelinks Y_C s_C
-val _ = print' ("matchCLO: s_C = " ^ Wiring.toString s_C ^ 
+            val w_C = closelinks Y_C s'_C
+val _ = print' ("matchCLO: s'_C = " ^ Wiring.toString s'_C ^ 
                 ", Y_C = [ " ^ NameSet.fold (fn n => fn s => Name.unmk n ^ " " ^ s) "] " Y_C ^
                 ", Y_a = [ " ^ NameSet.fold (fn n => fn s => Name.unmk n ^ " " ^ s) "] " Y_a ^
                 ", Y_R = [ " ^ NameSet.fold (fn n => fn s => Name.unmk n ^ " " ^ s) "]\n" Y_R)
@@ -2582,7 +2583,7 @@ val _ = print' ("matchCLO: s_C = " ^ Wiring.toString s_C ^
                 ({w_C = w_C, Qs = Qs, pi = pi, qs = qs, tree = CLO tree},
                   rest ()))
           end
-        else
+        | NONE =>
           rest ()
     in
       lzunmk (lzfoldr toCLO lzNil matches)
