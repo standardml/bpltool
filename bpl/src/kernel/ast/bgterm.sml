@@ -44,7 +44,8 @@ functor BgTerm'(structure Info : INFO
                              Wiring.nameset =
                              NameSetPP.collection
     sharing type Ion.control = Control.control)
-      : BGTERM =
+      : BGTERM
+    where type control = Control.control =
 struct
   open Debug
   open ErrorHandler
@@ -133,10 +134,10 @@ struct
   exception UnknownControl of bgterm
   exception WrongArity of bgterm
 
-  fun replacecontrols ctrllist =
+  fun replacectrls ctrllist =
     let
       fun replace (t as Ion (ion, i)) = (
-          Ion (Ion.replacecontrol ctrllist ion, i)
+          Ion (Ion.replacectrl ctrllist ion, i)
           handle Ion.WrongArity _ => raise WrongArity t
                | Ion.UnknownControl _ => raise UnknownControl t) 
         | replace (Abs (X, t, i)) = Abs (X, replace t, i)
@@ -628,14 +629,14 @@ struct
                           explain_NotImplemented)
   fun explain_UnknownControl (UnknownControl t) =
       [Exp (LVL_USER, Info.origin (info t), pack_pp_with_data pp t, []),
-       Exp (LVL_LOW, file_origin, mk_string_pp "in BgTerm.replacecontrols", [])]
+       Exp (LVL_LOW, file_origin, mk_string_pp "in BgTerm.replacectrls", [])]
     | explain_UnknownControl _ = raise Match
   val _ = add_explainer
             (mk_explainer "The ion control name has not been declared"
                           explain_UnknownControl)
   fun explain_WrongArity (WrongArity t) =
       [Exp (LVL_USER, Info.origin (info t), pack_pp_with_data pp t, []),
-       Exp (LVL_LOW, file_origin, mk_string_pp "in BgTerm.replacecontrols", [])]
+       Exp (LVL_LOW, file_origin, mk_string_pp "in BgTerm.replacectrls", [])]
     | explain_WrongArity _ = raise Match
   val _ = add_explainer
             (mk_explainer
@@ -678,6 +679,7 @@ functor BgTerm (structure Info : INFO
                   and type wiring = Wiring.wiring
                   and type 'kind permutation = 'kind Permutation.permutation
                   and type Immutable = Permutation.Immutable
+                  and type control = Control.control
                   and type ion = Ion.ion
                   and type nameset = NameSet.Set
  =

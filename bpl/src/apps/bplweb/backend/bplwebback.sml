@@ -152,15 +152,28 @@ struct
         let
           (*val _ = TextIO.output (stdErr, "bplwebback::domatch called.\n")*)
           val _ = Name.reset ()
-          val _ = signatur := parseStr SIGNATURE "signature" signaturestr
+          val signatur = parseStr SIGNATURE "signature" signaturestr
+          val fixtctrl = BgTerm.replacectrls signatur
+          val bareagent = parseStr BGTERM "agent" agentstr
+          val ctrlfixedagent = fixtctrl bareagent
           val _ =
             agent := SOME
                       (BgBDNF.regularize 
                         (BgBDNF.make
-                          (BgVal.make
-                            BgTerm.info
-                              (parseStr BGTERM "agent" agentstr))))
-          val _ = rules := parseStr RULES "rules" rulesstr
+                          (BgVal.make BgTerm.info ctrlfixedagent)))
+          val fixvctrl = BgVal.replacectrls signatur
+          val fixbctrl = BgBDNF.replacectrls signatur
+          val barerules = parseStr RULES "rules" rulesstr
+          fun fixrule rule =
+            case Rule.unmk rule of
+              {name, redex, react, inst} =>
+              Rule.make {
+                name = name,
+                redex = fixbctrl redex,
+                react = fixvctrl react,
+                inst = inst}
+          val ctrlfixedrules = map fixrule barerules 
+          val _ = rules := ctrlfixedrules
           val userules = parsenum userulesstr
           val matchcount = parsenum matchcountstr
 val _ = TextIO.output (stdErr, "userules = " ^ Int.toString userules 

@@ -26,6 +26,7 @@ sig
   type info
   type nameset
   type interface
+  type control
   type ion
   type wiring
   type Immutable
@@ -90,6 +91,9 @@ sig
    * @param b2  the second bigraph.
    *)
   val eq' : 'class bgbdnf -> 'class bgbdnf -> bool
+
+  (** Replace ion controls by looking their names up in the list. *)
+  val replacectrls : control list -> 'a bgbdnf -> 'a bgbdnf
 
   (** Sum type for singular top-level nodes. The renaming concretion is
       represented by just the renaming. *)

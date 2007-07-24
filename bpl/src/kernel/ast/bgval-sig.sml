@@ -56,6 +56,7 @@ sig
   type nameset
   type interface
   type wiring
+  type control
   type ion
   type Immutable
   type 'kind permutation
@@ -323,6 +324,8 @@ sig
    * with id, etc.
    *)
   val simplify : bgval -> bgval
+  (** Replace ion controls by looking their names up in the list. *)
+  val replacectrls : control list -> bgval -> bgval
   (** Prettyprint a bgval without parentheses around it.
    * @params indent pps t
    * @param indent  Indentation at each block level.

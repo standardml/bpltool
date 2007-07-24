@@ -150,7 +150,10 @@ sig
                Reaction.rule
 
   sharing type control =
-               Control.control
+               Control.control =
+               BgTerm.control =
+               BgVal.control =
+               BgBDNF.control
 
   sharing type Match.match =
                Reaction.match

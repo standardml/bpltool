@@ -82,7 +82,7 @@ sig
    * the control table and replaced by that entry.
    * @exception  UnknownControl if the term contains a control not listed.
    *)
-  val replacecontrols : control list -> bgterm -> bgterm
+  val replacectrls : control list -> bgterm -> bgterm
   (** Prettyprint a bgterm without parentheses around it.
    * @params indent pps t
    * @param indent  Indentation at each block level.

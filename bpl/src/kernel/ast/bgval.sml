@@ -93,6 +93,7 @@ struct
   type interface = Interface.interface
   type Immutable = Permutation.Immutable
   type 'kind permutation = 'kind Permutation.permutation
+  type control = Control.control
   type ion = Ion.ion
   type wiring = Wiring.wiring
 
@@ -1431,6 +1432,18 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
         else 
           false
       end
+
+  fun replacectrls ctrls =
+    let
+      fun rplc (VIon (ion, i))
+        = VIon (Ion.replacectrl ctrls ion, i)
+        | rplc (VAbs (X, v, i))   = VAbs (X, rplc v, i) 
+        | rplc (VTen (vs, i))     = VTen (map rplc vs, i)
+        | rplc (VCom (b1, b2, i)) = VCom (rplc b1, rplc b2, i)
+        | rplc v = v
+    in
+      rplc
+    end
 
   val revision
     = hd (String.tokens (not o Char.isDigit) "$LastChangedRevision$")

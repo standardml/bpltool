@@ -53,7 +53,7 @@ struct
 
   exception UnknownControl of ion
 
-  fun replacecontrol ctrllist (ion as {ctrl, free, bound}) =
+  fun replacectrl ctrllist (ion as {ctrl, free, bound}) =
     let
       fun lookup c =
         let

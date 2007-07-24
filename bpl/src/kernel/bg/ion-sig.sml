@@ -55,7 +55,7 @@ sig
    * a list of controls, and replaced by the matching entry.
    * @exception  UnknownControl if the ion control name is not listed.
    *)
-  val replacecontrol : control list -> ion -> ion
+  val replacectrl : control list -> ion -> ion
   (** Test two ions for equality.
    * @params i1 i2
    * @param i1  the first ion.

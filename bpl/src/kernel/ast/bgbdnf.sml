@@ -1515,6 +1515,8 @@ struct
           false*)
       end handle InterfacesDiffer => false
     end
+
+  val replacectrls = BgVal.replacectrls
     
   fun eq b1 b2 =
       let
