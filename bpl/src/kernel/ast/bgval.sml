@@ -1433,10 +1433,31 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
           false
       end
 
+  exception UnknownControl of bgval
+  fun explain_UnknownControl (UnknownControl v) =
+      [Exp (LVL_USER, Info.origin (info v), pack_pp_with_data pp v, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp "in BgVal.replacectrls", [])]
+    | explain_UnknownControl _ = raise Match
+  val _ = add_explainer
+            (mk_explainer "The ion control name has not been declared"
+                          explain_UnknownControl)
+  exception WrongArity of bgval
+  fun explain_WrongArity (WrongArity v) =
+      [Exp (LVL_USER, Info.origin (info v), pack_pp_with_data pp v, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp "in BgVal.replacectrls", [])]
+    | explain_WrongArity _ = raise Match
+  val _ = add_explainer
+            (mk_explainer
+              "Ion control arity does not match the number \
+              \of free names or bound name sets"
+                          explain_WrongArity)
+
   fun replacectrls ctrls =
     let
-      fun rplc (VIon (ion, i))
-        = VIon (Ion.replacectrl ctrls ion, i)
+      fun rplc (v as VIon (ion, i))
+        = (VIon (Ion.replacectrl ctrls ion, i)
+           handle Ion.WrongArity _ => raise WrongArity v
+                | Ion.UnknownControl _ => raise UnknownControl v)
         | rplc (VAbs (X, v, i))   = VAbs (X, rplc v, i) 
         | rplc (VTen (vs, i))     = VTen (map rplc vs, i)
         | rplc (VCom (b1, b2, i)) = VCom (rplc b1, rplc b2, i)
