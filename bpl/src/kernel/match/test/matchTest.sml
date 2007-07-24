@@ -80,6 +80,10 @@ in
    * succeed.
    *)
   val tests = [
+    ("Matching empty agent",
+     {agent = -//[],
+      redex = K0},
+     JUST []),
     ("Matching with id_Z nonempty",
      {agent = (K1[x] * z/z) o L1[z] o <->,
       redex = K1[x]},

@@ -139,7 +139,7 @@ val comlevel = ref 0;
 
 %%
 %header (functor RulesLex(structure Tokens : Rules_TOKENS));
-KW_ID   = \* | `[|]` | [|][|] | [<|]-[>] | [|]--[>] | [a-z][A-Za-z0-9_]* | 1 | -?[/][/]?;
+KW_ID   = \* | `[|]` | [|][|] | [<|]-[>] | [|]?--[>] | "=:" | "-:" | [a-z][A-Za-z0-9_]* | 1 | -?[/][/]?;
 CTRLID  = [A-Z?!][A-Za-z0-9_]*;
 INT     = (0 | [1-9][0-9]*);
 STRING  = \"([^\ \t\013\n]|\\\")*\";
