@@ -258,19 +258,17 @@ val _ = printRes "term''" terms'''
 
 (* (k k)<x:=k> --3> k k *)
 val term''' = LazyList.lzhd terms''' (* the resulting agent we want *)
-val _ = print("term''' =\n" ^ B.toString(term''') ^ "\n")
-val mtD = M.amatch { agent = makeBR term''' , rule = ruleD }
+(*val _ = print("term''' =\n" ^ B.toString(term''') ^ "\n")*)
+val mtsD = M.matches { agent = makeBR term''' , rule = ruleD }
+(*val _ = printMts mtsD*)
+val terms'''' = LazyList.lzmap (Re.react term''') mtsD
 (*
 val _ = case mtD of NONE => print "No matches!\n"
 		  | SOME(m) => ( print(M.toString(m))
 		    handle e => handler e )
-
-val _ = print("length(mtsD) = " ^ (lzlength mtsD) ^ "\n")
-val _ = printMts mtC2
-val terms''' = LazyList.lzmap (Re.react term'') mtC2
-val _ = print("length(terms''') = " ^ (lzlength terms''') ^ "\n")
-val _ = printRes "term''" terms'''
 *)
+val _ = printRes "term'''" terms''''
+
 
 (*
 open TextIO;
