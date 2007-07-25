@@ -43,7 +43,7 @@ end
 local
 fun help' [] = ()
   | help' ("control" :: topics) = (print
-  	"Node controls (K,L,M : string, m,n >= 0):\n\
+  	"Node controls (K,L,M : string; m,n >= 0):\n\
   	\  active   (K -: n)         Active node of global arity n\n\
   	\  passive  (L =: m --> n)   Passive node of local/global arity m/n\n\
   	\  atomic   (L =: m --> n)   Atomic node of local/global arity m/n\n\
@@ -52,7 +52,7 @@ fun help' [] = ()
   	\  atomic0  (M)              Atomic node without ports\n";
   	help'' topics)
   | help' ("bigraph" :: topics) = (print
-	  "Ions (K,L,M : control, x,y : string):\n\
+	  "Ions (K,L,M : control; x,y : string):\n\
 	  \  K[y,...]                  Ion with control of global arity\n\
 	  \  L[y,...][[x,...],...]     Ion with control of global/local arity\n\n\
 	  \Wirings (x,y : string):\n\
@@ -81,15 +81,27 @@ fun help' [] = ()
 	  \  A o B                     Composition\n";
 	  help'' topics)
   | help' ("operator" :: topics) = (print
-	  "ML function composition (f : 'b -> c, g : 'a -> 'b):\n\
+	  "ML function composition (f : 'b -> c; g : 'a -> 'b):\n\
 	  \  f oo g\n\n\
 	  \Precedence:\n\
 	  \  o                         Composition (strongest)\n\
 	  \  *, ||, `|`                Product, left associative\n\
 	  \  <[x,...]> P               Abstraction (weakest)\n";
 	  help'' topics)
+  | help' ("rule" :: topics) = (print
+	  "Rules: (R, R' : bgval; rho : inst; N,x : string; i,j : int)\n\
+	  \  R ----|> R'               Rule with redex R, reactum R' and default instantiation\n\
+	  \  R --rho--|> R'            Rule with redex R, reactum R' and instantiation rho\n\
+	  \  N ::: R ----|> R'         Named rule\n\
+	  \  [i_0 |-> j_0, ..., i_m-1 |-> j_m-1]\n\
+	  \                            Instantiation mapping redex site i_k\n\
+	  \                              to reactum site j_k\n\
+	  \  [..., i_k&[x_0,...,x_m-1] |--> j_k&[y_0,...,y_m-1], ...]\n\
+	  \                            Instantiation mapping local redex\n\
+	  \                              name x_k to reactum name y_k\n";
+	  help'' topics)
   | help' ("operation" :: topics) = (print
-	  "Operations (A,B,R : 'a bgbdnf, a,r,v : bgval, e : exn):\n\
+	  "Bigraph operations (A,B,R : 'a bgbdnf; a,r,v : bgval; e : exn):\n\
 	  \  norm_v v             denorm_b B           (De)normalise\n\
 	  \  regl_v v             regl_b B             Regularise\n\
 	  \  simpl_v v            simpl_b B            Attempt to simplify\n\
@@ -99,34 +111,54 @@ fun help' [] = ()
 	  \  print_v v            print_b B            Print to stdOut\n\
 	  \  print_mv mz          print_mb mz          Print lazy list of matches\n\
 	  \  print_mtv mz         print_mtb mz         Print lazy list of matches with trees\n\
-	  \  explain e                                 Explain exception in detail\n";
+	  \  str_r r                                   Return rule as a string\n\
+	  \  print_r r                                 Print rule\n\
+	  \  explain e                                 Explain exception in detail\n\
+	  \  use_shorthands on/off                     hide/show identities when displaying\n";
 	  help'' topics)
-	| help' ("instantiation" :: topics) = (print
-	  "Instantiations:\n\
-	  \  @[i_0 |-> j_0, ..., i_m-1 |-> j_m-1]      Instantiation mapping redex\n\
-	  \                                              site i_k to reactum site j_k\n\
-	  \  @@[..., i_k&[x_0,...,x_m-1] |--> j_k&[y_0,...,y_m-1], ...]\n\
-	  \                                            Instantiation mapping local redex\n\
-	  \                                              name x_k to reactum name y_k\n";
+  | help' ("tactic" :: topics) = (print
+	  "Tactics: (N : string; t : tactic)\n\
+	  \  react_rule N                              Apply rule N\n\
+	  \  react_rule_any                            Apply any rule\n\
+	  \  roundrobin                                Apply rules roundrobin until none match\n\
+	  \  t1 ++ t2                                  Use t1, then t2\n\
+	  \  TRY t1 ORTHEN t2                          If t1 fails, use t2 on its result\n\
+	  \  IF t1 THEN t2 ELSE t3                     If t1 finishes, use t2, else t3 on its result\n\
+	  \  REPEAT t                                  Repeat t until it fails\n\
+	  \  i TIMES_DO t                              Use t i times\n\
+	  \  finish                                    Finish tactic\n\
+	  \  fail                                      Fail tactic\n";
+	  help'' topics)
+  | help' ("reaction" :: topics) = (print
+	  "Reaction operations (v : bgval; m : match; r : rule, N : string, rs : rules):\n\
+	  \  react v m                                 Perform a single reaction step\n\
+	  \  mkrules [r_0, ..., r_n]                   Construct a rule map\n\
+	  \  mknamedrules [..., (N_i, r_i), ...]       Construct a rule map with explicit names\n\
+	  \  run rs t v                                Perform agent reactions using a tactic\n\
+	  \  steps rs t v                              Return agent for each step using a tactic\n\
+	  \  \n";
 	  help'' topics)
   | help' ("example" :: topics) = (print
 	  "Example:\n\
 	  \  let val K = active   (\"K\" =: 2 --> 1)\n\
 	  \      val L = passive0 (\"L\")\n\
 	  \      val (x,y,z) = (\"x\", \"y\", \"z\")\n\
+	  \      val KtoL = \"KtoL\" ::: K[z][[y,z],[]] ----|> L * z//[y,z] o `[y,z]`\n\
 	  \  in <[y]> (y//[x,z] * merge(2)) o (K[z][[y,z],[]] * id_X[x] * L)\n\
 	  \            o (@@[1&[],0&[y,z]] * x//[])\n\
 	  \  end handle error => explain error\n";
 	  help'' topics)
 	| help' _
-	= help' ["control", "bigraph", "operator", "operation", "example"]
+	= help'
+	    ["control", "bigraph", "operator", "rule", "operation", "tactic", "reaction", "example"]
 and help'' [] = ()
   | help'' topics = (print "\n"; help' topics)
 fun help''' []
   = (print "  (help \
-          	\[\"control\", \"bigraph\", \"operator\",\
-          	\ \"operation\", \"example\"]):\n\n";
-          help' ["control", "bigraph", "operator", "operation", "example"])
+          	\[\"control\", \"bigraph\", \"operator\", \"rule\",\
+          	\ \"operation\", \"tactic\", \"reaction\", \"example\"]):\n\n";
+          help' ["control", "bigraph", "operator", "rule", "operation",
+                 "tactic", "reaction", "example"])
   | help''' topics = (print " ('help []' for all topics):\n\n"; help' topics)
 in
 fun help topics =
@@ -152,11 +184,14 @@ type 'class bgbdnf = 'class BG.BgBDNF.bgbdnf
 type match = BG.Match.match
 type rule = BG.Rule.rule
 val norm_v = BG.BgBDNF.make
+val normalize = norm_v
 val denorm_b = BG.BgBDNF.unmk
 val regl_b = BG.BgBDNF.regularize
 fun regl_v v = regl_b (norm_v v)
+val regularize = regl_v
 val simpl_v = BG.BgVal.simplify
-fun simpl_b b = simpl_v (denorm_b b) 
+fun simpl_b b = simpl_v (denorm_b b)
+val simplify = simpl_v
 val match_rbdnf = BG.Match.matches
 fun match_b {agent, redex}
   = let
@@ -182,6 +217,7 @@ fun match_v {agent, redex}
                    redex = redex,
                    react = react}}
     end
+val match = match_v
 fun react_b {agent, rules} =
   case BG.Match.arrmatch {agent = regl_b agent, rules = rules} of
     NONE => NONE
@@ -198,6 +234,7 @@ fun react_b {agent, rules} =
     end
 fun react_v {agent, rules} =
   react_b {agent = norm_v agent, rules = rules}
+val react = react_v
 
 val str_b = BG.BgBDNF.toString
 val str_v = BG.BgVal.toString
@@ -220,6 +257,8 @@ in
   fun print_mv mz = print_m0 mz BG.Match.toString'
   fun print_mtv mz = print_m0 mz BG.Match.toStringWithTree'
 end
+val str_r = BG.Rule.toString
+fun print_r r = print (str_r r)
 
 fun explain e = (BG.ErrorHandler.explain e; raise e);
 

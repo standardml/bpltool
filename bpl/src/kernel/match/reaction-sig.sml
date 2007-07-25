@@ -61,10 +61,10 @@ sig
   val react : agent -> match -> agent
 
   (** Construct a rule map. *)
-  val mkrules : (rulename * rule) list -> rules
+  val mknamedrules : (rulename * rule) list -> rules
 
   (** Construct a rule map, using default names. *)
-  val mkdefaultrules : rule list -> rules
+  val mkrules : rule list -> rules
 
   (** Run a system of reaction rules, using a tactic, on an agent.
    * @params R t a

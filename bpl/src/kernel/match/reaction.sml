@@ -127,14 +127,14 @@ struct
       newagent
     end
 
-  fun mkrules nrs = 
+  fun mknamedrules nrs = 
     foldl
       (fn ((name, rule), map) => RuleNameMap.add (name, rule, map))
       RuleNameMap.empty
       nrs
 
-  val mkdefaultrules =
-    mkrules o map (fn rule => (#name (Rule.unmk rule), rule))
+  val mkrules =
+    mknamedrules o map (fn rule => (#name (Rule.unmk rule), rule))
 
 (*  fun run rules tactic agent =
     let

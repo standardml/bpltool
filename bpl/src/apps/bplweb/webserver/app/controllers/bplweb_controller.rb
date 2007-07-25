@@ -10,6 +10,8 @@ class BplwebController < ApplicationController
     @title = ''
     @signature = 'passive(Get =: 1 --> 1), passive(Send -: 2)'
     @agent = 'Get[y][[z]] o (&lt;[z]> z//[] * &lt;->) `|` Send[x,y] o &lt;->'
+print "\n===>[", params[:simplifymatches], "]\n"
+    @simplifymatches = params[:simplifymatches] == "on"
     @rules = [Rule.new(:redex => 'Get[y1][[z1]] `|` Send[x1,y1] o &lt;->',
                        :react => '(x1//[] * y1/z1 * idp(1)) o `[z1]`',
                        :inst => '[0 |-&gt; 0]')]
@@ -47,6 +49,7 @@ class BplwebController < ApplicationController
 
     signature = params ['signature']
     agent     = params ['agent']
+    simplifymatches = params ['simplifymatches'] == "on"
     redex     = params ['redex']
     react     = params ['react']
     inst     = params ['inst']
@@ -75,7 +78,8 @@ class BplwebController < ApplicationController
 print "matchrequest " + requestno.to_s + " calling server...\n"
     begin
       # Call the remote server and get our result
-      @result = server.call("matchrequest", id, signature, agent, rules,
+      @result = server.call("matchrequest", id, signature, agent,
+                            simplifymatches, rules,
                             matchcount, rulestomatch, requestno)
       if @result['type'] == 'OK'
         session[:id] = @result ['id']['sessionid'].to_i 

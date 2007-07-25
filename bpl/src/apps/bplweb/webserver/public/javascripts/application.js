@@ -368,7 +368,8 @@ function resultrequest (rule, match, rulestomatch, matchcount) {
 //  alert ('Sending for result (' + rule + ", " + match + ")");
   new Ajax.Request
     ('/bplweb/resultrequest',
-     {'parameters': 'sessionid=' + id['sessionid'] + '&matchingid=' + id['matchingid'] + '&rule=' + rule + '&match=' + match,
+     {'parameters': 'sessionid=' + id['sessionid'] + '&matchingid=' + id['matchingid']
+      + '&rule=' + rule + '&match=' + match,
       onSuccess: function (transport, json) {
           result = eval ("(" + transport.responseText + ")");
           switch (result ['type'].toUpperCase ()) {
@@ -417,7 +418,7 @@ function deletematches (rulestomatch) {
 }
 
 function matchrequest (rulestomatch, matchcount) {
-  deletematches (rulestomatch);  
+  deletematches (rulestomatch);
   new Ajax.Request
     ('/bplweb/matchrequest',
      {'parameters': 'sessionid=' + id['sessionid'] + '&matchingid=' + id['matchingid']

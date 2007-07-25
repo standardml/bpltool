@@ -87,11 +87,12 @@ print "running matcher worker thread...\n"
               agent != matching.agent || rules != matching.rules
             print "new agent or rules\n"
             $stdout.flush
-            signature    = matching.signature
-            agent        = matching.agent
-            rules        = matching.rules
-            rulestomatch = matching.rulestomatch
-            matchcount   = matching.matchcount
+            signature       = matching.signature
+            agent           = matching.agent
+            simplifymatches = matching.simplifymatches
+            rules           = matching.rules
+            rulestomatch    = matching.rulestomatch
+            matchcount      = matching.matchcount
             rules_formatted = "["
             first_rule = true
             rules.each {|rule|
@@ -127,6 +128,7 @@ print "running matcher worker thread...\n"
                           "ENDRULES",
                           "USERULES:#{rulestomatch}",
                           "MATCHCOUNT:#{matchcount}",
+                          "SIMPLIFYMATCHES:#{simplifymatches}",
                           "ENDMATCH"]
               print(line + "\n")
               matcher.puts(line + "\n")
@@ -324,13 +326,15 @@ noresult = { 'ruleno' => -1, 'matchno' => -1, 'match' => emptymatch }
 # The worker must be signaled when a change in the job has
 # occurred.
 class Matching
-  attr_reader :id, :signature, :agent, :rules, :matchcount, :rulestomatch,
+  attr_reader :id, :signature, :agent, :simplifymatches, 
+  :rules, :matchcount, :rulestomatch,
   :react, :requestno, :results, :found, :foundall, :errors,
   :mutex, :worker, :resultsflag
   def initialize (id)
     @id           = id        # Matching ID (determines agent & rules)
     @signature    = ""        # Signature for use in agent
     @agent        = ""        # Agent in which to match...
+    @simplifymatches = true   # Simplify context and parameter
     @rules        = ""        # ...one or more rules
     @matchcount   = -1        # Requested matches, -1 means 'all'
     @rulestomatch = -2        # Rules to match, -1 means 'all'
@@ -346,7 +350,7 @@ class Matching
     Worker.new self # Start the worker threads
   end
 
-  def matchrequest1 (id, signature, agent, rules,
+  def matchrequest1 (id, signature, agent, simplifymatches, rules,
                     matchcount, rulestomatch, requestno)
 print "matchrequest1 ([" + id['sessionid'].to_s + ", " +
       id['matchingid'].to_s + "], " + matchcount.to_s + ", " +
@@ -380,6 +384,7 @@ print "agent = '" + agent.to_s + "',  @agent = '" + @agent.to_s + "'\n"
         @id['matchingid'] += 1
         @signature = signature
         @agent = agent
+        @simplifymatches = simplifymatches
         @rules = rules
         @matchcount = matchcount
         @rulestomatch = rulestomatch
@@ -522,12 +527,12 @@ class Serverobj
     @matchingssessionidflag = ConditionVariable.new
   end
 
-  def matchrequest (id, signature, agent, rules,
+  def matchrequest (id, signature, agent, simplifymatches, rules,
                     matchcount, rulestomatch, requestno)
     print "matchrequest ([" + id['sessionid'].to_s + ", " +
       id['matchingid'].to_s + "], " + requestno.to_s + ")\n"
     print "args: "
-    print  [id, signature, agent, rules,
+    print  [id, signature, agent, simplifymatches, rules,
                     matchcount, rulestomatch, requestno].join(",")
     print "\n"
     sessionid = id['sessionid'].to_i
@@ -547,7 +552,8 @@ class Serverobj
     }
     id = {'sessionid' => sessionid, 'matchingid' => id['matchingid']}
     if matching
-      return matching.matchrequest1(id, signature, agent, rules, matchcount,
+      return matching.matchrequest1(id, signature, agent, simplifymatches,
+                                   rules, matchcount,
                                    rulestomatch, requestno)
     end
     print "matchrequest making new Matching object for session "
@@ -557,7 +563,8 @@ class Serverobj
     matching = Matching.new(id)
     @matchings[sessionid] = matching
     @matchingssessionidflag.broadcast
-    return matching.matchrequest1(id, signature, agent, rules, matchcount, 
+    return matching.matchrequest1(id, signature, agent, simplifymatches,
+                                  rules, matchcount, 
                                   rulestomatch, requestno)
   end
 
@@ -729,12 +736,12 @@ server.add_handler("resultrequest", ["struct", "struct", "int", "int"],
 }
 
 server.add_handler("matchrequest", 
-                   ['struct', 'struct', 'string', 'string', 'array', 'int', 'int', 'int'],
-                   "matchrequest({sessionid, matchingid}, signature, agent, rules, matchcount, rulestomatch, requestno)
+                   ['struct', 'struct', 'string', 'string', 'int', 'array', 'int', 'int', 'int'],
+                   "matchrequest({sessionid, matchingid}, signature, agent, simplifymatches, rules, matchcount, rulestomatch, requestno)
   returns a {type, {sessionid, matchingid}}
   where type is 'OK' or 'TimeOut'") {
-  |id, signature, agent, rules, matchcount, rulestomatch, requestno|
-  serverobj.matchrequest(id, signature, agent, rules,
+  |id, signature, agent, simplifymatches, rules, matchcount, rulestomatch, requestno|
+  serverobj.matchrequest(id, signature, agent, simplifymatches, rules,
                                 matchcount, rulestomatch, requestno)
 }
 
