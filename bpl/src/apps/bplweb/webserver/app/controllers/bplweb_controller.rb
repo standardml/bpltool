@@ -155,7 +155,7 @@ print "Server call returned to reactrequest " + id.to_s + ".\n"
 
     params = params()
 
-    signature = params ['signature']
+    signature = "[" + params ['signature'] + "]"
     agent = params ['agent']
 
     begin
