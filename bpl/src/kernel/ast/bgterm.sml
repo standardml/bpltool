@@ -151,6 +151,18 @@ struct
       replace
     end
 
+  fun add1s (t as Ion (ion, i))
+    = if Control.kind (#ctrl (Ion.unmk ion)) = Control.Atomic then
+        Com (t, Mer (0, i), i)
+      else
+        t 
+    | add1s (Abs (X, t, i))   = Abs (X, add1s t, i)
+    | add1s (Ten (ts, i))     = Ten (map add1s ts, i)
+    | add1s (Pri (ts, i))     = Pri (map add1s ts, i)
+    | add1s (Par (ts, i))     = Par (map add1s ts, i)
+    | add1s (Com (t1, t2, i)) = Com (add1s t1, add1s t2, i)
+    | add1s t = t
+
   exception NotImplemented of bgterm * string
 
   (* Determine whether t = 1 * ... * 1 *)
@@ -286,6 +298,36 @@ struct
       in
         w (t, width (t : bgterm)) ts
       end
+
+  (* Determine whether the inside of t is an atomic ion with
+   * an empty inner face.
+   *)
+  fun is_atomic_ion (Mer _)         = false
+    | is_atomic_ion (Con _)         = false
+    | is_atomic_ion (Wir _)         = false
+    | is_atomic_ion (Ion (ion, _))
+    = Control.kind (#ctrl (Ion.unmk ion)) = Control.Atomic
+    | is_atomic_ion (Per (pi, _))   = false
+    | is_atomic_ion (Abs (X, t, _)) = is_atomic_ion t
+    | is_atomic_ion (Ten (ts, _))
+    = foldr
+        (fn (t, n) => if is_atomic_ion t then 1 + n else n + 2 * width t)
+        0
+        ts
+      = 1
+    | is_atomic_ion (Par (ts, _))
+    = foldr
+        (fn (t, n) => if is_atomic_ion t then 1 + n else n + 2 * width t)
+        0
+        ts
+      = 1
+    | is_atomic_ion (Pri (ts, _))
+    = foldr
+        (fn (t, n) => if is_atomic_ion t then 1 + n else n + 2 * width t)
+        0
+        ts
+      = 1
+    | is_atomic_ion (Com (_, t, _)) = is_atomic_ion t
 
   fun pp indent pps =
     let
@@ -449,14 +491,17 @@ struct
                 val (showlpar, pal', par', prr', showrpar)
                   = checkprec PrCom
               in
-                showlpar();
-                <<();
-                ppp pal' PrCom PrCom b1;
-                show " o";
-                brk();
-                ppp PrCom par' prr' b2;
-                showrpar();
-                >>()
+                if is_atomic_ion b1 then
+                  ppp pal par prr b1
+                else
+                  (showlpar();
+                   <<();
+                   ppp pal' PrCom PrCom b1;
+                   show " o";
+                   brk();
+                   ppp PrCom par' prr' b2;
+                   showrpar();
+                   >>())
               end handle e => raise e
           in
             pp'

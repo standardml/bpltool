@@ -39,7 +39,7 @@ fun REACT n =
           Sum o (Send(n)(x :: ys)                `|` idp(1))
       `|` Sum o (Get(n)[x](map (fn z => [z]) zs) `|` idp(1))
     val react =
-      foldr (fn ((y, z), product) => y/z * product) (x//[] * idp(1)) yzs
+      (foldl (fn ((y, z), product) => product * y/z) (x//[]) yzs * idp(1))
       o (idp(1) `|` `zs`)
   in  
     ("REACT" ^ Int.toString n) ::: redex --[0 |-> 0, 1 |-> 2]--|> react

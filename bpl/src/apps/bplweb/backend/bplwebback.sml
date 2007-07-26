@@ -153,7 +153,7 @@ struct
           (*val _ = TextIO.output (stdErr, "bplwebback::domatch called.\n")*)
           val _ = Name.reset ()
           val signatur = parseStr SIGNATURE "signature" signaturestr
-          val fixtctrl = BgTerm.replacectrls signatur
+          val fixtctrl = BgTerm.add1s o BgTerm.replacectrls signatur
           val bareagent = parseStr BGTERM "agent" agentstr
           val ctrlfixedagent = fixtctrl bareagent
           val _ =

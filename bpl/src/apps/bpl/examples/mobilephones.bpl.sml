@@ -80,7 +80,7 @@ val DEF_Control = "DEF_Control" :::
 val defrules = [DEF_Car, DEF_Trans, DEF_Idtrans, DEF_Control]
 
 (* All rules *)
-val rules = mkdefaultrules (List.@ (defrules, pirules))
+val rules = mkrules (List.@ (defrules, pirules))
 
 (* Tactics *)
 val TAC_talk =

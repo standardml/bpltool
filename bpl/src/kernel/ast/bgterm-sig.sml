@@ -83,6 +83,8 @@ sig
    * @exception  UnknownControl if the term contains a control not listed.
    *)
   val replacectrls : control list -> bgterm -> bgterm
+  (** Replace all atomic ions K with a composition K o <-> *)
+  val add1s : bgterm -> bgterm
   (** Prettyprint a bgterm without parentheses around it.
    * @params indent pps t
    * @param indent  Indentation at each block level.
