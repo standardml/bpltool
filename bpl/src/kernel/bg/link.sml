@@ -49,7 +49,7 @@ struct
       | (SOME _, NONE) => false
       | (NONE, NONE) => NameSetCompare.lt inner1 inner2
       | (SOME x1, SOME x2) => 
-	if x1 = x2 then 
+	if Name.== (x1, x2) then 
 	  NameSetCompare.lt inner1 inner2
 	else
 	  Name.< (x1, x2)

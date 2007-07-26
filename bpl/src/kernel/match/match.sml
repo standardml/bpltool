@@ -351,7 +351,7 @@ struct
     fun check_adjust e s x x' =
         (case (NameMap.inDomain x e, NameMap.inDomain x' s) of
            (true, true)
-           => if (lookup e x) = (lookup s x') then
+           => if Name.== (lookup e x, lookup s x') then
                 (e, s)
               else
                 raise NoMatch
@@ -1426,7 +1426,7 @@ struct
         val s_C_e' = Wiring.* (s_C_e, s_C_L)
         val ename'' =
           NameSet.fold
-           (fn w => fn ename => NameMap.add' (w, w, ename))
+           (fn w => fn ename => NameMap.add' Name.== (w, w, ename))
            ename
            W
 
@@ -1998,7 +1998,7 @@ struct
                      val ename' =
                        NameSet.fold
                         (fn x => fn ename =>
-                         NameMap.add' (x, x, ename)
+                         NameMap.add' Name.== (x, x, ename)
                          handle NameMap.DATACHANGED => ename)
                          ename
                          Q_s_a_e'
@@ -2045,7 +2045,7 @@ struct
           val ename' =
             NameSet.fold
              (fn x => fn ename =>
-              NameMap.add' (x, x, ename)
+              NameMap.add' Name.== (x, x, ename)
               handle NameMap.DATACHANGED => ename)
               ename
               Q_s_a_e'
@@ -2431,7 +2431,7 @@ struct
 		              val s_C = Wiring.|| (s_Y, s_C)
 		              val ename'
 		                = NameSet.fold
-		                    (fn y => fn ename => NameMap.add' (y, y, ename))
+		                    (fn y => fn ename => NameMap.add' Name.== (y, y, ename))
 		                    ename'
 		                    s_Y_e_Y
 		           val _ = print' ("matchION: ename' = { " ^

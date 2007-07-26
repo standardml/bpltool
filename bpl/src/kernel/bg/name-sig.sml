@@ -24,7 +24,7 @@
 signature NAME =
 sig
   (** The name data type. *)
-  eqtype name
+  type name
   (** Construct a name. *)
   val make : string -> name
   (** Get the original string used to create a name. *)

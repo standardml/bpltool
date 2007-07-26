@@ -76,6 +76,9 @@ struct
     | nameedgecompare (Closure _)  (Name _)     = GREATER
     | nameedgecompare (Closure i1) (Closure i2) = Int.compare (i1, i2)
 
+  (* Equality operator on nameedges. *)
+  fun nameedgeeq (ne1, ne2) = nameedgecompare ne1 ne2 = EQUAL
+
   (* Less-than operator on link's. *)
   structure Link'Order =
   struct
@@ -107,7 +110,7 @@ struct
   structure NameEdgeMap
     = HashTableFn (type hash_key = nameedge
                    val hashVal = nameedgehash
-		   val sameKey = op =);
+		   val sameKey = nameedgeeq);
   fun createNameEdgeMap size = NameEdgeMap.mkTable (size, NOT_FOUND)
   fun createNameEdgeMap' ()  = createNameEdgeMap 37
 
