@@ -320,15 +320,24 @@ val _ = TextIO.output (stdErr, "rules = "
         | doreact (NONE, _) = log "Ruleno not specified!"
         | doreact (_, NONE) = log "Matchno not specified!"
       
-      fun dosimplify (SOME agentstr) =
+      fun dosimplify (signaturestr, SOME agentstr) =
         let
+          val _ = Name.reset ()
+          val signatur =
+            case signaturestr of
+              SOME signaturestr =>
+              parseStr SIGNATURE "signature" signaturestr
+            | NONE => []
+          val fixctrl = BgTerm.add1s o BgTerm.replacectrls signatur
+          val bareagent = parseStr BGTERM "agent" agentstr
+          val ctrlfixedagent = fixctrl bareagent
+
           val simplifiedagent
             = BgVal.simplify
                 (BgBDNF.unmk 
                   (BgBDNF.make
                     (BgVal.make
-                      BgTerm.info
-                        (parseStr BGTERM "agent" agentstr))))
+                      BgTerm.info ctrlfixedagent)))
           val oldval = Flags.getBoolFlag "/kernel/bg/name/strip"
         in
           Flags.setBoolFlag "/kernel/bg/name/strip" true;
@@ -337,7 +346,7 @@ val _ = TextIO.output (stdErr, "rules = "
              ^ "\nEND\n");
           Flags.setBoolFlag "/kernel/bg/name/strip" oldval
         end
-        | dosimplify NONE = log "Agent not specified!"
+        | dosimplify _ = log "Agent or not specified!"
       
       fun getuntil endmarker =
         let
@@ -420,7 +429,7 @@ val _ = TextIO.output (stdErr, "rules = "
         		log ("Unrecognised input line: " ^ line)
         end
       
-      fun evalsimplify (agent) =
+      fun evalsimplify (signatur, agent) =
       	let
       	  val line
       	    = case inputLineNoBuf () of
@@ -428,11 +437,13 @@ val _ = TextIO.output (stdErr, "rules = "
       	  val upline = String.translate (String.str o Char.toUpper) line
         in
         	if String.isPrefix "AGENT" upline then
-        		evalsimplify (SOME (getuntil "ENDAGENT"))
+        		evalsimplify (signatur, SOME (getuntil "ENDAGENT"))
+        	else if String.isPrefix "SIGNATURE" upline then
+        		evalsimplify (SOME (getuntil "ENDSIGNATURE"), agent)
         	else if String.isPrefix "ENDSIMPLIFY" upline then
-        		dosimplify (agent)
+        		dosimplify (signatur, agent)
         	else if null (String.tokens Char.isSpace line) then
-        	  evalsimplify (agent)
+        	  evalsimplify (signatur, agent)
         	else
         		log ("Unrecognised input line: " ^ line)
         end
@@ -459,7 +470,7 @@ val _ = TextIO.output (stdErr, "rules = "
         		  handle Subscript => false
         		  andalso (size line < 7 orelse
         		           not (Char.isAlpha (String.sub (line, 8)))) then
-        		  evalsimplify (NONE)
+        		  evalsimplify (NONE, NONE)
         		  handle e => BPLwebErrorHandler.explain e
         		  handle _ => ()
         	  else
