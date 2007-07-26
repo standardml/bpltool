@@ -110,7 +110,7 @@ struct
       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp errtitle,
            explainer e)
 
-  fun react agent match =
+  fun react match =
     let
       infix 6 o
       infix 5 *
@@ -144,23 +144,21 @@ struct
     in
       case tactic rulematches of
         MATCH (match, next_tactic)
-      => run rules next_tactic (react agent match)
+      => run rules next_tactic (react match)
       | _ => agent
     end
 *)
 
   fun steps' f g rules tactic agent =
     let
+      val regagent = BgBDNF.regularize (BgBDNF.make agent)
       fun addmatch rule =
-       (rule,
-        Match.matches {
-          agent = BgBDNF.regularize (BgBDNF.make agent),
-          rule = rule})
+       (rule, Match.matches {agent = regagent, rule = rule})
       val rulematches = RuleNameMap.composemap addmatch rules
     in
       case tactic rulematches of
         MATCH (match, next_tactic)
-      => f match agent (steps' f g rules next_tactic (react agent match))
+      => f match agent (steps' f g rules next_tactic (react match))
       | _ => g agent
     end
 
@@ -176,6 +174,14 @@ struct
         ("INITIAL:", BgVal.simplify a) ::
         (#name (Rule.unmk (#rule (Match.unmk m))), a') :: aas))
      (fn a => [("", BgVal.simplify (BgBDNF.unmk (BgBDNF.make a)))])
+
+  fun matches rules agent =
+    let
+      val agent = BgBDNF.regularize (BgBDNF.make agent)
+      fun toMatch rule = Match.matches {agent = agent, rule = rule}
+    in
+      lzmerge (map toMatch (RuleNameMap.range rules))
+    end
 
   fun finish _ = FINISH    
 

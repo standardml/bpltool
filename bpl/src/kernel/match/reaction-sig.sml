@@ -58,13 +58,23 @@ sig
   type tactic = (rule * matches) rulenamemap -> action
 
   (** Perform a single reaction step induced by a match. *)  
-  val react : agent -> match -> agent
+  val react : match -> agent
 
   (** Construct a rule map. *)
   val mknamedrules : (rulename * rule) list -> rules
 
   (** Construct a rule map, using default names. *)
   val mkrules : rule list -> rules
+
+  (** Return a lazy list of all matches for all rules.
+   * The matches are ordered in a round-robin fashion
+   * with respect to the list of reaction rules.
+   * @params R t a
+   * @param R  The reaction rules.
+   * @param a  The agent within which to match.
+   * @return   The resulting lazy list of matches.
+   *)
+  val matches : rules -> agent -> matches
 
   (** Run a system of reaction rules, using a tactic, on an agent.
    * @params R t a

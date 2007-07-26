@@ -2726,9 +2726,16 @@ val _ = print' ("matchCLO: s'_C = " ^ Wiring.toString s'_C ^
       fun << () = begin_block pps CONSISTENT 0
       fun >> () = end_block pps
       fun brk () = add_break pps (1, 1)
+      val rulename = #name (Rule.unmk rule)
     in
       <<();
       show "{";
+      (if rulename <> "" then
+         (<<(); show "rule"; brk();
+          show ("= \"" ^ rulename ^ "\"");
+          show ","; >>(); brk())
+       else
+         ());
       <<(); show "context"; brk(); show "= ";
       ppBBDNF indent pps context;
       show ","; >>(); brk();

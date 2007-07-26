@@ -134,6 +134,7 @@ fun help' [] = ()
 	  \  react v m                                 Perform a single reaction step\n\
 	  \  mkrules [r_0, ..., r_n]                   Construct a rule map\n\
 	  \  mknamedrules [..., (N_i, r_i), ...]       Construct a rule map with explicit names\n\
+	  \  matches rs v                              Return lazy list of all matches of all rules\n\
 	  \  run rs t v                                Perform agent reactions using a tactic\n\
 	  \  steps rs t v                              Return agent for each step using a tactic\n\
 	  \  \n";
