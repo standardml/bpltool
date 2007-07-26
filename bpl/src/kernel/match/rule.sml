@@ -21,7 +21,8 @@
 (** Abstract data type for modelling rules.
  * @version $LastChangedRevision$
  *)
-functor Rule (structure Interface : INTERFACE
+functor Rule (structure Info : INFO
+              structure Interface : INTERFACE
               structure NameSet : MONO_SET
               structure BgVal : BGVAL
               structure BgBDNF : BGBDNF
@@ -47,12 +48,13 @@ struct
     long = "--ppsimpleredex",
     arg = "",
     default = true}
+  type info = Info.info
   type bgval = BgVal.bgval
   type 'a bgbdnf = 'a BgBDNF.bgbdnf
   type BR = BgBDNF.BR
   type inst = Instantiation.inst
   datatype rule =
-    Rule of {name : string, redex : BR bgbdnf, react : bgval, inst : inst}
+    Rule of {name : string, redex : BR bgbdnf, react : bgval, inst : inst, info : info}
   (** Construct a rule.  The instantiation must be compatible
    * with redex and reactum inner faces, i.e., instantiate the
    * inner face of reactum from the inner face of redex.
@@ -62,7 +64,7 @@ struct
    * @param inst   Instantiation
    *)
   fun make r = Rule r
-  fun make' {name, redex, react} =
+  fun make' {name, redex, react, info} =
       let
         val I
           = Interface.make {loc = Interface.loc (BgBDNF.innerface redex),
@@ -73,7 +75,8 @@ struct
       in
         Rule
          {name = name, redex = redex, react = react,
-          inst = Instantiation.make' {I = I, J = J}}
+          inst = Instantiation.make' {I = I, J = J},
+          info = info}
       end
   (** Deconstruct a rule. @see make. *)
   fun unmk (Rule r) = r
@@ -83,7 +86,7 @@ struct
    * @param pps     Prettyprint stream on which to output.
    * @param r       The rule to output.
    *)
-  fun pp indent pps (Rule {name, redex, react, inst}) =
+  fun pp indent pps (Rule {name, redex, react, inst, info}) =
     let
       open PrettyPrint
       val show = add_string pps
@@ -113,7 +116,7 @@ struct
       >>>()
     end
     
-  fun oldpp indent pps (Rule {name, redex, react, inst}) =
+  fun oldpp indent pps (Rule {name, redex, react, inst, info}) =
     let
       open PrettyPrint
       val show = add_string pps

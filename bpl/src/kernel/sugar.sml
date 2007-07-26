@@ -41,7 +41,9 @@ functor Sugar'(structure Info : INFO
                    and type origin      = Origin.origin
 	       structure NameSetPP : COLLECTIONPRETTYPRINT
                  where type ppstream = PrettyPrint.ppstream
-	       sharing type Info.info = BgVal.info
+	       sharing type Info.info =
+	         BgVal.info =
+	         Rule.info
                sharing type Name.name = 
 			    NameSet.elt =
 			    Link.name =
@@ -308,7 +310,7 @@ fun (redex, mapinfos) --|> react =
       J = J,
       maps = map (fn i |--> j => (i, j)) mapinfos}
   in
-    Rule.make {name = "", redex = redex, react = react, inst = inst}
+    Rule.make {name = "", redex = redex, react = react, inst = inst, info = Info.noinfo}
   end
 infix 3 ----|>
 fun redex ----|> react = redex --[]--|> react
@@ -318,7 +320,7 @@ fun rulename ::: rule =
     val {redex, inst, react, ...} = Rule.unmk rule
   in
     Rule.make 
-     {name = rulename, redex = redex, inst = inst, react = react}
+     {name = rulename, redex = redex, inst = inst, react = react, info = Info.noinfo}
   end
   
 fun ppMapinfo indent pps ((i, xs) |--> (j, ys)) =
@@ -378,7 +380,9 @@ functor Sugar (structure Info : INFO
                    and type origin      = Origin.origin
 	       structure NameSetPP : COLLECTIONPRETTYPRINT
                  where type ppstream = PrettyPrint.ppstream
-	       sharing type Info.info = BgVal.info
+	       sharing type Info.info =
+	         BgVal.info =
+	         Rule.info
                sharing type Name.name = 
 			    NameSet.elt =
 			    Link.name =

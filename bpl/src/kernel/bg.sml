@@ -134,6 +134,13 @@ fun parseBgTermStr filename str =
 
 exception ThisCannotHappen
 
+  type ruledata = {
+    name : string,
+    redex : bgterm,
+    react : bgterm,
+    maps : ((int * Name.name list) * (int * Name.name list)) list,
+    info : Info.info}
+
 local
   open RulesLrVals
   open ParserData.Header

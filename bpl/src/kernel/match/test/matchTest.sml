@@ -168,7 +168,8 @@ end
            redex = BgBDNF.regularize
              (BgBDNF.make redex),
            react = redex,
-           inst = inst_id redex}
+           inst = inst_id redex,
+           info = Info.noinfo}
       val gotmatches = Match.matches
         {agent = BgBDNF.regularize (BgBDNF.make agent), rule = rule}
       (* lzsubset eq xs yz checks whether xs is a subset of yz, using

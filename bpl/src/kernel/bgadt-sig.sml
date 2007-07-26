@@ -130,7 +130,8 @@ sig
                BgTerm.info =
                BgVal.info =
                BgBDNF.info =
-               Match.info
+               Match.info =
+               Rule.info
 
   sharing type bgterm =
                BgTerm.bgterm =

@@ -181,7 +181,8 @@ structure Instantiation
        structure ListPP           = ListPP)
 
 structure Rule = Rule
-  (structure Interface     = Interface
+  (structure Info          = Info
+   structure Interface     = Interface
    structure NameSet       = NameSet
    structure BgVal         = BgVal
    structure BgBDNF        = BgBDNF

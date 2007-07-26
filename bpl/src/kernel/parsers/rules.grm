@@ -93,15 +93,21 @@ type ion = Ion.ion
 type 'kind permutation = 'kind Permutation.permutation
 type map = (int * name list) * (int * name list)
 type inst = Instantiation.inst
-type rule = Rule.rule
+type rule = {
+  name : string,
+  redex : bgterm,
+  react : bgterm,
+  maps : map list,
+  info : info}
 datatype fieldval = REDEX    of bgterm
                   | REACT    of bgterm
                   | INST     of map list * (int * int)
                   | RULENAME of string
 type rulefield = {name : string, value : fieldval}
-datatype parserresult = BGTERMRESULT of bgterm
-                      | RULESRESULT of rule list
-                      | SIGRESULT of control list
+datatype parserresult
+  = BGTERMRESULT of bgterm
+  | RULESRESULT of rule list
+  | SIGRESULT of control list
 
 (** Signal that a set with duplicate names has been encountered. 
  * @params smlfile leftpos rightpos errtxt
@@ -128,70 +134,42 @@ fun mk_origin p1 p2
 fun mk_info p1 p2 = Info.make (mk_origin p1 p2)
 
 val nextruleno = ref 0
-fun mk_rule (rulefields, p) =
+fun mk_rule (rulefields, (left, right)) =
   let
-    val term2bgval = BgVal.make BgTerm.info
-    val term2rbdnf
-      = BgBDNF.regularize o BgBDNF.make o term2bgval
-    fun populate {name = NONE, redex, react, inst} [] inst'
+    fun populate {name = NONE, redex, react, inst, info} []
       = populate
          {name = SOME (Int.toString (!nextruleno)
                        before nextruleno := !nextruleno + 1),
-          redex = redex, react = react, inst = inst} [] inst'
-      | populate {name, redex = SOME redex, react = SOME react, inst = NONE}
-                 [] (SOME inst') =
-        let
-          val I
-            = Interface.make {loc = Interface.loc (BgBDNF.innerface redex),
-                              glob = NameSet.empty}
-          val J
-            = Interface.make {loc = Interface.loc (BgVal.innerface react),
-                              glob = NameSet.empty}
-        in
-          populate {name = name, redex = SOME redex, react = SOME react,
-                    inst = SOME (Instantiation.make
-                                   {I = I, J = J, maps = inst'})}
-                   [] NONE
-        end
-      | populate {name, redex = SOME redex, react = SOME react, inst = NONE} [] NONE =
-        let
-          val I
-            = Interface.make {loc = Interface.loc (BgBDNF.innerface redex),
-                              glob = NameSet.empty}
-          val J
-            = Interface.make {loc = Interface.loc (BgVal.innerface react),
-                              glob = NameSet.empty}
-        in
-          populate {name = name, redex = SOME redex, react = SOME react,
-                    inst = SOME (Instantiation.make' {I = I, J = J})} [] NONE
-        end
-      | populate {name = SOME name, redex = SOME redex,
-                  react = SOME react, inst = SOME inst} [] _
-      = {name = name, redex = redex, react = react, inst = inst}
-      | populate _ [] _ = raise RedexOrReactMissing p
-      | populate {name, redex, react, inst}
-                 ((RULENAME name', _) :: rulefields) inst'
-      = populate {name = SOME name', redex = redex,
-                  react = react, inst = inst} rulefields inst'
-      | populate {name, redex, react, inst}
-                 ((REDEX   redex', _) :: rulefields)  inst'
-      = populate {name = name,
-                  redex = SOME (term2rbdnf redex'),
-                  react = react, inst = inst} rulefields  inst'
-      | populate {name, redex, react, inst}
-                 ((REACT   react', _) :: rulefields) inst'
+          redex = redex, react = react, inst = inst, info = info} []
+      | populate {name, redex, react, inst = NONE, info} []
       = populate {name = name, redex = redex,
-                  react = SOME (term2bgval react'), inst = inst} rulefields inst'
-      | populate {name, redex, react, inst}
-                 ((INST (inst', p'), _) :: rulefields) _
+                  react = react, inst = SOME [], info = info} []
+      | populate {name = SOME name, redex = SOME redex,
+                  react = SOME react, inst = SOME inst, info} []
+      = {name = name, redex = redex, react = react,
+        maps = inst, info = info}
+      | populate _ [] = raise RedexOrReactMissing (left, right)
+      | populate {name, redex, react, inst, info}
+                 ((RULENAME name', _) :: rulefields)
+      = populate {name = SOME name', redex = redex,
+                  react = react, inst = inst, info = info} rulefields
+      | populate {name, redex, react, inst, info}
+                 ((REDEX   redex', _) :: rulefields)
+      = populate {name = name, redex = SOME redex',
+                  react = react, inst = inst, info = info} rulefields
+      | populate {name, redex, react, inst, info}
+                 ((REACT   react', _) :: rulefields)
+      = populate {name = name, redex = redex,
+                  react = SOME react', inst = inst, info = info} rulefields
+      | populate {name, redex, react, inst, info}
+                 ((INST (inst', p'), _) :: rulefields)
       = populate {name = name, redex = redex, react = react,
-                  inst = inst} rulefields (SOME inst')
-    val ruledata
-      = populate
-          {name = NONE, redex = NONE, react = NONE, inst = NONE}
-          rulefields NONE
+                  inst = SOME inst', info = info} rulefields
   in
-    Rule.make ruledata
+    populate
+      {name = NONE, redex = NONE, react = NONE, inst = NONE,
+       info = mk_info left right}
+      rulefields
   end
 
 fun nset2idlinkset nset =
@@ -273,7 +251,6 @@ fun nset2idlinkset nset =
 		    structure BgVal : BGVAL
 		    structure BgBDNF : BGBDNF
 		    structure Instantiation : INSTANTIATION
-		    structure Rule : RULE
 		    sharing type Control.control = Ion.control
 		    sharing type Interface.interface = Instantiation.interface
 		    sharing type Name.name = 
@@ -299,11 +276,7 @@ fun nset2idlinkset nset =
                                  BgTerm.info =
                                  BgVal.info
                     sharing type BgTerm.bgterm = BgVal.bgterm
-                    sharing type BgVal.bgval = Rule.bgval
-                                             = BgBDNF.bgval
-                    sharing type BgBDNF.bgbdnf = Rule.bgbdnf
-                    sharing type BgBDNF.BR = Rule.BR
-                    sharing type Rule.inst = Instantiation.inst
+                    sharing type BgVal.bgval = BgBDNF.bgval
                     sharing type BgBDNF.interface =
                                  BgVal.interface =
                                  Instantiation.interface

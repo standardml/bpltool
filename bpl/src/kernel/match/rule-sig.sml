@@ -23,6 +23,7 @@
  *)
 signature RULE =
 sig
+  type info
   type rule
   type bgval
   type 'a bgbdnf
@@ -36,16 +37,23 @@ sig
    * @param react  Reactum bigraph
    * @param inst   Instantiation
    *)
-  val make : {name : string, redex : BR bgbdnf, react : bgval, inst : inst} -> rule
+  val make : {
+    name : string, redex : BR bgbdnf, react : bgval,
+    inst : inst, info : info} -> rule
   (** Construct a rule.
    * The instantiation will be inferred from redex and reactum.
    * @params {redex, react}
    * @param redex  Redex bigraph
    * @param react  Reactum bigraph
    *)
-  val make' : {name : string, redex : BR bgbdnf, react : bgval} -> rule
+  val make' : {
+    name : string, redex : BR bgbdnf,
+    react : bgval, info : info} -> rule
   (** Deconstruct a rule. @see make. *)
-  val unmk : rule -> {name : string, redex : BR bgbdnf, react : bgval, inst : inst}
+  val unmk :
+    rule -> {
+     name : string, redex : BR bgbdnf, react : bgval,
+     inst : inst, info : info}
   (** Prettyprint a rule.
    * @params indent pps r
    * @param indent  Indentation at each block level.

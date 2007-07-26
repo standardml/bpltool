@@ -2600,7 +2600,7 @@ val _ = print' ("matchCLO: s'_C = " ^ Wiring.toString s'_C ^
                     (BgBDNF.unmk agent, "in matches")
               else
                 ()
-      val {name, redex, react, inst} = Rule.unmk rule
+      val {name, redex, react, inst, info} = Rule.unmk rule
       val {wirxid = w_axid, D = D_a} = unmkBR agent
       val ps = #Ps (unmkDR D_a) handle e => raise e
       val {wirxid = w_Rxid, D = D_R} = unmkBR redex

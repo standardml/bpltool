@@ -27,6 +27,12 @@ sig
 
   include BG_ADT
 
+  type ruledata = {
+    name : string,
+    redex : bgterm,
+    react : bgterm,
+    maps : ((int * Name.name list) * (int * Name.name list)) list,
+    info : Info.info}
   (** The kind of contents to parse. *)
   type 'a kind
   (** Signature contents. *)
@@ -34,7 +40,7 @@ sig
   (** BgTerm contents. *)
   val BGTERM : bgterm kind
   (** List of rules contents. *)
-  val RULES : rule list kind
+  val RULES : ruledata list kind
 
   (** Parse a string as a bigraph term.
    * @params filename s

@@ -153,26 +153,36 @@ struct
           (*val _ = TextIO.output (stdErr, "bplwebback::domatch called.\n")*)
           val _ = Name.reset ()
           val signatur = parseStr SIGNATURE "signature" signaturestr
-          val fixtctrl = BgTerm.add1s o BgTerm.replacectrls signatur
+          val fixctrl = BgTerm.add1s o BgTerm.replacectrls signatur
           val bareagent = parseStr BGTERM "agent" agentstr
-          val ctrlfixedagent = fixtctrl bareagent
+          val ctrlfixedagent = fixctrl bareagent
           val _ =
             agent := SOME
                       (BgBDNF.regularize 
                         (BgBDNF.make
                           (BgVal.make BgTerm.info ctrlfixedagent)))
-          val fixvctrl = BgVal.replacectrls signatur
-          val fixbctrl = BgBDNF.replacectrls signatur
-          val barerules = parseStr RULES "rules" rulesstr
-          fun fixrule rule =
-            case Rule.unmk rule of
-              {name, redex, react, inst} =>
+          fun mkrule {name, redex, react, maps, info} =
+            let
+              val redex =
+                BgBDNF.regularize (
+                  BgBDNF.make (BgVal.make BgTerm.info (fixctrl redex)))
+              val react = BgVal.make BgTerm.info (fixctrl react)
+              val I =
+                Interface.make {
+                  loc = Interface.loc (BgBDNF.innerface redex),
+                  glob = NameSet.empty}
+              val J =
+                Interface.make {
+                  loc = Interface.loc (BgVal.innerface react),
+                  glob = NameSet.empty}
+              val inst = Instantiation.make {I = I, J = J, maps = maps}
+            in
               Rule.make {
-                name = name,
-                redex = fixbctrl redex,
-                react = fixvctrl react,
-                inst = inst}
-          val ctrlfixedrules = map fixrule barerules 
+                name = name, redex = redex, react = react,
+                inst = inst, info = info}
+            end 
+          val barerules = parseStr RULES "rules" rulesstr
+          val ctrlfixedrules = map mkrule barerules 
           val _ = rules := ctrlfixedrules
           val userules = parsenum userulesstr
           val matchcount = parsenum matchcountstr
