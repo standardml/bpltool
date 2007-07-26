@@ -18,8 +18,8 @@ signature MONO_FINMAP =
      *)
     val add        : dom * 'b * 'b map -> 'b map
 		(** Add a key-data pair k0 |-> d0.
-		 * @params == k0 d0 map
-		 * @param ==  Equality operator to use on data pairs
+		 * @params eq k0 d0 map
+		 * @param eq  Equality operator to use on data pairs
 		 *  @exception DATACHANGED  If a pair k0 |-> d1
 		 *                          already exists with d0 <> d1.
 		 *)

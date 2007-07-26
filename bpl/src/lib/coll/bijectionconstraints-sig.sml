@@ -87,7 +87,7 @@ sig
   val from_list : (set * set) list -> constraints
   (** Return a constraint set as a list of constraints.
    * @param C   The constraint set.
-   * @returns   The list of constraints.
+   * @return    The list of constraints.
    *)
   val list : constraints -> (set * set) list
   (** Signal that two sets of constraints are incompatible, e.g. they
