@@ -192,7 +192,7 @@ fun regl_v v = regl_b (norm_v v)
 val regularize = regl_v
 val simpl_v = BG.BgVal.simplify
 fun simpl_b b = simpl_v (denorm_b b)
-val simplify = simpl_v
+val simplify = simpl_v oo denorm_b oo norm_v 
 val match_rbdnf = BG.Match.matches
 fun match_b {agent, redex}
   = let
@@ -204,7 +204,8 @@ fun match_b {agent, redex}
          rule = BG.Rule.make'
                   {name = "Rule",
                    redex = redex,
-                   react = react}}
+                   react = react,
+                   info = Info.noinfo}}
     end
 fun match_v {agent, redex}
   = let
@@ -216,7 +217,8 @@ fun match_v {agent, redex}
          rule = BG.Rule.make'
                   {name = "Rule",
                    redex = redex,
-                   react = react}}
+                   react = react,
+                   info = Info.noinfo}}
     end
 val match = match_v
 fun react_b {agent, rules} =

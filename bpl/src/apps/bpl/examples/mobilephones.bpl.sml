@@ -83,28 +83,23 @@ val defrules = [DEF_Car, DEF_Trans, DEF_Idtrans, DEF_Control]
 val rules = mkrules (List.@ (defrules, pirules))
 
 (* Tactics *)
+val TAC_unfold =
+  react_rule "DEF_Car"     ++ react_rule "DEF_Trans"   ++
+  react_rule "DEF_Idtrans" ++ react_rule "DEF_Control"
 val TAC_talk =
-  react_rule "DEF_Car"     ++
-  react_rule "DEF_Trans"   ++
   react_rule "REACT0"         (* Car talks.                     *)
 val TAC_switch =
-  react_rule "DEF_Control" ++
-  react_rule "DEF_Trans"   ++
   react_rule "REACT2"      ++ (* Control tells Trans to lose.   *)
-  react_rule "DEF_Idtrans" ++
   react_rule "REACT2"      ++ (* Control tells Idtrans to gain. *)
-  react_rule "DEF_Car"     ++
   react_rule "REACT2"         (* Trans tells Car to switch.     *)
 
 (* System *)
-val System1 = simpl_b (norm_v (
-  (*-//[talk1,switch1,gain1,lose1,talk2,switch2,gain2,lose2] o *)
-  (    Car[talk1,switch1] 
+val System1 = simplify (
+       Car[talk1,switch1] 
    `|` Trans[talk1,switch1,gain1,lose1]
    `|` Idtrans[gain2,lose2]
-   `|` Control[lose1,talk2,switch2,gain2,lose2,talk1,switch1,gain1]
-   )))
-  handle e=>explain e
+   `|` Control[lose1,talk2,switch2,gain2,
+               lose2,talk1,switch1,gain1])
 
 val K0  = active0("K0")
 val K1  = active("K1" -: 1)
