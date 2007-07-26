@@ -622,8 +622,8 @@ class Serverobj
     }
   end
 
-  def simplifyrequest (agent)
-    print "simplifyrequest (" + agent + ")\n"
+  def simplifyrequest (signature, agent)
+    print "simplifyrequest (" + signature + ", " + agent + ")\n"
     matcher = IO.popen("../backend/mlton", "w+")
     matcher.fcntl(4, 0x40000) # Avoid buffering
     matcher.sync = false # Avoid buffering!
@@ -632,7 +632,7 @@ class Serverobj
       print "Error: expected 'READY' from bplwebback, got '#{line}\n'"
     end
     
-    matcher.puts("SIMPLIFY\nAGENT\n#{agent}\nENDAGENT\nENDSIMPLIFY\n")
+    matcher.puts("SIMPLIFY\nSIGNATURE\n#{signature}\nENDSIGNATURE\nAGENT\n#{agent}\nENDAGENT\nENDSIMPLIFY\n")
     matcher.flush
     line = matcher.gets
     
@@ -755,11 +755,11 @@ server.add_handler("reactrequest",
 }
 
 server.add_handler("simplifyrequest", 
-                   ['string'],
-                   "simplifyrequest(agent)
+                   ['string', 'string'],
+                   "simplifyrequest(signature, agent)
   returns a {type, {agent}}
   where type is 'OK' or 'TimeOut'") {
-  |agent|
+  |signature, agent|
   serverobj.simplifyrequest(agent)
 }
 

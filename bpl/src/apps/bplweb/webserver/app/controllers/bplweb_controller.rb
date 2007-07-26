@@ -155,11 +155,12 @@ print "Server call returned to reactrequest " + id.to_s + ".\n"
 
     params = params()
 
+    signature = params ['signature']
     agent = params ['agent']
 
     begin
       # Call the remote server and get our result
-      @result = server.call("simplifyrequest", agent);
+      @result = server.call("simplifyrequest", signature, agent);
     rescue StandardError => e
       @result = {'type' => 'XMLRPCERROR',
         'errtxt' => 'Exception in reactrequest from XMLRPC: ' +
