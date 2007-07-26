@@ -760,7 +760,7 @@ server.add_handler("simplifyrequest",
   returns a {type, {agent}}
   where type is 'OK' or 'TimeOut'") {
   |signature, agent|
-  serverobj.simplifyrequest(agent)
+  serverobj.simplifyrequest(signature, agent)
 }
 
 server.serve
