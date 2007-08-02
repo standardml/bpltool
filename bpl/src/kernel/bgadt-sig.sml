@@ -68,6 +68,7 @@ sig
   structure Instantiation : INSTANTIATION
   structure Rule          : RULE
   structure Reaction      : REACTION
+  where type rulename = string
 
   structure Interface   : INTERFACE
   structure Ion         : ION
@@ -148,7 +149,8 @@ sig
   sharing type rule =
                Rule.rule =
                Match.rule =
-               Reaction.rule
+               Reaction.rule =
+               Sugar.rule
 
   sharing type control =
                Control.control =

@@ -48,6 +48,12 @@ structure Test = struct
 	     structure Assert = Assert
        structure Test = Test)
 
+    structure ReactionTest 
+      = ReactionTest
+	    (structure ErrorHandler = PrintErrorHandler
+	     structure Assert = Assert
+       structure Test = Test)
+
     structure BGGen
       = BGGen
 	    (structure PrettyPrint = PrettyPrint
@@ -77,6 +83,7 @@ structure Test = struct
 	    val tests = [ ("BG", "kernel/bg/test",   BGTest.suite)
 			, ("BDNF", "kernel/ast/test",  BDNFTest.suite ".")
 			, ("Matching", "kernel/match/test",  MatchTest.suite)
+			, ("Reaction (very slow!)", "kernel/match/test",  ReactionTest.suite)
 			, ("MiniML", "apps/miniml/test", MiniMLTest.suite)
 			]
 	    fun say s = TextIO.print(s^"\n")

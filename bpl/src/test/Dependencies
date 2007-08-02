@@ -16,4 +16,5 @@ unittest: %PROGRAM
    /lib/util/timings /lib/util/origin /lib/util/printerrorhandler /kernel/bg
    /apps/miniml/bggen /apps/miniml/mml2bg /kernel/bg/test/bgTest
    /kernel/ast/test/bdnfTest /kernel/match/test/matchTest
+   /kernel/match/test/reactionTest
    /apps/miniml/test/minimltest

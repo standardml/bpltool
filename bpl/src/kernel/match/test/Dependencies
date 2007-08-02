@@ -5,3 +5,6 @@
 matchTest: /lib/smlunit/. /kernel/bpl /kernel/bgadt-sig /kernel/bgadt /lib/util/errormsg
    /lib/util/origin /lib/util/errorhandler-sig /lib/pp/smlnj/.
    /lib/coll/lazylist
+reactionTest: /lib/smlunit/. /kernel/bpl /kernel/bgadt-sig /kernel/bgadt /lib/util/errormsg
+   /lib/util/origin /lib/util/errorhandler-sig /lib/pp/smlnj/.
+   /lib/coll/lazylist

@@ -74,7 +74,8 @@ functor Sugar'(structure Info : INFO
 	       sharing type BgBDNF.BR = Rule.BR
 	       sharing type Instantiation.inst = Rule.inst
 	       ) : SUGAR 
-where type bgval = BgVal.bgval =
+where type bgval = BgVal.bgval
+  and type rule = Rule.rule =
 struct
 type control = Control.control
 type name = string
@@ -413,7 +414,8 @@ functor Sugar (structure Info : INFO
 	       sharing type BgBDNF.BR = Rule.BR
 	       sharing type Instantiation.inst = Rule.inst
 	       ) :> SUGAR 
-where type bgval = BgVal.bgval =
+where type bgval = BgVal.bgval
+  and type rule = Rule.rule =
 struct
   structure Sugar = Sugar'(structure Info = Info
 			   structure Name = Name
