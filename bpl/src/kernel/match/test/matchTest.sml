@@ -123,7 +123,7 @@ in
     ("Matching internal agent edges: siblings with nested linked parameters",
      {agent = (-/x o x//[x,y] * merge(2)) o ((x/x * K0) o M1[x] * (y/y * K0) o M1[y]),
       redex = (                 merge(2)) o (       K0          *        K0         )},
-     HAS [{context = -/x o x//[w,z] * idp(1), parameter = M1[w] * M1[z]}]),
+     HAS [{context = -/x o x//[x,y] * idp(1), parameter = M1[x] * M1[y]}]),
     ("Matching bound links",
      {agent = K10[][[x]] o (<[x]> M1[x]),
       redex = K10[][[y]]},
