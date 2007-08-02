@@ -39,6 +39,7 @@ signature MONO_FINMAP =
     (** addList l m; adds a list of associations to a map. *)
     val addList : (dom * 'b) list -> 'b map -> 'b map
 
+
     (** mergeMap f m1 m2; merges two finite maps, with a composition 
        function to apply to the codomains of domains which clash. *)
     val mergeMap : (('b * 'b) -> 'b) -> 'b map -> 'b map -> 'b map
@@ -47,6 +48,35 @@ signature MONO_FINMAP =
     (** @exception Restrict if an element
        of the list is not in the domain of the map. *)
     val restrict : (dom -> string) * 'b map * dom list -> 'b map
+
+
+    exception Split of dom
+    (** Split a map into two, one that maps from a given domain, and 
+     * one that does not map from the domain.
+     * @params m X
+     * @return {inDom, notInDom} so that
+     *           dom(inDom) = X
+     *     and   dom(notInDom) = dom(m) \ X
+     *     and   m(d) = inDom(d)     for all d \in X
+     *     and   m(d) = notInDom(d)  for all d \in (dom(m) \ X)
+     *
+     * @exception Split if an element of the list is not in the domain
+     *            of the map.
+     *)
+    val split : 'b map -> dom list -> {inDom : 'b map, notInDom : 'b map}
+
+    (** Split a map into two, one of which maps to a given set of values.
+     * @params eq m Y
+     * @return {inCod, notInCod}
+     *   Maps that satisfy
+     *     (d,y) \in inCod     <=  (d,y) \in m  and  y \in Y
+     *     (d,y) \in notInCod  <=  (d,y) \in m  and  y \not\in Y
+     *
+     * @exception Split if an element of the list is not in the domain
+     *            of the map.
+     *)
+    val split_outer : ('b * 'b -> bool) -> 'b map -> 'b list
+                      -> {inCod : 'b map, notInCod : 'b map}
 
     (** enrich en (A, B) returns true if for all a and b 
        such that b \in B and a \in (A \restrict dom(B)) 

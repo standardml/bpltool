@@ -480,6 +480,34 @@ old *)
 		   of SOME res => add(d,res,acc)
 		    | NONE => raise Restrict(pp d)) empty dom 
 
+    exception Split of dom
+    fun split m X =
+        foldr
+          (fn (x, {inDom, notInDom}) =>
+             case lookup m x of
+               NONE   => raise Split x
+             | SOME v =>
+                 {inDom    = add (x, v, inDom),
+                  notInDom = case remove (x, notInDom) of
+                               NONE    => notInDom (* x was already removed *)
+                             | SOME m' => m'})
+          {inDom = empty, notInDom = m} X
+
+    (* FIXME inefficient... *)
+    fun split_outer eq m Y =
+        let
+          fun inY e = List.exists (fn e' => eq (e, e')) Y
+          fun decide ((d, y), {inCod, notInCod}) =
+              if inY y then
+                {inCod    = add (d, y, inCod),
+                 notInCod = notInCod}
+              else
+                {inCod    = inCod,
+                 notInCod = add (d, y, notInCod)}
+        in
+          Fold decide {inCod = empty, notInCod = empty} m
+        end
+
     fun enrich en (m0, m) =
       Fold(fn ((d,r),b) => b andalso
 	   case lookup m0 d

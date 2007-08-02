@@ -961,12 +961,33 @@ struct
                        ", s_C_e = " ^ Wiring.toString s_C_e ^
                        ", s_C_n = " ^ Wiring.toString s_C_n ^ "\n") 
           val Y_n  = Wiring.outernames s_a_n
-          val Y_e  = NameSet.fromList (NameMap.range ename)
+          val Y_e  = NameSet.intersect
+                       (Wiring.outernames s_C_e)
+                       (NameSet.fromList (NameMap.range ename))
 
-          (* Split s_a_e into the part which has already been matched s_ae
-           * (specified by ename) and the rest s_a_e' *)
+          (* Split ename into the part which pertains to edges matched by
+           * edges ename_e and edges matched by names. *)
+          val {inCod = ename_e, notInCod = ename_n}
+            = NameMap.split_outer Name.== ename (NameSet.list Y_e)
+          
+
+          (* Split s_a_e into the part which has already been matched by
+           * edges s_ae (specified by ename_e), the part which has been
+           * matched by names s_an (specified by ename_n), and the rest
+           * s_a_e' *)
           val {inCod = s_ae, notInCod = s_a_e'}
-            = Wiring.split_outer s_a_e (NameSet.fromList (NameMap.dom ename))
+            = Wiring.split_outer s_a_e (NameSet.fromList (NameMap.dom ename_e))
+          val {inCod = s_an, notInCod = s_a_e'}
+            = Wiring.split_outer s_a_e' (NameSet.fromList (NameMap.dom ename_n))
+
+          val _ = print' (  "\nename_e = "
+                          ^ NameMap.Fold
+                              (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s)
+                              "" ename_e ^ "."
+                          ^ "\nename_n = "
+                            ^ NameMap.Fold
+                              (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s)
+                              "" ename_n ^ ".\n")
 
           (* Split alpha into the part related to s_C_n and the part
            * related to s_C_e
@@ -987,9 +1008,9 @@ struct
            * using ordered partitions of their constituents.
            * Then try to solve the subproblems
            *
-           * 1)  s_Ce  tau_e                    =  ename s_ae                and
+           * 1)  s_Ce  tau_e                    =  ename_e s_ae              and
            * 2)  s_Ce' tau'_e                   =  ename'_e (Q_e * s_ae'_e)  and
-           * 3)  s_C'_1 (id_Z * s_Cn tau_n)     =  s_a_n                     and
+           * 3)  s_C'_1 (id_Z * s_Cn tau_n)     =  s_a_n * (ename_n s_an)    and
            * 4)  s_C'_2 (id_Z' * s_Cn' tau'_n)  =  Q_n * s_ae'_n
            *
            * FIXME should we calculate all solutions to each and then generate combinations?
@@ -1042,7 +1063,8 @@ struct
                 (lzmap
                    (solve_4 s_ae'_n s_Cn' (Wiring.* (tau_e, tau'_e)) ename'_e Q''_e)
                    (find_rho_tau_Z {sigma   = s_Cn,
-                                    upsilon = s_a_n})))
+                                    (* FIXME this should only be done once... *)
+                                    upsilon = Wiring.* (s_a_n, app_ename ename_n s_an)})))
           (* solve (2) and then find solutions for (3) and (4) *)
           fun solve_234 s_ae'_n s_ae'_e s_Cn s_Cn' {tau = tau_e} =
               ((*print' ("s_ae'_e = " ^ Wiring.toString s_ae'_e ^
@@ -1055,13 +1077,14 @@ struct
           (* solve (1) and then find solutions for (2), (3), and (4) *)
           fun solve_1234 s_ae'_n s_ae'_e s_Cn s_Cn' =
               ((*print' ("s_ae = " ^ Wiring.toString s_ae ^
-                      ", app_ename ename s_ae = " ^
-                      Wiring.toString (app_ename ename s_ae) ^ ", ");*)
+                      ", app_ename ename_e s_ae = " ^
+                      Wiring.toString (app_ename ename_e s_ae) ^ ", ");*)
               lzconcat
                 (lzmap
                    (solve_234 s_ae'_n s_ae'_e s_Cn s_Cn')
                    (find_tau {sigma   = s_Ce,
-                              upsilon = app_ename ename s_ae})))
+                              (* FIXME this should only be done once... *)
+                              upsilon = app_ename ename_e s_ae})))
 
           fun process_s_C_n_alpha_split s_ae'_n s_ae'_e [s_Cn, s_Cn'] =
               solve_1234 s_ae'_n s_ae'_e s_Cn s_Cn'
