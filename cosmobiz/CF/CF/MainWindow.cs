@@ -17,8 +17,7 @@ namespace CF
         public MainWindow()
         {
             InitializeComponent();
-            //PerformReadXML();
-
+            PerformReadXML();
         }
         private void PerformReadXML()
         {
@@ -61,6 +60,8 @@ namespace CF
 
         private void button1_Click(object sender, EventArgs e)
         {
+            Processor proc = new Processor(elements);
+            proc.ProcessElements(0);
             /*
             int number = int.Parse(textBox1.Text);
             Sequence seq = new Sequence(number);

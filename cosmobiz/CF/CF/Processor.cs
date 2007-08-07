@@ -7,64 +7,83 @@ namespace CF
     public class Processor
     {
         private ListedElements elements;
-        /*
-        private List<object> objects;
 
-        public List<object> Objects
+        private Sequence startSequence;
+        private Sequence currentSequence;
+        private Flow currentFlow;
+
+
+        private List<Drawable> drawableObjects;
+
+        public List<Drawable> DrawableObjects
         {
-            get { return objects; }
+            get { return drawableObjects; }
+            //set { drawableObjects = value; }
         }
-        */
+
         public Processor(ListedElements elements)
         {
             this.elements = elements;
-            //objects = new List<object>();
+            drawableObjects = new List<Drawable>();
         }
 
-        public void ProcessElements(int j, IDrawable obj)//, Drawable obj)
+        public void ProcessElements(int j)
         {
-            //for (int i = j; i < elements.Count; i++)
-            //foreach (Element elem in elements)
+            if (j < elements.Count)
             {
-                switch (elements[j].Type)
+                switch (elements[j].Type)       //Attributes from XML needs to be handled
                 {
                     case "sequence":
                         {
-                            //opret ny seq
-                            //kald rekursiv med seq
                             Sequence seq = new Sequence();
-                            objects.Add(seq);
-                            ProcessElements(j + 1, seq); //rekursion, så parent kender children
+
+                            if (startSequence == null)
+                            {
+                                startSequence = seq;
+                            }
+                            if (currentSequence != null)
+                            {
+                                seq.AddParent(currentSequence);
+                            }
+                            if (currentFlow != null)
+                            {
+                                currentFlow.AddChild(seq);
+                            }
+                            currentSequence = seq;
                         }
                         break;
                     case "endsequence":
                         {
-                            //break og return til parent
-                            break;
+                            if (currentSequence.Parent != null)
+                            {
+                                currentSequence = currentSequence.Parent;
+                            }
                         }
                         break;
                     case "activity":
                         {
-
-                            //opret ny act
-                            //add activity til ejerens list over subObj
+                            Drawable act = new Activity();
+                            currentSequence.AddChild(act);
                         }
                         break;
                     case "Flow":
                         {
-                            //Opret nyt flow
-                            //kald rekursivt med flow
+                            Flow flow = new Flow();
+
+                            currentSequence.AddChild(flow);
+                            currentFlow = flow;
                         }
                         break;
                     case "endFlow":
                         {
-                            //break og return til paret
+                            currentFlow = null;
                         }
                         break;
 
                     default:
                         break;
                 }
+                ProcessElements(j + 1);
             }
         }
     }

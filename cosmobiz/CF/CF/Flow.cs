@@ -1,27 +1,22 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
 using System.Text;
-using System.Windows.Forms;
 
 namespace CF
 {
-    public partial class Flow : UserControl, IDrawable
+    public class Flow : Drawable
     {
-        public Flow()
+        private List<Drawable> sequences = new List<Drawable>();
+
+        public override void Draw()
         {
-            InitializeComponent();
+            //throw new Exception("The method or operation is not implemented.");
         }
 
-        #region IDrawable Members
-
-        public void Draw()
+        public override void AddChild(Drawable child)
         {
-            throw new Exception("The method or operation is not implemented.");
+            sequences.Add(child);  //should make sure child is Sequence
+            //throw new Exception("The method or operation is not implemented.");
         }
-
-        #endregion
     }
 }

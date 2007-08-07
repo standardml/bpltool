@@ -1,47 +1,34 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
 using System.Text;
-using System.Windows.Forms;
 
 namespace CF
 {
-    public partial class Sequence : UserControl, IDrawable
+    public class Sequence : Drawable
     {
-        private int number;
+        List<Drawable> drawableObjects = new List<Drawable>();
 
-        public int Number
+        private Sequence parent;
+        public Sequence Parent
         {
-            get { return number; }
-            set { number = value; }
-        }
-
-        //MainWindow main;
-
-        public Sequence()//, MainWindow main)
-        {
-            //this.number = number;
-            //this.main = main;
-            InitializeComponent();
-        }
-
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
-            //main.UserControlCounter(this.Location.X);
+            get { return parent; }
         }
 
 
-
-
-        #region IDrawable Members
-
-        public void Draw()
+        public override void Draw()
         {
-            throw new Exception("The method or operation is not implemented.");
+            //throw new Exception("The method or operation is not implemented.");
         }
 
-        #endregion
+        public override void AddChild(Drawable child)
+        {
+            drawableObjects.Add(child);
+            //throw new Exception("The method or operation is not implemented.");
+        }
+
+        public void AddParent(Sequence parent)
+        {
+            this.parent = parent;
+        }
     }
 }

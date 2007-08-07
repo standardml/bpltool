@@ -52,18 +52,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Activity.cs">
+    <Compile Include="Activity.cs" />
+    <Compile Include="Drawable.cs" />
+    <Compile Include="Flow.cs" />
+    <Compile Include="Sequence.cs" />
+    <Compile Include="VisualActivity.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Activity.Designer.cs">
-      <DependentUpon>Activity.cs</DependentUpon>
+    <Compile Include="VisualActivity.Designer.cs">
+      <DependentUpon>VisualActivity.cs</DependentUpon>
     </Compile>
     <Compile Include="IDrawable.cs" />
-    <Compile Include="Flow.cs">
+    <Compile Include="VisualFlow.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Flow.Designer.cs">
-      <DependentUpon>Flow.cs</DependentUpon>
+    <Compile Include="VisualFlow.Designer.cs">
+      <DependentUpon>VisualFlow.cs</DependentUpon>
     </Compile>
     <Compile Include="FlowElements.cs" />
     <Compile Include="MainWindow.cs">
@@ -75,9 +79,9 @@
     <Compile Include="Processor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="Activity.resx">
+    <EmbeddedResource Include="VisualActivity.resx">
       <SubType>Designer</SubType>
-      <DependentUpon>Activity.cs</DependentUpon>
+      <DependentUpon>VisualActivity.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainWindow.resx">
       <SubType>Designer</SubType>
@@ -88,23 +92,26 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Sequence.resx">
+    <EmbeddedResource Include="VisualSequence.resx">
       <SubType>Designer</SubType>
-      <DependentUpon>Sequence.cs</DependentUpon>
+      <DependentUpon>VisualSequence.cs</DependentUpon>
     </EmbeddedResource>
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Sequence.cs">
+    <Compile Include="VisualSequence.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Sequence.Designer.cs">
-      <DependentUpon>Sequence.cs</DependentUpon>
+    <Compile Include="VisualSequence.Designer.cs">
+      <DependentUpon>VisualSequence.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Images\Activity.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <Import Condition="'$(TargetFrameworkVersion)' == 'v1.0'" Project="$(MSBuildBinPath)\Microsoft.CompactFramework.CSharp.v1.targets" />
   <Import Condition="'$(TargetFrameworkVersion)' == 'v2.0'" Project="$(MSBuildBinPath)\Microsoft.CompactFramework.CSharp.targets" />

@@ -7,5 +7,6 @@ namespace CF
     interface IDrawable
     {
         void Draw();
+        void AddChild();
     }
 }
