@@ -65,9 +65,9 @@ namespace CF
             proc.ProcessElements(0);
             //Drawable seq = proc.StartSequence;
             //seq.Draw();
-
+            Point point = new Point(10, 10);
             start = proc.DrawableObjects[0];
-            start.Draw();
+            start.Draw(this, point);
 
 
         }

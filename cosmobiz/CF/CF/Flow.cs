@@ -7,6 +7,7 @@ namespace CF
     public class Flow : Drawable
     {
         private List<Drawable> sequences = new List<Drawable>();
+        private System.Drawing.Point point;
 
         private bool visible = true;
 
@@ -17,21 +18,28 @@ namespace CF
         }
 
 
-        public override void Draw()
+        public override System.Drawing.Point Draw(MainWindow main, System.Drawing.Point point)
         {
+            this.point = point;
+            //Calculate exitpoint
 
             if (visible)
             {
-                Console.WriteLine("DrawMe");
+                VisualFlow flow = new VisualFlow();
+                flow.Location = point;
+                main.Controls.Add(flow);
+                
+
                 foreach (Drawable seq in sequences)
                 {
-                    seq.Draw();
+                    point = seq.Draw(main, point); //needs adjustment, or sequences will not appear in parallel.
                 } 
             }
             else
             {
                 //draw replacement
             }
+            return point;
         }
 
         public override void AddChild(Drawable child)

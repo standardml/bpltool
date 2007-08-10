@@ -6,7 +6,7 @@ namespace CF
 {
     public abstract class Drawable
     {
-        public abstract void Draw();
+        public abstract System.Drawing.Point Draw(MainWindow main, System.Drawing.Point point);
         public abstract void AddChild(Drawable child);
     }
 }

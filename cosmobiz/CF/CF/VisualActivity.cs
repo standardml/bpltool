@@ -16,27 +16,8 @@ namespace CF
         public VisualActivity()
         {
             InitializeComponent();
-            /*
-            if (File.Exists("\\Program Files\\CF\\Images\\Activity.bmp"))
-            {
-                Image bitmap = new Bitmap("\\Program Files\\CF\\Images\\Activity.bmp");
-                Image bitmap2 = new Bitmap(50, 32);
-                Graphics graph = Graphics.FromImage(bitmap);
-                Graphics graph2 = Graphics.FromImage(bitmap2);
-                
-                //PictureBox box = new PictureBox();
+            //this.Top = 400;
 
-                //graph.Clear(Color.Red);
-                graph.DrawImage(bitmap, new Rectangle(0, 0, 50, 32), new Rectangle(0, 0, bitmap.Width, bitmap.Height), GraphicsUnit.Pixel);
-                graph2.Clear(Color.Red);
-                //graph.DrawLine(new Pen(Color.Black), 10, 10, 30, 10);
-                this.pictureBox1.Image = bitmap2;
-            }
-            else
-            {
-                Console.WriteLine("crap");
-            }
-            */
         }
 
         public event ClickedHandler VisualClicked;
@@ -53,7 +34,5 @@ namespace CF
         {
             OnVisualClicked();
         }
-
-
     }
 }

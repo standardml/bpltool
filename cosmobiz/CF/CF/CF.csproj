@@ -92,6 +92,10 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="VisualFlow.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>VisualFlow.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="VisualSequence.resx">
       <SubType>Designer</SubType>
       <DependentUpon>VisualSequence.cs</DependentUpon>
@@ -99,6 +103,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="VisualSequence.cs">
       <SubType>UserControl</SubType>

@@ -8,25 +8,19 @@ using System.Windows.Forms;
 
 namespace CF
 {
-    public partial class VisualFlow : UserControl, IDrawable
+    public partial class VisualFlow : UserControl
     {
         public VisualFlow()
         {
             InitializeComponent();
+            //this.Top = 500;
         }
 
-        #region IDrawable Members
-
-        public void Draw()
+        private void VisualFlow_Click(object sender, EventArgs e)
         {
-            throw new Exception("The method or operation is not implemented.");
+            this.Visible = false;
         }
 
-        public void AddChild()
-        {
-            throw new Exception("The method or operation is not implemented.");
-        }
 
-        #endregion
     }
 }
