@@ -13,6 +13,7 @@ namespace CF
     public partial class MainWindow : Form
     {
         ListedElements elements;
+        private Drawable start;
 
         public MainWindow()
         {
@@ -62,16 +63,13 @@ namespace CF
         {
             Processor proc = new Processor(elements);
             proc.ProcessElements(0);
-            /*
-            int number = int.Parse(textBox1.Text);
-            Sequence seq = new Sequence(number);
+            //Drawable seq = proc.StartSequence;
+            //seq.Draw();
 
-            //seq.Click += handler;
-            seq.Enabled = true;
-            Point point = new Point(number, number);
-            seq.Location = point;
-            this.Controls.Add(seq);
-            */
+            start = proc.DrawableObjects[0];
+            start.Draw();
+
+
         }
 
         public void UserControlCounter(int number)

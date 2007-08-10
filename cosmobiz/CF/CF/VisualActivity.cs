@@ -9,8 +9,10 @@ using System.IO;
 
 namespace CF
 {
-    public partial class VisualActivity : UserControl, IDrawable
+    public partial class VisualActivity : UserControl
     {
+        public delegate void ClickedHandler();
+
         public VisualActivity()
         {
             InitializeComponent();
@@ -37,18 +39,21 @@ namespace CF
             */
         }
 
-        #region IDrawable Members
+        public event ClickedHandler VisualClicked;
 
-        public void Draw()
+        protected virtual void OnVisualClicked()
         {
-            throw new Exception("The method or operation is not implemented.");
+            if (VisualClicked != null)
+            {
+                VisualClicked();
+            }
         }
 
-        public void AddChild()
+        private void VisualActivity_Click(object sender, EventArgs e)
         {
-            throw new Exception("The method or operation is not implemented.");
+            OnVisualClicked();
         }
 
-        #endregion
+
     }
 }

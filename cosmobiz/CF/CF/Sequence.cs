@@ -17,6 +17,10 @@ namespace CF
 
         public override void Draw()
         {
+            foreach (Drawable obj in drawableObjects)
+            {
+                obj.Draw();
+            }
             //throw new Exception("The method or operation is not implemented.");
         }
 

@@ -8,9 +8,16 @@ namespace CF
     {
         private ListedElements elements;
 
-        private Sequence startSequence;
+        private Drawable startSequence;
         private Sequence currentSequence;
         private Flow currentFlow;
+
+        //private Drawable startSequence;
+        public Drawable StartSequence
+        {
+            get { return startSequence; }
+        }
+
 
 
         private List<Drawable> drawableObjects;
@@ -50,6 +57,7 @@ namespace CF
                                 currentFlow.AddChild(seq);
                             }
                             currentSequence = seq;
+                            drawableObjects.Add(seq);
                         }
                         break;
                     case "endsequence":
@@ -64,6 +72,7 @@ namespace CF
                         {
                             Drawable act = new Activity();
                             currentSequence.AddChild(act);
+                            drawableObjects.Add(act);
                         }
                         break;
                     case "Flow":
@@ -72,6 +81,7 @@ namespace CF
 
                             currentSequence.AddChild(flow);
                             currentFlow = flow;
+                            drawableObjects.Add(flow);
                         }
                         break;
                     case "endFlow":

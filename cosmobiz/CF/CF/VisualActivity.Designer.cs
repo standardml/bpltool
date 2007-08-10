@@ -45,14 +45,15 @@ namespace CF
             this.label1.Size = new System.Drawing.Size(47, 32);
             this.label1.Text = "Act";
             // 
-            // Activity
+            // VisualActivity
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(192F, 192F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.Controls.Add(this.label1);
             this.Controls.Add(this.pictureBox1);
-            this.Name = "Activity";
+            this.Name = "VisualActivity";
             this.Size = new System.Drawing.Size(77, 38);
+            this.Click += new System.EventHandler(this.VisualActivity_Click);
             this.ResumeLayout(false);
 
         }

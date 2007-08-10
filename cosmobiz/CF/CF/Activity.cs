@@ -12,10 +12,13 @@ namespace CF
         {
             get { return child; }
         }
-	
 
         public override void Draw()
         {
+            VisualActivity vis = new VisualActivity();
+            //vis.Size = new System.Drawing.Size(30, 30);
+            vis.Bounds = new System.Drawing.Rectangle(10, 20, 30, 30);
+            
             //throw new Exception("The method or operation is not implemented.");
         }
 

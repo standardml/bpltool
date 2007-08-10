@@ -8,9 +8,30 @@ namespace CF
     {
         private List<Drawable> sequences = new List<Drawable>();
 
+        private bool visible = true;
+
+        public bool Visible
+        {
+            get { return visible; }
+            set { visible = value; }
+        }
+
+
         public override void Draw()
         {
-            //throw new Exception("The method or operation is not implemented.");
+
+            if (visible)
+            {
+                Console.WriteLine("DrawMe");
+                foreach (Drawable seq in sequences)
+                {
+                    seq.Draw();
+                } 
+            }
+            else
+            {
+                //draw replacement
+            }
         }
 
         public override void AddChild(Drawable child)
