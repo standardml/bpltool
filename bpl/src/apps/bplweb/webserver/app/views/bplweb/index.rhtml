@@ -121,7 +121,7 @@
 	  <tr>
 	    <td align="left">
 	      <%= visibilitytoggler("rules") %>
-	      Rules:</td>
+	      Rules: <span id="totalmatches-count"></span></td>
 	    <td align="right">
 	      <input type="hidden" name="simplifymatches" id="simplifymatches" value="on" />
 	       <!-- Simplify matches &nbsp; -->
@@ -223,7 +223,7 @@
 	    <div id="rule[0]-matches">
 	      <p class="head">
                 <%= visibilitytoggler("rule[0]-matches") %>
-                Matches:
+                <span id="rule[0]-count"></span> Matches:
               </p>
 	      <div id="rule[0]-matches-body" class="body">
               </div>

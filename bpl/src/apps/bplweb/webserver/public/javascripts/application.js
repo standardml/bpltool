@@ -198,7 +198,7 @@ function addrule () {
 rulechild ('Redex', bigraphhelp, "redex[" + nodeno + "]", 'a redex bigraph', true) +
 rulechild ('React', bigraphhelp, "react[" + nodeno + "]", 'a reactum bigraph', true) +
 rulechild ('Instantiation', instantiationhelp, "inst[" + nodeno + "]", 'an instantiation', true) +
-rulechild ("<span id='rule[" + nodeno + "]-count" + nodeno +"'>0</span> Matches", "", "rule[" + nodeno + "]-matches", false, false) +
+rulechild ("<span id='rule[" + nodeno + "]-count" + nodeno +"'></span> Matches", "", "rule[" + nodeno + "]-matches", false, false) +
 "         </div>";
 
   rulesnode.appendChild (rulenode);
@@ -383,8 +383,16 @@ function resultrequest (rule, match, rulestomatch, matchcount) {
             break;
 	  case 'NOMOREMATCHES':
 	    id = result.id;
-	    alert ("Found a total of " + result.matches + " matches for "
-	            + (result.rule < 0 ? "all rules" : "rule " + result.rule));
+	    if (result.rule < 0)
+              $('totalmatches-count').innerHTML = "(" + result.matches +
+	        (result.matches == 1 ? " match)" : " matches)");
+	    else {
+	      var matchcounter = $("rule[" + result.rule + "]-count");
+	      if (matchcounter)
+	        matchcounter.innerHTML = result.matches.toString ();
+	    }
+	    //alert ("Found a total of " + result.matches + " matches for "
+	    //        + (result.rule < 0 ? "all rules" : "rule " + result.rule));
 	    break;
           case 'TIMEOUT':
             if (confirm 
@@ -414,7 +422,11 @@ function deletematches (rulestomatch) {
   for (; ruletoclear = $('rule[' + i + ']-matches-body'); i++) {
     var c;
     while (c = ruletoclear.firstChild) ruletoclear.removeChild (c);
+    var counter = $('rule[' + i + ']-count');
+    if (counter) counter.innerHTML = "";
+    if (rulestomatch >= 0) break;
   }
+  $('totalmatches-count').innerHTML = "";
 }
 
 function matchrequest (rulestomatch, matchcount) {
