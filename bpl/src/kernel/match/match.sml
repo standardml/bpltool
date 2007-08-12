@@ -1389,8 +1389,7 @@ struct
   (* Match a global discrete prime using a PAX, MER or ION rule:
    * 1) If PAX rule matches return this match,
    *    else if ION rule matches return this match,
-   *    else if the agent contains n > 1 top-level molecules
-   *    and MER matching is allowed
+   *    else if MER matching is allowed
    *    (to avoid infinite recursion via MER-PAR-PARe-PARn),
    *    return any MER rule matches.
    *)
@@ -1403,8 +1402,7 @@ struct
            (mz as (LazyList.Cons _), _) => mz
          | (_, true)
          => (case #Ss (unmkG g) of
-               ((*_ :: *) (* panic@itu.dk 28.06.2007: Enable matching a=K 1, R=K*id *)
-                _ :: _) => lzunmk (matchMER' lvl args)
+               (_ :: _) => lzunmk (matchMER' lvl args)
              | _ => Nil)
          | _ => Nil)
          
