@@ -136,17 +136,20 @@ doc: doc-lib doc-kernel doc-miniml
 doc-lib:	lib/$(DOCSUBDIR)/index.html
 lib/$(DOCSUBDIR)/index.html: lib/smldoc.cfg lib/overview.html $(CMFILES-lib) $(SMLFILES-lib)
 	test -w lib/$(DOCSUBDIR) || mkdir lib/$(DOCSUBDIR)
-	cd lib && $(SMLDOC) -d $(DOCSUBDIR) $(SMLDOC-FLAGS) $(subst ./lib/,./,$(CMFILES-lib))
+	cd lib && $(SMLDOC) -d $(DOCSUBDIR) $(SMLDOC-FLAGS) \
+	$(subst ./lib/,./,$(filter-out %/test/sources.cm,$(CMFILES-lib)))
 
 doc-kernel:	kernel/$(DOCSUBDIR)/index.html
 kernel/$(DOCSUBDIR)/index.html: kernel/smldoc.cfg kernel/overview.html $(CMFILES-kernel) $(SMLFILES-kernel)
 	test -w kernel/$(DOCSUBDIR) || mkdir kernel/$(DOCSUBDIR)
-	cd kernel && $(SMLDOC) -d $(DOCSUBDIR) $(SMLDOC-FLAGS) $(subst ./kernel/,./,$(CMFILES-kernel))
+	cd kernel && $(SMLDOC) -d $(DOCSUBDIR) $(SMLDOC-FLAGS) \
+	$(subst ./kernel/,./,$(filter-out %/test/sources.cm,$(CMFILES-kernel)))
 
 doc-miniml:	apps/miniml/$(DOCSUBDIR)/index.html
 apps/miniml/$(DOCSUBDIR)/index.html: apps/miniml/smldoc.cfg apps/miniml/overview.html $(CMFILES-miniml) $(SMLFILES-miniml)
 	test -w apps/miniml/$(DOCSUBDIR) || mkdir apps/miniml/$(DOCSUBDIR)
-	cd apps/miniml && $(SMLDOC) -d $(DOCSUBDIR) $(SMLDOC-FLAGS) $(subst ./apps/miniml/,./,$(CMFILES-miniml))
+	cd apps/miniml && $(SMLDOC) -d $(DOCSUBDIR) $(SMLDOC-FLAGS) \
+	$(subst ./apps/miniml/,./,$(filter-out %/test/sources.cm,$(CMFILES-miniml)))
 
 DIRTREE: $(DESCFILES) $(MKDIRTREE)
 	echo "Directory summary (automatically generated, foolish to edit):" > $@
