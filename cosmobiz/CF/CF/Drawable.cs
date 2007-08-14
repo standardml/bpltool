@@ -8,5 +8,6 @@ namespace CF
     {
         public abstract System.Drawing.Point Draw(MainWindow main, System.Drawing.Point point);
         public abstract void AddChild(Drawable child);
+        public abstract int CollectWidths();
     }
 }

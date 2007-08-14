@@ -95,6 +95,7 @@ namespace CF
                 }
                 ProcessElements(j + 1);
             }
+            int t = startSequence.CollectWidths();
         }
     }
 }

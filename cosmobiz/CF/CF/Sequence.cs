@@ -8,7 +8,7 @@ namespace CF
     {
         List<Drawable> drawableObjects = new List<Drawable>();
         System.Drawing.Point point;
-        
+
 
         private Sequence parent;
         public Sequence Parent
@@ -16,13 +16,39 @@ namespace CF
             get { return parent; }
         }
 
+        private int width;
+        public int Width
+        {
+            get { return width; }
+        }
+
+
+        public override int CollectWidths() //Not correct, since each Act will add to the width (which should be 1 no matter how many Acts there are in a seq)
+        {
+            int w = 0;
+            foreach (Drawable obj in drawableObjects)
+            {
+
+                w += obj.CollectWidths();
+            }
+            if (w == 0)
+            {
+                width = 1;
+            }
+            else
+            {
+                width = w;
+            }
+            return width;
+
+        }
 
         public override System.Drawing.Point Draw(MainWindow main, System.Drawing.Point point)
         {
             this.point = point; // + Calculate exitpoint (if needed at all)
-            
+
             VisualSequence vis = new VisualSequence();
-            
+
             main.Controls.Add(vis);
 
             foreach (Drawable obj in drawableObjects)
@@ -42,5 +68,8 @@ namespace CF
         {
             this.parent = parent;
         }
+
+
+
     }
 }

@@ -17,6 +17,23 @@ namespace CF
             set { visible = value; }
         }
 
+        private int width;
+        public int Width
+        {
+            get { return width; }
+        }
+
+        public override int CollectWidths()
+        {
+            int w = 0;
+            foreach (Drawable seq in sequences)
+            {
+                w += seq.CollectWidths();
+            }
+            width = w;
+            return w;
+        }
+
 
         public override System.Drawing.Point Draw(MainWindow main, System.Drawing.Point point)
         {
@@ -47,5 +64,7 @@ namespace CF
             sequences.Add(child);  //should make sure child is Sequence
             //throw new Exception("The method or operation is not implemented.");
         }
+
+        
     }
 }

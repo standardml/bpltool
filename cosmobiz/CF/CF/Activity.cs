@@ -15,6 +15,11 @@ namespace CF
             get { return child; }
         }
 
+        public override int CollectWidths()
+        {
+            return 0;
+        }
+
         public override System.Drawing.Point Draw(MainWindow main, System.Drawing.Point point)
         {
             this.point = point;
@@ -38,5 +43,7 @@ namespace CF
             this.child = child;
             //throw new Exception("The method or operation is not implemented.");
         }
+
+
     }
 }

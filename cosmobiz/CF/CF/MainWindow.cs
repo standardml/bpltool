@@ -26,7 +26,7 @@ namespace CF
             string danishPath = "\\Programmer\\CF\\";
             if (Directory.Exists(englishPath))
             {
-                englishPath += "Flow.xml";
+                englishPath += "Flow2.xml";
                 elements = ReadXML(englishPath);
             }
             else if (Directory.Exists(danishPath))
@@ -55,6 +55,7 @@ namespace CF
 
                     TempElements.Add(new Element("end" + xreader.LocalName, "end" + xreader.LocalName, ""));
                 }
+
             }
             return TempElements;
         }
@@ -68,7 +69,9 @@ namespace CF
             Point point = new Point(10, 10);
             start = proc.DrawableObjects[0];
             start.Draw(this, point);
-
+            //Counting of width must be performed through calling child elements.
+            //Otherwise each element in proc.DrawableObjects is counting, which makes sequential flows appear parallel,
+            //since each add a width.
 
         }
 
