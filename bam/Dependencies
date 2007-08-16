@@ -1,0 +1,10 @@
+stack: util lib/pp/mak/.
+rbset-sig:
+rbset: rbset-sig %NODASHSIG
+ordering-sig:
+monofinmap-sig:
+orderfinmap: monofinmap-sig ordering-sig
+util-sig: monofinmap-sig rbset /lib/pp/mak/.
+util: util-sig orderfinmap lib/pp/mak/. rbset %NODASHSIG
+term: rbset util lib/pp/mak/. %PROGRAM
+bam: stack term util rbset-sig rbset lib/pp/mak/. %PROGRAM
