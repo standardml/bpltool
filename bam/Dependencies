@@ -7,4 +7,8 @@ orderfinmap: monofinmap-sig ordering-sig
 util-sig: monofinmap-sig rbset /lib/pp/mak/.
 util: util-sig orderfinmap lib/pp/mak/. rbset %NODASHSIG
 term: rbset util lib/pp/mak/. %PROGRAM
-bam: stack term util rbset-sig rbset lib/pp/mak/. %PROGRAM
+bam: stack term util rbset-sig rbset parse lib/pp/mak/. %PROGRAM
+parser.grm-sig: /lib/ml-yacc/.
+parser.grm: parser.grm-sig term /lib/ml-yacc/. util /lib/compat/mosml/. %NODASHSIG
+lexer.lex: /lib/compat/mosml/. parser.grm-sig
+parse: parser.grm-sig parser.grm lexer.lex term /lib/ml-yacc/.

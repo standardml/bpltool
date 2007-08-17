@@ -353,6 +353,7 @@ structure BAM = struct
 
 end (* structure BAM *)
 
+(*
 open Term
 val (K,A,B) = ( ("K", ()) , ("A", ()) , ("B", ()) )
 val lhs = Par(Prefix(K, Prefix(A, Nil)),
@@ -364,3 +365,15 @@ val agent = Par(Prefix(K, Prefix(B, Nil)),
 				Par(Prefix(A, Nil),
 				    Prefix(B, Nil)))))
 val _ = BAM.rewrite rules agent
+*)
+
+
+fun run file =
+    let val (rules, agent) = Parser.parseFile file
+	val rules' = Rbset.addList(Rbset.empty Rule.compare, rules)
+    in  BAM.rewrite rules' agent
+    end
+
+val _ = case CommandLine.arguments() of
+	    [file] => run file
+	  | _ => raise Fail("Expected a single argument")
