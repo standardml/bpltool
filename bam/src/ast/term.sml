@@ -16,54 +16,7 @@
  * USA
  *)
 
-structure Term :> sig
-    type 'a t
-
-    type 'a ctrl_id = string * 'a
-		   
-    val Par : 'a t * 'a t -> 'a t
-    val Prefix : 'a ctrl_id * 'a t -> 'a t
-    val Nil : 'a t
-    val Hole : int -> 'a t
-
-    val map : ('a -> 'b) -> 'a t -> 'b t
-
-    val toplevels : 'a t -> 'a t list
-    val exists : ('a -> bool) -> 'a t -> bool
-    val compare : 'a t * 'a t -> order
-
-    val plug : 'a t vector -> 'a t -> 'a t
-    val plug1 : int * 'a t -> 'a t -> 'a t
-
-    val pp : 'a t Pretty.pp
-    val pp' : 'a ctrl_id Pretty.pp -> 'a t Pretty.pp
-
-    datatype 'a view =
-	     VPar of 'a t * 'a t
-           | VPrefix of 'a ctrl_id * 'a t
-           | VNil
-	   | VHole of int
-
-    val view : 'a t -> 'a view
-
-    datatype 'a pattern =
-	     PSuccess
-	   | PVar of string
-	   | PPar of 'a pattern * 'a pattern
-	   | PPrefix of 'a ctrl_id * 'a pattern
-	   | PPrefixed of string * 'a pattern
-	   | PHole of int
-	   | PHoled of string
-	   | PNil
-
-    type 'a match
-
-    val match : 'a pattern -> 'a t -> 'a match option
-    val lookup : 'a match -> string -> 'a t option
-    val lookupCtrl : 'a match -> string -> 'a ctrl_id option
-    val lookupHole : 'a match -> string -> int option
-
-end = struct
+structure Term :> TERM = struct
 
     type 'a ctrl_id = string * 'a
     datatype 'a t =
@@ -306,21 +259,3 @@ end (* structure TermTest *)
 
 val _ = TermTest.run()
 *)
-
-structure Rule : sig
-    type 'ctrlinfo t
-    val rule : 'ctrlinfo Term.t * 'ctrlinfo Term.t -> 'ctrlinfo t
-    val LHS : 'ctrlinfo t -> 'ctrlinfo Term.t
-    val RHS : 'ctrlinfo t -> 'ctrlinfo Term.t
-    val map : ('ctrlinfo -> 'newctrlinfo) -> 'ctrlinfo t -> 'newctrlinfo t
-    val compare : 'ctrlinfo t * 'ctrlinfo t -> order
-    val pp : 'ctrlinfo t Pretty.pp
-end = struct
-    type 'ctrlinfo t = 'ctrlinfo Term.t * 'ctrlinfo Term.t
-    fun rule (lhs, rhs) = (lhs, rhs) (* FIXME: should really check *)
-    val LHS : 'ctrlinfo t -> 'ctrlinfo Term.t = #1
-    val RHS : 'ctrlinfo t -> 'ctrlinfo Term.t = #2
-    fun map f (lhs, rhs) = (Term.map f lhs, Term.map f rhs)
-    val compare = Util.pairCmp (Term.compare, Term.compare)
-    fun pp (lhs, rhs) = Pretty.ppBinary(Term.pp lhs, "-->", Term.pp rhs)
-end (* structure Rule *)

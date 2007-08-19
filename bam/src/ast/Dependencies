@@ -1,5 +1,9 @@
-term: /utils/rbset /utils/util /lib/pp/mak/. %PROGRAM
+term-sig: /lib/pp/mak/.
+term: term-sig /utils/rbset /utils/util /lib/pp/mak/. %NODASHSIG
+rule-sig: term /lib/pp/mak/.
+rule: rule-sig term /utils/util /lib/pp/mak/. %NODASHSIG
 minibpl.grm-sig: /lib/ml-yacc/.
-minibpl.grm: minibpl.grm-sig term /lib/ml-yacc/. /utils/util /lib/compat/mosml/. %NODASHSIG
+minibpl.grm: minibpl.grm-sig term rule /utils/util 
+   /lib/ml-yacc/. /lib/compat/mosml/. %NODASHSIG
 minibpl.lex: /lib/compat/mosml/. minibpl.grm-sig
-minibplparser: minibpl.grm-sig minibpl.grm minibpl.lex term /lib/ml-yacc/.
+minibplparser: minibpl.grm-sig minibpl.grm minibpl.lex term rule /lib/ml-yacc/.
