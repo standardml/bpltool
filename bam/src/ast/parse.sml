@@ -1,4 +1,4 @@
-structure Parser : sig val parseFile : string -> unit Rule.t list * unit Term.t end =
+structure MiniBPLParser : sig val parseFile : string -> unit Rule.t list * unit Term.t end =
 struct
 
     exception ParseError
@@ -6,25 +6,25 @@ struct
     type pos = int * int
 
     (* Create the Lexer and Parser *)
-    structure ParserLrVals = 
-	ParserLrValsFun(structure Token = LrParser.Token)
-    structure ParserL = 
-	LexerLexFun(structure Tokens = ParserLrVals.Tokens)
-    structure ParserP = 
-	JoinWithArg(structure ParserData = ParserLrVals.ParserData
-		    structure Lex = ParserL
+    structure MiniBPLLrVals = 
+	MiniBPLLrValsFun(structure Token = LrParser.Token)
+    structure MiniBPLL = 
+	MiniBPLLexFun(structure Tokens = MiniBPLLrVals.Tokens)
+    structure MiniBPLP = 
+	JoinWithArg(structure ParserData = MiniBPLLrVals.ParserData
+		    structure Lex = MiniBPLL
 		    structure LrParser = LrParser)
 
     fun printError (s, p1, p2) = TextIO.output(TextIO.stdOut, s)
 
     fun parseStream stream =
 	let val lexer = 
-		ParserP.makeLexer (fn i => TextIO.inputN (stream, i)) 
+		MiniBPLP.makeLexer (fn i => TextIO.inputN (stream, i)) 
 		                  ()
 
 	    val (ast, stream) = 
-		ParserP.parse(15, lexer, printError, ())
-	             handle ParserP.ParseError => raise ParseError
+		MiniBPLP.parse(15, lexer, printError, ())
+	             handle MiniBPLP.ParseError => raise ParseError
 	in
 	    ast
 	end

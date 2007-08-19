@@ -5,6 +5,7 @@ MLYACC          = mlyacc
 MLLEX           = mllex
 MAKEFILE	= Makefile
 EXEEXT		=
+SHELL		= /bin/bash
 
 MOSMLFLAGS 	= -liberal
 DEPENDENCIES    := $(shell find -L . -name Dependencies)

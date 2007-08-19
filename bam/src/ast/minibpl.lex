@@ -43,7 +43,7 @@ end (*local*)
 
 %%
 
-%header (functor LexerLexFun(structure Tokens : Parser_TOKENS));
+%header (functor MiniBPLLexFun(structure Tokens : MiniBPL_TOKENS));
 %arg (arg);
 
 %s COM STR;

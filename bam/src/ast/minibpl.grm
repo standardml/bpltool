@@ -63,7 +63,7 @@ fun mkProg declarations =
 %%
 
 
-  %header (functor ParserLrValsFun(structure Token: TOKEN))
+  %header (functor MiniBPLLrValsFun(structure Token: TOKEN))
 
 
   %term  
@@ -94,7 +94,7 @@ fun mkProg declarations =
   %start Program
 
   %nodefault
-  %name Parser
+  %name MiniBPL
   %eop EOF
   %noshift EOF
   %verbose

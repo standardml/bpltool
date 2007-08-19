@@ -369,7 +369,7 @@ val _ = BAM.rewrite rules agent
 
 
 fun run file =
-    let val (rules, agent) = Parser.parseFile file
+    let val (rules, agent) = MiniBPLParser.parseFile file
 	val rules' = Rbset.addList(Rbset.empty Rule.compare, rules)
     in  BAM.rewrite rules' agent
     end
