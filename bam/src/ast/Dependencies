@@ -1,0 +1,5 @@
+term: /utils/rbset /utils/util /lib/pp/mak/. %PROGRAM
+parser.grm-sig: /lib/ml-yacc/.
+parser.grm: parser.grm-sig term /lib/ml-yacc/. /utils/util /lib/compat/mosml/. %NODASHSIG
+lexer.lex: /lib/compat/mosml/. parser.grm-sig
+parse: parser.grm-sig parser.grm lexer.lex term /lib/ml-yacc/.

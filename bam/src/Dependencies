@@ -1,0 +1,2 @@
+bam: /utils/stack /ast/term /utils/util /utils/rbset-sig /utils/rbset 
+   /ast/parse /lib/pp/mak/. %PROGRAM
