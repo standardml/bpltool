@@ -1,4 +1,4 @@
-BPLROOT=../bpl/src
+BPLROOT=../../bpl/src
 
 MOSMLC  	= mosmlc
 MLYACC          = mlyacc
@@ -7,9 +7,12 @@ MAKEFILE	= Makefile
 EXEEXT		=
 
 MOSMLFLAGS 	= -liberal
-BPLDEPENDENCIES := $(shell find lib/ -name Dependencies)
-MOSMAKEDIRS 	:= . $(patsubst %/Dependencies,%,$(BPLDEPENDENCIES))
+DEPENDENCIES    := $(shell find -L . -name Dependencies)
+MOSMAKEDIRS 	:= $(patsubst %/Dependencies,%,$(DEPENDENCIES))
 MOSMAKE 	= $(BPLROOT)/lib/mosmake
+
+config:
+	echo $(MOSMAKEDIRS)
 
 include $(MOSMAKE)/Makefile.inc
 
