@@ -1,3 +1,21 @@
+(* Copyright (c) 2001-2007 Ken Friis Larsen, Peter Sestoft
+ *
+ * BAM is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
+ *
+ * BAM is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BAM; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+ * USA
+ *)
+
 (* Rbset -- ordered sets implemented by red-black trees *)
 (* Intention: should resemble SML/NJs ORD_SET signature *)
 
@@ -41,7 +59,6 @@ val compare      : 'item set * 'item set -> order
 
 val depth        : 'item set -> int
 
-(*
 datatype 'item intv = 
     All
   | From of 'item
@@ -50,6 +67,5 @@ datatype 'item intv =
 
 val subset  : 'item set * 'item intv -> 'item set
 val sublist : 'item set * 'item intv -> 'item list
-*)
 
 end

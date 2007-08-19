@@ -16,22 +16,7 @@
  * USA
  *)
 
-structure Stack : sig
-    type 'a t
-	 
-    exception Empty 
-
-    val empty : 'a t
-    val isEmpty : 'a t -> bool
-    val push  : 'a -> 'a t -> 'a t
-    val pop   : 'a t -> ('a * 'a t) (* may raise Empty *)
-
-    val take : int -> 'a t -> 'a list
-
-    val pp : string -> 'a Pretty.pp -> 'a t Pretty.pp
-
-    val compare : ('a * 'a -> order) -> 'a t * 'a t -> order
-end = struct
+structure Stack :> STACK = struct
 
     type 'a t = 'a list
     exception Empty
