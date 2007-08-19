@@ -1,0 +1,4 @@
+val lhs = K.A | B
+val rhs = B
+rule r = lhs -> rhs
+agent a = K.B | K.(K.A | A | B)
