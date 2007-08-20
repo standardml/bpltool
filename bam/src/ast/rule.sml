@@ -17,10 +17,18 @@
  *)
 
 structure Rule :> RULE = struct
+    exception NotWellFormed
     type 'ctrlinfo t = 'ctrlinfo Term.t * 'ctrlinfo Term.t
-    fun rule (lhs, rhs) = (lhs, rhs) (* FIXME: should really check *)
+    fun rule (lhs, rhs) = 
+	let val lhsHoles = Term.holeIndices lhs
+	    val rhsHoles = Term.holeIndices rhs
+	in  if Rbset.isSubset(rhsHoles, lhsHoles) then (lhs, rhs)
+	    else raise NotWellFormed
+	end
     val LHS : 'ctrlinfo t -> 'ctrlinfo Term.t = #1
     val RHS : 'ctrlinfo t -> 'ctrlinfo Term.t = #2
+    fun holeIndices r = Term.holeIndices (LHS r)
+    fun maxHoleIndex r = Term.maxHoleIndex (LHS r)
     fun map f (lhs, rhs) = (Term.map f lhs, Term.map f rhs)
     val compare = Util.pairCmp (Term.compare, Term.compare)
     fun pp (lhs, rhs) = Pretty.ppBinary(Term.pp lhs, "-->", Term.pp rhs)

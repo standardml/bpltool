@@ -30,6 +30,9 @@ signature TERM = sig
     val exists : ('cinfo -> bool) -> 'cinfo t -> bool
     val compare : 'cinfo t * 'cinfo t -> order
 
+    val holeIndices : 'cinfo t -> int Rbset.set
+    val maxHoleIndex : 'cinfo t -> int
+
     val plug : 'cinfo t vector -> 'cinfo t -> 'cinfo t
     val plug1 : int * 'cinfo t -> 'cinfo t -> 'cinfo t
 

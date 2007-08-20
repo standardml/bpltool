@@ -17,10 +17,13 @@
  *)
 
 signature RULE = sig
+    exception NotWellFormed
     type 'ctrlinfo t
     val rule : 'ctrlinfo Term.t * 'ctrlinfo Term.t -> 'ctrlinfo t
     val LHS : 'ctrlinfo t -> 'ctrlinfo Term.t
     val RHS : 'ctrlinfo t -> 'ctrlinfo Term.t
+    val holeIndices : 'ctrlinfo t -> int Rbset.set
+    val maxHoleIndex : 'ctrlinfo t -> int
     val map : ('ctrlinfo -> 'newctrlinfo) -> 'ctrlinfo t -> 'newctrlinfo t
     val compare : 'ctrlinfo t * 'ctrlinfo t -> order
     val pp : 'ctrlinfo t Pretty.pp

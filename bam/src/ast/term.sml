@@ -77,6 +77,15 @@ structure Term :> TERM = struct
        val singleton = singleton String.compare
     end
 
+    fun holes0 (p,H) =
+	case p of
+	    THole i => IntSet.add(H,i)
+	  | TNil => H
+	  | TPrefix(_, p) => holes0 (p, H)
+	  | TPar ps => List.foldl holes0 H ps
+    fun holeIndices p = holes0 (p, IntSet.empty)
+    fun maxHoleIndex p = valOf(IntSet.max(holeIndices p))
+
     fun plug plugs P =
 	let val holes = Vector.foldli (fn (i,p,s) => IntSet.add(s,i)) 
 				      IntSet.empty (plugs,0,NONE)
@@ -97,7 +106,9 @@ structure Term :> TERM = struct
 			then (true,List.foldl (fn ((_,P),Ps) => Par(P,Ps)) Nil Ps')
 			else (false,P)
 		    end
-	in  #2(plug0 P)
+	in  if Rbset.isEmpty holes then P (* since we are not plugging anything,
+					     there is no reason to traverse P *)
+	    else #2(plug0 P)
 	end
     fun plug1 (j, p) P =
 	let val plugs = Vector.tabulate(j, fn i => if i=j then p else Hole i)
