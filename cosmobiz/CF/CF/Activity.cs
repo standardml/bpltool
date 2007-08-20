@@ -1,23 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Drawing;
 
 namespace CF
 {
     public class Activity : Drawable
     {
         System.Drawing.Point point;
+        private Size size; //Set default size for Activity
 
-        private Drawable child;
+        private Drawable parent;
 
-        public Drawable Child
+        public Activity()
         {
-            get { return child; }
-        }
-
-        public override int CollectWidths()
-        {
-            return 0;
+            size = new Size(1, 1);
         }
 
         public override System.Drawing.Point Draw(MainWindow main, System.Drawing.Point point)
@@ -40,10 +37,25 @@ namespace CF
 
         public override void AddChild(Drawable child)
         {
-            this.child = child;
+            //this.child = child;
             //throw new Exception("The method or operation is not implemented.");
         }
 
 
+
+        public override void AddParent(Drawable parent)
+        {
+            this.parent = parent;
+        }
+
+        public override Drawable GetParent()
+        {
+            return parent;
+        }
+
+        public override Size CollectSize()
+        {
+            return size;
+        }
     }
 }

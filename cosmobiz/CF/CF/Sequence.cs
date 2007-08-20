@@ -1,20 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Drawing;
 
 namespace CF
 {
     public class Sequence : Drawable
     {
-        List<Drawable> drawableObjects = new List<Drawable>();
+        private Size size;
+        private List<Drawable> children = new List<Drawable>();
+
+        private Drawable parent;
+
         System.Drawing.Point point;
-
-
-        private Sequence parent;
-        public Sequence Parent
-        {
-            get { return parent; }
-        }
 
         private int width;
         public int Width
@@ -22,24 +20,35 @@ namespace CF
             get { return width; }
         }
 
-
-        public override int CollectWidths() //Not correct, since each Act will add to the width (which should be 1 no matter how many Acts there are in a seq)
+        public Sequence()
         {
-            int w = 0;
-            foreach (Drawable obj in drawableObjects)
-            {
+            size = new Size(0, 0);
+        }
 
-                w += obj.CollectWidths();
-            }
-            if (w == 0)
+        public override Size CollectSize() //Not correct, since each Act will add to the width (which should be 1 no matter how many Acts there are in a seq)
+        {
+            Size w = new Size(0, 0);
+            foreach (Drawable obj in children)
             {
-                width = 1;
+                if (obj is Flow)
+                {
+                    w.Width += obj.CollectSize().Width;
+                }
+                
+                w.Height += obj.CollectSize().Height;
+                /*if (obj.CollectSize().Height > w.Height)
+                {
+                    w.Height += obj.CollectSize().Height;
+                }*/
+
             }
-            else
+            if (w.Width == 0)
             {
-                width = w;
+                w.Width = 1;
             }
-            return width;
+            size = w;
+
+            return w;
 
         }
 
@@ -51,7 +60,7 @@ namespace CF
 
             main.Controls.Add(vis);
 
-            foreach (Drawable obj in drawableObjects)
+            foreach (Drawable obj in children)
             {
                 point = obj.Draw(main, point); //The increase in point needs to be handled (may need to return point instead of void)
             }
@@ -60,15 +69,18 @@ namespace CF
 
         public override void AddChild(Drawable child)
         {
-            drawableObjects.Add(child);
-            //throw new Exception("The method or operation is not implemented.");
+            children.Add(child);
         }
 
-        public void AddParent(Sequence parent)
+        public override void AddParent(Drawable parent)
         {
             this.parent = parent;
         }
 
+        public override Drawable GetParent()
+        {
+            return parent;
+        }
 
 
     }

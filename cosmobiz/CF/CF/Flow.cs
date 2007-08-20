@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Drawing;
 
 namespace CF
 {
     public class Flow : Drawable
     {
-        private List<Drawable> sequences = new List<Drawable>();
+        private Size size;
+        private List<Drawable> children = new List<Drawable>(); //always sequences
+        private Drawable parent;
+
         private System.Drawing.Point point;
 
         private bool visible = true;
@@ -23,15 +27,24 @@ namespace CF
             get { return width; }
         }
 
-        public override int CollectWidths()
+        public override Size CollectSize()
         {
-            int w = 0;
-            foreach (Drawable seq in sequences)
+            Size w = new Size(0,0);
+            foreach (Drawable seq in children)
             {
-                w += seq.CollectWidths();
+                w.Width += seq.CollectSize().Width;
+                if (seq.CollectSize().Height > w.Height)
+                {
+                    w.Height = seq.CollectSize().Height;
+                }//Must find the largest depth of the children (height)
             }
-            width = w;
+            size = w;
             return w;
+        }
+
+        public Flow()
+        {
+            size = new Size(0, 2);
         }
 
 
@@ -45,12 +58,12 @@ namespace CF
                 VisualFlow flow = new VisualFlow();
                 flow.Location = point;
                 main.Controls.Add(flow);
-                
 
-                foreach (Drawable seq in sequences)
+
+                foreach (Drawable seq in children)
                 {
                     point = seq.Draw(main, point); //needs adjustment, or sequences will not appear in parallel.
-                } 
+                }
             }
             else
             {
@@ -61,10 +74,19 @@ namespace CF
 
         public override void AddChild(Drawable child)
         {
-            sequences.Add(child);  //should make sure child is Sequence
-            //throw new Exception("The method or operation is not implemented.");
+            children.Add(child);  //should make sure child is Sequence
         }
 
-        
+
+
+        public override void AddParent(Drawable parent)
+        {
+            this.parent = parent;
+        }
+
+        public override Drawable GetParent()
+        {
+            return parent;
+        }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Drawing;
 
 namespace CF
 {
@@ -8,6 +9,8 @@ namespace CF
     {
         public abstract System.Drawing.Point Draw(MainWindow main, System.Drawing.Point point);
         public abstract void AddChild(Drawable child);
-        public abstract int CollectWidths();
+        public abstract void AddParent(Drawable parent);
+        public abstract Drawable GetParent();
+        public abstract Size CollectSize();
     }
 }
