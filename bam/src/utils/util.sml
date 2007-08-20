@@ -68,7 +68,13 @@ struct
     structure StringMap = OrderFinMap(type T = string
                                       val lt = curry String.<)
 
+    open Pretty
     fun ppSet pp s = 
-	Pretty.bracket "{#}" (Pretty.clist "#, " pp (Rbset.listItems s))
+	bracket "{#}" (clist "#, " pp (Rbset.listItems s))
+
+    fun ppVector pp v =
+	let val vs = Vector.foldr (op ::) [] v
+	in  clist "#, " pp vs
+	end
 
 end (* structure Util *)

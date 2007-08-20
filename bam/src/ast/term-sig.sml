@@ -38,6 +38,7 @@ signature TERM = sig
 
     val pp : 'cinfo t Pretty.pp
     val pp' : 'cinfo Control.t Pretty.pp -> 'cinfo t Pretty.pp
+    val toString : 'cinfo t -> string
 
     datatype 'cinfo view =
 	     VPar of 'cinfo t * 'cinfo t

@@ -86,35 +86,6 @@ structure Term :> TERM = struct
     fun holeIndices p = holes0 (p, IntSet.empty)
     fun maxHoleIndex p = valOf(IntSet.max(holeIndices p))
 
-    fun plug plugs P =
-	let val holes = Vector.foldli (fn (i,p,s) => IntSet.add(s,i)) 
-				      IntSet.empty (plugs,0,NONE)
-	    fun lookup i = Vector.sub(plugs,i)
-	    fun plug0 P =
-		case P of
-		    THole i => if IntSet.member(holes,i) 
-			       then (true, lookup i) else (false, P)
-		  | TNil => (false, P)
-		  | TPrefix(C, P') => 
-		    let val (new, P'') = plug0 P'
-		    in  if new then (true, Prefix(C, P'')) else (false, P)
-		    end
-		  | TPar Ps =>
-		    let val Ps' = List.map plug0 Ps
-			val new = List.exists #1 Ps'
-		    in  if new 
-			then (true,List.foldl (fn ((_,P),Ps) => Par(P,Ps)) Nil Ps')
-			else (false,P)
-		    end
-	in  if Rbset.isEmpty holes then P (* since we are not plugging anything,
-					     there is no reason to traverse P *)
-	    else #2(plug0 P)
-	end
-    fun plug1 (j, p) P =
-	let val plugs = Vector.tabulate(j, fn i => if i=j then p else Hole i)
-	in  plug plugs P
-	end
-
     datatype 'a view =
 	     VPar of 'a t * 'a t
            | VPrefix of 'a Control.t * 'a t
@@ -208,8 +179,42 @@ structure Term :> TERM = struct
 	  | TPar ps => (if lev>0 then bracket "(#)" else fn tree => tree) 
 			   (clist " |# "(pp0 ppCtrl 0) ps)
 
-    val pp = pp0 Control.pp 0
-    val pp' = fn ppCtrl => pp0 ppCtrl 0
+    fun pp p = pp0 Control.pp 0 p
+    fun pp' ppCtrl p = pp0 ppCtrl 0 p
+    fun toString p = ppToString(pp p)
+
+    fun plug plugs P =
+	let val holes = Vector.foldli (fn (i,p,s) => IntSet.add(s,i)) 
+				      IntSet.empty (plugs,0,NONE)
+	    fun lookup i = let val l = Vector.sub(plugs,i)
+			   in  print("found " ^ toString l); l
+			   end
+	    fun plug0 P =
+		case P of
+		    THole i => if IntSet.member(holes,i) 
+			       then (true, lookup i) else (false, P)
+		  | TNil => (false, P)
+		  | TPrefix(C, P') => 
+		    let val (new, P'') = plug0 P'
+		    in  if new then (true, Prefix(C, P'')) else (false, P)
+		    end
+		  | TPar Ps =>
+		    let val Ps' = List.map plug0 Ps
+			val new = List.exists #1 Ps'
+		    in  if new 
+			then (true,List.foldl (fn ((_,P),Ps) => Par(P,Ps)) Nil Ps')
+			else (false,P)
+		    end
+	in  if Rbset.isEmpty holes then P (* since we are not plugging anything,
+					     there is no reason to traverse P *)
+	    else #2(plug0 P)
+	end
+    fun plug1 (j, p) P =
+	let val plugs = Vector.tabulate(j+1, fn i => if i=j then p else Hole i)
+	in  plug plugs P
+	end
+
+
 end (* structure Term *)
 
 (*

@@ -123,7 +123,7 @@ structure BAM = struct
 	   bracket "(#)"
 	     (clist "#, " (fn t => t)
 	         [ ppBinary(Stack.pp "»" Term.pp lhs, "->", Term.pp rhs)
-                 (*, ppString "..."*)
+                 , "#" ^+ bracket "[#]" (Util.ppVector Term.pp params)
 	 	 , Util.ppSet ppInt indices
                  ]
               )
@@ -182,7 +182,7 @@ structure BAM = struct
 
        fun pp (S: stack, i) = 
 	   let val S' = Stack.take 3 S
-	   in  Pretty.bracket "(#)" (Pretty.ppBinary(Pretty.ilist "»»#" (ppElem o #1) S', ", ", Pretty.ppInt i))
+	   in  Pretty.bracket "(#)" (Pretty.ppBinary(Pretty.ilist " »»# " (ppElem o #1) S', ", ", Pretty.ppInt i))
 	   end
 
        fun termminus (p, I) =
@@ -241,7 +241,7 @@ structure BAM = struct
 		   S.mapPartial (Option.map (#2 o P.popLHS) o ifPred P.returnable) PM1
 	       val PM1holes =
 		   let fun f pm = case P.returnableHole pm of
-				      SOME j => (print("plugging " ^ Int.toString j); SOME(P.plug (j, T.plug1 (j, T.Nil) (P.param j pm)) (#2(P.popLHS pm))))
+				      SOME j => SOME(P.plug (j, T.plug1 (j, T.Nil) (P.param j pm)) (#2(P.popLHS pm)))
 				    | NONE => NONE
 		   in  S.mapPartial f PM1
 		   end
@@ -332,25 +332,7 @@ structure BAM = struct
 	       val _ = ( pr (S,i) ; print "\n-->" ; Option.app pr st'; print "\n\n")
 	   in  st'
 	   end 
-(*
-	   case step PMinit (S,i) of
-	       SOME (S', i') =>
-	          ( print "\n"
-		  ; print(Pretty.ppToString(pp (S,i)))
-		  ; print"\n"
-		  ; print(Pretty.ppToString(pp (S',i')))
-		  ; print"\n"
-		  before
-		    SOME (S',i')
-                  )
-	     | NONE => 
-	          ( print "\n"
-		  ; print(Pretty.ppToString(pp (S,i)))
-		  ; print"\n"
-                  before 
-                    NONE
-                  )
-*)
+
        fun initialState rules term : t =
 	   (Stack.push((S.init rules, T.Nil, T.Nil, term, T.Nil),C.ctrl("_top_",NONE,C.ACTIVE)) Stack.empty, 0)
     end (* structure BAM State *)

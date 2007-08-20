@@ -34,4 +34,5 @@ signature UTIL = sig
     structure StringMap : MONO_FINMAP where type dom = string
 
     val ppSet : 'a Pretty.pp -> 'a Rbset.set Pretty.pp
+    val ppVector : 'a Pretty.pp -> 'a vector Pretty.pp
 end

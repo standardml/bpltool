@@ -33,8 +33,12 @@ structure Stack :> STACK = struct
 	in  List.take(s, n')
 	end
 
+    local
+	open Pretty
+    in
     fun pp sep pp0 s = 
-	Pretty.ppBinary(Pretty.clist (sep^"#") pp0 s, sep, Pretty.ppString "·")
+	(clist (sep^"#") pp0 s +^ sep) +^ "·"
+    end
 
 end (* structure Stack *)
 
