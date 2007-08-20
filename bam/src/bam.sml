@@ -41,6 +41,7 @@ structure BAM = struct
 
        val compare : t * t -> order
 
+       val initParam : rule -> term vector
        val param : int -> t -> term
        val plug : int * term -> t -> t
        val popLHS : t -> term * t
@@ -69,9 +70,15 @@ structure BAM = struct
 			   | ord => ord)
 	     | ord => ord
 
-       fun param j pm = Vector.sub(parameter pm, j)
+       exception UnknownParameter of int
+
+       fun initParam rule =
+	   Vector.tabulate(1 + Rule.maxHoleIndex rule, fn i => Term.Hole i)
+       fun param j pm = 
+	   Vector.sub(parameter pm, j) 
+	   handle Subscript => raise UnknownParameter j
        fun plug (j, p) (L, R, D, I) = 
-	   let val D' = Vector.tabulate(Vector.length D, fn i => if i=j then p else Vector.sub(D, i))
+	   let val D' = Vector.tabulate(Vector.length D, fn i => if i=j then p else Vector.sub(D, i) handle Subscript => raise UnknownParameter i)
 	   in  (L, R, D', I)
 	   end 
 
@@ -115,8 +122,8 @@ structure BAM = struct
        fun pp (lhs, rhs, params, indices) =
 	   bracket "(#)"
 	     (clist "#, " (fn t => t)
-	         [ ppBinary(Stack.pp "»" Term.pp lhs, "-->", Term.pp rhs)
-                 , ppString "..."
+	         [ ppBinary(Stack.pp "»" Term.pp lhs, "->", Term.pp rhs)
+                 (*, ppString "..."*)
 	 	 , Util.ppSet ppInt indices
                  ]
               )
@@ -139,7 +146,7 @@ structure BAM = struct
        fun init rules = 
 	   let fun f rule = 
 		   PartialMatch.pmatch (Stack.push(Rule.LHS rule) Stack.empty, 
-					Rule.RHS rule, #[], IntSet.empty)
+					Rule.RHS rule, PartialMatch.initParam rule, IntSet.empty)
 	   in  Rbset.map (f, PartialMatch.compare) rules
 	   end
        fun minus (PM, I) = 
@@ -168,23 +175,14 @@ structure BAM = struct
 
        type t = stack * int
 
-       local open Pretty
-       in
-(*
-       fun ppCtrl (C,SOME i) = break(0,0)(ppString C, "{" ^+ ppInt i +^ "}")
-	 | ppCtrl (C, NONE) = ppString C +^ "{}"
-*)
-
-       val ppCtrl = Control.pp
        fun ppElem (PM, q, q', p, p') =
 	   Pretty.bracket "(#)"
 	     (Pretty.clist "#, " (fn t => t)
-	        ((*Util.ppSet P.pp PM ::*) (List.map (Term.pp' ppCtrl) [q,q',p,p'])))
-       end
+	        (Util.ppSet P.pp PM :: (List.map (Term.pp' Control.pp) [q,q',p,p'])))
 
-       fun show (S: stack) =
+       fun pp (S: stack, i) = 
 	   let val S' = Stack.take 3 S
-	   in  Pretty.ppToString(Pretty.ilist "»#" (ppElem o #1) S')
+	   in  Pretty.bracket "(#)" (Pretty.ppBinary(Pretty.ilist "»»#" (ppElem o #1) S', ", ", Pretty.ppInt i))
 	   end
 
        fun termminus (p, I) =
@@ -217,10 +215,10 @@ structure BAM = struct
 					IntSet.add(P.indices pm, i))
 			   end
 		   in  S.mapPartial (Option.map f o ifLHSMatch pat) PM
-		   end
+		   end handle Option => raise Fail("PM'")
 
 	       val PM'' =
-		   let val pat = T.PPar(T.PHoled "j", T.PVar("G''"))
+		   let val pat = T.PPar(T.PHoled "j", T.PVar("G'"))
 		       fun f (match, pm) = 
 			   let val G' = valOf(T.lookup match "G'")
 			       val j = valOf(T.lookupHole match "j")
@@ -230,7 +228,7 @@ structure BAM = struct
 			   in  P.plug(j,T.plug1(j,T.Prefix(K,p))(P.param j pm)) pm'
 			   end
 		   in  S.mapPartial (Option.map f o ifLHSMatch pat) PM
-		   end
+		   end 
 	       val traverse = (S.union(PM', PMnew), T.Nil, T.Nil, p, T.Nil)
 	       val sidestep = (S.union(PM'',PMtop), q, q', p', T.Nil)
 	   in  (Stack.push (traverse,C.ctrl(C.name K, SOME i, C.activity K))
@@ -243,7 +241,7 @@ structure BAM = struct
 		   S.mapPartial (Option.map (#2 o P.popLHS) o ifPred P.returnable) PM1
 	       val PM1holes =
 		   let fun f pm = case P.returnableHole pm of
-				      SOME j => SOME(P.plug (j, T.plug1 (j, T.Nil) (P.param j pm)) (#2(P.popLHS pm)))
+				      SOME j => (print("plugging " ^ Int.toString j); SOME(P.plug (j, T.plug1 (j, T.Nil) (P.param j pm)) (#2(P.popLHS pm))))
 				    | NONE => NONE
 		   in  S.mapPartial f PM1
 		   end
@@ -262,7 +260,6 @@ structure BAM = struct
 	       T.VNil => (S, i)  (* FIXME: Do I want this? *)
 	     | _ =>
 	       let val restart = (PM, q, T.Nil, q', T.Nil)
-		   val _ = print("Worklist: " ^ Pretty.ppToString(ppElem restart)^"\n")
 	       in  (Stack.push (restart,K0) S, i+1)
 	       end
 
@@ -271,7 +268,6 @@ structure BAM = struct
 	       val react = (S.minus(PM', I),
 			    termminus(q, I), T.Par(res, termminus(q', I)),
 			    p, p')
-		   val _ = print("React: " ^ Pretty.ppToString(ppElem react)^"\n")
 	   in  (Stack.push (react,K0) S, i)
 	   end
 
@@ -297,10 +293,10 @@ structure BAM = struct
 	       SOME pm => SOME(pm, S.delete(PM, pm))
 	     | NONE => NONE
 
-       val reactStep = fn x => (print("reactstep "); reactStep x)
-       val worklistStep = fn x => (print("workliststep "); worklistStep x)
-       val returnStep = fn x => (print("returnstep "); returnStep x)
-       val matchStep = fn x => (print("matchstep "); matchStep x)
+       val reactStep = fn x => (print("REACT"); reactStep x)
+       val worklistStep = fn x => (print("WLIST"); worklistStep x)
+       val returnStep = fn x => (print("RETURN"); returnStep x)
+       val matchStep = fn x => (print("MATCH"); matchStep x)
 
        fun step0 PMinit (pm as (PM, q, q', p, p') : elem, K0, S) i = 
 	   case (T.view p, T.view p') of 
@@ -331,10 +327,30 @@ structure BAM = struct
 	   else SOME(step1 PMinit (Stack.pop S) i)
 
        val step = fn PMinit => fn (S, i) =>
-	   (print(String.concat["(", show S, Int.toString i, "): "])
-	    ; step PMinit (S,i)
-	    before  print "\n")
-
+ 	   let val st' = step PMinit (S,i)
+	       fun pr (S,i) = ( print "\n  " ; print(Pretty.ppToString(pp(S,i))) )
+	       val _ = ( pr (S,i) ; print "\n-->" ; Option.app pr st'; print "\n\n")
+	   in  st'
+	   end 
+(*
+	   case step PMinit (S,i) of
+	       SOME (S', i') =>
+	          ( print "\n"
+		  ; print(Pretty.ppToString(pp (S,i)))
+		  ; print"\n"
+		  ; print(Pretty.ppToString(pp (S',i')))
+		  ; print"\n"
+		  before
+		    SOME (S',i')
+                  )
+	     | NONE => 
+	          ( print "\n"
+		  ; print(Pretty.ppToString(pp (S,i)))
+		  ; print"\n"
+                  before 
+                    NONE
+                  )
+*)
        fun initialState rules term : t =
 	   (Stack.push((S.init rules, T.Nil, T.Nil, term, T.Nil),C.ctrl("_top_",NONE,C.ACTIVE)) Stack.empty, 0)
     end (* structure BAM State *)
