@@ -18,10 +18,9 @@
 
 structure Term :> TERM = struct
 
-    type 'a ctrl_id = string * 'a
     datatype 'a t =
 	     TPar of 'a t list
-           | TPrefix of 'a ctrl_id * 'a t
+           | TPrefix of 'a Control.t * 'a t
            | TNil
 	   | THole of int
 
@@ -34,8 +33,8 @@ structure Term :> TERM = struct
 	  | (THole _, _) => LESS
 	  | (TPrefix _, TNil) => GREATER
 	  | (TPrefix _, THole _) => GREATER
-	  | (TPrefix((C1,_),p1'), TPrefix((C2,_),p2')) => 
-	       (case String.compare(C1, C2) of
+	  | (TPrefix(C1,p1'), TPrefix(C2,p2')) => 
+	       (case String.compare(Control.name C1, Control.name C2) of
 		    EQUAL => compare (p1', p2')
 		  | order => order)
 	  | (TPrefix _, _) => LESS
@@ -45,10 +44,10 @@ structure Term :> TERM = struct
     fun existsi P p =
 	case p of
 	    TPar ps => List.exists (existsi P) ps
-	  | TPrefix(C, p) => if P C then true else existsi P p
+	  | TPrefix(C, p) => if Control.predi P C then true else existsi P p
 	  | TNil => false
 	  | THole _ => false
-    fun exists P = existsi (fn (C,i) => P i)
+    fun exists P = existsi (fn (n,i,a) => P i)
 
     val Nil = TNil
     val Hole = THole
@@ -68,7 +67,7 @@ structure Term :> TERM = struct
 	case p of
 	    TNil => TNil
 	  | THole i => THole i
-	  | TPrefix((C,a), p) => TPrefix((C, f a), map f p)
+	  | TPrefix(C, p) => TPrefix(Control.map f C, map f p)
 	  | TPar ps => TPar(List.map (map f) ps)
 
     structure IntSet = struct
@@ -107,7 +106,7 @@ structure Term :> TERM = struct
 
     datatype 'a view =
 	     VPar of 'a t * 'a t
-           | VPrefix of 'a ctrl_id * 'a t
+           | VPrefix of 'a Control.t * 'a t
            | VNil
 	   | VHole of int
 
@@ -123,7 +122,7 @@ structure Term :> TERM = struct
 	     PSuccess
 	   | PVar of string
 	   | PPar of 'a pattern * 'a pattern
-	   | PPrefix of 'a ctrl_id * 'a pattern
+	   | PPrefix of 'a Control.t * 'a pattern
 	   | PPrefixed of string * 'a pattern
 	   | PHole of int
 	   | PHoled of string
@@ -137,7 +136,7 @@ structure Term :> TERM = struct
       | toplevel_pats P = [P]
 
     structure M = Util.StringMap
-    type 'a match = 'a t M.map * 'a ctrl_id M.map * int M.map
+    type 'a match = 'a t M.map * 'a Control.t M.map * int M.map
     val empty = (M.empty, M.empty, M.empty)
     fun extend_term (pmap,cmap,hmap) V p  = (M.add(V,p,pmap),cmap,hmap)
     fun extend_ctrl (pmap,cmap,hmap) VC C = (pmap,M.add(VC,C,cmap),hmap)
@@ -151,8 +150,8 @@ structure Term :> TERM = struct
 	    (PSuccess, _) => SOME map
 	  | (PVar V, _) => SOME(extend_term map V p)
 	  | (PNil, TNil) => SOME map
-	  | (PPrefix((PC,_), P'), TPrefix((C,_), p')) =>
-	       if PC = C then match1 map P' p'
+	  | (PPrefix(PC, P'), TPrefix(C, p')) =>
+	       if Control.name PC = Control.name C then match1 map P' p'
 	       else NONE
 	  | (PPrefixed(VC, P'), TPrefix(C, p')) =>
 	       match1 (extend_ctrl map VC C) P' p'
@@ -189,17 +188,17 @@ structure Term :> TERM = struct
     fun lookupHole map vi = lookup_hole map vi
 
     open Pretty
-    fun pp0 ppctrl lev p =
+    fun pp0 ppCtrl lev p =
 	case p of
 	    TNil => ppString "1"
 	  | THole i => "[" ^+ ppInt i +^ "]"
-	  | TPrefix(C, TNil) => ppctrl C
-	  | TPrefix(C, p) => break(0,0)(ppctrl C +^ ".", pp0 ppctrl 1 p)
+	  | TPrefix(C, TNil) => ppCtrl C
+	  | TPrefix(C, p) => break(0,0)(ppCtrl C +^ ".", pp0 ppCtrl 1 p)
 	  | TPar ps => (if lev>0 then bracket "(#)" else fn tree => tree) 
-			   (clist " |# "(pp0 ppctrl 0) ps)
+			   (clist " |# "(pp0 ppCtrl 0) ps)
 
-    val pp = pp0 (fn (C,_) => ppString C) 0
-    val pp' = fn ppctrl => pp0 ppctrl 0
+    val pp = pp0 Control.pp 0
+    val pp' = fn ppCtrl => pp0 ppCtrl 0
 end (* structure Term *)
 
 (*

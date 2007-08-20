@@ -17,50 +17,48 @@
  *)
 
 signature TERM = sig
-    type 'a t
+    type 'cinfo t
 
-    type 'a ctrl_id = string * 'a
-		   
-    val Par : 'a t * 'a t -> 'a t
-    val Prefix : 'a ctrl_id * 'a t -> 'a t
-    val Nil : 'a t
-    val Hole : int -> 'a t
+    val Par : 'cinfo t * 'cinfo t -> 'cinfo t
+    val Prefix : 'cinfo Control.t * 'cinfo t -> 'cinfo t
+    val Nil : 'cinfo t
+    val Hole : int -> 'cinfo t
 
-    val map : ('a -> 'b) -> 'a t -> 'b t
+    val map : ('cinfo -> 'newcinfo) -> 'cinfo t -> 'newcinfo t
 
-    val toplevels : 'a t -> 'a t list
-    val exists : ('a -> bool) -> 'a t -> bool
-    val compare : 'a t * 'a t -> order
+    val toplevels : 'cinfo t -> 'cinfo t list
+    val exists : ('cinfo -> bool) -> 'cinfo t -> bool
+    val compare : 'cinfo t * 'cinfo t -> order
 
-    val plug : 'a t vector -> 'a t -> 'a t
-    val plug1 : int * 'a t -> 'a t -> 'a t
+    val plug : 'cinfo t vector -> 'cinfo t -> 'cinfo t
+    val plug1 : int * 'cinfo t -> 'cinfo t -> 'cinfo t
 
-    val pp : 'a t Pretty.pp
-    val pp' : 'a ctrl_id Pretty.pp -> 'a t Pretty.pp
+    val pp : 'cinfo t Pretty.pp
+    val pp' : 'cinfo Control.t Pretty.pp -> 'cinfo t Pretty.pp
 
-    datatype 'a view =
-	     VPar of 'a t * 'a t
-           | VPrefix of 'a ctrl_id * 'a t
+    datatype 'cinfo view =
+	     VPar of 'cinfo t * 'cinfo t
+           | VPrefix of 'cinfo Control.t * 'cinfo t
            | VNil
 	   | VHole of int
 
-    val view : 'a t -> 'a view
+    val view : 'cinfo t -> 'cinfo view
 
-    datatype 'a pattern =
+    datatype 'cinfo pattern =
 	     PSuccess
 	   | PVar of string
-	   | PPar of 'a pattern * 'a pattern
-	   | PPrefix of 'a ctrl_id * 'a pattern
-	   | PPrefixed of string * 'a pattern
+	   | PPar of 'cinfo pattern * 'cinfo pattern
+	   | PPrefix of 'cinfo Control.t * 'cinfo pattern
+	   | PPrefixed of string * 'cinfo pattern
 	   | PHole of int
 	   | PHoled of string
 	   | PNil
 
-    type 'a match
+    type 'cinfo match
 
-    val match : 'a pattern -> 'a t -> 'a match option
-    val lookup : 'a match -> string -> 'a t option
-    val lookupCtrl : 'a match -> string -> 'a ctrl_id option
-    val lookupHole : 'a match -> string -> int option
+    val match : 'cinfo pattern -> 'cinfo t -> 'cinfo match option
+    val lookup : 'cinfo match -> string -> 'cinfo t option
+    val lookupCtrl : 'cinfo match -> string -> 'cinfo Control.t option
+    val lookupHole : 'cinfo match -> string -> int option
 
 end

@@ -161,9 +161,10 @@ structure BAM = struct
        structure S = PartialMatchSet 
        structure P = PartialMatch
        structure T = Term
+       structure C = Control
 
        type elem = S.t * term * term * term * term
-       type stack = (elem * (int option Term.ctrl_id)) Stack.t
+       type stack = (elem * (int option Control.t)) Stack.t
 
        type t = stack * int
 
@@ -173,8 +174,8 @@ structure BAM = struct
        fun ppCtrl (C,SOME i) = break(0,0)(ppString C, "{" ^+ ppInt i +^ "}")
 	 | ppCtrl (C, NONE) = ppString C +^ "{}"
 *)
-       fun ppCtrl (C, _) = ppString C
 
+       val ppCtrl = Control.pp
        fun ppElem (PM, q, q', p, p') =
 	   Pretty.bracket "(#)"
 	     (Pretty.clist "#, " (fn t => t)
@@ -202,7 +203,7 @@ structure BAM = struct
 		 | SOME match => SOME(match, pm)
 	   end
        fun matchStep PMinit (PM, q, q', (K,p), p') K0 (S:stack) i =
-	   let val PMnew = PMinit (* FIXME: assumes all ctrls are active *)
+	   let val PMnew = if Control.isActive K then PMinit else S.empty
 	       val PMtop = S.mapPartial (ifPred P.toplevel) PM
 
 	       val PM' =
@@ -232,7 +233,7 @@ structure BAM = struct
 		   end
 	       val traverse = (S.union(PM', PMnew), T.Nil, T.Nil, p, T.Nil)
 	       val sidestep = (S.union(PM'',PMtop), q, q', p', T.Nil)
-	   in  (Stack.push (traverse,(#1 K,SOME i)) 
+	   in  (Stack.push (traverse,C.ctrl(C.name K, SOME i, C.activity K))
 			   (Stack.push (sidestep,K0) S), i+1)
 	   end
 
@@ -335,7 +336,7 @@ structure BAM = struct
 	    before  print "\n")
 
        fun initialState rules term : t =
-	   (Stack.push((S.init rules, T.Nil, T.Nil, term, T.Nil),("_top_",NONE)) Stack.empty, 0)
+	   (Stack.push((S.init rules, T.Nil, T.Nil, term, T.Nil),C.ctrl("_top_",NONE,C.ACTIVE)) Stack.empty, 0)
     end (* structure BAM State *)
 
     fun rewrite rules term =
@@ -352,21 +353,6 @@ structure BAM = struct
 	end
 
 end (* structure BAM *)
-
-(*
-open Term
-val (K,A,B) = ( ("K", ()) , ("A", ()) , ("B", ()) )
-val lhs = Par(Prefix(K, Prefix(A, Nil)),
-	      Prefix(B, Nil))
-val rhs = Prefix(B, Nil)
-val rules = Rbset.singleton Rule.compare (Rule.rule(lhs,rhs))
-val agent = Par(Prefix(K, Prefix(B, Nil)),
-		Prefix(K, Par(Prefix(K, Prefix(A, Nil)),
-				Par(Prefix(A, Nil),
-				    Prefix(B, Nil)))))
-val _ = BAM.rewrite rules agent
-*)
-
 
 fun run file =
     let val (rules, agent) = MiniBPLParser.parseFile file

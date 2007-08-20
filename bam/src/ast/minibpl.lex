@@ -36,7 +36,12 @@ val eof = fn arg => tok arg EOF (0,0)
 local
     val keywords = 
 	[ ("agent",     AGENT)
+        , ("active",    ACTIVE)
+        , ("atomic",    ATOMIC)
+        , ("end",       END)
+	, ("passive",   PASSIVE)
 	, ("rule",      RULE)
+	, ("signature", SIGNATURE)
 	, ("val",       VAL)
 	]
 
@@ -85,6 +90,7 @@ end (*local*)
 <INITIAL>")"     => (tok arg RPAREN(yypos,yypos+1));
 <INITIAL>"."     => (tok arg PERIOD(yypos,yypos+1));
 <INITIAL>";"     => (tok arg SEMI(yypos,yypos+1));
+<INITIAL>":"     => (tok arg COLON(yypos,yypos+1));
 <INITIAL>"="     => (tok arg EQ(yypos,yypos+1));
 <INITIAL>"->"    => (tok arg ARROW(yypos,yypos+2));
 <INITIAL>"|"     => (tok arg BAR(yypos,yypos+1));

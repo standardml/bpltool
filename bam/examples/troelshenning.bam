@@ -1,3 +1,9 @@
+signature =
+  K : active
+  A : atomic
+  B : atomic
+end
+
 val lhs = K.A | B
 val rhs = B
 rule r = lhs -> rhs
