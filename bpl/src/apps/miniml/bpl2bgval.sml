@@ -80,7 +80,8 @@ datatype bigraph = Wir of wires
 		 | Site of siteId * namelist
 		 | Id of id
 		 | Empty
-type rule = bigraph * bigraph
+type inst = (nat * nat) list (* 21/8-07*)
+type rule = bigraph * bigraph * inst (* 21/8-07 *)
 datatype ctrlkind = Active
 		  | Passive
 		  | Atomic
@@ -174,7 +175,7 @@ fun lookupBigraph id idmap =
 fun ctrlNotInSig cid = raise Fail("Control does not exist in signature: " ^ cid ^ "\n")
 
 type idmap = (id * bigraph) list
-type sitemap = (int * siteId) list
+type sitemap = (nat * siteId) list
 
 (***** TRANSLATION *****)
 fun big2bgval ast (maps:idmap*sitemap) signa =
@@ -243,5 +244,5 @@ fun dec2bgval ast signa =
 
 (* toplevel *)
 fun prog2bgval ast =
-    case ast of Prog(Sig(s),d) => let val signa = cds2cdList s
-				  in (signa, dec2bgval d signa) end
+    case ast of Prog(s,d) => (s, dec2bgval d s)
+	      | _ => raise Fail("Malformed program")
