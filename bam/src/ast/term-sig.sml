@@ -29,6 +29,7 @@ signature TERM = sig
     val toplevels : 'cinfo t -> 'cinfo t list
     val exists : ('cinfo -> bool) -> 'cinfo t -> bool
     val compare : 'cinfo t * 'cinfo t -> order
+    val equal : 'cinfo t * 'cinfo t -> bool
 
     val holeIndices : 'cinfo t -> int Rbset.set
     val maxHoleIndex : 'cinfo t -> int

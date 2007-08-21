@@ -41,6 +41,8 @@ structure Term :> TERM = struct
 	  | (TPar p1s, TPar p2s) => Util.listCmp compare (p1s,p2s)
 	  | (TPar _, _) => GREATER
 
+    fun equal (p1, p2) = compare(p1, p2) = EQUAL
+
     fun existsi P p =
 	case p of
 	    TPar ps => List.exists (existsi P) ps
@@ -216,61 +218,3 @@ structure Term :> TERM = struct
 
 
 end (* structure Term *)
-
-(*
-structure TermTest = struct
-
-    open Term
-
-    (* matches *)
-    fun runMatchTest (t, P, p, expected) =
-	let fun checkBindings M b =
-		let fun loop [] = ()
-		      | loop ((v,p)::ps) =
-			   let val SOME p' = lookup M v
-			   in  if compare(p,p') = EQUAL then ()
-			       else print(t^": expected result not found for "^v^"\n")
-			   end handle Bind => print(t^": variable "^v^" unbound\n")
-		in  loop b
-		end
-	    val M = match P p
-	in  case (M, expected) of
-		(NONE, NONE) => ()
-	      | (SOME M, SOME b) => checkBindings M b
-	      | (SOME _, NONE) => print(t^": expected failure, got success\n")
-	      | (NONE, SOME _) => print(t^": expected success, got failure\n")
-	end
-    val (C1, C2) = ( ("C1", ()) , ("C2", ()) )
-
-    val C1Pat = PPrefix(C1, PVar "p1")
-    val C2Pat = PPrefix(C2, PVar "p2")
-    val C1PatNil = PPrefix(C1, PNil)
-    val C2PatNil = PPrefix(C2, PNil)
-    val C1ParPat = PPar(C1Pat, PVar "p")
-
-    val C1Term = Prefix(C1, Nil)
-    val C2Term = Prefix(C2, Nil)
-    val larger = Prefix(C1,Par(C2Term,C2Term))
-    val large  = Par(C2Term,C1Term)
-    val test = [ ("t1", C1ParPat, C1Term, SOME[("p1", Nil), ("p", Nil)])
-               , ("t2", C1ParPat, Prefix(C1,Par(C2Term,C2Term)), SOME[("p1", Par(C2Term,C2Term)), ("p", Nil)])
-               , ("t3", C1ParPat, Par(C2Term,C1Term), SOME[("p1", Nil), ("p", C2Term)])
-	       , ("t4", PPar(C1PatNil,C1PatNil), C1Term, NONE)
-               , ("t5", PPar(C1PatNil,C1PatNil), Par(C1Term,C2Term), NONE)
-	       , ("t6", PPar(C1PatNil,C1PatNil), Par(C1Term,C1Term), SOME[])
-               , ("t7", PPar(C1PatNil,PSuccess), Par(C2Term,C1Term), SOME[])
-               , ("t8", PPar(C1PatNil,PPar(C1PatNil,PSuccess)), Par(C1Term,Par(C2Term,C1Term)), SOME[])
-               ]
-
-    fun run() = List.app runMatchTest test
-
-    val _ = if compare(larger, large) = EQUAL then print "Failure\n"
-	    else print "Success\n"
-
-    val _ = if not(compare(larger, larger) = EQUAL) then print "Failure\n"
-	    else print "Success\n"
-
-end (* structure TermTest *)
-
-val _ = TermTest.run()
-*)

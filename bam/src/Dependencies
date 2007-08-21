@@ -1,3 +1,5 @@
 bam: /utils/stack /ast/control /ast/term /ast/rule 
    /utils/util /utils/rbset-sig /utils/rbset 
    /ast/minibplparser /lib/pp/mak/. %PROGRAM
+
+unittest: /ast/testterm /lib/smlunit/. %PROGRAM

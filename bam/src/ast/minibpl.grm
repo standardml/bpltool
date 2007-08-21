@@ -92,13 +92,13 @@ fun mkProg declarations =
       |  VAR of string
 
       |  RULE | VAL | AGENT | SIGNATURE | END
-      |  ACTIVE | PASSIVE | ATOMIC
+      |  ACTIVE | PASSIVE | ATOMIC | NEW
 
       |  EOF
 
 
   %keyword
-         RULE VAL AGENT SIGNATURE END ACTIVE PASSIVE ATOMIC
+         RULE VAL AGENT SIGNATURE END ACTIVE PASSIVE ATOMIC NEW
 
   %nonterm
          Term of term
@@ -168,6 +168,9 @@ AtTerm:
 	  ONE                                ( Nil )
         | CTRL                               ( Prefix(mkCtrl CTRL, Nil) )
         | CTRL PERIOD AtTerm                 ( Prefix(mkCtrl CTRL, AtTerm) )
+(*
+        | NEW VAR PERIOD AtTerm              ( Restriction(VAR, AtTerm) )
+*)
 	| HOLE                               ( mkHole HOLE )
 	| LPAREN Term RPAREN                 ( Term )
 	| VAR                                ( Var VAR )

@@ -9,3 +9,6 @@ minibpl.grm: minibpl.grm-sig control term rule /utils/util
    /lib/ml-yacc/. /lib/compat/mosml/. %NODASHSIG
 minibpl.lex: /lib/compat/mosml/. minibpl.grm-sig
 minibplparser: minibpl.grm-sig minibpl.grm minibpl.lex term rule /lib/ml-yacc/.
+
+# tests
+testterm: /lib/smlunit/. control term
