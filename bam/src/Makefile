@@ -27,3 +27,10 @@ PARSINGFILES := $(patsubst %.grm,%.grm-sig.sml,$(GRMFILES)) $(patsubst %.grm,%.g
 
 %.grm-sig.sml %.grm.sml: %.grm
 	   $(MLYACC) $< && mv $*.grm.sig $*.grm-sig.sml
+
+.PHONY: parsersclean
+parsersclean:
+	for g in $(GRMFILES); do $(RM) $$g{.desc,.sig,-sig.sml,.sml}; done
+	for l in $(LEXFILES); do $(RM) $$l.sml; done
+
+realclean: parsersclean
