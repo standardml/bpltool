@@ -67,6 +67,8 @@ struct
 
     structure StringMap = OrderFinMap(type T = string
                                       val lt = curry String.<)
+    structure IntMap = OrderFinMap(type T = int
+                                   val lt = curry Int.<)
 
     open Pretty
     fun ppSet pp s = 

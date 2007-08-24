@@ -17,14 +17,17 @@
  *)
 
 structure Rule :> RULE = struct
-    exception NotWellFormed
+    exception NotWellFormed of string
     type 'ctrlinfo t = 'ctrlinfo Term.t * 'ctrlinfo Term.t
-    fun rule (lhs, rhs) = 
-	let val lhsHoles = Term.holeIndices lhs
-	    val rhsHoles = Term.holeIndices rhs
-	in  if Rbset.isSubset(rhsHoles, lhsHoles) then (lhs, rhs)
-	    else raise NotWellFormed
+
+    fun rule (lhs, rhs) =
+	let fun unbound i = 
+		raise NotWellFormed("unknown hole "^ Int.toString i ^" in RHS")
+	    val (map,lhs') = Term.renumber (fn i => ()) Util.IntMap.empty lhs
+	    val (_, rhs')  = Term.renumber unbound map rhs
+	in  (lhs',rhs')
 	end
+
     val LHS : 'ctrlinfo t -> 'ctrlinfo Term.t = #1
     val RHS : 'ctrlinfo t -> 'ctrlinfo Term.t = #2
     fun holeIndices r = Term.holeIndices (LHS r)
@@ -32,4 +35,5 @@ structure Rule :> RULE = struct
     fun map f (lhs, rhs) = (Term.map f lhs, Term.map f rhs)
     val compare = Util.pairCmp (Term.compare, Term.compare)
     fun pp (lhs, rhs) = Pretty.ppBinary(Term.pp lhs, "-->", Term.pp rhs)
+    val toString = Pretty.ppToString o pp
 end (* structure Rule *)

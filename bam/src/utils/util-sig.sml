@@ -32,6 +32,7 @@ signature UTIL = sig
     val vectorCmp : ('a * 'a -> order) -> ('a vector * 'a vector) -> order
 
     structure StringMap : MONO_FINMAP where type dom = string
+    structure IntMap : MONO_FINMAP where type dom = int
 
     val ppSet : 'a Pretty.pp -> 'a Rbset.set Pretty.pp
     val ppVector : 'a Pretty.pp -> 'a vector Pretty.pp

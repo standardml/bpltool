@@ -226,9 +226,9 @@ structure BAM = struct
 			       val pm' = (LHS', P.RHS pm, P.parameter pm,
 					  IntSet.add(P.indices pm, i))
 			   in  P.plug(j,T.plug1(j,T.Prefix(K,p))(P.param j pm)) pm'
-			   end
+			   end 
 		   in  S.mapPartial (Option.map f o ifLHSMatch pat) PM
-		   end 
+		   end handle Option.Option => raise Fail("PM''")
 	       val traverse = (S.union(PM', PMnew), T.Nil, T.Nil, p, T.Nil)
 	       val sidestep = (S.union(PM'',PMtop), q, q', p', T.Nil)
 	   in  (Stack.push (traverse,C.ctrl(C.name K, SOME i, C.activity K))
@@ -282,7 +282,7 @@ structure BAM = struct
 			    in  case IntSet.find (fn j => j >= max) (P.indices pm0) of
 				    SOME _ => true
 				  | NONE => false
-			    end
+			    end handle Option.Option => raise Fail("findReaction")
 		   val PM'overlapping = S.mapPartial (ifPred f) PM'reactable
 	       in  S.isEmpty PM'overlapping
 	       end

@@ -1,9 +1,9 @@
 control-sig: /lib/pp/mak/.
 control: control-sig /lib/pp/mak/. %NODASHSIG
-term-sig: control /utils/rbset /lib/pp/mak/.
+term-sig: control /utils/util /utils/rbset /lib/pp/mak/.
 term: term-sig control /utils/rbset /utils/util /lib/pp/mak/. %NODASHSIG
 rule-sig: term /utils/rbset /lib/pp/mak/.
-rule: rule-sig term /utils/rbset /utils/util /lib/pp/mak/. %NODASHSIG
+rule: rule-sig term /utils/util /lib/pp/mak/. %NODASHSIG
 minibpl.grm-sig: /lib/ml-yacc/.
 minibpl.grm: minibpl.grm-sig control term rule /utils/util 
    /lib/ml-yacc/. /lib/compat/mosml/. %NODASHSIG

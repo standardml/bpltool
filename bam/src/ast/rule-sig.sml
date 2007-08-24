@@ -17,8 +17,14 @@
  *)
 
 signature RULE = sig
-    exception NotWellFormed
+    exception NotWellFormed of string
+
     type 'ctrlinfo t
+
+    (* Rules are renumbered so that hole indices are consecutive
+       and starts from 0. Furthermore, it is checked that all
+       holes in the RHS occurs in the LHS.
+    *)
     val rule : 'ctrlinfo Term.t * 'ctrlinfo Term.t -> 'ctrlinfo t
     val LHS : 'ctrlinfo t -> 'ctrlinfo Term.t
     val RHS : 'ctrlinfo t -> 'ctrlinfo Term.t
@@ -27,4 +33,5 @@ signature RULE = sig
     val map : ('ctrlinfo -> 'newctrlinfo) -> 'ctrlinfo t -> 'newctrlinfo t
     val compare : 'ctrlinfo t * 'ctrlinfo t -> order
     val pp : 'ctrlinfo t Pretty.pp
+    val toString : 'ctrlinfo t -> string
 end 

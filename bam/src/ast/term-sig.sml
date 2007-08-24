@@ -20,6 +20,7 @@ signature TERM = sig
     type 'cinfo t
 
     val Par : 'cinfo t * 'cinfo t -> 'cinfo t
+    val ParList : 'cinfo t list -> 'cinfo t
     val Prefix : 'cinfo Control.t * 'cinfo t -> 'cinfo t
     val Nil : 'cinfo t
     val Hole : int -> 'cinfo t
@@ -30,6 +31,11 @@ signature TERM = sig
     val exists : ('cinfo -> bool) -> 'cinfo t -> bool
     val compare : 'cinfo t * 'cinfo t -> order
     val equal : 'cinfo t * 'cinfo t -> bool
+
+    type holemap = int Util.IntMap.map
+    val renumber : (int -> unit) (* applied if a the hole number is not
+			            present in the map *)
+                   -> holemap -> 'cinfo t -> holemap * 'cinfo t
 
     val holeIndices : 'cinfo t -> int Rbset.set
     val maxHoleIndex : 'cinfo t -> int

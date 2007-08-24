@@ -18,6 +18,11 @@
 
 structure Term :> TERM = struct
 
+    (* The (internal) term representation maintains the invariant
+       that the representation is "minimal". For now this means that
+       it does not contain superfluous TNil's and that there are no
+       directly nested TPar's.
+    *)
     datatype 'a t =
 	     TPar of 'a t list
            | TPrefix of 'a Control.t * 'a t
@@ -65,6 +70,42 @@ structure Term :> TERM = struct
 	  | TNil => [] (* Nil should be elided from TPar lists *)
 	  | _ => [p]
 
+    fun ParList ps = List.foldr Par TNil ps
+	
+    structure M = Util.IntMap
+    type holemap = int Util.IntMap.map
+    fun renumber check map t =
+	let val i = ref 0
+	    fun next () = (!i before i := !i + 1)
+	    fun loop (map, t) =
+		case t of
+		    TNil => (map, TNil)
+		  | THole i => 
+		        (case M.lookup map i of
+			     NONE => ( check i ; 
+				       let val i' = next()
+				       in  (M.add(i,i',map), THole i')
+				       end
+                                     )
+			   | SOME i' => (map, THole i'))
+		  | TPrefix(C, t) => 
+		        let val (map',t') = loop(map,t)
+			in  (map',TPrefix(C,t'))
+			end
+		  | TPar ts => (* since we are not changing the kind of 
+                                 (sub)terms, applying Par directly does
+				 not invalidate the invariant *)
+		        let fun f (t, (map, ts)) =
+			    let val (map',t') = loop(map,t)
+			    in  (map', t'::ts)
+			    end 
+			    val (map',ts') = List.foldr f (map,[]) ts
+			in  (map',TPar ts')
+			end
+	in  loop (map, t)
+	end
+
+
     fun map f p = 
 	case p of
 	    TNil => TNil
@@ -86,7 +127,9 @@ structure Term :> TERM = struct
 	  | TPrefix(_, p) => holes0 (p, H)
 	  | TPar ps => List.foldl holes0 H ps
     fun holeIndices p = holes0 (p, IntSet.empty)
-    fun maxHoleIndex p = valOf(IntSet.max(holeIndices p))
+    fun maxHoleIndex p = case IntSet.max(holeIndices p) of
+			     NONE => ~1
+			   | SOME i => i
 
     datatype 'a view =
 	     VPar of 'a t * 'a t
