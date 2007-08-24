@@ -23,7 +23,7 @@ structure IntSet = struct
     val singleton = singleton String.compare
 end
 
-structure PartialMatch : PARTIALMATCH = struct
+structure PartialMatch :> PARTIALMATCH = struct
 
     (* convenience shorthands *)
     type term = int option Term.t

@@ -12,6 +12,8 @@ DEPENDENCIES    := $(shell find -L . -name Dependencies)
 MOSMAKEDIRS 	:= $(patsubst %/Dependencies,%,$(DEPENDENCIES))
 MOSMAKE 	= $(BPLROOT)/lib/mosmake
 
+all: main unittest
+
 config:
 	echo $(MOSMAKEDIRS)
 
@@ -34,3 +36,8 @@ parsersclean:
 	for l in $(LEXFILES); do $(RM) $$l.sml; done
 
 realclean: parsersclean
+
+
+.PHONY: test
+test: unittest
+	./unittest

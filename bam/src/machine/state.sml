@@ -126,15 +126,16 @@ end = struct
 	    in  (Stack.push (restart,K0) S, i+1)
 	    end
 
-    fun reactStep PMinit ((_, P, D, I), PM') (_, q, q', p, p') K0 (S:stack) i =
-	let val res = T.plug D P
+    fun reactStep PMinit (pm, PM') (_, q, q', p, p') K0 (S:stack) i =
+	let val (P,D,I) = (P.RHS pm, P.parameter pm, P.indices pm)
+	    val res = T.plug D P
 	    val react = (S.minus(PM', I),
 			 termminus(q, I), T.Par(res, termminus(q', I)),
 			 p, p')
 	in  (Stack.push (react,K0) S, i)
 	end
 
-    fun findReaction0 PM0 pm0 =
+    fun findReaction0 (PM0 : S.t) (pm0 : P.t) =
 	if P.reactable pm0 then
 	    let val PM' = S.delete(PM0, pm0)
 		val PM'reactable = S.mapPartial (ifPred P.reactable) PM'
@@ -151,7 +152,7 @@ end = struct
 	    end
 	else
 	    false
-    fun findReaction (PM, q, q', p, p') =
+    fun findReaction (PM, q, q', p, p') = 
 	case S.find (findReaction0 PM) PM of
 	    SOME pm => SOME(pm, S.delete(PM, pm))
 	  | NONE => NONE
