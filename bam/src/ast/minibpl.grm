@@ -53,7 +53,7 @@ fun mkTerm map t =
 	Nil => Term.Nil
       | Hole i => Term.Hole i
       | Prefix(C, t) => Term.Prefix(Control.ctrl (C,(),Control.ACTIVE), mkTerm map t)
-      | Par ts => List.foldr (fn (t,a) => Term.Par(mkTerm map t,a)) Term.Nil ts
+      | Par ts => Term.ParList(List.map (mkTerm map) ts)
       | Var v => lookup map v
 
 fun mkRule map (RuleDec (_,(t1, t2))) = Rule.rule (mkTerm map t1, mkTerm map t2)

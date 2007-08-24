@@ -1,5 +1,2 @@
-bam: /utils/stack /ast/control /ast/term /ast/rule 
-   /utils/util /utils/rbset-sig /utils/rbset 
-   /ast/minibplparser /lib/pp/mak/. %PROGRAM
-
+main: /machine/bam /ast/minibplparser /ast/rule /utils/rbset %PROGRAM
 unittest: /ast/testterm /lib/smlunit/. %PROGRAM
