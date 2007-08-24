@@ -81,13 +81,12 @@ datatype bigraph = Wir of wires
 		 | Id of id
 		 | Empty
 type inst = (nat * nat) list (* 21/8-07*)
-type rule = bigraph * bigraph * inst (* 21/8-07 *)
 datatype ctrlkind = Active
 		  | Passive
 		  | Atomic
 datatype ctrldef = Cdef of ctrlid * ctrlkind * nat * nat
 datatype ctrldefs = ctrldef list
-datatype dec = Rule of id * rule
+datatype dec = Rule of id * bigraph * bigraph
 	     | Value of id * bigraph
 datatype decs = dec list
 type signatur = ctrldefs
@@ -135,8 +134,10 @@ fun makeInst s1 s2 =
 	val s2nams = #2(s2)
     in todo
     end
-
+*)
 fun calcInst b1 b2 =
+    [] (* temporary *)
+(*
     let val s1 = (getSites b1 true, getSites b1 false)
 	val s2 = (getSites b2 true, getSites b2 false)
     in makeInst s1 s2 end
@@ -177,10 +178,13 @@ fun ctrlNotInSig cid = raise Fail("Control does not exist in signature: " ^ cid 
 type idmap = (id * bigraph) list
 type sitemap = (nat * siteId) list
 
-(***** TRANSLATION *****)
-fun big2bgval ast (maps:idmap*sitemap) signa =
+(***** TRANSLATION : ast -> bgval *****)
+fun big2bgval ast signa (maps:idmap*sitemap) =
     let val imap = #1(maps)
 	val smap = #2(maps)
+
+(*HERE*)
+
     (* hmm...need to calculate and insert implicit id wirings *)
     in case ast
 	of Wir(w) =>
@@ -189,16 +193,16 @@ fun big2bgval ast (maps:idmap*sitemap) signa =
 		     | Local(out,inn) => mkWir2 out inn
 		     | IdleG(x) => mkWir1 x
 		     | IdleL(x) => mkWir1 x )
-	 | Par(b1,b2) => (big2bgval b1 maps signa)
-			     || (big2bgval b2 maps signa)
-	 | Pri(b1,b2) => (big2bgval b1 maps signa)
-			     pp (big2bgval b2 maps signa)
-	 | Com(b1,b2) => (big2bgval b1 maps signa)
-			     oo (big2bgval b2 maps signa)
-	 | Emb(b1,b2) => (big2bgval b1 maps signa)
-			     oo (big2bgval b2 maps signa)
-	 | Ten(b1,b2) => (big2bgval b1 maps signa)
-			     tt (big2bgval b2 maps signa)
+	 | Par(b1,b2) => (big2bgval b1 signa maps)
+			     || (big2bgval b2 signa maps)
+	 | Pri(b1,b2) => (big2bgval b1 signa maps)
+			     pp (big2bgval b2 signa maps)
+	 | Com(b1,b2) => (big2bgval b1 signa maps)
+			     oo (big2bgval b2 signa maps)
+	 | Emb(b1,b2) => (big2bgval b1 signa maps)
+			     oo (big2bgval b2 signa maps)
+	 | Ten(b1,b2) => (big2bgval b1 signa maps)
+			     tt (big2bgval b2 signa maps)
 	 | Ctrl(cid,bports,fports) =>
 	   let val boundnames = List.map (nm2nmSet o s2n) bports
 	       val freenames = List.map s2n fports
@@ -209,40 +213,42 @@ fun big2bgval ast (maps:idmap*sitemap) signa =
 		| NONE => ctrlNotInSig cid
 	   end
 	 | Clo(nms,b) => (S.-//(List.map s2n nms)) 
-			     oo (big2bgval b maps signa)
+			     oo (big2bgval b signa maps)
 	 | Abs(nms,b) => B.Abs info (List.map (nm2nmSet o s2n) nms,
-				     big2bgval b maps signa)
+				     big2bgval b signa maps)
 	 | Site(i,nms) => todo (*(nextNat,i) :: smap) ... *)
 	 | Id(i) =>
 	   ( case getBigraph i imap
-	      of SOME(b) => big2bgval b maps signa
+	      of SOME(b) => big2bgval b signa maps
 	       | NONE => raise Fail("Unbound identifier: " ^ i ^ "\n") )
 	 | Empty => barren
 
-(* fix this... *)
-fun dec2bgval ast signa =
-    case ast of Decs(d1,d2) => (bpl2bgval d1 signa)
-			       @ (bpl2bgval d2 signa)
-(*
-      | Rule(i,r) =>
-	let val lhs = makeBR(#1(r))
-	    val rhs = #2(r)
-	    val ins = calcInst lhs rhs
-	in Rule.make { name = i, redex = lhs, react = rhs, inst = ins } end
-      | Value(i,b) => let val b' = big2bgval b ((i,b)::imap) smap
-		      in b' ((i,b')::imap) smap end
-*)
-      | Cdefs(cd,cds) => (bpl2bgval cd maps signa)
-			 :: (bpl2bgval cds maps signa)
-      | Cdef(cid,ck,n1,n2) => Ion.make {ctrl = Control.make(cid,ck),
-					free = map v2n n1,
-					bound = map v2n n2}
-(*
-      | Active => ...
-      | ... => ...
-*)
+fun dec2bgval decls vals rules signa (maps:imap*smap) =
+    case decls
+     of [] => (vals, rules, maps)
+      | (d::ds) =>
+	( case d
+	   of Rule(i,b1,b2) =>
+	      let val b1' = big2bgval b1 signa maps
+		  val b2' = big2bgval b2 signa maps
+		  val ins = calcInst b1' b2' maps
+		  val rule = Rule.make { name = i, redex = b1',
+					 react = b2', inst = ins}
+		  val rules' = rule :: rules
+	      in dec2bgval ds vals rules' signa maps end
+	    | Value(i,b) =>
+	      let val b' = big2bgval b signa maps
+		  val imap' = (i,b') :: (#1(maps))
+		  val maps' = (imap', (#2(maps)))
+		  val vals' = b' :: vals
+	      in dec2bgval ds vals' rules signa maps' end )
 
 (* toplevel *)
 fun prog2bgval ast =
-    case ast of Prog(s,d) => (s, dec2bgval d s)
-	      | _ => raise Fail("Malformed program")
+    let fun roll bglist maps = bglist (* TODO: roll into 'main' bgval *)
+    in case ast
+	of Prog(signa,declist) =>
+	   let val (vals,rules,maps) = dec2bgval declist [] [] signa ([],[])
+	   in (signa, roll vals maps, rules) end
+	 | _ => raise Fail("Malformed program")
+    end
