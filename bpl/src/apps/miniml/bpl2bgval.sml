@@ -175,6 +175,8 @@ fun lookupBigraph id idmap =
 
 fun ctrlNotInSig cid = raise Fail("Control does not exist in signature: " ^ cid ^ "\n")
 
+fun roll bglist maps = bglist (* TODO: roll into 'main' bgval *)
+
 type idmap = (id * bigraph) list
 type sitemap = (nat * siteId) list
 
@@ -182,17 +184,15 @@ type sitemap = (nat * siteId) list
 fun big2bgval ast signa (maps:idmap*sitemap) =
     let val imap = #1(maps)
 	val smap = #2(maps)
-
-(*HERE*)
-
     (* hmm...need to calculate and insert implicit id wirings *)
     in case ast
 	of Wir(w) =>
 	   (* hmmm...need to localise some names here? *)
-	   ( case w of Global(out,inn) => mkWir2 out inn
-		     | Local(out,inn) => mkWir2 out inn
-		     | IdleG(x) => mkWir1 x
-		     | IdleL(x) => mkWir1 x )
+	   ( case w
+	      of Global(out,inn) => mkWir2 out inn
+	       | Local(out,inn) => mkWir2 out inn (*localise?!*)
+	       | IdleG(x) => mkWir1 x
+	       | IdleL(x) => B.Abs info ((nm2nmSet o s2n) x, mkWir1 x) )
 	 | Par(b1,b2) => (big2bgval b1 signa maps)
 			     || (big2bgval b2 signa maps)
 	 | Pri(b1,b2) => (big2bgval b1 signa maps)
@@ -212,13 +212,14 @@ fun big2bgval ast signa (maps:idmap*sitemap) =
 				       bound = boundnames}
 		| NONE => ctrlNotInSig cid
 	   end
-	 | Clo(nms,b) => (S.-//(List.map s2n nms)) 
+	 | Clo(nms,b) => (Sugar.-//(List.map s2n nms)) 
 			     oo (big2bgval b signa maps)
 	 | Abs(nms,b) => B.Abs info (List.map (nm2nmSet o s2n) nms,
 				     big2bgval b signa maps)
+	 (*what about concretions?*)
 	 | Site(i,nms) => todo (*(nextNat,i) :: smap) ... *)
 	 | Id(i) =>
-	   ( case getBigraph i imap
+	   ( case lookupBigraph i imap
 	      of SOME(b) => big2bgval b signa maps
 	       | NONE => raise Fail("Unbound identifier: " ^ i ^ "\n") )
 	 | Empty => barren
@@ -245,10 +246,8 @@ fun dec2bgval decls vals rules signa (maps:imap*smap) =
 
 (* toplevel *)
 fun prog2bgval ast =
-    let fun roll bglist maps = bglist (* TODO: roll into 'main' bgval *)
-    in case ast
-	of Prog(signa,declist) =>
-	   let val (vals,rules,maps) = dec2bgval declist [] [] signa ([],[])
-	   in (signa, roll vals maps, rules) end
-	 | _ => raise Fail("Malformed program")
-    end
+    case ast
+     of Prog(signa,declist) =>
+	let val (vals,rules,maps) = dec2bgval declist [] [] signa ([],[])
+	in (signa, roll vals maps, rules) end
+      | _ => raise Fail("Malformed program")
