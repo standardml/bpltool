@@ -7,7 +7,12 @@ namespace CF
 {
     public abstract class Drawable
     {
-        public abstract System.Drawing.Point Draw(MainWindow main, System.Drawing.Point point);
+        //For testing
+        public abstract void setName(string name);
+        public abstract string getName();
+        //
+        public abstract Size Size();
+        public abstract Point Draw(MainWindow main, Point point);
         public abstract void AddChild(Drawable child);
         public abstract void AddParent(Drawable parent);
         public abstract Drawable GetParent();

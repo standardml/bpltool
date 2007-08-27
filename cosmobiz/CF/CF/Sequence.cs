@@ -7,22 +7,36 @@ namespace CF
 {
     public class Sequence : Drawable
     {
+        // For testing
+        private string name;
+
+        public override void setName(string name)
+        {
+            this.name = name;
+        }
+
+        public override string getName()
+        {
+            return name;
+        }
+        //
+
         private Size size;
+        public override Size Size()
+        {
+            return size;
+        }
         private List<Drawable> children = new List<Drawable>();
 
         private Drawable parent;
 
-        System.Drawing.Point point;
-
-        private int width;
-        public int Width
-        {
-            get { return width; }
-        }
+        private Point point;
+        private int l;
 
         public Sequence()
         {
             size = new Size(0, 0);
+            point = new Point(0, 0);
         }
 
         public override Size CollectSize() //Not correct, since each Act will add to the width (which should be 1 no matter how many Acts there are in a seq)
@@ -32,14 +46,13 @@ namespace CF
             {
                 if (obj is Flow)
                 {
-                    w.Width += obj.CollectSize().Width;
+                    if (obj.CollectSize().Width > w.Width)
+                    {
+                        w.Width = obj.CollectSize().Width;
+                    }
                 }
-                
+
                 w.Height += obj.CollectSize().Height;
-                /*if (obj.CollectSize().Height > w.Height)
-                {
-                    w.Height += obj.CollectSize().Height;
-                }*/
 
             }
             if (w.Width == 0)
@@ -52,19 +65,29 @@ namespace CF
 
         }
 
-        public override System.Drawing.Point Draw(MainWindow main, System.Drawing.Point point)
+        public override Point Draw(MainWindow main, Point point)
         {
-            this.point = point; // + Calculate exitpoint (if needed at all)
+            this.point.X = point.X;
+            this.point.Y = point.Y;
+            // + Calculate exitpoint (if needed at all)
+            //VisualSequence vis = new VisualSequence();
+            //main.Controls.Add(vis);
 
-            VisualSequence vis = new VisualSequence();
-
-            main.Controls.Add(vis);
+            if (parent == null)
+            {
+                l = size.Width / 2 - 1 / 2;
+                this.point.X = l;
+            }
 
             foreach (Drawable obj in children)
             {
-                point = obj.Draw(main, point); //The increase in point needs to be handled (may need to return point instead of void)
+                point.X = this.point.X;
+                
+                this.point.Y = obj.Draw(main, point).Y; //The increase in point needs to be handled (may need to return point instead of void)
+                
             }
-            return point;
+
+            return this.point;
         }
 
         public override void AddChild(Drawable child)

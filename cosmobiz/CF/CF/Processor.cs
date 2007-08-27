@@ -30,6 +30,7 @@ namespace CF
                     case "sequence":
                         {
                             Sequence seq = new Sequence();
+                            seq.setName(elements[j].Name);
                             if (currentNode != null)
                             {
                                 seq.AddParent(currentNode);
@@ -53,6 +54,7 @@ namespace CF
                     case "activity":
                         {
                             Drawable act = new Activity();
+                            act.setName(elements[j].Name);
                             act.AddParent(currentNode);
                             currentNode.AddChild(act);
                         }

@@ -7,11 +7,29 @@ namespace CF
 {
     public class Flow : Drawable
     {
+        // For testing
+        private string name;
+
+        public override void setName(string name)
+        {
+            this.name = name;
+        }
+
+        public override string getName()
+        {
+            return name;
+        }
+        //
+
         private Size size;
+        public override Size Size()
+        {
+            return size;
+        }
         private List<Drawable> children = new List<Drawable>(); //always sequences
         private Drawable parent;
 
-        private System.Drawing.Point point;
+        private Point point;
 
         private bool visible = true;
 
@@ -29,7 +47,7 @@ namespace CF
 
         public override Size CollectSize()
         {
-            Size w = new Size(0,0);
+            Size w = new Size(0, 0);
             foreach (Drawable seq in children)
             {
                 w.Width += seq.CollectSize().Width;
@@ -38,6 +56,8 @@ namespace CF
                     w.Height = seq.CollectSize().Height;
                 }//Must find the largest depth of the children (height)
             }
+            
+            w.Height += 2; //Adding the height of standard visualization of a flow (Split and unsplit)
             size = w;
             return w;
         }
@@ -45,31 +65,46 @@ namespace CF
         public Flow()
         {
             size = new Size(0, 2);
+            point = new Point(0, 0);
         }
 
 
-        public override System.Drawing.Point Draw(MainWindow main, System.Drawing.Point point)
+        public override Point Draw(MainWindow main, Point point)
         {
-            this.point = point;
+            this.point.X = point.X;
+            this.point.Y = point.Y;
+
             //Calculate exitpoint
 
             if (visible)
             {
                 VisualFlow flow = new VisualFlow();
-                flow.Location = point;
+
+                //Create custom header and footer for each particular flow according to size
+
+                //flow.Location = point;
                 main.Controls.Add(flow);
-
-
-                foreach (Drawable seq in children)
+#warning //Se note s. X
+                float a = 0;
+                float b = 0;
+                float c = 0;
+                for (int i = 0; i < children.Count; i++)
                 {
-                    point = seq.Draw(main, point); //needs adjustment, or sequences will not appear in parallel.
+                    b = children[i].Size().Width - 1;
+                    c = 2;
+                    point.X = a + (b / c);
+                    
+                    children[i].Draw(main, point); //needs adjustment, or sequences will not appear in parallel.
+
+                    a += children[i].Size().Width;
+                    
                 }
             }
             else
             {
                 //draw replacement
             }
-            return point;
+            return this.point;
         }
 
         public override void AddChild(Drawable child)

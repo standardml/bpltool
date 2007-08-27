@@ -7,27 +7,49 @@ namespace CF
 {
     public class Activity : Drawable
     {
-        System.Drawing.Point point;
-        private Size size; //Set default size for Activity
+        // For testing
+        private string name;
+
+        public override void setName(string name)
+        {
+            this.name = name;
+        }
+
+        public override string getName()
+        {
+            return name;
+        }
+        //
+
+        Point point;
+        //Set default size for Activity
+        private Size size;
+        public override Size Size()
+        {
+            return size;
+        }
 
         private Drawable parent;
 
         public Activity()
         {
             size = new Size(1, 1);
+            point = new Point(0, 0);
         }
 
-        public override System.Drawing.Point Draw(MainWindow main, System.Drawing.Point point)
+        public override Point Draw(MainWindow main, Point point)
         {
-            this.point = point;
+            this.point.X = point.X;
+            this.point.Y = point.Y;
+           
             VisualActivity vis = new VisualActivity();
             vis.VisualClicked += new VisualActivity.ClickedHandler(vis_VisualClicked);
-            vis.Location = point; // May need adjustment to align with connector line
-            point.Y += 38; //Adds the height of the visual
+            //vis.Location = point; // May need adjustment to align with connector line
+            point.Y += size.Height; //Adds the height of the visual
 
             main.Controls.Add(vis);
 
-            return point;
+            return this.point;
         }
 
         void vis_VisualClicked()

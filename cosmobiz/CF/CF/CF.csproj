@@ -55,6 +55,7 @@
     <Compile Include="Activity.cs" />
     <Compile Include="Drawable.cs" />
     <Compile Include="Flow.cs" />
+    <Compile Include="Point.cs" />
     <Compile Include="Sequence.cs" />
     <Compile Include="VisualActivity.cs">
       <SubType>UserControl</SubType>
