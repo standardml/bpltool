@@ -26,7 +26,7 @@ namespace CF
             string danishPath = "\\Programmer\\CF\\";
             if (Directory.Exists(englishPath))
             {
-                englishPath += "Flow4.xml";
+                englishPath += "Flow3.xml";
                 elements = ReadXML(englishPath);
             }
             else if (Directory.Exists(danishPath))
@@ -65,20 +65,15 @@ namespace CF
             Processor proc = new Processor(elements);
             proc.ProcessElements(0);
 
-            Point point = new Point(0,0);
+            Point point = new Point(0,0); //Adjusts 45 px from left side of screen
             start = proc.StartSequence;
 
             Size size = start.CollectSize();
             
             start.Draw(this, point);
             Console.WriteLine("1");
-            
-
         }
 
-        public void UserControlCounter(int number)
-        {
-            number_la.Text = number.ToString();
-        }
+        
     }
 }

@@ -31,7 +31,7 @@ namespace CF
         private Drawable parent;
 
         private Point point;
-        private int l;
+        private double l;
 
         public Sequence()
         {
@@ -75,16 +75,14 @@ namespace CF
 
             if (parent == null)
             {
-                l = size.Width / 2 - 1 / 2;
-                this.point.X = l;
+                float w = size.Width;
+                l = w / 2 - (0.5); //Equals: l = w/2-(1/2) - (w is width of child element, l is drawing index)
+                this.point.X = ((float)l * 135) + 45; //Position * drawing index width in px + adjusting for screens left side
             }
 
             foreach (Drawable obj in children)
             {
-                point.X = this.point.X;
-                
-                this.point.Y = obj.Draw(main, point).Y; //The increase in point needs to be handled (may need to return point instead of void)
-                
+                this.point = obj.Draw(main, this.point);
             }
 
             return this.point;

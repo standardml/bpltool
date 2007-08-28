@@ -20,7 +20,7 @@ namespace CF
             return name;
         }
         //
-
+        private float maxDepth;
         private Size size;
         public override Size Size()
         {
@@ -39,11 +39,13 @@ namespace CF
             set { visible = value; }
         }
 
+        /*
         private int width;
         public int Width
         {
             get { return width; }
         }
+        */
 
         public override Size CollectSize()
         {
@@ -73,6 +75,7 @@ namespace CF
         {
             this.point.X = point.X;
             this.point.Y = point.Y;
+            
 
             //Calculate exitpoint
 
@@ -80,25 +83,40 @@ namespace CF
             {
                 VisualFlow flow = new VisualFlow();
 
-                //Create custom header and footer for each particular flow according to size
+                CreateFlowImages();
+                point.Y += 70; //Replace with header.height
 
-                //flow.Location = point;
-                main.Controls.Add(flow);
-#warning //Se note s. X
+                //insert header image into main.Controls.Add();
+
+                
+
                 float a = 0;
                 float b = 0;
                 float c = 0;
+                float tmp;
                 for (int i = 0; i < children.Count; i++)
                 {
                     b = children[i].Size().Width - 1;
                     c = 2;
-                    point.X = a + (b / c);
-                    
-                    children[i].Draw(main, point); //needs adjustment, or sequences will not appear in parallel.
+                    tmp = a + (b / c);
+                    point.X = (tmp * 135) + 45;
 
+                    Point tmpP = children[i].Draw(main, point);
+
+                    if (maxDepth < tmpP.Y)
+                    {
+                        maxDepth = tmpP.Y;
+                    }
+                    else
+                    {
+                        //adjust this child line
+                    }
                     a += children[i].Size().Width;
-                    
                 }
+
+                //insert footer image into main.Controls.Add();
+                this.point.Y = (maxDepth + 70); //Replace with footer.height
+
             }
             else
             {
@@ -122,6 +140,14 @@ namespace CF
         public override Drawable GetParent()
         {
             return parent;
+        }
+
+        /// <summary>
+        /// The method handles the creation of the header and footer image for the flow,
+        /// depending on the width and children of the flow.
+        /// </summary>
+        private void CreateFlowImages()
+        {
         }
     }
 }

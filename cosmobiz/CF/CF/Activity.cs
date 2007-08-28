@@ -44,12 +44,20 @@ namespace CF
            
             VisualActivity vis = new VisualActivity();
             vis.VisualClicked += new VisualActivity.ClickedHandler(vis_VisualClicked);
-            //vis.Location = point; // May need adjustment to align with connector line
-            point.Y += size.Height; //Adds the height of the visual
 
+            System.Drawing.Point p = new System.Drawing.Point(Convert.ToInt32(point.X) - vis.Width / 2, Convert.ToInt32(point.Y));
+
+            this.point.X = p.X;
+            vis.Location = p;
+            
+            
+            //-vis.Width / 2; // May need adjustment to align with connector line
+            this.point.Y += vis.Height;  //Adds the height of the visual (y-position)
+                                         //x-position doesnt change when drawing an Activity
+            point.Y = this.point.Y;
             main.Controls.Add(vis);
 
-            return this.point;
+            return point;
         }
 
         void vis_VisualClicked()

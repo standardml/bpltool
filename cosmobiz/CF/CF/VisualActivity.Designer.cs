@@ -52,7 +52,7 @@ namespace CF
             this.Controls.Add(this.label1);
             this.Controls.Add(this.pictureBox1);
             this.Name = "VisualActivity";
-            this.Size = new System.Drawing.Size(77, 38);
+            this.Size = new System.Drawing.Size(90, 70);
             this.Click += new System.EventHandler(this.VisualActivity_Click);
             this.ResumeLayout(false);
 
