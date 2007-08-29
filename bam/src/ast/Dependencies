@@ -1,14 +1,14 @@
 control-sig: /lib/pp/mak/.
 control: control-sig /lib/pp/mak/. %NODASHSIG
-term-sig: control /utils/util /utils/rbset /lib/pp/mak/.
-term: term-sig control /utils/rbset /utils/util /lib/pp/mak/. %NODASHSIG
-rule-sig: term /utils/rbset /lib/pp/mak/.
-rule: rule-sig term /utils/util /lib/pp/mak/. %NODASHSIG
+process-sig: control /utils/util /utils/rbset /lib/pp/mak/.
+process: process-sig control /utils/rbset /utils/util /lib/pp/mak/. %NODASHSIG
+rule-sig: process /utils/rbset /lib/pp/mak/.
+rule: rule-sig process /utils/util /lib/pp/mak/. %NODASHSIG
 minibpl.grm-sig: /lib/ml-yacc/.
-minibpl.grm: minibpl.grm-sig control term rule /utils/util 
+minibpl.grm: minibpl.grm-sig control process rule /utils/util 
    /lib/ml-yacc/. /lib/compat/mosml/. %NODASHSIG
 minibpl.lex: /lib/compat/mosml/. minibpl.grm-sig
-minibplparser: minibpl.grm-sig minibpl.grm minibpl.lex term rule /lib/ml-yacc/.
+minibplparser: minibpl.grm-sig minibpl.grm minibpl.lex process rule /lib/ml-yacc/.
 
 # tests
-testterm: /lib/smlunit/. control term
+testprocess: /lib/smlunit/. control process

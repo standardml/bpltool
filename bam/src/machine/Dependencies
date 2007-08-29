@@ -1,6 +1,6 @@
-partialmatch-sig: /ast/term /ast/rule /utils/stack /utils/rbset /lib/pp/mak/.
-partialmatch: partialmatch-sig /ast/term /ast/rule 
+partialmatch-sig: /ast/process /ast/rule /utils/stack /utils/rbset /lib/pp/mak/.
+partialmatch: partialmatch-sig /ast/process /ast/rule 
   /utils/stack /utils/rbset /utils/util /lib/pp/mak/. %NODASHSIG
-state: partialmatch /ast/control /ast/term /ast/rule 
+state: partialmatch /ast/control /ast/process /ast/rule 
   /utils/stack /utils/rbset /lib/pp/mak/. /utils/util
-bam: partialmatch state /ast/term /ast/rule /utils/rbset
+bam: partialmatch state /ast/process /ast/rule /utils/rbset

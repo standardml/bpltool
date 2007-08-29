@@ -19,7 +19,7 @@
 
 structure TestTerm :> sig val suite : unit -> Test.test end = struct
 
-    open Assert Term
+    open Assert Process
 
     (* matches *)
     local 

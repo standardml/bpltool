@@ -1,2 +1,2 @@
 main: /machine/bam /ast/minibplparser /ast/rule /utils/rbset %PROGRAM
-unittest: /ast/testterm /lib/smlunit/. %PROGRAM
+unittest: /ast/testprocess /lib/smlunit/. %PROGRAM

@@ -20,7 +20,7 @@ structure BAM = struct
 
     fun rewrite rules term =
 	let val mkc = fn _ => NONE
-	    val term' = Term.map mkc term
+	    val term' = Process.map mkc term
 	    val rules' = Rbset.map (Rule.map mkc, Rule.compare) rules
 	    val init = BAMState.initialState rules' term'
 	    val PMinit = PartialMatchSet.init rules'

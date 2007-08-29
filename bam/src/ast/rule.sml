@@ -18,22 +18,22 @@
 
 structure Rule :> RULE = struct
     exception NotWellFormed of string
-    type 'ctrlinfo t = 'ctrlinfo Term.t * 'ctrlinfo Term.t
+    type 'ctrlinfo t = 'ctrlinfo Process.t * 'ctrlinfo Process.t
 
     fun rule (lhs, rhs) =
 	let fun unbound i = 
 		raise NotWellFormed("unknown hole "^ Int.toString i ^" in RHS")
-	    val (map,lhs') = Term.renumber (fn i => ()) Util.IntMap.empty lhs
-	    val (_, rhs')  = Term.renumber unbound map rhs
+	    val (map,lhs') = Process.renumber (fn i => ()) Util.IntMap.empty lhs
+	    val (_, rhs')  = Process.renumber unbound map rhs
 	in  (lhs',rhs')
 	end
 
-    val LHS : 'ctrlinfo t -> 'ctrlinfo Term.t = #1
-    val RHS : 'ctrlinfo t -> 'ctrlinfo Term.t = #2
-    fun holeIndices r = Term.holeIndices (LHS r)
-    fun maxHoleIndex r = Term.maxHoleIndex (LHS r)
-    fun map f (lhs, rhs) = (Term.map f lhs, Term.map f rhs)
-    val compare = Util.pairCmp (Term.compare, Term.compare)
-    fun pp (lhs, rhs) = Pretty.ppBinary(Term.pp lhs, "-->", Term.pp rhs)
+    val LHS : 'ctrlinfo t -> 'ctrlinfo Process.t = #1
+    val RHS : 'ctrlinfo t -> 'ctrlinfo Process.t = #2
+    fun holeIndices r = Process.holeIndices (LHS r)
+    fun maxHoleIndex r = Process.maxHoleIndex (LHS r)
+    fun map f (lhs, rhs) = (Process.map f lhs, Process.map f rhs)
+    val compare = Util.pairCmp (Process.compare, Process.compare)
+    fun pp (lhs, rhs) = Pretty.ppBinary(Process.pp lhs, "-->", Process.pp rhs)
     val toString = Pretty.ppToString o pp
 end (* structure Rule *)

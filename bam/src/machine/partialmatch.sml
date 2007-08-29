@@ -26,7 +26,7 @@ end
 structure PartialMatch :> PARTIALMATCH = struct
 
     (* convenience shorthands *)
-    type term = int option Term.t
+    type term = int option Process.t
     type rule = int option Rule.t
 
     type t = term Stack.t * term * term vector * IntSet.t
@@ -38,9 +38,9 @@ structure PartialMatch :> PARTIALMATCH = struct
     val indices : t -> IntSet.t = #4
 
     fun compare (pm1, pm2) = 
-	case Stack.compare Term.compare (LHS pm1, LHS pm2) of
-	    EQUAL => (case Term.compare (RHS pm1, RHS pm2) of
-			  EQUAL => (case Util.vectorCmp Term.compare (parameter pm1, parameter pm2) of
+	case Stack.compare Process.compare (LHS pm1, LHS pm2) of
+	    EQUAL => (case Process.compare (RHS pm1, RHS pm2) of
+			  EQUAL => (case Util.vectorCmp Process.compare (parameter pm1, parameter pm2) of
 					EQUAL => IntSet.compare(indices pm1, indices pm2)
 				      | ord => ord)
 			| ord => ord)
@@ -49,7 +49,7 @@ structure PartialMatch :> PARTIALMATCH = struct
     exception UnknownParameter of int
 
     fun initParam rule =
-	Vector.tabulate(1 + Rule.maxHoleIndex rule, fn i => Term.Hole i)
+	Vector.tabulate(1 + Rule.maxHoleIndex rule, fn i => Process.Hole i)
     fun param j pm = 
 	Vector.sub(parameter pm, j) 
 	handle Subscript => raise UnknownParameter j
@@ -72,25 +72,25 @@ structure PartialMatch :> PARTIALMATCH = struct
 	if Stack.isEmpty L then NONE
 	else let val (G, L') = Stack.pop L
 	     in  if Stack.isEmpty L' then NONE
-		 else case Term.view G of
-			  Term.VNil => SOME(Term.VNil)
-			| Term.VHole i => SOME(Term.VHole i)
+		 else case Process.view G of
+			  Process.VNil => SOME(Process.VNil)
+			| Process.VHole i => SOME(Process.VHole i)
 			| _ => NONE
 	     end
     fun returnable pm =
 	case returnable0 pm of
-	    SOME(Term.VNil) => true
+	    SOME(Process.VNil) => true
 	  | _ => false
     fun returnableHole pm =
 	case returnable0 pm of
-	    SOME(Term.VHole i) => SOME i
+	    SOME(Process.VHole i) => SOME i
 	  | _ => NONE
 
     fun reactable (L, R, D, I) =
 	if Stack.isEmpty L then false
 	else let val (G, L) = Stack.pop L 
-	     in  case Term.view G of
-		     Term.VNil => Stack.isEmpty L
+	     in  case Process.view G of
+		     Process.VNil => Stack.isEmpty L
 		   | _ => false
 	     end
 		    
@@ -98,8 +98,8 @@ structure PartialMatch :> PARTIALMATCH = struct
     fun pp (lhs, rhs, params, indices) =
 	bracket "(#)"
 		(clist "#, " (fn t => t)
-	               [ ppBinary(Stack.pp "»" Term.pp lhs, "->", Term.pp rhs)
-                       , "#" ^+ bracket "[#]" (Util.ppVector Term.pp params)
+	               [ ppBinary(Stack.pp "»" Process.pp lhs, "->", Process.pp rhs)
+                       , "#" ^+ bracket "[#]" (Util.ppVector Process.pp params)
 	 	       , Util.ppSet ppInt indices
                        ]
 		)

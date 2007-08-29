@@ -18,7 +18,7 @@
 
 structure BAMState :> sig
     type t
-    type term = int option Term.t
+    type term = int option Process.t
     type rule = int option Rule.t
     val step : PartialMatchSet.t -> t -> t option
     val initialState : rule Rbset.set -> term -> t
@@ -27,10 +27,10 @@ end = struct
     (* convenience *)
     structure S = PartialMatchSet 
     structure P = PartialMatch
-    structure T = Term
+    structure T = Process
     structure C = Control
 
-    type term = int option Term.t
+    type term = int option Process.t
     type rule = int option Rule.t
 		  
     type elem = S.t * term * term * term * term
@@ -42,7 +42,7 @@ end = struct
     in
     fun ppElem (PM, q, q', p, p') =
 	Util.ppTuple
-           (Util.ppSet P.pp PM :: (List.map (Term.pp' Control.pp) [q,q',p,p']))
+           (Util.ppSet P.pp PM :: (List.map (Process.pp' Control.pp) [q,q',p,p']))
 
     fun pp (S: stack, i) = 
 	let val S' = Stack.take 3 S

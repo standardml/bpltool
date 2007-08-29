@@ -50,10 +50,10 @@ fun insert map v t = case Util.StringMap.lookup map v of
 
 fun mkTerm map t =
     case t of
-	Nil => Term.Nil
-      | Hole i => Term.Hole i
-      | Prefix(C, t) => Term.Prefix(Control.ctrl (C,(),Control.ACTIVE), mkTerm map t)
-      | Par ts => Term.ParList(List.map (mkTerm map) ts)
+	Nil => Process.Nil
+      | Hole i => Process.Hole i
+      | Prefix(C, t) => Process.Prefix(Control.ctrl (C,(),Control.ACTIVE), mkTerm map t)
+      | Par ts => Process.ParList(List.map (mkTerm map) ts)
       | Var v => lookup map v
 
 fun mkRule map (RuleDec (_,(t1, t2))) = Rule.rule (mkTerm map t1, mkTerm map t2)
@@ -104,7 +104,7 @@ fun mkProg declarations =
          Term of term
       |  TermParList of term list
       |  AtTerm of term
-      |  Program of unit Rule.t list * unit Term.t (* everything has been resolved when we return *)
+      |  Program of unit Rule.t list * unit Process.t (* everything has been resolved when we return *)
       |  Declaration of declaration
       |  Declarations of declaration list
       |  Activity of Control.activity

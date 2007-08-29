@@ -25,9 +25,9 @@ signature RULE = sig
        and starts from 0. Furthermore, it is checked that all
        holes in the RHS occurs in the LHS.
     *)
-    val rule : 'ctrlinfo Term.t * 'ctrlinfo Term.t -> 'ctrlinfo t
-    val LHS : 'ctrlinfo t -> 'ctrlinfo Term.t
-    val RHS : 'ctrlinfo t -> 'ctrlinfo Term.t
+    val rule : 'ctrlinfo Process.t * 'ctrlinfo Process.t -> 'ctrlinfo t
+    val LHS : 'ctrlinfo t -> 'ctrlinfo Process.t
+    val RHS : 'ctrlinfo t -> 'ctrlinfo Process.t
     val holeIndices : 'ctrlinfo t -> int Rbset.set
     val maxHoleIndex : 'ctrlinfo t -> int
     val map : ('ctrlinfo -> 'newctrlinfo) -> 'ctrlinfo t -> 'newctrlinfo t

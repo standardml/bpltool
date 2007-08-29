@@ -16,7 +16,7 @@
  * USA
  *)
 
-structure Term :> TERM = struct
+structure Process :> PROCESS = struct
 
     (* The (internal) term representation maintains the invariant
        that the representation is "minimal". For now this means that

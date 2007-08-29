@@ -16,7 +16,7 @@
  * USA
  *)
 
-signature TERM = sig
+signature PROCESS = sig
     type 'cinfo t
 
     val Par : 'cinfo t * 'cinfo t -> 'cinfo t

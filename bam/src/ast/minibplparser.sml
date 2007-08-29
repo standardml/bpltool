@@ -17,7 +17,7 @@
  *)
 
 structure MiniBPLParser :> sig 
-    val parseFile : string -> unit Rule.t list * unit Term.t
+    val parseFile : string -> unit Rule.t list * unit Process.t
 end = struct
 
     exception ParseError

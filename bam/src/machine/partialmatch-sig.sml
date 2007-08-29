@@ -21,7 +21,7 @@ signature PARTIALMATCH = sig
     type t
 
     (* convenience shorthands *)
-    type term = int option Term.t
+    type term = int option Process.t
     type rule = int option Rule.t
 
     val pmatch : term Stack.t * term * term vector * int Rbset.set -> t
