@@ -36,4 +36,5 @@ signature UTIL = sig
 
     val ppSet : 'a Pretty.pp -> 'a Rbset.set Pretty.pp
     val ppVector : 'a Pretty.pp -> 'a vector Pretty.pp
+    val ppTuple : 'a Pretty.pptree list -> 'a Pretty.pptree
 end

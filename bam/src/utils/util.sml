@@ -79,4 +79,6 @@ struct
 	in  clist "#, " pp vs
 	end
 
+    fun ppTuple trees =	bracket "(#)" (clist ",# " (fn t => t) trees)
+
 end (* structure Util *)

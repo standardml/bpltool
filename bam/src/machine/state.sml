@@ -38,15 +38,19 @@ end = struct
 
     type t = stack * int
 
+    local open Pretty
+    in
     fun ppElem (PM, q, q', p, p') =
-	Pretty.bracket "(#)"
-	     (Pretty.clist "#, " (fn t => t)
-	        (Util.ppSet P.pp PM :: (List.map (Term.pp' Control.pp) [q,q',p,p'])))
+	Util.ppTuple
+           (Util.ppSet P.pp PM :: (List.map (Term.pp' Control.pp) [q,q',p,p']))
 
     fun pp (S: stack, i) = 
 	let val S' = Stack.take 3 S
-	in  Pretty.bracket "(#)" (Pretty.ppBinary(Pretty.ilist " »»# " (ppElem o #1) S', ", ", Pretty.ppInt i))
+	in  bracket "<#>" 
+               (  (ilist " »»# " (ppElem o #1) S' +^ ",") 
+               ++ (ppInt i))
 	end
+    end
 
     fun termminus (p, I) =
 	let fun f p = if T.exists (fn SOME idx => IntSet.member(I,idx)
@@ -157,10 +161,10 @@ end = struct
 	    SOME pm => SOME(pm, S.delete(PM, pm))
 	  | NONE => NONE
 
-    val reactStep = fn x => (print("REACT"); reactStep x)
-    val worklistStep = fn x => (print("WLIST"); worklistStep x)
-    val returnStep = fn x => (print("RETURN"); returnStep x)
-    val matchStep = fn x => (print("MATCH"); matchStep x)
+    val reactStep = fn x => (print("(REACT)"); reactStep x)
+    val worklistStep = fn x => (print("(WLIST)"); worklistStep x)
+    val returnStep = fn x => (print("(RETURN)"); returnStep x)
+    val matchStep = fn x => (print("(MATCH)"); matchStep x)
 
     fun step0 PMinit (pm as (PM, q, q', p, p') : elem, K0, S) i = 
 	case (T.view p, T.view p') of 
@@ -186,16 +190,20 @@ end = struct
 	    SOME reaction => reactStep PMinit reaction pm K S i
 	  | NONE => step0 PMinit (pm, K, S) i
 		    
-    fun step PMinit (S:stack, i) =
+    fun step2 PMinit (S:stack, i) =
 	if Stack.isEmpty S then NONE
 	else SOME(step1 PMinit (Stack.pop S) i)
 	     
-    val step = fn PMinit => fn (S, i) =>
- 			       let val st' = step PMinit (S,i)
-				   fun pr (S,i) = ( print "\n  " ; print(Pretty.ppToString(pp(S,i))) )
-				   val _ = ( pr (S,i) ; print "\n-->" ; Option.app pr st'; print "\n\n")
-			       in  st'
-			       end 
+    fun step PMinit (S, i) =
+	let open Pretty
+	    val _ = print "--> "
+	    val st' = step2 PMinit (S,i)
+	    fun pr (S,i) = 
+		ppPrint ("  " ^+ pp(S,i)) (plainOutput("(*","*)")) 
+			TextIO.stdOut
+	    val _ = ( print "\n" ; Option.app pr st' )
+	in  st'
+	end
 
     fun initialState rules term : t =
 	(Stack.push((S.init rules, T.Nil, T.Nil, term, T.Nil),C.ctrl("_top_",NONE,C.ACTIVE)) Stack.empty, 0)
