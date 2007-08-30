@@ -64,12 +64,6 @@
       <DependentUpon>VisualActivity.cs</DependentUpon>
     </Compile>
     <Compile Include="IDrawable.cs" />
-    <Compile Include="VisualFlow.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="VisualFlow.Designer.cs">
-      <DependentUpon>VisualFlow.cs</DependentUpon>
-    </Compile>
     <Compile Include="FlowElements.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
@@ -93,13 +87,17 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="VisualFlow.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>VisualFlow.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="VisualSequence.resx">
       <SubType>Designer</SubType>
       <DependentUpon>VisualSequence.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="VisualSplit.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>VisualSplit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="VisualUnSplit.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>VisualUnSplit.cs</DependentUpon>
     </EmbeddedResource>
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -111,6 +109,18 @@
     </Compile>
     <Compile Include="VisualSequence.Designer.cs">
       <DependentUpon>VisualSequence.cs</DependentUpon>
+    </Compile>
+    <Compile Include="VisualSplit.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="VisualSplit.Designer.cs">
+      <DependentUpon>VisualSplit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="VisualUnSplit.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="VisualUnSplit.Designer.cs">
+      <DependentUpon>VisualUnSplit.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

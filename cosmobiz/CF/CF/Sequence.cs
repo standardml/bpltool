@@ -65,7 +65,7 @@ namespace CF
 
         }
 
-        public override Point Draw(MainWindow main, Point point)
+        public override Point Draw(MainWindow main, Point point, float maxWidth)
         {
             this.point.X = point.X;
             this.point.Y = point.Y;
@@ -82,7 +82,7 @@ namespace CF
 
             foreach (Drawable obj in children)
             {
-                this.point = obj.Draw(main, this.point);
+                this.point = obj.Draw(main, this.point, size.Width);
             }
 
             return this.point;

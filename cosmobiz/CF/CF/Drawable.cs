@@ -12,7 +12,7 @@ namespace CF
         public abstract string getName();
         //
         public abstract Size Size();
-        public abstract Point Draw(MainWindow main, Point point);
+        public abstract Point Draw(MainWindow main, Point point, float maxWidth);
         public abstract void AddChild(Drawable child);
         public abstract void AddParent(Drawable parent);
         public abstract Drawable GetParent();

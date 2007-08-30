@@ -37,7 +37,7 @@ namespace CF
             point = new Point(0, 0);
         }
 
-        public override Point Draw(MainWindow main, Point point)
+        public override Point Draw(MainWindow main, Point point, float maxWidth)
         {
             this.point.X = point.X;
             this.point.Y = point.Y;

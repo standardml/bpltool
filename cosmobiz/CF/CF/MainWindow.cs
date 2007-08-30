@@ -19,6 +19,7 @@ namespace CF
         {
             InitializeComponent();
             PerformReadXML();
+            
         }
         private void PerformReadXML()
         {
@@ -26,7 +27,7 @@ namespace CF
             string danishPath = "\\Programmer\\CF\\";
             if (Directory.Exists(englishPath))
             {
-                englishPath += "Flow3.xml";
+                englishPath += "Flow4.xml";
                 elements = ReadXML(englishPath);
             }
             else if (Directory.Exists(danishPath))
@@ -70,7 +71,7 @@ namespace CF
 
             Size size = start.CollectSize();
             
-            start.Draw(this, point);
+            start.Draw(this, point, size.Width);
             Console.WriteLine("1");
         }
 
