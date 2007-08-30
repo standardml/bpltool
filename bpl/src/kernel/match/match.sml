@@ -950,7 +950,7 @@ struct
            *)
           val XZ = glob (outerface g)
           val s_a_n = Wiring.restrict'' s_a_n (XZ)
-          val s_a_e = Wiring.restrict'' s_a_e (XZ)
+          val s_a_e = Wiring.restrict' s_a_e (XZ)
           (* FIXME: The following should really be W+Z, not W+X+Z! *)
           val WXZ = NameSet.union (Wiring.outernames alpha) XZ
           val s_C_n = Wiring.restrict'' s_C_n (WXZ)
