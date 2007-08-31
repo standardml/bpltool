@@ -39,7 +39,7 @@ namespace CF
             point = new Point(0, 0);
         }
 
-        public override Size CollectSize() //Not correct, since each Act will add to the width (which should be 1 no matter how many Acts there are in a seq)
+        public override Size CollectSize() 
         {
             Size w = new Size(0, 0);
             foreach (Drawable obj in children)

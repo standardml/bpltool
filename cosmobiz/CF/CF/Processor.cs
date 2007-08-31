@@ -59,7 +59,7 @@ namespace CF
                             currentNode.AddChild(act);
                         }
                         break;
-                    case "Flow":
+                    case "flow":
                         {
                             Flow flow = new Flow();
                             flow.AddParent(currentNode);
@@ -67,7 +67,7 @@ namespace CF
                             currentNode = flow;
                         }
                         break;
-                    case "endFlow":
+                    case "endflow":
                         {
                             currentNode = currentNode.GetParent();
                         }
