@@ -1,17 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <sequence name="seq1" owner="">
   <activity name="act1" owner="Mad Max"/>
-  <Flow name="flow0" owner="">
+  <flow name="flow0" owner="">
      <sequence name="seqa" owner="">
         <activity name="acta" owner="Mad Max"/>
-        <Flow name="flow0" owner="">
+        <flow name="flow0" owner="">
      <sequence name="seqa" owner="">
         <activity name="acta" owner="Mad Max"/>
 
      </sequence>
      <sequence name="seqb" owner="">
 
-       <Flow name="flow1" owner="">
+       <flow name="flow1" owner="">
          <sequence name="seq2" owner="">
            <activity name="act4" owner="Allen"/>
            <activity name="act5" owner="Miss Piggy"/>
@@ -19,22 +19,22 @@
          <sequence name="seq3" owner="">
            <activity name="act6" owner="John Doe"/>
          </sequence>
-       </Flow>
-       <Flow name="flow2" owner="">
+       </flow>
+       <flow name="flow2" owner="">
          <sequence name="seq4" owner="">
            <activity name="act7" owner="Al"/>
            <activity name="act8" owner="Miss P"/>
          </sequence>
          <sequence name="seq5" owner="">
            <activity name="act9" owner="J Doe"/>
-<Flow name="flow0" owner="">
+<flow name="flow0" owner="">
      <sequence name="seqa" owner="">
         <activity name="acta" owner="Mad Max"/>
 
      </sequence>
      <sequence name="seqb" owner="">
 
-       <Flow name="flow1" owner="">
+       <flow name="flow1" owner="">
          <sequence name="seq2" owner="">
            <activity name="act4" owner="Allen"/>
            <activity name="act5" owner="Miss Piggy"/>
@@ -42,41 +42,8 @@
          <sequence name="seq3" owner="">
            <activity name="act6" owner="John Doe"/>
          </sequence>
-       </Flow>
-       <Flow name="flow2" owner="">
-         <sequence name="seq4" owner="">
-           <activity name="act7" owner="Al"/>
-           <activity name="act8" owner="Miss P"/>
-         </sequence>
-         <sequence name="seq5" owner="">
-           <activity name="act9" owner="J Doe"/>
-         </sequence>
-         <sequence name="seq6" owner="">
-           <activity name="act10" owner="Johnny"/>
-         </sequence>
-       </Flow>
-     </sequence>     
-  </Flow>
-         </sequence>
-         <sequence name="seq6" owner="">
-           <activity name="act10" owner="Johnny"/>
-         </sequence>
-       </Flow>
-     </sequence>     
-  </Flow>
-     </sequence>
-     <sequence name="seqb" owner="">
-
-       <Flow name="flow1" owner="">
-         <sequence name="seq2" owner="">
-           <activity name="act4" owner="Allen"/>
-           <activity name="act5" owner="Miss Piggy"/>
-         </sequence>
-         <sequence name="seq3" owner="">
-           <activity name="act6" owner="John Doe"/>
-         </sequence>
-       </Flow>
-       <Flow name="flow2" owner="">
+       </flow>
+       <flow name="flow2" owner="">
          <sequence name="seq4" owner="">
            <activity name="act7" owner="Al"/>
            <activity name="act8" owner="Miss P"/>
@@ -87,8 +54,41 @@
          <sequence name="seq6" owner="">
            <activity name="act10" owner="Johnny"/>
          </sequence>
-       </Flow>
+       </flow>
      </sequence>     
-  </Flow>
+  </flow>
+         </sequence>
+         <sequence name="seq6" owner="">
+           <activity name="act10" owner="Johnny"/>
+         </sequence>
+       </flow>
+     </sequence>     
+  </flow>
+     </sequence>
+     <sequence name="seqb" owner="">
+
+       <flow name="flow1" owner="">
+         <sequence name="seq2" owner="">
+           <activity name="act4" owner="Allen"/>
+           <activity name="act5" owner="Miss Piggy"/>
+         </sequence>
+         <sequence name="seq3" owner="">
+           <activity name="act6" owner="John Doe"/>
+         </sequence>
+       </flow>
+       <flow name="flow2" owner="">
+         <sequence name="seq4" owner="">
+           <activity name="act7" owner="Al"/>
+           <activity name="act8" owner="Miss P"/>
+         </sequence>
+         <sequence name="seq5" owner="">
+           <activity name="act9" owner="J Doe"/>
+         </sequence>
+         <sequence name="seq6" owner="">
+           <activity name="act10" owner="Johnny"/>
+         </sequence>
+       </flow>
+     </sequence>     
+  </flow>
   <activity name="act11" owner="GB"/>
 </sequence>

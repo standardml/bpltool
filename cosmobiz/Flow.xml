@@ -3,7 +3,7 @@
   <activity name="act1000" owner="Mad Max"/>
   <activity name="act2" owner="Toad"/>
   <activity name="act3" owner="Mr. Bean"/>
-  <Flow name="flow1" owner="">
+  <flow name="flow1" owner="">
     <sequence name="seq2" owner="">
       <activity name="act4" owner="Allen"/>
       <activity name="act5" owner="Miss Piggy"/>
@@ -11,6 +11,6 @@
     <sequence name="seq3" owner="">
       <activity name="act6" owner="John Doe"/>
     </sequence>
-  </Flow>
+  </flow>
   <activity name="act7" owner="GB"/>
 </sequence>
