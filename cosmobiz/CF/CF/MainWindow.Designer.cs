@@ -6,7 +6,6 @@ namespace CF
         /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
-        private System.Windows.Forms.MainMenu mainMenu1;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -30,25 +29,58 @@ namespace CF
         private void InitializeComponent()
         {
             this.mainMenu1 = new System.Windows.Forms.MainMenu();
-            this.button1 = new System.Windows.Forms.Button();
+            this.menuItem1 = new System.Windows.Forms.MenuItem();
+            this.menuItem2 = new System.Windows.Forms.MenuItem();
+            this.menuItem3 = new System.Windows.Forms.MenuItem();
+            this.menuItem4 = new System.Windows.Forms.MenuItem();
+            this.menuItem5 = new System.Windows.Forms.MenuItem();
+            this.menuItem6 = new System.Windows.Forms.MenuItem();
             this.SuspendLayout();
             // 
-            // button1
+            // mainMenu1
             // 
-            this.button1.Location = new System.Drawing.Point(187, 233);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(50, 32);
-            this.button1.TabIndex = 1;
-            this.button1.Text = "button1";
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.mainMenu1.MenuItems.Add(this.menuItem1);
+            // 
+            // menuItem1
+            // 
+            this.menuItem1.MenuItems.Add(this.menuItem2);
+            this.menuItem1.MenuItems.Add(this.menuItem3);
+            this.menuItem1.MenuItems.Add(this.menuItem4);
+            this.menuItem1.MenuItems.Add(this.menuItem5);
+            this.menuItem1.MenuItems.Add(this.menuItem6);
+            this.menuItem1.Text = "Draw";
+            // 
+            // menuItem2
+            // 
+            this.menuItem2.Text = "Draw Flow1";
+            this.menuItem2.Click += new System.EventHandler(this.menuItem2_Click);
+            // 
+            // menuItem3
+            // 
+            this.menuItem3.Text = "Draw Flow2";
+            this.menuItem3.Click += new System.EventHandler(this.menuItem3_Click);
+            // 
+            // menuItem4
+            // 
+            this.menuItem4.Text = "Draw Flow3";
+            this.menuItem4.Click += new System.EventHandler(this.menuItem4_Click);
+            // 
+            // menuItem5
+            // 
+            this.menuItem5.Text = "Draw Flow4";
+            this.menuItem5.Click += new System.EventHandler(this.menuItem5_Click);
+            // 
+            // menuItem6
+            // 
+            this.menuItem6.Text = "Draw Flow5";
+            this.menuItem6.Click += new System.EventHandler(this.menuItem6_Click);
             // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.AutoScroll = true;
-            this.ClientSize = new System.Drawing.Size(240, 268);
-            this.Controls.Add(this.button1);
+            this.ClientSize = new System.Drawing.Size(256, 284);
             this.Menu = this.mainMenu1;
             this.Name = "MainWindow";
             this.Text = "Form1";
@@ -58,7 +90,13 @@ namespace CF
 
         #endregion
 
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.MainMenu mainMenu1;
+        private System.Windows.Forms.MenuItem menuItem1;
+        private System.Windows.Forms.MenuItem menuItem2;
+        private System.Windows.Forms.MenuItem menuItem3;
+        private System.Windows.Forms.MenuItem menuItem4;
+        private System.Windows.Forms.MenuItem menuItem5;
+        private System.Windows.Forms.MenuItem menuItem6;
 
 
     }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
@@ -18,21 +17,21 @@ namespace CF
         public MainWindow()
         {
             InitializeComponent();
-            PerformReadXML();
-            
+            //PerformReadXML();
+
         }
-        private void PerformReadXML()
+        private void PerformReadXML(string file)
         {
             string englishPath = "\\Program files\\CF\\";
             string danishPath = "\\Programmer\\CF\\";
             if (Directory.Exists(englishPath))
             {
-                englishPath += "Flow4.xml";
+                englishPath += file;
                 elements = ReadXML(englishPath);
             }
             else if (Directory.Exists(danishPath))
             {
-                danishPath += "Flow.xml";
+                danishPath += file;
                 elements = ReadXML(danishPath);
             }
             else
@@ -61,20 +60,53 @@ namespace CF
             return TempElements;
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void menuItem2_Click(object sender, EventArgs e)
         {
+            PerformReadXML("Flow.xml");
+            ProcessAndDraw();
+        }
+
+        private void menuItem3_Click(object sender, EventArgs e)
+        {
+            PerformReadXML("Flow2.xml");
+            ProcessAndDraw();
+        }
+
+        private void menuItem4_Click(object sender, EventArgs e)
+        {
+            PerformReadXML("Flow3.xml");
+            ProcessAndDraw();
+        }
+
+        private void menuItem5_Click(object sender, EventArgs e)
+        {
+            PerformReadXML("Flow4.xml");
+            ProcessAndDraw();
+
+        }
+
+        private void menuItem6_Click(object sender, EventArgs e)
+        {
+            PerformReadXML("Flow5.xml");
+            ProcessAndDraw();
+        }
+
+        private void ProcessAndDraw()
+        {
+            this.Controls.Clear();
             Processor proc = new Processor(elements);
             proc.ProcessElements(0);
 
-            Point point = new Point(0,0); //Adjusts 45 px from left side of screen
+            Point point = new Point(0, 0); //Adjusts 45 px from left side of screen
             start = proc.StartSequence;
 
             Size size = start.CollectSize();
-            
+
             start.Draw(this, point, size.Width);
-            Console.WriteLine("1");
         }
 
-        
+
+
+
     }
 }

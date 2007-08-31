@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<sequence name="seq1" owner="">
+  <activity name="act1" owner="Mad Max"/>
+  <Flow name="flow1" owner="">
+    <sequence name="seq2" owner="">
+      <activity name="act4" owner="Allen"/>
+      <activity name="act5" owner="Miss Piggy"/>
+    </sequence>
+    <sequence name="seq3" owner="">
+      <activity name="act6" owner="John Doe"/>
+    </sequence>
+  </Flow>
+  <Flow name="flow2" owner="">
+    <sequence name="seq4" owner="">
+      <activity name="act7" owner="Al"/>
+      <activity name="act8" owner="Miss P"/>
+    </sequence>
+    <sequence name="seq5" owner="">
+      <activity name="act9" owner="J Doe"/>
+    </sequence>
+    <sequence name="seq6" owner="">
+      <activity name="act10" owner="Johnny"/>
+    </sequence>
+  </Flow>
+  <activity name="act11" owner="GB"/>
+</sequence>

@@ -93,9 +93,6 @@ namespace CF
 
             point.Y += 70; //Replace with header.height
 
-            //insert header image into main.Controls.Add();
-
-
             float firstDrawPoint = point.X - (this.maxWidth / 2);
             float a = firstDrawPoint + (this.maxWidth - localWidth) / 2; //locates the first drawing point. adjusts for wider flows in the lower parts of the structure.
             float b = 0;
@@ -118,11 +115,11 @@ namespace CF
                 else
                 {
                     //adjust this child line
+
                 }
                 a += children[i].Size().Width * 135;
             }
-            //insert footer image into main.Controls.Add();
-            exitPoint.Y = maxDepth; //Replace with footer.height
+            exitPoint.Y = maxDepth; 
             this.point.Y = exitPoint.Y + 70;
 
             CreateFlowImages(entryPoint, exitPoint);
@@ -164,7 +161,7 @@ namespace CF
             vSplit = new VisualSplit();
             uSplit = new VisualUnSplit();
 
-            int imageWidth = (int)attachmentPoints[attachmentPoints.Count - 1] - (int)attachmentPoints[0];
+            int imageWidth = (int)attachmentPoints[attachmentPoints.Count - 1] - (int)attachmentPoints[0] + 1;
             int imageHeight = 70;
 
             vSplit.ClientSize = new Size(imageWidth, imageHeight);//Så virker det.. ><
@@ -187,17 +184,22 @@ namespace CF
             vSplit.AddImage(headerImg);
             //
 
-#warning - this is not done yet:
+
             //Footer
             Image footerImage = new Bitmap(imageWidth, imageHeight, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
             Graphics footerGraph = Graphics.FromImage(footerImage);
 
             footerGraph.Clear(Color.Transparent);
+            
+            
+
             foreach (float pPoint in attachmentPoints)
             {
-                footerGraph.DrawLine(pen, (int)pPoint, 0, (int)pPoint, imageHeight - 1);
+                    //footerGraph.DrawLine(pen, (int)pPoint, 0, (int)pPoint+1, imageHeight - 1);
+                footerGraph.DrawLine(pen, (int)pPoint - (int)attachmentPoints[0], 0, (int)pPoint - (int)attachmentPoints[0], imageHeight - 1);
             }
-            footerGraph.DrawLine(pen, 0, imageHeight, imageWidth, imageHeight);
+            
+            footerGraph.DrawLine(pen, 0, imageHeight-1, imageWidth, imageHeight-1);
 
             uSplit.Top = (int)exitPoint.Y;
             uSplit.Left = (int)attachmentPoints[0];

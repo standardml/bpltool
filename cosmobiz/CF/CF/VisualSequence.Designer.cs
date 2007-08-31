@@ -28,34 +28,25 @@ namespace CF
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(VisualSequence));
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.seq_la = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
+            this.pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBox1.Location = new System.Drawing.Point(0, 0);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(67, 63);
-            this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
+            this.pictureBox1.Size = new System.Drawing.Size(19, 22);
             // 
-            // seq_la
-            // 
-            this.seq_la.Location = new System.Drawing.Point(3, 34);
-            this.seq_la.Name = "seq_la";
-            this.seq_la.Size = new System.Drawing.Size(60, 20);
-            this.seq_la.Text = "Sequence";
-            // 
-            // Sequence
+            // VisualSequence
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.Controls.Add(this.seq_la);
             this.Controls.Add(this.pictureBox1);
-            this.Name = "Sequence";
-            this.Size = new System.Drawing.Size(71, 67);
+            this.Name = "VisualSequence";
+            this.Size = new System.Drawing.Size(19, 22);
             this.ResumeLayout(false);
 
         }
@@ -63,7 +54,7 @@ namespace CF
         #endregion
 
         private System.Windows.Forms.PictureBox pictureBox1;
-        private System.Windows.Forms.Label seq_la;
+
 
     }
 }

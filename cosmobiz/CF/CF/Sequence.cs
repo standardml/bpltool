@@ -84,6 +84,26 @@ namespace CF
             {
                 this.point = obj.Draw(main, this.point, size.Width);
             }
+            if (parent != null && parent.Size().Height - 2 > size.Height) //Draw the length adjustment if the sequence is shorter than its siblings
+            {
+                int lineAdjustment = (parent.Size().Height - 2 - size.Height) * 70;
+                int imgWidth = 90;
+
+                VisualSequence vis = new VisualSequence();
+                vis.ClientSize = new Size(imgWidth, lineAdjustment);
+
+                Pen pen = new Pen(Color.Black, 1);
+
+                Image img = new Bitmap(imgWidth, lineAdjustment);
+                Graphics graph = Graphics.FromImage(img);
+
+                graph.Clear(Color.Transparent);
+                graph.DrawLine(pen, imgWidth / 2, 0, imgWidth / 2, lineAdjustment);
+                vis.AddImage(img);
+
+                vis.Location = new System.Drawing.Point((int)this.point.X - 45, (int)this.point.Y);
+                main.Controls.Add(vis);
+            }
 
             return this.point;
         }

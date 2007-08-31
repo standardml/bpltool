@@ -41,19 +41,38 @@ namespace CF
         {
             this.point.X = point.X;
             this.point.Y = point.Y;
-           
+
             VisualActivity vis = new VisualActivity();
             vis.VisualClicked += new VisualActivity.ClickedHandler(vis_VisualClicked);
+            
+            //Draws the image
+            int imgWidth = 90;
+            int imgHeight = 70;
+            vis.ClientSize = new Size(imgWidth, imgHeight);
+
+            Pen pen = new Pen(Color.Black, 1);
+
+            Image img = new Bitmap(imgWidth, imgHeight, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
+            Graphics graph = Graphics.FromImage(img);
+
+            graph.Clear(Color.Transparent);
+            graph.DrawLine(pen, imgWidth / 2, 0, imgWidth / 2, 30);
+            Rectangle rect = new Rectangle(0, 30, imgWidth - 1, 39);
+            graph.DrawRectangle(pen, rect);
+
+            vis.AddImage(img);
+            //
+
 
             System.Drawing.Point p = new System.Drawing.Point(Convert.ToInt32(point.X) - vis.Width / 2, Convert.ToInt32(point.Y));
 
             this.point.X = p.X;
             vis.Location = p;
-            
-            
+
+
             //-vis.Width / 2; // May need adjustment to align with connector line
             this.point.Y += vis.Height;  //Adds the height of the visual (y-position)
-                                         //x-position doesnt change when drawing an Activity
+            //x-position doesnt change when drawing an Activity
             point.Y = this.point.Y;
             main.Controls.Add(vis);
 
