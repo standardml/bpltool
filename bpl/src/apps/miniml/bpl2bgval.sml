@@ -106,46 +106,37 @@ fun (b1:bgval) tt (b2:bgval) = Sugar.* (b1,b2)
 fun (b1:bgval) oo (b2:bgval) = Sugar.o (b1,b2)
 
 (***** AUXILIARY FUNCTIONS *****)
-(*
-fun getSites1 b numbered =
-    case b of Wir => []
+fun getSites (b:bgval) =
+    case b of Wir(w) => []
 	    | Par(b1,b2) => (getSites b1) @ (getSites b2)
 	    | Pri(b1,b2) => (getSites b1) @ (getSites b2)
 	    | Com(b1,b2) => (getSites b1) @ (getSites b2)
 	    | Emb(b1,b2) => (getSites b1) @ (getSites b2)
 	    | Ten(b1,b2) => (getSites b1) @ (getSites b2)
-	    | Ctrl(i) => []
-	    | CtrlB(c,p) => []
-	    | CtrlF(c,p) => []
-	    | CtrlBF(c,p1,p2) => []
+	    | Ctrl(i,b,f) => []
 	    | Clo(n,b) => getSites b
 	    | Abs(n,b) => getSites b
-	    | Site(n) => if numbered then [n] else []
-	    | Sitep(n,l) => if numbered then [n] else []
-	    | Nsite(s) => if numbered then [] else [s]
-	    | Nsitep(s,l) => if numbered then [] else [s]
-	    | id => []
+	    | Site(i,l) => [i]
+	    | id(i) => []
 	    | Empty => []
 
-fun makeInst s1 s2 =
-    let val s1nums = #1(s1)
-	val s1nams = #2(s1)
-	val s2nums = #1(s2)
-	val s2nams = #2(s2)
-    in todo
+fun partSmap [] acc x = []
+  | partSmap ((n,i)::m) acc x =
+    if x=n then (rev acc, (n,i)::m) else partSmap m ((n,i) :: acc) x
+
+fun lookupFst [] id =
+  | lookupFst ((n,i)::m) id = if i=id then n else lookupFst m id
+
+fun calcInst b1 b2 (maps:imap*smap) =
+    let val pivot = List.hd(List.rev(getSites b1)) + 1
+	val (smap1,smap2) = partSmap smap [] pivot
+    in List.map (fn (n,i) => let val x = lookupFst smap1 i
+			     in (n,x) end) smap2
     end
-*)
-fun calcInst b1 b2 =
-    [] (* temporary *)
-(*
-    let val s1 = (getSites b1 true, getSites b1 false)
-	val s2 = (getSites b2 true, getSites b2 false)
-    in makeInst s1 s2 end
-*)
 
 fun s2n s = Name.make s
 
-fun v2n x = Name.make (String.toString x)
+fun v2n x = s2n (String.toString x)
 
 fun mkWir1 ovar =
     Wiring.make(LinkSet.insert
@@ -168,7 +159,7 @@ fun lookupKind cid signa =
 	  | loop ((i,k,b,f)::p) = if cid = i then SOME k else loop p
     in loop signa end
 
-fun lookupBigraph id idmap =
+fun lookupBgval id idmap =
     let fun loop [] = NONE
           | loop ((i,b)::p) = if id = i then SOME b else loop p
     in loop idmap end
@@ -180,24 +171,23 @@ fun lastCnt [] = 0
 
 fun ctrlNotInSig cid = raise Fail("Control does not exist in signature: " ^ cid ^ "\n")
 
-fun roll bglist maps = bglist (* TODO: roll into 'main' bgval *)
-
-type idmap = (id * bigraph) list
+type idmap = (id * bgval) list
 type sitemap = (nat * siteId) list
 
 (***** TRANSLATION : ast -> bgval *****)
 fun big2bgval ast signa (maps:idmap*sitemap) =
     let val imap = #1(maps)
-	val smap = #2(maps)
+	val smap = #2(maps) (* to be updated in this function *)
 	val cnt = lastCnt smap
 	val returnmap = ref smap
     in let val bgval =
 	       case ast
 		of Wir(w) =>
-		   (* hmmm...need to localise some names here? *)
+		   (* todo: do these cover all cases? *)
 		   ( case w
 		      of Global(out,inn) => mkWir2 out inn
-		       | Local(out,inn) => mkWir2 out inn (*localise?!*)
+		       | Local(out,inn) =>
+			 B.Abs info ((nm2nmSet o s2n) out, mkWir2 out inn)
 		       | IdleG(x) => mkWir1 x
 		       | IdleL(x) => B.Abs info ((nm2nmSet o s2n) x, mkWir1 x)
 		   )
@@ -237,21 +227,19 @@ fun big2bgval ast signa (maps:idmap*sitemap) =
 		 (* | Conc(nms,b) => not used *)
 		 | Site(i,nms) =>
 		   ( returnmap := (cnt+1,i) :: (!returnmap)
-		   ; S.id1 tt (S.idX (nList2nSet nms)) ) (*HERE!*)
+		   ; S.id_1 tt (S.idw nms) )
 		 | Id(i) =>
-		   ( case lookupBigraph i imap
-		      of SOME(b) => big2bgval b signa maps
+		   ( case lookupBgval i imap
+		      of SOME(b) => b
 		       | NONE => raise Fail("Unbound identifier: " ^ i ^ "\n")
 		   )
 		 | Empty => barren
        in (bgval, !returnmap) end (* return bgval and new sitemap *)
     end
 
-(*DOES THIS WHOLE INSTANTIATION PART WORK!?*)
-
 fun dec2bgval decls vals rules signa (maps:imap*smap) =
-    let val imap = #1(maps)
-	val smap = #2(maps)
+    let val imap = #1(maps) (* for rolling bgval list into main bgval *)
+	val smap = #2(maps) (* for making instantiations *)
     in case decls
 	of [] => (vals, rules, maps)
 	 | (d::ds) =>
@@ -266,7 +254,7 @@ fun dec2bgval decls vals rules signa (maps:imap*smap) =
 		 in dec2bgval ds vals rules' signa (imap,smap'') end
 	       | Value(i,b) =>
 		 let val (b',smap') = big2bgval b signa maps
-		     val imap' = (i,b') :: imap
+		     val imap' = (i,b') :: imap (* update imap *)
 		     val vals' = b' :: vals
 		 in dec2bgval ds vals' rules signa (imap',smap') end )
     end
@@ -276,5 +264,7 @@ fun prog2bgval ast =
     case ast
      of Prog(signa,declist) =>
 	let val (vals,rules,maps) = dec2bgval declist [] [] signa ([],[])
-	in (signa, roll vals maps, rules) end
+	    (* vars of last val	have been substituted for on the fly *)
+	    val mainBgval = List.hd(rev vals)
+	in (signa, mainBgval, rules) end
       | _ => raise Fail("Malformed program")
