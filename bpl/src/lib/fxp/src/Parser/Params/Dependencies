@@ -1,0 +1,34 @@
+# Copyright (c) 2007  The BPL Group at the IT University of Copenhagen
+#
+# This file is part of BPL.
+#
+# BPL is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or (at
+# your option) any later version.
+#
+# BPL is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with BPL; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+# USA
+
+# INCLUDE=../../Unicode/Chars
+# INCLUDE=../Base
+# INCLUDE=../../Util
+
+. = dtd hookData hooks ignore parserOptions resolve
+
+dtd: ../../Unicode/Chars/uniChar ../Base/base ../../Util/utilInt
+  ../../Unicode/Chars/dataDict /lib/compat/common/legacyvectorslice
+hookData: ../Error/errors ../../Unicode/Uri/uri
+  ../../Unicode/encoding ../../Unicode/Chars/uniChar ../Base/base
+hooks: hookData
+ignore:
+parserOptions: ../Dfa/dfaOptions ../../Util/options
+  ../../Util/utilInt ../../Util/utilList
+resolve: ../Base/base ../Error/errors ../../Unicode/Uri/uri

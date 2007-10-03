@@ -41,7 +41,7 @@ fun makeBR bgval = Bdnf.regularize (Bdnf.make bgval)
 
 val K' = makeBR K
 
-val r = R.make' { name = "K-to-L" , redex = K' , react = L }
+val r = R.make' { name = "K-to-L" , redex = K' , react = L, info = info }
 
 val Coa = makeBR(B.Com info (C,a))
 val Cob = makeBR(B.Com info (C,b))
@@ -67,9 +67,9 @@ val _ = printMts mt_a
 (*val _ = printMts mt_b*)
 val _ = map print b_parts
 
-val b's = LazyList.lzmap (Re.react Cob) mt_b
+val b's = LazyList.lzmap (Re.react (*Cob*)) mt_b
 val _ = print "Agents resulting from reactions:\n"
-val _ = LazyList.lzprint (B.toString o B.simplify o Bdnf.unmk) b's
+val _ = LazyList.lzprint (B.toString o B.simplify o Bdnf.unmk o Bdnf.make) b's
 val _ = print "\n"
 
 

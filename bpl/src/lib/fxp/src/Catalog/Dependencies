@@ -1,0 +1,40 @@
+# Copyright (c) 2007  The BPL Group at the IT University of Copenhagen
+#
+# This file is part of BPL.
+#
+# BPL is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or (at
+# your option) any later version.
+#
+# BPL is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with BPL; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+# USA
+
+. = catalog catData catDtd catError catFile catHooks catOptions catParams catParse catResolve socatParse
+
+catData: ../Unicode/Uri/uri
+catDtd: ../Parser/Params/dtd
+catError: ../Parser/Error/errors ../Util/utilError ../Util/utilString
+catParams: catError ../Unicode/Uri/uri ../Unicode/encoding
+catalog: catParams catData catParse ../Unicode/Uri/uri ../Unicode/Uri/uriDict
+catFile: catError catParams ../Unicode/Chars/uniChar ../Unicode/Decode/decode
+  ../Unicode/Uri/uri ../Util/utilError
+catHooks: catData catError catDtd catParams ../Parser/Params/hookData
+  ../Parser/Params/ignore
+  ../Unicode/Chars/uniChar ../Unicode/Chars/uniClasses ../Unicode/Uri/uri
+  ../Util/utilList
+catOptions: ../Unicode/Uri/uri ../Unicode/encoding ../Util/options
+socatParse: catData catError catFile catParams ../Unicode/Chars/uniChar
+  ../Unicode/Chars/uniClasses ../Unicode/Uri/uri
+catParse: catData catDtd catHooks catParams socatParse
+  ../Parser/Params/parserOptions ../Parser/Params/resolve
+  ../Unicode/Uri/uri ../Util/options
+catResolve: catalog catParams ../Parser/Base/base ../Parser/Error/errors
+  ../Parser/Params/resolve

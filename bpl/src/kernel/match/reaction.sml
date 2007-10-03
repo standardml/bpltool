@@ -64,7 +64,7 @@ functor Reaction (
   sharing type Instantiation.inst = Rule.inst
   sharing type Info.info =
                BgBDNF.info =
-               BgVal.info
+               BgVal.info = Origin.origin
   sharing type Interface.interface = BgBDNF.interface)
   :> REACTION
   where type rulename = string

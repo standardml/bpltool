@@ -6,6 +6,12 @@ group is
 #else
   legacyarray-sig.sml
   legacyarray.sml
+  legacyarrayslice-sig.sml
+  legacyarrayslice.sml
+  legacyvector-sig.sml
+  legacyvector.sml
+  legacyvectorslice-sig.sml
+  legacyvectorslice.sml
   legacylistpair-sig.sml
   legacylistpair.sml
   legacytimer-sig.sml

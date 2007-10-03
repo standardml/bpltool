@@ -24,6 +24,8 @@
  * @version $LastChangedRevision$
  *)
 
+structure Array1996 = Array
+
 structure Array :> ARRAY =
 struct
   open Array

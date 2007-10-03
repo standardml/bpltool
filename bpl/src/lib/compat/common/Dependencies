@@ -1,6 +1,12 @@
-. = legacyarray legacylistpair legacysubstring exception-sig
+. = legacyvector legacyvectorslice legacyarray legacyarrayslice legacylistpair legacysubstring exception-sig
+legacyvector-sig:
+legacyvector: legacyvector-sig %NODASHSIG
+legacyvectorslice-sig: legacyvector-sig
+legacyvectorslice: legacyvector legacyvectorslice-sig %NODASHSIG
 legacyarray-sig:
 legacyarray: legacyarray-sig %NODASHSIG
+legacyarrayslice-sig: legacyvectorslice
+legacyarrayslice: legacyarray legacyarrayslice-sig %NODASHSIG
 legacylistpair-sig:
 legacylistpair: legacylistpair-sig %NODASHSIG
 legacytimer-sig:

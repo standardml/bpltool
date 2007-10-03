@@ -132,7 +132,8 @@ sig
                BgVal.info =
                BgBDNF.info =
                Match.info =
-               Rule.info
+               Rule.info =
+               ErrorHandler.origin
 
   sharing type bgterm =
                BgTerm.bgterm =

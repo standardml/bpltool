@@ -1,0 +1,39 @@
+# Copyright (c) 2007  The BPL Group at the IT University of Copenhagen
+#
+# This file is part of BPL.
+#
+# BPL is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or (at
+# your option) any later version.
+#
+# BPL is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with BPL; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+# USA
+
+# INCLUDE=../Params
+# INCLUDE=../Error
+# INCLUDE=../Base
+# INCLUDE=../../Unicode/Chars
+# INCLUDE=../../Util
+# INCLUDE=..
+
+. = dtdAttributes dtdDeclare dtdManager
+
+dtdDeclare: ../Params/dtd ../entities ../Params/parserOptions
+  ../Error/errors
+  ../../Unicode/Chars/uniChar ../../Unicode/Chars/uniClasses
+  ../../Util/utilInt ../../Util/utilList ../Base/base 
+dtdAttributes: dtdDeclare ../Params/dtd ../entities
+  ../Error/errors ../Params/hookData ../Params/parserOptions
+  ../../Unicode/Chars/uniChar ../../Unicode/Chars/uniClasses
+  ../../Util/utilList ../Base/base /lib/compat/common/legacyarray
+dtdManager: dtdAttributes ../entities ../Params/dtd
+  ../../Unicode/Chars/uniChar ../Base/base 
+  ../Params/hooks ../Params/hookData ../Params/parserOptions

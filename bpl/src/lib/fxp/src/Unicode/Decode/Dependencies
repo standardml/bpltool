@@ -1,0 +1,46 @@
+# Copyright (c) 2007  The BPL Group at the IT University of Copenhagen
+#
+# This file is part of BPL.
+#
+# BPL is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or (at
+# your option) any later version.
+#
+# BPL is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with BPL; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+# USA
+
+# INCLUDE=../../Util
+# INCLUDE=../Chars
+# INCLUDE=../Uri
+# INCLUDE=..
+
+. = decode decodeError decodeFile decodeMisc decodeUcs2 decodeUcs4
+    decodeUtf16 decodeUtf8 decodeUtil
+
+decodeFile: /lib/compat/mosml/word32/.
+  ../Chars/uniChar ../Uri/uri ../../Util/utilError
+  ../../Util/utilString
+decodeError: decodeFile ../Chars/uniChar ../../Util/utilString
+decodeUtil: decodeFile decodeError ../Chars/uniChar
+decodeMisc: decodeFile decodeError ../Chars/uniChar
+decodeUcs2: decodeFile decodeError decodeUtil ../Chars/uniChar
+  ../encoding
+decodeUcs4: decodeFile decodeError decodeUtil ../Chars/uniChar
+  ../encoding ../Chars/uniClasses
+decodeUtf16: decodeFile decodeError decodeUtil ../Chars/uniChar
+  ../encoding
+decodeUtf8: decodeFile decodeError decodeUtil ../Chars/uniChar
+  ../Chars/uniClasses ../../Util/utilError ../../Util/utilInt
+
+
+decode: decodeError decodeFile decodeMisc decodeUcs2 decodeUcs4
+  decodeUtf16 decodeUtf8 decodeUtil
+  ../encoding ../Uri/uri ../Chars/uniChar

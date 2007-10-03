@@ -104,6 +104,16 @@ structure RulesParser
        structure Lex         = RulesLex
        structure LrParser    = LrParser)
 
+structure BPLXMLHooks
+  = BPLXMLHooks
+      (structure Info = Info
+       structure Control = Control
+       structure Name = Name
+       structure NameSet = NameSet
+       structure BgTerm = BgTerm) 
+
+structure BPLXMLParser = BPLXMLParser (BPLXMLHooks)
+
 fun pp bdnf = BgBDNF.pp (!indent) bdnf
 
 fun toString bdnf 
@@ -234,13 +244,22 @@ fun usefile filename =
       bgbdnf
     end
 
+fun brsUseXMLfile filename =
+  let
+    val {signatur, rules} = BPLXMLParser.parseFile filename
+  in
+    (signatur, rules)
+  end
+
 end
 
 functor BG (structure ErrorHandler : ERRORHANDLER
               where type ppstream    = PrettyPrint.ppstream
                 and type break_style = PrettyPrint.break_style
                 and type origin      = Origin.origin)
-        :> BG =
+        :> BG where type ErrorHandler.break_style = ErrorHandler.break_style
+                and type ErrorHandler.ppstream = ErrorHandler.ppstream
+                and type ErrorHandler.origin = Origin.origin =
 struct
   structure BG = BG'(structure ErrorHandler = ErrorHandler)
   open BG

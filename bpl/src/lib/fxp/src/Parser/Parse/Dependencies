@@ -1,0 +1,67 @@
+# Copyright (c) 2007  The BPL Group at the IT University of Copenhagen
+#
+# This file is part of BPL.
+#
+# BPL is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or (at
+# your option) any later version.
+#
+# BPL is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with BPL; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+# USA
+
+# INCLUDE=../Dfa
+# INCLUDE=../Dtd
+# INCLUDE=../Params
+# INCLUDE=../../Unicode/Chars
+# INCLUDE=../Base
+# INCLUDE=../Error
+# INCLUDE=../../Util
+# INCLUDE=../../Unicode/Uri
+
+. = parseBase parseContent parseDecl parseDocument parseDtd
+  parseLiterals parseMisc parseNames parseRefs parseTags parseXml
+
+parseBase: ../Dfa/dfa ../Dtd/dtdManager ../Params/dtd ../Params/resolve
+  ../Dfa/dfaOptions ../Params/parserOptions
+  ../../Unicode/Chars/uniChar ../Params/hooks ../Base/base
+  ../Error/errors
+parseNames: parseBase ../Base/base ../../Unicode/Chars/uniClasses
+  ../../Unicode/Chars/uniChar ../Error/errors
+parseMisc: parseNames parseBase
+  ../../Unicode/Chars/uniChar ../Error/errors
+parseXml: parseMisc parseBase
+  ../../Unicode/Chars/uniChar  ../../Unicode/Chars/uniClasses
+  ../Error/errors ../Params/hookData ../../Unicode/Uri/uri
+  ../../Unicode/encoding ../../Util/utilString
+parseRefs: parseXml parseBase ../Base/base
+  ../../Unicode/Chars/uniChar ../../Unicode/Chars/uniClasses
+  ../Error/errors
+parseLiterals: parseRefs parseBase ../Base/base ../../Unicode/Uri/uri
+  ../../Unicode/Chars/uniChar ../../Unicode/Chars/uniClasses
+  ../Error/errors
+parseTags: parseLiterals parseBase ../Base/base ../../Util/utilList
+  ../../Unicode/Chars/uniChar  ../../Unicode/Chars/uniClasses
+  ../Error/errors ../Params/hookData
+parseDecl: parseTags parseBase ../../Unicode/Chars/uniChar
+  ../Base/base ../Error/errors ../../Util/utilInt ../../Util/utilList
+  ../Params/hookData
+parseDtd: parseDecl parseBase
+  ../Base/base ../../Unicode/Chars/uniChar ../../Unicode/Chars/uniClasses
+  ../Error/errors
+parseContent: parseDtd parseBase parseDtd ../Params/hookData ../Base/base
+  ../../Unicode/Chars/uniChar ../../Unicode/Chars/uniClasses
+  ../Error/errors ../../Util/utilList /lib/compat/common/legacyarray
+  /lib/compat/common/legacyarrayslice
+parseDocument: parseContent parseBase
+  ../Params/dtd ../Params/hooks ../Params/resolve
+  ../Params/parserOptions ../Base/base
+  ../../Unicode/Chars/uniChar ../../Unicode/Chars/uniClasses
+  ../Error/errors ../../Unicode/Uri/uri

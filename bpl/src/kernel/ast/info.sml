@@ -32,7 +32,7 @@ struct
   fun origin i = i
 end
 
-structure Info :> INFO =
+structure Info :> INFO where type info = Origin.origin =
 struct
   open Info'
 end

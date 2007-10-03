@@ -188,16 +188,16 @@ val instC = Inst.make { I = redex_innerface_C ,
 
 val redexA = S.o (S.* (app, id_x), S.|| (lam_x, id_1))
 val reactA = S.`|` (id_1, def_x)
-val ruleA = R.make' { name = "A" , redex = makeBR redexA , react = reactA }
+val ruleA = R.make' { name = "A" , redex = makeBR redexA , react = reactA, info = info }
 
 val redexC = S.|| (var_x, def_x)
 val reactC = S.|| (id_1, def_x)
 val ruleC = R.make { name = "C" , redex = makeBR redexC , react = reactC,
-		     inst = instC }
+		     inst = instC, info = info }
 
 val redexD = S.o (S.* (S.-/ "x", id_1), def_x)
 val reactD = barren
-val ruleD = R.make' { name = "D" , redex = makeBR redexD , react = reactD }
+val ruleD = R.make' { name = "D" , redex = makeBR redexD , react = reactD, info = info }
 
 (* REACTIONS *)
 (* example:
@@ -222,7 +222,7 @@ val mtsA = M.matches { agent = makeBR term , rule = ruleA }
 val _ = printMts mtsA
 val _ = map print (parts term mtsA)
 *)
-val terms' = LazyList.lzmap (Re.react term) mtsA
+val terms' = LazyList.lzmap (Re.react (*term*)) mtsA
 val _ = printRes "term" terms'
 
 (* (x x)<x:=k> --2> (k x)<x:=k> *)
@@ -233,7 +233,7 @@ val mtsC = M.matches { agent = makeBR term' , rule = ruleC }
 val _ = printMts mtsC
 val _ = print("length(mtsC) = " ^ (lzlength mtsC) ^ "\n")
 *)
-val terms'' = LazyList.lzmap (Re.react term') mtsC
+val terms'' = LazyList.lzmap (Re.react (*term'*)) mtsC
 (*
 val _ = print("length(terms'') = " ^ (lzlength terms'') ^ "\n")
 *)
@@ -250,7 +250,7 @@ val mtC2 = M.matches { agent = makeBR term'' , rule = ruleC }
 val _ = print("length(mtC2) = " ^ (lzlength mtC2) ^ "\n")
 val _ = printMts mtC2
 *)
-val terms''' = LazyList.lzmap (Re.react term'') mtC2
+val terms''' = LazyList.lzmap (Re.react (*term''*)) mtC2
 (*
 val _ = print("length(terms''') = " ^ (lzlength terms''') ^ "\n")
 *)
@@ -261,7 +261,7 @@ val term''' = LazyList.lzhd terms''' (* the resulting agent we want *)
 (*val _ = print("term''' =\n" ^ B.toString(term''') ^ "\n")*)
 val mtsD = M.matches { agent = makeBR term''' , rule = ruleD }
 (*val _ = printMts mtsD*)
-val terms'''' = LazyList.lzmap (Re.react term''') mtsD
+val terms'''' = LazyList.lzmap (Re.react (*term'''*)) mtsD
 (*
 val _ = case mtD of NONE => print "No matches!\n"
 		  | SOME(m) => ( print(M.toString(m))

@@ -25,7 +25,7 @@
 signature BASEERRORHANDLER =
 sig
   type ppstream
-  type break_style
+  eqtype break_style
   type origin
 
   (** An error explanation. *)
