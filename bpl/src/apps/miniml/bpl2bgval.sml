@@ -23,7 +23,7 @@
  Implements bpl/bplproject/doc/projects/contextawareness/plato/bpl-bnf.tex
 *)
 
-open TextIO;
+(*open TextIO;*)
 
 structure BG = BG (structure ErrorHandler = PrintErrorHandler);
 structure B = BG.BgVal
@@ -34,11 +34,11 @@ structure Ion = BG.Ion
 structure Name = BG.Name
 structure Wiring  = BG.Wiring
 structure NameSet = BG.NameSet
+structure Link = BG.Link
 structure LinkSet = BG.LinkSet
 
 (*
 structure P = BG.Permutation
-structure Link    = BG.Link
 structure Bdnf    = BG.BgBDNF
 structure M       = BG.Match
 structure Re = Reaction (structure RuleNameMap = Util.StringMap
@@ -66,7 +66,7 @@ datatype wire = Global of id * id
 	      | IdleL of id
 type wires = wire list
 type names = id list
-type namelist = Namelist of names
+datatype namelist = Namelist of names
 type ports = names
 datatype bigraph = Wir of wires
 		 | Par of bigraph * bigraph
@@ -85,12 +85,17 @@ datatype ctrlkind = Active
 		  | Passive
 		  | Atomic
 datatype ctrldef = Cdef of ctrlid * ctrlkind * nat * nat
-datatype ctrldefs = ctrldef list
+type ctrldefs = ctrldef list
 datatype dec = Rule of id * bigraph * bigraph
 	     | Value of id * bigraph
-datatype decs = dec list
+type decs = dec list
 type signatur = ctrldefs
 datatype prog = Prog of signatur * decs
+
+type bgval = B.bgval
+
+type idmap = (id * bgval) list
+type sitemap = (nat * siteId) list
 
 val barren = Sugar.<-> (* barren root *)
 val info = BG.Info.noinfo
@@ -101,12 +106,12 @@ infixr pp (* prime product *)
 infixr tt (* tensor product *)
 infixr oo (* composition *)
 fun (b1:bgval) || (b2:bgval) = Sugar.|| (b1,b2)
-fun (b1:bgval) pp (b2:bgval) = Sugar.'|' (b1,b2)
+fun (b1:bgval) pp (b2:bgval) = Sugar.`|` (b1,b2)
 fun (b1:bgval) tt (b2:bgval) = Sugar.* (b1,b2)
 fun (b1:bgval) oo (b2:bgval) = Sugar.o (b1,b2)
 
 (***** AUXILIARY FUNCTIONS *****)
-fun getSites (b:bgval) =
+fun getSites (b:bigraph) =
     case b of Wir(w) => []
 	    | Par(b1,b2) => (getSites b1) @ (getSites b2)
 	    | Pri(b1,b2) => (getSites b1) @ (getSites b2)
@@ -116,23 +121,37 @@ fun getSites (b:bgval) =
 	    | Ctrl(i,b,f) => []
 	    | Clo(n,b) => getSites b
 	    | Abs(n,b) => getSites b
-	    | Site(i,l) => [i]
-	    | id(i) => []
+	    | Site(i,l) => [i] (* assumes that sites are Nats already *)
+	    | Id(i) => []
 	    | Empty => []
 
-fun partSmap [] acc x = []
+fun partSmap [] acc x = (acc,[])
   | partSmap ((n,i)::m) acc x =
     if x=n then (rev acc, (n,i)::m) else partSmap m ((n,i) :: acc) x
 
-fun lookupFst [] id =
-  | lookupFst ((n,i)::m) id = if i=id then n else lookupFst m id
+fun lookupFst [] id = NONE
+  | lookupFst ((n,i)::m) id = if i=id then SOME(n) else lookupFst m id
 
-fun calcInst b1 b2 (maps:imap*smap) =
-    let val pivot = List.hd(List.rev(getSites b1)) + 1
+(* hmm...this function is fishy *)
+fun site2int s =
+    case s of Num(n) => n
+	    | Var(v) => raise Fail("site2int: " ^ v ^ "is not a Nat\n")
+
+fun nat2string n = Int.toString(n)
+
+fun calcInst (b1:bgval) (b2:bgval) pivot (maps:idmap*sitemap) =
+    let val smap = #2(maps)
 	val (smap1,smap2) = partSmap smap [] pivot
-    in List.map (fn (n,i) => let val x = lookupFst smap1 i
-			     in (n,x) end) smap2
-    end
+	val inst = List.map (fn (n,i) => let val x = lookupFst smap1 i
+					 in (n,x) end) smap2
+	fun err n = "calcInst: Site " ^ nat2string(n) ^
+		    " has no LHS counterpart\n"
+	fun peel assocOptList =
+	    case assocOptList
+	     of [] => []
+	      | ((n,x)::m) => case x of NONE => raise Fail(err n)
+				      | SOME(i) => (n,i) :: peel m
+    in peel inst end
 
 fun s2n s = Name.make s
 
@@ -170,9 +189,6 @@ fun lastCnt [] = 0
   | lastCnt ((k,v)::m) = #1(List.hd(rev m))
 
 fun ctrlNotInSig cid = raise Fail("Control does not exist in signature: " ^ cid ^ "\n")
-
-type idmap = (id * bgval) list
-type sitemap = (nat * siteId) list
 
 (***** TRANSLATION : ast -> bgval *****)
 fun big2bgval ast signa (maps:idmap*sitemap) =
@@ -247,7 +263,8 @@ fun dec2bgval decls vals rules signa (maps:imap*smap) =
 	      of Rule(i,b1,b2) =>
 		 let val (b1',smap') = big2bgval b1 signa maps
 		     val (b2',smap'') = big2bgval b2 signa (imap,smap')
-		     val ins = calcInst b1' b2' (imap,smap'')
+		     val pivot = site2int(List.hd(List.rev(getSites b1))) + 1
+		     val ins = calcInst b1' b2' pivot (imap,smap'')
 		     val rule = Rule.make { name = i, redex = b1',
 					    react = b2', inst = ins}
 		     val rules' = rule :: rules
