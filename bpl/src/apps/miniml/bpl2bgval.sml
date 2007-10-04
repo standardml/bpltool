@@ -23,6 +23,19 @@
  Implements bpl/bplproject/doc/projects/contextawareness/plato/bpl-bnf.tex
 *)
 
+(* TODO, maybe:
+
+- Need a function that traverses a bigraph and replaces sitenames with
+  sitenumbers? This function should be called before getSites, which
+  should then work on bigraphs with numbered sites only (as it does
+  now).
+
+- Calc. inst. for bgvals or for bigraphs with numbered sites only?
+
+- Reconsider imperative maps in bpl2bgval, make functional?
+
+*)
+
 (*open TextIO;*)
 
 structure BG = BG (structure ErrorHandler = PrintErrorHandler);
