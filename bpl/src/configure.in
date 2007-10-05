@@ -13,6 +13,7 @@ AC_EXEEXT
 
 AC_CHECK_PROGS(SED,gnused gsed sed)
 AC_CHECK_PROGS(PERL,perl)
+AC_CHECK_PROGS(MOSML,mosml)
 AC_CHECK_PROGS(MOSMLC,mosmlc)
 AC_CHECK_PROGS(MLYACC,mlyacc ml-yacc ml-yacc.bat)
 AC_CHECK_PROGS(MLLEX,mllex ml-lex ml-lex.bat)
@@ -32,6 +33,7 @@ then
 		MLC="mlton"
 	fi
 fi
+srcdir=`cd $srcdir && pwd`
 
 AC_CACHE_VAL([bpl_cv_with_smldocdir],[bpl_cv_with_smldocdir=\${datadir}/doc/bpl])
 AC_ARG_WITH([smldocdir],
@@ -49,7 +51,8 @@ AC_CONFIG_COMMANDS(newdeps,[test -f mosmake.dep &&
                             echo $as_me: removing mosmake.dep &&
                             rm -f mosmake.dep])
 
-AC_OUTPUT(Makefile Makefile.chain)
+AC_CONFIG_COMMANDS([set_bpltoolcli_execbit], [chmod a+x bpltoolcli.sh], [])
+AC_OUTPUT(Makefile Makefile.chain bpltoolcli.sh)
 
 echo;
 echo Configuration complete

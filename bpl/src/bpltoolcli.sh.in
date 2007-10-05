@@ -1,0 +1,28 @@
+#!/bin/bash
+
+SRCDIR="@srcdir@"
+MLC="@MLC@"
+MOSML="@MOSML@"
+SMLNJ="@SMLNJ@"
+MLTON="@MLTON@"
+
+CUR_WD=`pwd`
+cd ${SRCDIR}/apps/bpl
+case "$MLC" in
+	"smlnj" )
+	$SMLNJ smlnj.sml
+	;;
+	"mlton" )
+	echo "Sorry, the CLI does not work with MLton (try SML of New Jersey - it's slow but pretty ;-)"
+	;;
+	"mosml" )
+	echo "Sorry, the CLI does not (yet) work with Moscow ML (try SML of New Jersey - it's slow but pretty ;-)"
+	# We need to pass dependencies to mosml, i.e. we must
+	# somehow get these from the Dependencies files...
+#	$MOSML -P full -I ../../kernel -I ../../lib/util mosml.sml
+	;;
+	* )
+	echo "NO sml compiler found (quitting)."
+	;;
+esac
+cd $CUR_WD

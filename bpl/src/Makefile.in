@@ -196,17 +196,19 @@ kernel.cm: kernel.cm.in
 %/mlton.mlb: %/Dependencies
 	cd $(dir $@) && $(MAKE) $(notdir $@)
 
-smlnj-prepare: $(CMFILES)
-mlton-prepare: $(patsubst %/Dependencies,%/mlton.mlb,$(DEPENDENCIES)) $(PARSINGFILES)
+prepare: prepare-$(MLC)
+prepare-smlnj: $(CMFILES)
+prepare-mlton: $(patsubst %/Dependencies,%/mlton.mlb,$(DEPENDENCIES)) $(PARSINGFILES)
+prepare-mosml: 
 
-.PHONY: smlnj-prepare mlton-prepare
+.PHONY: prepare
 
 # Testing
 check: test
 
 test: test-$(MLC)
 
-test-smlnj: smlnj-prepare
+test-smlnj: prepare-smlnj
 	echo "val pwd = OS.FileSys.getDir ();\
 	      val _   = OS.FileSys.chDir \"lib/compat/smlnj/\";\
 	      use \"cmmakedefine.sml\";\
@@ -216,7 +218,7 @@ test-smlnj: smlnj-prepare
 test-mosml: unittest
 	./unittest
 
-test-mlton: mlton-prepare $(PARSINGFILES)
+test-mlton: prepare-mlton $(PARSINGFILES)
 	$(MLTON) test/mlton.mlb && test/mlton
 
 .PHONY:	check test test-smlnj test-mosml test-mlton
@@ -224,7 +226,7 @@ test-mlton: mlton-prepare $(PARSINGFILES)
 # Web application
 test-webapp: test-webapp-mlton
 
-test-webapp-smlnj: smlnj-prepare $(PARSINGFILES)
+test-webapp-smlnj: prepare-smlnj $(PARSINGFILES)
 	echo "CM.make' \"apps/bplweb/backend/sources.cm\";" | $(SMLNJ)
 
 test-webapp-mosml: bplwebback
@@ -233,7 +235,7 @@ test-webapp-mosml: bplwebback
 test-webapp-mlton: apps/bplweb/backend/mlton
 	apps/bplweb/backend/mlton < apps/bplweb/backend/test/matching1.cmd
 
-apps/bplweb/backend/mlton: mlton-prepare $(PARSINGFILES)
+apps/bplweb/backend/mlton: prepare-mlton $(PARSINGFILES)
 	$(MLTON) apps/bplweb/backend/mlton.mlb
 
 # Update web application pages and XML RPC server, but not backend executable
