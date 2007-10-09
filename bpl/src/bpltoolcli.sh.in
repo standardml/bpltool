@@ -7,6 +7,8 @@ SMLNJ="@SMLNJ@"
 MLTON="@MLTON@"
 
 CUR_WD=`pwd`
+cd ${SRCDIR}/
+make prepare
 cd ${SRCDIR}/apps/bpl
 case "$MLC" in
 	"smlnj" )
