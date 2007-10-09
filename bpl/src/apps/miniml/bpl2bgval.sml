@@ -32,7 +32,7 @@
 
 - Calc. inst. for bgvals or for bigraphs with numbered sites only?
 
-- Reconsider imperative maps in bpl2bgval, make functional?
+- Insert implicit ids!?
 
 *)
 
@@ -40,6 +40,7 @@
 
 structure BG = BG (structure ErrorHandler = PrintErrorHandler);
 structure B = BG.BgVal
+structure BgTerm = BG.BgTerm
 structure Sugar = BG.Sugar
 structure Rule = BG.Rule
 structure Control = BG.Control
@@ -49,6 +50,9 @@ structure Wiring  = BG.Wiring
 structure NameSet = BG.NameSet
 structure Link = BG.Link
 structure LinkSet = BG.LinkSet
+structure Origin = Origin
+structure Instantiation = BG.Instantiation
+structure Rule = BG.Rule
 
 (*
 structure P = BG.Permutation
@@ -93,7 +97,7 @@ datatype bigraph = Wir of wires
 		 | Site of siteId * namelist
 		 | Id of id
 		 | Empty
-type inst = (nat * nat) list (* 21/8-07*)
+type instant = (nat * nat) list (* 21/8-07*)
 datatype ctrlkind = Active
 		  | Passive
 		  | Atomic
@@ -145,19 +149,19 @@ fun partSmap [] acc x = (acc,[])
 fun lookupFst [] id = NONE
   | lookupFst ((n,i)::m) id = if i=id then SOME(n) else lookupFst m id
 
-(* hmm...this function is fishy *)
+(* todo: this function is fishy *)
 fun site2int s =
     case s of Num(n) => n
 	    | Var(v) => raise Fail("site2int: " ^ v ^ "is not a Nat\n")
 
-fun nat2string n = Int.toString(n)
+fun nat2str n = Int.toString(n)
 
 fun calcInst (b1:bgval) (b2:bgval) pivot (maps:idmap*sitemap) =
     let val smap = #2(maps)
 	val (smap1,smap2) = partSmap smap [] pivot
 	val inst = List.map (fn (n,i) => let val x = lookupFst smap1 i
 					 in (n,x) end) smap2
-	fun err n = "calcInst: Site " ^ nat2string(n) ^
+	fun err n = "calcInst: Site " ^ nat2str(n) ^
 		    " has no LHS counterpart\n"
 	fun peel assocOptList =
 	    case assocOptList
@@ -165,26 +169,26 @@ fun calcInst (b1:bgval) (b2:bgval) pivot (maps:idmap*sitemap) =
 	      | ((n,x)::m) => case x of NONE => raise Fail(err n)
 				      | SOME(i) => (n,i) :: peel m
     in peel inst end
+(*interface * interface * rho: (int*bgval) array*)
 
 fun s2n s = Name.make s
 
 fun v2n x = s2n (String.toString x)
 
 fun mkWir1 ovar =
-    Wiring.make(LinkSet.insert
-		    LinkSet.empty
-		    (Link.make {outer = SOME(v2n ovar),
-				inner = NameSet.empty}))
+    let val link = Link.make {outer = SOME(v2n ovar),
+			      inner = NameSet.empty}
+	val linkset = LinkSet.insert link LinkSet.empty
+	val wiring = Wiring.make linkset
+    in B.Wir info wiring end
 
 fun mkWir2 ovar ivar =
     let val link = Link.make
-		       {outer = SOME(v2n out),
-			inner = NameSet.insert empty (v2n inn)}
-	val linkset = NameSet.insert NameSet.empty link
-    in Wiring.make linkset end
-
-fun nms2nmSet n = List.map (fn x => NameSet.insert NameSet.empty x)
-			   (nms2nmList n)
+		       {outer = SOME(v2n ovar),
+			inner = NameSet.insert (v2n ivar) NameSet.empty}
+	val linkset = LinkSet.insert link LinkSet.empty
+	val wiring = Wiring.make linkset
+    in B.Wir info wiring end
 
 fun lookupKind cid signa =
     let fun loop [] = NONE
@@ -196,77 +200,100 @@ fun lookupBgval id idmap =
           | loop ((i,b)::p) = if id = i then SOME b else loop p
     in loop idmap end
 
-fun nList2nSet l = List.map (nm2nmSet o s2n) l
+fun nm2nmSet n = NameSet.insert n NameSet.empty
+
+fun s2nmSet s = (nm2nmSet o s2n) s
+
+fun strList2nmSetList l = List.map (nm2nmSet o s2n) l
 
 fun lastCnt [] = 0
   | lastCnt ((k,v)::m) = #1(List.hd(rev m))
 
 fun ctrlNotInSig cid = raise Fail("Control does not exist in signature: " ^ cid ^ "\n")
 
-(***** TRANSLATION : ast -> bgval *****)
+fun abs p = B.Abs info p
+
+fun rmDubs [] = []
+  | rmDubs (x::xs) =
+    if List.exists (fn y => y = x) xs then rmDubs xs else x :: rmDubs xs
+
 fun big2bgval ast signa (maps:idmap*sitemap) =
     let val imap = #1(maps)
 	val smap = #2(maps) (* to be updated in this function *)
 	val cnt = lastCnt smap
-	val returnmap = ref smap
-    in let val bgval =
-	       case ast
-		of Wir(w) =>
-		   (* todo: do these cover all cases? *)
-		   ( case w
-		      of Global(out,inn) => mkWir2 out inn
-		       | Local(out,inn) =>
-			 B.Abs info ((nm2nmSet o s2n) out, mkWir2 out inn)
-		       | IdleG(x) => mkWir1 x
-		       | IdleL(x) => B.Abs info ((nm2nmSet o s2n) x, mkWir1 x)
-		   )
-		 | Par(b1,b2) =>
-		   let val (b1',smap') = big2bgval b1 signa maps
-		       val (b2',smap'') = big2bgval b2 signa (imap,smap')
-		   in returnmap := smap'' ; b1' || b2' end
-		 | Pri(b1,b2) =>
-		   let val (b1',smap') = big2bgval b1 signa maps
-		       val (b2',smap'') = big2bgval b2 signa (imap,smap')
-		   in returnmap := smap'' ; b1' pp b2' end
-		 | Com(b1,b2) =>
-		   let val (b1',smap') = big2bgval b1 signa maps
-		       val (b2',smap'') = big2bgval b2 signa (imap,smap')
-		   in returnmap := smap'' ; b1' oo b2' end
-		 | Emb(b1,b2) =>
-		   let val (b1',smap') = big2bgval b1 signa maps
-		       val (b2',smap'') = big2bgval b2 signa (imap,smap')
-		   in returnmap := smap'' ; b1' oo b2' end
-		 | Ten(b1,b2) =>
-		   let val (b1',smap') = big2bgval b1 signa maps
-		       val (b2',smap'') = big2bgval b2 signa (imap,smap')
-		   in returnmap := smap'' ; b1' tt b2' end
-		 | Ctrl(cid,bports,fports) =>
-		   let val boundnames = nList2nSet bports
-		       val freenames = List.map s2n fports
-		   in case lookupKind cid signa
-		       of SOME(k) => Ion.make {ctrl = Control.make(cid,k),
-					       free = freenames,
-					       bound = boundnames}
-			| NONE => ctrlNotInSig cid
-		   end
-		 | Clo(nms,b) => (Sugar.-//(List.map s2n nms)) 
-				     oo (big2bgval b signa maps)
-		 | Abs(nms,b) => B.Abs info (nList2nSet nms,
-					     big2bgval b signa maps)
-		 (* | Conc(nms,b) => not used *)
-		 | Site(i,nms) =>
-		   ( returnmap := (cnt+1,i) :: (!returnmap)
-		   ; S.id_1 tt (S.idw nms) )
-		 | Id(i) =>
-		   ( case lookupBgval i imap
-		      of SOME(b) => b
-		       | NONE => raise Fail("Unbound identifier: " ^ i ^ "\n")
-		   )
-		 | Empty => barren
-       in (bgval, !returnmap) end (* return bgval and new sitemap *)
+    in case ast
+	of Wir(w) =>
+	   let fun w2bgval wire =
+		   case wire
+		    of Global(out,inn) =>  mkWir2 out inn
+		     | Local(out,inn) => abs (s2nmSet out, mkWir2 out inn)
+		     | IdleG(x) => mkWir1 x
+		     | IdleL(x) => abs (s2nmSet x, mkWir1 x)
+	       val wires = List.map w2bgval w
+	       val bgval = B.Par info wires
+	   (* HERE: need to handle exception NotParallelisable *)
+	   in (bgval, smap) end
+	 | Par(b1,b2) =>
+	   let val (b1',smap') = big2bgval b1 signa maps
+	       val (b2',smap'') = big2bgval b2 signa (imap,smap')
+	   in (b1' || b2', smap'') end
+	 | Pri(b1,b2) =>
+	   let val (b1',smap') = big2bgval b1 signa maps
+	       val (b2',smap'') = big2bgval b2 signa (imap,smap')
+	   in (b1' pp b2', smap'') end
+	 | Com(b1,b2) =>
+	   let val (b1',smap') = big2bgval b1 signa maps
+	       val (b2',smap'') = big2bgval b2 signa (imap,smap')
+	   in (b1' oo b2', smap'') end
+	 | Emb(b1,b2) =>
+	   let val (b1',smap') = big2bgval b1 signa maps
+	       val (b2',smap'') = big2bgval b2 signa (imap,smap')
+	   in (b1' oo b2', smap'') end
+	 | Ten(b1,b2) =>
+	   let val (b1',smap') = big2bgval b1 signa maps
+	       val (b2',smap'') = big2bgval b2 signa (imap,smap')
+	   in (b1' tt b2', smap'') end
+	 | Ctrl(cid,bports,fports) =>
+	   let val boundnames = strList2nmSetList bports
+	       val freenames = List.map s2n fports
+	       val bSz = List.length bports
+	       val fSz = List.length fports
+	   in case lookupKind cid signa
+	       of SOME(k) =>
+		  let val ion = Ion.make {ctrl = Control.make(cid,k,bSz,fSz),
+					  free = freenames,
+					  bound = boundnames}
+		      val bgval = B.Ion info ion
+		  in (bgval, smap) end
+		| NONE => ctrlNotInSig cid
+	   end
+	 | Clo(nms,b) =>
+	   let val bgval1 = Sugar.-//nms(*(List.map s2n nms)*)
+	       val (bgval2, smap') = big2bgval b signa maps
+	   in (bgval1 oo bgval2, smap') end
+	 | Abs(nms,b) =>
+	   let val nmSetList = strList2nmSetList (rmDubs nms)
+	       val union = fn (nmset,acc) => NameSet.union nmset acc
+	       val nmSet = List.foldr union NameSet.empty nmSetList
+	       val (b',smap') = big2bgval b signa maps
+	       val abst = abs(nmSet, b')
+	   in (abst, smap') end
+	 (* | Conc(nms,b) => not used *)
+	 | Site(i,nmList) =>
+	   let val id1 = Sugar.merge 1
+	       val nms = case nmList of Namelist(sl) => sl
+	       val idw = Sugar.idw nms(*(List.map s2n nms)*)
+	       val bgval = id1 tt idw
+	   in (bgval, (cnt+1,i) :: smap) end
+	 | Id(i) =>
+	   ( case lookupBgval i imap
+	      of SOME(b) => (b, smap)
+	       | NONE => raise Fail("Unbound identifier: " ^ i ^ "\n")
+	   )
+	 | Empty => (barren, smap)
     end
 
-fun dec2bgval decls vals rules signa (maps:imap*smap) =
+fun dec2bgval decls vals rules signa (maps:idmap*sitemap) =
     let val imap = #1(maps) (* for rolling bgval list into main bgval *)
 	val smap = #2(maps) (* for making instantiations *)
     in case decls
@@ -276,10 +303,13 @@ fun dec2bgval decls vals rules signa (maps:imap*smap) =
 	      of Rule(i,b1,b2) =>
 		 let val (b1',smap') = big2bgval b1 signa maps
 		     val (b2',smap'') = big2bgval b2 signa (imap,smap')
-		     val pivot = site2int(List.hd(List.rev(getSites b1))) + 1
+		     val pivot = ((site2int o List.last o getSites) b1) + 1
 		     val ins = calcInst b1' b2' pivot (imap,smap'')
-		     val rule = Rule.make { name = i, redex = b1',
-					    react = b2', inst = ins}
+		     val rule = Rule.make { info = Origin.unknown_origin,
+					    inst = ins,
+					    name = i,
+					    react = b1',
+					    redex = b2'}
 		     val rules' = rule :: rules
 		 in dec2bgval ds vals rules' signa (imap,smap'') end
 	       | Value(i,b) =>
@@ -295,6 +325,6 @@ fun prog2bgval ast =
      of Prog(signa,declist) =>
 	let val (vals,rules,maps) = dec2bgval declist [] [] signa ([],[])
 	    (* vars of last val	have been substituted for on the fly *)
-	    val mainBgval = List.hd(rev vals)
+	    val mainBgval = getLast vals
 	in (signa, mainBgval, rules) end
       | _ => raise Fail("Malformed program")
