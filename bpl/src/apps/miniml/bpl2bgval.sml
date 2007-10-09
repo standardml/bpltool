@@ -231,7 +231,8 @@ fun big2bgval ast signa (maps:idmap*sitemap) =
 		     | IdleL(x) => abs (s2nmSet x, mkWir1 x)
 	       val wires = List.map w2bgval w
 	       val bgval = B.Par info wires
-	   (* HERE: need to handle exception NotParallelisable *)
+		   handle NotParallelisable =>
+			  raise Fail("Inner names not disjoint\n")
 	   in (bgval, smap) end
 	 | Par(b1,b2) =>
 	   let val (b1',smap') = big2bgval b1 signa maps
