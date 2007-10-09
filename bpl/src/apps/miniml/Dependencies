@@ -82,4 +82,10 @@ tryit: %PROGRAM /kernel/bg /lib/coll/lzlist /lib/util/printerrorhandler
 # Lambda encoding in pure bigraphs.
 lambda-pure: %PROGRAM /kernel/bg /lib/coll/lzlist /lib/util/printerrorhandler
    /kernel/ast/bgval /kernel/match/funs /lib/util/origin 
-   /lib/coll/orderfinmap /lib/coll/orderset /lib/util/util
+   /lib/coll/orderfinmap /lib/coll/orderset /lib/util/util 
+   /lib/util/baseerrorhandler /lib/pp/smlnj/prettyprint
+
+# bpl2bgval
+bpl2bgval: %PROGRAM /kernel/bg /lib/util/printerrorhandler 
+   /kernel/ast/bgval /lib/util/origin
+
