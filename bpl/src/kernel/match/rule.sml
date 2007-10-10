@@ -55,6 +55,10 @@ struct
   type inst = Instantiation.inst
   datatype rule =
     Rule of {name : string, redex : BR bgbdnf, react : bgval, inst : inst, info : info}
+
+  exception OuterfaceMismatch of BR bgbdnf * bgval
+  (* FIXME add explainer *)
+
   (** Construct a rule.  The instantiation must be compatible
    * with redex and reactum inner faces, i.e., instantiate the
    * inner face of reactum from the inner face of redex.
@@ -63,7 +67,12 @@ struct
    * @param react  Reactum bigraph
    * @param inst   Instantiation
    *)
-  fun make r = Rule r
+  fun make (r as {redex, react, ...}) =
+      if Interface.eq (BgBDNF.outerface redex, BgVal.outerface react)
+      then
+        Rule r
+      else
+        raise OuterfaceMismatch (redex, react)
   fun make' {name, redex, react, info} =
       let
         val I
@@ -73,10 +82,14 @@ struct
           = Interface.make {loc = Interface.loc (BgVal.innerface react),
                             glob = NameSet.empty}
       in
-        Rule
-         {name = name, redex = redex, react = react,
-          inst = Instantiation.make' {I = I, J = J},
-          info = info}
+	if Interface.eq (BgBDNF.outerface redex, BgVal.outerface react)
+	then
+          Rule
+           {name = name, redex = redex, react = react,
+            inst = Instantiation.make' {I = I, J = J},
+            info = info}
+	else
+	  raise OuterfaceMismatch (redex, react)
       end
   (** Deconstruct a rule. @see make. *)
   fun unmk (Rule r) = r

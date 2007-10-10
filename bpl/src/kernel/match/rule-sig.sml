@@ -29,6 +29,16 @@ sig
   type 'a bgbdnf
   type BR
   type inst
+
+  (** Signal that the outerfaces of redex and reactum are not
+   * identical.
+   * 
+   * @params redex reactum
+   * @param redex    the redex
+   * @param reactum  the reactum
+   *)
+  exception OuterfaceMismatch of BR bgbdnf * bgval
+
   (** Construct a rule.  The instantiation must be compatible
    * with redex and reactum inner faces, i.e., instantiate the
    * inner face of reactum from the inner face of redex.
@@ -36,6 +46,8 @@ sig
    * @param redex  Redex bigraph
    * @param react  Reactum bigraph
    * @param inst   Instantiation
+   * @exception OuterfaceMismatch  if the outerfaces of redex and
+   *                               reactum are different.
    *)
   val make : {
     name : string, redex : BR bgbdnf, react : bgval,
@@ -45,6 +57,8 @@ sig
    * @params {redex, react}
    * @param redex  Redex bigraph
    * @param react  Reactum bigraph
+   * @exception OuterfaceMismatch  if the outerfaces of redex and
+   *                               reactum are different.
    *)
   val make' : {
     name : string, redex : BR bgbdnf,
