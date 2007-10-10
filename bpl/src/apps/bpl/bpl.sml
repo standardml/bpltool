@@ -94,11 +94,11 @@ fun help' [] = ()
 	  \  R --rho--|> R'            Rule with redex R, reactum R' and instantiation rho\n\
 	  \  N ::: R ----|> R'         Named rule\n\
 	  \  [i_0 |-> j_0, ..., i_m-1 |-> j_m-1]\n\
-	  \                            Instantiation mapping redex site i_k\n\
-	  \                              to reactum site j_k\n\
+	  \                            Instantiation mapping reactum site i_k\n\
+	  \                              to redex site j_k\n\
 	  \  [..., i_k&[x_0,...,x_m-1] |--> j_k&[y_0,...,y_m-1], ...]\n\
-	  \                            Instantiation mapping local redex\n\
-	  \                              name x_k to reactum name y_k\n";
+	  \                            Instantiation mapping local reactum\n\
+	  \                              name x_k to redex name y_k\n";
 	  help'' topics)
   | help' ("operation" :: topics) = (print
 	  "Bigraph operations (A,B,R : 'a bgbdnf; a,r,v : bgval; e : exn):\n\

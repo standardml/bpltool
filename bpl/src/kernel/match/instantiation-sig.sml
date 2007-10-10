@@ -41,8 +41,8 @@ sig
    * For instance, the map                                   <br />
    *   1&[y1,y2] |--> 0&[x1,x2],                             <br />
    * written ((1,[x1,x2]),(0,[y1,y2])), will let root 1 of the instance
-   * be a copy of root 0 of the original, where name y1 is renamed to x1,
-   * name y2 renamed to x2.
+   * be a copy of root 0 of the original, where name x1 is renamed to y1,
+   * name x2 renamed to y2.
    *)
   type map = (int * name list) * (int * name list)
 
