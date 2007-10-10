@@ -21,7 +21,7 @@
 (** Syntactic sugar for creating bgvals in SML.
  * @version $LastChangedRevision$
  *)
-functor Sugar'(structure Info : INFO
+functor Sugar'(structure Info : INFO 
 	       structure Name : NAME
 	       structure NameSet : MONO_SET
 	       structure Interface : INTERFACE
