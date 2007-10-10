@@ -63,38 +63,54 @@ val False       = atomic0  ("False"                 );
 
 val Assign      = passive  ("Assign"      -:       1);
 val Copy        = passive0 ("Copy"                  );
-(* The first free port of a 'to' or 'from' node should be connected to a
+(* The first free port of a To or From node should be connected to a
  * variable name, and the second should be connected to the scope port of
  * the node delimiting its scope. *)
 val To          = atomic   ("To"          -:       2);
 val From        = atomic   ("From"        -:       2);
 
-(* The free ports of an 'invoke' node should be connected:
+(* The free ports of an Invoke node should be connected:
  * 
  *   #1 to the name of the operation to be invoked
- *   #2 to the name of the parameter variable
- *   #3 to the same scope port as the parameter variable
- *   #4 to the instance identifier
+ *   #2 to the name of the input variable
+ *   #3 to the same scope port as the input variable
+ *   #4 to the name of the output variable
+ *   #5 to the same scope port as the output variable
+ *   #6 to the instance identifier
  *)
-val Invoke      = atomic   ("Invoke"      =: 0 --> 4);
-(* The free ports of a 'receive' node should be connected:
+val Invoke      = atomic   ("Invoke"      -:       6);
+
+val Proxies     = passive0 ("Proxies"               );
+(* The free ports of a RecProxy node should be connected:
+ *
+ *   #1 to the name of the operation
+ *   #2 to the instance identifier
+ *)
+val RecProxy    = passive  ("RecProxy"    -:       2);
+val Parameter   = passive0 ("Parameter"             );
+(* The free ports of a Receive node should be connected:
  * 
  *   #1 to the name of the operation
- *   #2 to the scope port of the enclosing process
- *   #3 to the name of the formal parameter variable
- *   #4 to the same scope port as the formal parameter variable
+ *   #2 to the instance identifier
+ *   #3 to the name of the variable
+ *   #4 to the same scope port as the variable
  *)
-val Receive     = atomic   ("Receive"     =: 0 --> 4);
-(* NB! How is the link between the invoking and invoked process
- *     represented? *)
-(* The free ports of a 'reply' node should be connected:
+val Receive     = atomic   ("Receive"     -:       4);
+(* The free ports of a Reply node should be connected:
  * 
- *   #1 to the name of the operation to be invoked
- *   #2 to the name of the parameter variable
- *   #3 to the same scope port as the parameter variable
- *   #4 to the instance identifier
+ *   #1 to the name of the variable
+ *   #2 to the same scope port as the variable
+ *   #3 to the instance identifier of its enclosing instance
  *)
-val Reply       = atomic   ("Reply"       =: 0 --> 4);
+val Reply       = atomic   ("Reply"       -:       3);
+(* The free ports of a GetReply node should be connected:
+ * 
+ *   #1 to the name of the output variable
+ *   #2 to the same scope port as the output variable
+ *   #3 to the instance identifier of its enclosing instance
+ *   #4 to the instance identifier of the replying instance
+ *)
+val GetReply    = atomic   ("GetReply"    -:       4);
 
 (* The free port should be connected to the instance identifier of the
  * enclosing instance. *)
@@ -146,13 +162,13 @@ val rule_if_false           =
                               o (Condition o False
                                  `|` (Then o `[]`) `|` (Else o `[]`)))
                               || Running["inst_id"]
-                           --[0|->1]--|>
+                           --[0 |-> 1]--|>
                              `[]`
                              || Running["inst_id"];
 val rule_while_unfold       =
     "while unfold"       ::: (While["inst_id"] o (Condition `|` `[]`))
                              || Running["inst_id"]
-                           --[2|->0, 3|->1]--|>
+                           --[2 |-> 0, 3 |-> 1]--|>
                              (If["inst_id"]
                               o (Condition
                                  `|` Then o Sequence["inst_id"]
@@ -171,14 +187,50 @@ val rule_variable_copy      =
                              || Variable["f", "scope"]
                              || Variable["t", "scope'"]
                              || Running["inst_id"]
-                           --[1|->0]--|>
+                           --[1 |-> 0]--|>
                              <->
                              || Variable["f", "scope"]
                              || Variable["t", "scope'"]
                              || Running["inst_id"];
 
 (* Process communication *)
+val rule_invoke             =
+    "invoke"             ::: Invoke["op", "invar", "invar_scope",
+				    "outvar", "outvar_scope",
+				    "inst_id_invoker"]
+			     || Variable["invar", "invar_scope"]
+                             || Running["inst_id_invoker"]
+			     || Process["proc_name"][["scope"]]
+                                o (<["scope"]>
+				   ((Proxies
+                                     o (RecProxy["op", "scope"] o <->
+                                        `|` `[]`))
+                                    `|` `["scope"]`))
+                           --[3 |-> 0, 4 |-> 1, 5&["inst_id_invoked"] |--> 2&["scope"]]--|>
+			     (-/"inst_id_invoked"
+			      * idw["op", "invar", "invar_scope", "outvar",
+				    "outvar_scope", "inst_id_invoker",
+				    "proc_name"]
+			      * idp(4))
+                             o (GetReply["outvar", "outvar_scope",
+					 "inst_id_invoker", "inst_id_invoked"]
+				|| Variable["invar", "invar_scope"]
+				|| Running["inst_id_invoker"]
+				|| ((Process["proc_name"][["scope"]]
+                                     o (<["scope"]>
+				        ((Proxies
+					  o (RecProxy["op", "scope"] o <->
+				             `|` `[]`))
+					 `|` `["scope"]`)))
+				    `|` (Instance["proc_name", "inst_id_invoked"]
+					 o ((Proxies
+					     o ((RecProxy["op", "inst_id_invoked"]
+						 o Parameter o `[]`)
+					        `|` `[]`))
+				            `|` Running["inst_id_invoked"]
+					    `|` `["inst_id_invoked"]`))));
 
+(* NB! invoke step 2 + reply missing*)
 
 (* Process cancellation *)
 val rule_exit_stop_inst     =
