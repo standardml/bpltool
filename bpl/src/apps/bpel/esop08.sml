@@ -128,7 +128,7 @@ val rule_scope_activation   =
     "scope activation"   ::: Scope["inst_id"][["scope"]]
                              || Running["inst_id"]
                            ----|>
-                             (idw["inst_id"] * -/"scope" * `[]`)
+                             -/"scope"
                              o (ActiveScope["scope", "inst_id"]
                                 o `["scope"]`)
                              || Running["inst_id"];
@@ -212,11 +212,7 @@ val rule_invoke             =
 
                            --[3 |-> 0, 4 |-> 1, 5&["inst_id_invoked"] |--> 2&["scope"]]--|>
 
-                             (-/"inst_id_invoked"
-                              * idw["op", "invar", "invar_scope", "outvar",
-                                    "outvar_scope", "inst_id_invoker",
-                                    "proc_name"]
-                              * idp(4))
+                             -/"inst_id_invoked"
                              o (GetReply["outvar", "outvar_scope",
                                          "inst_id_invoker", "inst_id_invoked"]
                                 || Variable["invar", "invar_scope"]
@@ -296,9 +292,7 @@ val tactic = roundrobin;
  *
  * <process name="EchoProcess" scope="EchoId">
  * <variables>
- *   <variable name="x" scope="EchoId">
- *     42
- *   </variable>
+ *   <variable name="x" scope="EchoId">42</variable>
  * </variables>
  * <proxies>
  *   <recproxy op="echo" inst_id="EchoId" />
@@ -324,5 +318,36 @@ val echo_process = Process["EchoProcess"][["EchoId"]]
                          `|` Sequence["EchoId"]
                              o (Receive["echo", "x", "EchoScope", "EchoId"]
                                 `|` Next o Sequence["EchoId"]
-                                           o (Reply["x", "EchoScope", "EchoId"]
-                                              `|` Next o Exit["EchoId"]))));
+                                         o (Reply["x", "EchoScope", "EchoId"]
+                                            `|` Next o Exit["EchoId"]))));
+
+(* An instance which is about to invoke the echo process:
+ * 
+ * <instance name"Caller" inst_id="CallerId">
+ * <running inst_id="CallerId" />
+ * <variables>
+ *   <variable name="y" scope="CallerId">foo</variable>
+ *   <variable name="z" scope="CallerId">bar</variable>
+ * </variables>
+ * <invoke op="echo" invar="y" invar_scope="CallerId"
+ *                   outvar="z" outvar_scope="CallerId"
+ *                   inst_id="CallerId" />
+ * </instance>
+ *)
+val caller_inst = -/"CallerId"
+                  o Instance["Caller", "CallerId"]
+                  o ("CallerId"//["CallerId", "CallerScope"] * idp(1))
+                  o (Running["CallerId"]
+                     `|` Variables
+                         o (Variable["y", "CallerScope"] o Value["foo"]
+                            `|` Variable["z", "CallerScope"] o Value["bar"])
+                     `|` "CallerScope"//["CallerScope", "CallerScope'"]
+                         o Invoke["echo", "y", "CallerScope",
+                                          "z", "CallerScope'", "CallerId"]);
+
+(* NB! Non-terminating:
+val ms = matches (mkrules [rule_reply]) (echo_process || caller_inst);
+val ms = matches (mkrules [rule_invoke]) (echo_process || caller_inst);
+print_mv ms;*)
+
+(*val final_state = run rules tactic (echo_process || caller_inst);*)
