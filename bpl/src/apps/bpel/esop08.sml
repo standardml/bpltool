@@ -91,9 +91,9 @@ val Parameter   = passive0 ("Parameter"             );
 (* The free ports of a Receive node should be connected:
  * 
  *   #1 to the name of the operation
- *   #2 to the instance identifier
- *   #3 to the name of the variable
- *   #4 to the same scope port as the variable
+ *   #2 to the name of the variable
+ *   #3 to the same scope port as the variable
+ *   #4 to the instance identifier
  *)
 val Receive     = atomic   ("Receive"     -:       4);
 (* The free ports of a Reply node should be connected:
@@ -196,41 +196,69 @@ val rule_variable_copy      =
 (* Process communication *)
 val rule_invoke             =
     "invoke"             ::: Invoke["op", "invar", "invar_scope",
-				    "outvar", "outvar_scope",
-				    "inst_id_invoker"]
-			     || Variable["invar", "invar_scope"]
+                                    "outvar", "outvar_scope",
+                                    "inst_id_invoker"]
+                             || Variable["invar", "invar_scope"]
                              || Running["inst_id_invoker"]
-			     || Process["proc_name"][["scope"]]
+                             || Process["proc_name"][["scope"]]
                                 o (<["scope"]>
-				   ((Proxies
+                                   ((Proxies
                                      o (RecProxy["op", "scope"] o <->
                                         `|` `[]`))
                                     `|` `["scope"]`))
-                           --[3 |-> 0, 4 |-> 1, 5&["inst_id_invoked"] |--> 2&["scope"]]--|>
-			     (-/"inst_id_invoked"
-			      * idw["op", "invar", "invar_scope", "outvar",
-				    "outvar_scope", "inst_id_invoker",
-				    "proc_name"]
-			      * idp(4))
-                             o (GetReply["outvar", "outvar_scope",
-					 "inst_id_invoker", "inst_id_invoked"]
-				|| Variable["invar", "invar_scope"]
-				|| Running["inst_id_invoker"]
-				|| ((Process["proc_name"][["scope"]]
-                                     o (<["scope"]>
-				        ((Proxies
-					  o (RecProxy["op", "scope"] o <->
-				             `|` `[]`))
-					 `|` `["scope"]`)))
-				    `|` (Instance["proc_name", "inst_id_invoked"]
-					 o ((Proxies
-					     o ((RecProxy["op", "inst_id_invoked"]
-						 o Parameter o `[]`)
-					        `|` `[]`))
-				            `|` Running["inst_id_invoked"]
-					    `|` `["inst_id_invoked"]`))));
 
-(* NB! invoke step 2 + reply missing*)
+                           --[3 |-> 0, 4 |-> 1, 5&["inst_id_invoked"] |--> 2&["scope"]]--|>
+
+                             (-/"inst_id_invoked"
+                              * idw["op", "invar", "invar_scope", "outvar",
+                                    "outvar_scope", "inst_id_invoker",
+                                    "proc_name"]
+                              * idp(4))
+                             o (GetReply["outvar", "outvar_scope",
+                                         "inst_id_invoker", "inst_id_invoked"]
+                                || Variable["invar", "invar_scope"]
+                                || Running["inst_id_invoker"]
+                                || ((Process["proc_name"][["scope"]]
+                                     o (<["scope"]>
+                                        ((Proxies
+                                          o (RecProxy["op", "scope"] o <->
+                                             `|` `[]`))
+                                         `|` `["scope"]`)))
+                                    `|` (Instance["proc_name", "inst_id_invoked"]
+                                         o ((Proxies
+                                             o ((RecProxy["op", "inst_id_invoked"]
+                                                 o Parameter o `[]`)
+                                                `|` `[]`))
+                                            `|` Running["inst_id_invoked"]
+                                            `|` `["inst_id_invoked"]`))));
+
+val rule_receive            =
+    "receive"            ::: Receive["op", "var", "var_scope", "inst_id"]
+                             || RecProxy["op", "inst_id"] o Parameter
+                             || Variable["var", "var_scope"]
+                             || Running["inst_id"]
+                           ----|>
+                             <->
+                             || RecProxy["op", "inst_id"] o <->
+                             || Variable["var", "var_scope"]
+                             || Running["inst_id"]
+
+val rule_reply              =
+    "reply"              ::: Reply["var", "var_scope", "inst_id_invoked"]
+                             || Variable["var", "var_scope"]
+                             || Running["inst_id_invoked"]
+                             || GetReply["outvar", "outvar_scope",
+                                         "inst_id_invoker", "inst_id_invoked"]
+                             || Variable["outvar", "outvar_scope"]
+                             || Running["inst_id_invoker"]
+                           --[1 |-> 0]--|>
+                             <->
+                             || Variable["var", "var_scope"]
+                             || Running["inst_id_invoked"]
+                             || <->
+                             || Variable["outvar", "outvar_scope"]
+                             || Running["inst_id_invoker"]
+
 
 (* Process cancellation *)
 val rule_exit_stop_inst     =
