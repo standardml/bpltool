@@ -46,6 +46,9 @@ val Variables   = passive0 ("Variables"             );
  * and the second should be connected to the scope port of the node
  * delimiting its scope. *)
 val Variable    = passive  ("Variable"    -:       2);
+(* Values are atomic nodes connected to a name representing the value.
+ *)
+val Value       = atomic   ("Value"       -:       1);
 
 val Sequence    = active   ("Sequence"    -:       1);
 val Next        = passive0 ("Next"                  );
@@ -274,7 +277,52 @@ val rule_exit_remove_inst   =
                              "name"//[] * "inst_id"//[] * <->;
                              
 
+val rules =
+    mkrules [rule_scope_activation, rule_scope_completed,
+             rule_flow_completed, rule_sequence_completed,
+             rule_if_true, rule_if_false, rule_while_unfold,
+             rule_variable_copy,
+             rule_invoke, rule_receive, rule_reply,
+             rule_exit_stop_inst, rule_exit_remove_inst];
+
+val tactic = roundrobin;
+
 (*******************************)
 (*       Example processes     *)
 (*******************************)
 
+(* A simple echo process: it provides an operation "echo" which receives
+ * a value and sends the value back.
+ *
+ * <process name="EchoProcess" scope="EchoId">
+ * <variables>
+ *   <variable name="x" scope="EchoId">
+ *     42
+ *   </variable>
+ * </variables>
+ * <proxies>
+ *   <recproxy op="echo" inst_id="EchoId" />
+ * </proxies>
+ * <sequence inst_id="EchoId">
+ *   <receive op="echo" var="x" var_scope="EchoId" inst_id="EchoId" />
+ *   <next>
+ *     <sequence inst_id="EchoId">
+ *       <reply var="x" var_scope="EchoId" inst_id="EchoId" />
+ *       <next>
+ *         <exit inst_id="EchoId">
+ *       </next>
+ *     </sequence>
+ *   </next>
+ * </sequence>
+ * </process>
+ *)
+val echo_process = Process["EchoProcess"][["EchoId"]]
+                   o (<["EchoId"]>
+                      ("EchoId"//["EchoId", "EchoScope"] * idp(1))
+                      o (Variables o Variable["x", "EchoScope"] o Value["42"]
+                         `|` Proxies o RecProxy["echo", "EchoId"] o <->
+                         `|` Sequence["EchoId"]
+                             o (Receive["echo", "x", "EchoScope", "EchoId"]
+                                `|` Next o Sequence["EchoId"]
+                                           o (Reply["x", "EchoScope", "EchoId"]
+                                              `|` Next o Exit["EchoId"]))));
