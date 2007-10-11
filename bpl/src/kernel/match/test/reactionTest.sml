@@ -67,7 +67,7 @@ local
   val REACT0 = "REACT0" :::
     Sum o (Send0[x] `|` idp(1)) `|` Sum o (Get0[x][] `|` idp(1))
     --[0 |-> 0, 1 |-> 2]--|>
-    x//[] * idp(2)
+    x//[] * merge(2)
 	
   val REACT2 = "REACT2" :::
         Sum o (Send2[x,y1,y2]     `|` idp(1))

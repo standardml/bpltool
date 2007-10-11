@@ -48,6 +48,13 @@ struct
     long = "--ppsimpleredex",
     arg = "",
     default = true}
+  val _ = Flags.makeBoolFlag {
+    name = "/kernel/match/rule/ppsimplereactum",
+    desc = "Simplify reactum when displaying rules",
+    short = "",
+    long = "--ppsimplereactum",
+    arg = "",
+    default = true}
   type info = Info.info
   type bgval = BgVal.bgval
   type 'a bgbdnf = 'a BgBDNF.bgbdnf
@@ -124,7 +131,10 @@ struct
       else
         Instantiation.pp indent pps inst;
       show "--|>"; brk0();
-      BgVal.pp indent pps react;
+      if Flags.getBoolFlag "/kernel/match/rule/ppsimplereactum" then
+        BgVal.pp indent pps (BgVal.simplify react)
+      else
+        BgVal.pp indent pps react;
       >>();
       >>>()
     end
