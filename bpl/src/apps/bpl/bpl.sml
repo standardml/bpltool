@@ -155,15 +155,15 @@ fun help' [] = ()
 and help'' [] = ()
   | help'' topics = (print "\n"; help' topics)
 fun help''' []
-  = (print "  (help \
+  = (help' ["control", "bigraph", "operator", "rule", "operation",
+            "tactic", "reaction", "example"];
+     print "\n\n(help \
           	\[\"control\", \"bigraph\", \"operator\", \"rule\",\
-          	\ \"operation\", \"tactic\", \"reaction\", \"example\"]):\n\n";
-          help' ["control", "bigraph", "operator", "rule", "operation",
-                 "tactic", "reaction", "example"])
-  | help''' topics = (print " ('help []' for all topics):\n\n"; help' topics)
+          	\ \"operation\", \"tactic\", \"reaction\", \"example\"])\n\n")
+  | help''' topics = (help' topics; print "\n\n'(help []' for all topics)\n\n")
 in
 fun help topics =
-  (print "BPL Usage Help"; help''' topics)
+  (print "BPL Usage Help\n\n"; help''' topics)
 end
 
 open BG.Sugar
