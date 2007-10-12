@@ -76,7 +76,7 @@ SMLFILES-lib	:= $(shell find ./lib -name CM -prune -a -type f -o -name *.sml)
 SMLFILES-miniml	:= $(shell find ./apps/miniml -name CM -prune -a -type f -o -name *.sml)
 CMFILES        	= $(filter-out ./lib/compat/common/sources.cm, $(patsubst %/Dependencies,%/sources.cm,$(DEPENDENCIES)))
 CMFILES-kernel	= $(filter ./kernel/%,$(CMFILES))
-CMFILES-lib	= $(filter-out ./lib/compat/mosml/thread/sources.cm,$(filter ./lib/%,$(CMFILES)))
+CMFILES-lib	= $(filter-out ./lib/fxp/% ./lib/compat/mosml/thread/sources.cm,$(filter ./lib/%,$(CMFILES)))
 CMFILES-miniml	= $(filter ./apps/miniml/%,$(CMFILES))
 
 include $(MOSMAKE)/Makefile.inc
@@ -134,19 +134,19 @@ svn-update:
 doc: doc-lib doc-kernel doc-miniml
 
 doc-lib:	lib/$(DOCSUBDIR)/index.html
-lib/$(DOCSUBDIR)/index.html: lib/smldoc.cfg lib/overview.html $(CMFILES-lib) $(SMLFILES-lib)
+lib/$(DOCSUBDIR)/index.html lib/$(DOCSUBDIR)/module-list: lib/smldoc.cfg lib/overview.html $(CMFILES-lib) $(SMLFILES-lib)
 	test -w lib/$(DOCSUBDIR) || mkdir lib/$(DOCSUBDIR)
 	cd lib && $(SMLDOC) -d $(DOCSUBDIR) $(SMLDOC-FLAGS) \
 	$(subst ./lib/,./,$(filter-out %/test/sources.cm,$(CMFILES-lib)))
 
 doc-kernel:	kernel/$(DOCSUBDIR)/index.html
-kernel/$(DOCSUBDIR)/index.html: kernel/smldoc.cfg kernel/overview.html $(CMFILES-kernel) $(SMLFILES-kernel)
+kernel/$(DOCSUBDIR)/index.html kernel/$(DOCSUBDIR)/module-list: kernel/smldoc.cfg kernel/overview.html lib/$(DOCSUBDIR)/module-list $(CMFILES-kernel) $(SMLFILES-kernel)
 	test -w kernel/$(DOCSUBDIR) || mkdir kernel/$(DOCSUBDIR)
 	cd kernel && $(SMLDOC) -d $(DOCSUBDIR) $(SMLDOC-FLAGS) \
 	$(subst ./kernel/,./,$(filter-out %/test/sources.cm,$(CMFILES-kernel)))
 
 doc-miniml:	apps/miniml/$(DOCSUBDIR)/index.html
-apps/miniml/$(DOCSUBDIR)/index.html: apps/miniml/smldoc.cfg apps/miniml/overview.html $(CMFILES-miniml) $(SMLFILES-miniml)
+apps/miniml/$(DOCSUBDIR)/index.html: apps/miniml/smldoc.cfg apps/miniml/overview.html lib/$(DOCSUBDIR)/module-list kernel/$(DOCSUBDIR)/module-list $(CMFILES-miniml) $(SMLFILES-miniml)
 	test -w apps/miniml/$(DOCSUBDIR) || mkdir apps/miniml/$(DOCSUBDIR)
 	cd apps/miniml && $(SMLDOC) -d $(DOCSUBDIR) $(SMLDOC-FLAGS) \
 	$(subst ./apps/miniml/,./,$(filter-out %/test/sources.cm,$(CMFILES-miniml)))

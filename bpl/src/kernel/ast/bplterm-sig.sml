@@ -18,9 +18,23 @@
  * USA
  *)
 
+(** Abstract data type for an alternative variant of bigraph terms.
+ *
+ *
+ * TODO: UPDATE THIS OUT-OF-DATE-DOCUMENTATION:
+ *
+ * The terms are not necessarily well-formed:
+ * scope rule may be violated in abstractions, names may clash in
+ * interfaces of tensor product operands, bigraph widths may be
+ * incompatible in compositions, etc.
+ * <p>
+ * Each constructor takes an info argument that can contain contextual
+ * information (e.g., source file location for the term).
+ * @version $LastChangedRevision: 930 $
+ *)
 signature BPL_TERM = sig
-
-    type ctrlid = string
+	(** Control identifier type *)
+	type ctrlid = string
     type namedsite = string
     type id = string
 

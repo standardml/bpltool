@@ -18,6 +18,9 @@
  * USA
  *)
 
+(** Abstract data type for an alternative variant of bigraph terms.
+ * @version $LastChangedRevision: 923 $
+ *)
 structure BPLTerm :> BPL_TERM = struct
 
     type ctrlid = string

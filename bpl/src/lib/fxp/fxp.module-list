@@ -1,0 +1,21 @@
+structure Word{
+ type word
+}
+structure Uri{
+ structure Chars => structure UniChar . structure Chars
+ type Uri
+}
+structure Dtd{
+ structure Bytes => structure DecodeFile . structure Bytes
+ structure Chars => structure UniChar . structure Chars
+ structure Error => structure Decode . structure Error
+ type Dtd
+}
+signature Hooks{
+ type AppData
+ type AppFinal
+}
+structure IgnoreHooks{
+ type AppData
+ type AppFinal
+}
