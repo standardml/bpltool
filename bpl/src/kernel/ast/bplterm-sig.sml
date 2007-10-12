@@ -33,7 +33,7 @@
  * @version $LastChangedRevision: 930 $
  *)
 signature BPL_TERM = sig
-	(** Control identifier type *)
+	(** Control identifier type. *)
 	type ctrlid = string
     type namedsite = string
     type id = string
@@ -47,8 +47,11 @@ signature BPL_TERM = sig
     type edge = id
 		
     type ports = edge list
-		 
-    datatype bigraph = Wir of wiring
+	
+	(** The BPL bigraph term data type. *)	 
+  datatype bigraph
+  (** A wiring. *)  
+  = Wir of wiring
 		     | Par of bigraph * bigraph
 		     | Pri of bigraph * bigraph
 		     | Com of bigraph * bigraph
