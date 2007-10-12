@@ -18,20 +18,28 @@
  * USA
  *)
 
-(** Parser for brs'es expressed in XML.
+(** Data structure for holding a bigraph or a BRS.
  * @version $LastChangedRevision: 442 $
  * Modified: $Date: 2006/09/04 21:48:46 $ by: $Author: hniss $
  *)
+functor BigraphData (
+  structure Info : INFO
+  structure Name : NAME
+  structure Control : CONTROL
+  structure BgTerm : BGTERM
+) : BIGRAPHDATA =
+struct
+  type info = Info.info
+  type name = Name.name
+  type control = Control.control
+  type bgterm = BgTerm.bgterm
+  datatype bigraphdata =
+    BRS of {
+      name : string,
+      redex : bgterm,
+      react : bgterm,
+      maps : ((int * name list) * (int * name list)) list,
+      info : info} list
+  | BIGRAPH of bgterm
+end  
  
-signature BPLXMLPARSER =
-sig
-  (** Data type of initial data needed for parsing. *)
-  type initDatatype
-  (** Type of parsing result. *)
-  type resulttype
-  (** Parse a given URI as XML using a DTD, returning a BRS. *)
-  val parse : initDatatype -> Uri.Uri option -> Dtd.Dtd option
-    -> resulttype
-  (** Parse an XML string, returning a BRS. *)
-  val parseFile : initDatatype -> string -> resulttype
-end

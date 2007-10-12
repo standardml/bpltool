@@ -104,15 +104,29 @@ structure RulesParser
        structure Lex         = RulesLex
        structure LrParser    = LrParser)
 
-structure BPLXMLHooks
-  = BPLXMLHooks
-      (structure Info = Info
-       structure Control = Control
-       structure Name = Name
-       structure NameSet = NameSet
-       structure BgTerm = BgTerm) 
+structure BigraphData = BigraphData (
+  structure Info    = Info
+  structure Name    = Name
+  structure Control = Control
+  structure BgTerm  = BgTerm)
 
-structure BPLXMLParser = BPLXMLParser (BPLXMLHooks)
+structure BigraphXMLHooks
+  = BigraphXMLHooks
+      (structure Info        = Info
+       structure Control     = Control
+       structure Name        = Name
+       structure NameSet     = NameSet
+       structure BgTerm      = BgTerm
+       structure BigraphData = BigraphData) 
+
+structure BigraphXMLParser =
+  BPLXMLParser (structure BPLXMLHooks = BigraphXMLHooks)
+
+structure SignatureXMLHooks =
+  SignatureXMLHooks (structure Control = Control)
+
+structure SignatureXMLParser =
+  BPLXMLParser (structure BPLXMLHooks = SignatureXMLHooks)
 
 fun pp bdnf = BgBDNF.pp (!indent) bdnf
 
@@ -244,11 +258,14 @@ fun usefile filename =
       bgbdnf
     end
 
-fun brsUseXMLfile filename =
+fun brsUseXMLfiles sigfilename brsfilename =
   let
-    val {signatur, rules} = BPLXMLParser.parseFile filename
+    exception ExpectedBRS
+    val cs = SignatureXMLParser.parseFile () sigfilename
   in
-    (signatur, rules)
+    case BigraphXMLParser.parseFile cs brsfilename of
+      BigraphData.BRS rs => (cs, rs)
+    | BigraphData.BIGRAPH _ => raise ExpectedBRS (* TODO! *) 
   end
 
 end

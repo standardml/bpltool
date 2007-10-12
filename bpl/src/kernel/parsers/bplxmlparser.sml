@@ -23,26 +23,22 @@
  * Modified: $Date: 2006/09/04 21:48:46 $ by: $Author: hniss $
  *)
  
- functor BPLXMLParser (BPLXMLHooks : BPLXMLHOOKS) :> BPLXMLPARSER
-   where type info = BPLXMLHooks.info
-     and type name = BPLXMLHooks.name
-     and type control = BPLXMLHooks.control
-     and type bgterm = BPLXMLHooks.bgterm =
- struct
-   type info = BPLXMLHooks.info
-   type name = BPLXMLHooks.name
-   type control = BPLXMLHooks.control
-   type bgterm = BPLXMLHooks.bgterm
-   type ruledata = BPLXMLHooks.ruledata
-   type brs = {signatur : control list, rules : ruledata list}
-   structure Parser = Parse
-    (structure Dtd = Dtd
-     structure Hooks = BPLXMLHooks
-     structure ParserOptions = ParserOptions ()
-     structure Resolve = ResolveNull)
-   fun parse uri dtd =
-     BPLXMLHooks.getBRS
-       (Parser.parseDocument uri dtd BPLXMLHooks.init)
-   fun parseFile filename =
-     parse (SOME (Uri.String2Uri ("file://" ^ filename))) NONE
- end
+functor BPLXMLParser (structure BPLXMLHooks : BPLXMLHOOKS)
+  :> BPLXMLPARSER
+  where type initDatatype = BPLXMLHooks.initDatatype
+    and type resulttype = BPLXMLHooks.resulttype
+  =
+struct
+  type initDatatype = BPLXMLHooks.initDatatype
+  type resulttype = BPLXMLHooks.resulttype
+  structure Parser = Parse
+   (structure Dtd = Dtd
+    structure Hooks = BPLXMLHooks
+    structure ParserOptions = ParserOptions ()
+    structure Resolve = ResolveNull)
+  fun parse initData uri dtd =
+    BPLXMLHooks.getResult
+      (Parser.parseDocument uri dtd (BPLXMLHooks.init initData))
+  fun parseFile initData filename =
+    parse initData (SOME (Uri.String2Uri ("file://" ^ filename))) NONE
+end

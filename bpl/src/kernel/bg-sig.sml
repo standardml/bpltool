@@ -69,8 +69,9 @@ sig
   val bgvalUsefile' : string -> bgval
   (** Read a BG expression from a file, return it as a bgval. *)
   val bgvalUsefile'' : string -> bgval
-  (** Read a BRS from an XML file. *)
-  val brsUseXMLfile : string -> control list * ruledata list
+  (** Read a bigraphical signature from one XML file and a BRS from
+   * another XML file. *)
+  val brsUseXMLfiles : string -> string -> control list * ruledata list
   (** Prettyprinter for bigraphs. *)
   val pp : PrettyPrint.ppstream -> 'class bgbdnf -> unit
   (** Return string representation of a normal form bigraph. *)

@@ -18,20 +18,18 @@
  * USA
  *)
 
-(** Parser for brs'es expressed in XML.
+(** Callback functions for SAX parsing a BPL signature expressed in XML.
  * @version $LastChangedRevision: 442 $
  * Modified: $Date: 2006/09/04 21:48:46 $ by: $Author: hniss $
  *)
- 
-signature BPLXMLPARSER =
-sig
-  (** Data type of initial data needed for parsing. *)
-  type initDatatype
-  (** Type of parsing result. *)
-  type resulttype
-  (** Parse a given URI as XML using a DTD, returning a BRS. *)
-  val parse : initDatatype -> Uri.Uri option -> Dtd.Dtd option
-    -> resulttype
-  (** Parse an XML string, returning a BRS. *)
-  val parseFile : initDatatype -> string -> resulttype
+
+functor SignatureXMLHooks (structure Control : CONTROL) :> BPLXMLHOOKS
+	where type initDatatype = unit
+	  and type resulttype = Control.control list =
+struct
+  open IgnoreHooks
+  type initDatatype = unit
+  type resulttype = Control.control list
+  fun init _ = ()
+  fun getResult appFinal = []
 end

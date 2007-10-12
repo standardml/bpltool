@@ -26,17 +26,12 @@
 signature BPLXMLHOOKS =
 sig
   include Hooks
-  type info
-  type name
-  type control
-  type bgterm
-  type ruledata = {
-    name : string,
-    redex : bgterm,
-    react : bgterm,
-    maps : ((int * name list) * (int * name list)) list,
-    info : info}
-  (** Initial empty data structure with which to call parseDocument. *)
-  val init : AppData
-  val getBRS : AppFinal -> {signatur : control list, rules : ruledata list}
+  (** The type of the initial data needed for parsing. *)
+  type initDatatype
+	(** The type of the result of parsing. *)
+  type resulttype
+  (** The initial data structure used for parsing. *)
+  val init : initDatatype -> AppData
+  (** Return the result of the parsing. *)
+  val getResult : AppFinal -> resulttype
 end

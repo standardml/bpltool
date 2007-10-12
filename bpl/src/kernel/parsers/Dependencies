@@ -6,7 +6,8 @@
 # INCLUDE=../../lib/fxp/src/Parser/Params
 # INCLUDE=../../lib/fxp/src/Parser/Parse
 
-. = bg.grm bg.lex rules.grm rules.lex bplxmlparser bplxmlhooks
+. = bg.grm bg.lex rules.grm rules.lex bplxmlparser bigraphxmlhooks
+  signaturexmlhooks bigraphdata
 bg.grm-sig: /lib/ml-yacc/.
 bg.lex: /lib/util/errormsg /lib/compat/mosml/. bg.grm-sig
 bg.grm: /lib/ml-yacc/.  /lib/coll/monoset-sig bg.grm-sig
@@ -26,14 +27,19 @@ bpl.grm: bpl.grm-sig /kernel/ast/bplterm
 bplparser: bpl.grm bpl.lex /kernel/ast/bplterm
    /lib/ml-yacc/. /lib/pp/mak/. /lib/util/sourceloc
    %PROGRAM
-bplxmlhooks-sig: /kernel/bg/control-sig /kernel/match/rule-sig
-  /lib/fxp/src/Parser/Params/hooks
-bplxmlhooks: bplxmlhooks-sig /kernel/bg/sigs /kernel/ast/sigs
-  /kernel/match/sigs
-  /lib/fxp/src/Parser/Params/ignore /lib/coll/monoset-sig %NODASHSIG
+bigraphdata-sig: /kernel/bg/sigs
+bigraphdata: /kernel/bg/sigs /kernel/ast/sigs bigraphdata-sig %NODASHSIG
+bplxmlhooks-sig: /lib/fxp/src/Parser/Params/hooks
+signaturexmlhooks: bplxmlhooks-sig /kernel/bg/control-sig
+  /lib/fxp/src/Parser/Params/ignore
+  %NODASHSIG
+bigraphxmlhooks: bplxmlhooks-sig bigraphdata-sig bigraphdata
+  /kernel/bg/sigs /kernel/ast/sigs
+  /lib/fxp/src/Parser/Params/ignore
+  %NODASHSIG
 bplxmlparser-sig: /lib/fxp/src/Unicode/Uri/uri
   /lib/fxp/src/Parser/Params/dtd
-bplxmlparser: bplxmlparser-sig bplxmlhooks-sig bplxmlhooks
+bplxmlparser: bplxmlparser-sig bplxmlhooks-sig
   /lib/fxp/src/Parser/Params/dtd
   /lib/fxp/src/Parser/Params/parserOptions
   /lib/fxp/src/Parser/Params/resolve
