@@ -303,8 +303,7 @@ val tactic = roundrobin;
  * </process>
  *)
 val echo_process = Process
-                   o (Running
-                     `|` Variables o Variable o Value
+                   o (Variables o Variable o Value
                          `|` Proxies o RecProxy o <->
                          `|` Sequence
                              o (Receive
