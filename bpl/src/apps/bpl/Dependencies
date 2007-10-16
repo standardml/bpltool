@@ -17,6 +17,11 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
 # USA
 
+# INCLUDE=../../kernel
+# INCLUDE=../../lib/pp/smlnj
+# INCLUDE=../../lib/util
+# INCLUDE=../../lib/coll
+
 bpl: /lib/pp/smlnj/prettyprint /lib/util/origin /lib/util/printerrorhandler /kernel/bg
    /lib/coll/lazylist /kernel/ast/bgbdnf /kernel/ast/bgval /kernel/match/match
    %NODASHSIG
