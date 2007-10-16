@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+targetNamespace="http://www.itu.dk/research/theory/bpl"
+xmlns="http://www.itu.dk/research/theory/bpl"
+elementFormDefault="qualified">
+
+<xs:complexType name="site-type">
+  <xs:sequence minOccurs="0">
+    <xs:element name="localinners">
+      <xs:complexType>
+	<xs:anyAttribute processContents="lax" />
+      </xs:complexType>
+    </xs:element>
+  </xs:sequence>
+  <xs:attribute name="idx" type="xs:nonNegativeInteger" />
+</xs:complexType>
+
+<xs:complexType name="bigraph-type">
+  <xs:sequence minOccurs="0">
+    <xs:element name="edges" minOccurs="0">
+      <xs:complexType>
+        <xs:anyAttribute processContents="lax" />
+      </xs:complexType>
+    </xs:element>
+    <xs:element name="globalinners" minOccurs="0">
+      <xs:complexType>
+        <xs:anyAttribute processContents="lax" />
+      </xs:complexType>
+    </xs:element>
+    <xs:element name="root" maxOccurs="unbounded">
+      <xs:complexType>
+        <xs:group ref="children" />
+        <xs:anyAttribute processContents="lax" />
+      </xs:complexType>
+    </xs:element>
+  </xs:sequence>
+  <xs:attribute name="bigraph" />
+  <xs:anyAttribute processContents="lax" />
+</xs:complexType>
+
+<xs:element name="bigraph" type="bigraph-type">
+  <xs:key name="links">
+    <xs:annotation>
+      <xs:documentation>
+	Links must be unique
+      </xs:documentation>
+    </xs:annotation>
+    <xs:selector xpath=".|.//edges|.//root" />
+    <xs:field xpath="@*" />
+  </xs:key>
+
+  <xs:key name="nonlocatedlinks">
+    <xs:selector xpath=".|.//edges" />
+    <xs:field xpath="@*" />
+  </xs:key>
+
+  <xs:keyref name="global-inners-link-nonlocated" refer="nonlocatedlinks">
+    <xs:annotation>
+      <xs:documentation>
+	Global inner names must be linked to non-located links
+      </xs:documentation>
+    </xs:annotation>
+    <xs:selector xpath=".//globalinners" />
+    <xs:field xpath="@*" />
+  </xs:keyref>
+
+  <xs:keyref name="local-inners-link" refer="links">
+    <xs:annotation>
+      <xs:documentation>
+	Local inner names must be linked to links
+      </xs:documentation>
+    </xs:annotation>
+    <xs:selector xpath=".//localinners" />
+    <xs:field xpath="@*" />
+  </xs:keyref>
+
+  <xs:unique name="unique-site-indexes">
+    <xs:annotation>
+      <xs:documentation>
+	Site indexes must be unique
+      </xs:documentation>
+    </xs:annotation>
+    <xs:selector xpath=".//site" />
+    <xs:field xpath="@idx" />
+  </xs:unique>
+</xs:element>
+
+</xs:schema>

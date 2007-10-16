@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+
+<brs
+xmlns="http://www.itu.dk/research/theory/bpl"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="
+  http://www.itu.dk/research/theory/bpl brs.xsd
+  http://www.itu.dk/research/theory/bpl signature.xsd">
+
+  <bigraphs>
+    <def name="redex">
+      <bigraph g1="y1" g2="y2">
+	<edges edge1="e1" edge2="e2" edge3="e3"/>
+	<globalinners x1="e1" x2="y1" />
+	<root l1="y3" l2="y4">
+	  <K f1="y1" f2="y3" b1="e2">
+	    <L b1="e3">
+	      <M f1="e3" />
+	      <M f1="y2" />
+	      <site idx="1">
+                <localinners x1="e1" x2="y2" />
+	      </site>
+	      <site idx="1">
+		<localinners x2="y4" />
+	      </site>
+	    </L>
+	  </K>
+	</root>
+      </bigraph>
+    </def>
+  </bigraphs>
+
+  <rules>
+    <rule name="dupsite">
+      <redex bigraph="redex" />
+      <react bigraph="redex" />
+      <inst>
+	<sitemap reactidx="0" redexidx="1">
+	  <namemap reactname="x1" redexname="x2" />
+	</sitemap>
+	<sitemap reactidx="1" redexidx="1" />
+      </inst>
+    </rule>
+  </rules>
+
+</brs>
+

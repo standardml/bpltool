@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+targetNamespace="http://www.itu.dk/research/theory/bpl"
+xmlns="http://www.itu.dk/research/theory/bpl"
+elementFormDefault="qualified">
+
+<xs:include schemaLocation="http://www.itu.dk/research/theory/bpl/bigraph.xsd" />
+
+<xs:group name="children">
+  <xs:sequence>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="site" type="site-type" />
+      <xs:element name="K" type="K-type" kind="active" />
+      <xs:element name="L" type="L-type" kind="passive" />
+      <xs:element name="M" type="M-type" kind="atomic" />
+    </xs:choice>
+  </xs:sequence>
+</xs:group>
+
+<xs:complexType name="K-type">
+  <xs:group ref="children" />
+  <xs:attribute name="f1" type="xs:string" use="required" />
+  <xs:attribute name="f2" type="xs:string" use="required" />
+  <xs:attribute name="b1" type="xs:string" use="required" />
+</xs:complexType>
+
+<xs:complexType name="L-type">
+  <xs:group ref="children" />
+  <xs:attribute name="b1" type="xs:string" use="required" />
+</xs:complexType>
+
+<xs:complexType name="M-type">
+  <xs:attribute name="f1" type="xs:string" use="required" />
+</xs:complexType>
+
+<xs:element name="root">
+  <xs:complexType>
+    <xs:group ref="children" />
+    <xs:anyAttribute processContents="lax" />
+  </xs:complexType>
+  <xs:keyref name="ports-link-links" refer="links">
+    <xs:annotation>
+      <xs:documentation>
+	Node ports are linked to links
+      </xs:documentation>
+    </xs:annotation>
+    <xs:selector xpath=".//K|.//L|.//M" />
+    <xs:field xpath="@*" />
+  </xs:keyref>
+</xs:element>
+
+</xs:schema>

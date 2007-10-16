@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+targetNamespace="http://www.itu.dk/research/theory/bpl"
+xmlns="http://www.itu.dk/research/theory/bpl"
+elementFormDefault="qualified">
+
+<xs:include schemaLocation="http://www.itu.dk/research/theory/bpl/bigraph.xsd" />
+
+<xs:element name="bigraphs">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element name="def" maxOccurs="unbounded">
+	<xs:complexType>
+	  <xs:sequence>
+	    <xs:element name="bigraph" type="bigraph-type" />
+	  </xs:sequence>
+	  <xs:attribute name="name" type="xs:string" />
+	</xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="rule">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element name="redex" type="bigraph-type" />
+      <xs:element name="react" type="bigraph-type" />
+      <xs:element name="inst" minOccurs="0">
+	<xs:complexType>
+	  <xs:sequence>
+	    <xs:element name="sitemap" maxOccurs="unbounded">
+	      <xs:complexType>
+		<xs:sequence>
+		  <xs:element name="namemap" minOccurs="0" maxOccurs="unbounded">
+		    <xs:complexType>
+		      <xs:attribute name="reactname" type="xs:string" use="required" />
+		      <xs:attribute name="redexname" type="xs:string" use="required" />
+		    </xs:complexType>
+		  </xs:element>
+		</xs:sequence>
+		<xs:attribute name="reactidx" type="xs:nonNegativeInteger" use="required" />
+		<xs:attribute name="redexidx" type="xs:nonNegativeInteger" use="required" />
+	      </xs:complexType>
+	    </xs:element>
+	  </xs:sequence>
+	</xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" />
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="rules">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="rule" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="brs">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="bigraphs" />
+      <xs:element ref="rules" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:key name="bigraphs">
+    <xs:selector xpath="./bigraphs/def" />
+    <xs:field xpath="@name" />
+  </xs:key>
+  <xs:keyref name="bigraph-ref-must-be-defined" refer="bigraphs">
+    <xs:annotation>
+      <xs:documentation>
+	redex and react bigraphs in rules must be defined
+      </xs:documentation>
+    </xs:annotation>
+    <xs:selector xpath=".//redex|.//react" />
+    <xs:field xpath="@bigraph" />
+  </xs:keyref>
+</xs:element>
+
+</xs:schema>
