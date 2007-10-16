@@ -42,6 +42,12 @@ struct
   fun eq (n1, k1, b1, f1)  (n2, k2, b2, f2) =
     strEq n1 n2 andalso kindEq k1 k2 andalso
     b1 = b2 andalso f1 = f2
+  fun kind2String Active  = "Active"
+    | kind2String Passive = "Passive"
+    | kind2String Atomic  = "Atomic"
+  fun toString (n, k, b, f) = n ^ " : " ^ kind2String k ^ "(" ^
+    (if b > 0 then Int.toString b ^ " -> " else "") ^
+    Int.toString f ^ ")"
 end
 
 structure Control :> CONTROL =

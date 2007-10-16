@@ -30,8 +30,13 @@ bplparser: bpl.grm bpl.lex /kernel/ast/bplterm
 bigraphdata-sig: /kernel/bg/sigs
 bigraphdata: /kernel/bg/sigs /kernel/ast/sigs bigraphdata-sig %NODASHSIG
 bplxmlhooks-sig: /lib/fxp/src/Parser/Params/hooks
+   /lib/fxp/src/Parser/Params/dtd
 signaturexmlhooks: bplxmlhooks-sig /kernel/bg/control-sig
-  /lib/fxp/src/Parser/Params/ignore
+  /lib/fxp/src/Parser/Params/.
+  /lib/fxp/src/Parser/Error/errors
+  /lib/fxp/src/Parser/Error/errorString
+  /lib/fxp/src/Unicode/Chars/uniChar
+  /lib/coll/map
   %NODASHSIG
 bigraphxmlhooks: bplxmlhooks-sig bigraphdata-sig bigraphdata
   /kernel/bg/sigs /kernel/ast/sigs

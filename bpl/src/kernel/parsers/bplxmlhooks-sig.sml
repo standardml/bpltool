@@ -31,7 +31,7 @@ sig
 	(** The type of the result of parsing. *)
   type resulttype
   (** The initial data structure used for parsing. *)
-  val init : initDatatype -> AppData
+  val init : (initDatatype * Dtd.Dtd) -> AppData
   (** Return the result of the parsing. *)
   val getResult : AppFinal -> resulttype
 end

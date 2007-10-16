@@ -37,8 +37,14 @@ struct
     structure ParserOptions = ParserOptions ()
     structure Resolve = ResolveNull)
   fun parse initData uri dtd =
-    BPLXMLHooks.getResult
-      (Parser.parseDocument uri dtd (BPLXMLHooks.init initData))
+    let
+      val dtd =
+        case dtd of SOME dtd => dtd | NONE => Dtd.initDtdTables ()
+    in
+      BPLXMLHooks.getResult
+        (Parser.parseDocument
+           uri (SOME dtd) (BPLXMLHooks.init (initData, dtd)))
+    end
   fun parseFile initData filename =
-    parse initData (SOME (Uri.String2Uri ("file://" ^ filename))) NONE
+    parse initData (SOME (Uri.String2Uri ("file:" ^ filename))) NONE
 end

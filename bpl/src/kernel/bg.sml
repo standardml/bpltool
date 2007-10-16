@@ -265,7 +265,7 @@ fun brsUseXMLfiles sigfilename brsfilename =
   in
     case BigraphXMLParser.parseFile cs brsfilename of
       BigraphData.BRS rs => (cs, rs)
-    | BigraphData.BIGRAPH _ => raise ExpectedBRS (* TODO! *) 
+    | BigraphData.BIGRAPH _ => (cs,[]) (* TODO! *) 
   end
 
 end

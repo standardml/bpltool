@@ -28,9 +28,13 @@ sig
   eqtype control
   (** The kind datatype. *)
   datatype kind = Active | Passive | Atomic
-  (** Construct a control. *)
+  (** Construct a control.
+   * @params (name, kind, bound, free)
+   *)
   val make : (string * kind * int * int) -> control
-  (** Deconstruct a control. *)
+  (** Deconstruct a control.
+   * @return (name, kind, bound, free)
+   *)
   val unmk : control -> (string * kind * int * int)
   (** Return the name of a control. *)
   val name : control -> string
@@ -46,4 +50,6 @@ sig
    * @param c2  the second control.
    *)
   val eq : control -> control -> bool
+  val kind2String : kind -> string
+  val toString : control -> string
 end

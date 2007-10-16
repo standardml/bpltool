@@ -29,11 +29,7 @@ functor BPLXMLHooks (
   structure Name : NAME
   structure NameSet : MONO_SET
   structure BgTerm : BGTERM
-  ) :> BPLXMLHOOKS
-  where type info = Info.info
-    and type name = Name.name
-    and type control = Control.control
-    and type bgterm = BgTerm.bgterm =
+  ) :> BPLXMLHOOKS =
 struct
   open IgnoreHooks
   type info = Info.info

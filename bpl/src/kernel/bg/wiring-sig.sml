@@ -33,6 +33,24 @@ sig
 
   (** The wiring data type. *)
   type wiring
+  (** Signal that a wiring is not a renaming.
+   * @params wiring errtxt
+   * @param wiring  The wiring.
+   * @param errtxt  Explanatory error text.
+   *)
+  exception NotARenaming of wiring * string
+  (** Signal that a wiring has multiple links whose names clash.
+   * @params wiring errtxt
+   * @param wiring  The wiring.
+   * @param errtxt  Explanatory error text.
+   *)
+  exception NotAWiring of wiring * string
+  (** Signal that a wiring has closed edges.
+   * @params wiring errtxt
+   * @param wiring  The wiring.
+   * @param errtxt  Explanatory error text.
+   *)
+  exception NotASubstitution of wiring * string
   (** Construct a wiring from a link set.  Inner names must be
    * disjoint, outer names need not be. *)
   val make : linkset -> wiring
@@ -192,18 +210,6 @@ sig
    *)
   val app_inverse : wiring -> nameset -> nameset
 
-  (** Signal that a wiring is not a renaming.
-   * @params wiring errtxt
-   * @param wiring  The wiring.
-   * @param errtxt  Explanatory error text.
-   *)
-  exception NotARenaming of wiring * string
-  (** Signal that a wiring has multiple links whose names clash.
-   * @params wiring errtxt
-   * @param wiring  The wiring.
-   * @param errtxt  Explanatory error text.
-   *)
-  exception NotAWiring of wiring * string
   (** Compute the name to which the wiring maps a given name.
    * It is not checked that the wiring is a renaming - only that if the 
    * name is in the domain, then it is mapped to a name in the codomain.
