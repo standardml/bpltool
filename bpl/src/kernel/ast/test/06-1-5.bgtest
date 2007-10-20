@@ -4,9 +4,10 @@ Testing normalisation and composition (a non-trivial use of the push-thru lemma)
 
 result:
 
-(x/x * idp_2) o
-  (idw_0 *
-   ((x/x * (({}) (idw_0 * idp_1) o '{}')) o
-    (({}) (x/x * merge_1) o ((x/x * idp_1) o '{x}')) *
-    (idw_0 * (({}) (idw_0 * idp_1) o '{}')) o
-    (({}) (idw_0 * merge_1) o ((idw_0 * idp_1) o '{}'))) o [1, 0{x}])
+(x/x * idp_2)
+ o (idw_0
+    * `**[(x/x * ({})(idw_0 * idp_1) o '{}')
+         o (({}) (x/x * merge_1) o `**[(x/x * idp_1) o '{x}'])
+         , (idw_0 * ({})(idw_0 * idp_1) o '{}')
+         o (({}) (idw_0 * merge_1) o `**[(idw_0 * idp_1) o '{}'])]
+      o [1, 0{x}])
