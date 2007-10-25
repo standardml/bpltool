@@ -27,6 +27,10 @@ functor Rule (structure Info : INFO
               structure BgVal : BGVAL
               structure BgBDNF : BGBDNF
               structure Instantiation : INSTANTIATION
+              structure ErrorHandler : ERRORHANDLER
+                  where type ppstream    = PrettyPrint.ppstream
+                    and type break_style = PrettyPrint.break_style
+                    and type origin      = Origin.origin
               sharing type NameSet.Set =
                            Interface.nameset
               sharing type Interface.interface =
@@ -35,12 +39,17 @@ functor Rule (structure Info : INFO
                            Instantiation.interface
               sharing type BgVal.bgval =
                            BgBDNF.bgval
+              sharing type Info.info =
+                           BgBDNF.info =
+                           BgVal.info
              ) : RULE
               where type bgval = BgVal.bgval
                 and type 'a bgbdnf = 'a BgBDNF.bgbdnf
                 and type BR = BgBDNF.BR
                 and type inst = Instantiation.inst =
 struct
+  open Debug
+  open ErrorHandler
   val _ = Flags.makeBoolFlag {
     name = "/kernel/match/rule/ppsimpleredex",
     desc = "Simplify redex when displaying rules",
@@ -63,8 +72,26 @@ struct
   datatype rule =
     Rule of {name : string, redex : BR bgbdnf, react : bgval, inst : inst, info : info}
 
+  val file_origin = Origin.mk_file_origin
+                      "$BPL/src/kernel/match/rule.sml"
+                      Origin.NOPOS
+  fun mk_explainer errtitle (explainer : exn -> explanation list) e =
+      Exp (LVL_USER, Origin.unknown_origin, mk_string_pp errtitle,
+           explainer e)
+
   exception OuterfaceMismatch of BR bgbdnf * bgval
-  (* FIXME add explainer *)
+  fun explain_OuterfaceMismatch (OuterfaceMismatch (redex, react)) =
+      [Exp (LVL_USER, Origin.unknown_origin,
+            mk_string_pp ("Redex and reactum outer face must be equal"),
+            [Exp (LVL_USER, Info.origin (BgBDNF.info redex),
+                  pack_pp_with_data BgBDNF.pp redex, []),
+             Exp (LVL_USER, Info.origin (BgVal.info react),
+                  pack_pp_with_data BgVal.pp react, [])])]
+    | explain_OuterfaceMismatch _ = raise Match
+  val _ = add_explainer
+            (mk_explainer
+               "Redex/reactum outer face mismatch"
+               explain_OuterfaceMismatch)
 
   (** Construct a rule.  The instantiation must be compatible
    * with redex and reactum inner faces, i.e., instantiate the
