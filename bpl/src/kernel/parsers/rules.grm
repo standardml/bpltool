@@ -219,7 +219,7 @@ fun nset2idlinkset nset =
 | nsetlist of nameset list
 | nset of nameset
 | ctrlid of control
-| link of link
+| link of link list
 | perm of Immutable permutation
 | permentrylist of (int * nameset) list
 | permentry of (int * nameset)
@@ -359,7 +359,7 @@ altbg : ONE                   (Mer (0, mk_info ONEright ONEleft))
    | MERGE pint               (Mer (pint, mk_info MERGEleft pintright))
    | BQUOTE nset BQUOTE       (Con (nset, mk_info BQUOTE1left BQUOTE2right))
    | link                     (Wir (Wiring.make 
-				      (LinkSet.singleton link), 
+				      (LinkSet.fromList link), 
 				      mk_info linkleft linkright))
    | IDW nset                 (Wir (Wiring.make (nset2idlinkset nset),
 				    mk_info IDWleft IDWright))
@@ -427,12 +427,14 @@ nset    : LBRACK names RBRACK (NameSet.fromList (names)
 
 ctrlid	: CTRLID	      (Control.make (CTRLID, Control.Active, 0, 0))
 
-link	: DASHSLASHSLASH nset	        (Link.make {outer = NONE, inner = nset})
-        | id SLASH id	%prec SLASH	(Link.make {outer = SOME (Name.make id1), 
-						    inner = NameSet.singleton (Name.make id2)})
-	| DASHSLASH id			(Link.make {outer = NONE, 
-						    inner = NameSet.singleton (Name.make id)})
-	| id SLASHSLASH nset	        (Link.make {outer = SOME (Name.make id), inner = nset})
+link	: DASHSLASHSLASH nset	        (map (fn name => 
+                                              Link.make {outer = NONE, inner = NameSet.singleton name})
+                                             (NameSet.list nset))
+        | id SLASH id	%prec SLASH	([Link.make {outer = SOME (Name.make id1), 
+					 	     inner = NameSet.singleton (Name.make id2)}])
+	| DASHSLASH id			([Link.make {outer = NONE, 
+						     inner = NameSet.singleton (Name.make id)}])
+	| id SLASHSLASH nset	        ([Link.make {outer = SOME (Name.make id), inner = nset}])
 
 perm	: LBRACK permentrylist RBRACK	        (Permutation.make permentrylist)
 
