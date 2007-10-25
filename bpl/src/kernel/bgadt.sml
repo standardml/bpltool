@@ -186,7 +186,8 @@ structure Rule = Rule
    structure NameSet       = NameSet
    structure BgVal         = BgVal
    structure BgBDNF        = BgBDNF
-   structure Instantiation = Instantiation)
+   structure Instantiation = Instantiation
+   structure ErrorHandler  = ErrorHandler)
 
 type rule = Rule.rule
 
