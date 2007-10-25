@@ -388,6 +388,7 @@ print "agent = '" + agent.to_s + "',  @agent = '" + @agent.to_s + "'\n"
         @rules = rules
         @matchcount = matchcount
         @rulestomatch = rulestomatch
+        @react.clear
         @results.clear
         @found.clear
         @foundall.clear
