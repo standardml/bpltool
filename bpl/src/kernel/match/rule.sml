@@ -84,9 +84,9 @@ struct
       [Exp (LVL_USER, Origin.unknown_origin,
             mk_string_pp ("Redex and reactum outer face must be equal"),
             [Exp (LVL_USER, Info.origin (BgBDNF.info redex),
-                  pack_pp_with_data BgBDNF.pp redex, []),
+                  pack_pp_with_data BgBDNF.ppWithIface redex, []),
              Exp (LVL_USER, Info.origin (BgVal.info react),
-                  pack_pp_with_data BgVal.pp react, [])])]
+                  pack_pp_with_data BgVal.ppWithIface react, [])])]
     | explain_OuterfaceMismatch _ = raise Match
   val _ = add_explainer
             (mk_explainer
