@@ -23,19 +23,6 @@
  Implements bpl/bplproject/doc/projects/contextawareness/plato/bpl-bnf.tex
 *)
 
-(* TODO, maybe:
-
-- Need a function that traverses a bigraph and replaces sitenames with
-  sitenumbers? This function should be called before getSites, which
-  should then work on bigraphs with numbered sites only (as it does
-  now).
-
-- Calc. inst. for bgvals or for bigraphs with numbered sites only?
-
-- Insert implicit ids!?
-
-*)
-
 (*open TextIO;*)
 
 structure BG = BG (structure ErrorHandler = PrintErrorHandler);
@@ -97,7 +84,7 @@ datatype bigraph = Wir of wires
 		 | Site of siteId * namelist
 		 | Id of id
 		 | Empty
-type instant = (nat * nat) list (* 21/8-07*)
+(*type instant = (nat * nat) list (* 21/8-07*)*)
 datatype ctrlkind = Active
 		  | Passive
 		  | Atomic
@@ -111,7 +98,7 @@ datatype prog = Prog of signatur * decs
 
 type bgval = B.bgval
 
-type idmap = (id * bgval) list
+(*type idmap = (id * bgval) list*)
 type sitemap = (nat * siteId) list
 
 val barren = Sugar.<-> (* barren root *)
@@ -294,6 +281,20 @@ fun big2bgval ast signa (maps:idmap*sitemap) =
 	 | Empty => (barren, smap)
     end
 
+(* takes list of decls, produces list of bgvals/rules of bgval pairs *)
+fun dec2bgval decls signa sitemap =
+    case decls
+     of [] => []
+      | (d::ds) => (case d
+		     of Value(i,b) =>
+			let val (b',smap') = big2bgval b signa maps
+			    val imap' = (i,b') :: imap (* update imap *)
+			    val vals' = b' :: vals
+			in dec2bgval ds vals' rules signa (imap',smap') end
+		      | Rule(i,b1,b2) => ...
+		   )
+
+(*
 fun dec2bgval decls vals rules signa (maps:idmap*sitemap) =
     let val imap = #1(maps) (* for rolling bgval list into main bgval *)
 	val smap = #2(maps) (* for making instantiations *)
@@ -319,8 +320,124 @@ fun dec2bgval decls vals rules signa (maps:idmap*sitemap) =
 		     val vals' = b' :: vals
 		 in dec2bgval ds vals' rules signa (imap',smap') end )
     end
+*)
+
+(* substitute a bigraph b1 into a bigraph b2, recursively *)
+fun sub b1 b2 =
+    case b2 of Wir(w) => Wir(w)
+	    | Par(b,b') => Par(sub b1 b, sub b1 b')
+	    | Pri(b,b') => Pri(sub b1 b, sub b1 b')
+	    | Com(b,b') => Com(sub b1 b, sub b1 b')
+	    | Emb(b,b') => Emb(sub b1 b, sub b1 b')
+	    | Ten(b,b') => Ten(sub b1 b, sub b1 b')
+	    | Ctrl(i,b,f) => Ctrl(i,b,f)
+	    | Clo(n,b) => Clo(n, sub b1 b)
+	    | Abs(n,b) => Abs(n, sub b1 b)
+	    | Site(i,l) => Site(i,l)
+	    | Id(i) => b1 (* assumes that b1 is already rolled *)
+	    | Empty => Empty
+
+(* substitute a bigraph b into every following element in a bigraph list *)
+fun subList [] = []
+  | subList (b::bs) =
+    let val newlist = 
+	    List.map
+		(fn b' =>
+		    case b' of Value(i,big) => Value(i, sub b b')
+			     | Rule(i,b1,b2) => Rule(sub b b1, sub b b2))
+		bs
+    in b :: newlist end
+
+(* rool a declist (vals/rules) *)
+fun roll [] = []
+  | roll (d::ds) =
+    if ds = [] then d
+    else let val newlist = subList (d::ds)
+	     val hd = List.hd newlist
+	     val tl = List.tl newlist
+	 in hd :: roll tl end
+
+(* delete all except the main val (and rules) from a declist *)
+fun delAuxVals [] = []
+  | delAuxVals (d::ds) =
+    case d of Value(i,b) =>
+	      let val moreVals =
+		      List.find
+			  (fn d => case d of Value(i,b) => true
+					   | Rule(i,b1,b2) => false)
+			  ds
+	      in if moreVals
+		 then delAuxVals ds (* main val is last by invariant *)
+		 else d::ds (* found the main val, terminate *)
+	      end
+	    | Rule(i,b1,b2) => d :: delAuxVals ds
+
+(* compute next unused nat identifier *)
+fun nextNat smap =
+    let val last = List.last smap
+	val nat = #1(last)
+    in nat+1 end (* we know that nats are ints *)
+
+(* replace siteIds in a bigraph by contiguous Nats *)
+fun traverse b smap =
+    case b
+     of Wir(w) => (Wir(w), smap) (* done *)
+      | Par(b1,b2) =>
+	let val (b1',smap') = traverse b1 smap
+	    val (b2',smap'') = traverse b2 smap'
+	in (Par(b1',b2'), smap'') end
+      | Pri(b1,b2) =>
+	let val (b1',smap') = traverse b1 smap
+	    val (b2',smap'') = traverse b2 smap'
+	in (Pri(b1',b2'), smap'') end
+      | Com(b1,b2) =>
+	let val (b1',smap') = traverse b1 smap
+	    val (b2',smap'') = traverse b2 smap'
+	in (Com(b1',b2'), smap'') end
+      | Emb(b1,b2) =>
+	let val (b1',smap') = traverse b1 smap
+	    val (b2',smap'') = traverse b2 smap'
+	in (Emb(b1',b2'), smap'') end
+      | Ten(b1,b2) =>
+	let val (b1',smap') = traverse b1 smap
+	    val (b2',smap'') = traverse b2 smap'
+	in (Ten(b1',b2'), smap'') end
+      | Ctrl(i,b,f) => (Ctrl(i,b,f), smap) (* done *)
+      | Clo(n,b) => Clo(n, traverse b smap)
+      | Abs(n,b) => Abs(n, traverse b smap)
+      | Site(i,l) => let val next = nextNat smap
+		     in (Site(next,l), (next,i)::smap) end
+      | Id(i) => raise Fail("'traverse' called on bigraph with an Id(i)")
+      | Empty => (Empty, smap) (* done *)
+
+type sitemap = (nat * siteId) list
+
+(* take declist, return declist of decs with Nat-sites and instantiations *)
+fun numberSites [] smap = []
+  | numberSites (d::ds) =
+    case d
+     of Value(i,b) =>
+	let val (b',smap') = traverse b smap
+	in Value(i,b') :: numberSites ds smap' end
+      | Rule(i,b1,b2) =>
+	let val (b1',smap') = traverse b1 smap
+	    val (b2',smap'') = traverse b2 smap'
+	in Rule(i,b1',b2') :: numberSites ds smap'' end
 
 (* toplevel *)
+fun prog2bgval ast =
+    case ast
+     of Prog(signa,declist) =>
+	let val rolledList = roll declist
+	    val rolledList' = delAuxVals rolledList
+	    val numberedList = numberSites rolledList' [](*smap*)
+	    HERE (* insert ids *)
+	    val mainBgval = ...
+	    val rules' = ...
+	in (signa, mainBgval, rules') end
+      | _ => raise Fail("Malformed program")
+
+(* old code
 fun prog2bgval ast =
     case ast
      of Prog(signa,declist) =>
@@ -329,3 +446,4 @@ fun prog2bgval ast =
 	    val mainBgval = getLast vals
 	in (signa, mainBgval, rules) end
       | _ => raise Fail("Malformed program")
+*)
