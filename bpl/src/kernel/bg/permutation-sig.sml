@@ -182,11 +182,12 @@ sig
         -> {group : 'kindb permutation, minors : 'kindc permutation list}
   (** Compute the product of a list of local inner names lists and a
    * permutation as defined in the implementation article Definition 3.5.
-   * Let the lengths of the inner names lists be [n_0, ..., n_{k-1}];
+   * Let the lengths of the inner names lists be [n_0, ..., n<sub>k-1</sub>}];
    * then the product Xss * pi is defined by<p>
    *
-   * (Xss * pi)(i + &sum;_{i' < l} n_{pi(i')}) = i + &sum;_{j' < pi(l)} n_j',
-   * where i < n_{pi(l)} and l < k.
+   * (Xss * pi)(i + &sum;<sub>i' < l</sub> n<sub>pi(i')</sub>) =
+   * i + &sum;<sub>j' < pi(l)</sub> n_j',
+   * where i < n<sub>pi(l)</sub> and l < k.
    *
    * @params Xss pi
    * @param Xss  List of local inner names lists.
