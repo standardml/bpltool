@@ -134,7 +134,7 @@ in
      {agent = K10[][[x]] o (<[x]> M1[x]),
       redex = K10[][[y]]},
      JUST [{context = idp(1), parameter = <[y]> M1[y]}]),
-    ("Matching wide redex with internal edge",
+    ("Matching wide redex in an agent with internal edge",
      {agent = (-/x o x//[x,x1,x2] * merge(2)) o 
               ((K1[x] * x1/x1) o M1[x1] * K1[x2] o <->),
       redex = (      y//[y1,y2,y3] * idp(2)) o
