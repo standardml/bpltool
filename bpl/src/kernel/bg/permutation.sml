@@ -381,7 +381,7 @@ struct
    *             local inner name list is a list of name sets
    *             describing the inner names of the sites of the jth prime.
    * @return     a permutation pi_Xss such that pi o (P_0 x ... x P_n-1)
-   *             = (P_pi(0) x ... x P_pi(n-1)) pi_Xss.
+   *             = (P_pi^-1(0) x ... x P_pi^-1(n-1)) pi_Xss.
    * @see bigraph literature on the Pushthrough Lemma.
    *)
   fun pushthru (perm as {width, pi, pi_inv}) Xss =
@@ -712,6 +712,8 @@ struct
             , pi     = ppi
             , pi_inv = ppi_inv})
       end
+
+  fun pushthru pi Xss = prod Xss pi
 
   exception UnequalLengths of nameset list list * nameset list list * string
   fun explain_UnequalLengths (UnequalLengths (nsss1, nsss2, errtxt)) =

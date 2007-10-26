@@ -126,6 +126,7 @@ sig
   val permute
       : 'kind permutation -> 'a list -> 'a list
   (** Push a permutation through a product of primes.
+   * DEPRECATED! - Use prod instead.
    * @params pi Xss
    * @param pi   permutation to push through n primes.
    * @param Xss  list of local inner name lists.  The jth (0 <= j < n)
@@ -182,9 +183,9 @@ sig
   (** Compute the product of a list of local inner names lists and a
    * permutation as defined in the implementation article Definition 3.5.
    * Let the lengths of the inner names lists be [n_0, ..., n_{k-1}];
-   * then the product Xss * pi is defined by
+   * then the product Xss * pi is defined by<p>
    *
-   * (Xss * pi)(i + &sum_{i' < l} n_{pi(i')}) = i + &sum_{j' < pi(l)} n_j',
+   * (Xss * pi)(i + &sum;_{i' < l} n_{pi(i')}) = i + &sum;_{j' < pi(l)} n_j',
    * where i < n_{pi(l)} and l < k.
    *
    * @params Xss pi

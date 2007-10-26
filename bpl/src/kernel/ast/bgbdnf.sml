@@ -957,14 +957,25 @@ struct
                  = ListPair.unzip
                      (map bgval2PBDNF 
                           (composeprimes P_1s
-                             (Permutation.permute
-                                (Permutation.invert pi_1) P_2s)))
+                             (Permutation.permute pi_1 P_2s)))
                val U = Interface.glob (innerface D2)
                val wid_U = Wiring.id_X U
                val s = Wiring.* (wid_U, Wiring.** ss)
                val X''ss = map (Interface.loc o innerface) P_2s
-               val pi = Permutation.o 
-                          (Permutation.pushthru pi_1 X''ss, pi_2)
+               val barpi1 = Permutation.pushthru pi_1 X''ss
+               (*val _ = print ("barpi1=" ^ Permutation.toString barpi1 ^ 
+                 ", pi_1=" ^ Permutation.toString pi_1 ^
+                 ", X''ss=[ " ^ foldr 
+                 (fn (X''s, s) => 
+                   "[ " ^ foldr
+                   (fn (X'', s) => "[ " ^ 
+                   NameSet.fold (fn n => fn s => 
+                   Name.unmk n ^ " " ^ s) ("] " ^ s) X'')
+                   ("] " ^ s)
+                   X''s)
+                 ("], pi_2=" ^ Permutation.toString pi_2 ^ "\n")
+                 X''ss)*)
+               val pi = Permutation.o (barpi1, pi_2)
                val D = Wir wid_U ** Ten Ps oo Per pi
                val V1 = Interface.glob (outerface (Ten P_1s))
                val wid_V1 = Wiring.id_X V1

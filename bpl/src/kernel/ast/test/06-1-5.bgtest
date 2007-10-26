@@ -1,6 +1,6 @@
 Testing normalisation and composition (a non-trivial use of the push-thru lemma)
 
-[1,0] o ('{}' * '{x}')
+([1, 0] * x/x) o ('{}' * '{x}')
 
 result:
 
