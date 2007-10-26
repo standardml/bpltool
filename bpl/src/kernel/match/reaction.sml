@@ -251,7 +251,7 @@ struct
     end
   fun thent ELSE elset = {thent = thent, elset = elset}
 
-  fun REPEAT t = IF t THEN (REPEAT t) ELSE fail
+  fun REPEAT t rulematches = (IF t THEN (REPEAT t) ELSE fail) rulematches
 
   infixr 4 TIMES_DO
   fun 0 TIMES_DO t = finish
