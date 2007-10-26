@@ -67,6 +67,8 @@ local
   val M11 = atomic   ("M11" =: 1 --> 1)
 
   val (x, y, z, u, v, w) = ("x", "y", "z", "u", "v", "w")
+  val (x1, x2, x3) = ("x1", "x2", "x3")
+  val (y1, y2, y3) = ("y1", "y2", "y3")
   val (y_4,y_5,x_6,x_7) = ("y_4","y_5","x_6","x_7")
 in
   (** The list of tests.  Each entry consists of:
@@ -132,6 +134,14 @@ in
      {agent = K10[][[x]] o (<[x]> M1[x]),
       redex = K10[][[y]]},
      JUST [{context = idp(1), parameter = <[y]> M1[y]}]),
+    ("Matching wide redex with internal edge",
+     {agent = (-/x o x//[x,x1,x2] * merge(2)) o 
+              ((K1[x] * x1/x1) o M1[x1] * K1[x2] o <->),
+      redex = (      y//[y1,y2,y3] * idp(2)) o
+              (                  M1[y1] * (K1[y2] * y3/y3) o `[y3]`)},
+     HAS
+       [{context   = (x//[x,x1] * merge(2)) o (K1[x] * x1/x1 * idp(1)),
+         parameter = <[y3]> (y3//[] * <->)}]),
     ("Pi calculus reaction rule",
      {agent = (idw[y,z] * K0) o (K1[y] * idw[z]) o M1[z]
           `|` (idw[y]   * K0) o L1[y] o <->,
