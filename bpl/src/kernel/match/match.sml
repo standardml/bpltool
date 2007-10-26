@@ -89,7 +89,7 @@ struct
   open Debug
   open ErrorHandler
 
-  (* fun print' s = TextIO.output(TextIO.stdErr, s) (* For debugging *) *) 
+  fun print' s = TextIO.output(TextIO.stdErr, s) (* For debugging *) 
   fun print' s = ()
 
   val file_origin = Origin.mk_file_origin
@@ -931,7 +931,7 @@ struct
    *)
   fun matchPAX' lvl {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, g, G} =
       lzmake (fn () => (print' (Int.toString lvl ^ " PAX' "
-        ^ "g = " ^ BgBDNF.toString g ^ "\nG = " ^ BgBDNF.toString G
+        ^ "\ng = " ^ BgBDNF.toString g ^ "\nG = " ^ BgBDNF.toString G
         ^ "\ns_a_e = " ^ Wiring.toString s_a_e
         ^ "\ns_a_n = " ^ Wiring.toString s_a_n
         ^ "\ns_C_e = " ^ Wiring.toString s_C_e
