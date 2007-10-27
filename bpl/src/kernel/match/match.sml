@@ -2202,7 +2202,7 @@ struct
       fun submatches mslz ({s_a = {s_a_e, s_a_n}, L,
                             s_R = {s_R_e, s_R_n}, e, Ps} :: rest)
         = let
-            fun tosubmatches (ms, ename') =
+            fun tosubmatches (ms, ename', s_C') =
               let
                 val mlz = matchE {ename = ename',
                         s_a = {s_a_e = s_a_e, s_a_n = s_a_n},
@@ -2210,17 +2210,22 @@ struct
                         s_R = {s_R_e = s_R_e, s_R_n = s_R_n},
                         e = e,
                         Ps = Ps}
-                fun addms {E, qs, s_C, Y, ename', tree}
-                  = ({E = E, qs = qs, s_C = s_C, Y = Y, tree = tree} :: ms, ename')
+                fun addms ({E, qs, s_C, Y, ename', tree}, mlz) =
+                  let
+                    val s_C' = Wiring.+ (s_C, s_C')
+                  in
+                    lzCons (fn () => (({E = E, qs = qs, s_C = s_C, Y = Y, tree = tree} :: ms, ename', s_C'), mlz ()))
+                  end
+                  handle Wiring.CannotExtend _ => mlz ()
               in
-                lzmap addms mlz
+                lzfoldr addms lzNil mlz
               end
           in
             submatches (lzconcat (lzmap tosubmatches mslz)) rest 
           end
         | submatches mslz [] = mslz
       val mslz
-        = submatches (lzCons (fn () => (([], ename), lzNil))) sRePss
+        = submatches (lzCons (fn () => (([], ename, Wiring.id_0), lzNil))) sRePss
       
       val Y_a_n = Wiring.introductions s_a_n
       val Y_R_e = Wiring.introductions s_R_e
@@ -2228,7 +2233,7 @@ struct
       val Y_R_empty = NameSet.isEmpty Y_R_e andalso NameSet.isEmpty Y_R_n
       val Y_a_n_empty_and_Y_R_nonempty
         = NameSet.isEmpty Y_a_n andalso not Y_R_empty
-      fun toPARn (matches, ename') =
+      fun toPARn (matches, ename', s_C) =
         let
           val matches = rev matches
           val Es = map (fn {s_C, Y, E, qs, tree} => E) matches
@@ -2268,8 +2273,7 @@ struct
                          (NameSet.remove
                           theoutername (NameSet.union Y Y_a_n)))
                 end
-          val s_C_is = map #s_C matches
-          val s_C = Wiring.++ (s_I :: s_C_is)
+          val s_C = Wiring.+ (s_I, s_C)
           (*val _ = print' "matchPARn: "
           val _ = map (fn w => print' (Wiring.toString w ^ " ++ ")) s_C_is
           val _ = print' (" = " ^ Wiring.toString s_C ^ "\n")
@@ -2333,7 +2337,7 @@ struct
    * 2) For each permutation pi of the redex primes Qs',
    *    2a) Push pi through Qs, yielding pibar.
    *    2b) Infer premise, yielding parameter list qs etc.
-   *    2c) Permute qs by pibar and return the result.
+   *    2c) Permute qs by invert(pibar) and return the result.
    *)
   fun matchPER {matchE, ename, s_a, L, s_R, es, Qs}
     = lzmake (fn () => (print' "PER ";
@@ -2343,10 +2347,10 @@ struct
         let
           val pi = Permutation.copy (toperm perm)
           val Qs' = permute pi Qs
-          val pibar = pushthru pi Xss
+          val pibar_inv = Permutation.invert (pushthru pi Xss)
           fun toPER {ename', Y, s_C, Es, qs, tree}
             = {ename' = ename', Y = Y, s_C = s_C, Es = Es, pi = pi,
-               qs = permute pibar qs, tree = PER tree}
+               qs = permute pibar_inv qs, tree = PER tree}
           val matches
             = lzmap toPER
                (matchPARe {matchE = matchE,
