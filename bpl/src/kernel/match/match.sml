@@ -2417,11 +2417,14 @@ struct
    * 5) Construct p = (id * (vec v)/(vec X))n and infer premise
    *     using s_a, L, s_R, p, and Ps, yielding
    *     ename', Y', s_C, P = (id * (vec v)/(vec Z))N, and qs
-   * 6) Construct s_C = s_Y_n || s_Y_e || s_C
-   *     and    ename' = ename' + {s_Y_e(y) |-> s_Y_e(y)
-   *                               | y in Y n dom(s_Y_e)}
+   * 6) Construct ename' = ename' + {s_Y_e(y) |-> s_Y_e(y)
+   *                               | y in Y n dom(s_Y_e) and
+   *                                 s_Y_e(y) notin dom(ename')}
+   *     and      s_Y_e' = ename' o s_Y_e
+   *                    (restricting ename' to s_Y_e's outer face)
+   * 7) Construct s_C = s_Y_n || s_Y_e || s_C
    *     and         G = (id * K_yZ)N
-   * 7) Return ename', Y', s_C, G, qs
+   * 8) Return ename', Y', s_C, G, qs
    *)
   and matchION (args as {ename, 
                          s_a as {s_a_e, s_a_n}, L, s_R, e = g, Ps})
