@@ -137,6 +137,12 @@ in
     ("Matching redex inner name with nothing",
      {agent = <->, redex = `[x]`},
      HAS [{context = -/x * idp(1), parameter = <[x]> x//[] * <->}]),
+    ("Matching redex link with agent edge",
+     {agent = (-/x o x//[x1,x2] * idp(1)) o (x2/x2 * K1[x1]) o M1[x2],
+      redex =                                        M1[y]},
+     HAS
+       [{context   = (-/x o x//[x,y] * idp(1)) o (y/y * K1[x]),
+         parameter = idx0}]),
     ("Matching wide redex in an agent with internal edge",
      {agent = (-/x o x//[x,x1,x2] * merge(2)) o 
               ((K1[x] * x1/x1) o M1[x1] * K1[x2] o <->),
