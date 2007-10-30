@@ -933,7 +933,7 @@ struct
    * FIXME describe algoritm
    *)
   fun matchPAX' lvl {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, g, G} =
-      lzmake (fn () => (print' (fn () => Int.toString lvl ^ " PAX' "
+      lzmake (fn () => (print' (fn () => Int.toString lvl ^ ">PAX' "
         ^ "\ng = " ^ BgBDNF.toString g ^ "\nG = " ^ BgBDNF.toString G
         ^ "\ns_a_e = " ^ Wiring.toString s_a_e
         ^ "\ns_a_n = " ^ Wiring.toString s_a_n
@@ -1043,6 +1043,7 @@ struct
                           NameMap.empty
                           Y'_n
                     in
+                      print' (fn () => Int.toString lvl ^ "<PAX' ");
                       {ename' = NameMap.plus
                                  (NameMap.plus (ename, ename'_e), ename'_n),
                        Y      = NameSet.union Q''_e Q''_n,
@@ -1105,6 +1106,7 @@ struct
             | process_s_a_e'_split _ = raise ThisCannotHappen
         in
           lzunmk
+            (lzappend
             (lzmap
               (fn m as {ename', s_C', ...}
                => (print' (fn () => Int.toString lvl ^ " PAX':OK! ename' = "
@@ -1120,9 +1122,13 @@ struct
                      (opartgen2lzlist
                         (OrderedPartition.make s_a_e'_links 2)
                       handle OrderedPartition.NoPartitions => lzNil)))))
+            (lzmake ( 
+              fn () => (
+                print' (fn () => Int.toString lvl ^ ".PAX'a ");
+                Nil))))
         end
-        handle NoMatch => Nil)
-      | _ => Nil)
+        handle NoMatch => (print' (fn () => Int.toString lvl ^ ".PAX'b "); Nil))
+      | _ => (print' (fn () => Int.toString lvl ^ ".PAX'c "); Nil))
   (* Match a global discrete prime g to a context G using the ZAX rule:
    *   Y, id_e, Y |- 1, [[id_0]]^P ~~> 1, [[id_0]]^P.
    * 1) Check that g = 1 and G = 1.
@@ -1132,13 +1138,14 @@ struct
       | [] (* This implies G = 1. *)
       => (case #Ss (unmkG g) of
             [] (* This implies g = 1. *)
-          => Cons ({ename' = ename,
+          => (print' (fn () => Int.toString lvl ^ ".ZAX'a ");
+              Cons ({ename' = ename,
                   s_C' = Wiring.id_0,
                   Y = NameSet.empty,
                   qs = [],
-                  tree = ZAX'}, lzNil)
-          | _ => Nil)
-      | _ => Nil))
+                  tree = ZAX'}, lzNil))
+          | _ => (print' (fn () => Int.toString lvl ^ ".ZAX'b "); Nil))
+      | _ => (print' (fn () => Int.toString lvl ^ ".ZAX'c "); Nil)))
   
   (* Match a global discrete prime to a context using the MER rule:
    * 1) Find agent width n and context width m.
@@ -1165,7 +1172,7 @@ struct
    *)
    (* NOT FULLY IMPLEMENTED YET! *)
   and matchMER' lvl {ename, s_a, s_C, g, G} = lzmake (fn () =>
-    let val _ = print' (fn () => Int.toString lvl ^ " MER' ");
+    let val _ = print' (fn () => Int.toString lvl ^ ">MER' ");
       val ms = #Ss (unmkG g)
       val n = length ms
       val Ss = #Ss (unmkG G)
@@ -1188,7 +1195,8 @@ struct
 		                             es = es, Es = Es,
 		                             pi = pibar}
 		            fun make_match {ename', s_C', Y, qs, tree} =
-		                {ename' = ename', s_C' = s_C', Y = Y, qs = qs, tree = MER' tree}
+		              (print' (fn () => Int.toString lvl ^ "<MER' ");
+		               {ename' = ename', s_C' = s_C', Y = Y, qs = qs, tree = MER' tree})
 		          in
 		            lzmap make_match premise_matches
 		          end
@@ -1253,11 +1261,17 @@ struct
 		             handle NoMorePerms => lzNil)
 		      val perm = firstperm (map (fn _ => NameSet.empty) Xss)
                       val pi   = toperm perm
+          val matches =
+		        lzappend
+		          (tryRhos
+		             [] []
+		             (Permutation.copy pi, perm) (Partition.make ms m) [])
+		          (lzmake
+		            (fn () =>
+		              (print' (fn () => Int.toString lvl ^ ".MER' ");
+		               Nil)))
 		    in
-		      lzunmk
-		        (tryRhos
-		           [] []
-		           (Permutation.copy pi, perm) (Partition.make ms m) [])
+		      lzunmk matches
 				end
     end handle e => raise e)
 
@@ -1282,7 +1296,8 @@ struct
    * 8) Return ename', s_C', qs.
    *)
   and matchION' lvl {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, g, G} =
-      lzmake (fn () => (print' (fn () => Int.toString lvl ^ " ION' "); (*print'(": s_a_e=" ^ Wiring.toString s_a_e ^ "\ns_a_n="
+      lzmake (fn () => (print' (fn () => Int.toString lvl ^ ">ION' ");
+       (*print'(": s_a_e=" ^ Wiring.toString s_a_e ^ "\ns_a_n="
       ^ Wiring.toString s_a_n ^ "\n");*) print' (fn () => "g=" ^ BgBDNF.toString g ^ "\n");
       (*print' (fn () => "s_C_e="
       ^ Wiring.toString s_C_e ^ "\ns_C_n="
@@ -1373,21 +1388,31 @@ struct
               in
                 lzCons
                   (fn () =>
-		                ({ename' = ename',
-		                  s_C' = Wiring.make_ren s_C',
-		                  Y = Y,
-		                  qs = qs,
-		                  tree = ION' tree},
-		                  rest ()))
+		                (print' (fn () => Int.toString lvl ^ "<ION' ");
+ 		                 ({ename' = ename',
+		                   s_C' = Wiring.make_ren s_C',
+		                   Y = Y,
+		                   qs = qs,
+		                   tree = ION' tree},
+		                   rest ())))
               end handle NoMatch => lzNil
         in
-          lzunmk (lzfoldr make_match lzNil premise_matches)
+          lzunmk
+           (lzfoldr
+              make_match
+              (lzmake
+                (fn () => (
+                   print' (fn () => Int.toString lvl ^ ".ION'a ");
+                   Nil)))
+              premise_matches)
         end
-        handle NoMatch => Nil)
-      | _ => Nil)
-      | _ => Nil)
-      | _ => Nil)
-      | _ => Nil) handle e => raise e)
+        handle NoMatch =>
+          (print' (fn () => Int.toString lvl ^ ".ION'a "); Nil))
+      | _ => (print' (fn () => Int.toString lvl ^ ".ION'a "); Nil))
+      | _ => (print' (fn () => Int.toString lvl ^ ".ION'a "); Nil))
+      | _ => (print' (fn () => Int.toString lvl ^ ".ION'a "); Nil))
+      | _ => (print' (fn () => Int.toString lvl ^ ".ION'a "); Nil))
+        handle e => raise e)
 
   (* Match a global discrete prime using a PAX, MER or ION rule:
    * 1) If PAX rule matches return this match,
@@ -1440,7 +1465,7 @@ struct
   and matchABS' lvl {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, p, P} =
       lzmake (fn () =>
       let
-      val _ = print' (fn () => Int.toString lvl ^ " ABS' ")
+      val _ = print' (fn () => Int.toString lvl ^ ">ABS' ")
         val {s = s_a_L, N = n, ...} = BgBDNF.unmkP p
         val {s = s_C_L, N = N, ...} = BgBDNF.unmkP P
         val {absnames = Z, G = g} = BgBDNF.unmkN n
@@ -1462,13 +1487,21 @@ struct
             g = g, G = G}
 
         fun make_match {ename', s_C', Y, qs, tree} =
+          (print' (fn () => Int.toString lvl ^ "<ABS' ");
             {ename' = ename',
              s_C'   = Wiring.domdiff' s_C' W,
              Y      = Y,
              qs     = qs,
-             tree   = ABS' tree}
+             tree   = ABS' tree})
+        val matches =
+          lzappend
+            (lzmap make_match premise_matches)
+            (lzmake
+              (fn () =>
+                (print' (fn () => Int.toString lvl ^ ".ABS' ");
+                 Nil)))
       in
-        lzunmk (lzmap make_match premise_matches)
+        lzunmk matches
       end handle e => raise e)
 
   (* Match a parallel composition to a context using the PARn rule:
@@ -1482,7 +1515,7 @@ struct
   and matchPARn' lvl {ename, s_a, s_C, es, Es} = 
       lzmake (fn () =>
       let
-      val _ = print' (fn () => Int.toString lvl ^ " PARn' ")
+      val _ = print' (fn () => Int.toString lvl ^ ">PARn' ")
         (* build_matches returns a lazy list of matches.
          * results is a lazy list of results from preceding factors
          * (e_0, E_0)...(e_i-1, E_i-1)
@@ -1514,8 +1547,9 @@ struct
                       val tree = PARn' (tree_i :: trees) 
                     in
                       lzCons (fn () =>
-                        ({ename' = ename', s_C' = s_C', Y = Y, qss = qss, tree = tree},
-                         newresults ()))
+                        (print' (fn () => Int.toString lvl ^ "<PARn ");
+                         ({ename' = ename', s_C' = s_C', Y = Y, qss = qss, tree = tree},
+                          newresults ())))
                     end
                     handle Wiring.CannotExtend _ => newresults ()
                 in
@@ -1527,12 +1561,17 @@ struct
           end
         val result_0 = {ename' = ename, s_C' = Wiring.id_0, Y = NameSet.empty,
               qss = [], tree = PARn' []}
-      in
-        lzunmk
-          (build_matches
+        val matches =
+          lzappend
+           (build_matches
              (rev es)
              (rev Es)
-             (lzmake (fn () => Cons (result_0, lzNil))))
+             (lzmake (fn () =>
+               (print' (fn () => Int.toString lvl ^ "<PARn' ");
+                Cons (result_0, lzNil)))))
+           (lzmake (fn () => (print' (fn () => Int.toString lvl ^ ".PARn' "); Nil)))
+      in
+        lzunmk matches
       end
         
 (*              {ename' = ename_i, s_C' = s_C'_i, Y, qss, tree = PARn' trees} =
@@ -1608,17 +1647,25 @@ struct
   and matchPER' lvl {ename, s_a, s_C, es, Es, pi} =
       lzmake (fn () =>
       let
-      val _ = print' (fn () => Int.toString lvl ^ " PER' ")
+      val _ = print' (fn () => Int.toString lvl ^ ">PER' ")
         fun toPER' {ename', s_C', Y, qs, tree} =
+          (print' (fn () => Int.toString lvl ^ "<PER' ");
             {ename' = ename',
              s_C'   = s_C',
              Y      = Y,
              qs     = Permutation.permute pi qs,
-             tree   = PER' tree}
+             tree   = PER' tree})
+        val matches = 
+          lzappend
+            (lzmap toPER' (matchPARe' (lvl + 1) {ename = ename,
+                                         s_a = s_a, s_C = s_C,
+                                         es = es, Es = Es}))
+            (lzmake
+              (fn () => 
+                (print' (fn () => Int.toString lvl ^ ".PER' ");
+                 Nil)))
       in
-        lzunmk (lzmap toPER' (matchPARe' (lvl + 1) {ename = ename,
-                                          s_a = s_a, s_C = s_C,
-                                          es = es, Es = Es}))
+        lzunmk matches
       end handle e => raise e)
   
   (* Match a global discrete prime using the SWX rule:
@@ -1634,10 +1681,10 @@ struct
    *    else
    *      return NoMatch
    *)
-  fun matchSWX {ename, 
+  fun matchSWX lvl {ename, 
                 s_a = {s_a_e, s_a_n}, L,
                 s_R = {s_R_e, s_R_n}, e = g, Ps = [P]}
-    = lzmake (fn () => (print' (fn () => "SWX ");
+    = lzmake (fn () => (print' (fn () => (Int.toString lvl ^ ">SWX "));
       let
         val {id_Z, Y = U, s, X = W, N} = unmkP P
         val {absnames = W, G} = unmkN N
@@ -1645,16 +1692,19 @@ struct
         val s_C_n = Wiring.* (s, s_R_n)
         val id_Y_C_e = Wiring.id_X (Wiring.outernames s_C_e)
         val i = BgBDNF.info P
-        fun toSWX ({ename', s_C', Y, qs, tree}, rest) = ((*print' (fn () => "SWX: s_C'=" ^ Wiring.toString s_C'
-        ^ "\ns_R_e=" ^ Wiring.toString s_R_e
-        ^ "\ns_R_n=" ^ Wiring.toString s_R_n
-        ^ "\nP=" ^ BgBDNF.toString P
-        ^ "\nqs=[" ^ concat (map (fn q => BgBDNF.toString q ^ "\n") qs) ^ "]\n");*)
+        fun toSWX ({ename', s_C', Y, qs, tree}, rest) = (
+          print' (fn () => (Int.toString lvl ^ "-SWX "));
+          (*print' (fn () => ": s_C'=" ^ Wiring.toString s_C'
+          ^ "\ns_R_e=" ^ Wiring.toString s_R_e
+          ^ "\ns_R_n=" ^ Wiring.toString s_R_n
+          ^ "\nP=" ^ BgBDNF.toString P
+          ^ "\nqs=[" ^ concat (map (fn q => BgBDNF.toString q ^ "\n") qs) ^ "]\n");*)
             let
               val s_C = Wiring.* (s_C', id_Y_C_e)
               val L' = Wiring.app_inverse s_C L
             in
               if NameSet.isEmpty (NameSet.difference L' U) then
+                (print' (fn () => (Int.toString lvl ^ "<SWX "));
                 lzCons
                   (fn () =>
                       ({ename' = ename',
@@ -1663,7 +1713,7 @@ struct
                         E = makeG [makeS (SCon (i, Wiring.id_X U))],
                         qs = qs,
                         tree = SWX tree},
-                       rest ()))
+                       rest ())))
               else
                 rest ()
             end)
@@ -1675,9 +1725,16 @@ struct
                       s_C = {s_C_e = s_C_e, s_C_n = s_C_n},
                       g = g, G = G}
       in
-        lzunmk (lzfoldr toSWX lzNil matches)
+        lzunmk
+         (lzfoldr
+            toSWX
+            (lzmake
+             (fn () =>
+              (print' (fn () => Int.toString lvl ^ ".SWX ");
+              Nil)))
+            matches)
       end) handle e => raise e)
-    | matchSWX _ = lzNil
+    | matchSWX lvl _ = (print' (fn () => Int.toString lvl ^ ".SWX "); lzNil)
 
   (* Split a link l "horizontally" into a link, a substitution, and an
    * identity wiring:
@@ -2000,10 +2057,10 @@ struct
    * 2) Return ename' = ename, Y, s_C = sigma,
    *           E = "V", qs = [(id_Z * ^tau)(X)g]
    *)
-  fun matchPAX {ename,
+  fun matchPAX lvl {ename,
                 s_a = {s_a_e, s_a_n}, L,
                 s_R = {s_R_e, s_R_n}, e = g, Ps = [P]}
-    = lzmake (fn () => (print' (fn () => "PAX ");
+    = lzmake (fn () => (print' (fn () => (Int.toString lvl ^ ">PAX "));
       if Wiring.is_id0 s_R_e andalso Wiring.is_id0 s_R_n then
         let
           val {s, N, id_Z, Y = V, ...} = unmkP P
@@ -2029,27 +2086,35 @@ struct
                          val _ = print' (fn () => "\nename' = " ^
                            NameMap.Fold (fn ((x,y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s) "\n" ename')
                      fun toPAX {tau, id_Z, sigma, Y} =
+                      (print' (fn () => Int.toString lvl ^ "<PAX ");
                          {ename' = ename',
                           s_C = sigma,
                           Y = Y,
                           E = makeG [makeS (SCon (i, Wiring.id_X V))],
                           qs = [makeP tau (makeN (Wiring.innernames tau) g)],
-                          tree = PAX}
+                          tree = PAX})
+                     val matches =
+                       (lzappend 
+                         (lzmap
+                            toPAX
+                            (horizontally_split_wiring
+                               {ename = ename, s_e = s_a_e, s_n = s_a_n}
+                               V L))
+                         (lzmake
+                           (fn () =>
+                             (print' (fn () => Int.toString lvl ^ ".PAXa ");
+                              Nil))))
                    in
-                     lzunmk
-                       (lzmap
-                          toPAX
-                          (horizontally_split_wiring
-                             {ename = ename, s_e = s_a_e, s_n = s_a_n}
-                             V L))
+                     lzunmk matches                       
                    end
                  else
-                   Nil
-              | _ => Nil)
-          | _ => Nil
+                   (print' (fn () => Int.toString lvl ^ ".PAXb "); Nil)
+              | _ => (print' (fn () => Int.toString lvl ^ ".PAXc "); Nil))
+          | _ => (print' (fn () => Int.toString lvl ^ ".PAXd "); Nil)
         end
       else
-        Nil) handle e => raise e)
+        (print' (fn () => Int.toString lvl ^ ".PAXe "); Nil))
+      handle e => raise e)
   (* Match a global discrete prime using the ZAX rule:
    * s, id_e, s |- g, id_0 ~~> g, id_0.
    * 1) Check that s_R_e = s_R_n = id_0 and Ps = []
@@ -2057,10 +2122,10 @@ struct
    * 3) Let s_C = s_a_n * s_a_e restricted to X + Z
    * 4) Return ename' = ename, Y = {}, s_C, E = g, qs = []
    *)
-    | matchPAX {ename,
+    | matchPAX lvl {ename,
                 s_a = {s_a_e, s_a_n}, L,
                 s_R = {s_R_e, s_R_n}, e = g, Ps = []}
-    = lzmake (fn () => (print' (fn () => "ZAX ");
+    = lzmake (fn () => (print' (fn () => Int.toString lvl ^ ">ZAX ");
       if Wiring.is_id0 s_R_e andalso Wiring.is_id0 s_R_n then
         let
           val s_C = Wiring.* (app_ename ename s_a_e, s_a_n)
@@ -2074,7 +2139,8 @@ struct
               ename
               Q_s_a_e'
         in
-(* FIXME is this rignt? /Espen *)
+          print' (fn () => Int.toString lvl ^ "<ZAX ");
+(* FIXME is this right? /Espen *)
 	        LazyList.Cons 
 	          ({ename' = ename',
 	           s_C = s_C,
@@ -2082,7 +2148,9 @@ struct
 	           E = g,
 	           qs = [],
 	           tree = ZAX},
-	           lzNil)
+	           (lzmake
+	            (fn () => 
+	             (print' (fn () => Int.toString lvl ^ ".ZAXa "); Nil))))
 	      end
 (*        let
 	        val XplusZ = Interface.glob (outerface g)
@@ -2098,8 +2166,10 @@ struct
 	           lzNil)
 	      end
 *)	    else
-	      LazyList.Nil) handle e => raise e)
-    | matchPAX _ = lzNil
+         (print' (fn () => Int.toString lvl ^ ".ZAXb ");
+	        LazyList.Nil)) handle e => raise e)
+    | matchPAX lvl _ =
+      (print' (fn () => Int.toString lvl ^ ".ZAXc "); lzNil)
 
   (* makefreshlinks returns a list of links vs/Xs, where vs are
    * fresh names.
@@ -2177,10 +2247,10 @@ struct
    * (which should not be allowed) due to the threading of ename through
    * recursive calls.
    *)
-  fun matchPARn
+  fun matchPARn lvl
       {matchE, ename, 
        s_a = {s_a_e, s_a_n}, L, s_R as {s_R_e, s_R_n},
-       es, Pss} = lzmake (fn () => (print' (fn () => "PARn ");
+       es, Pss} = lzmake (fn () => (print' (fn () => Int.toString lvl ^ ">PARn ");
     let
       val Ys = map (glob o outerface) es
       val s_a_es = map (Wiring.restrict s_a_e) Ys
@@ -2207,12 +2277,12 @@ struct
         = let
             fun tosubmatches (ms, ename', s_C') =
               let
-                val mlz = matchE {ename = ename',
+                val mlz = matchE (lvl + 1) {ename = ename',
                         s_a = {s_a_e = s_a_e, s_a_n = s_a_n},
-                        L = L,
+                        L   = L,
                         s_R = {s_R_e = s_R_e, s_R_n = s_R_n},
-                        e = e,
-                        Ps = Ps}
+                        e   = e,
+                        Ps  = Ps}
                 fun addms ({E, qs, s_C, Y, ename', tree}, mlz) =
                   let
                     val s_C' = Wiring.+ (s_C, s_C')
@@ -2238,6 +2308,7 @@ struct
         = NameSet.isEmpty Y_a_n andalso not Y_R_empty
       fun toPARn (matches, ename', s_C) =
         let
+          val _ = print' (fn () => Int.toString lvl ^ "-PARn ")
           val matches = rev matches
           val Es = map (fn {s_C, Y, E, qs, tree} => E) matches
           val qss = map #qs matches
@@ -2282,9 +2353,13 @@ struct
           val _ = print' (fn () => " = " ^ Wiring.toString s_C ^ "\n")
           val _ = map (fn qs => (print' (fn () => "["); map (fn q => print' (fn () => "q = " ^ BgVal.toString_unchanged (BgBDNF.unmk q) ^ "\n")) qs; print' "]\n")) qss*)
         in
+          print' (fn () => Int.toString lvl ^ "<PARn ");
           {ename' = ename', Y = Y, s_C = s_C, Es = Es, qss = qss, tree = PARn trees}
         end
-      val matches = lzmap toPARn mslz
+      val matches =
+        lzappend 
+          (lzmap toPARn mslz)
+          (lzmake (fn () => (print' (fn () => Int.toString lvl ^ ".PARn "); Nil))) 
     in
       lzunmk matches
     end) handle e => raise e)
@@ -2296,8 +2371,8 @@ struct
    *    lists of lists qss, etc.
    * 4) Concatenate the resulting qss and return the result.
    *)
-  fun matchPARe {matchE, ename, s_a, L, s_R, es, Ps}
-    = lzmake (fn () => (print' (fn () => "PARe ");
+  fun matchPARe lvl {matchE, ename, s_a, L, s_R, es, Ps}
+    = lzmake (fn () => (print' (fn () => Int.toString lvl ^ ">PARe ");
     let
       val n = length es
       val m = length Ps
@@ -2314,11 +2389,12 @@ struct
         let
           val P'ss = group Ps split
           fun toPARe {ename', Y, s_C, Es, qss, tree}
-            = {ename' = ename', Y = Y, s_C = s_C, Es = Es,
-               qs = List.concat qss, tree = PARe tree}
+            = (print' (fn () => Int.toString lvl ^ "<PARe ");
+               {ename' = ename', Y = Y, s_C = s_C, Es = Es,
+                qs = List.concat qss, tree = PARe tree})
           val matches
             = lzmap toPARe
-               (matchPARn {matchE = matchE,
+               (matchPARn (lvl + 1) {matchE = matchE,
                            ename = ename,
                            s_a = s_a,
                            L = L,
@@ -2327,12 +2403,17 @@ struct
                            Pss = P'ss})
           fun next () = lzunmk (nextmatch
                                 (nextsplit split)
-                                handle NoMoreSplits => lzNil)
+                                handle NoMoreSplits =>
+                                  (print' (fn () => Int.toString lvl ^ ".PARe "); 
+                                   lzNil))
         in
           lzappend matches (lzmake next)
         end
     in
-      lzunmk (nextmatch (firstsplit m n)) handle NoMoreSplits => Nil
+      lzunmk (nextmatch (firstsplit m n))
+      handle NoMoreSplits => 
+        (print' (fn () => Int.toString lvl ^ ".PARe "); 
+         Nil)
     end) handle e => raise e)
 
   (* Match a context permutation:
@@ -2342,8 +2423,8 @@ struct
    *    2b) Infer premise, yielding parameter list qs etc.
    *    2c) Permute qs by invert(pibar) and return the result.
    *)
-  fun matchPER {matchE, ename, s_a, L, s_R, es, Qs}
-    = lzmake (fn () => (print' (fn () => "PER ");
+  fun matchPER lvl {matchE, ename, s_a, L, s_R, es, Qs}
+    = lzmake (fn () => (print' (fn () => Int.toString lvl ^ ">PER ");
     let
       val Xss = map (loc o innerface) Qs
       fun nextmatch perm =
@@ -2352,20 +2433,24 @@ struct
           val Qs' = permute pi Qs
           val pibar_inv = Permutation.invert (pushthru pi Xss)
           fun toPER {ename', Y, s_C, Es, qs, tree}
-            = {ename' = ename', Y = Y, s_C = s_C, Es = Es, pi = pi,
-               qs = permute pibar_inv qs, tree = PER tree}
+            = (print' (fn () => Int.toString lvl ^ "<PER "); 
+               {ename' = ename', Y = Y, s_C = s_C, Es = Es, pi = pi,
+               qs = permute pibar_inv qs, tree = PER tree})
           val matches
             = lzmap toPER
-               (matchPARe {matchE = matchE,
+               (matchPARe (lvl + 1) {matchE = matchE,
                            ename = ename,
                            s_a = s_a,
                            L = L,
                            s_R = s_R,
                            es = es,
                            Ps = Qs'})
-          fun next () = lzunmk (nextmatch 
-                                (nextperm perm)
-                                handle NoMorePerms => lzNil)
+          fun next () =
+            lzunmk (nextmatch 
+                     (nextperm perm)
+                     handle NoMorePerms =>
+                       (print' (fn () => Int.toString lvl ^ ".PER "); 
+                        lzNil))
         in
           lzappend matches (lzmake next)
         end
@@ -2383,16 +2468,17 @@ struct
    *         yielding ename', Y, s_C, Es, pi, qs.
    *     3c) Return ename', Y, s_C, merged Es, qs.
    *)
-  fun matchMER (args as {ename, s_a, L, s_R, e = g, Ps}) =
+  fun matchMER lvl (args as {ename, s_a, L, s_R, e = g, Ps}) =
     lzmake (fn () =>
-    let val _ =  print' (fn () => "MER ")
+    let val _ =  print' (fn () => Int.toString lvl ^ ">MER ")
       val {idxmerge, Ss = ms} = unmkG g
       val m = length Ps + 1
       val rho = Partition.make ms m
       fun toMER {ename', Y, s_C, Es, pi, qs, tree} =
-        {ename' = ename', Y = Y, s_C = s_C,
-         E = makeG (List.concat (map (#Ss o unmkG) Es)),
-         qs = qs, tree = MER tree}
+        (print' (fn () => Int.toString lvl ^ "<MER "); 
+         {ename' = ename', Y = Y, s_C = s_C,
+          E = makeG (List.concat (map (#Ss o unmkG) Es)),
+          qs = qs, tree = MER tree})
       fun try rho =
         let
           val mss = Partition.next rho
@@ -2401,14 +2487,19 @@ struct
           ^ "].\n")*)
           val gs = map makeG mss
           val matches
-            = matchPER {ename = ename, matchE = matchDG false,
+            = matchPER (lvl + 1) {ename = ename, matchE = matchDG false,
                   s_a = s_a, L = L, s_R = s_R, es = gs, Qs = Ps}
         in
           lzappend (lzmap toMER matches) (try rho)
         end
       	handle Partition.NoPartitions => lzNil
     in
-      lzunmk (try rho)
+      lzunmk
+        (lzappend
+          (try rho)
+          (lzmake 
+            (fn () => 
+              (print' (fn () => Int.toString lvl ^ ".MER "); Nil))))
     end handle e => raise e)
 
   (* Match a global discrete prime using the ION rule, if possible:
@@ -2429,9 +2520,9 @@ struct
    *     and         G = (id * K_yZ)N
    * 8) Return ename', Y', s_C, G, qs
    *)
-  and matchION (args as {ename, 
+  and matchION lvl (args as {ename, 
                          s_a as {s_a_e, s_a_n}, L, s_R, e = g, Ps})
-    = lzmake (fn () => (print' (fn () => "ION ");
+    = lzmake (fn () => (print' (fn () => Int.toString lvl ^ ">ION ");
     case unmkG g of  {Ss = [s], ...} =>
       (case unmkS s of BgBDNF.SMol m =>
         let
@@ -2439,7 +2530,7 @@ struct
           val {ctrl, free = ys, bound = Xs} = Ion.unmk KyX
         in
           case Control.kind ctrl of
-            Control.Passive => LazyList.Nil
+            Control.Passive => (print' (fn () => Int.toString lvl ^ ".ION "); Nil)
           | _ =>
 	          let
 		          val Y = foldr (fn (y, Y) => NameSet.insert y Y) NameSet.empty ys
@@ -2454,6 +2545,7 @@ struct
 		          val p = makeP (Wiring.make' vXs) n
 		          fun toION ({ename', Y = Y', s_C, E = P, qs, tree}, lzms) =
 		            let
+		              val _ = print' (fn () => Int.toString lvl ^ "-ION ")
 		              val {s = vZ, N, ...} = unmkP P
 		              val vZs =  Wiring.unmk vZ
 		              val Zs = sortlinksby vXs vZs
@@ -2477,25 +2569,33 @@ struct
 		            in
 		              lzCons
 		                (fn () =>
-		                 ({ename' = ename', Y = Y', s_C = s_C, E = G, qs = qs,
-		                   tree = ION tree},
+		                 ((print' (fn () => Int.toString lvl ^ "<ION ");
+		                  {ename' = ename', Y = Y', s_C = s_C, E = G, qs = qs,
+		                   tree = ION tree}),
 		                  lzms ()))
 		            end
 		          val matches
-		            = lzfoldr toION lzNil (matchABS
-                                         {ename = ename,
-                                          s_a = {s_a_n = s_a_n_new,
-                                                 s_a_e = s_a_e_new},
-                                          L = L_new,
-                                          s_R = s_R,
-                                          e = p,
-                                          Ps = Ps})
+		            = lzfoldr 
+		                toION
+		                (lzmake 
+		                  (fn () =>
+		                    (print' (fn () => Int.toString lvl ^ ".IONa ");
+		                     Nil)))
+		                (matchABS (lvl + 1)
+                      {ename = ename,
+                       s_a = {s_a_n = s_a_n_new,
+                              s_a_e = s_a_e_new},
+                       L   = L_new,
+                       s_R = s_R,
+                       e   = p,
+                       Ps  = Ps})
 		        in
 		          lzunmk matches
 		        end
 	      end
        | _ => raise AgentNotGround (BgBDNF.unmk g, "in matchDS"))
-      | _ => LazyList.Nil) handle e => raise e)
+      | _ => (print' (fn () => Int.toString lvl ^ ".IONb "); Nil))
+       handle e => raise e)
   
   (* Match a global discrete prime using a SWX, PAX, MER or ION rule:
    * 1) First
@@ -2506,11 +2606,11 @@ struct
    *    (to avoid infinite recursion via MER-PAR-PARe-PARn),
    *    return any MER rule matches.
    *)
-  and matchDG allowMER (args as {ename, s_a, L, s_R, e = g, Ps}) =
+  and matchDG allowMER lvl (args as {ename, s_a, L, s_R, e = g, Ps}) =
     let
       val (paxswxz, paxmatch) = 
-	        case lzunmk (matchPAX args) of
-	          LazyList.Nil => (lzunmk (matchSWX args), false)
+	        case lzunmk (matchPAX lvl args) of
+	          LazyList.Nil => (lzunmk (matchSWX lvl args), false)
 	        | mz as (LazyList.Cons _) => (mz, true)
     in
       lzappend
@@ -2518,11 +2618,11 @@ struct
 				(lzappend 
 				  (case (paxmatch, Ps) of
 				     (true, []) => lzNil
-				   | _ =>  matchION args)
+				   | _ =>  matchION lvl args)
 		    	(if allowMER then
 			      (lzmake (fn () =>
 		        	case #Ss (unmkG g) of
-		          	(_ :: _ :: _) => lzunmk (matchMER args)
+		          	(_ :: _ :: _) => lzunmk (matchMER lvl args)
 		        	| _ => LazyList.Nil))
 		      else
 		        lzNil))
@@ -2538,9 +2638,9 @@ struct
    *    using W such that s_C * s_C_L = s_Cnew
    * 6) Construct and return ename', Y, s_C, (id * s_C_L)(U)G, and qs
    *)  
-  and matchABS {ename,
+  and matchABS lvl {ename,
                 s_a = {s_a_e, s_a_n}, L, s_R as {s_R_e, s_R_n}, e = p, Ps}
-    = lzmake (fn () => (print' (fn () => "ABS ");
+    = lzmake (fn () => (print' (fn () => Int.toString lvl ^ ">ABS ");
     let
       val {Y = W, s = s_a_L, N = n, ...} = unmkP p
       val {absnames = Z, G = g} = unmkN n
@@ -2549,11 +2649,13 @@ struct
       val s_a_n_new = Wiring.* (s_a_L, s_a_n)
       fun toABS {ename', Y, s_C, E = G, qs, tree} =
         let
+          val _ = print' (fn () => Int.toString lvl ^ "-ABS ")
           val {inCod = s_C_L, notInCod = s_C}
             = Wiring.split_outer s_C W
           val U = Wiring.innernames s_C_L
           val P = makeP s_C_L (makeN U G)
         in
+          print' (fn () => Int.toString lvl ^ "<ABS ");
           {ename' = ename', Y = Y, s_C = s_C, E = P, qs = qs,
            tree = ABS tree}
            (* FIXME: tree might not be prime!  In that case,
@@ -2562,13 +2664,20 @@ struct
         end
       val matches
         = lzmap toABS
-           (matchDG true 
+           (matchDG true (lvl + 1) 
                     {ename = ename,
                      s_a = {s_a_e = s_a_e, s_a_n = s_a_n_new},
                      L = L_new,
                      s_R = s_R,
                      e = g,
                      Ps = Ps})
+      val matches =
+        lzappend
+          matches
+          (lzmake
+            (fn () =>
+              (print' (fn () => Int.toString lvl ^ ".ABS ");
+               Nil)))
     in
       lzunmk matches
     end handle e => raise e))
@@ -2582,7 +2691,7 @@ struct
    * 4) Check that s_C = id_{Y_R} * s'_C
    * 5) Return a new w_C as s'_C where links Y_C are closed.
    *)
-  fun matchCLO {w_a, w_R, ps, Ps} = lzmake (fn () => (print' (fn () => "CLO ");
+  fun matchCLO {w_a, w_R, ps, Ps} = lzmake (fn () => (print' (fn () => "0>CLO ");
     let
       open Wiring
       val {opened = s_a_e, rest = s_a_n, ...}
@@ -2590,7 +2699,7 @@ struct
       val {opened = s_R_e, rest = s_R_n, newnames = Y_R}
         = splitopen w_R
       val matches
-        = matchPER {matchE = matchABS,
+        = matchPER 1 {matchE = matchABS,
                     ename = NameMap.empty,
                     s_a = {s_a_e = s_a_e, s_a_n = s_a_n},
                     L = NameSet.empty,
@@ -2599,7 +2708,8 @@ struct
                     Qs = Ps}
       val remove_id_Y = Wiring.remove_id_Y Y_R
       fun toCLO ({ename', Y, s_C, Es = Qs, pi, qs, tree}, rest) =
-        case remove_id_Y s_C of
+        (print' (fn () => "0-CLO ");
+         case remove_id_Y s_C of
           SOME s'_C =>
           let
             val Y_a = (NameSet.fromList (NameMap.range ename'))
@@ -2613,13 +2723,18 @@ val _ = print' (fn () => "matchCLO: s'_C = " ^ Wiring.toString s'_C ^
           in
             lzCons
               (fn () =>
-                ({w_C = w_C, Qs = Qs, pi = pi, qs = qs, tree = CLO tree},
+                ((print' (fn () => "0<CLO ");
+                 {w_C = w_C, Qs = Qs, pi = pi, qs = qs, tree = CLO tree}),
                   rest ()))
           end
         | NONE =>
-          rest ()
+          rest ())
     in
-      lzunmk (lzfoldr toCLO lzNil matches)
+      lzunmk
+       (lzfoldr
+          toCLO
+          (lzmake (fn () => (print' (fn () => "0.CLO "); Nil)))
+          matches)
     end handle e => raise e))
     
   fun matches {agent, rule} = lzmake (fn () => (
