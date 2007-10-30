@@ -186,6 +186,13 @@ sig
    *)
   val in_codomain : name -> wiring -> bool
 
+  (** Rename the outer names of a wiring.
+   * @params map wiring
+   * @param map     A map representing the renaming.
+   * @param wiring  The wiring to rename.
+   *)
+  val rename_outernames : name namemap -> wiring -> wiring
+
   (** Compute the set of names to which the wiring maps a given set.
    * @params wiring X
    * @param wiring  The wiring.

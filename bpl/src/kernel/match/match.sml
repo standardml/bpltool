@@ -25,6 +25,9 @@
  * In Proceedings of Graph Transformation for Verification and
  * Concurrency Workshop 2006
  * Electronic Notes in Theoretical Computer Science. Elsevier.</li><li>
+ * Glenstrup, Damgaard, Birkedal, and Højsgaard:                   <em>
+ * An Implementation of Bigraph Matching                          </em>
+ *                                                            </li><li>
  * Damgaard and Glenstrup: <em>Normal inferences in Bigraph Matching.</em>
  * Internal note 2006, the BPL Project. IT University of Copenhagen.</li></ul>
  * @version $LastChangedRevision$
@@ -2422,7 +2425,7 @@ struct
    *                                 s_Y_e(y) notin dom(ename')}
    *     and      s_Y_e' = ename' o s_Y_e
    *                    (restricting ename' to s_Y_e's outer face)
-   * 7) Construct s_C = s_Y_n || s_Y_e || s_C
+   * 7) Construct s_C = s_Y_n || s_Y_e' || s_C
    *     and         G = (id * K_yZ)N
    * 8) Return ename', Y', s_C, G, qs
    *)
@@ -2446,7 +2449,7 @@ struct
 		          val Y_e = NameSet.intersect Y (Wiring.innernames s_Y_e)
 		          val s_Y_e_Y = Wiring.app s_Y_e Y_e handle e => raise e
 (*val _ = print' (fn () => "matchION: WIRING s_Y_n, s_Y_e:\n" ^ Wiring.toString s_Y_n ^ "\n" ^ Wiring.toString s_Y_e ^ "\n");*)
-		          val s_Y = Wiring.|| (s_Y_n, s_Y_e)
+		          (* val s_Y = Wiring.|| (s_Y_n, s_Y_e) DEPRECATED *)
 		          val vXs = makefreshlinks Xs
 		          val p = makeP (Wiring.make' vXs) n
 		          fun toION ({ename', Y = Y', s_C, E = P, qs, tree}, lzms) =
@@ -2456,12 +2459,15 @@ struct
 		              val Zs = sortlinksby vXs vZs
 (*val _ = print' (fn () => "matchION: WIRING s_Y, s_C:\n" ^ Wiring.toString s_Y ^ "\n" ^ Wiring.toString s_C ^ "\n");*)
 
-		              val s_C = Wiring.|| (s_Y, s_C)
 		              val ename'
 		                = NameSet.fold
-		                    (fn y => fn ename => NameMap.add' Name.== (y, y, ename))
+		                    (fn y => fn ename =>
+		                      (NameMap.add' Name.== (y, y, ename)
+		                       handle NameMap.DATACHANGED => ename))
 		                    ename'
 		                    s_Y_e_Y
+		              val s_Y_e' = Wiring.rename_outernames ename' s_Y_e
+		              val s_C = Wiring.|| (Wiring.|| (s_Y_n, s_Y_e'), s_C)
 		           val _ = print' (fn () => "matchION: ename' = { " ^
 		             NameMap.Fold (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s) "}" ename'
 		             ^ "s_Y_e_Y = {" ^ NameSet.fold (fn x => fn s => Name.unmk x ^ " " ^ s) "}" s_Y_e_Y
@@ -2475,7 +2481,6 @@ struct
 		                   tree = ION tree},
 		                  lzms ()))
 		            end
-		            handle NameMap.DATACHANGED => lzms ()
 		          val matches
 		            = lzfoldr toION lzNil (matchABS
                                          {ename = ename,

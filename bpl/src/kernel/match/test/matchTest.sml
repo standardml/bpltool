@@ -149,7 +149,7 @@ in
       redex = (      y//[y1,y2,y3] * idp(2)) o
               (                  M1[y1] * (K1[y2] * y3/y3) o `[y3]`)},
      HAS
-       [{context   = (x//[x,x1] * merge(2)) o (K1[x] * x1/x1 * idp(1)),
+       [{context   = (-/x o x//[x,y] * merge(2)) o (K1[x] * y/y * idp(1)),
          parameter = <[y3]> (y3//[] * <->)}]),
     ("Pi calculus reaction rule",
      {agent = (idw[y,z] * K0) o (K1[y] * idw[z]) o M1[z]

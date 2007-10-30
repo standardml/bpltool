@@ -18,7 +18,9 @@
  * USA
  *)
 
-(** Lazy list datatype.
+(** Lazy list datatype.  Note that this interface does not specify
+ * whether an element in a lazylist is evaluated more than once if
+ * the list is inspected several times.
  * @version $LastChangedRevision$
  *)
  
@@ -66,6 +68,11 @@
 	val lzconcat : 'a lazylist lazylist -> 'a lazylist
 	(** Concatenate a list of lazy lists. *)
 	val lzconcatlists : 'a lazylist list -> 'a lazylist
+  (** Return the nth element of a lazy list.
+   * @params xs n
+   * @exception Subscript if n > length xs or n < 0.
+   *)
+  val lznth : 'a lazylist -> int -> 'a
   (** Return a lazy list of the first n elements of a lazy list.
    * @params xs n
    * @exception Subscript if n > length xs or n < 0.

@@ -131,7 +131,7 @@ fun help' [] = ()
 	  help'' topics)
   | help' ("reaction" :: topics) = (print
 	  "Reaction operations (v : bgval; m : match; r : rule, N : string, rs : rules):\n\
-	  \  react v m                                 Perform a single reaction step\n\
+	  \  react m                                   Perform a single reaction step\n\
 	  \  mkrules [r_0, ..., r_n]                   Construct a rule map\n\
 	  \  mknamedrules [..., (N_i, r_i), ...]       Construct a rule map with explicit names\n\
 	  \  matches rs v                              Return lazy list of all matches of all rules\n\
@@ -237,7 +237,6 @@ fun react_b {agent, rules} =
     end
 fun react_v {agent, rules} =
   react_b {agent = norm_v agent, rules = rules}
-val react = react_v
 
 val str_b = BG.BgBDNF.toString
 val str_v = BG.BgVal.toString

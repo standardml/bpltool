@@ -772,6 +772,22 @@ struct
                  not (Name.== (x, y))
                | _ => false) ls)
 
+  fun rename_outernames ren (w as (ls, ht)) =
+    let
+      fun ren_nameedge (Name n) =
+        Name (getOpt (NameMap.lookup ren n, n))
+        | ren_nameedge e = e
+      fun ren_link {outer as Name n, inner} =
+          {outer = ren_nameedge outer, inner = inner}
+        | ren_link l = l
+      val ht' = createNameHashMap (NameHashMap.numItems ht)
+    in
+      NameHashMap.appi
+        (fn (x, y) => NameHashMap.insert ht' (x, ren_nameedge y))
+        ht;
+      (Link'Set.map ren_link ls, ht')
+    end
+
   fun app_x (w as (_, ht)) x =
     case NameHashMap.find ht x of
       SOME (Name n) => SOME n

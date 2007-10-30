@@ -92,6 +92,8 @@ struct
     | lzdrop t n = fn () => case t () of
                               Nil => raise Subscript
                             | Cons (_, tail) => lzdrop tail (n - 1) ()
+
+  fun lznth t n = lzhd (lzdrop t n) handle EmptyList => raise Subscript
   
   fun lzcombine ts = fn () =>
       let
