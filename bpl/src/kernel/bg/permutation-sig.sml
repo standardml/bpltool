@@ -194,7 +194,20 @@ sig
    * @param pi   The permutation.
    *)
   val prod : nameset list list -> 'kinda permutation -> 'kindb permutation
-
+  (** Signal that some permutation is not a product of a list and a
+   * permutation.
+   *) 
+  exception NotProduct of nameset list * Mutable permutation
+  (** Compute the division of a permutation by a list of local outer name sets.
+   * This is the inverse operation of prod (= pushthru), where the resulting
+   * permutation should have an outer face equal to the list of local name sets.
+   * @params Xs pi
+   * @param Xs       List of local outer name sets.
+   * @param pi       The permutation.
+   * @exception      NotProduct if pi is not a product of some Xss and pi'.
+   *) 
+  val divide : 'kinda permutation -> nameset list -> 'kindb permutation
+  
   (** Signal that two lists have different lengths.  *)
   exception UnequalLengths 
 	    of nameset list list * nameset list list * string
