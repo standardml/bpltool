@@ -770,10 +770,12 @@ struct
         val m = LinkSet.size upsilon'
         val n = LinkSet.size sigma'
       in
+        (* This will prevent R=`[x]` from matching a=<-> :
         if m = 0 andalso n > 0 then
           Nil
-        else
+        else*)
           let 
+          val _ = print' (fn () => "\nEntering find_rho_tau_Z'...")
             val vWs = LinkSet.list upsilon'
             val sigma_link_list = LinkSet.list sigma'
 
@@ -788,12 +790,14 @@ struct
                           val Q_j = Wiring.innernames sm_j
                           val U_j = Wiring.outernames sm_j
                         in
+                        print' (fn () => "Adding " ^ Name.unmk y_j ^ "\n");
                           {Y = NameSet.insert y_j Y,
                            rho = Wiring.* (rho, Wiring.make' [mk_slink (y_j, U_j)]),
                            tau = Wiring.* (tau, Wiring.introduce Q_j),
                            Z = Z}
                         end
                 in
+                print' (fn () => "\nIntroducing names..."); 
                   foldr
                     introduce_name
                     {rho = rho, tau = tau, Z = Z, Y = NameSet.empty}
@@ -930,7 +934,9 @@ struct
    *   s_C'     =  s_C'1 * s_C'2
    *   s_C_e    =  s_Ce * s_Ce'
    * 
-   * FIXME describe algoritm
+   * (It also seems like Y = Q''_e + Q''_n.  /ajg)
+   *   
+   * FIXME describe algorithm
    *)
   fun matchPAX' lvl {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, g, G} =
       lzmake (fn () => (print' (fn () => Int.toString lvl ^ ">PAX' "
@@ -949,15 +955,29 @@ struct
           (* Remember to trim s_a and s_C to fit the outer face of g and
            * alpha * id_Z, as this is
            * not done explicitly in the PARn (and ION?) rules.
+           * This is important for computing in matchCLO the context links that
+           * require closing.
            * FIXME: Should the next 4 applications of restrict'' be restrict' ?
            *)
           val XZ = glob (outerface g)
-          val s_a_n = Wiring.restrict'' s_a_n (XZ)
-          val s_a_e = Wiring.restrict' s_a_e (XZ)
           (* FIXME: The following should really be W+Z, not W+X+Z! *)
           val WXZ = NameSet.union (Wiring.outernames alpha) XZ
           val s_C_n = Wiring.restrict'' s_C_n (WXZ)
           val s_C_e = Wiring.restrict'' s_C_e (WXZ)
+          val s_C_e_of = Wiring.outernames s_C_e
+          val s_a_n = Wiring.restrict'' s_a_n (XZ)
+          (* Name introductions remaining in s_a_e after restriction 
+           * should be removed, unless they are already mapped by
+           * ename to a name also present in the outer face of the
+           * restricted s_C_e.  This is to ensure that the latter
+           * outer names do not introduce new, different name
+           * introductions (returned in Y).
+           *)
+          val s_a_e =
+            Wiring.restrict''' s_a_e (XZ)
+              (fn y => case NameMap.lookup ename y of
+                 NONE => true
+               | SOME y' => not (NameSet.member y' s_C_e_of))
 
           val _ = print' (fn () => "after : s_a_e = " ^ Wiring.toString s_a_e ^
                        ", s_a_n = " ^ Wiring.toString s_a_n ^ 
@@ -1052,8 +1072,8 @@ struct
                        tree   = PAX'}
                     end
               in
-              (*print' (fn () => "s_ae'_n = " ^ Wiring.toString s_ae'_n ^
-                     ", s_Cn' = " ^ Wiring.toString s_Cn' ^ "\n");*)
+              print' (fn () => "s_ae'_n = " ^ Wiring.toString s_ae'_n ^
+                     ", s_Cn' = " ^ Wiring.toString s_Cn' ^ "\n");
                 lzmap
                   to_solution
                   (find_rho_tau_Z' {sigma   = s_Cn',
@@ -1062,7 +1082,7 @@ struct
           (* solve (3) and then find solutions for (4) *)
           fun solve_34 s_ae'_n s_Cn s_Cn' tau_e
                        {tau = tau'_e, ename = ename'_e, Y = Q''_e} =
-              ((*print' (fn () => "s_Cn = " ^ Wiring.toString s_Cn ^ ", ");*)
+              (print' (fn () => "s_Cn = " ^ Wiring.toString s_Cn ^ ", ");
               lzconcat
                 (lzmap
                    (solve_4 s_ae'_n s_Cn' (Wiring.* (tau_e, tau'_e)) ename'_e Q''_e)
@@ -1071,8 +1091,8 @@ struct
                                     upsilon = Wiring.* (s_a_n, app_ename ename_n s_an)})))
           (* solve (2) and then find solutions for (3) and (4) *)
           fun solve_234 s_ae'_n s_ae'_e s_Cn s_Cn' {tau = tau_e} =
-              ((*print' (fn () => "s_ae'_e = " ^ Wiring.toString s_ae'_e ^
-                      ", s_Ce' = " ^ Wiring.toString s_Ce' ^ "\n");*)
+              (print' (fn () => "s_ae'_e = " ^ Wiring.toString s_ae'_e ^
+                      ", s_Ce' = " ^ Wiring.toString s_Ce' ^ "\n");
               lzconcat
                 (lzmap
                    (solve_34 s_ae'_n s_Cn s_Cn' tau_e)
@@ -1080,9 +1100,9 @@ struct
                                upsilon = s_ae'_e})))
           (* solve (1) and then find solutions for (2), (3), and (4) *)
           fun solve_1234 s_ae'_n s_ae'_e s_Cn s_Cn' =
-              ((*print' (fn () => "s_ae = " ^ Wiring.toString s_ae ^
+              (print' (fn () => "s_ae = " ^ Wiring.toString s_ae ^
                       ", app_ename ename_e s_ae = " ^
-                      Wiring.toString (app_ename ename_e s_ae) ^ ", ");*)
+                      Wiring.toString (app_ename ename_e s_ae) ^ ", ");
               lzconcat
                 (lzmap
                    (solve_234 s_ae'_n s_ae'_e s_Cn s_Cn')
@@ -1297,11 +1317,12 @@ struct
    *)
   and matchION' lvl {ename, s_a as {s_a_e, s_a_n}, s_C as {s_C_e, s_C_n}, g, G} =
       lzmake (fn () => (print' (fn () => Int.toString lvl ^ ">ION' ");
-       (*print'(": s_a_e=" ^ Wiring.toString s_a_e ^ "\ns_a_n="
-      ^ Wiring.toString s_a_n ^ "\n");*) print' (fn () => "g=" ^ BgBDNF.toString g ^ "\n");
-      (*print' (fn () => "s_C_e="
-      ^ Wiring.toString s_C_e ^ "\ns_C_n="
-      ^ Wiring.toString s_C_n ^ "\n");*) print' (fn () => "G=" ^ BgBDNF.toString G ^ "\n");
+      print' (fn () => ": s_a_e=" ^ Wiring.toString s_a_e
+                     ^ "\ns_a_n=" ^ Wiring.toString s_a_n ^ "\n");
+      print' (fn () => "g=" ^ BgBDNF.toString g ^ "\n");
+      print' (fn () => "s_C_e=" ^ Wiring.toString s_C_e
+                    ^ "\ns_C_n=" ^ Wiring.toString s_C_n ^ "\n");
+      print' (fn () => "G=" ^ BgBDNF.toString G ^ "\n");
       case #Ss (unmkG g) of
         [s] =>
       (case unmkS s of
@@ -1566,9 +1587,7 @@ struct
            (build_matches
              (rev es)
              (rev Es)
-             (lzmake (fn () =>
-               (print' (fn () => Int.toString lvl ^ "<PARn' ");
-                Cons (result_0, lzNil)))))
+             (lzmake (fn () => Cons (result_0, lzNil))))
            (lzmake (fn () => (print' (fn () => Int.toString lvl ^ ".PARn' "); Nil)))
       in
         lzunmk matches
@@ -2712,7 +2731,14 @@ struct
          case remove_id_Y s_C of
           SOME s'_C =>
           let
-            val Y_a = (NameSet.fromList (NameMap.range ename'))
+val _ = print' (fn () => "\nmatchCLO: s'_C = " ^ Wiring.toString s'_C ^ 
+                ", Y = [ " ^ NameSet.fold (fn n => fn s => Name.unmk n ^ " " ^ s) "] " Y ^
+                ", ename range = [ " ^ 
+                foldl (fn (n, s) => Name.unmk n ^ " " ^ s) "]\n"
+                 (NameMap.range ename'))
+            val Y_a =
+              (NameSet.union Y (NameSet.fromList (NameMap.range ename')))
+              handle e => raise e
             val Y_C = NameSet.difference Y_a Y_R
             val w_C = closelinks Y_C s'_C
 val _ = print' (fn () => "matchCLO: s'_C = " ^ Wiring.toString s'_C ^ 

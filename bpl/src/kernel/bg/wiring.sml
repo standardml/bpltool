@@ -915,11 +915,13 @@ struct
   (* Algorithm for restricting a wiring, trimming the outer
    * face:
    * 1 For each link mapping, remove it if inner name not in X.
-   * 2 For each link, remove inner names not in X
-   *   2a If empty name set, remove link.
+   * 2 For each link y/X', remove inner names not in X
+   *   2a If empty name set and p(y), remove link.
 	 *)
-  fun restrict'' (ls, ht) X =
+  fun restrict''' (ls, ht) X p =
     let
+      fun p' (Name n) = p n
+        | p' _ = true 
       val htX = createNameHashMap (NameHashMap.numItems ht)
     in
       NameHashMap.appi
@@ -929,9 +931,9 @@ struct
       (Link'Set.fold
          (fn {outer, inner} => fn ls =>
           let
-            val inner = NameSet.intersect inner X
+            val inner = NameSet.intersect inner X            
           in
-            if NameSet.isEmpty inner then
+            if NameSet.isEmpty inner andalso p' outer then
               ls
             else
               Link'Set.insert {outer = outer, inner = inner} ls
@@ -940,6 +942,8 @@ struct
        ls,
        htX)
     end
+
+  fun restrict'' w X = restrict''' w X (fn _ => true)
 
   (* Algorithm for restricting a wiring, trimming the outer
    * face:

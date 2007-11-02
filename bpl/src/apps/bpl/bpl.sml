@@ -98,7 +98,10 @@ fun help' [] = ()
 	  \                              to redex site j_k\n\
 	  \  [..., i_k&[x_0,...,x_m-1] |--> j_k&[y_0,...,y_m-1], ...]\n\
 	  \                            Instantiation mapping local reactum\n\
-	  \                              name x_k to redex name y_k\n";
+	  \                              name x_k to redex name y_k\n\
+	  \  redex   rule              Extract the redex of a rule\n\
+	  \  reactum rule              Extract the reactum of a rule\n\
+	  \  inst    rule              Extract the instantiation of a rule\n";
 	  help'' topics)
   | help' ("operation" :: topics) = (print
 	  "Bigraph operations (A,B,R : 'a bgbdnf; a,r,v : bgval; e : exn):\n\
@@ -261,6 +264,10 @@ in
 end
 val str_r = BG.Rule.toString
 fun print_r r = print (str_r r)
+
+val redex   = BG.BgBDNF.unmk oo #redex oo BG.Rule.unmk
+val reactum = #react oo BG.Rule.unmk
+val inst    = #inst  oo BG.Rule.unmk
 
 fun explain e = (BG.ErrorHandler.explain e; raise e);
 

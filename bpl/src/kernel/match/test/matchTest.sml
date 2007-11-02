@@ -51,6 +51,8 @@ local
   nonfix <
 
   val K0  = active0  ("K0")
+  val K0' = active0  ("K0'")
+  val K0''= active0  ("K0''")
   val K1  = active   ("K1" -: 1)
   val K2  = active   ("K2" -: 2)
   val K10 = active   ("K10" =: 1 --> 0)
@@ -61,6 +63,8 @@ local
   val L10 = passive  ("L10" =: 1 --> 0)
   val L11 = passive  ("L11" =: 1 --> 1)
   val M0  = atomic0  ("M0")
+  val M0' = atomic0  ("M0'")
+  val M0''= atomic0  ("M0''")
   val M1  = atomic   ("M1" -: 1)
   val M2  = atomic   ("M2" -: 2)
   val M10 = atomic   ("M10" =: 1 --> 0)
@@ -137,6 +141,9 @@ in
     ("Matching redex inner name with nothing",
      {agent = <->, redex = `[x]`},
      HAS [{context = -/x * idp(1), parameter = <[x]> x//[] * <->}]),
+    ("Matching scoped redex inner name with nothing",
+     {agent = <->, redex = <[x]> `[x]`},
+     HAS [{context = (-/x * idp(1)) o `[x]`, parameter = <[x]> x//[] * <->}]),
     ("Matching redex link with agent edge",
      {agent = (-/x o x//[x1,x2] * idp(1)) o (x2/x2 * K1[x1]) o M1[x2],
       redex =                                        M1[y]},
@@ -151,6 +158,18 @@ in
      HAS
        [{context   = (-/x o x//[x,y] * merge(2)) o (K1[x] * y/y * idp(1)),
          parameter = <[y3]> (y3//[] * <->)}]),
+    ("Matching links via two inner redex names",
+     {agent = (-/x o x//[x1,x2] * y//[y1,y2] * merge(2)) o
+              ((K1[x1] * x2/x2) o M1[x2] * (K1[y1] * y2/y2) o M1[y2]),
+      redex = (-/x o x//[x1,x2] * y//[y1,y2] * merge(2)) o
+              ((K1[x1] * x2/x2) o `[x2]` * (K1[y1] * y2/y2) o `[y2]`)},
+     HAS [{context = y/y * idp(1), parameter = (<[x2]> M1[x2]) * (<[y2]> M1[y2])}]),
+    ("Matching wide redex yielding permuting context",
+     {agent = merge(3) o (K0 o M0 * K0' o M0' * K0'' o M0''),
+      redex =                  M0 *       M0' *        M0''},
+     JUST
+       [{context   = merge(3) o (K0 * K0' * K0''),
+         parameter = idx0}]),
     ("Pi calculus reaction rule",
      {agent = (idw[y,z] * K0) o (K1[y] * idw[z]) o M1[z]
           `|` (idw[y]   * K0) o L1[y] o <->,

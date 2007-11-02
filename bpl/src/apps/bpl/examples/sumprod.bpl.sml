@@ -49,14 +49,14 @@ val ( a , b , c , d )
  * containing their sum.
  *)
 val SumInit = "SumInit" :::
-  Sum o (Num[a] o `[a]` `|` -//[b] o (Num[b] o `[b]`))
+  Sum o (-/a o (Num[a] o `[a]`) `|` -/b o (Num[b] o `[b]`))
   ----|>
-  Sum o (Num[a] o `[a]` `|` -//[b] o (Add[a,b] o `[b]`))
+  -//[a,b] o (Sum o (Num[a] o `[a]` `|` Add[a,b] o `[b]`))
 
 val SumDo = "SumDo" :::
-  Z[a] || -//[b] o (Add[a,b] o `[b]`)
+  Z[a] || (Add[a,b] o `[b]`)
   ----|>
-  `[a]` * <->
+  `[a]` * b//[] * <->
 
 val SumEnd = "SumEnd" :::
   Sum o (Num[a] o `[a]`)
@@ -105,10 +105,11 @@ val TAC_prod =
 (* 2 + 0 *)
 val two_plus_zero =
   Sum o
-    (-//[a] o (Num[a] o S o S o Z[a]) `|` -//[b] o (Num[b] o Z[b]))
+    (-/a o (Num[a] o S o S o Z[a]) `|` -/b o (Num[b] o Z[b]))
 
 (* 2 + 1 *)
-val two_plus_one = Sum o (Num[a] o S o S o Z[a] `|` Num[b] o S o Z[b])
+val two_plus_one =
+  Sum o (-/a o (Num[a] o S o S o Z[a]) `|` -/b o (Num[b] o S o Z[b]))
 
 (* 2 x 0 *)
 val two_x_zero = Prod o (Num[a] o S o S o Z[a] `|` Num[b] o Z[b])
