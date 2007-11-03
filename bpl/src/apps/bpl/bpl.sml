@@ -140,6 +140,7 @@ fun help' [] = ()
 	  \  matches rs v                              Return lazy list of all matches of all rules\n\
 	  \  run rs t v                                Perform agent reactions using a tactic\n\
 	  \  steps rs t v                              Return agent for each step using a tactic\n\
+	  \  stepz rs t v                              Return lazily agent for each step using a tactic\n\
 	  \  \n";
 	  help'' topics)
   | help' ("example" :: topics) = (print

@@ -313,6 +313,8 @@ sig
                           newnames : nameset}
   (** Close some open links. *)
   val closelinks : nameset -> wiring -> wiring
+  (** Remove idle edges, i.e., edges with no inner names. *)
+  val removeidles : wiring -> wiring
   (** Determine whether some wiring is an identity. *)
   val is_id : wiring -> bool
   (** Determine whether some wiring is a zero identity. *)

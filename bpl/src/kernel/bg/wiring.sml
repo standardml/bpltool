@@ -279,6 +279,18 @@ struct
 	newmap
       end
 
+  fun removeidles (ls, ht) =
+    let
+      fun nonidles (l as {outer = Closure _, inner}) ls
+        = if NameSet.isEmpty inner then
+            ls
+          else
+            Link'Set.insert l ls
+        | nonidles l ls = Link'Set.insert l ls
+    in
+      (Link'Set.fold nonidles Link'Set.empty ls, ht)
+    end      
+
   fun is_id (ls, ht) = 
       let
 	fun is_not_id_link {outer = Name y, inner} _ =

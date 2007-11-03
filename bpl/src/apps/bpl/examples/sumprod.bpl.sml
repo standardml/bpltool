@@ -68,16 +68,16 @@ val SumEnd = "SumEnd" :::
  * containing their product.
  *)
 val ProdInit = "ProdInit" :::
-  Prod o (Num[a] o `[a]` `|` Num[b] o `[b]`)
+  Prod o (Num[a] o `[a]` `|` -/b o (Num[b] o `[b]`))
   ----|>
   Prod o
-    (Lier o `[a]`  `|` Cand[b] o `[b]` `|` -//[c] o (Num[c] o Z[c]))
+    (Lier o `[a]`  `|` -/b o (Cand[b] o `[b]`) `|` -/c o (Num[c] o Z[c]))
 
 val ProdStep = "ProdStep" :::
-  Prod o (Lier o S o `[a]`  `|` Cand[b] o `[b]` `|` Num[c] o `[c]`)
+  Prod o (Lier o S o `[a]`  `|` -/b o (Cand[b] o `[b]`) `|` -/c o (Num[c] o `[c]`))
   --[3&[d] |--> 1&[b]]--|>
-  Prod o (Lier o `[a]`      `|` Cand[b] o `[b]` `|`
-          Sum o (Num[c] o `[c]` `|` -//[d] o (Num[d] o `[d]`)))
+  Prod o (Lier o `[a]`      `|` -/b o (Cand[b] o `[b]`) `|`
+          Sum o (-/c o (Num[c] o `[c]`) `|` -/d o (Num[d] o `[d]`)))
 
 val ProdEnd = "ProdEnd" :::
   Prod o (Lier o Z[a]  `|` Cand[b] o `[b]` `|` Num[c] o `[c]`)
@@ -99,7 +99,7 @@ val TAC_sum =
 
 val TAC_prod =
   react_rule "ProdInit" ++
-  REPEAT (react_rule "ProdStep") ++
+  REPEAT (react_rule "ProdStep" ++ TAC_sum) ++
   react_rule "ProdEnd"
 
 (* 2 + 0 *)
@@ -107,13 +107,25 @@ val two_plus_zero =
   Sum o
     (-/a o (Num[a] o S o S o Z[a]) `|` -/b o (Num[b] o Z[b]))
 
+(* 0 + 2 *)
+val zero_plus_two =
+  Sum o
+    (-/a o (Num[a] o Z[a]) `|` -/b o (Num[b] o S o S o Z[b]))
+
 (* 2 + 1 *)
 val two_plus_one =
   Sum o (-/a o (Num[a] o S o S o Z[a]) `|` -/b o (Num[b] o S o Z[b]))
 
 (* 2 x 0 *)
-val two_x_zero = Prod o (Num[a] o S o S o Z[a] `|` Num[b] o Z[b])
+val two_x_zero = Prod o (-/a o (Num[a] o S o S o Z[a]) `|` -/b o (Num[b] o Z[b]))
+
+(* 0 x 2 *)
+val zero_x_two = Prod o (-/b o (Num[b] o Z[b]) `|` -/a o (Num[a] o S o S o Z[a]))
 
 (* 2 x 3 *)
-val two_x_zero =
-  Prod o (Num[a] o S o S o Z[a] `|` Num[b] o S o S o S o Z[b])
+val two_x_three =
+  Prod o (-/a o (Num[a] o S o S o Z[a]) `|` -/b o (Num[b] o S o S o S o Z[b]))
+
+(* 3 x 2 *)
+val three_x_two =
+  Prod o (-/a o (Num[a] o S o S o S o Z[a]) `|` -/b o (Num[b] o S o S o Z[b]))

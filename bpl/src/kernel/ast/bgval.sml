@@ -1229,7 +1229,8 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	           VCom (v1', v2', ioi)
 	      | (v1', VCom (v2a, v2b, _)) => VCom (VCom (v1', v2a, ioi), v2b, ioi)
 	      | (v1', v2') => VCom (v1', v2', ioi)
-	    end                 
+	    end   
+	  | simplify (VWir (w, i)) = VWir (Wiring.removeidles w, i)              
     | simplify v = v
 
   (* Rxxx rules.

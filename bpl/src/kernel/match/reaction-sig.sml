@@ -96,6 +96,17 @@ sig
    *)
   val steps : rules -> tactic -> agent -> (rulename * agent) list
 
+  (** Return the steps (applied rules on which agents)
+   * resulting from running a system
+   * of reaction rules, using a tactic, on an agent.
+   * @params R t a
+   * @param R  The reaction rules.
+   * @param t  The tactic to use.
+   * @param a  The initial agent to use.
+   * @return   The resulting steps.
+   *)
+  val stepz : rules -> tactic -> agent -> (rulename * agent) lazylist
+
   (** Finish tactic. *)
   val finish : tactic
   (** Fail tactic. *)

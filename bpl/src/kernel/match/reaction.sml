@@ -158,22 +158,42 @@ struct
     in
       case tactic rulematches of
         MATCH (match, next_tactic)
-      => f match agent (steps' f g rules next_tactic (react match))
+      => f match agent (fn () => steps' f g rules next_tactic (react match))
       | _ => g agent
     end
 
   val run =
     steps'
-      (fn _ => fn _ => fn a => a)
+      (fn _ => fn _ => fn t => t ())
       (fn a => BgVal.simplify (BgBDNF.unmk (BgBDNF.make a))) 
 
   val steps =
     steps'
-     (fn m => fn a => (fn [] => raise ThisCannotHappen
+     (fn m => fn a => (fn t =>
+      case t () of
+        [] => raise ThisCannotHappen
       | ((_, a') :: aas) =>
-        ("INITIAL:", BgVal.simplify a) ::
-        (#name (Rule.unmk (#rule (Match.unmk m))), a') :: aas))
-     (fn a => [("", BgVal.simplify (BgBDNF.unmk (BgBDNF.make a)))])
+        ("<INITIAL>:", BgVal.simplify (BgBDNF.unmk (BgBDNF.make a))) ::
+        (#name (Rule.unmk (#rule (Match.unmk m))) ^ ":", a') :: aas))
+     (fn a => [("<FINAL>:", BgVal.simplify (BgBDNF.unmk (BgBDNF.make a)))])
+
+  val stepz =
+    steps'
+     (fn m => fn a => (fn t => lzmake (fn () =>
+      case lzunmk (t ()) of
+        Nil => raise ThisCannotHappen
+      | Cons ((_, a'), t_aas) =>
+        Cons (
+          ("<INITIAL>:", BgVal.simplify (BgBDNF.unmk (BgBDNF.make a))),
+          (lzmake (
+            fn () => Cons ((
+              #name (Rule.unmk (#rule (Match.unmk m))) ^ ":",
+              BgVal.simplify (BgBDNF.unmk (BgBDNF.make a'))), t_aas)))))))
+     (fn a =>
+       lzmake (fn () =>
+         Cons (
+           ("<FINAL>:", BgVal.simplify (BgBDNF.unmk (BgBDNF.make a))),
+           lzNil)))
 
   fun matches rules agent =
     let

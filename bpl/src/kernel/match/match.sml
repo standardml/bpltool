@@ -986,7 +986,7 @@ struct
           val Y_n  = Wiring.outernames s_a_n
           val Y_e  = NameSet.intersect
                        (Wiring.outernames s_C_e)
-                       (NameSet.fromList (NameMap.range ename))
+                       (NameSet.fromList (NameMap.range ename)) handle e => raise e
 
           (* Split ename into the part which pertains to edges matched by
            * edges ename_e and edges matched by names. *)
@@ -2736,8 +2736,16 @@ val _ = print' (fn () => "\nmatchCLO: s'_C = " ^ Wiring.toString s'_C ^
                 ", ename range = [ " ^ 
                 foldl (fn (n, s) => Name.unmk n ^ " " ^ s) "]\n"
                  (NameMap.range ename'))
+            (* FIXME: The following ought check for duplicates (i.e., use
+             * insert, not insert') in the range of ename.
+             *)
             val Y_a =
-              (NameSet.union Y (NameSet.fromList (NameMap.range ename')))
+              (NameSet.union
+                Y
+                (foldr
+                  (fn (x, Y) => NameSet.insert' x Y) 
+                  NameSet.empty
+                  (NameMap.range ename')))
               handle e => raise e
             val Y_C = NameSet.difference Y_a Y_R
             val w_C = closelinks Y_C s'_C
