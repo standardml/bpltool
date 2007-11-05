@@ -2484,8 +2484,14 @@ struct
    * 3) For each partition rho(n,m) of n into m subsets
    *     3a) Construct tensor product gs of merged molecule subsets.
    *     3b) Infer premise using ename, s_a, L, s_R, es = mss, Ps,
-   *         yielding ename', Y, s_C, Es, pi, qs.
-   *     3c) Return ename', Y, s_C, merged Es, qs.
+   *         yielding ename', Y, s_C, Es, pibar, qs.
+   *     3c) Let  Ss  = merge Es
+   *              Xss = the list of local names lists for Ss
+   *     3d) If pibar is indeed the pushthru of a permutation pi
+   *         through a permutation of Ss
+   *           compute pi  = pibar / Xss
+   *                   Ss' = permute (invert pi) Ss
+   *           return ename', Y, s_C, Ss', qs
    *)
   fun matchMER lvl (args as {ename, s_a, L, s_R, e = g, Ps}) =
     lzmake (fn () =>
@@ -2493,11 +2499,20 @@ struct
       val {idxmerge, Ss = ms} = unmkG g
       val m = length Ps + 1
       val rho = Partition.make ms m
-      fun toMER {ename', Y, s_C, Es, pi, qs, tree} =
-        (print' (fn () => Int.toString lvl ^ "<MER "); 
-         {ename' = ename', Y = Y, s_C = s_C,
-          E = makeG (List.concat (map (#Ss o unmkG) Es)),
-          qs = qs, tree = MER tree})
+      fun toMER ({ename', Y, s_C, Es, pi = pibar, qs, tree}, lzms) =
+        lzmake (fn () =>
+        let val _ = print' (fn () => Int.toString lvl ^ "<MER ")
+          val Ss  = List.concat (map (#Ss o unmkG) Es)
+          val Xss = map (loc o innerface) Ss
+          val pi  = Permutation.divide pibar Xss
+          val Ss' = Permutation.permute (Permutation.invert pi) Ss
+        in
+          Cons ({ename' = ename', Y = Y, s_C = s_C,
+                 E = makeG (Ss'),
+                 qs = qs, tree = MER tree},
+                lzms ())
+        end
+        handle Permutation.NotProduct _ => lzunmk (lzms ()))
       fun try rho =
         let
           val mss = Partition.next rho
@@ -2509,7 +2524,7 @@ struct
             = matchPER (lvl + 1) {ename = ename, matchE = matchDG false,
                   s_a = s_a, L = L, s_R = s_R, es = gs, Qs = Ps}
         in
-          lzappend (lzmap toMER matches) (try rho)
+          lzappend (lzfoldr toMER lzNil matches) (try rho)
         end
       	handle Partition.NoPartitions => lzNil
     in

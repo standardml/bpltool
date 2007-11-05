@@ -154,6 +154,19 @@ struct
 	SOME _ => false
       | NONE => true
 
+  (** Determine whether some permutation is the identity in time
+   * O(n), where n = width.
+   *)
+  fun is_id ({width, pi, pi_inv} : 'kind permutation) =
+      case Array.findi (fn (i, (j, _)) => i <> j) pi of
+	SOME _ => false
+      | NONE => true
+
+  (** Determine whether some permutation is the zero identity in
+   * time O(1).
+   *)
+  fun is_id0 ({width, ...} : 'kind permutation) = width = 0
+
   fun pp' at atat lbrack amp rbrack idp indent pps (perm as {width, pi, pi_inv}) =
       let
 	open PrettyPrint
@@ -715,10 +728,10 @@ struct
 
   fun pushthru pi Xss = prod Xss pi
 
-  exception NotProduct of nameset list * Mutable permutation
-  fun explain_NotProduct (NotProduct (nss, p)) =
+  exception NotProduct of nameset list list * Mutable permutation
+  fun explain_NotProduct (NotProduct (nsss, p)) =
       [Exp (LVL_USER, Origin.unknown_origin,
-            mk_list_pp "{" "}" "," NameSetPP.pp nss,
+            mk_list_pp "{" "}" "," (mk_list_pp' "{" "}" "," NameSetPP.pp) nsss,
             []),
        Exp (LVL_USER, Origin.unknown_origin,
             pack_pp_with_data pp p, [])]
@@ -726,7 +739,16 @@ struct
   val _ = add_explainer 
             (mk_explainer "permutation is not a product" explain_NotProduct)
 
-  fun divide perm Xs = raise NotProduct (Xs, copy perm) (* TODO: Implement! *)
+  (* FIXME: inefficient *)
+  fun divide perm Xss =
+      let
+        val {major, minors} = split perm Xss
+      in
+        if List.all is_id minors then
+          major
+        else
+          raise NotProduct (Xss, perm)
+      end
 
   exception UnequalLengths of nameset list list * nameset list list * string
   fun explain_UnequalLengths (UnequalLengths (nsss1, nsss2, errtxt)) =
@@ -808,19 +830,6 @@ struct
     in
       perm
     end
-
-  (** Determine whether some permutation is the identity in time
-   * O(n), where n = width.
-   *)
-  fun is_id ({width, pi, pi_inv} : 'kind permutation) =
-      case Array.findi (fn (i, (j, _)) => i <> j) pi of
-	SOME _ => false
-      | NONE => true
-
-  (** Determine whether some permutation is the zero identity in
-   * time O(1).
-   *)
-  fun is_id0 ({width, ...} : 'kind permutation) = width = 0
 
   val op * = x
 
