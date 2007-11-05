@@ -88,8 +88,6 @@ end (*local*)
   TyId=             [']{Identifier};
   Integer=          {Digit}+;
 
-  NotQuoteBackslash= [^"\];
-
 %%
 
 <INITIAL>{WS}    => (continue ());

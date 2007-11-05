@@ -112,7 +112,7 @@ end (*local*)
   TyId=             [']{Identifier};
   Integer=          {Digit}+;
 
-  NotQuoteBackslash= [^"\];
+  NotQuoteBackslash= [^"\\];
 
 %%
 
