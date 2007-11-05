@@ -2752,10 +2752,10 @@ val _ = print' (fn () => "\nmatchCLO: s'_C = " ^ Wiring.toString s'_C ^
                 foldl (fn (n, s) => Name.unmk n ^ " " ^ s) "]\n"
                  (NameMap.range ename'))
             (* FIXME: The following ought check for duplicates (i.e., use
-             * insert, not insert') in the range of ename.
+             * union/insert, not union'/insert') in the range of ename.
              *)
             val Y_a =
-              (NameSet.union
+              (NameSet.union'
                 Y
                 (foldr
                   (fn (x, Y) => NameSet.insert' x Y) 
