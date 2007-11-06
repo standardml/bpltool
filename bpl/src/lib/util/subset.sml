@@ -26,37 +26,75 @@ struct
   open LazyList
 
   type set = Set.Set
-  type subsetgen = set lazylist ref
+  type subsetgen = (set * set) lazylist ref
 
   exception NoSubsets
 
   fun make X =
       let
-        fun all_subsets []      = lzCons (fn () => (Set.empty, lzNil))
+        fun all_subsets []      = lzCons (fn () => ((Set.empty, Set.empty), lzNil))
           | all_subsets (e::es) = lzmake (fn () =>
             lzunmk
-              (lzfoldr (fn (X', rest) => 
-                           lzCons (fn () => (Set.insert e X',
-                           lzCons (fn () => (X', rest ())))))
-                       lzNil (all_subsets es)))
+              (lzfoldr
+                 (fn ((X', X'_complement), rest) => 
+                     lzCons (fn () => ((Set.insert e X', X'_complement),
+                     lzCons (fn () => ((X', Set.insert e X'_complement),
+                     rest ())))))
+                 lzNil (all_subsets es)))
       in
         ref (all_subsets (Set.list X))
       end
   
   fun next sg =
       case lzunmk (!sg) of
-         Nil         => raise NoSubsets
-       | Cons (r, g) => (sg := g; r)
+        Nil         => raise NoSubsets
+      | Cons ((s, _), g) => (sg := g; s)
+
+  fun next' sg =
+      case lzunmk (!sg) of
+        Nil         => raise NoSubsets
+      | Cons (r, g) => (sg := g; r)
 
   (* FIXME inefficient *)
-  fun next' sg m =
+  fun next_eq sg m =
+      let
+        val s = next sg
+      in
+        if Set.size s = m then
+          s
+        else
+          next_eq sg m
+      end
+
+  fun next_eq' sg m =
+      let
+        val (r as (s, _)) = next' sg
+      in
+        if Set.size s = m then
+          r
+        else
+          next_eq' sg m
+      end
+
+  fun next_geq sg m =
       let
         val s = next sg
       in
         if Set.size s >= m then
           s
         else
-          next' sg m
+          next_geq sg m
       end
+
+  fun next_geq' sg m =
+      let
+        val (r as (s, _)) = next' sg
+      in
+        if Set.size s >= m then
+          r
+        else
+          next_geq' sg m
+      end
+  
 end
 

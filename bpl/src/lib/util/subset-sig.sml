@@ -45,6 +45,35 @@ sig
    * @exception NoSubsets  if no more subsets are available.
    *)
   val next : subsetgen -> set
+  (** Get the next subset and its complement from a subset generator.
+   * @params subset_gen
+   * @param subset_gen  the subset generator.
+   * @return a subset and its complement of the set given to make.
+   * @exception NoSubsets  if no more subsets are available.
+   *)
+  val next' : subsetgen -> set * set
+
+  (** Get the next subset from a subset generator which has
+   * m elements.
+   *
+   * @params subset_gen m
+   * @param subset_gen  the subset generator.
+   * @param m           the number of elements.
+   * @return a subset of the set given to make with m elements.
+   * @exception NoSubsets  if no more subsets are available.
+   *)
+  val next_eq : subsetgen -> int -> set
+  (** Get the next subset from a subset generator which has
+   * m elements. The complement of the subset is given as well.
+   *
+   * @params subset_gen m
+   * @param subset_gen  the subset generator.
+   * @param m           the number of elements.
+   * @return a subset of the set given to make with m elements.
+   *         The complement of the subset is given as well.
+   * @exception NoSubsets  if no more subsets are available.
+   *)
+  val next_eq' : subsetgen -> int -> set * set
 
   (** Get the next subset from a subset generator which has
    * at least m elements.
@@ -55,5 +84,16 @@ sig
    * @return a subset of the set given to make with at least m elements.
    * @exception NoSubsets  if no more subsets are available.
    *)
-  val next' : subsetgen -> int -> set
+  val next_geq : subsetgen -> int -> set
+  (** Get the next subset from a subset generator which has
+   * at least m elements. The complement of the subset is given as well.
+   *
+   * @params subset_gen m
+   * @param subset_gen  the subset generator.
+   * @param m           the minimum number of elements.
+   * @return a subset of the set given to make with at least m elements.
+   *         The complement of the subset is given as well.
+   * @exception NoSubsets  if no more subsets are available.
+   *)
+  val next_geq' : subsetgen -> int -> set * set
 end

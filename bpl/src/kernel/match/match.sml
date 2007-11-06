@@ -110,6 +110,9 @@ struct
   structure NameSetSubset
     = Subset(structure LazyList = LazyList
              structure Set = NameSet)
+  structure LinkSetSubset
+    = Subset(structure LazyList = LazyList
+             structure Set = LinkSet)
 
   open BgVal
   type info = Info.info
@@ -443,11 +446,26 @@ struct
          Cons (NameSetSubset.next subsetgen, nssubsetgen2lzlist subsetgen)
          handle NameSetSubset.NoSubsets => Nil)
   (* same as above, except the list only has elements of at least size m *)
-  fun nssubsetgen2lzlist' subsetgen m =
+  fun nssubsetgen2lzlist_geq subsetgen m =
       lzmake
         (fn () =>
-         Cons (NameSetSubset.next' subsetgen m, nssubsetgen2lzlist' subsetgen m)
+         Cons (NameSetSubset.next_geq subsetgen m, nssubsetgen2lzlist_geq subsetgen m)
          handle NameSetSubset.NoSubsets => Nil)
+
+  (* Utility function for converting a linkset subset generator to a lazy list
+   *)
+  (* same as above, except the list only has elements of size m *)
+  fun lssubsetgen2lzlist_eq subsetgen m =
+      lzmake
+        (fn () =>
+         Cons (LinkSetSubset.next_eq subsetgen m, lssubsetgen2lzlist_eq subsetgen m)
+         handle LinkSetSubset.NoSubsets => Nil)
+  (* same as above, except the subsets are paired with their complements *)
+  fun lssubsetgen2lzlist_eq' subsetgen m =
+      lzmake
+        (fn () =>
+         Cons (LinkSetSubset.next_eq' subsetgen m, lssubsetgen2lzlist_eq' subsetgen m)
+         handle LinkSetSubset.NoSubsets => Nil)
 
   (* utility functions to make substitution links *)
   fun mk_slink (y, X) = Link.make {outer = SOME y, inner = X}
@@ -538,11 +556,68 @@ struct
   (* Find all substitutions tau, some nameset Y, and all renamings ename that
    * satisfy the equation
    *
-   *    sigma tau = ename (upsilon * Y)
+   *    sigma tau = ename upsilon * Y
    * 
    * given subsitutions sigma and upsilon.
    * 
    * The algorithm is as follows (could be more sophisticated...):
+   *
+   * 1) Let m = |sigma| and lay out the links of upsilon as a list:
+   *      upsilon = [z_1/V_1, ..., z_n/V_n]
+   * 2) If n > m then return NoMatch
+   * 3) For each partition of sigma
+   *    sigma = {s_1/X_1, ..., s_n/X_n} \cup {t_1/V_1, ..., t_m-n/V_m-n}
+   *      a) let Y = {t_1, ..., t_m-n}
+   *      b) For each permutation pi of n elements
+   *           let ename = {s_1/z_pi(1), ..., s_n/z_pi(n)}
+   *           the solutions given by
+   *             find_tau {sigma = sigma, upsilon = ename upsilon * Y}
+   *           are also solutions to the above equation
+   *)
+  fun find_tau' {sigma, upsilon} = lzmake (fn () =>
+    let
+      val sigma'   = Wiring.unmk sigma
+      val upsilon' = Wiring.unmk upsilon
+      val m = LinkSet.size sigma'
+      val n = LinkSet.size upsilon'
+    in
+      if n > m then
+        Nil
+      else
+        let
+          val zs = map (valOf o #outer o Link.unmk) (LinkSet.list upsilon')
+          
+          fun process_permutation Y wir_Y ss z_pis = 
+            let
+              val ename = NameMap.fromList (ListPair.zip (ss, z_pis))
+              fun add_ename_Y {tau} = {tau = tau, ename = ename, Y = Y}
+            in
+              lzmap
+                add_ename_Y
+                (find_tau {sigma = sigma,
+                           upsilon = Wiring.* (app_ename ename upsilon, wir_Y)})
+            end
+            
+          fun process_sigma_partition (ssigma, ssigma_complement) =
+            let
+              val ss = map (valOf o #outer o Link.unmk) (LinkSet.list ssigma)
+              val Y  = LinkSet.fold
+                         (fn l => fn Y =>
+                             NameSet.insert (valOf (#outer (Link.unmk l))) Y)
+                         NameSet.empty ssigma_complement
+              val wir_Y = Wiring.introduce Y
+            in
+              lzconcat (lzmap (process_permutation Y wir_Y ss) (all_perms zs))
+            end
+        in
+          lzunmk (lzconcat (lzmap
+                              process_sigma_partition
+                              (* Partition sigma using a subset generator *)
+                              (lssubsetgen2lzlist_eq'
+                                 (LinkSetSubset.make sigma') n)))
+        end
+    end)
+(*(* Old algorithm which found solutions for  sigma tau = ename (upsilon * Y):
    *
    * 1) Lay out the links of sigma and upsilon as lists:
    *      sigma   = [s_1/X_1, ..., s_m/X_m]
@@ -596,6 +671,7 @@ struct
             lzunmk (lzconcat (lzmap process_ws_permutation (all_perms ws)))
           end
       end)
+*)
 
   (* find all substitutions rho and tau and all namesets Z
    * satisfying the equation
@@ -910,15 +986,16 @@ struct
    * The approach taken is to split the problem into four smaller problems
    * 
    * 1)  s_Ce  tau_e                    =  ename s_ae                
-   * 2)  s_Ce' tau'_e                   =  ename'_e (Q''_e * s_ae'_e)  
+   * 2)  s_Ce' tau'_e                   =  ename'_e s_ae'_e * Q''_e  
    * 3)  s_C'_1 (id_Z * s_Cn tau_n)     =  s_a_n                     
-   * 4)  s_C'_2 (id_Z' * s_Cn' tau'_n)  =  ename'_n (Q''_n * s_ae'_n)
-   *                                    =            Q''_n * s_ae'_n
+   * 4)  s_C'_2 (id_Z' * s_Cn' tau'_n)  =  ename'_n s_ae'_n * Q''_n
+   *                                    =           s_ae'_n * Q''_n
    * 
    * where
    * 
    *   ename''  =  ename'_n * ename'_e
    *   s_a_e    =  s_ae * Q''_n * s_ae'_n * s_ae'_e * Q''_e
+   *   Y        =  Q''_e + Q''_n
    * 
    *   ename    :  Q_e  -> Y_e
    *   ename'_n :  Q''_n \uplus Q'_n  ->  Y'_n  is an identity
@@ -934,7 +1011,6 @@ struct
    *   s_C'     =  s_C'1 * s_C'2
    *   s_C_e    =  s_Ce * s_Ce'
    * 
-   * (It also seems like Y = Q''_e + Q''_n.  /ajg)
    *   
    * FIXME describe algorithm
    *)
@@ -959,13 +1035,14 @@ struct
            * require closing.
            * FIXME: Should the next 4 applications of restrict'' be restrict' ?
            *)
-          val XZ = glob (outerface g)
+          val XZ       = glob (outerface g)
           (* FIXME: The following should really be W+Z, not W+X+Z! *)
-          val WXZ = NameSet.union (Wiring.outernames alpha) XZ
-          val s_C_n = Wiring.restrict'' s_C_n (WXZ)
-          val s_C_e = Wiring.restrict'' s_C_e (WXZ)
+          val W        = Wiring.outernames alpha
+          val WXZ      = NameSet.union W XZ
+          val s_C_n    = Wiring.restrict'' s_C_n (WXZ)
+          val s_C_e    = Wiring.restrict'' s_C_e (WXZ)
           val s_C_e_of = Wiring.outernames s_C_e
-          val s_a_n = Wiring.restrict'' s_a_n (XZ)
+          val s_a_n    = Wiring.restrict'' s_a_n (XZ)
           (* Name introductions remaining in s_a_e after restriction 
            * should be removed, unless they are already mapped by
            * ename to a name also present in the outer face of the
@@ -1032,23 +1109,23 @@ struct
            * Then try to solve the subproblems
            *
            * 1)  s_Ce  tau_e                    =  ename_e s_ae              and
-           * 2)  s_Ce' tau'_e                   =  ename'_e (Q_e * s_ae'_e)  and
+           * 2)  s_Ce' tau'_e                   =  ename'_e s_ae'_e * Q_e    and
            * 3)  s_C'_1 (id_Z * s_Cn tau_n)     =  s_a_n * (ename_n s_an)    and
            * 4)  s_C'_2 (id_Z' * s_Cn' tau'_n)  =  Q_n * s_ae'_n
            *
            * FIXME should we calculate all solutions to each and then generate combinations?
            * NB! We calculate the same solutions for each combination...
            *     Slow but easy and memory preserving...
-					 * FIXME: What if s_ae or s_ae'_e are empty, but s_Ce or s_Ce', respectively,
-					 *     are not?  Should we then add a name introduction to s_ae or s_ae'_e,
-					 *     and return it in Y?
+           * FIXME: What if s_ae or s_ae'_e are empty, but s_Ce or s_Ce', respectively,
+           *     are not?  Should we then add a name introduction to s_ae or s_ae'_e,
+           *     and return it in Y?
            *)
           val s_C_n_alpha_links = LinkSet.list (Wiring.unmk s_C_n_alpha)
           val s_a_e'_links      = LinkSet.list (Wiring.unmk s_a_e')
 
           (* solve (4) and construct result
            * taue = tau_e * tau'_e *)
-          fun solve_4 s_ae'_n s_Cn' taue ename'_e Q''_e
+          fun solve_4 ename' s_ae'_n s_Cn' taue Q''_e
                       {rho = s_C'_1, tau = tau_n, Z} =
               let
                 val tauen = Wiring.* (taue, tau_n)
@@ -1056,16 +1133,9 @@ struct
                     let
                       val id_Z     = Wiring.id_X (NameSet.union Z Z')
                       val tau      = Wiring.* (tauen, tau'_n)
-                      val Y'_n     = Wiring.outernames s_C'_2
-                      val ename'_n =
-                        NameSet.fold
-                         (fn y => fn ename'_n => NameMap.add (y, y, ename'_n))
-                          NameMap.empty
-                          Y'_n
                     in
                       print' (fn () => Int.toString lvl ^ "<PAX' ");
-                      {ename' = NameMap.plus
-                                 (NameMap.plus (ename, ename'_e), ename'_n),
+                      {ename' = ename',
                        Y      = NameSet.union Q''_e Q''_n,
                        s_C'   = Wiring.* (s_C'_1, s_C'_2),
                        qs     = [makeP tau (makeN (Wiring.innernames tau) g handle e => raise e)],
@@ -1080,49 +1150,67 @@ struct
                                     upsilon = s_ae'_n})
               end
           (* solve (3) and then find solutions for (4) *)
-          fun solve_34 s_ae'_n s_Cn s_Cn' tau_e
+          fun solve_3 ename' s_ae'_n s_Cn s_Cn' tau_e
                        {tau = tau'_e, ename = ename'_e, Y = Q''_e} =
+            let
+              val ename' = NameMap.plus (ename', ename'_e)
+            in
               (print' (fn () => "s_Cn = " ^ Wiring.toString s_Cn ^ ", ");
               lzconcat
                 (lzmap
-                   (solve_4 s_ae'_n s_Cn' (Wiring.* (tau_e, tau'_e)) ename'_e Q''_e)
+                   (solve_4 ename' s_ae'_n s_Cn' (Wiring.* (tau_e, tau'_e)) Q''_e)
                    (find_rho_tau_Z {sigma   = s_Cn,
                                     (* FIXME this should only be done once... *)
                                     upsilon = Wiring.* (s_a_n, app_ename ename_n s_an)})))
+            end
           (* solve (2) and then find solutions for (3) and (4) *)
-          fun solve_234 s_ae'_n s_ae'_e s_Cn s_Cn' {tau = tau_e} =
+          fun solve_2 ename' s_ae'_n s_ae'_e s_Cn s_Cn' {tau = tau_e} =
               (print' (fn () => "s_ae'_e = " ^ Wiring.toString s_ae'_e ^
                       ", s_Ce' = " ^ Wiring.toString s_Ce' ^ "\n");
               lzconcat
                 (lzmap
-                   (solve_34 s_ae'_n s_Cn s_Cn' tau_e)
+                   (solve_3 ename' s_ae'_n s_Cn s_Cn' tau_e)
                    (find_tau' {sigma   = s_Ce',
                                upsilon = s_ae'_e})))
           (* solve (1) and then find solutions for (2), (3), and (4) *)
-          fun solve_1234 s_ae'_n s_ae'_e s_Cn s_Cn' =
+          fun solve_1 ename' s_ae'_n s_ae'_e s_Cn s_Cn' =
               (print' (fn () => "s_ae = " ^ Wiring.toString s_ae ^
                       ", app_ename ename_e s_ae = " ^
                       Wiring.toString (app_ename ename_e s_ae) ^ ", ");
               lzconcat
                 (lzmap
-                   (solve_234 s_ae'_n s_ae'_e s_Cn s_Cn')
+                   (solve_2 ename' s_ae'_n s_ae'_e s_Cn s_Cn')
                    (find_tau {sigma   = s_Ce,
                               (* FIXME this should only be done once... *)
                               upsilon = app_ename ename_e s_ae})))
 
-          fun process_s_C_n_alpha_split s_ae'_n s_ae'_e [s_Cn, s_Cn'] =
-              solve_1234 s_ae'_n s_ae'_e s_Cn s_Cn'
-            | process_s_C_n_alpha_split _ _ _ = raise ThisCannotHappen
+          fun process_s_C_n_alpha_split ename' s_ae'_n s_ae'_e [s_Cn, s_Cn'] =
+              solve_1 ename' s_ae'_n s_ae'_e s_Cn s_Cn'
+            | process_s_C_n_alpha_split _ _ _ _ = raise ThisCannotHappen
 
           fun process_s_a_e'_split [s_ae'_n, s_ae'_e] =
+            let
+              val ename'_n
+                = LinkSet.fold
+                    (fn l => fn ename'_n =>
+                        let
+                          val y = valOf (Link.outername l)
+                        in
+                          NameMap.add (y, y, ename'_n)
+                        end)
+                    NameMap.empty
+                    (Wiring.unmk s_ae'_n)
+              val ename' = NameMap.plus (ename, ename'_n)
+            in
               lzconcat
                 (lzmap
-                   (process_s_C_n_alpha_split s_ae'_n s_ae'_e)
+                   (process_s_C_n_alpha_split ename' s_ae'_n s_ae'_e)
                    (lzmap
                      (map (fn ls => Wiring.make' ls handle e => raise e))
                      (opartgen2lzlist
                         (OrderedPartition.make s_C_n_alpha_links 2)
                       handle OrderedPartition.NoPartitions => lzNil)))
+            end
             | process_s_a_e'_split _ = raise ThisCannotHappen
         in
           lzunmk
@@ -2063,7 +2151,7 @@ struct
         lzconcat
           (lzmap
              process_V_subset
-             (nssubsetgen2lzlist' (NameSetSubset.make V) k))
+             (nssubsetgen2lzlist_geq (NameSetSubset.make V) k))
       end
 
   (* Match a global discrete prime using the PAX rule:
@@ -2755,10 +2843,10 @@ val _ = print' (fn () => "\nmatchCLO: s'_C = " ^ Wiring.toString s'_C ^
              * union/insert, not union'/insert') in the range of ename.
              *)
             val Y_a =
-              (NameSet.union'
+              (NameSet.union
                 Y
                 (foldr
-                  (fn (x, Y) => NameSet.insert' x Y) 
+                  (fn (x, Y) => NameSet.insert x Y) 
                   NameSet.empty
                   (NameMap.range ename')))
               handle e => raise e
