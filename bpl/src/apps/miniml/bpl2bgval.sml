@@ -42,10 +42,10 @@ structure LinkSet = BG.LinkSet
 structure Origin = Origin
 structure Instantiation = BG.Instantiation
 structure Rule = BG.Rule
+structure BgBdnf = BG.BgBDNF
 
 (*
 structure P = BG.Permutation
-structure Bdnf    = BG.BgBDNF
 structure M       = BG.Match
 structure Re = Reaction (structure RuleNameMap = Util.StringMap
                          structure Info = BG.Info
@@ -141,62 +141,89 @@ fun getSiteNums (b:bigraph) =
 	    | Ctrl(i,b,f) => []
 	    | Clo(n,b) => getSiteNums b
 	    | Abs(n,b) => getSiteNums b
-	    | Site(i,l) => [i] (* assumes that sites are Nats already *)
+	    | Site(i,l) =>
+	      ( case i (* assume that sites are Nats already *)
+		 of Num(n) => [n]
+		  | _ => raise Fail("getSiteNums: Site with non-nat id") )
 	    | Id(i) => []
 	    | Empty => []
-
 
 (* partition an smap into two smaps according to pivot p *)
 fun partSmap [] acc p = (acc,[])
   | partSmap ((n,i)::m) acc p =
     if p=n then (rev acc, (n,i)::m) else partSmap m ((n,i) :: acc) p
 
+(* lookup first occurence of id and return corresponding key (Site) *)
+fun lookupSite [] id = NONE
+  | lookupSite (s::m) id =
+    case s
+     of Site(Num(n),l) => if id=n then SOME(s) else lookupSite m id
+      | _ => raise Fail("lookupSite: Unnumbered site")
+
 (* lookup first occurence of id and return corresponding key (Nat) *)
 fun lookupFst [] id = NONE
-  | lookupFst ((n,i)::m) id = if i=id then SOME(n) else lookupFst m id
+  | lookupFst ((n,Num(n'))::m) id = if id=n' then SOME(n)
+				    else lookupFst m id
+  | lookupFst ((n,_)::m) id = raise Fail("lookupFst: Unnumbered site")
 
-(* lookup first occurence of n2 and return corresponding n1 *)
+(* lookup first occurence of n1 and return corresponding key (Nat) *)
 fun lookupSnd [] id = NONE
   | lookupSnd ((n1,n2)::m) id = if id=n1 then SOME(n2) else lookupSnd m id
 
-fun nat2int n = n
-
-fun nat2str n = Int.toString(nat2int(n))
-
 (* calculate 'maps', i.e. a 'map list', for instantiation *)
-fun calcMaps (b1:bigraph) (b2:bigraph) pivot smap =
+fun calcMaps (b1:bigraph) (b2:bigraph) pivot(*:int*) (smap:sitemap) =
     let val (smap1,smap2) = partSmap smap [] pivot
 	(* for each site in b2, find target site in b1 if it exists *)
-	val auxList = List.map (fn (n,i) => let val x = lookupFst smap1 i
-					    in (n,x) end)
-			       smap2
-	fun err n = "calcMaps: Site " ^ nat2str(n) ^
-		    " has no LHS counterpart"
-	(* peel off options from second components of generated auxlist *)
-	fun peel assocOptList =
+	val auxList = (*:(nat*nat option) list*)
+	    List.map
+		(fn s =>
+		    ( case s
+		       of (n,Num(n')) => let val opt = lookupFst smap1 n'
+					 in (n,opt) end
+			| _ => raise Fail("calcMaps: smap2 has non-site")
+		    )
+		) 
+		smap2
+	fun err1 n = "calcMaps: Site " ^ Int.toString(n) ^
+		     " has no LHS counterpart"
+	fun err2 n = "makeMaps: Shouldn't happen"
+	val err3 = "makeMaps: Unnumbered site"
+	(* peel off options from second components of generated auxList *)
+	fun peel (assocOptList:(nat*nat option) list) =
 	    case assocOptList
 	     of [] => []
-	      | ((n,x)::m) => case x of NONE => raise Fail(err n)
-				      | SOME(i) => (n,i) :: peel m
-	val pldList = peel auxList
+	      | ((n,x)::m) => case x of NONE => raise Fail(err1 n)
+				      | SOME(n') => (n,n') :: peel m
+	val pldList = (*:(nat*nat) list*) peel auxList
 	(* generate 'maps'; (int * name list) * (int * name list) list *)
 	val sites1 = getSites b1
 	val sites2 = getSites b2
-	fun makeMaps slist1 slist2 alist =
+	fun namelist2name_list l =
+	    case l of Namelist(nms) => List.map (fn s => Name.make s) nms
+	fun makeMaps slist1 slist2 pldlist =
 	    List.map
-	    ( fn Site(n,l) =>
-		 let val b1siteId = lookupSnd auxList n
-		     val b1site =
-			 case b1siteId
-			  of SOME(m) =>
-			     ( case lookupFst sites1 b1siteId
-				of SOME(s) => s
-				 | NONE => raise Fail(err n) )
-			   | NONE => raise Fail(err n)
-		     val b2site = Site(n,l)
-		 in (b2site, b1site) end )
+	    ( fn s =>
+		 ( case s
+		    of Site(Num(n),l) =>
+		       let val b1siteId = lookupSnd pldlist n
+			   val b1site =
+			       case b1siteId
+				of SOME(n') => (* there is a LHS site id *)
+				   ( case lookupSite sites1 n'
+				      of SOME(s) => s (* id points to site *)
+				       | NONE => raise Fail(err2 n') )
+				 | NONE => raise Fail(err1 n)
+			   val (n1,l1) =
+			       case b1site
+				of Site(Num(n'),l') =>
+				   (n', namelist2name_list l')
+				 | _ => raise Fail(err3)
+			   val (n2,l2) = (n, namelist2name_list l)
+		       in ((n2,l2), (n1,l1)) end
+		     | _ => raise Fail(err3))
+	    )
 	    slist2
-	val maps = makeMaps sites1 sites2 auxlist
+	val maps = makeMaps sites1 sites2 pldList
     in maps end
 
 fun s2n s = Name.make s
@@ -299,7 +326,7 @@ fun big2bgval (ast:bigraph) signa =
 	end
       | Clo(nms,b) =>
 	let val bgval1 = Sugar.-//nms(*(List.map s2n nms)*)
-	    val (bgval2, smap') = big2bgval b signa maps
+	    val bgval2 = big2bgval b signa
 	in bgval1 oo bgval2 end
       | Abs(nms,b) =>
 	let val nmSetList = strList2nmSetList (rmDubs nms)
@@ -407,22 +434,23 @@ fun decs2bgvals decls mainVal rules signa smap =
 	   of Value(i,b) =>
 	      let val b' = big2bgval b signa
 		  val mainBgval = b'
-	      in decs2bgval ds mainBgval rules signa smap end
+	      in decs2bgvals ds mainBgval rules signa smap end
 	    | Rule(i,b1,b2) =>
-	      let val pivot = ((nat2int o List.last o getSiteNums) b1) + 1
+	      let val pivot = ((List.last o getSiteNums) b1) + 1
 		  val maplist = calcMaps b1 b2 pivot smap
 		  val b1' = big2bgval b1 signa
 		  val b2' = big2bgval b2 signa
-		  val ins = Instantiation.make { I = b1'.innerface,
-						 J = b2'.innerface,
+		  val b2'' = (BgBdnf.regularize o BgBdnf.make) b2'
+		  val ins = Instantiation.make { I = B.innerface b1',
+						 J = B.innerface b2',
 						 maps = maplist }
 		  val rule = Rule.make { info = Origin.unknown_origin,
 					 inst = ins,
 					 name = i,
 					 react = b1',
-					 redex = b2'}
+					 redex = b2''}
 		  val rules' = rule :: rules
-	      in decs2bgval ds mainVal rules' signa smap end
+	      in decs2bgvals ds mainVal rules' signa smap end
 	)
 
 (*
@@ -468,21 +496,26 @@ fun sub b1 b2 =
 	    | Id(i) => b1 (* assumes that b1 is already rolled *)
 	    | Empty => Empty
 
-(* substitute a bigraph b into every following element in a bigraph list *)
+(* substitute a bigraph b into every following element in a decl list *)
 fun subList [] = []
-  | subList (b::bs) =
-    let val newlist = 
-	    List.map
-		(fn b' =>
-		    case b' of Value(i,big) => Value(i, sub b b')
-			     | Rule(i,b1,b2) => Rule(sub b b1, sub b b2))
-		bs
-    in b :: newlist end
+  | subList (d::ds) =
+    case d
+     of Rule(i,b1,b2) => d :: subList ds (* rules not subst. into decls *)
+      | Value(i,b) =>
+	let val newlist = 
+		List.map
+		    (fn d' =>
+			case d'
+			 of Value(i',b') => Value(i', sub b b')
+			  | Rule(i',b1',b2')
+			    => Rule(i', sub b b1', sub b b2'))
+		    ds
+	in d :: newlist end
 
 (* roll a declist (vals/rules) *)
 fun roll [] = []
   | roll (d::ds) =
-    if ds = [] then d
+    if ds = [] then [d] (* nothing to do for the last element *)
     else let val newlist = subList (d::ds)
 	     val hd = List.hd newlist
 	     val tl = List.tl newlist
@@ -493,25 +526,25 @@ fun delAuxVals [] = []
   | delAuxVals (d::ds) =
     case d of Value(i,b) =>
 	      let val moreVals =
-		      List.find
+		      List.exists
 			  (fn d => case d of Value(i,b) => true
 					   | Rule(i,b1,b2) => false)
 			  ds
 	      in if moreVals
-		 then delAuxVals ds (* main val is last by invariant *)
+		 then delAuxVals ds (* cont., main val is last by invar. *)
 		 else d::ds (* found the main val, terminate *)
 	      end
 	    | Rule(i,b1,b2) => d :: delAuxVals ds
 
-(* compute next unused Nat identifier *)
-fun nextNat smap =
+(* compute next unused Nat site-identifier *)
+fun nextNat (smap:sitemap) =
     let val last = List.last smap
 	val nat = #1(last)
-    in nat2int(nat) + 1 end
+    in nat + 1 end
 
 (* replace siteIds in a bigraph by contiguous Nats *)
-fun traverse b smap =
-    case b
+fun traverse big smap =
+    case big
      of Wir(w) => (Wir(w), smap) (* done *)
       | Par(b1,b2) =>
 	let val (b1',smap') = traverse b1 smap
@@ -534,26 +567,31 @@ fun traverse b smap =
 	    val (b2',smap'') = traverse b2 smap'
 	in (Ten(b1',b2'), smap'') end
       | Ctrl(i,b,f) => (Ctrl(i,b,f), smap) (* done *)
-      | Clo(n,b) => Clo(n, traverse b smap)
-      | Abs(n,b) => Abs(n, traverse b smap)
+      | Clo(n,b) =>
+	let val (b',smap') = traverse b smap
+	in (Clo(n,b'), smap') end
+      | Abs(n,b) =>
+	let val (b',smap') = traverse b smap
+	in (Abs(n,b'), smap') end
       | Site(i,l) => let val next = nextNat smap
-		     in (Site(next,l), (next,i)::smap) end
-      | Id(i) => let val id = case i of Var(v) => v2s v
-				      | Num(n) => Int.toString n
-		 in raise Fail("traverse: Bigraph with an id " ^ id) end
+		     in (Site(Num(next),l), (next,i)::smap) end
+      | Id(i) => raise Fail("traverse: Bigraph with an id " ^ i)
       | Empty => (Empty, smap) (* done *)
 
-(* take declist, return declist of decs with Nat-sites and an updated smap *)
-fun numberSites [] smap = ([],smap)
-  | numberSites (d::ds) =
+(* number the sites of a decl, update smap *)
+fun numberSites d smap =
     case d
-     of Value(i,b) =>
-	let val (b',smap') = traverse b smap
-	in Value(i,b') :: numberSites ds smap' end
-      | Rule(i,b1,b2) =>
-	let val (b1',smap') = traverse b1 smap
-	    val (b2',smap'') = traverse b2 smap'
-	in Rule(i,b1',b2') :: numberSites ds smap'' end
+     of Value(i,b) => let val (b',smap') = traverse b smap
+		      in (Value(i,b'), smap') end
+      | Rule(i,b1,b2) => let val (b1',smap') = traverse b1 smap
+			     val (b2',smap'') = traverse b2 smap'
+			 in (Rule(i,b1',b2'), smap'') end
+
+(* take declist, return declist of decs with Nat-sites and an updated smap *)
+fun numberDecs [] acc smap = (rev acc, smap)
+  | numberDecs (d::ds) acc smap =
+    let val (d',smap') = numberSites d smap
+    in numberDecs ds (d' :: acc) smap' end
 
 (* toplevel *)
 fun prog2bgval ast =
@@ -561,9 +599,9 @@ fun prog2bgval ast =
      of Prog(signa,declist) =>
 	let val rolledList = roll declist
 	    val rolledList' = delAuxVals rolledList
-	    val smap = []
-	    val (nmbrdList,smap') = numberSites rolledList' smap
-	    val mainVal = []
+	    val smap = [] (* sitemap: (nat * siteId) list*)
+	    val (nmbrdList,smap') = numberDecs rolledList' [](*acc*) smap
+	    val mainVal = barren (* dummy *)
 	    val rules = []
 	    val (b,r) = decs2bgvals nmbrdList mainVal rules signa smap'
 	    val mainBgval = b
