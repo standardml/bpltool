@@ -148,14 +148,21 @@ sig
   exception IncompatibleNamesetListList
   of Mutable permutation * nameset list list
   (** Signal that a permutation is not regularizable relative to a list
-   *  of local inner name lists.
+   *  of local outer name lists.
    *)
   exception NotRegularisable of Mutable permutation * nameset list list
-  (** Split a permutation into one major and a number of minor
-   * permutations.
+  (** Split a permutation &pi; into one major <u>&pi;</u><sup>Xss</sup>
+   * and a number of minor permutations &pi;<sub>i</sub><sup>Xss</sup>
+   * given a list of local outer name lists Xss such that
+   *<p>
+   * &pi; = \bigox(&pi;<sub>i</sub><sup>Xss</sup>) o (Xss &#8729; <u>&pi;</u><sup>Xss</sup>)
+   *</p>
+   * where Xss &#8729; <u>&pi;</u><sup>Xss</sup> is the <code>prod</code>
+   * function applied to Xss and <u>&pi;</u><sup>Xss</sup>.
+   *
    * @params pi Xss
    * @param pi   the permutation to split
-   * @param Xss  list of local inner name lists.
+   * @param Xss  list of local outer name lists.
    * @exception IncompatibleNamesetListList  if the total number of elements
    *                                         in Xss is different than the
    *                                         width of pi.
@@ -165,14 +172,17 @@ sig
   val split
       : 'kinda permutation -> nameset list list
         -> {major : 'kindb permutation, minors : 'kindc permutation list}
-  (** Split the permutation into two parts: (1) one that groups the
-   * sites according to Xss without changing the order within the group,
-   * and (2) a permutation for each group that permutes the sites of a
-   * group.
-   *
+  (** Split the permutation &pi; into two parts given a list of local outer
+   * name lists Xss: (1) one &pi;<sup>Xss</sup> that groups the sites according
+   * to Xss without changing the order within the group, and (2) a permutation
+   * for each group &pi;<sub>i</sub><sup>Xss</sup> that permutes the sites of a
+   * group, such that
+   *<p>
+   * &pi; = \bigox(&pi;<sub>i</sub><sup>Xss</sup>) o &pi;<sup>Xss</sup>
+   *</p>
    * @params pi Xss
    * @param pi   the permutation to split
-   * @param Xss  list of local inner name lists.
+   * @param Xss  list of local outer name lists.
    * @exception IncompatibleNamesetListList  if the total number of elements
    *                                         in Xss is different than the
    *                                         width of pi.
@@ -180,9 +190,9 @@ sig
   val general_split
       : 'kinda permutation -> nameset list list
         -> {group : 'kindb permutation, minors : 'kindc permutation list}
-  (** Compute the product of a list of local inner names lists and a
+  (** Compute the product of a list of local outer names lists and a
    * permutation as defined in the implementation article Definition 3.5.
-   * Let the lengths of the inner names lists be [n_0, ..., n<sub>k-1</sub>}];
+   * Let the lengths of the outer names lists be [n_0, ..., n<sub>k-1</sub>}];
    * then the product Xss * pi is defined by<p>
    *
    * (Xss * pi)(i + &sum;<sub>i' < l</sub> n<sub>pi(i')</sub>) =
