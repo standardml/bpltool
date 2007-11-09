@@ -35,14 +35,15 @@ structure Rule = BG.Rule
 structure Control = BG.Control
 structure Ion = BG.Ion
 structure Name = BG.Name
-structure Wiring  = BG.Wiring
 structure NameSet = BG.NameSet
+structure Wiring  = BG.Wiring
 structure Link = BG.Link
 structure LinkSet = BG.LinkSet
 structure Origin = Origin
 structure Instantiation = BG.Instantiation
 structure Rule = BG.Rule
 structure BgBdnf = BG.BgBDNF
+structure Interface = BG.Interface
 
 (*
 structure P = BG.Permutation
@@ -86,7 +87,7 @@ datatype bigraph = Wir of wires
 		 | Site of siteId * namelist
 		 | Id of id
 		 | Empty
-type ctrlkind = Control.kind
+type ctrlkind = Control.kind (* Active | Passive | Atomic *)
 datatype ctrldef = Cdef of ctrlid * ctrlkind * nat * nat
 type ctrldefs = ctrldef list
 datatype dec = Rule of id * bigraph * bigraph
@@ -234,10 +235,16 @@ fun mkWir1 ovar =
 	val wiring = Wiring.make linkset
     in B.Wir info wiring end
 
+fun nm2nmSet n = NameSet.insert n NameSet.empty
+
+fun s2nmSet s = (nm2nmSet o s2n) s
+
+fun strList2nmSetList l = List.map (nm2nmSet o s2n) l
+
 fun mkWir2 ovar ivar =
     let val link = Link.make
-		       {outer = SOME(v2n ovar),
-			inner = NameSet.insert (v2n ivar) NameSet.empty}
+		       { outer = SOME(v2n ovar),
+			 inner = nm2nmSet (v2n ivar) }
 	val linkset = LinkSet.insert link LinkSet.empty
 	val wiring = Wiring.make linkset
     in B.Wir info wiring end
@@ -252,12 +259,6 @@ fun lookupBgval id idmap =
           | loop ((i,b)::m) = if id = i then SOME b else loop m
     in loop idmap end
 
-fun nm2nmSet n = NameSet.insert n NameSet.empty
-
-fun s2nmSet s = (nm2nmSet o s2n) s
-
-fun strList2nmSetList l = List.map (nm2nmSet o s2n) l
-
 fun lastCnt [] = 0
   | lastCnt ((k,v)::m) = #1(List.hd(rev m))
 
@@ -270,10 +271,30 @@ fun rmDubs [] = []
   | rmDubs (x::xs) =
     if List.exists (fn y => y = x) xs then rmDubs xs else x :: rmDubs xs
 
+(* check composability and calculate info for inserting name-ids *)
+(*
+fun calcIds b1 b2 =
+    let val b1' = big2bgval b1 signa
+	val b2' = big2bgval b2 signa
+	val b1'i_loc = (Interface.loc o B.innerface) b1'
+	val b2'o_glob = (Interface.glob o B.outerface) b2'
+	val b2'o_loc = (Interface.loc o B.outerface) b2'
+	val loc_ok = NameSet.eq(b1'i_loc, b2'o_loc)
+	val b2'nms_ok = NameSet.eq(NameSet.intersection(b2'p_loc,
+							b2'p_loc),
+				   NameSet.empty)
+	val all_ok = loc_ok andalso b2'nms
+	val id_b2glob = Sugar.iw (NameSet.toList b2'o_glob)
+    in (all_ok, b1', id_b2glob, b2') end
+*)
 
-(* transform a dec/big into a bgval *)
+fun nmSet2sList set = List.map (fn n => Name.unmk n) (NameSet.list set)
+
+(***** TRANSLATION *****)
+
+(* transform a bigraph into a bgval *)
 fun big2bgval (ast:bigraph) signa =
-    (* HERE insert ids...?! *)
+    (* HERE...insert also id_n ? *)
     case ast
      of Wir(w) =>
 	let fun w2bgval wire =
@@ -295,14 +316,18 @@ fun big2bgval (ast:bigraph) signa =
 	let val b1' = big2bgval b1 signa
 	    val b2' = big2bgval b2 signa
 	in b1' pp b2' end
-      | Com(b1,b2) =>
+      | Com(b1,b2) => (* we only wire through global names *)
 	let val b1' = big2bgval b1 signa
 	    val b2' = big2bgval b2 signa
-	in b1' oo b2' end
-      | Emb(b1,b2) =>
+	    val b2'o_glob = (Interface.glob o B.outerface) b2'
+	    val id_b2glob = Sugar.idw(nmSet2sList b2'o_glob)
+	in (b1' tt id_b2glob) oo b2' end
+      | Emb(b1,b2) => (* we only wire through global names *)
 	let val b1' = big2bgval b1 signa
 	    val b2' = big2bgval b2 signa
-	in b1' oo b2' end
+	    val b2'o_glob = (Interface.glob o B.outerface) b2'
+	    val id_b2glob = Sugar.idw(nmSet2sList b2'o_glob)
+	in (b1' tt id_b2glob) oo b2' end
       | Ten(b1,b2) =>
 	let val b1' = big2bgval b1 signa
 	    val b2' = big2bgval b2 signa
@@ -334,10 +359,10 @@ fun big2bgval (ast:bigraph) signa =
 	in abst end
       (* | Conc(nms,b) => not used *)
       | Site(i,nmList) =>
-	let val id1 = Sugar.merge 1
+	let val id_1 = Sugar.merge 1
 	    val nms = case nmList of Namelist(sl) => sl
-	    val idw = Sugar.idw nms(*(List.map s2n nms)*)
-	    val bgval = id1 tt idw
+	    val id_nms = Sugar.idw nms(*(List.map s2n nms)*)
+	    val bgval = id_1 tt id_nms
 	in bgval end
       | Id(i) => raise Fail("big2bgval: " ^ "Unbound identifier: " ^ i)
       | Empty => barren
