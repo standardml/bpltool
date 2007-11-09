@@ -86,9 +86,7 @@ datatype bigraph = Wir of wires
 		 | Site of siteId * namelist
 		 | Id of id
 		 | Empty
-datatype ctrlkind = Active
-		  | Passive
-		  | Atomic
+type ctrlkind = Control.kind
 datatype ctrldef = Cdef of ctrlid * ctrlkind * nat * nat
 type ctrldefs = ctrldef list
 datatype dec = Rule of id * bigraph * bigraph
@@ -97,10 +95,9 @@ type decs = dec list
 type signatur = ctrldefs
 datatype prog = Prog of signatur * decs
 
+(* aux. types and vals *)
 type bgval = B.bgval
-
 type sitemap = (nat * siteId) list
-
 val barren = Sugar.<-> (* barren root *)
 val info = BG.Info.noinfo
 
@@ -170,6 +167,10 @@ fun lookupFst [] id = NONE
 fun lookupSnd [] id = NONE
   | lookupSnd ((n1,n2)::m) id = if id=n1 then SOME(n2) else lookupSnd m id
 
+fun s2n s = Name.make s
+
+fun v2n x = s2n (String.toString x)
+
 (* calculate 'maps', i.e. a 'map list', for instantiation *)
 fun calcMaps (b1:bigraph) (b2:bigraph) pivot(*:int*) (smap:sitemap) =
     let val (smap1,smap2) = partSmap smap [] pivot
@@ -199,7 +200,7 @@ fun calcMaps (b1:bigraph) (b2:bigraph) pivot(*:int*) (smap:sitemap) =
 	val sites1 = getSites b1
 	val sites2 = getSites b2
 	fun namelist2name_list l =
-	    case l of Namelist(nms) => List.map (fn s => Name.make s) nms
+	    case l of Namelist(nms) => List.map (fn s => s2n s) nms
 	fun makeMaps slist1 slist2 pldlist =
 	    List.map
 	    ( fn s =>
@@ -226,10 +227,6 @@ fun calcMaps (b1:bigraph) (b2:bigraph) pivot(*:int*) (smap:sitemap) =
 	val maps = makeMaps sites1 sites2 pldList
     in maps end
 
-fun s2n s = Name.make s
-
-fun v2n x = s2n (String.toString x)
-
 fun mkWir1 ovar =
     let val link = Link.make {outer = SOME(v2n ovar),
 			      inner = NameSet.empty}
@@ -247,12 +244,12 @@ fun mkWir2 ovar ivar =
 
 fun lookupKind cid signa =
     let fun loop [] = NONE
-	  | loop ((i,k,b,f)::p) = if cid = i then SOME k else loop p
+	  | loop ((i,k,b,f)::m) = if cid = i then SOME k else loop m
     in loop signa end
 
 fun lookupBgval id idmap =
     let fun loop [] = NONE
-          | loop ((i,b)::p) = if id = i then SOME b else loop p
+          | loop ((i,b)::m) = if id = i then SOME b else loop m
     in loop idmap end
 
 fun nm2nmSet n = NameSet.insert n NameSet.empty
@@ -593,6 +590,11 @@ fun numberDecs [] acc smap = (rev acc, smap)
     let val (d',smap') = numberSites d smap
     in numberDecs ds (d' :: acc) smap' end
 
+(* take ctrldef list and peel off Cdef constructor from the 4-tuples *)
+fun peelCdef [] = []
+  | peelCdef (c::cs) =
+    case c of Cdef(cid,ck,bp,fp) => (cid,ck,bp,fp) :: peelCdef cs
+
 (* toplevel *)
 fun prog2bgval ast =
     case ast
@@ -603,11 +605,11 @@ fun prog2bgval ast =
 	    val (nmbrdList,smap') = numberDecs rolledList' [](*acc*) smap
 	    val mainVal = barren (* dummy *)
 	    val rules = []
-	    val (b,r) = decs2bgvals nmbrdList mainVal rules signa smap'
+	    val signa' = peelCdef signa
+	    val (b,r) = decs2bgvals nmbrdList mainVal rules signa' smap'
 	    val mainBgval = b
 	    val rules' = r
 	in (signa, mainBgval, rules') end
-      | _ => raise Fail("prog2bgval: Malformed program")
 
 (* old code
 fun prog2bgval ast =
