@@ -89,3 +89,5 @@ lambda-pure: %PROGRAM /kernel/bg /lib/coll/lzlist /lib/util/printerrorhandler
 bpl2bgval: %PROGRAM /kernel/bg /lib/util/printerrorhandler 
    /kernel/ast/bgval /lib/util/origin
 
+# test-bpl2bgval
+test-bpl2bgval: %PROGRAM /kernel/bg /kernel/ast/bgval
