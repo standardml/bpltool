@@ -90,4 +90,4 @@ bpl2bgval: %PROGRAM /kernel/bg /lib/util/printerrorhandler
    /kernel/ast/bgval /lib/util/origin
 
 # test-bpl2bgval
-test-bpl2bgval: %PROGRAM /kernel/bg /kernel/ast/bgval
+test-bpl2bgval: %PROGRAM bpl2bgval
