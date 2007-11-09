@@ -19,13 +19,14 @@
  *)
 
 (*
+ Ebbe Elsborg, November 9 2007
+
  Mapping from BPL abstract syntax tree to BgVal. 
  Implements bpl/bplproject/doc/projects/contextawareness/plato/bpl-bnf.tex
 
- make apps/miniml/bpl2bgval.uo
+ Compile: cd <src-dir of BPL-root>; make apps/miniml/bpl2bgval.uo
+ Run: 
 *)
-
-(*open TextIO;*)
 
 structure BG = BG (structure ErrorHandler = PrintErrorHandler);
 structure B = BG.BgVal
@@ -646,3 +647,17 @@ fun prog2bgval ast =
 	in (signa, mainBgval, rules) end
       | _ => raise Fail("Malformed program")
 *)
+
+(***** TESTING *****)
+
+open TextIO;
+
+val signat = []
+val bigraph = Empty
+val dec = Value("id", bigraph)
+val prog = Prog(signat,[dec])
+val (s,b,r) = prog2bgval prog
+val bgval = (B.toString o B.simplify) b
+
+val _ = print bgval
+val _ = print "\n"
