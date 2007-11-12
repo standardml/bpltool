@@ -204,6 +204,18 @@ struct
       else
         false
 
+  fun is_id0 (Mer _)        = false
+    | is_id0 (Con _)        = false
+    | is_id0 (Wir (w, _))   = Wiring.is_id0 w
+    | is_id0 (Ion _)        = false
+    | is_id0 (Per (pi, _))  = Permutation.width pi = 0
+    | is_id0 (Abs _)        = false
+    | is_id0 (Ten (ts, _))  = List.all is_id0 ts
+    | is_id0 (Par (ts, _))  = List.all is_id0 ts
+    | is_id0 (Pri (ts, _))  = false
+    | is_id0 (t as (Com _))
+    = raise NotImplemented (t, "is_idw for composition")
+
   fun is_idw (Mer _)        = false
     | is_idw (Con _)        = false
     | is_idw (Wir (w, _))   = Wiring.is_id w
@@ -371,15 +383,15 @@ struct
                fn () => show ")")
       	    else
       	      (fn () => (), pal, par, prr, fn () => ())
-          fun pp' (Mer (0, _)) = show "<->"
-            | pp' (Mer (n, _)) = show ("merge(" ^ Int.toString n ^ ")")
-            | pp' (Con (X, _)) 
+          fun pp' _ _ (Mer (0, _)) = show "<->"
+            | pp' _ _ (Mer (n, _)) = show ("merge(" ^ Int.toString n ^ ")")
+            | pp' _ _ (Con (X, _))
             = ((show "`"; NameSetPP.ppbr indent "[" "]" pps X; show "`")
                handle e => raise e)
-            | pp' (Wir (w, _)) = (Wiring.pp indent pps w handle e => raise e)
-            | pp' (Ion (KyX, _)) = (Ion.pp indent pps KyX handle e => raise e)
-            | pp' (Per (pi, _)) = (Permutation.pp indent pps pi handle e => raise e)
-            | pp' (Abs (X, b, _))
+            | pp' _ _ (Wir (w, _)) = (Wiring.pp indent pps w handle e => raise e)
+            | pp' _ _ (Ion (KyX, _)) = (Ion.pp indent pps KyX handle e => raise e)
+            | pp' _ _ (Per (pi, _)) = (Permutation.pp indent pps pi handle e => raise e)
+            | pp' outermost innermost (Abs (X, b, _))
             = ((if pp0abs orelse not (NameSet.isEmpty X) then
                   let
                     val (showlpar, pal', par', prr', showrpar) = 
@@ -396,18 +408,20 @@ struct
                     showlpar();
                     show "<"; NameSetPP.ppbr indent "[" "]" pps X; show ">";
                     brkindent();
-                    ppp pal' par' prr' b;
+                    ppp pal' par' prr' outermost innermost b;
                     showrpar();
                     >>()
                   end
                 else
-                  ppp pal par prr b)
+                  ppp pal par prr outermost innermost b)
                handle e => raise e)
-            | pp' (Ten (bs, i)) =
+            | pp' outermost innermost (Ten (bs, i)) =
               (let
                 val bs' =
                   if ppids then
                     bs
+                  else if innermost then
+                    List.filter (not o is_id0) bs
                   else
                     List.filter (not o is_id') bs
               in
@@ -415,91 +429,94 @@ struct
                  []
                => (case bs of
                      [] => show "idx0"
-                   | bs => pp' (widest bs))
-               | [b] => pp' b
+                   | bs => pp' outermost innermost (widest bs))
+               | [b] => pp' outermost innermost b
                | (b :: bs) => 
                  let
                    val (showlpar, pal', par', prr', showrpar) 
                      = checkprec PrTen
                    fun mappp [] = ()
                      | mappp [b]
-                     = (show " *"; brk(); ppp PrTen par' prr' b)
+                     = (show " *"; brk();
+                        ppp PrTen par' prr' outermost innermost b)
                      | mappp (b :: b' :: bs) 
                      = (show " *";
                         brk();
-                        ppp PrTen PrTen PrTen b;
+                        ppp PrTen PrTen PrTen outermost innermost b;
                         mappp (b' :: bs))
                  in
                      showlpar();
                      <<();
-                     ppp pal' PrTen PrTen b;
+                     ppp pal' PrTen PrTen outermost innermost b;
                      mappp bs;
                      showrpar();
                      >>()
                  end
                end handle e => raise e)
-            | pp' (Pri (bs, _)) =
+            | pp' outermost innermost (Pri (bs, _)) =
               ((case bs of
                  [] => show "<->"
-               | [b] => pp' b
+               | [b] => pp' outermost innermost b
                | (b :: bs) => 
                  let
                    val (showlpar, pal', par', prr', showrpar) 
                      = checkprec PrPri
                    fun mappp [] = ()
                      | mappp [b]
-                     = (show " `|`"; brk(); ppp PrPri par' prr' b)
+                     = (show " `|`"; brk();
+                        ppp PrPri par' prr' outermost innermost b)
                      | mappp (b :: b' :: bs) 
                      = (show " `|`";
                         brk();
-                        ppp PrPri PrPri PrPri b;
+                        ppp PrPri PrPri PrPri outermost innermost b;
                         mappp (b' :: bs))
                  in
                    showlpar();
                    <<();
-                   ppp pal' PrPri PrPri b;
+                   ppp pal' PrPri PrPri outermost innermost b;
                    mappp bs;
                    showrpar();
                    >>()
                  end) handle e => raise e)
-            | pp' (Par (bs, _)) =
+            | pp' outermost innermost (Par (bs, _)) =
               ((case bs of
                  [] => show "id||0"
-               | [b] => pp' b
+               | [b] => pp' outermost innermost b
                | (b :: bs) => 
                  let
                    val (showlpar, pal', par', prr', showrpar) 
                      = checkprec PrPar
                    fun mappp [] = ()
                      | mappp [b]
-                     = (show " ||"; brk(); ppp PrPar par' prr' b)
+                     = (show " ||"; brk();
+                        ppp PrPar par' prr' outermost innermost b)
                      | mappp (b :: b' :: bs) 
                      = (show " ||";
                         brk();
-                        ppp PrPar PrPar PrPar b;
+                        ppp PrPar PrPar PrPar outermost innermost b;
                         mappp (b' :: bs))
                  in
                    showlpar();
                    <<();
-                   ppp pal' PrPar PrPar b;
+                   ppp pal' PrPar PrPar outermost innermost b;
                    mappp bs;
                    showrpar();
                    >>()
                  end) handle e => raise e)
-            | pp' (Com (b1, b2, _)) = 
+            | pp' outermost innermost (Com (b1, b2, _)) =
               let
                 val (showlpar, pal', par', prr', showrpar)
                   = checkprec PrCom
               in
                 if is_atomic_ion b1 then
-                  ppp pal par prr b1
+                  ppp pal par prr outermost innermost b1
                 else
                   (showlpar();
                    <<();
-                   ppp pal' PrCom PrCom b1;
+                   ppp pal' PrCom PrCom outermost false b1;
                    show " o";
                    brk();
-                   ppp PrCom par' prr' b2;
+                   ppp PrCom par' prr' false innermost b2;
                    showrpar();
                    >>())
               end handle e => raise e
@@ -507,7 +524,7 @@ struct
             pp'
           end
         in
-          ppp PrMin PrMin PrMax
+          ppp PrMin PrMin PrMax true true
         end handle e => raise e
 
       fun oldpp indent pps =
