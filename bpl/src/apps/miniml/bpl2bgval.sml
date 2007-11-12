@@ -27,6 +27,8 @@
  Compile: cd <src-dir of BPL-root>; make bpl2bgval
 *)
 
+structure Bpl2bgval = struct
+
 structure BG = BG (structure ErrorHandler = PrintErrorHandler);
 structure B = BG.BgVal
 structure BgTerm = BG.BgTerm
@@ -646,3 +648,5 @@ fun prog2bgval ast =
 	in (signa, mainBgval, rules) end
       | _ => raise Fail("Malformed program")
 *)
+
+end (* structure Bpl2bgval *)
