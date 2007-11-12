@@ -21,19 +21,18 @@
 (*
  Ebbe Elsborg, November 9 2007
 
- Mapping from BPL abstract syntax tree to BgVal. 
- Implements bpl/bplproject/doc/projects/contextawareness/plato/bpl-bnf.tex
-
  Compile: cd <src-dir of BPL-root>; make test-bpl2bgval
  Run: ./test-bpl2bgval
 *)
 
 open TextIO;
 
-val signat = [("k",Atomic,2,1)]
+structure B2 = Bpl2bgval
+
+val signat = [("k",B2.Atomic,2,1)]
 val bigraph = Ctrl("k",["b1","b2"],["f1"])
-val dec = Value("id", bigraph)
-val prog = Prog(signat,[dec])
+val decs = [Value("id", bigraph)]
+val prog = Prog(signat,decs)
 val (s,b,r) = prog2bgval prog
 val bgval = (B.toString o B.simplify) b
 
