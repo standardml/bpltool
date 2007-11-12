@@ -266,7 +266,7 @@ end
 val str_r = BG.Rule.toString
 fun print_r r = print (str_r r)
 
-val redex   = BG.BgBDNF.unmk oo #redex oo BG.Rule.unmk
+val redex   = simpl_b oo #redex oo BG.Rule.unmk
 val reactum = #react oo BG.Rule.unmk
 val inst    = #inst  oo BG.Rule.unmk
 
