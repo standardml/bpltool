@@ -216,6 +216,8 @@ struct
     | is_id0 (t as (Com _))
     = raise NotImplemented (t, "is_idw for composition")
 
+  fun is_id0' t = is_id0 t handle NotImplemented _ => false
+
   fun is_idw (Mer _)        = false
     | is_idw (Con _)        = false
     | is_idw (Wir (w, _))   = Wiring.is_id w
@@ -421,7 +423,7 @@ struct
                   if ppids then
                     bs
                   else if innermost then
-                    List.filter (not o is_id0) bs
+                    List.filter (not o is_id0') bs
                   else
                     List.filter (not o is_id') bs
               in
