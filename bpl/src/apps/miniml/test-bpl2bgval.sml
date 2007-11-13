@@ -32,7 +32,11 @@ structure B2 = Bpl2bgval
 open B2;
 
 val signat = [Cdef("k1",Control.Passive,1,2),
-	      Cdef("k2",Control.Atomic,0,2)]
+	      Cdef("k2",Control.Atomic,0,2),
+	      Cdef("k3",Control.Atomic,0,0),
+	      Cdef("K",Control.Atomic,0,0),
+	      Cdef("L",Control.Atomic,0,0),
+	      Cdef("M",Control.Passive,0,0)]
 
 val b0 = Empty
 val b1 = Ctrl("k1",["x"],["y","z"])
@@ -44,36 +48,38 @@ val b6 = Par(Id("id1"),Id("id5"))
 val b7 = Ten(Wir([Local("y","x"),Global("q","q")]),b0)
 val b8 = Emb(Wir([IdleG("v")]),Empty)
 val b9 = Ten(b7,b8)
+val b10 = Ctrl("k2",[],["f1","f2"])
+val b11 = Ctrl("k3",[],[])
 
-(*HERE: try out rules!*)
+val id1 = Site(Var("site"),Namelist([]))
+val K = Ctrl("K",[],[])
+val L = Ctrl("L",[],[])
+val M = Ctrl("M",[],[])
+val C = Pri(M,id1)
+val a = Ten(K,L)
+val b = Ten(L,K)
 
-val decs = [Value("id1", b0),
-	    Value("id5", b5),
-	    Value("id6", b6),
-	    Value("id", b9)]
+val decs = [Value("v1",Com(id1,Empty))(*Value("v1", Com(C,a)),
+	    Value("v2", Com(C,b)),
+	    Rule("r",K,L)*)]
 val prog = Prog(signat,decs)
 val (s,b,r) = prog2bgval prog
 val bgval = (B.toString o B.simplify) b
 
+(* printing *)
+fun printRule r =
+    let val {name,redex,react,inst,info} = Rule.unmk r
+	val redex' = (B.toString o B.simplify o BgBdnf.unmk) redex
+	val react' = (B.toString o B.simplify) react
+	val inst' = "dummyinst"
+    in print("(" ^
+	     name ^ "," ^ redex' ^ "," ^ react' ^ "," ^ inst'
+	     ^ ")" ^ "\n")
+    end
+
+fun printRules l = List.map printRule l
+
 val _ = print bgval
 val _ = print "\n"
-
-(*
-datatype wire = Global of id * id
-	      | Local of id * id
-	      | IdleG of id
-	      | IdleL of id
-
-datatype bigraph = Wir of wires
-		 | Par of bigraph * bigraph
-		 | Pri of bigraph * bigraph
-		 | Com of bigraph * bigraph
-		 | Emb of bigraph * bigraph
-		 | Ten of bigraph * bigraph
-		 | Ctrl of ctrlid * ports * ports
-		 | Clo of names * bigraph
-		 | Abs of names * bigraph
-		 | Site of siteId * namelist
-		 | Id of id
-		 | Empty
-*)
+val _ = printRules r
+val _ = print "\n"
