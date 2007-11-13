@@ -24,7 +24,7 @@
  Mapping from BPL abstract syntax tree to BgVal. 
  Implements bpl/bplproject/doc/projects/contextawareness/plato/bpl-bnf.tex
 
- Algorithm: TODO...
+ Algorithm: todo explanation
 
  Compile: cd <src-dir of BPL-root>; make bpl2bgval
 *)
@@ -48,22 +48,6 @@ structure Instantiation = BG.Instantiation
 structure Rule = BG.Rule
 structure BgBdnf = BG.BgBDNF
 structure Interface = BG.Interface
-
-(*
-structure P = BG.Permutation
-structure M       = BG.Match
-structure Re = Reaction (structure RuleNameMap = Util.StringMap
-                         structure Info = BG.Info
-                         structure Interface = BG.Interface
-                         structure Wiring = BG.Wiring
-                         structure BgVal = BG.BgVal
-                         structure BgBDNF = BG.BgBDNF
-                         structure Match = BG.Match
-                         structure Instantiation = BG.Instantiation
-                         structure Rule = BG.Rule
-                         structure Origin = Origin
-                         structure ErrorHandler = PrintErrorHandler)
-*)
 
 (***** BNF *****)
 type id = string
@@ -378,11 +362,13 @@ fun decs2bgvals decls mainVal rules signa smap =
       | (d::ds) =>
 	( case d
 	   of Value(i,b) =>
-	      let val b' = big2bgval b signa
-		  val mainBgval = b'
+	      let val mainBgval = big2bgval b signa
 	      in decs2bgvals ds mainBgval rules signa smap end
 	    | Rule(i,b1,b2) =>
-	      let val pivot = ((List.last o getSiteNums) b1) + 1
+	      let val numOfSites = (List.length o getSiteNums) b1
+		  val pivot = if numOfSites > 0
+			      then ((List.last o getSiteNums) b1) + 1
+			      else 0 (* yields empty maplist *)
 		  val maplist = calcMaps b1 b2 pivot smap
 		  val b1' = big2bgval b1 signa
 		  val b2' = big2bgval b2 signa
@@ -435,11 +421,11 @@ fun subList [] = []
 (* roll a declist (vals/rules) *)
 fun roll [] = []
   | roll (d::ds) =
-    if ds = [] then [d] (* nothing to do for last elm *)
+    if ds = [] then [d] (* nothing to do for last element *)
     else let val newlist = subList (d::ds)
-	     val hd = List.hd newlist
-	     val tl = List.tl newlist
-	 in hd :: roll tl end
+	     val head = List.hd newlist
+	     val tail = List.tl newlist
+	 in head :: roll tail end
 
 (* delete all except the main val (and rules) from a declist *)
 fun delAuxVals [] = []
@@ -524,8 +510,9 @@ fun prog2bgval ast =
      of Prog(signa,declist) =>
 	let val rolledList = roll declist
 	    val rolledList' = delAuxVals rolledList
+	    val acc = []
 	    val smap = [] (* sitemap: (nat * siteId) list*)
-	    val (nmbrdList,smap') = numberDecs rolledList' [](*acc*) smap
+	    val (nmbrdList,smap') = numberDecs rolledList' acc smap
 	    val mainVal = barren (* dummy *)
 	    val rules = []
 	    val signa' = peelCdef signa
