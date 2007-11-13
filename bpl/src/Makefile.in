@@ -213,6 +213,7 @@ test-smlnj: prepare-smlnj
 	      val _   = OS.FileSys.chDir \"lib/compat/smlnj/\";\
 	      use \"cmmakedefine.sml\";\
               val _   = OS.FileSys.chDir pwd;\
+              val _   = SMLofNJ.Internals.GC.messages false;\
               CM_make \"test/unittest.cm\"" | $(SMLNJ)
 
 test-mosml: unittest
