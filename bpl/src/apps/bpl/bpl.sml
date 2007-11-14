@@ -149,7 +149,7 @@ fun help' [] = ()
 	  \      val L = passive0 (\"L\")\n\
 	  \      val (x,y,z) = (\"x\", \"y\", \"z\")\n\
 	  \      val KtoL = \"KtoL\" ::: K[z][[y,z],[]] ----|> L * z//[y,z] o `[y,z]`\n\
-	  \  in <[y]> (y//[x,z] * merge(2)) o (K[z][[y,z],[]] * id_X[x] * L)\n\
+	  \  in <[y]> (y//[x,z] * merge(2)) o (K[z][[y,z],[]] * idw[x] * L)\n\
 	  \            o (@@[1&[],0&[y,z]] * x//[])\n\
 	  \  end handle error => explain error\n";
 	  help'' topics)
