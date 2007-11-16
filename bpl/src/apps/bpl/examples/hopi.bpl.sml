@@ -34,7 +34,7 @@ val _ = OS.FileSys.chDir cur_dir;
 (*******************************)
 
 
-val NilP     = atomic0 ("0"                    );
+val NilP     = atomic0 ("NilP"                 );
 val Var      = atomic  ("Var"        -:       1);
 val Send     = passive ("Out"        -:       1);
 val SendPro  = passive0("OutPro"               );
@@ -117,7 +117,7 @@ val tactic = roundrobin;
 (*       Example processes     *)
 (*******************************)
 
-val Dummy     = atomic0 ("P"                    );
+val Dummy     = atomic0 ("Dummy"                    );
 
 (* Represent a simple copy-process a => a(x).(x || x) *)
 val copy = fn a => Receive[a][["x"]] o (<["x"]> Var["x"] `|` Var["x"]) 
