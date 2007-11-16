@@ -95,6 +95,9 @@ sig
   (** Return the empty identity permutation. *)
   val id_0 : Immutable permutation
 
+  (** Map a root index to a site index. *)
+  val invmap : 'a permutation -> int -> int
+
   (** Signal that two permutations cannot be composed. *)
   exception Uncomposable
     of Mutable permutation * Mutable permutation * string

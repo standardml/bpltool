@@ -333,6 +333,8 @@ sig
   val remove_id_Y : nameset -> wiring -> wiring option
   (** Determine whether some wiring is a renaming. *)
   val is_renaming : wiring -> bool
+  (** Determine whether some wiring has at least one internal edge. *)
+  val has_edge : wiring -> bool
   (** Construct an identity wiring on a set of names. *)
   val id_X : nameset -> wiring
   (** Construct an empty identity wiring. *)

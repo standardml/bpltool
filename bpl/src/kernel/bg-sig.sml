@@ -79,6 +79,9 @@ sig
   (** Return string representation of a bigraph value. *)
   val bgvalToString : bgval -> string
 
+  structure PPSVG : PPSVG
+  val ppsvgdoc : PPSVG.config option -> PPSVG.B bgbdnf -> string
+
   structure BgTermParser : PARSER
   
   structure RulesParser : PARSER

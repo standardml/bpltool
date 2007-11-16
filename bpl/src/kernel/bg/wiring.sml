@@ -1254,6 +1254,14 @@ struct
       Link'Set.foldUntil testlink true ls
     end
 
+  fun has_edge (ls, _) =
+    let
+      fun testlink {outer = Closure _, inner} = false
+        | testlink _ = true
+    in
+      not (Link'Set.all testlink ls)
+    end
+
   fun id_X X =
       let
 	val ht = createNameHashMap' ()

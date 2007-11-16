@@ -4,7 +4,7 @@
  *      - exception DuplicatesRemoved - raised by
  *        addList, fromList, union, and insert
  * April 2006: Arne John Glenstrup: Added foldUntil function.
- * January 2007: Espen Højsgaard: Added all function.
+ * January 2007: Espen Hï¿½jsgaard: Added all function.
  *) 
 
 functor OrderSet(Order : ORDERING): MONO_SET =
@@ -149,6 +149,9 @@ functor OrderSet(Order : ORDERING): MONO_SET =
 
     fun insert' k0 t = insert k0 t handle DuplicatesRemoved => t
 
+    (** Return a list containing the elements in increasing
+     * order.
+     *)
     fun list (s:Set) : elt list =
       let
 	fun f E a = a

@@ -52,7 +52,7 @@ sig
   type DR
   (** BR BDNF general, regular bigraph class phantom type. *)
   type BR
-  (** The bgbdnf data type.  'class must be M, S, G, N, P, D, or B. *)
+  (** The bgbdnf data type.  'class must be M, S, G, N, P, D, DR, B or BR. *)
   type 'class bgbdnf
   (** Signal that a BDNF does not represent a regular bigraph.
    * @params i b errtxt

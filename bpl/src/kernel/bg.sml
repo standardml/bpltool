@@ -128,6 +128,22 @@ structure SignatureXMLHooks =
 structure SignatureXMLParser =
   BPLXMLParser (structure BPLXMLHooks = SignatureXMLHooks)
 
+structure PPSVG =
+  PPSVG (
+    structure Name        = Name
+    structure NameSet     = NameSet
+    structure Interface   = Interface
+    structure Control     = Control
+    structure Ion         = Ion
+    structure Permutation = Permutation
+    structure Link        = Link
+    structure LinkSet     = LinkSet
+    structure Wiring      = Wiring
+    structure BgVal       = BgVal
+    structure BgBDNF      = BgBDNF)  
+
+fun ppsvgdoc bdnf = PPSVG.ppsvgdoc bdnf
+
 fun pp bdnf = BgBDNF.pp (!indent) bdnf
 
 fun toString bdnf 

@@ -16,9 +16,9 @@ bgadt: bgadt-sig bg/funs ast/funs sugar match/funs /lib/pp/smlnj/.
    /lib/coll/set /lib/coll/pp /lib/coll/lzlist /lib/util/errorhandler-sig
    /lib/util/origin-sig /lib/util/origin /lib/coll/map
    /lib/coll/bijectionconstraints %NODASHSIG
-bg-sig: bgadt-sig sugar-sig parsers/.
+bg-sig: bgadt-sig sugar-sig parsers/. ast/ppsvg-sig
    /lib/coll/monoset-sig /lib/ml-yacc/. /lib/pp/smlnj/prettyprint %NODASHSIG
-bg: bgadt sugar parsers/. bg-sig /lib/coll/lazylist
+bg: bgadt sugar parsers/. ast/ppsvg bg-sig /lib/coll/lazylist
    /lib/coll/set /lib/pp/smlnj/. /lib/ml-yacc/. /lib/util/errormsg
    /lib/util/errorhandler-sig /lib/util/debug /lib/util/origin %NODASHSIG
 bpl: bg-sig bg /lib/util/printerrorhandler /lib/util/origin %NODASHSIG

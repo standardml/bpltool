@@ -22,3 +22,7 @@ bgbdnf: info-sig /lib/coll/monoset-sig /lib/coll/pp /kernel/bg/sigs
 #ppbg bgterm-sig /lib/pp/smlnj/. %NODASHSIG
 bplterm-sig: /lib/pp/mak/.
 bplterm: bplterm-sig /lib/pp/mak/. /lib/util/util %NODASHSIG
+ppsvg-sig:
+ppsvg: bgbdnf-sig bgval-sig /kernel/bg/sigs /lib/coll/monoset-sig
+  /lib/coll/monofinmap-sig /lib/coll/orderfinmap /lib/coll/orderset
+

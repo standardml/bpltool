@@ -268,6 +268,8 @@ struct
 	{width = 0, pi = pi, pi_inv = pi} 
       end
 
+	fun invmap ({pi_inv, ...} : 'a permutation) i = #1 (pi_inv sub i)
+
   fun copy {width, pi, pi_inv}
     = let
         val newpi = array (width, (0, NameSet.empty))
