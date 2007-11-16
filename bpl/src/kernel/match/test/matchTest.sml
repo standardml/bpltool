@@ -184,7 +184,15 @@ in
       redex =  (x/x * K0) o (K1[x] `|` idp(1))
            `|` (x/x * K0) o (L1[x]  `|` idp(1))},
      HAS [{context   = y/x * z/z * idp(1),
-           parameter = M1[z] * M0 * K0 o <-> * L0 o <->}])
+           parameter = M1[z] * M0 * K0 o <-> * L0 o <->}]),
+    ("Local links must not be matched by global links, part 1",
+     {agent = K10[][[x]] o (<[x]> M1[x]),
+      redex = K10[][[x]] o (`[]` `|` (<["x"]> "x"//[]  * <->))},
+     JUST []),
+    ("Local links must not be matched by global links, part 2",
+     {agent = <[x]> M1[x],
+      redex = `[]` `|` (<["x"]> "x"//[]  * <->)},
+     JUST [])
   ]
 end
   
