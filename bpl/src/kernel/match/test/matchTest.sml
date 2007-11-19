@@ -305,7 +305,7 @@ end
                  ("expected no matches for a = "
                 ^ BgVal.toString agent
                 ^ ", R = " ^ BgVal.toString redex
-                ^ "\but found\ncontext = "
+                ^ "\nbut found\ncontext = "
                 ^ BgBDNF.toString (#context (Match.unmk' m))
                 ^ "\nparameter = "
                 ^ BgBDNF.toString (#parameter (Match.unmk' m))))
