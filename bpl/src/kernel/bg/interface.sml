@@ -127,6 +127,11 @@ struct
 		  show ">"; >>>())
       end handle e => raise e
 
+  fun toString I
+    = PrettyPrint.pp_to_string
+        (Flags.getIntFlag "/misc/linewidth") 
+        (pp (Flags.getIntFlag "/misc/indent")) I
+
   val op * = x
 
 end

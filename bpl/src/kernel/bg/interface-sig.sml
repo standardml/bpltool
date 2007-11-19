@@ -76,4 +76,6 @@ sig
    * @param I       The interface to output.
    *)
   val pp : int -> PrettyPrint.ppstream -> interface -> unit
+  (** Return a prettyprinted string representation of an interface. *)
+  val toString : interface -> string
 end

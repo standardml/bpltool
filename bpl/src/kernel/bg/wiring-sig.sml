@@ -350,6 +350,6 @@ sig
    *)
   val pp : int -> PrettyPrint.ppstream -> wiring -> unit
   val oldpp : int -> PrettyPrint.ppstream -> wiring -> unit
-  (** Return a prettyprinted string representation of a match. *)
+  (** Return a prettyprinted string representation of a wiring. *)
   val toString : wiring -> string
 end
