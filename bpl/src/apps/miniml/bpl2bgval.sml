@@ -29,6 +29,8 @@
  Compile: cd <src-dir of BPL-root>; make bpl2bgval
 *)
 
+open TextIO;
+
 structure Bpl2bgval = struct
 
 structure BG = BG (structure ErrorHandler = PrintErrorHandler);
@@ -134,11 +136,6 @@ fun getSiteNums (b:bigraph) =
 	    | Id(i) => []
 	    | Empty => []
 
-(* partition an smap into two smaps according to pivot p *)
-fun partSmap [] acc p = (acc,[])
-  | partSmap ((n,i)::m) acc p =
-    if p=n then (rev acc, (n,i)::m) else partSmap m ((n,i) :: acc) p
-
 (* lookup first occurence of id and return corresponding key (Site) *)
 fun lookupSite [] id = NONE
   | lookupSite (s::m) id =
@@ -192,7 +189,7 @@ fun lookupCtrl cid signa =
 
 (* find the last key (nat/int) of an assoc. list *)
 fun lastCnt [] = 0
-  | lastCnt ((k,v)::m) = #1(List.hd(rev m))
+  | lastCnt ((k,v)::m) = #1(List.hd(List.rev((k,v)::m)))
 
 (* raise an error message that a particular control is not in the sig. *)
 fun ctrlNotInSig cid =
@@ -209,10 +206,40 @@ fun nmSet2sList set =
 	(fn n => Name.ekam n) (* recover original string by 'ekam' *)
 	(NameSet.list set)
 
+(* partition an smap into two smaps according to pivot p *)
+fun partSmap [] acc p = (acc,[])
+	  | partSmap ((n,i)::m) acc p = if p=n then (rev acc, (n,i)::m)
+					else partSmap m ((n,i) :: acc) p
+
+(* some error functions *)
+fun err1 n = "calcMaps: Site " ^ Int.toString(n) ^
+	     " has no LHS counterpart\n"
+fun err2 n = "makeMaps: Shouldn't happen... " ^ Int.toString(n) ^ "\n"
+val err3 = "makeMaps: Unnumbered site\n"
+
+(* peel off options from second components of generated auxList *)
+fun peel (assocOptList:(nat*nat option) list) =
+    case assocOptList
+     of [] => []
+      | ((n,x)::m) => ( case x
+			 of NONE => raise Fail(err1 n)
+			  | SOME(n') => (n,n') :: peel m )
+
+(* peel off Namelist constructor *)
+fun peelNamelist l =
+    case l of Namelist(nms) => List.map (fn s => s2n s) nms
+
 (* calculate 'maps', i.e. a 'map list', for instantiation *)
 fun calcMaps (b1:bigraph) (b2:bigraph) pivot(*:int*) (smap:sitemap) =
-    let val (smap1,smap2) = partSmap smap [] pivot
+    let val _ = print("pivot: " ^ Int.toString(pivot) ^ "\n")
+	val _ = case smap of [] => print "empty smap\n"
+			    | (x::xs) => print "non-empty smap\n"
+	val (smap1,smap2) = partSmap smap [] pivot
 	(* for each site in b2, find target site in b1 if it exists *)
+	val _ = case smap1 of [] => print "empty smap1\n"
+			    | (x::xs) => print "non-empty smap1\n"
+	val _ = case smap2 of [] => print "empty smap2\n"
+			    | (x::xs) => print "non-empty smap2\n"
 	val auxList = (*:(nat*nat option) list*)
 	    List.map
 		(fn s =>
@@ -221,47 +248,35 @@ fun calcMaps (b1:bigraph) (b2:bigraph) pivot(*:int*) (smap:sitemap) =
 					 in (n,opt) end
 			| _ => raise Fail("calcMaps: smap2 has non-site\n")
 		    )
-		) 
+		)
 		smap2
-	fun err1 n = "calcMaps: Site " ^ Int.toString(n) ^
-		     " has no LHS counterpart\n"
-	fun err2 n = "makeMaps: Shouldn't happen\n"
-	val err3 = "makeMaps: Unnumbered site\n"
-	(* peel off options from second components of generated auxList *)
-	fun peel (assocOptList:(nat*nat option) list) =
-	    case assocOptList
-	     of [] => []
-	      | ((n,x)::m) => case x of NONE => raise Fail(err1 n)
-				      | SOME(n') => (n,n') :: peel m
 	val pldList = (*:(nat*nat) list*) peel auxList
 	(* generate 'maps'; (int * name list) * (int * name list) list *)
 	val sites1 = getSites b1
 	val sites2 = getSites b2
-	fun namelist2name_list l =
-	    case l of Namelist(nms) => List.map (fn s => s2n s) nms
 	fun makeMaps slist1 slist2 pldlist =
 	    List.map
-	    ( fn s =>
-		 ( case s
-		    of Site(Num(n),l) =>
-		       let val b1siteId = lookupSnd pldlist n
-			   val b1site =
-			       case b1siteId
-				of SOME(n') => (* there is a LHS site id *)
-				   ( case lookupSite sites1 n'
-				      of SOME(s) => s (* id points to site *)
-				       | NONE => raise Fail(err2 n') )
-				 | NONE => raise Fail(err1 n)
-			   val (n1,l1) =
-			       case b1site
-				of Site(Num(n'),l') =>
-				   (n', namelist2name_list l')
-				 | _ => raise Fail(err3)
-			   val (n2,l2) = (n, namelist2name_list l)
-		       in ((n2,l2), (n1,l1)) end
-		     | _ => raise Fail(err3))
-	    )
-	    slist2
+		( fn s =>
+		     ( case s
+			of Site(Num(n),l) =>
+			   let val b1siteId = lookupSnd pldlist n
+			       val b1site =
+				   case b1siteId
+				    of SOME(n') => (* exists LHS site id *)
+				       ( case lookupSite sites1 n'
+					  of SOME(s) => s (* id |-> site *)
+					   | NONE => raise Fail(err2 n') )
+				     | NONE => raise Fail(err1 n)
+			       val (n1,l1) =
+				   case b1site
+				    of Site(Num(n'),l') =>
+				       (n', peelNamelist l')
+				     | _ => raise Fail(err3)
+			       val (n2,l2) = (n, peelNamelist l)
+			   in ((n2,l2), (n1,l1)) end
+			 | _ => raise Fail(err3) )
+		)
+		slist2
 	val maps = makeMaps sites1 sites2 pldList
     in maps end
 
@@ -365,9 +380,9 @@ fun decs2bgvals decls mainVal rules signa smap =
 	      let val mainBgval = big2bgval b signa
 	      in decs2bgvals ds mainBgval rules signa smap end
 	    | Rule(i,b1,b2) =>
-	      let val numOfSites = (List.length o getSiteNums) b1
-		  val pivot = if numOfSites > 0
-			      then ((List.last o getSiteNums) b1) + 1
+	      let val b1sites = getSiteNums b1
+		  val pivot = if List.length(b1sites) > 0
+			      then (List.last b1sites) + 1
 			      else 0 (* yields empty maplist *)
 		  val maplist = calcMaps b1 b2 pivot smap
 		  val b1' = big2bgval b1 signa
@@ -444,9 +459,9 @@ fun delAuxVals [] = []
 
 (* compute next unused nat site-identifier *)
 fun nextNat (smap:sitemap) =
-    let val last = List.last smap
-	val nat = #1(last)
-    in nat + 1 end
+    case smap
+     of [] => 0
+      | (x::xs) => #1(List.last smap) + 1
 
 (* replace siteIds in a bigraph by contiguous nats *)
 fun traverse big smap =
@@ -487,8 +502,7 @@ fun traverse big smap =
 (* number the sites of a decl, update smap *)
 fun numberSites d smap =
     case d
-     of Value(i,b) => let val (b',smap') = traverse b smap
-		      in (Value(i,b'), smap') end
+     of Value(i,b) => (Value(i,b), smap) (* Values are assumed ground *)
       | Rule(i,b1,b2) => let val (b1',smap') = traverse b1 smap
 			     val (b2',smap'') = traverse b2 smap'
 			 in (Rule(i,b1',b2'), smap'') end
@@ -504,15 +518,34 @@ fun peelCdef [] = []
   | peelCdef (c::cs) =
     case c of Cdef(cid,ck,bp,fp) => (cid,ck,bp,fp) :: peelCdef cs
 
+fun printSmap smap =
+    List.map (fn x =>
+		 let val prtnat = Int.toString(#1(x))
+		     val prtid = case #2(x)
+				  of Num(n) => Int.toString n
+				   | Var(i) => i
+		 in print("(" ^ prtnat ^ "," ^ prtid ^ ") ") end
+	     )
+	     smap
+
 (* toplevel *)
 fun prog2bgval ast =
     case ast
      of Prog(signa,declist) =>
 	let val rolledList = roll declist
 	    val rolledList' = delAuxVals rolledList
+	    val _ = print("rolledList': "
+			  ^ ((Int.toString o List.length) rolledList')
+			  ^ "\n")
 	    val acc = []
-	    val smap = [] (* sitemap: (nat * siteId) list*)
+	    val smap = [] (* sitemap: (nat * siteId) list *)
 	    val (nmbrdList,smap') = numberDecs rolledList' acc smap
+	    val _ = print("nmbrdList: "
+			  ^ ((Int.toString o List.length) nmbrdList)
+			  ^"\n")
+	    val _ = print("smap': ")
+	    val _ = printSmap smap'
+	    val _ = print "\n"
 	    val mainVal = barren (* dummy *)
 	    val rules = []
 	    val signa' = peelCdef signa
