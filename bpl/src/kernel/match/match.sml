@@ -1039,10 +1039,18 @@ struct
           (* FIXME: The following should really be W+Z, not W+X+Z! *)
           val W        = Wiring.outernames alpha
           val WXZ      = NameSet.union W XZ
-          val s_C_n    = Wiring.restrict'' s_C_n (WXZ)
-          val s_C_e    = Wiring.restrict'' s_C_e (WXZ)
+          val s_C_n    = Wiring.restrict'' s_C_n WXZ
+          (* Name introductions remaining in s_C_e after restriction 
+           * should be removed, unless they are already mapped by
+           * ename.
+           *)
+          val s_C_e    =
+            Wiring.restrict''' s_C_e WXZ
+              (fn y => case NameMap.lookup ename y of
+                 NONE   => true
+               | SOME _ => false)
           val s_C_e_of = Wiring.outernames s_C_e
-          val s_a_n    = Wiring.restrict'' s_a_n (XZ)
+          val s_a_n    = Wiring.restrict'' s_a_n XZ
           (* Name introductions remaining in s_a_e after restriction 
            * should be removed, unless they are already mapped by
            * ename to a name also present in the outer face of the
@@ -1051,7 +1059,7 @@ struct
            * introductions (returned in Y).
            *)
           val s_a_e =
-            Wiring.restrict''' s_a_e (XZ)
+            Wiring.restrict''' s_a_e XZ
               (fn y => case NameMap.lookup ename y of
                  NONE => true
                | SOME y' => not (NameSet.member y' s_C_e_of))
