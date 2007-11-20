@@ -181,7 +181,7 @@ print "Server call returned to simplifyrequest " + id.to_s + ".\n"
     
     begin
       # Call the prettyprinter
-      f = IO.popen("../../svg/bgval2svg/bgval2svg", "r+")
+      f = IO.popen("../../svg/bg2svg/bg2svg", "r+")
       f.puts "SIGNATURE"
       f.puts signature
       f.puts "ENDSIGNATURE"
