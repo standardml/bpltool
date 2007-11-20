@@ -483,8 +483,9 @@ function toggleshowimgs (checkbox) {
       drawsvgrequest (bigraph, 'rule' + istr + '-redex-image');
       drawsvgrequest ($('react' + istr), 'rule' + istr + '-react-image');
       var rulematchstr = 'rule' + istr + 'match';
+      var jstr;
       for (
-        j = 0;
+        var j = 0;
 	jstr = rulematchstr + '[' + j + ']',
         bigraph = $(jstr + '-ctx-body');
 	j++) {
@@ -494,9 +495,19 @@ function toggleshowimgs (checkbox) {
     }
   } else {
     $("agent-image").innerHTML = "";
-    for (i = 0; bigraph = $('redex[' + i + ']'); i++) {
-      $('rule[' + i + ']-redex-image').innerHTML = "";
-      $('rule[' + i + ']-react-image').innerHTML = "";
+    for (i = 0; istr = '[' + i + ']', $('redex' + istr); i++) {
+      $('rule' + istr + '-redex-image').innerHTML = "";
+      $('rule' + istr + '-react-image').innerHTML = "";
+      var rulematchstr = 'rule' + istr + 'match';
+      var jstr;
+      for (
+        var j = 0;
+	jstr = rulematchstr + '[' + j + ']',
+        $(jstr + '-ctx-body');
+	j++) {
+	$(jstr + '-ctx-image').innerHTML = "";
+	$(jstr + '-par-image').innerHTML = "";
+      }
     }
   }
 }
