@@ -39,3 +39,8 @@ text.site {
   fill: black;
   stroke: none;
 }
+
+path.link {
+  stroke: black;
+  fill: none;
+}
