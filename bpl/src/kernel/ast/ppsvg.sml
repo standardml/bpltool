@@ -257,7 +257,7 @@ struct
       "' width='" ^ intToString width ^
       "' height='" ^ intToString height ^ "' />\n" ^ s
     | str' (Circle {class, cx, cy, r}) s
-    = "  <circle " ^ (if class = "" then "" else "class='" ^ class ^ "' ") ^
+    = "  <" ^ ns ^ "circle " ^ (if class = "" then "" else "class='" ^ class ^ "' ") ^
       "cx='" ^ intToString cx ^ "' cy='" ^ intToString cy ^
       "' r='" ^ intToString r ^ "' />\n" ^ s
     | str' (Ellipse {class, cx, cy, rx, ry}) s
@@ -266,7 +266,7 @@ struct
       "' rx='" ^ intToString rx ^
       "' ry='" ^ intToString ry ^ "' />\n" ^ s
     | str' (Path {class, d}) s
-    = "  <path " ^ (if class = "" then "" else "class='" ^ class ^ "' ") ^
+    = "  <" ^ ns ^ "path " ^ (if class = "" then "" else "class='" ^ class ^ "' ") ^
       "d='" ^ foldr pathstr ("' />\n" ^ s) d
      in
        str'
