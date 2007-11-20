@@ -495,7 +495,7 @@ function toggleshowimgs (checkbox) {
     }
   } else {
     $("agent-image").innerHTML = "";
-    for (i = 0; istr = '[' + i + ']', $('redex' + istr); i++) {
+    for (i = 0; istr = '[' + i + ']', bigraph = $('redex' + istr); i++) {
       $('rule' + istr + '-redex-image').innerHTML = "";
       $('rule' + istr + '-react-image').innerHTML = "";
       var rulematchstr = 'rule' + istr + 'match';
@@ -503,7 +503,7 @@ function toggleshowimgs (checkbox) {
       for (
         var j = 0;
 	jstr = rulematchstr + '[' + j + ']',
-        $(jstr + '-ctx-body');
+        bigraph = $(jstr + '-ctx-body');
 	j++) {
 	$(jstr + '-ctx-image').innerHTML = "";
 	$(jstr + '-par-image').innerHTML = "";
