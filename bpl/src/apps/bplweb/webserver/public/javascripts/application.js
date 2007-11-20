@@ -482,7 +482,7 @@ function toggleshowimgs (checkbox) {
     for (i = 0; istr = '[' + i + ']', bigraph = $('redex' + istr); i++) {
       drawsvgrequest (bigraph, 'rule' + istr + '-redex-image');
       drawsvgrequest ($('react' + istr), 'rule' + istr + '-react-image');
-      var rulematchstr = 'rule' + istr + 'match';
+      var rulematchstr = 'rule' + istr + '-match';
       var jstr;
       for (
         var j = 0;
@@ -498,7 +498,7 @@ function toggleshowimgs (checkbox) {
     for (i = 0; istr = '[' + i + ']', bigraph = $('redex' + istr); i++) {
       $('rule' + istr + '-redex-image').innerHTML = "";
       $('rule' + istr + '-react-image').innerHTML = "";
-      var rulematchstr = 'rule' + istr + 'match';
+      var rulematchstr = 'rule' + istr + '-match';
       var jstr;
       for (
         var j = 0;
