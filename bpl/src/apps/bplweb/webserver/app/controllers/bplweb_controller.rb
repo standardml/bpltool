@@ -9,12 +9,12 @@ class BplwebController < ApplicationController
     @filename = ''
     @title = ''
     @signature = 'passive(Get =: 1 --> 1), passive(Send -: 2)'
-    @agent = 'Get[y][[z]] o (&lt;[z]> z//[] * &lt;->) `|` Send[x,y] o &lt;->'
+    @agent = 'Get[y][[z]] o (<[z]> z//[] * <->) `|` Send[x,y] o <->'
 print "\n===>[", params[:simplifymatches], "]\n"
     @simplifymatches = params[:simplifymatches] == "on"
-    @rules = [Rule.new(:redex => 'Get[y1][[z1]] `|` Send[x1,y1] o &lt;->',
+    @rules = [Rule.new(:redex => 'Get[y1][[z1]] `|` Send[x1,y1] o <->',
                        :react => '(x1//[] * y1/z1 * idp(1)) o `[z1]`',
-                       :inst => '[0 |-&gt; 0]')]
+                       :inst => '[0 |->; 0]')]
     if params[:id]
       begin
         example = Example.find(params[:id])
@@ -170,6 +170,29 @@ print "Server call returned to reactrequest " + id.to_s + ".\n"
       @result = {'type' => 'TIMEOUT'}
     end
 print "Server call returned to simplifyrequest " + id.to_s + ".\n"
+  end
+  
+  def svgrequest
+    # Return SVG representation of a bigraph
+    params = params()
+    
+    signature = "[" + params [:signature] + "]"
+    bigraph = params [:bigraph]
+    
+    begin
+      # Call the prettyprinter
+      f = IO.popen("../../svg/bgval2svg/bgval2svg", "r+")
+      f.puts "SIGNATURE"
+      f.puts signature
+      f.puts "ENDSIGNATURE"
+      f.puts "BIGRAPH"
+      f.puts bigraph
+      f.puts "ENDBIGRAPH"
+      @result = ""
+      @result += f.gets while !f.eof?
+    rescue StandardError => txt
+      @result = "<p class='info'>[unable to generate image: " + txt.to_s + "]</p>"
+    end
   end
 
 end

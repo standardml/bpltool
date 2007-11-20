@@ -1,0 +1,41 @@
+text.name {
+  font-family: serif;
+  font-size: smaller;
+  font-weight: normal;
+  stroke: none;
+  fill: black;
+}
+
+rect.root {
+  fill: none;
+  stroke: black;
+  stroke-dasharray: 10,5;
+}
+
+circle.binder {
+  fill: white;
+  stroke: black;
+}
+
+ellipse.node {
+  fill: none;
+  stroke: black;
+}
+
+text.node {
+  font-weight: bold;
+  fill: blue;
+  stroke: none;
+}
+
+rect.site {
+  fill: silver;
+  stroke: none;
+}
+
+text.site {
+  font-size: smaller;
+  font-weight: normal;
+  fill: black;
+  stroke: none;
+}

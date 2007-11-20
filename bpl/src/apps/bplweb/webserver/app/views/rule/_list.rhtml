@@ -38,7 +38,10 @@
 	      <div id="rule[<%=i%>]-redex-body" class="body">
                 <textarea name="redex[<%=i%>]" id="redex[<%=i%>]" class="editablecode" rows="1" cols="45"
                   title="Enter a redex bigraph here"
-                  onkeypress="resizenode (this);"><%= @rules[i].redex %></textarea>
+		  onchange="redraw (this, 'rule[<%=i%>]-redex-image');"
+                  onkeypress="resizenode (this);"><%= CGI.escapeHTML(@rules[i].redex) %></textarea>
+              </div>
+              <div id="rule[<%=i%>]-redex-image">
               </div>
             </div>
 	    <div id="rule[<%=i%>]-react">
@@ -54,9 +57,12 @@
               title="Help for bigraph syntax" /></a>
               </p>
 	      <div id="rule[<%=i%>]-react-body" class="body">
-                <textarea name="react[<%=i%>]" class="editablecode" rows="1" cols="45"
+                <textarea id="react[<%=i%>]" name="react[<%=i%>]" class="editablecode" rows="1" cols="45"
                   title="Enter a reactum bigraph here"
-                  onkeypress="resizenode (this);"><%= @rules[i].react %></textarea>
+		  onchange="redraw (this, 'rule[<%=i%>]-react-image');"
+                  onkeypress="resizenode (this);"><%= CGI.escapeHTML(@rules[i].react) %></textarea>
+              </div>
+              <div id="rule[<%=i%>]-react-image">
               </div>
             </div>
 	    <div id="rule[<%=i%>]-inst">
@@ -74,7 +80,7 @@
 	      <div id="rule[<%=i%>]-inst-body" class="body">
                 <textarea name="inst[<%=i%>]" class="editablecode" rows="1" cols="45"
                   title="Enter an instantiation here"
-                  onkeypress="resizenode (this);"><%= @rules[i].inst %></textarea>
+                  onkeypress="resizenode (this);"><%= CGI.escapeHTML(@rules[i].inst) %></textarea>
               </div>
             </div>
 	    <div id="rule[<%=i%>]-matches">

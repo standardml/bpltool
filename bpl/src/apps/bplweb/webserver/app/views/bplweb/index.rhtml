@@ -1,5 +1,14 @@
+<%-
+if request.env["HTTP_ACCEPT"].index('application/xhtml+xml')
+headers["Content-Type"] = "application/xhtml+xml; charset=utf-8"
+else
+headers["Content-Type"] = "text/html; charset=utf-8"
+end
+-%>
 <?xml version="1.0"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "xhtml11.dtd">
+<?xml-stylesheet href="/stylesheets/bplsvg.css" type="text/css" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <!--
  Copyright (c) 2007  The BPL Group at the IT University of Copenhagen
 
@@ -20,13 +29,17 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
  USA
 -->
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" 
+      xmlns:svg="http://www.w3.org/2000/svg"
+      xml:lang="en">
   <head>
     <title>BPLweb</title>
     <%= javascript_include_tag :defaults %>
-    <link rel="stylesheet" type="text/css" href="/stylesheets/bplweb.css"></style>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bplweb.css"></link>
+    <object id="AdobeSVG" classid="clsid:78156a80-c6a1-4bbf-8e6a-3cd390eeb4e2"> </object>
+    <?import namespace="svg" urn="http://www.w3.org/2000/svg" implementation="#AdobeSVG"?>
   </head>
-  <body onload='initialresizing();'>
+  <body onload='initialresizing(); initialredraw();'>
     <h1><center>BPLweb</center></h1>
 
     <p class="header"><b>BETA</b> version (see below for details).</p>
@@ -78,13 +91,18 @@
 	      src="/images/Icon_help.gif" 
               alt=" ? "
               title="Help for signature syntax" /></a></td>
+            <td align="right">
+              Display bigraphs
+              <input id="showimgs" name="showimgs" type="checkbox"
+	       onchange="toggleshowimgs (this);" <%= @showimgs ? 'checked="checked"' : '' %> />
+            </td>
 	  </tr>
 	</table>
       </p>
       <div id="signature-body">
 	  <textarea id="signature" name="signature" class="editablecode"
 	    onkeypress="resizenode (this);" rows="1" cols="55"
-	    title="Enter a signature here"><%= @signature %></textarea>
+	    title="Enter a signature here"><%= CGI.escapeHTML(@signature) %></textarea>
       </div>
     </div>
 
@@ -111,7 +129,10 @@
       <div id="agent-body">
 	  <textarea id="agent" name="agent" class="editablecode"
 	    onkeypress="resizenode (this);" rows="1" cols="55"
-	    title="Enter a ground bigraph here"><%= @agent %></textarea>
+	    onchange="redraw (this, 'agent-image');"
+	    title="Enter a ground bigraph here"><%= CGI.escapeHTML(@agent) %></textarea>
+      </div>
+      <div id="agent-image">
       </div>
     </div>
 
@@ -234,7 +255,7 @@
     </div>
     </form>
 
-		<hr>
+		<hr />
   <p class="footer">
   Welcome to the online Bigraphical Programming Languages (BPL) tool  demo!
   </p>
@@ -251,7 +272,7 @@
     .replace(/\!/g,'mailto:').replace(/\#/g,'@').replace(/\*/g,'.'));
 </script>.
   </p>
-	<hr>
+	<hr />
 	<div class="subfooter">
   <span style="float: left;">
 	 Copyright (c) 2007  The BPL Group at the IT University of Copenhagen

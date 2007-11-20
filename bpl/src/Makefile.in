@@ -224,6 +224,21 @@ test-mlton: prepare-mlton $(PARSINGFILES)
 
 .PHONY:	check test test-smlnj test-mosml test-mlton
 
+# SVG
+test-bg2svg: test-bg2svg-mlton
+
+test-bg2svg-smlnj: prepare-smlnj $(PARSINGFILES)
+	echo "CM.make' \"apps/svg/bg2svg/sources.cm\";" | $(SMLNJ)
+
+test-bg2svg-mlton: apps/svg/bg2svg/bg2svg
+	apps/svg/bg2svg/bg2svg < apps/svg/bg2svg/bg2svg-test.txt
+
+test-bg2svg-mosml: bg2svg
+	apps/svg/bg2svg/bg2svg < apps/svg/bg2svg/bg2svg-test.txt
+
+apps/svg/bg2svg/bg2svg: prepare-mlton $(PARSINGFILES)
+	$(MLTON) -output "$@" apps/svg/bg2svg/mlton.mlb
+
 # Web application
 test-webapp: test-webapp-mlton
 
@@ -243,10 +258,11 @@ apps/bplweb/backend/mlton: prepare-mlton $(PARSINGFILES)
 update-webapp:
 	ssh $(WEBAPP-SERVER) 'cd $(WEBAPP-BPLDIR)/src/apps/bplweb && svn update'
 
-# Rebuild backend executable
+# Rebuild backend executable and SVG prettyprinter
 remake-uploaded-webapp:
 	@echo Remaking webapp at server.  Remember to commit changes first.
-	ssh $(WEBAPP-SERVER) 'cd $(WEBAPP-BPLDIR)/src && svn update && ./config.status && nice make apps/bplweb/backend/mlton'
+	ssh $(WEBAPP-SERVER) 'cd $(WEBAPP-BPLDIR)/src && svn update && \
+	./config.status && nice make apps/bplweb/backend/mlton apps/svg/bg2svg/bg2svg'
 
 # Restart XML RPC server
 restart-webapp:

@@ -50,6 +50,9 @@ function gettextsize (text) {
   return {rows: r + 1, cols: maxcol};
 }
 
+function escapeHTML (s) {
+  return s.replace (/&/g, "&amp;").replace (/</g, "&lt;").replace (/>/g, "&gt;");
+}
 
 function resizenode (textareanode) {
   var nodetext = textareanode.value;
@@ -69,6 +72,18 @@ function initialresizing () {
   var react_body;
   for (var i = 0; react_body = $("react[" + i + "]"); ++i)
     resizenode(react_body);
+}
+
+function initialredraw () {
+  if ($('showimgs').checked) {
+    drawsvgrequest ($('agent'), "agent-image");
+  var redex_body;
+  for (var i = 0; redex_body = $("redex[" + i + "]"); ++i)
+    drawsvgrequest (redex_body, "rule[" + i + "]-redex-image");
+  var react_body;
+  for (var i = 0; react_body = $("react[" + i + "]"); ++i)
+    drawsvgrequest (react_body, "rule[" + i + "]-react-image");
+  }
 }
 
 function editnode (textnode) {
@@ -112,7 +127,7 @@ function visibilitytoggler (id, hide) {
     minusstyle = " style='display: none;'";
   else
     plusstyle = " style='display: none;'";
-  return "<a href='#' class='visibilitytoggle' onclick='togglevisibility (\"" + id + "\"); return false;'><span id='" + id + "-p'" + plusstyle + ">+</span><span id='" + id + "-m'" + minusstyle + ">&minus;</span></a>\n";
+  return "<a href='#' class='visibilitytoggle' onclick='togglevisibility (\"" + id + "\"); return false;'><span id='" + id + "-p'" + plusstyle + ">+</span><span id='" + id + "-m'" + minusstyle + ">&#8722;</span></a>\n";
 }
 
 
@@ -123,7 +138,7 @@ function togglevisibility (id) {
 }
 
 
-function rulechild (title, helplink, id, term, insertbody) {
+function rulechild (title, helplink, id, term, insertbody, drawonchange) {
   var titleattr = "";
   if (term) titleattr = "title='Enter " + term + " here' ";
   return ("	    <div id='" + id + "'>\n" +
@@ -132,10 +147,14 @@ function rulechild (title, helplink, id, term, insertbody) {
                   visibilitytoggler (id) + "</span>\n" +
 "                " + title + ": \n" + helplink +
 "              </p>\n" +
-"	      <div id='" + id + "-body' class='body'>\n" +
+"	       <div id='" + id + "-body' class='body'>\n" +
 (insertbody ? 
-"                <textarea name='" + id + "' class='editablecode' " + titleattr + "rows='1' cols='60'\n" +
+"                <textarea name='" + id + "' id='" + id + "' class='editablecode' " + titleattr + "rows='1' cols='60'\n" +
+(drawonchange ?
+"                 onchange='redraw (this, \"" + id + "-image\");'\n" : "") +
 "                 onkeypress='resizenode (this);'></textarea>\n" : "") +
+"              </div>\n" +
+"              <div id='" + id + "-image' class='image'>\n" +
 "              </div>\n" +
 "            </div>\n");
 }
@@ -195,10 +214,10 @@ function addrule () {
 "	    </table>\n" +
 "	  </p>\n" +
 "	  <div id='rule[" + nodeno + "]-body' class='body'>\n" +
-rulechild ('Redex', bigraphhelp, "redex[" + nodeno + "]", 'a redex bigraph', true) +
-rulechild ('React', bigraphhelp, "react[" + nodeno + "]", 'a reactum bigraph', true) +
-rulechild ('Instantiation', instantiationhelp, "inst[" + nodeno + "]", 'an instantiation', true) +
-rulechild ("<span id='rule[" + nodeno + "]-count" + nodeno +"'></span> Matches", "", "rule[" + nodeno + "]-matches", false, false) +
+rulechild ('Redex', bigraphhelp, "redex[" + nodeno + "]", 'a redex bigraph', true, true) +
+rulechild ('React', bigraphhelp, "react[" + nodeno + "]", 'a reactum bigraph', true, true) +
+rulechild ('Instantiation', instantiationhelp, "inst[" + nodeno + "]", 'an instantiation', true, false) +
+rulechild ("<span id='rule[" + nodeno + "]-count" + nodeno +"'></span> Matches", "", "rule[" + nodeno + "]-matches", false, false, false) +
 "         </div>";
 
   rulesnode.appendChild (rulenode);
@@ -222,7 +241,6 @@ function deleterule (ruleno) {
       .concat (rule.getElementsBySelector ('[id|="react' + oldnum + '"]'))
       .concat (rule.getElementsBySelector ('[id|="inst' + oldnum + '"]'));
     var newrulenodeid = "rule[" + ruleno + "]";
-//alert("changing node " + rulenodeid + " to " + newrulenodeid);
     for (var i = 0; i < namednodes.length; i++) {
       var node = namednodes [i];
       var idstr = node.getAttribute ("id");
@@ -241,7 +259,6 @@ function deleterule (ruleno) {
       var toggler = togglers [i];
       var target = toggler.getAttribute ("target");
       target = target.replace (oldnum, newnum);
-if (!$(target + "-p")) alert (target);
       var hide = $(target + "-p").visible ();
       toggler.setAttribute ("target", target);
       togglers [i].innerHTML = visibilitytoggler (target, hide);
@@ -282,7 +299,9 @@ function addresult (rule, match, result) {
 "	 Context:\n" +
 "       </p>\n" +
 "       <div id='" + rmstr + "-ctx-body' class='body'>\n" +
-"	 <pre class='code'>" + result ['context'] + "</pre>\n" +
+"	 <pre class='code'>" + escapeHTML (result ['context']) + "</pre>\n" +
+"       </div>\n" +
+"       <div id='" + rmstr + "-ctx-image' class='image'>\n" +
 "       </div>\n" +
 "     </div>\n" +
 "     <div id='" + rmstr + "-par'>\n" +
@@ -291,7 +310,9 @@ function addresult (rule, match, result) {
 "	 Parameter:\n" +
 "       </p>\n" +
 "       <div id='" + rmstr + "-par-body' class='body'>\n" +
-"	 <pre class='code'>" + result ['parameter'] + "</pre>\n" +
+"	 <pre class='code'>" + escapeHTML (result ['parameter']) + "</pre>\n" +
+"       </div>\n" +
+"       <div id='" + rmstr + "-par-image' class='image'>\n" +
 "       </div>\n" +
 "     </div>\n" +
 "     <div id='" + rmstr + "-tree'>\n" +
@@ -312,6 +333,12 @@ function addresult (rule, match, result) {
       = '<pre class="code">' + result ['parameter'] + '</pre>';
     $(rmstr + '-tree-body').innerHTML
       = '<pre class="code">' + result ['tree'] + '</pre>';
+  }
+  if ($('showimgs').checked) {
+    drawsvgrequest
+      ($(rmstr + "-ctx-body"), rmstr + "-ctx-image");
+    drawsvgrequest
+      ($(rmstr + "-par-body"), rmstr + "-par-image");
   }
 }
 
@@ -429,6 +456,41 @@ function deletematches (rulestomatch) {
   $('totalmatches-count').innerHTML = "";
 }
 
+function drawsvgrequest (bigraphnode, imgnodeid) {
+  var bigraph = bigraphnode.value;
+  if (!bigraph)
+    bigraph = bigraphnode.textContent;
+  new Ajax.Request
+    ('/bplweb/svgrequest',
+     {'parameters': {'sessionid': id['sessionid'], 'matchingid': id['matchingid'],
+      'signature': $('signature').value, 'bigraph': bigraph},
+      onSuccess: function (transport) {
+      	$(imgnodeid).innerHTML = transport.responseText;
+      }})
+}
+
+function redraw (bigraphnode, imgnodeid) {
+  if ($('showimgs').checked) drawsvgrequest (bigraphnode, imgnodeid);
+}
+
+function toggleshowimgs (checkbox) {
+  var bigraph;
+  var i;
+  if (checkbox.checked) {
+    drawsvgrequest ($("agent"), "agent-image");
+    for (i = 0; bigraph = $('redex[' + i + ']'); i++) {
+      drawsvgrequest (bigraph, 'rule[' + i + ']-redex-image');
+      drawsvgrequest ($('react[' + i + ']'), 'rule[' + i + ']-react-image');
+    }
+  } else {
+    $("agent-image").innerHTML = "";
+    for (i = 0; bigraph = $('redex[' + i + ']'); i++) {
+      $('rule[' + i + ']-redex-image').innerHTML = "";
+      $('rule[' + i + ']-react-image').innerHTML = "";
+    }
+  }
+}
+
 function matchrequest (rulestomatch, matchcount) {
   deletematches (rulestomatch);
   new Ajax.Request
@@ -478,6 +540,7 @@ function reactrequest (rule, match) {
             var agentnode = $('agent');
             agentnode.value = result.agent;
             resizenode (agentnode);
+            if ($('showimgs').checked) drawsvgrequest (agentnode, 'agent-image');
             break;
           case 'TIMEOUT':
             alert ("The react request timed out.  Please try again.");

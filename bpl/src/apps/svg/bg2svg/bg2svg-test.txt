@@ -1,0 +1,6 @@
+SIGNATURE
+[active(K -: 1), passive(L =: 1 --> 2)]
+ENDSIGNATURE
+BIGRAPH
+K[y1] || L[y1,y2][[x1,x2]]
+ENDBIGRAPH

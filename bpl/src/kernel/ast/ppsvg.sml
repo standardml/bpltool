@@ -39,8 +39,10 @@ functor PPSVG (
   sharing type Name.name = Ion.name
                          = Link.name
                          = NameSet.elt
-  sharing type NameSet.Set = Link.nameset
+  sharing type NameSet.Set = Interface.nameset
+                           = Link.nameset
                            = Ion.nameset
+                           = Wiring.nameset
   sharing type Interface.interface = BgBDNF.interface
   sharing type Control.control = Ion.control
   sharing type Ion.ion = BgBDNF.ion
@@ -143,7 +145,55 @@ struct
   | Circle    of {class : string, cx : int, cy : int, r : int}
   | Ellipse   of {class : string, cx : int, cy : int, rx : int, ry : int}
   | Path      of {class : string, d : pathdata list}
-  
+
+  local
+    open Int
+  in
+    (* Find the bounding box of two boxes. *)
+    fun maxpair (((x1, y1), (x2, y2)), ((x1', y1'), (x2', y2')))
+      = ((min (x1, x1'), min (y1, y1')),
+         (max (x2, x2'), max (y2, y2')))
+    (* Find the bounding box of a path that starts within a box xyxy. *)
+    fun svgpathsize (MoveTo [], xyxy) = xyxy
+      | svgpathsize (MoveTo (xy :: xys), _)
+      = foldl maxpair (xy, xy) (map (fn xy => (xy, xy)) xys)
+      | svgpathsize (LineTo [], xyxy) = xyxy
+      | svgpathsize (LineTo (xy :: xys), _)
+      = foldl maxpair (xy, xy) (map (fn xy => (xy, xy)) xys)
+      | svgpathsize (HLineTo [], xyxy) = xyxy
+      | svgpathsize (HLineTo (x :: xs), ((_, y1), (_, y2)))
+      = ((foldl min x xs, y1), (foldl max x xs, y2))
+      | svgpathsize (VLineTo [], xyxy) = xyxy
+      | svgpathsize (VLineTo (y :: ys), ((x1, _), (x2, _)))
+      = ((x1, foldl min y ys), (x2, foldl max y ys))
+      | svgpathsize (CurveTo [], xyxy) = xyxy
+      | svgpathsize (CurveTo ((_, _, xy) :: xys), _)
+      = foldl maxpair (xy, xy) (map (fn (_, _, xy) => (xy, xy)) xys)
+      | svgpathsize (SCurveTo [], xyxy) = xyxy
+      | svgpathsize (SCurveTo ((_, xy) :: xys), _)
+      = foldl maxpair (xy, xy) (map (fn (_, xy) => (xy, xy)) xys)
+      | svgpathsize (QCurveTo [], xyxy) = xyxy
+      | svgpathsize (QCurveTo ((_, xy) :: xys), _)
+      = foldl maxpair (xy, xy) (map (fn (_, xy) => (xy, xy)) xys)
+      | svgpathsize (SQCurveTo [], xyxy) = xyxy
+      | svgpathsize (SQCurveTo (xy :: xys), _)
+      = foldl maxpair (xy, xy) (map (fn xy => (xy, xy)) xys)
+      | svgpathsize (ClosePath, xyxy) = xyxy
+    (* Find the bounding box of SVG data *)
+    fun svgsize (Svg []) = ((0, 0), (0, 0))
+      | svgsize (Svg (svg :: svgs))
+      = foldl maxpair (svgsize svg) (map svgsize svgs)
+      | svgsize (Text {x, y, ...}) = ((x, y), (x, y))
+      | svgsize (Rectangle {x, y, width, height, ...})
+      = ((x, y), (x + width, y + height))
+      | svgsize (Circle {cx, cy, r, ...})
+      = ((cx - r, cy - r), (cx + r, cy + r))
+      | svgsize (Ellipse {cx, cy, rx, ry, ...})
+      = ((cx - rx, cy - ry), (cx + rx, cy + ry))
+      | svgsize (Path {d, ...})
+      = foldl svgpathsize ((0, 0), (0, 0)) d
+  end
+    
   fun pathstr (MoveTo ((x, y) :: xys), s)
     = "\n    M" ^ intToString x ^ "," ^ intToString y ^
       pathstr (MoveTo xys, s)
@@ -180,17 +230,25 @@ struct
     | pathstr (SQCurveTo [], s) = s
     | pathstr (ClosePath, s) = "z" ^ s
   
-  fun str (Svg svgs) s
-    = "<svg width='100%' height='100%' version='1.1'\n\
-      \  xmlns='http://www.w3.org/2000/svg' fill='none' stroke='black'>\n" ^
-      foldr (fn (svg, s) => str svg s) ("</svg>\n" ^ s) svgs
-    | str (Text {class, x, y, text, anchor}) s
-    = "  <text " ^ (if class = "" then "" else "class='" ^ class ^ "' ") ^
+  fun svgToString ns = 
+    let
+  fun str' (svg as (Svg svgs)) s
+    = let
+        val ((x1, y1), (x2, y2))
+          = maxpair (((0, 0), (0, 0)), svgsize svg)
+      in
+        "<" ^ ns ^ "svg width='" ^ Int.toString (x2 - x1 + 1) ^ 
+        "' height='" ^ Int.toString (y2 - y1 + 1) ^ "' version='1.1'\n\
+          \  fill='none' stroke='black'>\n" ^
+          foldr (fn (svg, s) => str' svg s) ("</" ^ ns ^ "svg>\n" ^ s) svgs
+      end
+    | str' (Text {class, x, y, text, anchor}) s
+    = "  <" ^ ns ^ "text " ^ (if class = "" then "" else "class='" ^ class ^ "' ") ^
       "x='" ^ intToString x ^ "' y='" ^ intToString y ^ "'" ^
       (if anchor = "" then "" else " text-anchor='" ^ anchor ^ "'") ^
-      ">" ^ text ^ "</text>\n" ^ s
-    | str (Rectangle {class, x, y, r, width, height}) s
-    = "  <rect " ^ (if class = "" then "" else "class='" ^ class ^ "' ") ^
+      ">" ^ text ^ "</" ^ ns ^ "text>\n" ^ s
+    | str' (Rectangle {class, x, y, r, width, height}) s
+    = "  <" ^ ns ^ "rect " ^ (if class = "" then "" else "class='" ^ class ^ "' ") ^
       "x='" ^ intToString x ^ "' y='" ^ intToString y ^
       (if r = 0 then 
          ""
@@ -198,18 +256,21 @@ struct
          "' rx='" ^ intToString r ^ "' ry='" ^ intToString r) ^
       "' width='" ^ intToString width ^
       "' height='" ^ intToString height ^ "' />\n" ^ s
-    | str (Circle {class, cx, cy, r}) s
+    | str' (Circle {class, cx, cy, r}) s
     = "  <circle " ^ (if class = "" then "" else "class='" ^ class ^ "' ") ^
       "cx='" ^ intToString cx ^ "' cy='" ^ intToString cy ^
       "' r='" ^ intToString r ^ "' />\n" ^ s
-    | str (Ellipse {class, cx, cy, rx, ry}) s
-    = "  <ellipse " ^ (if class = "" then "" else "class='" ^ class ^ "' ") ^
+    | str' (Ellipse {class, cx, cy, rx, ry}) s
+    = "  <" ^ ns ^ "ellipse " ^ (if class = "" then "" else "class='" ^ class ^ "' ") ^
       "cx='" ^ intToString cx ^ "' cy='" ^ intToString cy ^
       "' rx='" ^ intToString rx ^
       "' ry='" ^ intToString ry ^ "' />\n" ^ s
-    | str (Path {class, d}) s
+    | str' (Path {class, d}) s
     = "  <path " ^ (if class = "" then "" else "class='" ^ class ^ "' ") ^
       "d='" ^ foldr pathstr ("' />\n" ^ s) d
+     in
+       str'
+     end
      
   (* SVG data types ************************************************)
 
@@ -220,7 +281,7 @@ struct
       xsep           = 5,
       ysep           = 5,
       ctrlfontheight = 16,
-      ctrlcharwidth  = 12,
+      ctrlcharwidth  = 11,
       namefontheight = 10,
       namecharwidth  = 7,
       sitefontheight = 12,
@@ -240,7 +301,7 @@ struct
       siterounding   = 5
   }
  
-  fun ppsvg config b =
+  fun makesvg config b =
     let
       val config = getOpt (config, defaultconfig)
       val sqrt2 = Math.sqrt 2.0
@@ -578,10 +639,11 @@ struct
             namecharwidth, namefontheight, rootheight,
             xsep, ysep, ...} : configinfo = cfg
           val {ren, Ps, perm} = unmkD d
-          val ls =
+          val w =
             case BgVal.match BgVal.PWir ren of
-              BgVal.MWir w => Wiring.unmk w
+              BgVal.MWir w => w
             | _ => raise Impossible
+          val ls = Wiring.unmk w
           val pi =
             case BgVal.match BgVal.PPer perm of 
               BgVal.MPer per => Permutation.invmap per
@@ -592,17 +654,18 @@ struct
               (0, 0, 0, 0, fn xy => fn mksvg => mksvg xy)
               Ps
           val xsep = case Ps of [] => 0 | _ => xsep
-          val w =
-            LinkSet.fold
-              (fn l => fn w =>
-                 w + 1 + 
-                 String.size
-                   (Name.ekam
-                     (NameSet.someElement
-                       (#inner (Link.unmk l)))))
+          val wd =
+            NameSet.fold
+              (fn n => fn wd => wd + 1 + String.size (Name.ekam n))
               0
-              ls
-          val inameswidth = if w = 0 then 0 else (w - 1) * namecharwidth
+              (Wiring.innernames w)
+          val inameswidth = if wd = 0 then 0 else (wd - 1) * namecharwidth
+          val wd =
+            NameSet.fold
+              (fn n => fn wd => wd + 1 + String.size (Name.ekam n))
+              0
+              (Interface.names (BgBDNF.outerface d))
+          val onameswidth = if wd = 0 then 0 else (wd - 1) * namecharwidth
           val myheight =
             Int.max (rootheight, maxheight + ysep) + namefontheight
           fun draw (x, y) =
@@ -635,7 +698,8 @@ struct
             in
               (pmap, sxxs, svgs)
             end              
-          val mywidth = Int.max (width - xsep, inameswidth)
+          val mywidth =
+            Int.max (Int.max (width - xsep, inameswidth), onameswidth)
         in
           ((mywidth, myheight), draw)
         end
@@ -842,13 +906,35 @@ struct
           | m => raise Impossible
         end
     in
-      str (Svg (ppB b (0, 0))) ""
+      Svg (ppB b (0, 0))
     end
+
+  fun ppsvg ns config b = svgToString ns (makesvg config b) ""
 
   fun ppsvgdoc config b =
     "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"no\"?>\n\
-    \<?xml-stylesheet href=\"bplsvg.css\" type=\"text/css\" ?>\n\
+    \<?xml-stylesheet type=\"text/css\"\n\
+    \  href=\"http://www.itu.dk/research/theory/bpl/css/bplsvg.css\" ?>\n\
     \<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 20010904//EN\"\n\
     \\"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">\n" ^
-    ppsvg config b
+    ppsvg "" config b
+
+  fun ppxhtmldoc title config b =
+    "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"no\"?>\n\
+    \<?xml-stylesheet type=\"text/css\"\n\
+    \  href=\"http://www.itu.dk/research/theory/bpl/css/bplsvg.css\" ?>\n\
+    \<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\"\n\
+  	\ \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n\
+    \<html xmlns='http://www.w3.org/1999/xhtml'\n\
+    \  xmlns:svg='http://www.w3.org/2000/svg'\n\
+    \  xml:lang='en'>\n\
+    \<head>\n\
+    \  <title>" ^ title ^ "</title>\n\
+    \  <object id='AdobeSVG' classid='clsid:78156a80-c6a1-4bbf-8e6a-3cd390eeb4e2'></object>\n\
+    \  <?import namespace='svg' implementation='#AdobeSVG'?>\n\
+    \</head>\n\
+    \<body>\n  " ^
+    ppsvg "svg:" config b ^
+    "\n</body>\n\
+    \</html>\n"
 end

@@ -1254,7 +1254,7 @@ struct
       | [] (* This implies G = 1. *)
       => (case #Ss (unmkG g) of
             [] (* This implies g = 1. *)
-          => (print' (fn () => Int.toString lvl ^ ".ZAX'a ");
+          => (print' (fn () => Int.toString lvl ^ "<ZAX' ");
               Cons ({ename' = ename,
                   s_C' = Wiring.id_0,
                   Y = NameSet.empty,

@@ -80,7 +80,10 @@ sig
   val bgvalToString : bgval -> string
 
   structure PPSVG : PPSVG
-  val ppsvgdoc : PPSVG.config option -> PPSVG.B bgbdnf -> string
+  
+  sharing type BgBDNF.bgbdnf = PPSVG.bgbdnf
+  sharing type BgBDNF.B = PPSVG.B
+  val ppsvgdoc : PPSVG.config option -> B bgbdnf -> string
 
   structure BgTermParser : PARSER
   
