@@ -180,18 +180,32 @@ struct
       = foldl maxpair (xy, xy) (map (fn xy => (xy, xy)) xys)
       | svgpathsize (ClosePath, xyxy) = xyxy
     (* Find the bounding box of SVG data *)
-    fun svgsize (Svg []) = ((0, 0), (0, 0))
-      | svgsize (Svg (svg :: svgs))
-      = foldl maxpair (svgsize svg) (map svgsize svgs)
-      | svgsize (Text {x, y, ...}) = ((x, y), (x, y))
-      | svgsize (Rectangle {x, y, width, height, ...})
-      = ((x, y), (x + width, y + height))
-      | svgsize (Circle {cx, cy, r, ...})
-      = ((cx - r, cy - r), (cx + r, cy + r))
-      | svgsize (Ellipse {cx, cy, rx, ry, ...})
-      = ((cx - rx, cy - ry), (cx + rx, cy + ry))
-      | svgsize (Path {d, ...})
-      = foldl svgpathsize ((0, 0), (0, 0)) d
+    fun svgsize (maxcharwidth, maxcharheight) =
+      let
+        val subheight = maxcharheight div 4
+		    fun svgsize' (Svg []) = ((0, 0), (0, 0))
+		      | svgsize' (Svg (svg :: svgs))
+		      = foldl maxpair (svgsize' svg) (map svgsize' svgs)
+		      | svgsize' (Text {x, y, text, anchor, ...})
+		      =(case (String.size text * maxcharwidth, anchor) of
+		          (width, "middle") =>
+		          ((x - (width + 1) div 2, y - maxcharheight),
+		           (x + (width + 1) div 2, y + subheight))
+		        | (width, "end") =>
+		          ((x - width, y - maxcharheight), (x, y + subheight))
+		        | (width, _) =>
+		          ((x, y - maxcharheight), (x + width, y + subheight)))
+		      | svgsize' (Rectangle {x, y, width, height, ...})
+		      = ((x, y), (x + width, y + height))
+		      | svgsize' (Circle {cx, cy, r, ...})
+		      = ((cx - r, cy - r), (cx + r, cy + r))
+		      | svgsize' (Ellipse {cx, cy, rx, ry, ...})
+		      = ((cx - rx, cy - ry), (cx + rx, cy + ry))
+		      | svgsize' (Path {d, ...})
+		      = foldl svgpathsize ((0, 0), (0, 0)) d
+		  in
+		    svgsize'
+		  end
   end
     
   fun pathstr (MoveTo ((x, y) :: xys), s)
@@ -230,12 +244,12 @@ struct
     | pathstr (SQCurveTo [], s) = s
     | pathstr (ClosePath, s) = "z" ^ s
   
-  fun svgToString ns = 
+  fun svgToString ns maxcharsize = 
     let
   fun str' (svg as (Svg svgs)) s
     = let
         val ((x1, y1), (x2, y2))
-          = maxpair (((0, 0), (0, 0)), svgsize svg)
+          = maxpair (((0, 0), (0, 0)), svgsize maxcharsize svg)
       in
         "<" ^ ns ^ "svg width='" ^ Int.toString (x2 - x1 + 1) ^ 
         "' height='" ^ Int.toString (y2 - y1 + 1) ^ "' version='1.1'\n\
@@ -909,7 +923,13 @@ struct
       Svg (ppB b (0, 0))
     end
 
-  fun ppsvg ns config b = svgToString ns (makesvg config b) ""
+  fun ppsvg ns config b =
+    let
+      val {ctrlcharwidth, ctrlfontheight, ...} =
+        getOpt (config, defaultconfig) ("", [])
+    in
+      svgToString ns (ctrlcharwidth, ctrlfontheight) (makesvg config b) ""
+    end
 
   fun ppsvgdoc config b =
     "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"no\"?>\n\
