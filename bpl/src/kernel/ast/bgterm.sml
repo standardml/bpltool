@@ -510,10 +510,12 @@ struct
                 val (showlpar, pal', par', prr', showrpar)
                   = checkprec PrCom
               in
+(* espen 20/11/07: unsound
+   eg. M o `[x]` will be prettyprinted as M (where M is atomic)
                 if is_atomic_ion b1 then
                   ppp pal par prr outermost innermost b1
                 else
-                  (showlpar();
+*)                  (showlpar();
                    <<();
                    ppp pal' PrCom PrCom outermost false b1;
                    show " o";
