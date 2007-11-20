@@ -475,12 +475,22 @@ function redraw (bigraphnode, imgnodeid) {
 
 function toggleshowimgs (checkbox) {
   var bigraph;
+  var istr;
   var i;
   if (checkbox.checked) {
     drawsvgrequest ($("agent"), "agent-image");
-    for (i = 0; bigraph = $('redex[' + i + ']'); i++) {
-      drawsvgrequest (bigraph, 'rule[' + i + ']-redex-image');
-      drawsvgrequest ($('react[' + i + ']'), 'rule[' + i + ']-react-image');
+    for (i = 0; istr = '[' + i + ']', bigraph = $('redex' + istr); i++) {
+      drawsvgrequest (bigraph, 'rule' + istr + '-redex-image');
+      drawsvgrequest ($('react' + istr), 'rule' + istr + '-react-image');
+      var rulematchstr = 'rule' + istr + 'match';
+      for (
+        j = 0;
+	jstr = rulematchstr + '[' + j + ']',
+        bigraph = $(jstr + '-ctx-body');
+	j++) {
+	drawsvgrequest (bigraph, jstr + '-ctx-image');
+	drawsvgrequest ($(jstr + '-par-body'), jstr + '-par-image');
+      }
     }
   } else {
     $("agent-image").innerHTML = "";
