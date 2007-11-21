@@ -41,9 +41,16 @@ val signat = [Cdef("k1",Passive,1,2),
 	      Cdef("K",Atomic,0,0),
 	      Cdef("L",Atomic,0,0),
 	      Cdef("M",Passive,0,0),
+	      Cdef("nil",Atomic,0,0),
 	      Cdef("send",Passive,0,2),
-	      Cdef("get",Passive,1,1)]
+	      Cdef("get",Passive,1,1),
+	      Cdef("sub",Active,1,0),
+	      Cdef("def",Passive,0,1),
+	      Cdef("msg",Atomic,0,1)]
 
+fun id1 id = Site(Var(id),Namelist([]))
+
+(*
 val b0 = Empty
 val b1 = Ctrl("k1",["x"],["y","z"])
 val b2 = Abs(["x"], Ctrl("k2",[],["x","q"]))
@@ -57,19 +64,39 @@ val b9 = Ten(b7,b8)
 val b10 = Ctrl("k2",[],["f1","f2"])
 val b11 = Ctrl("k3",[],[])
 
-fun id1 id = Site(Var(id),Namelist([]))
-
 val K = Ctrl("K",[],[])
 val L = Ctrl("L",[],[])
 val M = Ctrl("M",[],[])
 val C = Pri(M,id1 "site")
 val a = Ten(K,L)
 val b = Ten(L,K)
+*)
 
-val send = Ctrl("send",[],["a","w"])
-val get = Ctrl("get",["x"],["a"])
+(* Pi *)
+val idle__a = Wir([IdleG("a")])
+val idle_x = Wir([IdleL("x")])
+val site0 = Site(Var("s0"),Namelist([]))
+val site1 = Site(Var("s1"),Namelist(["x"]))
 
-(*send_aw([0]) | get_a(x)([1]) -> [0] | ? *)
+val null = Ctrl("null",[],[])
+val send' = Ctrl("send",[],["a","w"])
+val send = Emb(send',Empty)
+val get' = Ctrl("get",["x"],["a"])
+val get = Emb(get',idle_x)
+
+val sub__x = Ctrl("sub",["x"],[])
+val def_x = Ctrl("def",[],["x"])
+val msg_w = Ctrl("msg",[],["w"])
+
+fun abs_x b = Abs(["x"],b)
+val get_sub = Emb(sub__x,Pri(site1,abs_x(Emb(def_x,msg_w))))
+
+(*
+rule comm =
+  send_aw([0]) | get_a(x)([1]<x>)
+    ->
+  [0] tt a/ | sub_(x)([1]<x> | ({x})def_x(msg_w))
+*)
 
 val decs = [(*Value("v1",Com(C,a)),
 	    Value("v2",Com(C,b)),
@@ -77,9 +104,10 @@ val decs = [(*Value("v1",Com(C,a)),
 	    Rule("r1",K,L),*)
 	    Value("v_send",send),
 	    Value("v_get",get),
+	    Value("state",Pri(Id("v_send"),Id("v_get"))),
 	    Rule("comm",
-		 Pri(Id("v_send"),Id("v_get")),
-		 Pri(,))]
+		 Pri(send',get'),
+		 Pri(Ten(site0,idle__a),get_sub))]
 val prog = Prog(signat,decs)
 val (s,b,r) = prog2bgval prog
 val bgval = (B.toString o B.simplify) b
