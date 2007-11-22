@@ -3,6 +3,9 @@ require "xmlrpc/client"
 $xmlrpcserverport = 3197
 
 class BplwebController < ApplicationController
+  def test
+  end
+
   def index
     @example_pages, @examples = paginate :examples, {:per_page => 20, :order => "filename"}
     params = params()

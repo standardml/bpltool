@@ -2,40 +2,22 @@
 if request.env["HTTP_ACCEPT"].index('application/xhtml+xml')
 headers["Content-Type"] = "application/xhtml+xml; charset=utf-8"
 else
-headers["Content-Type"] = "text/html; charset=utf-8"
+headers["Content-Type"] = "text/html"
 end
 -%>
-<?xml version="1.0"?>
+<?xml version="1.0" standalone="no"?>
 <?xml-stylesheet href="/stylesheets/bplsvg.css" type="text/css" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<!--
- Copyright (c) 2007  The BPL Group at the IT University of Copenhagen
-
- This file is part of BPL.
-
- BPL is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or (at
- your option) any later version.
-
- BPL is distributed in the hope that it will be useful, but
- WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with BPL; if not, write to the Free Software
- Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
- USA
--->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" 
       xmlns:svg="http://www.w3.org/2000/svg"
+      xmlns:xlink="http://www.w3.org/1999/xlink"
       xml:lang="en">
   <head>
     <title>BPLweb</title>
     <%= javascript_include_tag :defaults %>
     <link rel="stylesheet" type="text/css" href="/stylesheets/bplweb.css"></link>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bplsvg.css"></link>
     <object id="AdobeSVG" classid="clsid:78156a80-c6a1-4bbf-8e6a-3cd390eeb4e2"> </object>
     <?import namespace="svg" urn="http://www.w3.org/2000/svg" implementation="#AdobeSVG"?>
   </head>
@@ -49,32 +31,32 @@ end
     <div id="fileio">
       <h2>Examples:</h2>
       <div id="examples">
-      	<%= render :partial => 'example/examples' %>
+        <%= render :partial => 'example/examples' %>
       </div>
-      	<table>
-      	  <tr>
-      	    <td>File:</td>
-	    <td><%= text_field("example", "filename", {'value' => @filename}) %></td>
-      	  </tr>
-	  <tr>
-	    <td>Title:</td>
-	    <td><%= text_field("example", "title", {'value' => @title}) %></td>
-	  </tr>
-	  <tr>
-	    <td>Passwd:</td>
-	    <td><%= password_field("example", "passwd") %></td>
-	  </tr>
-	  <tr>
-	    <td></td>
-	    <td>
-	      <%= submit_to_remote("save", "Save",
-	            {:url => {:controller => "example", :action => "save" }, :update => "examples"}) %>  
-	      <%= submit_to_remote("delete", "Delete",
-	            {:url => {:controller => "example", :action => "delete" }, :update => "examples"}) %>  
-	    </td>
-	  </tr>
-      	</table>
-      	
+        <table>
+          <tr>
+            <td>File:</td>
+            <td><%= text_field("example", "filename", {'value' => @filename}) %></td>
+          </tr>
+          <tr>
+            <td>Title:</td>
+            <td><%= text_field("example", "title", {'value' => @title}) %></td>
+          </tr>
+          <tr>
+            <td>Passwd:</td>
+            <td><%= password_field("example", "passwd") %></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>
+              <%= submit_to_remote("save", "Save",
+                    {:url => {:controller => "example", :action => "save" }, :update => "examples"}) %>  
+              <%= submit_to_remote("delete", "Delete",
+                    {:url => {:controller => "example", :action => "delete" }, :update => "examples"}) %>  
+            </td>
+          </tr>
+        </table>
+        
     </div>
 
     <div id="signature-div">
@@ -83,26 +65,26 @@ end
           <tr>
             <td align="left">
               <%= visibilitytoggler("signature") %>
-	      Signature: <a
-	      href="signaturesyntax"
-	      class="helpicon"
-              onclick="openhelpwindow ('signaturesyntax', 'Signature syntax', 470, 200); return false;"><img
-	      class="helpicon"
-	      src="/images/Icon_help.gif" 
+              Signature: <a
+              href="/bplweb/signaturesyntax"
+              class="helpicon"
+              target="Signature Syntax"><img
+              class="helpicon"
+              src="/images/Icon_help.gif" 
               alt=" ? "
               title="Help for signature syntax" /></a></td>
             <td align="right">
               Display bigraphs
               <input id="showimgs" name="showimgs" type="checkbox"
-	       onchange="toggleshowimgs (this);" <%= @showimgs ? 'checked="checked"' : '' %> />
+               onclick="toggleshowimgs (this);" <%= @showimgs ? 'checked="checked"' : '' %> />
             </td>
-	  </tr>
-	</table>
+          </tr>
+        </table>
       </p>
       <div id="signature-body">
-	  <textarea id="signature" name="signature" class="editablecode"
-	    onkeypress="resizenode (this);" rows="1" cols="55"
-	    title="Enter a signature here"><%= CGI.escapeHTML(@signature) %></textarea>
+          <textarea id="signature" name="signature" class="editablecode"
+            onkeyup="resizenode (this);" rows="1" cols="55"
+            title="Enter a signature here"><%= CGI.escapeHTML(@signature) %></textarea>
       </div>
     </div>
 
@@ -112,25 +94,25 @@ end
           <tr>
             <td align="left">
               <%= visibilitytoggler("agent") %>
-	      Agent: <a
-	      href="bigraphsyntax"
-	      class="helpicon"
-              onclick="openhelpwindow ('bigraphsyntax', 'Bigraph syntax', 470, 480); return false;"><img
-	      class="helpicon"
-	      src="/images/Icon_help.gif" 
+              Agent: <a
+              href="/bplweb/bigraphsyntax"
+              class="helpicon"
+              target="Bigraph Syntax"><img
+              class="helpicon"
+              src="/images/Icon_help.gif" 
               alt=" ? "
               title="Help for bigraph syntax" /></a></td>
-	    <td align="right">
-	      <input type="button" value="Simplify" onclick="simplifyrequest ();" />
-	    </td>
-	  </tr>
-	</table>
+            <td align="right">
+              <input type="button" value="Simplify" onclick="simplifyrequest ();" />
+            </td>
+          </tr>
+        </table>
       </p>
       <div id="agent-body">
-	  <textarea id="agent" name="agent" class="editablecode"
-	    onkeypress="resizenode (this);" rows="1" cols="55"
-	    onchange="redraw (this, 'agent-image');"
-	    title="Enter a ground bigraph here"><%= CGI.escapeHTML(@agent) %></textarea>
+          <textarea id="agent" name="agent" class="editablecode"
+            onkeyup="resizenode (this);" rows="1" cols="55"
+            onchange="redraw (this, 'agent-image');"
+            title="Enter a ground bigraph here"><%= CGI.escapeHTML(@agent) %></textarea>
       </div>
       <div id="agent-image">
       </div>
@@ -139,123 +121,123 @@ end
     <div id="rules">
       <p class="head">
         <table width="70%">
-	  <tr>
-	    <td align="left">
-	      <%= visibilitytoggler("rules") %>
-	      Rules: <span id="totalmatches-count"></span></td>
-	    <td align="right">
-	      <input type="hidden" name="simplifymatches" id="simplifymatches" value="on" />
-	       <!-- Simplify matches &nbsp; -->
-	      <input type="button" value="Add" onclick="addrule ();"
+          <tr>
+            <td align="left">
+              <%= visibilitytoggler("rules") %>
+              Rules: <span id="totalmatches-count"></span></td>
+            <td align="right">
+              <input type="hidden" name="simplifymatches" id="simplifymatches" value="on" />
+               <!-- Simplify matches &nbsp; -->
+              <input type="button" value="Add" onclick="addrule ();"
                 title="Add a rule" />
-	      <input type="button" class="matchbutton"
+              <input type="button" class="matchbutton"
                 title="Find one match of any rule"
                 value="1 Match" onclick="matchrequest (-1, 1);" />
-	      <input type="button" class="matchbutton"
+              <input type="button" class="matchbutton"
                 title="Find all matches of all rules"
                 value="All Matches" onclick="matchrequest (-1, -1);" />
-	      <input type="button" class="stopbutton"
+              <input type="button" class="stopbutton"
                 value="Stop" disabled="disabled"
-	        onclick="stoprequest ();" />
-	    </td>
-	  </tr>
-	</table>
+                onclick="stoprequest ();" />
+            </td>
+          </tr>
+        </table>
       </p>
       <div id="rules-body" class="body">
-      	<%= render :partial => 'rule/list' %>
-	<!-- div id="rule[0]">
-	  <p class="head">
-	    <table width="70%">
-	      <tr>
-	        <td align="left">
-	        <%= visibilitytoggler("rule[0]") %>
-	          Rule <span class='ruleno'>0</span>:</td>
-		<td align="right">
-		  <input type="button" value="Delete"
+        <%= render :partial => 'rule/list' %>
+        <!-- div id="rule[0]">
+          <p class="head">
+            <table width="70%">
+              <tr>
+                <td align="left">
+                <%= visibilitytoggler("rule[0]") %>
+                  Rule <span class='ruleno'>0</span>:</td>
+                <td align="right">
+                  <input type="button" value="Delete"
                      title="Delete this rule"
-		     onclick="deleterule (getruleno(this));"/>
-		  <input type="button" value="1 Match"
+                     onclick="deleterule (getruleno(this));"/>
+                  <input type="button" value="1 Match"
                      title="Find one match of this rule"
-		     onclick="matchrequest (getruleno(this), 1);" />
-		  <input type="button" value="All Matches"
+                     onclick="matchrequest (getruleno(this), 1);" />
+                  <input type="button" value="All Matches"
                      title="Find all matches of this rule"
-		     onclick="matchrequest (getruleno(this), -1);" />
-		  <input type="button" value="Stop"
-		disabled="disabled" />
-		</td>
-	      </tr>
-	    </table>
-	  </p>
-	  <div id="rule[0]-body" class="body">
-	    <div id="rule[0]-redex">
-	      <p class="head">
-	        <%= visibilitytoggler("rule[0]-redex") %>
+                     onclick="matchrequest (getruleno(this), -1);" />
+                  <input type="button" value="Stop"
+                disabled="disabled" />
+                </td>
+              </tr>
+            </table>
+          </p>
+          <div id="rule[0]-body" class="body">
+            <div id="rule[0]-redex">
+              <p class="head">
+                <%= visibilitytoggler("rule[0]-redex") %>
                 Redex: <a
-	      href="bigraphsyntax"
-	      class="helpicon"
-              onclick="openhelpwindow ('bigraphsyntax', 'Bigraph syntax', 470, 480); return false;"><img
-	      class="helpicon"
-	      src="/images/Icon_help.gif" 
+              href="/bplweb/bigraphsyntax"
+              class="helpicon"
+              target="Bigraph Syntax"><img
+              class="helpicon"
+              src="/images/Icon_help.gif" 
               alt=" ? "
               title="Help for bigraph syntax" /></a>
               </p>
-	      <div id="rule[0]-redex-body" class="body">
+              <div id="rule[0]-redex-body" class="body">
                 <textarea name="redex[0]" class="editablecode" rows="1" cols="45"
                   title="Enter a redex bigraph here"
-                  onkeypress="resizenode (this);">Get[y1][[z1]] `|` Send[x1,y1] o &lt;-></textarea>
+                  onkeyup="resizenode (this);">Get[y1][[z1]] `|` Send[x1,y1] o &lt;-></textarea>
               </div>
             </div>
-	    <div id="rule[0]-react">
-	      <p class="head">
-       	        <%= visibilitytoggler("rule[0]-react") %>
+            <div id="rule[0]-react">
+              <p class="head">
+                <%= visibilitytoggler("rule[0]-react") %>
                 Reactum: <a
-	      href="bigraphsyntax"
-	      class="helpicon"
-              onclick="openhelpwindow ('bigraphsyntax', 'Bigraph syntax', 470, 480); return false;"><img
-	      class="helpicon"
-	      src="/images/Icon_help.gif" 
+              href="/bplweb/bigraphsyntax"
+              class="helpicon"
+              target="Bigraph Syntax"><img
+              class="helpicon"
+              src="/images/Icon_help.gif" 
               alt=" ? "
               title="Help for bigraph syntax" /></a>
               </p>
-	      <div id="rule[0]-react-body" class="body">
+              <div id="rule[0]-react-body" class="body">
                 <textarea name="react[0]" class="editablecode" rows="1" cols="45"
                   title="Enter a reactum bigraph here"
-                  onkeypress="resizenode (this);">(x1//[] * y1/z1 * idp(1)) o `[z1]`</textarea>
+                  onkeyup="resizenode (this);">(x1//[] * y1/z1 * idp(1)) o `[z1]`</textarea>
               </div>
             </div>
-	    <div id="rule[0]-inst">
-	      <p class="head">
-       	        <%= visibilitytoggler("rule[0]-inst") %>
+            <div id="rule[0]-inst">
+              <p class="head">
+                <%= visibilitytoggler("rule[0]-inst") %>
                 Instantiation: <a
-	      href="instantiationsyntax"
-	      class="helpicon"
-              onclick="openhelpwindow ('instantiationsyntax', 'Instantiation syntax', 875, 100); return false;"><img
-	      class="helpicon"
-	      src="/images/Icon_help.gif" 
+              href="/bplweb/instantiationsyntax"
+              class="helpicon"
+              target="Bigraph Syntax"><img
+              class="helpicon"
+              src="/images/Icon_help.gif" 
               alt=" ? "
               title="Help for instantiation syntax" /></a>
               </p>
-	      <div id="rule[0]-inst-body" class="body">
+              <div id="rule[0]-inst-body" class="body">
                 <textarea name="inst[0]" class="editablecode" rows="1" cols="45"
                   title="Enter an instantiation here"
-                  onkeypress="resizenode (this);">[0 |-&gt; 0]</textarea>
+                  onkeyup="resizenode (this);">[0 |-&gt; 0]</textarea>
               </div>
             </div>
-	    <div id="rule[0]-matches">
-	      <p class="head">
+            <div id="rule[0]-matches">
+              <p class="head">
                 <%= visibilitytoggler("rule[0]-matches") %>
                 <span id="rule[0]-count"></span> Matches:
               </p>
-	      <div id="rule[0]-matches-body" class="body">
+              <div id="rule[0]-matches-body" class="body">
               </div>
             </div>
-	  </div>
-	</div -->
+          </div>
+        </div -->
       </div>
     </div>
     </form>
 
-		<hr />
+                <hr />
   <p class="footer">
   Welcome to the online Bigraphical Programming Languages (BPL) tool  demo!
   </p>
@@ -272,32 +254,32 @@ end
     .replace(/\!/g,'mailto:').replace(/\#/g,'@').replace(/\*/g,'.'));
 </script>.
   </p>
-	<hr />
-	<div class="subfooter">
+        <hr />
+        <div class="subfooter">
   <span style="float: left;">
-	 Copyright (c) 2007  The BPL Group at the IT University of Copenhagen
+         Copyright (c) 2007  The BPL Group at the IT University of Copenhagen
 <!--
-	 This file is part of BPL.
+         This file is part of BPL.
 
-	 BPL is free software; you can redistribute it and/or modify
-	 it under the terms of the GNU General Public License as published by
-	 the Free Software Foundation; either version 2 of the License, or (at
-	 your option) any later version.
+         BPL is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the Free Software Foundation; either version 2 of the License, or (at
+         your option) any later version.
 
-	 BPL is distributed in the hope that it will be useful, but
-	 WITHOUT ANY WARRANTY; without even the implied warranty of
-	 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-	 General Public License for more details.
-	 
-	 You should have received a copy of the GNU General Public License
-	 along with BPL; if not, write to the Free Software
-	 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
-	 USA
+         BPL is distributed in the hope that it will be useful, but
+         WITHOUT ANY WARRANTY; without even the implied warranty of
+         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+         General Public License for more details.
+         
+         You should have received a copy of the GNU General Public License
+         along with BPL; if not, write to the Free Software
+         Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+         USA
 -->
   </span>
   <span style="float: right;">
     Last modification: $Date$ by: $Author$.
-	</span>
-	</div>
+        </span>
+        </div>
   </body>
 </html>

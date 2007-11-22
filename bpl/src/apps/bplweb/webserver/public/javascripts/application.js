@@ -152,7 +152,7 @@ function rulechild (title, helplink, id, term, insertbody, drawonchange) {
 "                <textarea name='" + id + "' id='" + id + "' class='editablecode' " + titleattr + "rows='1' cols='60'\n" +
 (drawonchange ?
 "                 onchange='redraw (this, \"" + id + "-image\");'\n" : "") +
-"                 onkeypress='resizenode (this);'></textarea>\n" : "") +
+"                 onkeyup='resizenode (this);'></textarea>\n" : "") +
 "              </div>\n" +
 "              <div id='" + id + "-image' class='image'>\n" +
 "              </div>\n" +
@@ -169,7 +169,7 @@ function getruleno (inputnode) {
 var bigraphhelp = "<a\n" +
 "	      href='bigraphsyntax'\n" +
 "	      class='helpicon'\n" +
-"              onclick='openhelpwindow (\"bigraphsyntax\", \"Bigraph syntax\", 470, 480); return false;'><img\n" +
+"             target='bigraph Syntax'><img\n" +
 "	      class='helpicon'\n" +
 "	      src='/images/Icon_help.gif'\n" + 
 "              alt=' ? '\n" +
@@ -178,7 +178,7 @@ var bigraphhelp = "<a\n" +
 var instantiationhelp = "<a\n" +
 "	      href='instantiationsyntax'\n" +
 "	      class='helpicon'\n" +
-"              onclick='openhelpwindow (\"instantiationsyntax\", \"Instantiation syntax\", 875, 100); return false;'><img\n" +
+"             target='Instantiation Syntax'><img\n" +
 "	      class='helpicon'\n" +
 "	      src='/images/Icon_help.gif'\n" + 
 "              alt=' ? '\n" +
@@ -269,11 +269,12 @@ function deleterule (ruleno) {
 }
 
 function addresult (rule, match, result) {
+    //  alert ("adding result " + rule + "-" + match);
   var rstr = 'rule[' + rule + ']';
   var rmstr = rstr + '-match[' + match + ']';
   var matchnode = $(rmstr)
   if (!matchnode) {
-    parent = $(rstr + '-matches-body');
+    var parent = $(rstr + '-matches-body');
     matchnode = document.createElement ("div");
     matchnode.setAttribute ("id", rmstr);
     matchnode.setAttribute ("class", "match"); 
@@ -392,12 +393,13 @@ function errorToString (errTrees, indent) {
 var id = {'sessionid': -1, 'matchingid': -1};
 
 function resultrequest (rule, match, rulestomatch, matchcount) {
-//  alert ('Sending for result (' + rule + ", " + match + ")");
+    // alert ('Sending for result (' + rule + ", " + match + ")");
   new Ajax.Request
     ('/bplweb/resultrequest',
      {'parameters': 'sessionid=' + id['sessionid'] + '&matchingid=' + id['matchingid']
       + '&rule=' + rule + '&match=' + match,
       onSuccess: function (transport, json) {
+	 //    alert("got result");
           result = eval ("(" + transport.responseText + ")");
           switch (result ['type'].toUpperCase ()) {
           case 'OK':
@@ -460,6 +462,8 @@ function drawsvgrequest (bigraphnode, imgnodeid) {
   var bigraph = bigraphnode.value;
   if (!bigraph)
     bigraph = bigraphnode.textContent;
+  if (!bigraph)
+    bigraph = bigraphnode.innerText;
   new Ajax.Request
     ('/bplweb/svgrequest',
      {'parameters': {'sessionid': id['sessionid'], 'matchingid': id['matchingid'],
@@ -513,6 +517,7 @@ function toggleshowimgs (checkbox) {
 }
 
 function matchrequest (rulestomatch, matchcount) {
+    //  alert("sending match request");
   deletematches (rulestomatch);
   new Ajax.Request
     ('/bplweb/matchrequest',
@@ -542,7 +547,7 @@ function matchrequest (rulestomatch, matchcount) {
           default:
             alert ("Unrecognised server match response: " + transport.responseText);
           }
-        },
+        }
      });
 }
 
@@ -575,7 +580,7 @@ function reactrequest (rule, match) {
           default:
             alert ("Unrecognised server react response: " + transport.responseText);
           }
-        },
+        }
      });
 }
 
@@ -599,7 +604,7 @@ function simplifyrequest () {
           default:
             alert ("Unrecognised server simplification response: " + transport.responseText);
           }
-        },
+        }
      });
 }
 
@@ -609,3 +614,4 @@ function openhelpwindow (url, title, width, height) {
     ('/bplweb/' + url, 'Help: ' + title,
      'menubar=no,toolbar=no,location=no,directories=no,scrollbars=yes,resizeable=yes,dependent=yes,width=' + width + ',height=' + height);
 }
+

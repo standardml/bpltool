@@ -3,44 +3,44 @@ text.name {
   font-size: smaller;
   font-weight: normal;
   stroke: none;
-  fill: black;
+  fill: black
 }
 
 rect.root {
   fill: none;
   stroke: black;
-  stroke-dasharray: 10,5;
+  stroke-dasharray: 10,5
 }
 
 circle.binder {
   fill: white;
-  stroke: black;
+  stroke: black
 }
 
 ellipse.node {
   fill: none;
-  stroke: black;
+  stroke: black
 }
 
 text.node {
   font-weight: bold;
   fill: blue;
-  stroke: none;
+  stroke: none
 }
 
 rect.site {
   fill: silver;
-  stroke: none;
+  stroke: none
 }
 
 text.site {
   font-size: smaller;
   font-weight: normal;
   fill: black;
-  stroke: none;
+  stroke: none
 }
 
 path.link {
   stroke: black;
-  fill: none;
+  fill: none
 }

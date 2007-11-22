@@ -27,9 +27,9 @@
 	      <p class="head">
 	        <%= visibilitytoggler("rule[" + i.to_s + "]-redex") %>
                 Redex: <a
-	      href="bigraphsyntax"
+	      href="/bplweb/bigraphsyntax"
 	      class="helpicon"
-              onclick="openhelpwindow ('bigraphsyntax', 'Bigraph syntax', 470, 480); return false;"><img
+              target="Bigraph Syntax"><img
 	      class="helpicon"
 	      src="/images/Icon_help.gif" 
               alt=" ? "
@@ -39,7 +39,7 @@
                 <textarea name="redex[<%=i%>]" id="redex[<%=i%>]" class="editablecode" rows="1" cols="45"
                   title="Enter a redex bigraph here"
 		  onchange="redraw (this, 'rule[<%=i%>]-redex-image');"
-                  onkeypress="resizenode (this);"><%= CGI.escapeHTML(@rules[i].redex) %></textarea>
+                  onkeyup="resizenode (this);"><%= CGI.escapeHTML(@rules[i].redex) %></textarea>
               </div>
               <div id="rule[<%=i%>]-redex-image">
               </div>
@@ -48,9 +48,9 @@
 	      <p class="head">
        	        <%= visibilitytoggler("rule[" + i.to_s + "]-react") %>
                 Reactum: <a
-	      href="bigraphsyntax"
+	      href="/bplweb/bigraphsyntax"
 	      class="helpicon"
-              onclick="openhelpwindow ('bigraphsyntax', 'Bigraph syntax', 470, 480); return false;"><img
+              target="Bigraph Syntax"><img
 	      class="helpicon"
 	      src="/images/Icon_help.gif" 
               alt=" ? "
@@ -60,7 +60,7 @@
                 <textarea id="react[<%=i%>]" name="react[<%=i%>]" class="editablecode" rows="1" cols="45"
                   title="Enter a reactum bigraph here"
 		  onchange="redraw (this, 'rule[<%=i%>]-react-image');"
-                  onkeypress="resizenode (this);"><%= CGI.escapeHTML(@rules[i].react) %></textarea>
+                  onkeyup="resizenode (this);"><%= CGI.escapeHTML(@rules[i].react) %></textarea>
               </div>
               <div id="rule[<%=i%>]-react-image">
               </div>
@@ -69,9 +69,9 @@
 	      <p class="head">
        	        <%= visibilitytoggler("rule[" + i.to_s + "]-inst") %>
                 Instantiation: <a
-	      href="instantiationsyntax"
+	      href="/bplweb/instantiationsyntax"
 	      class="helpicon"
-              onclick="openhelpwindow ('instantiationsyntax', 'Instantiation syntax', 875, 100); return false;"><img
+              target="Instantiation Syntax"><img
 	      class="helpicon"
 	      src="/images/Icon_help.gif" 
               alt=" ? "
@@ -80,7 +80,7 @@
 	      <div id="rule[<%=i%>]-inst-body" class="body">
                 <textarea name="inst[<%=i%>]" class="editablecode" rows="1" cols="45"
                   title="Enter an instantiation here"
-                  onkeypress="resizenode (this);"><%= CGI.escapeHTML(@rules[i].inst) %></textarea>
+                  onkeyup="resizenode (this);"><%= CGI.escapeHTML(@rules[i].inst) %></textarea>
               </div>
             </div>
 	    <div id="rule[<%=i%>]-matches">
