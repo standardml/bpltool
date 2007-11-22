@@ -295,7 +295,7 @@ struct
       xsep           = 5,
       ysep           = 5,
       ctrlfontheight = 16,
-      ctrlcharwidth  = 11,
+      ctrlcharwidth  = 10,
       namefontheight = 10,
       namecharwidth  = 7,
       sitefontheight = 12,

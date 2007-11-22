@@ -12,7 +12,8 @@ name: /lib/coll/ordering-sig /lib/coll/set /lib/pp/edlib/edlibprettyprint
    /lib/util/debug /lib/util/origin /lib/util/errorhandler-sig
    /lib/util/flags %NODASHSIG
 interface-sig:
-interface: /lib/coll/monoset-sig /lib/coll/pp /lib/pp/smlnj/. name-sig
+interface: /lib/coll/monoset-sig /lib/coll/pp /lib/pp/smlnj/.
+  /lib/util/flags name-sig
 link-sig:
 link: /lib/coll/set /lib/coll/pp + name-sig
 wiring-sig:
