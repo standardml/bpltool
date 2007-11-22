@@ -1768,7 +1768,7 @@ struct
             {ename' = ename',
              s_C'   = s_C',
              Y      = Y,
-             qs     = Permutation.permute pi qs,
+             qs     = Permutation.permute (Permutation.invert pi) qs,
              tree   = PER' tree})
         val matches = 
           lzappend
