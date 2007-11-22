@@ -33,15 +33,23 @@ val _ = OS.FileSys.chDir cur_dir;
 (*          Signature          *)
 (*******************************)
 
+val nilp     = "NilP"
+val var      = "Var"
+val send     = "Send"
+val sendPro  = "SendPro"
+val sendResi = "SendResi"
+val receive  = "Receive"
+val def      = "Def"
+val sub      = "Sub"
 
-val NilP     = atomic0 ("NilP"                 );
-val Var      = atomic  ("Var"        -:       1);
-val Send     = passive ("Out"        -:       1);
-val SendPro  = passive0("OutPro"               );
-val SendResi = passive0("OutResi"              );
-val Receive  = passive ("In"         =: 1 --> 1);
-val Def      = passive ("Def"        -:       1);
-val Sub      = active  ("Sub"        =: 1 --> 0);
+val NilP     = atomic0 (nilp                  );
+val Var      = atomic  (var         -:       1);
+val Send     = passive (send        -:       1);
+val SendPro  = passive0(sendPro               );
+val SendResi = passive0(sendResi              );
+val Receive  = passive (receive     =: 1 --> 1);
+val Def      = passive (def         -:       1);
+val Sub      = active  (sub         =: 1 --> 0);
 
 (*******************************)
 (*        Reaction rules       *)
