@@ -324,9 +324,9 @@ sig
    * @params Y w
    *)
   val is_id_x_sigma : nameset -> wiring -> bool
-  (** Determine whether some wiring can be written w = id_Y x sigma,
-   * where sigma is a substitution (i.e., no closed links), returning
-   * SOME sigma.
+  (** Determine whether some wiring can be written w = id_Y' x sigma,
+   * where Y' &sube Y and sigma is a substitution (i.e., no closed
+   * links), returning SOME sigma.
    * If the wiring cannot be written on this form, NONE is returned.
    * @params Y w
    *)

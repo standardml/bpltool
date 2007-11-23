@@ -1219,19 +1219,20 @@ struct
       case Link'Set.foldUntil filteroutY (SOME Link'Set.empty) ls of
         SOME ls =>
         let
-          val ht' =
-            createNameHashMap
-              (NameHashMap.numItems ht - NameSet.size Y)
+          val ht' = NameHashMap.copy ht
           fun rm_id_Y y _ =
-            case NameHashMap.find ht y of
+            case NameHashMap.find ht y : nameedge option of
               SOME (Name y') =>
               let
                 val OK = Name.== (y', y)
               in
-                if OK then NameHashMap.insert ht' (y, Name y') else ();
+                if OK then
+                  (NameHashMap.remove ht' y; ()) handle _ => ()
+                else
+                  ();
                 (not OK, OK)
               end
-            | _ => (true, false)
+            | _ => (false, true)
         in
           if NameSet.foldUntil rm_id_Y true Y then
             SOME (ls, ht')

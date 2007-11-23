@@ -280,7 +280,7 @@ struct
    *
    * They must return specific values, as well as
    * - ename'     extension of ename, renaming some of s_a_e's outer names
-   * - Y          set of names to add as introductions to s_a_e
+   * - Y          (DEPRECATED!) set of names to add as introductions to s_a_e
    * - s_C        substitution representing context links
    *
    * Links of s_R_e must only be matched with links of s_a_e, and
@@ -303,7 +303,7 @@ struct
    *
    * They must return specific values, as well as
    * - ename'     extension of ename, renaming some of s_a_e's outer names
-   * - Y          set of names to add as introductions to s_a_e
+   * - Y          (DEPRECATED!) set of names to add as introductions to s_a_e
    * - s_C'       substitution representing (part of) context edge links
    *
    * Letting sigma^C represent the context substitution of the
@@ -833,7 +833,8 @@ struct
    *        let  Y_m = {}
    *        for each sm_j : Q_j -> U_j
    *          Y_j   = Y_j-1 \cup {y_j}     where y_j is fresh
-   *          rho_j = rho_j-1 * y_j/U_j
+   *        [  rho_j = rho_j-1 * y_j/U_j  <=== THIS STEP IS NOW OMITTED,
+   *                                           AS IT IS DONE IN matchCLO  ]
    *          tau_j = tau_j-1 * Q_j
    * 5) return {rho = rho_m+t, tau = tau_m+t, Z = Z_m, Y = Y_m+t}
    * 
@@ -868,7 +869,7 @@ struct
                         in
                         print' (fn () => "Adding " ^ Name.unmk y_j ^ "\n");
                           {Y = NameSet.insert y_j Y,
-                           rho = Wiring.* (rho, Wiring.make' [mk_slink (y_j, U_j)]),
+                           rho = rho (* DEPRECATED: Wiring.* (rho, Wiring.make' [mk_slink (y_j, U_j)]) *),
                            tau = Wiring.* (tau, Wiring.introduce Q_j),
                            Z = Z}
                         end
@@ -982,6 +983,9 @@ struct
    *  = (s_C' (id_Z * s_C_n) * s_C_e) (id_Z * alpha tau)
    *
    * where Y, ename', s_C', id_Z, and tau are unknown.
+   * Note, however, that names introduced by Y solely to match a link in
+   * alpha should not be added to s_C', as this is done automatically in
+   * matchCLO.
    *
    * The approach taken is to split the problem into four smaller problems
    * 
@@ -1940,7 +1944,7 @@ struct
    * identity wiring, where the interface between the two substitutions
    * is given by V and some links must "pass through" both substitutions.
    *
-   * More formal: given a substitution s, find sigma, tau, and id_Z such
+   * More formally: given a substitution s, find sigma, tau, and id_Z such
    * that
    *
    *   s = sigma (tau * id_Z)
@@ -1969,9 +1973,8 @@ struct
    * 2) split s_n = s_n_L * s_n_notL  where s_n_L : -> L
    * 3) lay out the links of s_n_L as        [l_L_1, ..., l_L_k]
    *    and the links of s_e' * s_n_notL as  [l_notL_1, ..., l_notL_p]
-   * 4) for each subset W of V whith |W| >= |L|
-   *      a) let j = |W]
-   *             T = V\W
+   * 4) for each subset W of V with |W| >= |L|
+   *      a) let T = V\W
    *      b) for each ordered partition [W_1, ..., W_k] of W with |W_i| >= 1
    *           1) for each link l_L_i find all splits  l_L_i = l'_L_i tau_L_i
    *                                            where  tau_L_i : -> W_i
@@ -2057,6 +2060,7 @@ struct
 
         fun process_S_partition U {tau_LS, sigma_L} Sparts =
             let
+            (* DEPRECATED: introductions are handled in matchCLO
               val (l_Ss, Y)
                 = foldr
                     (fn (Spart, (l_Ss, Y)) =>
@@ -2074,16 +2078,16 @@ struct
                             NameSet.insert y Y)
                          end)
                     (LinkSet.empty, NameSet.empty) Sparts
-              val sigma_S = make l_Ss
+              val sigma_S = make l_Ss *)
               fun insert_Y {tau, id_Z, sigma} =
-                  {tau = tau, id_Z = id_Z, sigma = sigma, Y = Y}
+                  {tau = tau, id_Z = id_Z, sigma = sigma, Y = NameSet.empty}
             in
               lzmap
                 insert_Y
                 (lzconcat
                    (lzmap
                       (process_U_opartition
-                         {tau_LS = tau_LS, sigma_LS = sigma_L * sigma_S})
+                         {tau_LS = tau_LS, sigma_LS = sigma_L (* DEPRECATED: * sigma_S *)})
                       (opartgen2lzlist
                          (OrderedPartition.make (NameSet.list U) p)
                        handle OrderedPartition.NoPartitions => lzNil)))
@@ -2337,11 +2341,12 @@ struct
    *  5) Let ename' = ename_n, compute Y by union and Es and pss by product.
    *  6) Determine names Y_a_e, Y_a_n, Y_R_e, Y_R_n
    *     introduced by (ename' s_a_e), s_a_n, s_R_e, and s_R_n, respectively.
-   *  7) If Y = Y_a_e = Y_a_n = {} and Y_R_e + Y_R_n <> {}, then add a
-   *     fresh name to Y.
-   *  8) Construct substitution s_I : Y_R_e + Y_R_n -> Y_a_e' + Y_a_n + Y.
-   *  9) Compute s_C as the extension* of s_C_i's and s_I.
-   * 10) Return ename', Y, s_C, Es and pss.
+   *  7) If Y = Y_a_e = Y_a_n = {} and Y_R_e + Y_R_n <> {}, then
+   *       s_I = id_0
+   *     else
+   *       Construct substitution s_I : Y_R_e + Y_R_n -> Y_a_e' + Y_a_n.
+   *  8) Compute s_C as the extension* of s_C_i's and s_I.
+   *  9) Return ename', Y, s_C, Es and pss.
    *
    * *=extension is a parallel product where inner name
    *   clash is allowed, providing such names map to the
@@ -2419,8 +2424,7 @@ struct
       val Y_R_e = Wiring.introductions s_R_e
       val Y_R_n = Wiring.introductions s_R_n
       val Y_R_empty = NameSet.isEmpty Y_R_e andalso NameSet.isEmpty Y_R_n
-      val Y_a_n_empty_and_Y_R_nonempty
-        = NameSet.isEmpty Y_a_n andalso not Y_R_empty
+      val Y_a_n_empty = NameSet.isEmpty Y_a_n
       fun toPARn (matches, ename', s_C) =
         let
           val _ = print' (fn () => Int.toString lvl ^ "-PARn ")
@@ -2431,36 +2435,26 @@ struct
           val Y = (foldr (fn (Y_i, Y) => NameSet.union Y_i Y) NameSet.empty
                    o map #Y)
                   matches
-          val Y
-            = if Y_a_n_empty_and_Y_R_nonempty
-              andalso NameSet.isEmpty Y then
-                NameSet.singleton y
-              else
-                Y
           val s_I
-            = if Y_R_empty then
+            = if Y_R_empty orelse Y_a_n_empty then
                 Wiring.id_0
               else
                 let
-                  (* Pick an outer name from Y + Y_a_n *)
+                  (* Pick an outer name from Y_a_n *)
                   val theoutername
                     = case NameSet.foldUntil
                              (fn y => fn NONE => (true, SOME y) | y' => (true, y'))
-                             (NameSet.foldUntil 
-                                (fn y => fn NONE => (true, SOME y) | y' => (true, y'))
-                                NONE Y)
+                             NONE
                              Y_a_n of
                         SOME y => y
-                      | NONE => raise ThisCannotHappen (* as Y + Y_a_n <> {} *)
+                      | NONE => raise ThisCannotHappen (* as Y_a_n <> {} *)
                 in
                   Wiring.*
                     (Wiring.make
                        (LinkSet.singleton
                           (Link.make {outer = SOME theoutername,
                                       inner = NameSet.union Y_R_e Y_R_n})),
-                       Wiring.introduce
-                         (NameSet.remove
-                          theoutername (NameSet.union Y Y_a_n)))
+                       Wiring.introduce (NameSet.remove theoutername Y_a_n))
                 end
           val s_C = Wiring.+ (s_I, s_C)
           (*val _ = print' "matchPARn: "
@@ -2817,13 +2811,18 @@ struct
    * 2) Open w_R, yielding s_R = s_R_e * s_R_n and fresh outer names Y_R of s_R_e
    * 3) Using s_a, s_R, infer premise,
    *    yielding ename', Y, s_C, Qs, pi, qs,
-   *    where ename' maps to range Y_R + Y_C
-   * 4) Check that s_C = id_{Y_R} * s'_C
-   * 5) Return a new w_C as s'_C where links Y_C are closed.
+   *    where ename' maps into range Y_R + Y_C
+   * 4) Check that s_C = id_{Y'_R} * s'_C for some Y'_R subseteq Y_R
+   * 5) Let Y'_R be the outer names of s_R_n and Qs
+   * 6) Let Y' = Y'_R \ innernames(s'_C)
+   * 7) Compute s'_C = s'_C * id_Y'
+   * 8) Compute Y_C = Y' u range(ename') \ Y_R
+   * 9) Return a new w_C as s'_C where links Y_C are closed.
    *)
   fun matchCLO {w_a, w_R, ps, Ps} = lzmake (fn () => (print' (fn () => "0>CLO ");
     let
       open Wiring
+      infix 5 *
       val {opened = s_a_e, rest = s_a_n, ...}
         = splitopen w_a
       val {opened = s_R_e, rest = s_R_n, newnames = Y_R}
@@ -2837,6 +2836,7 @@ struct
                     es = ps,
                     Qs = Ps}
       val remove_id_Y = Wiring.remove_id_Y Y_R
+      val Y''_R = outernames s_R_n
       fun toCLO ({ename', Y, s_C, Es = Qs, pi, qs, tree}, rest) =
         (print' (fn () => "0-CLO ");
          case remove_id_Y s_C of
@@ -2847,22 +2847,22 @@ val _ = print' (fn () => "\nmatchCLO: s'_C = " ^ Wiring.toString s'_C ^
                 ", ename range = [ " ^ 
                 foldl (fn (n, s) => Name.unmk n ^ " " ^ s) "]\n"
                  (NameMap.range ename'))
-            (* FIXME: The following ought to check for duplicates (i.e., use
-             * union/insert, not union'/insert') in the range of ename.
-             *)
-            val Y_a =
-              (NameSet.union
-                Y
-                (foldr
-                  (fn (x, Y) => NameSet.insert x Y) 
-                  NameSet.empty
-                  (NameMap.range ename')))
+            val Y'_R =
+              foldl
+                (fn (Q, Y) => NameSet.union Y (glob (BgBDNF.outerface Q))) Y''_R Qs
+            val Y' = NameSet.difference Y'_R (innernames s'_C)
+            val s'_C = s'_C * id_X Y'
+            val rg_ename' =
+              foldr
+                (fn (x, Y) => NameSet.insert x Y) 
+                NameSet.empty
+                (NameMap.range ename')
               handle e => raise e
-            val Y_C = NameSet.difference Y_a Y_R
+            val Y_C = NameSet.union Y' (NameSet.difference rg_ename' Y_R)
             val w_C = closelinks Y_C s'_C
 val _ = print' (fn () => "matchCLO: s'_C = " ^ Wiring.toString s'_C ^ 
                 ", Y_C = [ " ^ NameSet.fold (fn n => fn s => Name.unmk n ^ " " ^ s) "] " Y_C ^
-                ", Y_a = [ " ^ NameSet.fold (fn n => fn s => Name.unmk n ^ " " ^ s) "] " Y_a ^
+                ", Y' = [ " ^ NameSet.fold (fn n => fn s => Name.unmk n ^ " " ^ s) "] " Y' ^
                 ", Y_R = [ " ^ NameSet.fold (fn n => fn s => Name.unmk n ^ " " ^ s) "]\n" Y_R)
 
           in
