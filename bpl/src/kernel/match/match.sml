@@ -2815,14 +2815,16 @@ struct
    * 4) Check that s_C = id_{Y'_R} * s'_C for some Y'_R subseteq Y_R
    * 5) Let Y'_R be the outer names of s_R_n and Qs
    * 6) Let Y' = Y'_R \ innernames(s'_C)
-   * 7) Compute s'_C = s'_C * id_Y'
-   * 8) Compute Y_C = Y' u range(ename') \ Y_R
-   * 9) Return a new w_C as s'_C where links Y_C are closed.
+   * 7) Let s_a_I = the name introductions of s_a_n
+   * 8) Compute s'_C = s_a_I || (s'_C * id_Y')
+   * 9) Compute Y_C = Y' u range(ename') \ Y_R
+   * 10) Return a new w_C as s'_C where links Y_C are closed.
    *)
   fun matchCLO {w_a, w_R, ps, Ps} = lzmake (fn () => (print' (fn () => "0>CLO ");
     let
       open Wiring
       infix 5 *
+      infix 5 ||
       val {opened = s_a_e, rest = s_a_n, ...}
         = splitopen w_a
       val {opened = s_R_e, rest = s_R_n, newnames = Y_R}
@@ -2851,10 +2853,12 @@ val _ = print' (fn () => "\nmatchCLO: s'_C = " ^ Wiring.toString s'_C ^
               foldl
                 (fn (Q, Y) => NameSet.union Y (glob (BgBDNF.outerface Q))) Y''_R Qs
             val Y' = NameSet.difference Y'_R (innernames s'_C)
-            val s'_C = s'_C * id_X Y'
+            val s_a_I = make_intro (introductions s_a_n)
+            val s'_C = s_a_I || (s'_C * id_X Y')
+  (* FIXME: ename' should be injective, i.e., insert should replace insert' *)
             val rg_ename' =
               foldr
-                (fn (x, Y) => NameSet.insert x Y) 
+                (fn (x, Y) => NameSet.insert' x Y) 
                 NameSet.empty
                 (NameMap.range ename')
               handle e => raise e

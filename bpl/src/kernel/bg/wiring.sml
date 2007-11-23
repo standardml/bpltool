@@ -611,44 +611,80 @@ struct
       end
 
   local
-  fun parprod (l1s, ht1) (l2s, ht2) =
+    (* Compute the union of the hash tables, and the number of 
+     * internal edges in w1.
+     *)
+    fun parprod (l1s, ht1) (l2s, ht2) =
       (* Careful, now.  We must renumber the closure numbers of
        * (ls2, ht2) so they don't merge with those of (ls1, ht1).
        *)
       let
-	val ht = createNameHashMap (Link'Set.size l1s + Link'Set.size l2s)
-	val i_max = ref ~1
-	fun insertlinkinht offset (innername, nameedge as (Name n)) =
-	    NameHashMap.insert ht (innername, nameedge)
-	  | insertlinkinht offset (innername, Closure i) =
-	    ((if !i_max < i then i_max := i else ());
-	     NameHashMap.insert ht (innername, Closure (offset + i)))
-	val _ = NameHashMap.appi (insertlinkinht 0) ht1
-	val i2_offset = !i_max + 1
-	val _ = NameHashMap.appi (insertlinkinht i2_offset) ht2;
+	      val ht = createNameHashMap (Link'Set.size l1s + Link'Set.size l2s)
+	      val i_max = ref ~1
+	      fun insertlinkinht offset (innername, nameedge as (Name n)) =
+	          NameHashMap.insert ht (innername, nameedge)
+	        | insertlinkinht offset (innername, Closure i) =
+	          ((if !i_max < i then i_max := i else ());
+	          NameHashMap.insert ht (innername, Closure (offset + i)))
+	      val _ = NameHashMap.appi (insertlinkinht 0) ht1
+	      val i2_offset = !i_max + 1
+        val _ = NameHashMap.appi (insertlinkinht i2_offset) ht2;
       in
-	(i2_offset, ht)
+        (i2_offset, ht)
       end
   in
-  fun x (w1 as (l1s, ht1), w2 as (l2s, ht2)) =
+    fun x (w1 as (l1s, ht1), w2 as (l2s, ht2)) =
       let
-	val (i2_offset, ht) = parprod w1 w2
-	fun insertlinkinls (link' as {outer = Name n, inner}) ls =
-	    Link'Set.insert link' ls
-	  | insertlinkinls {outer = Closure i, inner} ls =
-	    Link'Set.insert {outer = Closure (i2_offset + i), 
-			     inner = inner}
-			    ls
-	val ls = Link'Set.fold insertlinkinls l1s l2s
+	      val (i2_offset, ht) = parprod w1 w2
+	      fun insertlinkinls (link' as {outer = Name n, inner}) ls =
+	          Link'Set.insert link' ls
+	        | insertlinkinls {outer = Closure i, inner} ls =
+	          Link'Set.insert
+	            {outer = Closure (i2_offset + i), inner = inner}
+			        ls
+	      val ls = Link'Set.fold insertlinkinls l1s l2s
       in
-	(ls, ht)
+	      (ls, ht)
       end
 
-  fun || (w1, w2) =
+    (* Algorithm for parallel product of wirings:
+     * 1 Compute the new hash table, ht, and the number of
+     *   edges in w1, edges, using parprod
+     * 2 For each link V |-> y in l1s add y |-> V to w_inv
+     * 3 For each link X |-> u in l2s,
+     *   If u = CLOSURE i,
+     *     add (CLOSURE i + edges) |-> X to w_inv
+     *   else
+     *     case lookup u w_inv of
+     *     NONE   => add u |-> X to w_inv
+     *     SOME V => insert u |-> V u X into w_inv
+     * 4 Compute the new link set using invmap2link'set   
+     *)
+    fun || (w1 as (l1s, ht1), w2 as (l2s, ht2)) =
       let
-	val (i2_offset, ht) = parprod w1 w2
+	      val (i2_offset, ht) = parprod w1 w2
+        val w_inv =
+          createNameEdgeMap
+            (Link'Set.size l1s + Link'Set.size l2s)
       in
-	(map2link'set ht, ht)
+        Link'Set.apply
+          (fn {outer, inner} =>
+           NameEdgeMap.insert w_inv (outer, inner))
+          l1s;
+        Link'Set.apply
+          (fn {outer = Closure i, inner} =>
+              NameEdgeMap.insert
+                w_inv
+                (Closure (i + i2_offset), inner)
+            | {outer, inner} =>
+              (case NameEdgeMap.find w_inv outer of
+                 NONE => NameEdgeMap.insert w_inv (outer, inner)
+               | SOME V =>
+                 NameEdgeMap.insert
+                   w_inv
+                   (outer, NameSet.union V inner)))
+            l2s;
+        (invmap2link'set w_inv, ht)
       end
   end
 
