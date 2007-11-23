@@ -68,9 +68,11 @@ val rule_application =
                           Def["x"]) * "a"//[]
 
 val rule_app_var =
-    "application variable" ::: Sub[][["x"]] o (<["x"]>Var["x"] `|` Def["x"])
-                                  ----|>
-                               `[]`
+    "application variable" ::: Sub[][["x"]] o (<["x"]>Var["x"] `|` `["x"]` `|` Def["x"])
+                                  --[0 |-> 1, 1 |-> 0, 2 |-> 1]--|>
+                               Sub[][["x"]] o (<["x"]> `[]` `|` `["x"]` `|` Def["x"])
+(* We cannot have propagation with var, as this might introduce problems *)
+(* with divergence *)
 
 val rule_prop_recei =
     "propagation receive"  ::: Sub[][["x'"]] o (<["x'"]> "x'"//["x'","y","x''"] o
@@ -133,9 +135,13 @@ val sender = fn a => Send[a] o (SendPro o Dummy `|` SendResi o NilP)
 
 val system = (copy "a" `|` sender "a")
 
-val ms = matches rules system
+(* val ms = matches rules system *)
 
-val _ = print_mv ms
+(* val _ = print_mv ms *)
+
+val myrun = run rules tactic;
+val mysteps = steps rules tactic;
+
 (* Why do we obtain two identical matches ????? *)
 (* Assume K = active   ("K" =: 2 --> 1) *)
 (* What is the difference between the following two expressions ??? *)
