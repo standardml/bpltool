@@ -244,15 +244,15 @@ struct
     | pathstr (SQCurveTo [], s) = s
     | pathstr (ClosePath, s) = "z" ^ s
   
-  fun svgToString ns maxcharsize = 
+  fun svgToString atts ns maxcharsize = 
     let
   fun str' (svg as (Svg svgs)) s
     = let
         val ((x1, y1), (x2, y2))
           = maxpair (((0, 0), (0, 0)), svgsize maxcharsize svg)
       in
-        "<" ^ ns ^ "svg width='" ^ Int.toString (x2 - x1 + 1) ^ 
-        "' height='" ^ Int.toString (y2 - y1 + 1) ^ "' version='1.1'\n\
+        "<" ^ ns ^ "svg " ^ atts ^ "\n  width='" ^ intToString (x2 - x1 + 1) ^ 
+        "' height='" ^ intToString (y2 - y1 + 1) ^ "' version='1.1'\n\
           \  fill='none' stroke='black'>\n" ^
           foldr (fn (svg, s) => str' svg s) ("</" ^ ns ^ "svg>\n" ^ s) svgs
       end
@@ -285,15 +285,117 @@ struct
      in
        str'
      end
-     
+
+  exception MoveToExpected of pathdata list
+  fun svgToTikZ unitsize =
+  let
+    fun xy2str (x, y) = intToString x ^ "," ^ intToString y
+    fun pair xy = "(" ^ xy2str xy ^ ")"
+    fun styleis "" = "" | styleis class = "style=" ^ class
+    fun pathToTikZ (MoveTo (xy0 :: xys) :: ds, s) =
+      let
+        infix 6 --
+        fun (x1, y1) -- (x2, y2) = (x1 - x2, y1 - y2)
+		    fun toTikZ _ _ ([], s) = s
+		      | toTikZ c here (MoveTo [] :: ds, s)
+		      = toTikZ c here (ds, s)
+		      | toTikZ _ here (MoveTo (xy :: xys) :: ds, s)
+		      = " " ^ pair xy ^ toTikZ here xy (MoveTo xys :: ds, s)
+		      | toTikZ c here (LineTo [] :: ds, s)
+		      = toTikZ c here (ds, s)
+		      | toTikZ _ here (LineTo (xy :: xys) :: ds, s)
+		      = " -- " ^ pair xy ^ toTikZ here xy (LineTo xys :: ds, s)
+		      | toTikZ c here (HLineTo [] :: ds, s)
+		      = toTikZ c here (ds, s)
+		      | toTikZ _ (x0, y0) (HLineTo (x :: xs) :: ds, s)
+		      = " -- (" ^ xy2str (x0, y0) ^ " -| " ^ xy2str (x, 0) ^ ")" ^
+		        toTikZ (x0, y0) (x, y0) (HLineTo xs :: ds, s)
+		      | toTikZ c here (VLineTo [] :: ds, s)
+		      = toTikZ c here (ds, s)
+		      | toTikZ _ (x0, y0) (VLineTo (y :: ys) :: ds, s)
+		      = " -- (" ^ xy2str (x0, y0) ^ " |- " ^ xy2str (0, y) ^ ")" ^
+		        toTikZ (x0, y0) (x0, y) (VLineTo ys :: ds, s)
+		      | toTikZ c here (CurveTo [] :: ds, s)
+		      = toTikZ c here (ds, s)
+		      | toTikZ _ here
+		          (CurveTo ((c1, c2, c) :: cs) :: ds, s)
+		      = " .. controls +" ^ pair (c1 -- here) ^ " and +" ^
+		        pair (c2 -- c) ^ " .. " ^
+		        pair c ^ toTikZ c2 c (CurveTo cs :: ds, s)
+		      | toTikZ c here (SCurveTo [] :: ds, s)
+		      = toTikZ c here (ds, s)
+		      | toTikZ (xc, yc) (x0, y0)
+		          (SCurveTo ((c2, c) :: cs) :: ds, s)
+		      = " .. controls +" ^ pair (x0 - xc, y0 - yc) ^
+		        " and +" ^ pair (c2 -- c) ^ " .. " ^ pair c ^
+		        toTikZ c2 c (SCurveTo cs :: ds, s)
+		      | toTikZ c here (QCurveTo [] :: ds, s)
+		      = toTikZ c here (ds, s)
+		      | toTikZ _ here
+		          (QCurveTo ((c1, c) :: cs) :: ds, s)
+		      = " .. controls +" ^ pair (c1 -- here) ^ " .. " ^ pair c  ^
+		        toTikZ c1 c (QCurveTo cs :: ds, s)
+		      | toTikZ c here (SQCurveTo [] :: ds, s)
+		      = toTikZ c here (ds, s)
+		      | toTikZ (xc, yc) (x0, y0)
+		          (SQCurveTo (c :: cs) :: ds, s)
+		      = " .. controls +" ^ pair (x0 - xc, y0 - yc) ^
+		        " .. " ^ pair c ^
+		        toTikZ
+		          (2 * x0 - xc, 2 * y0 - yc) c (SQCurveTo cs :: ds, s)
+		      | toTikZ _ here (ClosePath :: ds, s)
+		      = " -- " ^ pair xy0 ^ toTikZ here xy0 (ds, s)
+      in
+        " " ^ pair xy0 ^ toTikZ xy0 xy0 (MoveTo xys :: ds, s)
+      end
+      | pathToTikZ (ds, _) = raise MoveToExpected ds
+    fun svgToTikZ' (Svg svgs) s
+      = "\\tikzstyle nametext=[font=\\footnotesize\\itshape,inner sep=0pt]\n\
+        \\\tikzstyle root=[dashed,rounded corners]\n\
+        \\\tikzstyle binder=[draw,fill=white]\n\
+        \\\tikzstyle node=[draw]\n\
+        \\\tikzstyle nodetext=[font=\\sffamily,text=blue,inner sep=0pt]\n\
+        \\\tikzstyle site=[fill=gray!25,rounded corners]\n\
+        \\\tikzstyle sitetext=[font=\\sffamily,inner sep=0pt]\n\
+        \\\tikzstyle link=[draw]\n\
+        \\\begin{tikzpicture}[x={(" ^ Real.toString unitsize ^
+        "cm,0cm)},y=-" ^ Real.toString unitsize ^ "cm]\n" ^
+        foldr (fn (svg, s) => svgToTikZ' svg s) 
+        ("\\end{tikzpicture}\n" ^ s)
+        svgs
+      | svgToTikZ' (Text {class, x, y, text, anchor}) s
+      = "  \\draw " ^ pair (x, y) ^ " node [" ^ styleis class ^
+        ",anchor=" ^ 
+        (case anchor of
+           "middle" => "south"
+         | "end" => "south east"
+         | _ => "south west") ^
+        "] {" ^ text ^ "};\n" ^ s
+      | svgToTikZ' (Rectangle {class, x, y, r, width, height}) s
+      = "  \\draw[" ^ styleis class ^ "] " ^ pair (x, y) ^
+        " rectangle +" ^ pair (width, height) ^ ";\n" ^ s
+      | svgToTikZ' (Circle {class, cx, cy, r}) s
+      = "  \\draw[" ^ styleis class ^ "] " ^ pair (cx, cy) ^
+        " circle (" ^ Real.toString (real r * unitsize) ^ "cm);\n" ^
+        s
+      | svgToTikZ' (Ellipse {class, cx, cy, rx, ry}) s
+      = "  \\draw[" ^ styleis class ^ "] " ^ pair (cx, cy) ^
+        " ellipse (" ^ Real.toString (real rx * unitsize) ^ "cm and "
+         ^ Real.toString (real ry * unitsize) ^ "cm);\n" ^ s
+      | svgToTikZ' (Path {class, d}) s
+      = "  \\draw" ^ pathToTikZ (d, ";\n" ^ s)
+  in
+    svgToTikZ'
+  end
+
   (* SVG data types ************************************************)
 
   exception Impossible
   fun makeconfig f = f
   fun unmkconfig f = f
   fun defaultconfig _ = {
-      xsep           = 5,
-      ysep           = 5,
+      xsep           = 4,
+      ysep           = 4,
       ctrlfontheight = 16,
       ctrlcharwidth  = 10,
       namefontheight = 10,
@@ -318,7 +420,9 @@ struct
   fun makesvg config b =
     let
       val config = getOpt (config, defaultconfig)
-      val sqrt2 = Math.sqrt 2.0
+      val sqrt2        = Math.sqrt 2.0
+      (* Coordinates for a regular octagon of width 1 *)
+      val sqrt2div2    = sqrt2 / 2.0
       
       val showsitenums = Interface.width (BgBDNF.innerface b) > 1
       
@@ -335,13 +439,20 @@ struct
        * the new x position (to the right of e plus x separator space)
        * and height of e if higher than maxheight.
        *) 
-      fun hlayout xsep pp path (e, (branch, width, maxheight, i, mksvgs)) =
+      fun hlayout xsep pp path
+        (e, (branch, width, maxheight, (nws, sws, nes, ses), i, mksvgs)) =
         let
-          val ((width', height), i, mksvg') = pp (branch :: path) i e
+          val ((width', height), (nws', sws', nes', ses'), i, mksvg')
+            = pp (branch :: path) i e
+          fun xshift ((x, y), xys) = (x + width + xsep, y) :: xys
         in
           (branch + 1,
-           width + width' + xsep,
+           width + xsep + width',
            Int.max (height, maxheight),
+           (foldr xshift nws nws',
+            foldr xshift sws sws',
+            foldr xshift nes nes',
+            foldr xshift ses ses'),
            i,
            fn xy => fn mknext =>
              mksvgs xy (fn (x, y) => mksvg' (x, y) :: mknext (x + width' + xsep, y)))
@@ -356,8 +467,12 @@ struct
        *    inner site numbers (as given by the permutation in D),
        *  - a next in-order site number,
        *  - the current piece of syntax.
-       * It then returns (width, height), i and draw, where
+       * It then returns (width, height), (nws,sws,nes,ses), i and draw,
+       * where
        *  - (width, height) is the space taken up by this node,
+       *  - nws i a list of extreme coordinates on the north-western
+       *    edge of this node, relative to the top-left position;
+       *  - sws, nes, ses are for south-west, north-east and south-east
        *  - i is the next in-order site number,
        *  - draw is a function for actually drawing the node.
        * The draw function takes a coordinate (x,y) of the top left
@@ -395,12 +510,51 @@ struct
           val (K, _, b, f) = Control.unmk ctrl
           val cfg as {
             ctrlfontheight, ctrlcharwidth, textysep, textmargin,
-            nodeminwidth, nodeminheight, portsep, binderradius, ...}
+            nodeminwidth, nodeminheight, portsep, binderradius,
+            xsep, ysep, ...}
             = config (K, path)
           val textwidth = String.size K * ctrlcharwidth
-          val ((nwidth, nheight), i, mksvgs) = ppN cfg path pi i N
+          val ((nwidth, nheight), (nws, sws, nes, ses), i, mksvgs)
+            = ppN cfg path pi i N
+          val cx = nwidth div 2
+          val cy = nheight div 2
+          val nwidthsqr = real (nwidth * nwidth)
+          val nheightsqr = real (nheight * nheight)
+          val rsqr =
+            (* square of maximum distance from (cx,cy) to
+             * corner points, in a normalised coordinate system of
+             * size 1 x 1
+             *)
+            foldl
+              (fn (cs, rsqr) =>
+               Real.max (
+                 rsqr,
+                 (foldl
+                   (fn ((x, y), rsqr) =>
+                   let
+                     val dx = real (x - cx)
+                     val dy = real (y - cy)
+                   in
+                     Real.max (
+                       rsqr,
+                       dx * dx / nwidthsqr +
+                       dy * dy / nheightsqr)
+                   end)
+                   0.0
+                   cs)))
+              0.0
+              [nws, sws, nes, ses]
+          (* Deprecated:
           val width  = Real.max (real nwidth * sqrt2, real nodeminwidth)
           val height = Real.max (real nheight * sqrt2, real nodeminheight)
+          *)
+          val r = Math.sqrt rsqr
+          val width =
+            Real.max
+              (2.0 * ((r * real nwidth) + real xsep), real nodeminwidth)
+          val height =
+            Real.max
+              (2.0 * ((r * real nheight) + real ysep), real nodeminheight) 
           val iwidth = round width
           val iheight = round height
           val hw = width / 2.0
@@ -417,8 +571,11 @@ struct
               in
                 round (height * (1.0 - Math.sqrt (1.0 - dx * dx)) / 2.0)
               end
-          val yoff = Int.min (texty, ctrlfontheight + textysep)
-          
+          val yoff (* height of control text that lies below node top level *)
+            = Int.min (texty, ctrlfontheight + textysep)
+          val nodeyoff (* y position of node *)
+            = ctrlfontheight + textysep - yoff
+          val textypos = Int.max (texty, ctrlfontheight)
           fun ports (x0, y0) pmap svgs =
             let
               val space = iwidth - textwidth - textmargin
@@ -489,6 +646,10 @@ struct
             in
               (pmap, List.revAppend (bsvgs, List.revAppend (fsvgs, svgs)))
             end
+          val xe = round (sqrt2div2 * width)
+          val xw = iwidth - xe
+          val ys = round (sqrt2div2 * height)
+          val yn = iheight - ys
           fun draw (x, y) =
             let
               val (pmap1, svgs) = mksvgs (
@@ -496,21 +657,32 @@ struct
                y + round ((height - real nheight) / 2.0) + ctrlfontheight - yoff)
               val (pmap2, svgs) = ports (x, y + ctrlfontheight + textysep - yoff) pmap1 svgs
             in
-             (NameMap.plus (pmap1, pmap2),
-             Ellipse {
-               class = "node",
-               cx = x + halfwidth,
-               cy = y + halfheight + ctrlfontheight + textysep - yoff,
-               rx = halfwidth, ry = halfheight} ::
-             Text {
-               class = "node",
-               x = x,
-               y = y + Int.max (texty, ctrlfontheight),
-               text = K, anchor = ""} ::
-             svgs)
-           end
+              (NameMap.plus (pmap1, pmap2),
+              Ellipse {
+                class = "node",
+                cx = x + halfwidth,
+                cy = y + halfheight + ctrlfontheight + textysep - yoff,
+                rx = halfwidth, ry = halfheight} ::
+              Text {
+                class = "nodetext",
+                x = x,
+                y = y + textypos,
+                text = K, anchor = ""} ::
+              svgs)
+            end
         in
-          ((iwidth, iheight + ctrlfontheight + textysep - yoff), i, draw)
+          ((iwidth, iheight + nodeyoff),
+           ([(0, textypos - ctrlfontheight - textysep), (* top left corner of node label *)
+             (xw, nodeyoff)],                        (* nnw corner of octagon *)
+            [(0, ys + nodeyoff),                     (* wsw corner of octagon *)
+             (xw, iheight + nodeyoff)],              (* ssw corner of octagon *)
+            [(0, textypos - ctrlfontheight - textysep), (* top left corner of node label *)
+             (xe, nodeyoff),                         (* nne corner of octagon *)
+             (iwidth, yn + nodeyoff)],               (* ene corner of octagon *)
+            [(xe, iheight + nodeyoff),               (* sse corner of octagon *)
+             (iwidth, ys + nodeyoff)]),              (* ese corner of octagon *)
+           i,
+           draw)
         end
 
       (* S: Singular top-level nodes *******************************)
@@ -551,7 +723,7 @@ struct
                      NameMap.add
                        (oname, (xpos, y + sitefontheight + textysep), pmap),
                      Text {
-                       class = "name",
+                       class = "nametext",
                        x = xpos, 
                        y = y + (namefontheight + sitefontheight + 2 * textysep),
                        text = iname,
@@ -570,14 +742,17 @@ struct
                    width = mywidth, height = siteheight} ::
                  (if showsitenums then
                     Text {
-                      class = "site",
+                      class = "sitetext",
                       x = x, y = y + sitefontheight,
                       text = siteno, anchor = ""} :: svgs
                   else
                     svgs))
               end
+            val myheight = siteheight + sitefontheight + textysep
           in
-            ((mywidth, siteheight + sitefontheight + textysep),
+            ((mywidth, myheight),
+             ([(0, 0)], [(0, myheight)],
+              [(mywidth, 0)], [(mywidth, myheight)]),
              i + 1,
              draw)
           end
@@ -590,15 +765,16 @@ struct
           val {xsep, ...} = cfg
           val {absnames, G} = unmkN n
           val {idxmerge, Ss} = unmkG G
-          val (_, width, maxheight, i, mksvgs) =
+          val (_, width, maxheight, corners, i, mksvgs) =
             foldl
               (hlayout xsep (ppS pi) path)
-              (0, 0, 0, i, fn xy => fn mksvg => mksvg xy)
+              (0, 0, 0, ([],[],[],[]), i,
+               fn xy => fn mksvg => mksvg xy)
               Ss
           val xsep = case Ss of [] => 0 | _ => xsep
           val mksvgs = fn xy => mksvgs xy (fn _ => [])
         in
-          ((width - xsep, maxheight), i, concatpairs o mksvgs)
+          ((width - xsep, maxheight), corners, i, concatpairs o mksvgs)
         end
 
       (* P: Discrete primes ****************************************)
@@ -617,7 +793,7 @@ struct
               0
               ls
           val namewidth = if w = 0 then 0 else (w - 1) * namecharwidth
-          val ((width, height), i, mksvgs) = ppN cfg path pi i N
+          val ((width, height), _, i, mksvgs) = ppN cfg path pi i N
           val mywidth' = width + 2 * xsep
           val mywidth =
             Int.max (mywidth', Int.max (namewidth, rootwidth))
@@ -642,7 +818,10 @@ struct
              svgs)
            end
         in
-          ((mywidth, myheight), i, draw)
+          ((mywidth, myheight),
+           ([(0, 0)], [(0, myheight)],
+            [(mywidth, 0)], [(mywidth, myheight)]),
+           i, draw)
         end
 
       (* D: Discrete bigraphs **************************************)
@@ -662,10 +841,10 @@ struct
             case BgVal.match BgVal.PPer perm of 
               BgVal.MPer per => Permutation.invmap per
             | _ => raise Impossible 
-          val (_, width, maxheight, _, mksvgs) =
+          val (_, width, maxheight, _, _, mksvgs) =
             foldl
               (hlayout xsep (ppP hasedges pi) [])
-              (0, 0, 0, 0, fn xy => fn mksvg => mksvg xy)
+              (0, 0, 0, ([],[],[],[]), 0, fn xy => fn mksvg => mksvg xy)
               Ps
           val xsep = case Ps of [] => 0 | _ => xsep
           val wd =
@@ -698,7 +877,7 @@ struct
                        y + myheight - namefontheight), 
                       pmap),
                    Text {
-                     class = "name",
+                     class = "nametext",
                      x = xpos, y = y + myheight,
                      text = iname, anchor = "middle"} :: svgs)
                 end
@@ -893,7 +1072,7 @@ struct
                                 (xx, namey))]]}
                            :: svgs)
                     val svgs = Text {
-                         class = "name", x = xx, y = y + namefontheight,
+                         class = "nametext", x = xx, y = y + namefontheight,
                          text = name, anchor = "middle"} ::
                       drawlinks links svgs
                   in
@@ -923,12 +1102,12 @@ struct
       Svg (ppB b (0, 0))
     end
 
-  fun ppsvg ns config b =
+  fun ppsvg atts ns config b =
     let
       val {ctrlcharwidth, ctrlfontheight, ...} =
         getOpt (config, defaultconfig) ("", [])
     in
-      svgToString ns (ctrlcharwidth, ctrlfontheight) (makesvg config b) ""
+      svgToString atts ns (ctrlcharwidth, ctrlfontheight) (makesvg config b) ""
     end
 
   fun ppsvgdoc config b =
@@ -937,7 +1116,7 @@ struct
     \  href=\"http://www.itu.dk/research/theory/bpl/css/bplsvg.css\" ?>\n\
     \<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 20010904//EN\"\n\
     \\"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">\n" ^
-    ppsvg "" config b
+    ppsvg "xmlns='http://www.w3.org/2000/svg'" "" config b
 
   fun ppxhtmldoc title config b =
     "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"no\"?>\n\
@@ -954,7 +1133,9 @@ struct
     \  <?import namespace='svg' implementation='#AdobeSVG'?>\n\
     \</head>\n\
     \<body>\n  " ^
-    ppsvg "svg:" config b ^
+    ppsvg "" "svg:" config b ^
     "\n</body>\n\
     \</html>\n"
+  fun ppTikZ unitsize config b =
+    svgToTikZ (getOpt (unitsize, 0.02)) (makesvg config b) ""
 end

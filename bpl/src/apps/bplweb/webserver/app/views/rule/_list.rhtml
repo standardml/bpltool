@@ -41,7 +41,7 @@
 		  onchange="redraw (this, 'rule[<%=i%>]-redex-image');"
                   onkeyup="resizenode (this);"><%= CGI.escapeHTML(@rules[i].redex) %></textarea>
               </div>
-              <div id="rule[<%=i%>]-redex-image">
+              <div id="rule[<%=i%>]-redex-image" onclick="showsource(this);">
               </div>
             </div>
 	    <div id="rule[<%=i%>]-react">
@@ -62,7 +62,7 @@
 		  onchange="redraw (this, 'rule[<%=i%>]-react-image');"
                   onkeyup="resizenode (this);"><%= CGI.escapeHTML(@rules[i].react) %></textarea>
               </div>
-              <div id="rule[<%=i%>]-react-image">
+              <div id="rule[<%=i%>]-react-image" onclick="showsource(this);">
               </div>
             </div>
 	    <div id="rule[<%=i%>]-inst">

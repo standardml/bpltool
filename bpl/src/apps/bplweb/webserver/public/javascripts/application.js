@@ -154,7 +154,7 @@ function rulechild (title, helplink, id, term, insertbody, drawonchange) {
 "                 onchange='redraw (this, \"" + id + "-image\");'\n" : "") +
 "                 onkeyup='resizenode (this);'></textarea>\n" : "") +
 "              </div>\n" +
-"              <div id='" + id + "-image' class='image'>\n" +
+"              <div id='" + id + "-image' class='image' onclick='showsource(this);'>\n" +
 "              </div>\n" +
 "            </div>\n");
 }
@@ -594,6 +594,7 @@ function simplifyrequest () {
           switch (result ['type'].toUpperCase ()) {
           case 'OK':
             $('agent').value = result.simplifiedagent;
+            resizenode($('agent'));
             break;
           case 'TIMEOUT':
             alert ("The simplification request timed out.  Please try again.");
@@ -615,3 +616,20 @@ function openhelpwindow (url, title, width, height) {
      'menubar=no,toolbar=no,location=no,directories=no,scrollbars=yes,resizeable=yes,dependent=yes,width=' + width + ',height=' + height);
 }
 
+function showsource (bigraph) {
+  var srcwin = window.open
+    ('', 'Illustration source code',
+     'menubar=no,toolbar=no,location=no,directories=no,scrollbars=yes,resizeable=yes,dependent=yes');
+  var srcdoc = srcwin.document;
+  var pre = srcdoc.createElement("pre");
+  var text = $(bigraph).getElementsByClassName("source")[0].textContent;
+  if (text) {
+    pre.textContent = text;
+  } else {
+    pre.innerText = $(bigraph).getElementsByClassName("source")[0].innerText;
+  }
+  var body = srcdoc.body;
+  var child = body.firstChild;
+  if (child) { body.removeChild (child); } 
+  body.appendChild (pre);
+}

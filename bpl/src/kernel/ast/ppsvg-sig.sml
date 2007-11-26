@@ -142,13 +142,35 @@ sig
    * @param b       Bigraph to prettyprint.
    *)
   val makesvg : config option -> B bgbdnf -> svg
+  (** Convert some svg data into an SVG string representation,
+   * prepending it to a string.
+   * @params atts ns (maxcharwidth, maxcharheight) svg s
+   * @param atts    Additional attributes for the svg tag.
+   * @param ns      Namespace prefix (e.g., "svg:").
+   * @param maxcharwidth   Maximum char width.
+   * @param maxcharheight  Maximum char height.
+   * @param svg     The SVG data to print.
+   * @param s       The string onto which output is prepended.
+   *)
+  val svgToString :
+    string -> string -> (int * int) -> svg -> string -> string
+  (** Convert some svg data into a TikZ string representation,
+   * prepending it to a string.
+   * @params unitsize svg s
+   * @param unitsize  Size, in cms, of the TikZ unit vector
+   *                  (NONE = default 0.01).
+   * @param svg     The SVG data to print.
+   * @param s       The string onto which output is prepended.
+   *)
+  val svgToTikZ : real -> svg -> string -> string
   (** Prettyprint a bgbdnf, producing SVG.
-   * @params ns config b
+   * @params atts ns config b
+   * @param atts    Additional attributes for the svg tag.
    * @param ns      Namespace prefix (e.g., "svg:").
    * @param config  Config to use when prettyprinting.
    * @param b       Bigraph to prettyprint.
    *)
-  val ppsvg : string -> config option -> B bgbdnf -> string
+  val ppsvg : string -> string -> config option -> B bgbdnf -> string
   (** Prettyprint a bgbdnf, producing an XML document including
    * preamble, styling and SVG.
    * @params config b
@@ -164,4 +186,12 @@ sig
    * @param b       Bigraph to prettyprint.
    *)
   val ppxhtmldoc : string -> config option -> B bgbdnf -> string
+  (** Prettyprint a bgbdnf, producing TikZ.
+   * @params unitsize config b
+   * @param unitsize  Size, in cms, of the TikZ unit vector
+   *                  (NONE = default 0.01).
+   * @param config    Config to use when prettyprinting.
+   * @param b         Bigraph to prettyprint.
+   *)
+  val ppTikZ : real option -> config option -> B bgbdnf -> string
 end

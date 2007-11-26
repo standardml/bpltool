@@ -1,4 +1,4 @@
-text.name {
+text.nametext {
   font-family: serif;
   font-size: smaller;
   font-weight: normal;
@@ -22,7 +22,7 @@ ellipse.node {
   stroke: black
 }
 
-text.node {
+text.nodetext {
   font-weight: bold;
   fill: blue;
   stroke: none
@@ -33,7 +33,7 @@ rect.site {
   stroke: none
 }
 
-text.site {
+text.sitetext {
   font-size: smaller;
   font-weight: normal;
   fill: black;

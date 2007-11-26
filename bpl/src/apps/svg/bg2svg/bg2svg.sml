@@ -137,9 +137,18 @@ struct
       val barebigraph = parseStr BGTERM "bigraph" bigraphstr
       val ctrlfixedbigraph = fixctrl barebigraph
       val bigraph = BgBDNF.make (BgVal.make BgTerm.info ctrlfixedbigraph)
-      val svg = ppsvg "svg:" (SOME defaultconfig) bigraph
+      val svg = makesvg (SOME defaultconfig) bigraph
+      val {ctrlcharwidth, ctrlfontheight, ...} =
+        unmkconfig defaultconfig ("", [])
+      val svgstr =
+        svgToString "" "svg:" (ctrlcharwidth, ctrlfontheight) svg ""
+      val TikZstr = svgToTikZ 0.02 svg ""
     in
-      print svg
+      print svgstr;
+      print "\n<div class='source' style='display:none'>\n  <![CDATA[\n";
+      print svgstr;
+      print ("\n\n" ^ TikZstr);
+      print "\n]]>\n</div>\n"
     end
 end
 
