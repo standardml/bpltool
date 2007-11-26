@@ -51,6 +51,8 @@ struct
 	<<(); show leftb; foldl pp_e false xs; show rightb; >>()
       end
   fun pp indent = ppbr indent "[" "]"
+  fun toStringBr leftb rightb = PrettyPrint.pp_to_string 0 (ppbr 0 leftb rightb)
+  val toString = toStringBr "[" "]"
 end
 
 functor PolyListPrettyPrint 
@@ -80,5 +82,7 @@ struct
 	<<(); show leftb; foldl pp_e false xs; show rightb; >>()
       end
   fun pp pp_elt indent = ppbr pp_elt indent "[" "]"
+  fun toStringBr pp_elt leftb rightb = PrettyPrint.pp_to_string 0 (ppbr pp_elt 0 leftb rightb)
+  fun toString pp_elt = toStringBr pp_elt "[" "]"
 end
 

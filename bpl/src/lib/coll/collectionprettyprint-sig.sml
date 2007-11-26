@@ -39,6 +39,19 @@ sig
    * @param S       The collection to print.
    *)
   val ppbr : int -> string -> string -> ppstream -> collection -> unit
+  (** Prettyprint a given collection to a string.
+   * @params S
+   * @param S       The collection to print.
+   *)
+  val toString : collection -> string
+  (** Prettyprint a given collection to a string with specific surrounding
+   * braces.
+   * @params leftb rightb S
+   * @param leftb   Left brace.
+   * @param rightb  Right brace.
+   * @param S       The collection to print.
+   *)
+  val toStringBr : string -> string -> collection -> string
 end
 
 signature POLYCOLLECTIONPRETTYPRINT =
@@ -61,4 +74,17 @@ sig
    *)
   val ppbr : (int -> ppstream -> 'a -> unit)
 			     -> int -> string -> string -> ppstream -> 'a collection -> unit
+  (** Prettyprint a given collection to a string.
+   * @params S
+   * @param S       The collection to print.
+   *)
+  val toString : (int -> ppstream -> 'a -> unit) -> 'a collection -> string
+  (** Prettyprint a given collection to a string with specific surrounding
+   * braces.
+   * @params leftb rightb S
+   * @param leftb   Left brace.
+   * @param rightb  Right brace.
+   * @param S       The collection to print.
+   *)
+  val toStringBr : (int -> ppstream -> 'a -> unit) -> string -> string -> 'a collection -> string
 end

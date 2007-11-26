@@ -51,4 +51,6 @@ struct
 	<<(); show leftb; Set.fold pp_e false S; show rightb; >>()
       end
   fun pp indent = ppbr indent "{" "}"
+  fun toStringBr leftb rightb = PrettyPrint.pp_to_string 0 (ppbr 0 leftb rightb)
+  val toString = toStringBr "{" "}"
 end
