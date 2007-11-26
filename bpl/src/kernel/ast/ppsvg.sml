@@ -354,7 +354,7 @@ struct
         \\\tikzstyle root=[dashed,rounded corners]\n\
         \\\tikzstyle binder=[draw,fill=white]\n\
         \\\tikzstyle node=[draw]\n\
-        \\\tikzstyle nodetext=[font=\\sffamily,text=blue,inner sep=0pt]\n\
+        \\\tikzstyle nodetext=[font=\\sffamily\\bfseries,text=blue,inner sep=0pt]\n\
         \\\tikzstyle site=[fill=gray!25,rounded corners]\n\
         \\\tikzstyle sitetext=[font=\\sffamily,inner sep=0pt]\n\
         \\\tikzstyle link=[draw]\n\
