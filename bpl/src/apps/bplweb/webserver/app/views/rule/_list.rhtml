@@ -41,8 +41,6 @@
 		  onchange="redraw (this, 'rule[<%=i%>]-redex-image');"
                   onkeyup="resizenode (this);"><%= CGI.escapeHTML(@rules[i].redex) %></textarea>
               </div>
-              <div id="rule[<%=i%>]-redex-image" onclick="showsource(this);">
-              </div>
             </div>
 	    <div id="rule[<%=i%>]-react">
 	      <p class="head">
@@ -61,8 +59,6 @@
                   title="Enter a reactum bigraph here"
 		  onchange="redraw (this, 'rule[<%=i%>]-react-image');"
                   onkeyup="resizenode (this);"><%= CGI.escapeHTML(@rules[i].react) %></textarea>
-              </div>
-              <div id="rule[<%=i%>]-react-image" onclick="showsource(this);">
               </div>
             </div>
 	    <div id="rule[<%=i%>]-inst">
@@ -83,6 +79,15 @@
                   onkeyup="resizenode (this);"><%= CGI.escapeHTML(@rules[i].inst) %></textarea>
               </div>
             </div>
+	    <div id="rule[<%=i%>]-image" style="display: none;">
+              <span id="rule[<%=i%>]-redex-image" onclick="showsource(this);">
+              </span>
+              <span style="vertical-align: 150%; font-size: larger;">
+                &#160;&#8594;&#160;
+	      </span>
+              <span id="rule[<%=i%>]-react-image" onclick="showsource(this);">
+              </span>
+	    </div>
 	    <div id="rule[<%=i%>]-matches">
 	      <p class="head">
                 <%= visibilitytoggler("rule[" + i.to_s + "]-matches") %>

@@ -77,6 +77,9 @@ function initialresizing () {
 function initialredraw () {
   if ($('showimgs').checked) {
     drawsvgrequest ($('agent'), "agent-image");
+  var image;
+  for (var i = 0; image = $("rule[" + i + "]-image"); ++i)
+    $(image).setStyle ({display: 'block'});
   var redex_body;
   for (var i = 0; redex_body = $("redex[" + i + "]"); ++i)
     drawsvgrequest (redex_body, "rule[" + i + "]-redex-image");
@@ -138,7 +141,7 @@ function togglevisibility (id) {
 }
 
 
-function rulechild (title, helplink, id, term, insertbody, drawonchange) {
+function rulechild (title, helplink, id, areaid, term, insertbody, drawonchange) {
   var titleattr = "";
   if (term) titleattr = "title='Enter " + term + " here' ";
   return ("	    <div id='" + id + "'>\n" +
@@ -149,12 +152,10 @@ function rulechild (title, helplink, id, term, insertbody, drawonchange) {
 "              </p>\n" +
 "	       <div id='" + id + "-body' class='body'>\n" +
 (insertbody ? 
-"                <textarea name='" + id + "' id='" + id + "' class='editablecode' " + titleattr + "rows='1' cols='60'\n" +
+"                <textarea name='" + areaid + "' id='" + areaid + "' class='editablecode' " + titleattr + "rows='1' cols='60'\n" +
 (drawonchange ?
 "                 onchange='redraw (this, \"" + id + "-image\");'\n" : "") +
 "                 onkeyup='resizenode (this);'></textarea>\n" : "") +
-"              </div>\n" +
-"              <div id='" + id + "-image' class='image' onclick='showsource(this);'>\n" +
 "              </div>\n" +
 "            </div>\n");
 }
@@ -214,10 +215,20 @@ function addrule () {
 "	    </table>\n" +
 "	  </p>\n" +
 "	  <div id='rule[" + nodeno + "]-body' class='body'>\n" +
-rulechild ('Redex', bigraphhelp, "redex[" + nodeno + "]", 'a redex bigraph', true, true) +
-rulechild ('React', bigraphhelp, "react[" + nodeno + "]", 'a reactum bigraph', true, true) +
-rulechild ('Instantiation', instantiationhelp, "inst[" + nodeno + "]", 'an instantiation', true, false) +
-rulechild ("<span id='rule[" + nodeno + "]-count" + nodeno +"'></span> Matches", "", "rule[" + nodeno + "]-matches", false, false, false) +
+rulechild ('Redex', bigraphhelp, "rule[" + nodeno + "]-redex", "redex[" + nodeno + "]", 'a redex bigraph', true, true) +
+rulechild ('React', bigraphhelp, "rule[" + nodeno + "]-react", "react[" + nodeno + "]", 'a reactum bigraph', true, true) +
+rulechild ('Instantiation', instantiationhelp, "rule[" + nodeno + "]-inst", "inst[" + nodeno + "]", 'an instantiation', true, false) +
+"	    <div id='rule[" + nodeno + "]-image'" +
+(($("showimgs").checked) ? "" : "style='display: none;'") + ">\n" +
+"              <span id='rule[" + nodeno + "]-redex-image' onclick='showsource(this);'>\n" +
+"              </span>\n" +
+"              <span style='vertical-align: 150%; font-size: larger;'>\n" +
+"                &#160;&#8594;&#160;\n" +
+"              </span>\n" +
+"              <span id='rule[" + nodeno + "]-react-image' onclick='showsource(this);'>\n" +
+"              </span>\n" +
+"	    </div>\n" +
+rulechild ("<span id='rule[" + nodeno + "]-count" + nodeno +"'></span> Matches", "", "rule[" + nodeno + "]-matches", "rule[" + nodeno + "]-matches", false, false, false) +
 "         </div>";
 
   rulesnode.appendChild (rulenode);
@@ -484,6 +495,7 @@ function toggleshowimgs (checkbox) {
   if (checkbox.checked) {
     drawsvgrequest ($("agent"), "agent-image");
     for (i = 0; istr = '[' + i + ']', bigraph = $('redex' + istr); i++) {
+      $('rule' + istr + '-image').setStyle ({display: 'block'});
       drawsvgrequest (bigraph, 'rule' + istr + '-redex-image');
       drawsvgrequest ($('react' + istr), 'rule' + istr + '-react-image');
       var rulematchstr = 'rule' + istr + '-match';
@@ -500,6 +512,7 @@ function toggleshowimgs (checkbox) {
   } else {
     $("agent-image").innerHTML = "";
     for (i = 0; istr = '[' + i + ']', bigraph = $('redex' + istr); i++) {
+      $('rule' + istr + '-image').setStyle ({display: 'none'});
       $('rule' + istr + '-redex-image').innerHTML = "";
       $('rule' + istr + '-react-image').innerHTML = "";
       var rulematchstr = 'rule' + istr + '-match';

@@ -408,7 +408,7 @@ struct
       rootwidth      = 40,
       rootheight     = 30,
       rootrounding   = 5,
-      nodeminwidth   = 60,
+      nodeminwidth   = 50,
       nodeminheight  = 40,
       portsep        = 7,
       binderradius   = 3,
