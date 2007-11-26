@@ -173,6 +173,64 @@ struct
                 | MER of derivation
                 | ABS of derivation
                 | CLO of derivation
+  
+  fun ppTree indent pps tree =
+  let
+    open PrettyPrint
+	  val show = add_string pps
+	  fun << () = begin_block pps CONSISTENT 0
+	  fun <<<() = begin_block pps INCONSISTENT 0
+	  fun >> () = end_block pps
+	  fun brk () = add_break pps (0, indent)
+	  fun brk0() = add_break pps (0, 0)
+	  fun showtrees [] = ()
+      | showtrees [tree] = ppTree' tree	    
+	    | showtrees (tree :: trees)
+	    = (ppTree' tree; show ","; brk0(); showtrees trees)
+	  and ppTree' PAX' = show "PAX'"
+	    | ppTree' ZAX' = show "ZAX'"
+	    | ppTree' (ION' tree)
+	    = (<<(); show "ION'("; brk(); ppTree' tree; brk0(); show ")"; >>())
+	    | ppTree' (PARn' trees)
+	    = (<<(); show "PARn'("; brk();
+	      <<<(); showtrees trees; >>();
+	      brk0(); show ")"; >>())
+	    | ppTree' (PARe' tree)
+	    = (<<(); show "PARe'("; brk(); ppTree' tree; brk0(); show ")"; >>())
+	    | ppTree' (PER' tree)
+	    = (<<(); show "PER'("; brk(); ppTree' tree; brk0(); show ")"; >>())
+	    | ppTree' (MER' tree)
+	    = (<<(); show "MER'("; brk(); ppTree' tree; brk0(); show ")"; >>())
+	    | ppTree' (ABS' tree)
+	    = (<<(); show "ABS'("; brk(); ppTree' tree; brk0(); show ")"; >>())
+	    | ppTree' (SWX tree)
+	    = (<<(); show "SWX("; brk(); ppTree' tree; brk0(); show ")"; >>())
+	    | ppTree' PAX = show "PAX"
+	    | ppTree' ZAX = show "ZAX"
+	    | ppTree' (ION tree)
+	    = (<<(); show "ION("; brk(); ppTree' tree; brk0(); show ")"; >>())
+	    | ppTree' (PARn trees)
+	    = (<<(); show "PARn("; brk();
+	      <<<(); showtrees trees; >>();
+	      brk0(); show ")"; >>())
+	    | ppTree' (PARe tree)
+	    = (<<(); show "PARe("; brk(); ppTree' tree; brk0(); show ")"; >>())
+	    | ppTree' (PER tree)
+	    = (<<(); show "PER("; brk(); ppTree' tree; brk0(); show ")"; >>())
+	    | ppTree' (MER tree)
+	    = (<<(); show "MER("; brk(); ppTree' tree; brk0(); show ")"; >>())
+	    | ppTree' (ABS tree)
+	    = (<<(); show "ABS("; brk(); ppTree' tree; brk0(); show ")"; >>())
+	    | ppTree' (CLO tree)
+	    = (<<(); show "CLO("; brk(); ppTree' tree; brk0(); show ")"; >>())
+  in
+    ppTree' tree
+  end  
+             
+  val treeToString
+    = PrettyPrint.pp_to_string
+        (Flags.getIntFlag "/misc/linewidth") 
+        (ppTree (Flags.getIntFlag "/misc/indent"))
 
   type match = {context : B bgbdnf,
                 rule : rule,
@@ -1839,8 +1897,7 @@ struct
         val matches
           = matchDG' true 0
                      {ename = ename,
-                      s_a = {s_a_e = s_a_e,
-                             s_a_n = s_a_n},
+                      s_a = {s_a_e = s_a_e, s_a_n = s_a_n},
                       s_C = {s_C_e = s_C_e, s_C_n = s_C_n},
                       g = g, G = G}
       in
@@ -2663,7 +2720,7 @@ struct
               val L_new = NameSet.intersect L (Wiring.outernames s_a_n_new)
 		          val Y_e = NameSet.intersect Y (Wiring.innernames s_Y_e)
 		          val s_Y_e_Y = Wiring.app s_Y_e Y_e handle e => raise e
-(*val _ = print' (fn () => "matchION: WIRING s_Y_n, s_Y_e:\n" ^ Wiring.toString s_Y_n ^ "\n" ^ Wiring.toString s_Y_e ^ "\n");*)
+              (* val _ = print' (fn () => "matchION: WIRING s_Y_n, s_Y_e:\n" ^ Wiring.toString s_Y_n ^ "\n" ^ Wiring.toString s_Y_e ^ "\n");*)
 		          (* val s_Y = Wiring.|| (s_Y_n, s_Y_e) DEPRECATED *)
 		          val vXs = makefreshlinks Xs
 		          val p = makeP (Wiring.make' vXs) n
@@ -2673,7 +2730,7 @@ struct
 		              val {s = vZ, N, ...} = unmkP P
 		              val vZs =  Wiring.unmk vZ
 		              val Zs = sortlinksby vXs vZs
-(*val _ = print' (fn () => "matchION: WIRING s_Y, s_C:\n" ^ Wiring.toString s_Y ^ "\n" ^ Wiring.toString s_C ^ "\n");*)
+                  (*val _ = print' (fn () => "matchION: WIRING s_Y, s_C:\n" ^ Wiring.toString s_Y ^ "\n" ^ Wiring.toString s_C ^ "\n");*)
 
 		              val ename'
 		                = NameSet.fold
@@ -2684,11 +2741,11 @@ struct
 		                    s_Y_e_Y
 		              val s_Y_e' = Wiring.rename_outernames ename' s_Y_e
 		              val s_C = Wiring.|| (Wiring.|| (s_Y_n, s_Y_e'), s_C)
-		           val _ = print' (fn () => "matchION: ename' = { " ^
+(*		           val _ = print' (fn () => "matchION: ename' = { " ^
 		             NameMap.Fold (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s) "}" ename'
 		             ^ "s_Y_e_Y = {" ^ NameSet.fold (fn x => fn s => Name.unmk x ^ " " ^ s) "}" s_Y_e_Y
 		             ^ "\n") 
-		              val KyZ = Ion.make {ctrl = ctrl, free = ys, bound = Zs}
+*)		              val KyZ = Ion.make {ctrl = ctrl, free = ys, bound = Zs}
 		              val G = makeG [makeS (SMol (makeM KyZ N))]
 		            in
 		              lzCons
@@ -2771,37 +2828,36 @@ struct
       val W = Wiring.outernames s_a_L
       val L_new = NameSet.union L W
       val s_a_n_new = Wiring.* (s_a_L, s_a_n)
-      fun toABS {ename', Y, s_C, E = G, qs, tree} =
+      fun toABS ({ename', Y, s_C, E = G, qs, tree}, lzms) =
+        lzmake (fn () =>
         let
-          val _ = print' (fn () => Int.toString lvl ^ "-ABS ")
+          val _ = print' (fn () => Int.toString lvl ^ "<ABS ")
           val {inCod = s_C_L, notInCod = s_C}
             = Wiring.split_outer s_C W
           val U = Wiring.innernames s_C_L
-          val P = makeP s_C_L (makeN U G)
+          val P = makeP s_C_L (makeN U G) handle e => raise e
         in
-          print' (fn () => Int.toString lvl ^ "<ABS ");
-          {ename' = ename', Y = Y, s_C = s_C, E = P, qs = qs,
-           tree = ABS tree}
+          Cons ({ename' = ename', Y = Y, s_C = s_C, E = P, qs = qs,
+                 tree = ABS tree}, lzms ())
            (* FIXME: tree might not be prime!  In that case,
               tree cannot create a match and this submatch must
               be skipped. *)
         end
+        handle BgVal.NotTensorable _ => lzunmk (lzms ()))
       val matches
-        = lzmap toABS
-           (matchDG true (lvl + 1) 
-                    {ename = ename,
-                     s_a = {s_a_e = s_a_e, s_a_n = s_a_n_new},
-                     L = L_new,
-                     s_R = s_R,
-                     e = g,
-                     Ps = Ps})
-      val matches =
-        lzappend
-          matches
-          (lzmake
-            (fn () =>
-              (print' (fn () => Int.toString lvl ^ ".ABS ");
-               Nil)))
+        = lzfoldr
+            toABS
+		        (lzmake 
+		           (fn () =>
+		               (print' (fn () => Int.toString lvl ^ ".ABS ");
+		                Nil)))
+            (matchDG true (lvl + 1) 
+                     {ename = ename,
+                      s_a = {s_a_e = s_a_e, s_a_n = s_a_n_new},
+                      L = L_new,
+                      s_R = s_R,
+                      e = g,
+                      Ps = Ps})
     in
       lzunmk matches
     end handle e => raise e))
@@ -2962,59 +3018,6 @@ val _ = print' (fn () => "matchCLO: s'_C = " ^ Wiring.toString s'_C ^
   val allmatches   = lztolist o   matches
   val allrrmatches = lztolist o rrmatches
   
-  fun ppTree indent pps tree =
-  let
-    open PrettyPrint
-	  val show = add_string pps
-	  fun << () = begin_block pps CONSISTENT 0
-	  fun <<<() = begin_block pps INCONSISTENT 0
-	  fun >> () = end_block pps
-	  fun brk () = add_break pps (0, indent)
-	  fun brk0() = add_break pps (0, 0)
-	  fun showtrees [] = ()
-      | showtrees [tree] = ppTree' tree	    
-	    | showtrees (tree :: trees)
-	    = (ppTree' tree; show ","; brk0(); showtrees trees)
-	  and ppTree' PAX' = show "PAX'"
-	    | ppTree' ZAX' = show "ZAX'"
-	    | ppTree' (ION' tree)
-	    = (<<(); show "ION'("; brk(); ppTree' tree; brk0(); show ")"; >>())
-	    | ppTree' (PARn' trees)
-	    = (<<(); show "PARn'("; brk();
-	      <<<(); showtrees trees; >>();
-	      brk0(); show ")"; >>())
-	    | ppTree' (PARe' tree)
-	    = (<<(); show "PARe'("; brk(); ppTree' tree; brk0(); show ")"; >>())
-	    | ppTree' (PER' tree)
-	    = (<<(); show "PER'("; brk(); ppTree' tree; brk0(); show ")"; >>())
-	    | ppTree' (MER' tree)
-	    = (<<(); show "MER'("; brk(); ppTree' tree; brk0(); show ")"; >>())
-	    | ppTree' (ABS' tree)
-	    = (<<(); show "ABS'("; brk(); ppTree' tree; brk0(); show ")"; >>())
-	    | ppTree' (SWX tree)
-	    = (<<(); show "SWX("; brk(); ppTree' tree; brk0(); show ")"; >>())
-	    | ppTree' PAX = show "PAX"
-	    | ppTree' ZAX = show "ZAX"
-	    | ppTree' (ION tree)
-	    = (<<(); show "ION("; brk(); ppTree' tree; brk0(); show ")"; >>())
-	    | ppTree' (PARn trees)
-	    = (<<(); show "PARn("; brk();
-	      <<<(); showtrees trees; >>();
-	      brk0(); show ")"; >>())
-	    | ppTree' (PARe tree)
-	    = (<<(); show "PARe("; brk(); ppTree' tree; brk0(); show ")"; >>())
-	    | ppTree' (PER tree)
-	    = (<<(); show "PER("; brk(); ppTree' tree; brk0(); show ")"; >>())
-	    | ppTree' (MER tree)
-	    = (<<(); show "MER("; brk(); ppTree' tree; brk0(); show ")"; >>())
-	    | ppTree' (ABS tree)
-	    = (<<(); show "ABS("; brk(); ppTree' tree; brk0(); show ")"; >>())
-	    | ppTree' (CLO tree)
-	    = (<<(); show "CLO("; brk(); ppTree' tree; brk0(); show ")"; >>())
-  in
-    ppTree' tree
-  end  
-  
   fun pp0 showTree ppBBDNF ppDRBDNF indent pps
           ({context, rule, parameter, tree} : match) =
     let
@@ -3067,11 +3070,6 @@ val _ = print' (fn () => "matchCLO: s'_C = " ^ Wiring.toString s'_C ^
              short = "", long = "indent",
              arg = "N",
              desc = "Set extra indentation at each level when prettyprinting to N"}
-             
-  val treeToString
-    = PrettyPrint.pp_to_string
-        (Flags.getIntFlag "/misc/linewidth") 
-        (ppTree (Flags.getIntFlag "/misc/indent"))
 
   val toString
     = PrettyPrint.pp_to_string
