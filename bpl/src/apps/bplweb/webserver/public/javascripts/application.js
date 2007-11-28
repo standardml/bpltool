@@ -488,12 +488,17 @@ function redraw (bigraphnode, imgnodeid) {
   if ($('showimgs').checked) drawsvgrequest (bigraphnode, imgnodeid);
 }
 
+function BPLcheckSVG () {
+  if (!document.implementation.hasFeature("org.w3c.dom.svg", "1.0"))
+    checkAndGetSVGViewer();
+}
+
 function toggleshowimgs (checkbox) {
   var bigraph;
   var istr;
   var i;
   if (checkbox.checked) {
-    checkAndGetSVGViewer();
+    BPLcheckSVG ();
     drawsvgrequest ($("agent"), "agent-image");
     for (i = 0; istr = '[' + i + ']', bigraph = $('redex' + istr); i++) {
       $('rule' + istr + '-image').setStyle ({display: 'block'});
