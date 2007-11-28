@@ -313,7 +313,7 @@ function addresult (rule, match, result) {
 "       <div id='" + rmstr + "-ctx-body' class='body'>\n" +
 "	 <pre class='code'>" + escapeHTML (result ['context']) + "</pre>\n" +
 "       </div>\n" +
-"       <div id='" + rmstr + "-ctx-image' class='image'>\n" +
+"       <div id='" + rmstr + "-ctx-image' class='image' onclick='showsource(this);'>\n" +
 "       </div>\n" +
 "     </div>\n" +
 "     <div id='" + rmstr + "-par'>\n" +
@@ -324,7 +324,7 @@ function addresult (rule, match, result) {
 "       <div id='" + rmstr + "-par-body' class='body'>\n" +
 "	 <pre class='code'>" + escapeHTML (result ['parameter']) + "</pre>\n" +
 "       </div>\n" +
-"       <div id='" + rmstr + "-par-image' class='image'>\n" +
+"       <div id='" + rmstr + "-par-image' class='image' onclick='showsource(this);'>\n" +
 "       </div>\n" +
 "     </div>\n" +
 "     <div id='" + rmstr + "-tree'>\n" +
@@ -493,6 +493,7 @@ function toggleshowimgs (checkbox) {
   var istr;
   var i;
   if (checkbox.checked) {
+    checkAndGetSVGViewer();
     drawsvgrequest ($("agent"), "agent-image");
     for (i = 0; istr = '[' + i + ']', bigraph = $('redex' + istr); i++) {
       $('rule' + istr + '-image').setStyle ({display: 'block'});

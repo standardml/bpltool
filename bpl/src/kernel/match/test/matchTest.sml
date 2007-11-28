@@ -148,9 +148,7 @@ in
      {agent = (-//[x,y] * idp(1)) o (y/y * K1[x]) o M1[y],
       redex = (x//[x1,x2] * idp(1)) o (x2/x2 * K1[x1]) o `[x2]`},
      JUST 
-       [{context   = -//[x,y] * idp(1), parameter = <[x2]> x2//[] * M1[y]},
-        {context   = -/x o x//[x,y] * idp(1),
-         parameter = (y/y * (<[x2]> x2//[] * idp(1))) o M1[y]}]),
+       [{context   = -//[x,y] * idp(1), parameter = <[x2]> x2//[] * M1[y]}]),
     ("Matching redex link with agent edge",
      {agent = (-/x o x//[x1,x2] * idp(1)) o (x2/x2 * K1[x1]) o M1[x2],
       redex =                                        M1[y]},

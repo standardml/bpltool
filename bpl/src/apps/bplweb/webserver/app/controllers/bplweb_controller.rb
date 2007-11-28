@@ -17,7 +17,7 @@ print "\n===>[", params[:simplifymatches], "]\n"
     @simplifymatches = params[:simplifymatches] == "on"
     @rules = [Rule.new(:redex => 'Get[y1][[z1]] `|` Send[x1,y1] o <->',
                        :react => '(x1//[] * y1/z1 * idp(1)) o `[z1]`',
-                       :inst => '[0 |->; 0]')]
+                       :inst => '[0 |-> 0]')]
     if params[:id]
       begin
         example = Example.find(params[:id])

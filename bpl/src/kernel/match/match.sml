@@ -402,7 +402,8 @@ struct
      {s_a = s_a, s_C = s_C, s_a_e'' = s_a_e, s_C_e'' = s_C_e})
 
   (* Checks that e(x) = s(x') and -- if necessary -- adjusts e and s
-   * to make it true. The (possibly) changed e and s are returned.
+   * to make it true, while still ensuring that e is injective.
+   * The (possibly) changed e and s are returned.
    * If  x \in dom(e)  and  x' \in dom(s)  and  e(x) <> s(x')
    * then NoMatch is raised.
    *)
@@ -422,7 +423,15 @@ struct
          | (true, false)
            => (e, NameMap.add (x', lookup e x, s))
          | (false, true)
-           => (NameMap.add (x, lookup s x', e), s)
+           => let
+                val y = lookup s x'
+                val rg_e = NameMap.range e
+              in (* Ensure injective e *)
+                if List.exists (fn y' => Name.== (y, y')) rg_e then
+                  raise NoMatch
+                else
+                  (NameMap.add (x, y, e), s)
+              end
          | (false, false)
            => let
                 val fresh = Name.fresh NONE
@@ -1286,12 +1295,13 @@ struct
           lzunmk
             (lzappend
             (lzmap
-              (fn m as {ename', s_C', ...}
+              (fn m as {ename', s_C', qs, ...}
                => (print' (fn () => Int.toString lvl ^ " PAX':OK! ename' = "
                    ^ NameMap.Fold
                       (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y
                            ^ " " ^ s) "" ename'
-                   ^ ", s_C' = " ^ Wiring.toString s_C' ^ ".\n"); m))
+                   ^ ", s_C' = " ^ Wiring.toString s_C' ^
+                   ", qs = [ " ^ foldr (fn (q, s) => BgBDNF.toString q ^ " " ^ s) "].\n" qs); m))
             (lzconcat
                (lzmap
                   process_s_a_e'_split
@@ -2911,10 +2921,9 @@ val _ = print' (fn () => "\nmatchCLO: s'_C = " ^ Wiring.toString s'_C ^
             val Y' = NameSet.difference Y'_R (innernames s'_C)
             val s_a_I = make_intro (introductions s_a_n)
             val s'_C = s_a_I || (s'_C * id_X Y')
-  (* FIXME: ename' should be injective, i.e., insert should replace insert' *)
             val rg_ename' =
               foldr
-                (fn (x, Y) => NameSet.insert' x Y) 
+                (fn (x, Y) => NameSet.insert x Y) 
                 NameSet.empty
                 (NameMap.range ename')
               handle e => raise e
