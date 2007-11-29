@@ -413,7 +413,7 @@ struct
           SOME n' => n'
         | NONE => raise ThisCannotHappen
   in
-    fun check_adjust e s x x' =
+    fun check_adjust0 injective_e e s x x' =
         (case (NameMap.inDomain x e, NameMap.inDomain x' s) of
            (true, true)
            => if Name.== (lookup e x, lookup s x') then
@@ -427,7 +427,7 @@ struct
                 val y = lookup s x'
                 val rg_e = NameMap.range e
               in (* Ensure injective e *)
-                if List.exists (fn y' => Name.== (y, y')) rg_e then
+                if injective_e andalso List.exists (fn y' => Name.== (y, y')) rg_e then
                   raise NoMatch
                 else
                   (NameMap.add (x, y, e), s)
@@ -439,12 +439,16 @@ struct
                 (NameMap.add (x, fresh, e), NameMap.add (x', fresh, s))
               end)
   end
+  val check_adjust = check_adjust0 true
   (* Checks that e(x) = x' and -- if necessary -- adjusts e
    * to make it true. The (possibly) changed e is returned.
    * If  x \in dom(e)  and  e(x) <> x'  then NoMatch is raised.
    *)
   fun check_adjust' e x x' =
-      #1 (check_adjust e (NameMap.fromList [(x',x')]) x x')
+      #1 (check_adjust0 true e (NameMap.fromList [(x',x')]) x x')
+  (* As above, but does not force e injective *)
+  fun check_adjust'' e x x' =
+      #1 (check_adjust0 false e (NameMap.fromList [(x',x')]) x x')
 
 
   (* Apply a partial renaming ename : X -> to a substitution
@@ -1562,7 +1566,7 @@ struct
                                   (Wiring.app_renaming_x s_a_e yi handle e => raise e) u'
                               else
                                 (ename',
-                                 check_adjust'
+                                 check_adjust''
                                    s_C' u' (Wiring.app_renaming_x s_a_n yi handle e => raise e))
                             end
                           else
