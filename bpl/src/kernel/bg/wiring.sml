@@ -333,48 +333,76 @@ struct
 	       NameSetPP.ppbr 2 "[" "]" pps inner))
 
   fun pp' lbrack dblslash rbrack idw indent pps (w as (ls, _)) =
-      let
-	open PrettyPrint
-	val show = add_string pps
-	fun << () = begin_block pps INCONSISTENT indent
-	fun >> () = end_block pps
-	fun brk () = add_break pps (1, 0)
-	fun ppname {outer, inner} notfirst =
-	    (if notfirst then (show ","; brk()) else ();
-	     case outer of
-	       Name y => Name.pp indent pps y
-	     | _ => ();
-	     true)
-	fun ppwire {outer, inner} notfirst =
-	  let
-	    val innercount = NameSet.size inner;
-	  in
-	    (if notfirst then (brk(); show "* ") else ();
-	     case (outer, innercount) of
-	       (Name y, _) => Name.pp indent pps y
-	     | (_, 1) => show "-"
-	     | _ => show "-/x o x";
-	     if innercount = 1 then
-	       (show "/";
-	       NameSet.apply (Name.pp indent pps) inner)
-	     else
-	       (show dblslash;
-	       NameSetPP.ppbr indent lbrack rbrack pps inner);
-	     true)
-	  end
+    let
+      open PrettyPrint
+      val show = add_string pps
+      fun << () = begin_block pps INCONSISTENT indent
+      fun >> () = end_block pps
+      fun brk () = add_break pps (1, 0)
+      fun ppname {outer, inner} notfirst = (
+        if notfirst then (show ","; brk()) else ();
+        case outer of
+          Name y => Name.pp indent pps y
+        | _ => (); true)
+      fun ppwire {outer, inner} notfirst =
+        let
+          val innercount = NameSet.size inner;
+        in
+         (if notfirst then (brk(); show "* ") else ();
+          case (outer, innercount) of
+            (Name y, _) => Name.pp indent pps y
+          | (_, 1) => show "-"
+          | _ => show "-/x o x";
+            if innercount = 1 then
+              (show "/";
+               NameSet.apply (Name.pp indent pps) inner)
+            else
+              (show dblslash;
+               NameSetPP.ppbr indent lbrack rbrack pps inner);
+          true)
+        end
       in
-	case Link'Set.size ls of
-	  0 => show (idw ^ "0")
-	| 1 => (Link'Set.fold ppwire false ls; ())
-	| _ => if is_id w then
-		 (show idw;
-		  <<(); show lbrack;
-		  Link'Set.fold ppname false ls; 
-		  show rbrack; >>())
-	       else      
-		 (<<();
-		  show "("; Link'Set.fold ppwire false ls; show ")";
-		  >>())
+        case Link'Set.size ls of
+          0 => show (idw ^ "0")
+        | 1 => (Link'Set.fold ppwire false ls; ())
+        | _ =>
+          if is_id w then (
+            show idw;
+            <<(); show lbrack;
+            Link'Set.fold ppname false ls; 
+            show rbrack; >>()
+          ) else
+            let
+              fun getsingleclosures
+                    (l as {outer = Closure _, inner})
+                    (ns, ls)
+                = if NameSet.size inner < 2 then
+                    (NameSet.union inner ns, ls)
+                  else
+                    (ns, Link'Set.insert l ls)
+                | getsingleclosures l (ns, ls)
+                = (ns, Link'Set.insert l ls)
+              val (ns, ls) =
+                Link'Set.fold
+                  getsingleclosures
+                  (NameSet.empty, Link'Set.empty)
+                  ls
+            in
+              <<();
+              if Link'Set.isEmpty ls then () else show "(";
+              if NameSet.isEmpty ns then
+                ()
+              else if NameSet.size ns < 2 then (
+                show "-/";
+                NameSet.apply (Name.pp indent pps) ns
+              ) else (
+                show "-"; show dblslash;
+                NameSetPP.ppbr indent lbrack rbrack pps ns
+              );
+              Link'Set.fold ppwire (not (NameSet.isEmpty ns)) ls;
+              if Link'Set.isEmpty ls then () else show ")";
+              >>()
+            end
       end handle e => raise e
 
   fun pp i = pp' "[" "//" "]" "idw" i

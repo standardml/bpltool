@@ -482,7 +482,7 @@ struct
                  end) handle e => raise e)
             | pp' outermost innermost (Par (bs, _)) =
               ((case bs of
-                 [] => show "id||0"
+                 [] => show "idx0"
                | [b] => pp' outermost innermost b
                | (b :: bs) => 
                  let

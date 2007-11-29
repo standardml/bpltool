@@ -1540,13 +1540,13 @@ struct
                                            P = BgBDNF.makeP vZ N}
 
           fun make_match ({ename', s_C', Y, qs, tree}, rest) =
-              let
+            let
               val _ = print' (fn () => "\nION' BEFORE: ename' = " ^
-              NameMap.Fold (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s) "" ename'
-              ^ "s_C' = " ^ Wiring.toString s_C' ^ "\n")
+                NameMap.Fold (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s) "" ename'
+                ^ "s_C' = " ^ Wiring.toString s_C' ^ "\n")
               
                
-                val (ename', s_C')
+              val (ename', s_C')
                   = ListPair.foldlEq
                       (fn (yi, ui, (ename', s_C')) =>
                           if not (Wiring.in_domain ui s_C_e) then
@@ -1570,11 +1570,11 @@ struct
                       (ename', Wiring.unmk_sub s_C') (ys, us)
                     handle ListPair.UnequalLengths => raise NoMatch
               val _ = print' (fn () => "ION' AFTER: ename' = " ^
-              NameMap.Fold (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s) "" ename'
-              ^ "s_C' = " ^
-              NameMap.Fold (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s) "" s_C'
-              ^ "\n")
-              in
+                NameMap.Fold (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s) "" ename'
+                ^ "s_C' = " ^
+                NameMap.Fold (fn ((x, y), s) => Name.unmk x ^ "->" ^ Name.unmk y ^ " " ^ s) "" s_C'
+                ^ "\n")
+            in
                 lzCons
                   (fn () =>
 		                (print' (fn () => Int.toString lvl ^ "<ION' ");
@@ -1584,7 +1584,7 @@ struct
 		                   qs = qs,
 		                   tree = ION' tree},
 		                   rest ())))
-              end handle NoMatch => lzNil
+            end handle NoMatch => rest ()
         in
           lzunmk
            (lzfoldr
@@ -1596,11 +1596,11 @@ struct
               premise_matches)
         end
         handle NoMatch =>
-          (print' (fn () => Int.toString lvl ^ ".ION'a "); Nil))
-      | _ => (print' (fn () => Int.toString lvl ^ ".ION'a "); Nil))
-      | _ => (print' (fn () => Int.toString lvl ^ ".ION'a "); Nil))
-      | _ => (print' (fn () => Int.toString lvl ^ ".ION'a "); Nil))
-      | _ => (print' (fn () => Int.toString lvl ^ ".ION'a "); Nil))
+          (print' (fn () => Int.toString lvl ^ ".ION'b "); Nil))
+      | _ => (print' (fn () => Int.toString lvl ^ ".ION'c "); Nil))
+      | _ => (print' (fn () => Int.toString lvl ^ ".ION'd "); Nil))
+      | _ => (print' (fn () => Int.toString lvl ^ ".ION'e "); Nil))
+      | _ => (print' (fn () => Int.toString lvl ^ ".ION'f "); Nil))
         handle e => raise e)
 
   (* Match a global discrete prime using a PAX, MER or ION rule:
