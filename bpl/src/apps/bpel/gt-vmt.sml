@@ -207,6 +207,7 @@ val rule_variable_copy      =
     "variable copy"      ::: (Assign["inst_id"] o Copy
                               o (From["f", "scope"]
                                  `|` To["t", "scope'"]))
+(* Variables not on top-level *)
                              `|` Variable["f", "scope"]
                              `|` Variable["t", "scope'"]
                              `|` Running["inst_id"]
@@ -220,6 +221,7 @@ val rule_invoke             =
     "invoke"             ::: Invoke["op", "invar", "invar_scope",
                                     "outvar", "outvar_scope",
                                     "inst_id_invoker"]
+(* Variables not on top-level *)
                              `|` Variable["invar", "invar_scope"]
                              `|` Running["inst_id_invoker"]
                              `|` Process["proc_name"][["scope"]]
@@ -228,10 +230,11 @@ val rule_invoke             =
                                      o (RecProxy["op", "scope"] o <->
                                         `|` `[]`))
                                     `|` `["scope"]`))
-                           --[3 |-> 0, 4 |-> 1, 5&["inst_id_invoked"] |--> 2&["scope"]]--|>
+                   --[3 |-> 0, 4 |-> 1, 5&["inst_id_invoked"] |--> 2&["scope"]]--|>
                              -/"inst_id_invoked"
                              o (GetReply["outvar", "outvar_scope",
                                          "inst_id_invoker", "inst_id_invoked"]
+(* Variables not on top-level *)
                                 `|` Variable["invar", "invar_scope"]
                                 `|` Running["inst_id_invoker"]
                                 `|` ((Process["proc_name"][["scope"]]
@@ -251,6 +254,7 @@ val rule_invoke             =
 val rule_receive            =
     "receive"            ::: Receive["op", "var", "var_scope", "inst_id"]
                              `|` RecProxy["op", "inst_id"] o Parameter
+(* Variables not on top-level *)
                              `|` Variable["var", "var_scope"]
                              `|` Running["inst_id"]
                            ----|>
@@ -260,6 +264,7 @@ val rule_receive            =
 
 val rule_reply              =
     "reply"              ::: Reply["var", "var_scope", "inst_id_invoked"]
+(* Variables not on top-level *)
                              `|` Variable["var", "var_scope"]
                              `|` Running["inst_id_invoked"]
                              `|` GetReply["outvar", "outvar_scope",
@@ -285,10 +290,10 @@ val rule_exit_remove_inst   =
                            ----|>
                              "name"//[] *  <->;
                              
-(* TO BE UPDATED *)
 val rules =
-    mkrules [rule_scope_activation, rule_scope_completed_a, rule_scope_completed_b,
-             rule_flow_activated, rule_sequence_activated, rule_sequence_next,
+    mkrules [rule_scope_activation, rule_scope_completed_a, 
+	     rule_scope_completed_b, rule_flow_activated, 
+	     rule_sequence_activated, rule_sequence_next,
              rule_if_true, rule_if_false, rule_while_unfold,
              rule_variable_copy,
              rule_invoke, rule_receive, rule_reply,
@@ -347,7 +352,7 @@ val echo_process = Process["EchoProcess"][["EchoId"]]
  *                   inst_id="CallerId" />
  * </instance>
  *)
-val caller_inst = -/"CallerId" o ("CallerId"//["CallerId", "CallerScope"] * idp(1)) o
+val caller_inst = -/"CallerId" o ("CallerId"//["CallerId", "CallerScope"] * `[]`) o
                   (Instance["Caller", "CallerId"] 
                   `|` Running["CallerId"]
                   `|` Variables
@@ -357,9 +362,49 @@ val caller_inst = -/"CallerId" o ("CallerId"//["CallerId", "CallerScope"] * idp(
                       o Invoke["echo", "y", "CallerScope",
                                        "z", "CallerScope'", "CallerId"]);
 
-(* NB! Non-terminating:
+(* NB! Terminating, but with no match ???? 
 val ms = matches (mkrules [rule_reply]) (echo_process || caller_inst);
 val ms = matches (mkrules [rule_invoke]) (echo_process || caller_inst);
 print_mv ms; *)
 
 (*val final_state = run rules tactic (echo_process || caller_inst);*)
+
+
+
+
+
+(* Part of commplete rule rule_invoke which is matched *)
+(* in agent echo_process *)
+(*
+val rule_tmp = 
+      "rule temp" ::: Process["proc_name"][["scope"]]
+                                o (<["scope"]>
+                                   ((Proxies
+                                     o (RecProxy["op", "scope"] o <->
+                                        `|` `[]`))
+                                    `|` `["scope"]`))
+                    ----|> 
+                      ("proc_name"//[] * "op"//[])  o <->;
+*)
+
+(*
+matches (mkrules [rule_tmp2]) caller_inst;
+does not give any matches
+*) 
+
+(* 
+val rule_tmp2 = 
+      "rule temp2" ::: Invoke["op", "invar", "invar_scope",
+                                    "outvar", "outvar_scope",
+                                    "inst_id_invoker"]
+MISSING VARIABLES !!!!!
+                             `|` Variable["invar", "invar_scope"]
+                             `|` Running["inst_id_invoker"]
+                    ----|> 
+ `[]` * "op"//[] * "invar"//[] * "invar_scope"//[] * "outvar"//[] * 
+      "outvar_scope"//[] * "inst_id_invoker"//[];
+*)
+
+(* Some stuff to remember *)
+(* Print agent as a svg document *)
+(* print(ppsvgdoc NONE (norm_v agent)); *)
