@@ -251,10 +251,17 @@ end
   </p>
   <p class="footer">
   You are very welcome to play around with the tool. If you experience
-  any trouble or erronous behavior consider dropping us an email on <script type="text/javascript">
-  document.write("<a href='!bplweb-bugs#itu*dk'>bplweb-bugs#itu*dk</a>"
-    .replace(/\!/g,'mailto:').replace(/\#/g,'@').replace(/\*/g,'.'));
-</script>.
+  any trouble or erronous behavior consider dropping us an email on <span id="bugmail"></span>
+  <script type="text/javascript">
+    var link = document.createElement ("a");
+    link.setAttribute ("href",
+      "!bplweb-bugs#itu*dk"
+      .replace(/\!/g,'mailto:').replace(/\#/g,'@').replace(/\*/g,'.'));
+    var text = document.createTextNode (
+      "bplweb-bugs#itu*dk".replace(/\#/g,'@').replace(/\*/g,'.'));
+    link.appendChild (text);
+    $('bugmail').appendChild (link);
+  </script>.
   </p>
         <hr />
         <div class="subfooter">
@@ -280,7 +287,7 @@ end
 -->
   </span>
   <span style="float: right;">
-    Last modification: $Date$ by: $Author$.
+    Last modification: $Date: $ by: $Author: $.
         </span>
         </div>
   </body>
