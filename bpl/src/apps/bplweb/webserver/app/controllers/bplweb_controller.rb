@@ -11,7 +11,7 @@ class BplwebController < ApplicationController
     params = params()
     @filename = ''
     @title = ''
-    @signature = "(* Features Demo *)\n"
+    @signature = "(* Features Demo *)\n" +
                  "active0 (K), active (K1 -: 1), active(K21 =: 2 --> 1)\n" +
                  "passive0(L), passive(L1 -: 1), passive(L2 -: 2), passive(L20 =: 2 --> 0)\n" +
                  "atomic0 (M), atomic (M1 -: 1), atomic (M2 -: 2)"
