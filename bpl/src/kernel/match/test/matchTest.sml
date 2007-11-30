@@ -57,11 +57,13 @@ local
   val K2  = active   ("K2" -: 2)
   val K10 = active   ("K10" =: 1 --> 0)
   val K11 = active   ("K11" =: 1 --> 1)
+  val K20 = active   ("K20" =: 2 --> 0)
   val L0  = passive0 ("L0")
   val L1  = passive  ("L1" -: 1)
   val L2  = passive  ("L2" -: 2)
   val L10 = passive  ("L10" =: 1 --> 0)
   val L11 = passive  ("L11" =: 1 --> 1)
+  val L20 = passive  ("L20" =: 2 --> 0)
   val M0  = atomic0  ("M0")
   val M0' = atomic0  ("M0'")
   val M0''= atomic0  ("M0''")
@@ -69,6 +71,7 @@ local
   val M2  = atomic   ("M2" -: 2)
   val M10 = atomic   ("M10" =: 1 --> 0)
   val M11 = atomic   ("M11" =: 1 --> 1)
+  val M20 = atomic   ("M20" =: 2 --> 0)
 
   val (x, y, z, u, v, w) = ("x", "y", "z", "u", "v", "w")
   val (x1, x2, x3) = ("x1", "x2", "x3")
@@ -141,6 +144,12 @@ in
      {agent = K10[][[x]] o (<[x]> M1[x]),
       redex = K10[][[y]]},
      JUST [{context = idp(1), parameter = <[y]> M1[y]}]),
+    ("Matching within an idle binder",
+     {agent = <[y]> y//[] o L1[x1] o (-/x o M1[x]),
+      redex = <[y1]> L1[y1] o `[y2]`},
+     HAS
+       [{context = -/y2 * (x1/y1 * idp(1)) o `[y1]`,
+         parameter = <[y2]> M1[y2]}]),
     ("Matching redex inner name with nothing",
      {agent = <->, redex = `[x]`},
      HAS [{context = -/x * idp(1), parameter = <[x]> x//[] * <->}]),

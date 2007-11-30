@@ -1892,7 +1892,7 @@ struct
           ^ "\nqs=[" ^ concat (map (fn q => BgBDNF.toString q ^ "\n") qs) ^ "]\n");*)
             let
               val s_C = Wiring.* (s_C', id_Y_C_e)
-              val L' = Wiring.app_inverse s_C L
+              val L' = Wiring.app_inverse' s_C L
             in
               if NameSet.isEmpty (NameSet.difference L' U) then
                 (print' (fn () => (Int.toString lvl ^ "<SWX "));

@@ -878,24 +878,30 @@ struct
 		   X
       handle NotInDomain (w, x, _) => raise NotInDomain (w, x, "in app")
 
-  fun app_inverse (w as (ls, _)) Y =
+  local
+    fun app_inverse0 (w as (ls, _)) Y
+      = Link'Set.fold
+          (fn {outer = Name y, inner} =>
+              (fn (wY', Y') =>
+                  if NameSet.member y Y then
+                    (NameSet.union wY' inner, NameSet.insert' y Y')
+                  else
+                    (wY', Y'))
+            | _ => fn X => X)
+          (NameSet.empty, NameSet.empty) ls
+  in
+    fun app_inverse w Y =
       let
-        val (wY', Y')
-          = Link'Set.fold
-              (fn {outer = Name y, inner} =>
-                  (fn (wY', Y') =>
-                      if NameSet.member y Y then
-                        (NameSet.union wY' inner, NameSet.insert' y Y')
-                      else
-                        (wY', Y'))
-                | _ => fn X => X)
-              (NameSet.empty, NameSet.empty) ls
+        val (wY', Y') = app_inverse0 w Y
       in
         if NameSet.eq Y Y' then
           wY'
         else
           raise NotInCodomain (w, NameSet.difference Y Y', "in app_inverse")
       end
+
+    fun app_inverse' w = #1 o app_inverse0 w
+  end
 
   fun app_renaming_x w x =
       case app_x w x of

@@ -217,6 +217,14 @@ sig
    *                          the codomain of the wiring.
    *)
   val app_inverse : wiring -> nameset -> nameset
+  (** Compute the set of names which the wiring maps into a given set.
+   * No exception is raised if X contains names that are not in the
+   * codomain of the wiring.
+   * @params wiring X
+   * @param wiring  The wiring.d
+   * @param X       The set of names.
+   *)
+  val app_inverse' : wiring -> nameset -> nameset
 
   (** Compute the name to which the wiring maps a given name.
    * It is not checked that the wiring is a renaming - only that if the 
