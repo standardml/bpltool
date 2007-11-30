@@ -2388,9 +2388,7 @@ struct
           SOME v =>
             (case NameHashMap.find vZs_ht v of
               SOME vZ => Link.innernames vZ
-            | NONE
-            => raise Unmatchedv ("match/match.sml", vXs, vZs,
-                                 "sortlinksby"))
+            | NONE => NameSet.empty)
         | NONE => raise NotName ("match/match.sml", vX, vXs, vZs,
                                  "sortlinksby:findvZ")
     in

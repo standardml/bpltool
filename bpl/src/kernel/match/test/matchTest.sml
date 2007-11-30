@@ -145,10 +145,10 @@ in
       redex = K10[][[y]]},
      JUST [{context = idp(1), parameter = <[y]> M1[y]}]),
     ("Matching within an idle binder",
-     {agent = <[y]> y//[] o L1[x1] o (-/x o M1[x]),
+     {agent = (x1/x1 * K10[][[]]) o L1[x1] o (-/x o M1[x]),
       redex = <[y1]> L1[y1] o `[y2]`},
      HAS
-       [{context = -/y2 * (x1/y1 * idp(1)) o `[y1]`,
+       [{context = -/y2 * (x1/y1 * idp(1)) o (y1/y1 * K10[][[]]) o `[y1]`,
          parameter = <[y2]> M1[y2]}]),
     ("Matching redex inner name with nothing",
      {agent = <->, redex = `[x]`},
