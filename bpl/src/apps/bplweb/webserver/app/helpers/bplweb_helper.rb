@@ -27,7 +27,7 @@ module BplwebHelper
       plusstyle = " style='display: none;'"
     end
 
-    link_to_function("<span id='#{id}-p'" + plusstyle + ">+</span><span id='#{id}-m'" + minusstyle + ">&minus;</span>",
+    link_to_function("<span id='#{id}-p'" + plusstyle + ">+</span><span id='#{id}-m'" + minusstyle + ">&#8722;</span>",
                      visual_effect(:toggle_appear, "#{id}-body", :duration => 0.25)+
                      visual_effect(:toggle_appear, "#{id}-p", :duration => 0)+
                      visual_effect(:toggle_appear, "#{id}-m", :duration => 0))
