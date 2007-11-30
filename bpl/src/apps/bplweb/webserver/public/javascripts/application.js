@@ -219,7 +219,7 @@ rulechild ('Redex', bigraphhelp, "rule[" + nodeno + "]-redex", "redex[" + nodeno
 rulechild ('React', bigraphhelp, "rule[" + nodeno + "]-react", "react[" + nodeno + "]", 'a reactum bigraph', true, true) +
 rulechild ('Instantiation', instantiationhelp, "rule[" + nodeno + "]-inst", "inst[" + nodeno + "]", 'an instantiation', true, false) +
 "	    <div id='rule[" + nodeno + "]-image'" +
-(($("showimgs").checked) ? "" : "style='display: none;'") + ">\n" +
+(($("showimgs").checked) ? "" : " style='display: none;'") + ">\n" +
 "              <span id='rule[" + nodeno + "]-redex-image' onclick='showsource(this);'>\n" +
 "              </span>\n" +
 "              <span style='vertical-align: 150%; font-size: larger;'>\n" +
