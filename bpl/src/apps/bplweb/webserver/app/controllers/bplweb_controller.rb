@@ -16,13 +16,19 @@ class BplwebController < ApplicationController
                  "passive0(L), passive(L1 -: 1), passive(L2 -: 2), passive(L20 =: 2 --> 0)\n" +
                  "atomic0 (M), atomic (M1 -: 1), atomic (M2 -: 2)"
     @agent = "-//[e1,e2] o (\n" +
-             " K1[e1] o M `|` L1[e1] o M2[e1,e2] `|`" +
-             " K21[f][[b1,b2],[]] o (<[b1,b2]> L2[b1,b2] o M1[e2]) *\n" +
-             " L20[][[b1],[b2]] o ([b1,b2]> L2[b1,b2])\n" +
+             " K21[f][[],[b1,b2]] o (<[b1,b2]> L2[b1,b2] o M1[e1]) `|`\n" +
+             " L1[e2] o M2[e1,e2]                                  `|`\n" +
+             " K1[e2] o M                                           *\n" +
+             " L20[][[b1],[b2]] o (<[b1,b2]> L2[b1,b2] o <->)\n" +
              ")"
     @simplifymatches = params[:simplifymatches] == "on"
-    @rules = [Rule.new(:redex => 'K1[y1] || L1[y1] || (<[y2,y3]> L2[y2,y3])',
-                       :react => 'y1//[] * y2//[] * y3//[] * (K * L o merge(2) * <->) o @[2,0,1]',
+    @rules = [Rule.new(:redex => '(<[y1,y2]> L2[y1,y2] o `[x1]`) ||\n' +
+                                 'L1[x2] ||\n' +
+                                 'K1[x2] o merge(2)',
+                       :react => '((<[y1,y2]> y1//[] * y2//[] * K) * x1//[] * x2//[]\n' +
+                                 ' (-/x1 o (L1[x1] o (`[]` `|` `[x1]`)) `|` `[]`) *\n' +
+                                 ' <->) o\n' +
+                                 '@@[2&[x1],0&[],1&[],3&[]]',
                        :inst => '')]
     if params[:id]
       begin
