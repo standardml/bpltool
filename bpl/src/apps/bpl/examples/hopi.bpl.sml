@@ -29,6 +29,14 @@ val _ = OS.FileSys.chDir "../../bpl/";
 use "smlnj.sml";
 val _ = OS.FileSys.chDir cur_dir;
 
+(***********************************)
+(*  Auxiliary string declarations  *)
+(***********************************)
+
+val x = "x"
+val a = "a"
+val dummy = "Dummy"
+
 (*******************************)
 (*          Signature          *)
 (*******************************)
@@ -56,40 +64,44 @@ val Sub      = active  (sub         =: 1 --> 0);
 (*******************************)
 
 val rule_global_gc = 
-    "global gc"     ::: Sub[][["x"]] o (`[]` `|` (<["x"]>Def["x"]))
+    "global gc"     ::: Sub[][[x]] o (`[]` `|` (<[x]>Def[x]))
                            ----|>
                         `[]`
 
-val rule_application =  
-    "application"   ::: Send["a"] o (SendPro `|` SendResi) `|` 
-                        Receive["a"][["x"]] o (<["x"]> `["x"]`)
-                           --[0 |-> 1, 1 |-> 2, 2 |-> 0]--|>
-                        `[]` `|` Sub[][["x"]] o (<["x"]> `["x"]` `|` 
-                          Def["x"]) * "a"//[]
 
-val rule_app_var =
-    "application variable" ::: Sub[][["x"]] o (<["x"]>Var["x"] `|` `["x"]` `|` Def["x"])
-                                  --[0 |-> 1, 1 |-> 0, 2 |-> 1]--|>
-                               Sub[][["x"]] o (<["x"]> `[]` `|` `["x"]` `|` Def["x"])
+val rule_application =  
+    "application"   ::: Send[a] o (SendPro `|` SendResi) `|` 
+                        Receive[a][[x]] o (<[x]> `[x]`)
+                           --[0 |-> 1, 1 |-> 2, 2 |-> 0]--|>
+                        `[]` `|` Sub[][[x]] o (<[x]> `[x]` `|` 
+                           Def[x]) * a//[]
+
+
 (* We cannot have propagation with var, as this might introduce problems *)
 (* with divergence *)
+val rule_app_var =
+    "application variable" ::: Sub[][[x]] o (<[x]>Var[x] `|` `[x]` `|` Def[x])
+                                  --[0 |-> 1, 1 |-> 0, 2 |-> 1]--|>
+                               Sub[][[x]] o (<[x]> `[]` `|` `[x]` `|` Def[x])
 
+(* MISSING *)
 val rule_prop_recei =
     "propagation receive"  ::: Sub[][["x'"]] o (<["x'"]> "x'"//["x'","y","x''"] o
-                                  (Receive["a"][["x"]] o (<["x"]> `["x","x'"]`)
+                                  (Receive[a][[x]] o (<[x]> `[x,"x'"]`)
                                    `|` `["y"]`
                                    `|` Def["x''"]
                                   )
                                )
                                   --[0 |-> 0, 1 |-> 2, 2 |-> 1, 3 |-> 2]--|>
-                               Receive["a"][["x"]] o (<["x"]> Sub[][["x'"]] o (
-                                  <["x'"]> `["x","x'"]` `|` Def["x'"]))
+                               Receive[a][[x]] o (<[x]> Sub[][["x'"]] o (
+                                  <["x'"]> `[x,"x'"]` `|` Def["x'"]))
                                `|`
                                Sub[][["y"]] o (<["y"]> `["y"]` `|` Def["y"])
 
+(* MISSING *)
 val rule_prop_send =
-    "propagation send"  ::: Sub[][["x"]] o (<["x"]> "x"//["x'","x''","x'''","y"] o
-                               (Send["a"] o (
+    "propagation send"  ::: Sub[][[x]] o (<[x]> x//["x'","x''","x'''","y"] o
+                               (Send[a] o (
                                   (SendPro o  `["x'"]`) 
                                    `|` (SendResi o `["x''"]`)
                                ) 
@@ -97,7 +109,7 @@ val rule_prop_send =
                                `|` Def["x'''"])
                             )
                                --[0 |-> 0, 1 |-> 3, 2 |-> 1, 3 |-> 3, 4 |-> 2, 5 |-> 3]--|>
-                            Send["a"] o (
+                            Send[a] o (
                                (SendPro o Sub[][["x'"]] o (
                                   <["x'"]> `["x'"]` `|` Def["x'"])
                                )
@@ -108,17 +120,18 @@ val rule_prop_send =
                             )
                             `|`
                             Sub[][["y"]] o (<["y"]> `["y"]` `|` Def["y"])
-    
 
-val rule_prop_empty =
-    "propagation empty"  ::: Sub[][["x"]] o (<["x"]> Def["x"] )
+(* This rule is actually subsumed by rule_global_gc, I think ??? *)
+(* The case where the hole is filled with the empty bigraph *)
+(*val rule_prop_empty =
+    "propagation empty"  ::: Sub[][[x]] o (<[x]> Def[x] )
                                 ----|>
                              <->
-
+*)
 
 val rules =
     mkrules [rule_global_gc, rule_application, rule_app_var, 
-             rule_prop_recei, rule_prop_send, rule_prop_empty];
+             rule_prop_recei, rule_prop_send]; (*, rule_prop_empty];*)
 
 val tactic = roundrobin;
 
@@ -127,54 +140,20 @@ val tactic = roundrobin;
 (*       Example processes     *)
 (*******************************)
 
-val Dummy     = atomic0 ("Dummy"                    );
+val Dummy     = atomic0 (dummy                    );
 
 (* Represent a simple copy-process a => a(x).(x || x) *)
-val copy = fn a => Receive[a][["x"]] o (<["x"]> Var["x"] `|` Var["x"]) 
+val copy = fn a => Receive[a][[x]] o (<[x]> Var[x] `|` Var[x]) 
 val sender = fn a => Send[a] o (SendPro o Dummy `|` SendResi o NilP) 
 
-val system = (copy "a" `|` sender "a")
+val system = fn a => (copy a `|` sender a)
+val system2 = (system "a") `|` (system "a")
 
-(* val ms = matches rules system *)
+(* val ms = matches rules (system "a") *)
 
 (* val _ = print_mv ms *)
 
 val myrun = run rules tactic;
 val mysteps = steps rules tactic;
 
-(* Why do we obtain two identical matches ????? *)
-(* Assume K = active   ("K" =: 2 --> 1) *)
-(* What is the difference between the following two expressions ??? *)
-(* - K[z][[x,y],[]]; *)
-(* val it = K[z][[x, y], []] : (x, y) -> <{z}> : bgval *)
-(* x and y both are linked to the first binding port *)
-(* - K[z][[x],[y]]; *)
-(* val it = K[z][[x], [y]] : (x, y) -> <{z}> : bgval *)
-(* x is linked to the first binding port and y to the second *)
 
-(* Why do the expression *)
-(* "run rules tactic system;" *)
-(* give the following error ? *)
-(* parameter is not compatible with instantiation *)
-(*    instantiation  [0 |-> 1, 1 |-> 2, 2 |-> 0]  *) 
-(*   parameter *)
-(*     idw0 * *)
-(*     ((idw0 * (<[]> (idw0 * idp(1)) o `[]`)) o *)
-(*      (<[]> (idw0 * merge(1)) o (idw0 * 0)) * *)
-(*      (idw0 * (<[x]> (x//[x_a6, x_a9] * idp(1)) o `[x_a6, x_a9]`)) o *)
-(*      (<[x_a6, x_a9]> *)
-(*        (idw[x_a6, x_a9] * merge(2)) o (idw0 * Var[x_a9] * (idw0 * Var[x_a6]))) * *)
-(*      (idw0 * (<[]> (idw0 * idp(1)) o `[]`)) o *)
-(*      (<[]> (idw0 * merge(1)) o (idw0 * P))) *)
-
-
-
-
-(* Why do both the gc rule and the application rule match the following *)
-(* expression ? *)
-(* "Sub[][["x"]] o (<["x"]>Var["x"] `|` Def["x"] o NilP);" *)
-(* ----- *)
-(* [{rule = "application variable", context = idp(1), parameter = 0}, *)
-(* {rule = "global gc", context = -/x * idp(1), parameter = Var[x] * 0}] *)
-(* ----- *)
-(* The context should not know about x *)
