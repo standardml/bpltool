@@ -132,12 +132,12 @@ val rule_scope_activation   =
                              o (ActiveScope["scope", "inst_id"]
                                 o `["scope"]`)
                              || Running["inst_id"];
+
 val rule_scope_completed    =
-    "scope completed"    ::: ActiveScope["scope", "inst_id"] o <->
+    "scope completed"    ::: -/"scope" o ActiveScope["scope", "inst_id"] o <->
                              || Running["inst_id"]
                            ----|>
-                             ("scope"//[] * <->)
-                             || Running["inst_id"];
+			     <-> || Running["inst_id"];
 
 (* Structural activities *)
 val rule_flow_completed     =
