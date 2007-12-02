@@ -33,9 +33,7 @@ val _ = OS.FileSys.chDir cur_dir;
 (*  Auxiliary string declarations  *)
 (***********************************)
 
-val x = "x"
-val a = "a"
-val dummy = "Dummy"
+val (x,y,z,a) = ("x", "y", "z", "a")
 
 (*******************************)
 (*          Signature          *)
@@ -84,42 +82,38 @@ val rule_app_var =
                                   --[0 |-> 1, 1 |-> 0, 2 |-> 1]--|>
                                Sub[][[x]] o (<[x]> `[]` `|` `[x]` `|` Def[x])
 
-(* MISSING *)
+
 val rule_prop_recei =
-    "propagation receive"  ::: Sub[][["x'"]] o (<["x'"]> "x'"//["x'","y","x''"] o
-                                  (Receive[a][[x]] o (<[x]> `[x,"x'"]`)
-                                   `|` `["y"]`
-                                   `|` Def["x''"]
+    "propagation receive"  ::: Sub[][[z]] o (<[z]> z//[z,y] o
+                                  (Receive[a][[x]] o (<[x]> `[x,z]`)
+                                   `|` `[y]`
+                                   `|` Def[z]
                                   )
                                )
                                   --[0 |-> 0, 1 |-> 2, 2 |-> 1, 3 |-> 2]--|>
-                               Receive[a][[x]] o (<[x]> Sub[][["x'"]] o (
-                                  <["x'"]> `[x,"x'"]` `|` Def["x'"]))
+                               Receive[a][[x]] o (<[x]> Sub[][[z]] o (
+                                  <[z]> `[x,z]` `|` Def[z]))
                                `|`
-                               Sub[][["y"]] o (<["y"]> `["y"]` `|` Def["y"])
+                               Sub[][[y]] o (<[y]> `[y]` `|` Def[y])
 
-(* MISSING *)
+
 val rule_prop_send =
-    "propagation send"  ::: Sub[][[x]] o (<[x]> x//["x'","x''","x'''","y"] o
+    "propagation send"  ::: Sub[][[x]] o (<[x]> x//[x,z,y] o
                                (Send[a] o (
-                                  (SendPro o  `["x'"]`) 
-                                   `|` (SendResi o `["x''"]`)
+                                  (SendPro o  `[x]`) 
+                                   `|` (SendResi o `[z]`)
                                ) 
-                               `|` `["y"]`
-                               `|` Def["x'''"])
+                               `|` `[y]` 
+                               `|` Def[z])
                             )
                                --[0 |-> 0, 1 |-> 3, 2 |-> 1, 3 |-> 3, 4 |-> 2, 5 |-> 3]--|>
                             Send[a] o (
-                               (SendPro o Sub[][["x'"]] o (
-                                  <["x'"]> `["x'"]` `|` Def["x'"])
-                               )
+                               (SendPro o Sub[][[x]] o ( <[x]> `[x]` `|` Def[x]) )
                                `|` 
-                               (SendResi o Sub[][["x''"]] o (
-                                  <["x''"]> `["x''"]` `|` Def["x''"])
-                               )
+                               (SendResi o Sub[][[z]] o ( <[z]> `[z]` `|` Def[z]) )
                             )
                             `|`
-                            Sub[][["y"]] o (<["y"]> `["y"]` `|` Def["y"])
+                            Sub[][[y]] o (<[y]> `[y]` `|` Def[y])
 
 (* This rule is actually subsumed by rule_global_gc, I think ??? *)
 (* The case where the hole is filled with the empty bigraph *)
@@ -140,6 +134,7 @@ val tactic = roundrobin;
 (*       Example processes     *)
 (*******************************)
 
+val dummy = "Dummy"
 val Dummy     = atomic0 (dummy                    );
 
 (* Represent a simple copy-process a => a(x).(x || x) *)
