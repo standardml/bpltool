@@ -808,7 +808,7 @@ struct
                   x + (mywidth - width) div 2,
                   y + ysep + edgespace)
             in
-             (pmap, (s, x, x + mywidth),
+             (pmap, (s, x + rootrounding, x + mywidth - rootrounding),
              Rectangle {
                class = "root",
                x = x, y = y,
@@ -897,13 +897,14 @@ struct
           ((mywidth, myheight), draw)
         end
 
-      (* M: Bigraphs ***********************************************)
+      (* B: Bigraphs ***********************************************)
 
       fun ppB b = 
         let
           val cfg as {
             namefontheight, namecharwidth, ctrlfontheight, 
-            textysep, binderradius, idleedgelength, ...} = config ("", [])
+            textysep, binderradius, idleedgelength, rootrounding,
+            ...} = config ("", [])
           val {wirxid, D} = unmkB b
         in
           case BgVal.match (BgVal.PTen [BgVal.PWir, BgVal.PVar]) wirxid of
@@ -1005,7 +1006,7 @@ struct
                     val minxpos = xmin1 + (s1 * namecharwidth) div 2
                     val (x1', space) =
                       if x1 < minxpos then (* Name introduction *)
-                        (x2 - sumwidth, x2 - sumwidth - minxpos)
+                        (Int.min (x2 - sumwidth, xmax1), 0)
                       else
                         (x1, x2 - x1 - sumwidth)
                   in

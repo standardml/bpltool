@@ -16,7 +16,7 @@ class BplwebController < ApplicationController
                  "passive0(L), passive(L1 -: 1), passive(L2 -: 2), passive(L20 =: 2 --> 0)\n" +
                  "atomic0 (M), atomic (M1 -: 1), atomic (M2 -: 2)"
     @agent = "-//[e1,e2] o (\n" +
-             " K21[f][[b1],[b2]] o (<[b1,b2]> L2[b1,b2] o M1[e1]) `|`\n" +
+             " K21[f][[],[b1,b2]] o (<[b1,b2]> L2[b1,b2] o M1[e1]) `|`\n" +
              " L1[e2] o M2[e1,e2]                                  `|`\n" +
              " K1[e2] o M                                           *\n" +
              " L20[][[b1],[b2]] o (<[b1,b2]> L2[b1,b2] o <->)\n" +
