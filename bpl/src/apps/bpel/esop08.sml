@@ -267,10 +267,10 @@ val rule_exit_stop_inst     =
                              <->
                              || Stopped["inst_id"];
 val rule_exit_remove_inst   =
-    "exit remove inst"   ::: Instance["name", "inst_id"]
-                             o (Stopped["inst_id"] `|` `[]`)
+    "exit remove inst"   ::: -/"inst_id" o (Instance["name", "inst_id"]
+                                o (Stopped["inst_id"] `|` `[]`))
                            ----|>
-                             "name"//[] * "inst_id"//[] * <->;
+                             "name"//[] * <->;
                              
 
 val rules =
