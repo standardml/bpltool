@@ -41,7 +41,7 @@ val signat = [Cdef("k1",Passive,1,2),
 	      Cdef("K",Atomic,0,0),
 	      Cdef("L",Atomic,0,0),
 	      Cdef("M",Passive,0,0),
-	      Cdef("nil",Atomic,0,0),
+	      Cdef("null",Atomic,0,0),
 	      Cdef("send",Passive,0,2),
 	      Cdef("get",Passive,1,1),
 	      Cdef("sub",Active,1,0),
@@ -52,8 +52,8 @@ fun id1 id = Site(Var(id),Namelist([]))
 
 (*
 val b0 = Empty
-val b1 = Ctrl("k1",["x"],["y","z"])
-val b2 = Abs(["x"], Ctrl("k2",[],["x","q"]))
+val b1 = Ion("k1",["x"],["y","z"])
+val b2 = Abs(["x"], Ion("k2",[],["x","q"]))
 val b3 = Emb(b1,Com(b2,Empty))
 val b4 = Clo(["y"],b3)
 val b5 = Pri(Par(b1,b4),Ten(b3,Empty))
@@ -61,35 +61,41 @@ val b6 = Par(Id("id1"),Id("id5"))
 val b7 = Ten(Wir([Local("y","x"),Global("q","q")]),b0)
 val b8 = Emb(Wir([IdleG("v")]),Empty)
 val b9 = Ten(b7,b8)
-val b10 = Ctrl("k2",[],["f1","f2"])
-val b11 = Ctrl("k3",[],[])
+val b10 = Ion("k2",[],["f1","f2"])
+val b11 = Ion("k3",[],[])
 
-val K = Ctrl("K",[],[])
-val L = Ctrl("L",[],[])
-val M = Ctrl("M",[],[])
+val K = Ion("K",[],[])
+val L = Ion("L",[],[])
+val M = Ion("M",[],[])
 val C = Pri(M,id1 "site")
 val a = Ten(K,L)
 val b = Ten(L,K)
 *)
 
 (* Pi *)
-val idle__a = Wir([IdleG("a")])
-val idle_x = Wir([IdleL("x")])
-val site0 = Site(Var("s0"),Namelist([]))
+val send = Ion("send",[],["a","w"])
+val get = Ion("get",["x"],["a"])
+
+val null = Ion("null",[],[])                        (* 0 *)
+val send_null = Emb(send,null)                      (* aw.0 *)
+val get_null = Emb(get,Pri(null,Wir([IdleL("x")]))) (* a(x).0 *)
+val agent = Pri(send_null,get_null)                 (* aw.0 | a(x).0 *)
+
+val site0 = Site(Num(0),Namelist([]))
 val site1 = Site(Var("s1"),Namelist(["x"]))
 
-val null = Ctrl("null",[],[])
-val send' = Ctrl("send",[],["a","w"])
-val send = Emb(send',Empty)
-val get' = Ctrl("get",["x"],["a"])
-val get = Emb(get',idle_x)
+val send_ion = Emb(send,site0)                      (* aw.[0] *)
+val get_ion = Emb(get,site1)                        (* a(x).[1] *)
 
-val sub__x = Ctrl("sub",["x"],[])
-val def_x = Ctrl("def",[],["x"])
-val msg_w = Ctrl("msg",[],["w"])
-
+val sub__x = Ion("sub",["x"],[])
 fun abs_x b = Abs(["x"],b)
-val get_sub = Emb(sub__x,Pri(site1,abs_x(Emb(def_x,msg_w))))
+fun con_x b = Conc(["x"],b)
+val def_x = Ion("def",[],["x"])
+val msg_w = Ion("msg",[],["w"])
+(* it is troublesome to have to globalise names for Pri... *)
+val get_sub = Emb(sub__x,abs_x(Pri(con_x(site1),Emb(def_x,msg_w))))
+
+val idle__a = Wir([IdleG("a")])
 
 (*
 rule comm =
@@ -102,11 +108,12 @@ val decs = [(*Value("v1",Com(C,a)),
 	    Value("v2",Com(C,b)),
 	    Value("state",Pri(Id("v1"),Id("v2"))),
 	    Rule("r1",K,L),*)
-	    Value("v_send",send),
-	    Value("v_get",get),
-	    Value("state",Pri(Id("v_send"),Id("v_get"))),
+	    Value("v_null",null),
+	    Value("v_send",send_null),
+	    Value("v_get",get_null),
+	    Value("agent",agent),
 	    Rule("comm",
-		 Pri(send',get'),
+		 Pri(send_ion,get_ion),
 		 Pri(Ten(site0,idle__a),get_sub))]
 val prog = Prog(signat,decs)
 val (s,b,r) = prog2bgval prog
