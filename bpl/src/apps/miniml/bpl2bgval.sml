@@ -181,12 +181,12 @@ fun printMap m =
 		    | (n::ns) => Name.unmk(n) ^ (strList2str ns)
 	val (i1',l1') = (Int.toString i1, strList2str l1)
 	val (i2',l2') = (Int.toString i2, strList2str l2)
-    in print("(" ^ i1' ^ "," ^ l1' ^ ")" ^ " " ^
-	     "(" ^ i2' ^ "," ^ l2' ^ ") ")
+    in print("((" ^ i1' ^ "," ^ l1' ^ ")" ^ "," ^
+	     "(" ^ i2' ^ "," ^ l2' ^ ")) ")
     end
 
 (* print a 'map' : ( (int * namelist) * (int * namelist) ) list *)
-fun printMaps m = List.map printMap m
+fun printMaplist m = List.map printMap m
 
 (***** AUXILIARY FUNCTIONS *****)
 
@@ -573,18 +573,29 @@ fun decs2bgvals decls mainVal rules signa smap =
 			      else 0 (* yields empty maplist *)
 		  (*problem here: wrong maplist!?*)
 		  val maplist = calcMaps b1 b2 pivot smap
+		  val _ = print "length(maplist): "
 		  val _ = print(Int.toString(List.length maplist) ^ "\n")
-		  val _ = printMaps maplist
+		  val _ = printMaplist maplist
 		  val _ = print "\n"
 		  val b1' = big2bgval b1 signa
 		  val b2' = big2bgval b2 signa
 		  val b2'' = (BgBdnf.regularize o BgBdnf.make) b2'
-		  val _ = print "got this far dude...\n"
+		  val _ = print("b1': " ^ 
+				(Interface.toString o B.innerface) b1'
+				^ " -> ...\n")
+		  val _ = print("b2': " ^ 
+				(Interface.toString o B.innerface) b2'
+				^ " -> ...\n")
 		  val ins = Instantiation.make { I = B.innerface b1',
 						 J = B.innerface b2',
 						 maps = maplist }
 		      handle Instantiation.InvalidSiteNumber
-				 (map,int,iface) => raise Fail "here!\n"
+				 (map,int,iface) =>
+			     ( printMap map
+			     ; print(Int.toString(int))
+			     ; printIface iface
+			     ; Instantiation.make' { I = B.innerface b1',
+						    J = B.innerface b2'})
 		  val _ = print "got this far buddy...\n"
 		  val rule = Rule.make { info = Origin.unknown_origin,
 					 inst = ins,
@@ -719,7 +730,7 @@ fun numberSites d smap =
 (* take declist, return declist of decs with nat-sites and updated smap *)
 fun numberDecs [] acc smap = (List.rev acc, smap)
   | numberDecs (d::ds) acc smap =
-	val (d',smap') = numberSites d smap
+    let val (d',smap') = numberSites d smap
     in numberDecs ds (d'::acc) smap' end
 
 (* take ctrldef list and peel off Cdef constructor from the 4-tuples *)
