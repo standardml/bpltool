@@ -962,6 +962,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	  | make' (t as (BgTerm.Con (X, _)))      = VCon (X, (t2i t))
 	  | make' (t as (BgTerm.Wir (w, _)))      = VWir (w, (t2i t))
 	  | make' (t as (BgTerm.Ion (KyX, _)))    = Ion (t2i t) KyX
+    | make' (t as (BgTerm.Hop (t', _)))     = raise Fail "FIXME BgTerm.Hop not supported in BgVal.make"
 	  | make' (t as (BgTerm.Per (pi, _)))     = Per (t2i t) pi
 	  | make' (t as (BgTerm.Abs (X, t', _)))
 	    = Abs (t2i t) (X, make' t')

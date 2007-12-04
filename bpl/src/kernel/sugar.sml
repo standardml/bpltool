@@ -323,6 +323,36 @@ fun rulename ::: rule =
     Rule.make 
      {name = rulename, redex = redex, inst = inst, react = react, info = Info.noinfo}
   end
+
+exception NonAtomicControl of bgval
+fun explain_NonAtomicControl (NonAtomicControl m) =
+    [Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data BgVal.pp m, [])]
+  | explain_NonAtomicControl _ = raise Match
+val _ = add_explainer
+          (mk_explainer
+             "control must be atomic when using the << >> operator"
+             explain_NonAtomicControl)
+exception NotMolecule of bgval
+fun explain_NotMolecule (NotMolecule m) =
+    [Exp (LVL_USER, Origin.unknown_origin, pack_pp_with_data BgVal.pp m, [])]
+  | explain_NotMolecule _ = raise Match
+val _ = add_explainer
+          (mk_explainer
+             "the << >> operator can only be used on atomic molecules"
+             explain_NotMolecule)
+
+val >> = ()
+local open BgVal in
+  fun << m >>
+    = case match (PCom (PIon, PVar)) m of
+        MCom (MIon ion, _) =>
+        if Control.kind (#ctrl (Ion.unmk ion)) = Control.Atomic then
+          Ion Info.noinfo ion
+        else
+          raise NonAtomicControl m
+      | _ => raise NotMolecule m;
+end
+
   
 fun ppMapinfo indent pps ((i, xs) |--> (j, ys)) =
   let

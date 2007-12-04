@@ -83,6 +83,7 @@ struct
 	 | Con of nameset * info
 	 | Wir of wiring * info
 	 | Ion of ion * info
+	 | Hop of bgterm * info
 	 | Per of Immutable permutation * info
 	 | Abs of nameset * bgterm * info
 	 | Ten of bgterm list * info
@@ -107,6 +108,7 @@ struct
     | info (Con (_, i))    = i
     | info (Wir (_, i))    = i
     | info (Ion (_, i))    = i
+    | info (Hop (_, i))    = i
     | info (Per (_, i))    = i
     | info (Abs (_, _, i)) = i
     | info (Ten (_, i))    = i
@@ -118,6 +120,7 @@ struct
     | eq (Con (ns1, _))      (Con (ns2, _))               = NameSet.eq ns1 ns2
     | eq (Wir (w1, _))       (Wir (w2, _))                = Wiring.eq w1 w2
     | eq (Ion (i1, _))       (Ion (i2, _))                = Ion.eq i1 i2
+    | eq (Hop (b1, _))       (Hop (b2, _))                = eq b1 b2
     | eq (Per (p1, _))       (Per (p2, _))                = Permutation.eq p1 p2
     | eq (Abs (ns1, b1, _))  (Abs (ns2, b2, _))           = 
         NameSet.eq ns1 ns2 andalso eq b1 b2
@@ -140,6 +143,7 @@ struct
           Ion (Ion.replacectrl ctrllist ion, i)
           handle Ion.WrongArity _ => raise WrongArity t
                | Ion.UnknownControl _ => raise UnknownControl t) 
+        | replace (Hop (t, i)) = Hop (replace t, i)
         | replace (Abs (X, t, i)) = Abs (X, replace t, i)
         | replace (Ten (ts, i)) = Ten (map replace ts, i)
         | replace (Pri (ts, i)) = Pri (map replace ts, i)
@@ -156,6 +160,7 @@ struct
         Com (t, Mer (0, i), i)
       else
         t 
+    | add1s (Hop (t, i))      = t
     | add1s (Abs (X, t, i))   = Abs (X, add1s t, i)
     | add1s (Ten (ts, i))     = Ten (map add1s ts, i)
     | add1s (Pri (ts, i))     = Pri (map add1s ts, i)
@@ -171,6 +176,7 @@ struct
     | is_n (Con _)         = false
     | is_n (Wir (w, _))    = Wiring.is_id0 w
     | is_n (Ion _)         = false
+    | is_n (Hop _)         = false
     | is_n (Per (pi, _))   = Permutation.is_id0 pi
     | is_n (Abs (X, t, _)) = NameSet.isEmpty X andalso is_n t
     | is_n (Ten (ts, _))   = List.all is_n ts
@@ -184,6 +190,7 @@ struct
     | is_concretion_of X (Con (Y, _))     = NameSet.eq X Y
     | is_concretion_of X (Wir _)          = false
     | is_concretion_of X (Ion _)          = false
+    | is_concretion_of X (Hop _)          = false
     | is_concretion_of X (Per (pi, _))    = NameSet.isEmpty X andalso
 		  			   Permutation.is_id pi
     | is_concretion_of X (Abs (Y, t, _))  
@@ -208,6 +215,7 @@ struct
     | is_id0 (Con _)        = false
     | is_id0 (Wir (w, _))   = Wiring.is_id0 w
     | is_id0 (Ion _)        = false
+    | is_id0 (Hop _)        = false
     | is_id0 (Per (pi, _))  = Permutation.width pi = 0
     | is_id0 (Abs _)        = false
     | is_id0 (Ten (ts, _))  = List.all is_id0 ts
@@ -222,6 +230,7 @@ struct
     | is_idw (Con _)        = false
     | is_idw (Wir (w, _))   = Wiring.is_id w
     | is_idw (Ion _)        = false
+    | is_idw (Hop _)        = false
     | is_idw (Per (pi, _))  = Permutation.width pi = 0
     | is_idw (Abs _)        = false
     | is_idw (Ten (ts, _))  = List.all is_idw ts
@@ -235,6 +244,7 @@ struct
     | is_id1_x_idw (Con (X, _))    = NameSet.isEmpty X
     | is_id1_x_idw (Wir (w, _))    = Wiring.is_id w
     | is_id1_x_idw (Ion _)         = false
+    | is_id1_x_idw (Hop _)         = false
     | is_id1_x_idw (Per (pi, _))   = Permutation.width pi = 1
     | is_id1_x_idw (Abs (X, t, _)) = is_concretion_of X t
     | is_id1_x_idw (Ten (ts, _))   = is_id1_x_idw_list ts 
@@ -255,6 +265,7 @@ struct
     | is_id1_x_n_x_idw (Con (X, _))    = NameSet.isEmpty X
     | is_id1_x_n_x_idw (Wir (w, _))    = Wiring.is_id w
     | is_id1_x_n_x_idw (Ion _)         = false
+    | is_id1_x_n_x_idw (Hop _)         = false
     | is_id1_x_n_x_idw (Per (pi, _))   = Permutation.width pi = 1
     | is_id1_x_n_x_idw (Abs (X, t, _)) = is_concretion_of X t
     | is_id1_x_n_x_idw (Ten (ts, _))   = is_id1_x_n_x_idw_list ts 
@@ -276,6 +287,7 @@ struct
     | is_id (Con (X, _))    = NameSet.isEmpty X
     | is_id (Wir (w, _))    = Wiring.is_id w
     | is_id (Ion _)         = false
+    | is_id (Hop _)         = false
     | is_id (Per (pi, _))   = Permutation.is_id pi
     | is_id (Abs (X, t, _)) = is_concretion_of X t
     | is_id (Ten (ts, _))   = List.all is_id ts
@@ -286,10 +298,33 @@ struct
 
   fun is_id' t = is_id t handle NotImplemented _ => false
 
+  fun is_barren_root (Mer (0, _))      = true
+    | is_barren_root (Mer _)           = false 
+    | is_barren_root (Con _)           = false
+    | is_barren_root (Wir _)           = false
+    | is_barren_root (Ion _)           = false
+    | is_barren_root (Hop _)           = false
+    | is_barren_root (Per (pi, _))     = false
+    | is_barren_root (Abs (X, t, _))   = NameSet.isEmpty X andalso is_barren_root t
+    | is_barren_root (Ten (ts, _))     = is_barren_root_list ts 
+    | is_barren_root (Par (ts, _))     = is_barren_root_list ts 
+    | is_barren_root (Pri (ts, _))     = List.all is_barren_root ts
+    | is_barren_root (Com (t1, t2, _)) = is_id' t1 andalso is_barren_root t2
+                                         orelse is_barren_root t1
+  and is_barren_root_list [] = false
+    | is_barren_root_list (t :: ts)
+    = if is_barren_root t then
+        List.all is_id0' ts
+      else if is_id0' t then
+        is_barren_root_list ts
+      else
+        false
+
   fun width (Mer _)         = 1
     | width (Con _)         = 1
     | width (Wir _)         = 0
     | width (Ion _)         = 1
+    | width (Hop _)         = 1
     | width (Per (pi, _))   = Permutation.width pi
     | width (Abs _)         = 1
     | width (Ten (ts, _))   = foldr (fn (t, n) => width t + n) 0 ts
@@ -321,6 +356,7 @@ struct
     | is_atomic_ion (Wir _)         = false
     | is_atomic_ion (Ion (ion, _))
     = Control.kind (#ctrl (Ion.unmk ion)) = Control.Atomic
+    | is_atomic_ion (Hop (t, _))    = false
     | is_atomic_ion (Per (pi, _))   = false
     | is_atomic_ion (Abs (X, t, _)) = is_atomic_ion t
     | is_atomic_ion (Ten (ts, _))
@@ -374,9 +410,10 @@ struct
        * @param pal  Precedence attraction of surrounding left expression
        * @param par  Precedence attraction of surrounding right expression
        * @param prr  Precedence resistance of surrounding right expression
+       * @param aih  Atomic ions should be printed in "hole form"
        * @param t    Term to print
        *)
-      fun ppp pal par prr =
+      fun ppp pal par prr aih =
         let 
           fun checkprec prec =
             if pal >= prec orelse par > prec then
@@ -391,7 +428,14 @@ struct
             = ((show "`"; NameSetPP.ppbr indent "[" "]" pps X; show "`")
                handle e => raise e)
             | pp' _ _ (Wir (w, _)) = (Wiring.pp indent pps w handle e => raise e)
-            | pp' _ _ (Ion (KyX, _)) = (Ion.pp indent pps KyX handle e => raise e)
+            | pp' _ _ (Ion (KyX, _))
+            = if aih andalso
+                 Control.kind (#ctrl (Ion.unmk KyX)) = Control.Atomic
+              then
+                (show "<<("; Ion.pp indent pps KyX handle e => raise e; show ")>>")
+              else
+                (Ion.pp indent pps KyX handle e => raise e)
+            | pp' outermost innermost (Hop (t, _)) = (show "<<("; pp' outermost innermost t; show ")>>")
             | pp' _ _ (Per (pi, _)) = (Permutation.pp indent pps pi handle e => raise e)
             | pp' outermost innermost (Abs (X, b, _))
             = ((if pp0abs orelse not (NameSet.isEmpty X) then
@@ -410,12 +454,12 @@ struct
                     showlpar();
                     show "<"; NameSetPP.ppbr indent "[" "]" pps X; show ">";
                     brkindent();
-                    ppp pal' par' prr' outermost innermost b;
+                    ppp pal' par' prr' aih outermost innermost b;
                     showrpar();
                     >>()
                   end
                 else
-                  ppp pal par prr outermost innermost b)
+                  ppp pal par prr aih outermost innermost b)
                handle e => raise e)
             | pp' outermost innermost (Ten (bs, i)) =
               (let
@@ -440,16 +484,16 @@ struct
                    fun mappp [] = ()
                      | mappp [b]
                      = (show " *"; brk();
-                        ppp PrTen par' prr' outermost innermost b)
+                        ppp PrTen par' prr' aih outermost innermost b)
                      | mappp (b :: b' :: bs) 
                      = (show " *";
                         brk();
-                        ppp PrTen PrTen PrTen outermost innermost b;
+                        ppp PrTen PrTen PrTen aih outermost innermost b;
                         mappp (b' :: bs))
                  in
                      showlpar();
                      <<();
-                     ppp pal' PrTen PrTen outermost innermost b;
+                     ppp pal' PrTen PrTen aih outermost innermost b;
                      mappp bs;
                      showrpar();
                      >>()
@@ -466,16 +510,16 @@ struct
                    fun mappp [] = ()
                      | mappp [b]
                      = (show " `|`"; brk();
-                        ppp PrPri par' prr' outermost innermost b)
+                        ppp PrPri par' prr' aih outermost innermost b)
                      | mappp (b :: b' :: bs) 
                      = (show " `|`";
                         brk();
-                        ppp PrPri PrPri PrPri outermost innermost b;
+                        ppp PrPri PrPri PrPri aih outermost innermost b;
                         mappp (b' :: bs))
                  in
                    showlpar();
                    <<();
-                   ppp pal' PrPri PrPri outermost innermost b;
+                   ppp pal' PrPri PrPri aih outermost innermost b;
                    mappp bs;
                    showrpar();
                    >>()
@@ -491,16 +535,16 @@ struct
                    fun mappp [] = ()
                      | mappp [b]
                      = (show " ||"; brk();
-                        ppp PrPar par' prr' outermost innermost b)
+                        ppp PrPar par' prr' aih outermost innermost b)
                      | mappp (b :: b' :: bs) 
                      = (show " ||";
                         brk();
-                        ppp PrPar PrPar PrPar outermost innermost b;
+                        ppp PrPar PrPar PrPar aih outermost innermost b;
                         mappp (b' :: bs))
                  in
                    showlpar();
                    <<();
-                   ppp pal' PrPar PrPar outermost innermost b;
+                   ppp pal' PrPar PrPar aih outermost innermost b;
                    mappp bs;
                    showrpar();
                    >>()
@@ -510,20 +554,27 @@ struct
                 val (showlpar, pal', par', prr', showrpar)
                   = checkprec PrCom
               in
-(* ---
-   espen 20/11/07: unsound
-          eg. M o `[x]` will be prettyprinted as M (where M is atomic)
-   Arne 23.11.2007: Re-added this to make prettyprinted output parsable *)
                 if is_atomic_ion b1 then
-                  ppp pal par prr outermost innermost b1
+                  if is_barren_root b2 then
+                    ppp pal par prr false outermost innermost b1
+                  else
+                    (* Print the atomic ion b1 in a special way which
+                     * indicates that it has a hole *)
+                    (showlpar();
+                     <<();
+                     ppp pal' PrCom PrCom true outermost false b1;
+                     show " o";
+                     brk();
+                     ppp PrCom par' prr' false false innermost b2;
+                     showrpar();
+                     >>())
                 else
-(* --- *)
                   (showlpar();
                    <<();
-                   ppp pal' PrCom PrCom outermost false b1;
+                   ppp pal' PrCom PrCom false outermost false b1;
                    show " o";
                    brk();
-                   ppp PrCom par' prr' false innermost b2;
+                   ppp PrCom par' prr' aih false innermost b2;
                    showrpar();
                    >>())
               end handle e => raise e
@@ -531,7 +582,7 @@ struct
             pp'
           end
         in
-          ppp PrMin PrMin PrMax true true
+          ppp PrMin PrMin PrMax true true true
         end handle e => raise e
 
       fun oldpp indent pps =
@@ -577,6 +628,7 @@ struct
                 = (show "'"; NameSetPP.pp indent pps X; show "'")
                 | pp' (Wir (w, _)) = Wiring.oldpp indent pps w
                 | pp' (Ion (KyX, _)) = Ion.oldpp indent pps KyX
+                | pp' (Hop (t, _)) = (show "<<("; pp' t; show ")>>")
                 | pp' (Per (pi, _)) = Permutation.oldpp indent pps pi
                 | pp' (Abs (X, b, _)) =
                   let
@@ -718,6 +770,7 @@ struct
 	| Con _ => 1
 	| Wir _ => 1
 	| Ion _ => 1
+	| Hop(b,_) => 1+size b
 	| Per _ => 1
 	| Abs(_,b,_) => 1+size b
 	| Ten(bs,_) => 1+sizes bs

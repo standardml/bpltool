@@ -72,7 +72,7 @@ signature SUGAR =
     type rule
     type redexinst
 
-    (** Singal detection of an ion with duplicate names.
+    (** Signal detection of an ion with duplicate names.
      * @params K ys Xs errtxt
      * @param K       The ion control.
      * @param ys      The ions free names. 
@@ -86,6 +86,16 @@ signature SUGAR =
      * @param errtxt  Text detailing the error
      *)
     exception WrongArity of string
+    (** Signal detection of a non-atomic control when using the << >> operator.
+     * @params b
+     * @param b  The bgval on which the << >> operator was used.
+     *)
+    exception NonAtomicControl of bgval
+    (** Signal detection of a non-molecule when using the << >> operator.
+     * @params b
+     * @param b  The bgval on which the << >> operator was used.
+     *)
+    exception NotMolecule of bgval
 
     (** Create an active control. *)
     val active : (ctrlkind -> 'a) -> 'a
@@ -108,6 +118,11 @@ signature SUGAR =
     val -: : string * int -> ctrlkind -> name list -> bgval
     (** Operator to put between inner and outer arity. *)
     val --> : int * int -> arities
+    (** Turn an atomic molecule into an atomic ion. *)
+    val << : bgval -> unit -> bgval
+    (** Sugar for the unit argument to the << function.
+     * It allows one to write <<M>>. *)
+    val >> : unit
     (** A barren root bigraph. *)
     val <-> : bgval 
     (** Construct a merge_n bigraph. *)

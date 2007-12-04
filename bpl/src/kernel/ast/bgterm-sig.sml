@@ -48,6 +48,8 @@ sig
 	 | Wir of wiring * info
 	 (** K_yX = an ion. *)
 	 | Ion of ion * info
+   (** <<b>> = an atomic ion. *)
+   | Hop of bgterm * info
 	 (** pi = a permutation. *)
 	 | Per of Immutable permutation * info
 	 (** (X)P = an abstraction. *)

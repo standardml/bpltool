@@ -193,7 +193,8 @@ fun nset2idlinkset nset =
 	 | LPAREN | RPAREN | LBRACK | RBRACK | LBRACE | RBRACE | GT | LT
 	 | SLASH | SLASHSLASH | DASHSLASH | DASHSLASHSLASH
 	 | OO | XX | PRI | PAR | QUOTE | BQUOTE | COMMA
-         | IDX0 | IDBB0 | ONE | IDW | IDW0 | IDP
+   | LTLT | GTGT
+   | IDX0 | IDBB0 | ONE | IDW | IDW0 | IDP
 
 %nonterm
   start of parserresult
@@ -392,6 +393,7 @@ altbg : ONE                   (Mer (0, mk_info ONEright ONEleft))
    | IDP pint                 (Per (Permutation.id_n pint, mk_info IDPleft pintright))
    | LT nset GT bg    (Abs (nset, bg, mk_info LTleft bgright))
    | LPAREN bg RPAREN         (bg)
+   | LTLT bg GTGT             (Hop (bg, mk_info LTLTleft GTGTright))
 
 fports	: LBRACK names RBRACK (names)
 
