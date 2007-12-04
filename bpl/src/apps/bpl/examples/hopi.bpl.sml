@@ -148,6 +148,14 @@ val system2 = (system "a") `|` (system "a")
 
 (* val _ = print_mv ms *)
 
+val c = "c"
+val q = "Q"
+val Q     = atomic0 (q                    );
+
+
+val agent1 = Send[a] o (SendPro o (Send[c] o (SendPro o Q `|` SendResi o NilP)) `|` SendResi o (Receive[c][[x]] o (<[x]> Var[x])  `|` Receive[c][[z]] o (<[z]> (NilP * z//[]))))
+val agent2 = Receive[a][[y]] o (<[y]> Var[y] `|` Var[y]) 
+
 val myrun = run rules tactic;
 val mysteps = steps rules tactic;
 
