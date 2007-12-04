@@ -41,7 +41,7 @@ val ActiveScope = atomic   ("ActiveScope" -:       2);
 val Running     = atomic   ("Running"     -:       1);
 val Stopped     = atomic   ("Stopped"     -:       1);
 
-val Variables   = passive0 ("Variables"             );
+val Variables   = active0 ("Variables"             );
 (* The first free port of a variable should be connected to its name,
  * and the second should be connected to the scope port of the node
  * delimiting its scope. *)
