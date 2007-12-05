@@ -12,52 +12,52 @@ val _ = OS.FileSys.chDir cur_dir;
 (*******************************)
 (*     String Declarations     *)
 (*******************************)
-val process  = "Process"
-val instance = "Instance"
-val scope    = "Scope"
-val activeScope = "ActiveScope"
-val running  = "Running"
-val stopped  = "Stopped"
-val variables = "Variables"
-val variable = "Variable"
-val value    = "Value" 
-val sequence = "Sequence"
-val next     = "Next"
-val flow     = "Flow"
-val whileC   = "While"
-val ifC      = "If"
-val condition = "Condition"
-val thenC    = "Then"
-val elseC    = "Else"
-val trueC    = "True"
-val falseC   = "False"
-val assign   = "Assign"
-val copy     = "Copy"
-val to       = "To"
-val from     = "From"
-val invoke   = "Invoke"
-val proxies  = "Proxies"    
-val recProxy = "RecProxy"
-val parameter = "Parameter"
-val receive  = "Receive"
-val reply    = "Reply"
-val getReply = "GetReply"
-val exit     = "Exit"
+val Process     = "Process"
+val Instance    = "Instance"
+val Scope       = "Scope"
+val ActiveScope = "ActiveScope"
+val Running     = "Running"
+val Stopped     = "Stopped"
+val Variables   = "Variables"
+val Variable    = "Variable"
+val Value       = "Value" 
+val Sequence    = "Sequence"
+val Next        = "Next"
+val Flow        = "Flow"
+val While       = "While"
+val If          = "If"
+val Condition   = "Condition"
+val Then        = "Then"
+val Else        = "Else"
+val True        = "True"
+val False       = "False"
+val Assign      = "Assign"
+val Copy        = "Copy"
+val To          = "To"
+val From        = "From"
+val Invoke      = "Invoke"
+val Proxies     = "Proxies"    
+val RecProxy    = "RecProxy"
+val Parameter   = "Parameter"
+val Receive     = "Receive"
+val Reply       = "Reply"
+val GetReply    = "GetReply"
+val Exit        = "Exit"
 
 (*    For names                *)
-val inst_id = "inst_id"
-val scope   = "scope"
-val scope'  = "scope'"
-val f       = "f"
-val t       = "t"
-val proc_name = "proc_name"
-val var     = "var"
-val var_scope = "var_scope"
-val outvar  = "outvar"
-val outvar_scope = "outvar_scope"
-val invar   = "invar"
-val invar_scope = "invar_scope"
-val oper    = "op"
+val inst_id         = "inst_id"
+val scope           = "scope"
+val scope'          = "scope'"
+val f               = "f"
+val t               = "t"
+val proc_name       = "proc_name"
+val var             = "var"
+val var_scope       = "var_scope"
+val outvar          = "outvar"
+val outvar_scope    = "outvar_scope"
+val invar           = "invar"
+val invar_scope     = "invar_scope"
+val oper            = "op"
 val inst_id_invoker = "inst_id_invoker"
 val inst_id_invoked = "inst_id_invoked"
 
@@ -68,61 +68,61 @@ val inst_id_invoked = "inst_id_invoked"
 (* The binding port of a Process is used to delimit the scope of
  * variables within the process to the process itself.
  * The free port should be connected to name of the process. *)
-val Process     = passive  (process     =: 1 --> 1);
+val Process     = passive  (Process     =: 1 --> 1);
 
 (* The first free port should be connected to name of the process.
  * The second free port of an instance is the instance identifier
  * which (among other things) is used to determine the scope of
  * variables within the instance to the instance itself. *)
-val Instance    = active   (instance    -:       2);
+val Instance    = active   (Instance    -:       2);
 
 (* The binding port of a Scope is used to delimit the scope of
  * variables within the scope to the scope itself. *)
-val Scope       = passive  (scope       =: 1 --> 1);
+val Scope       = passive  (Scope       =: 1 --> 1);
 (* Scopes have to be initialized before they can be used. An ActiveScope
  * is a scope that has has been initialized.
  * The first free port of an ActiveScope is used to delimit the scope of
  * variables within the scope to the scope itself.
  * The second free port should be connected to the instance identifier.
  *)
-val ActiveScope = active   (activeScope -:       2);
+val ActiveScope = active   (ActiveScope -:       2);
 
 (* The free port of a 'running' or 'stopped' node should be connected to
  * the scope port of the parent process/instance.
  *)
-val Running     = atomic   (running     -:       1);
-val Stopped     = atomic   (stopped     -:       1);
+val Running     = atomic   (Running     -:       1);
+val Stopped     = atomic   (Stopped     -:       1);
 
-val Variables   = active0 (variables             );
+val Variables   = active0  (Variables             );
 (* The first free port of a variable should be connected to its name,
  * and the second should be connected to the scope port of the node
  * delimiting its scope. *)
-val Variable    = passive  (variable    -:       2);
+val Variable    = passive  (Variable    -:       2);
 (* Values are atomic nodes connected to a name representing the value.
  *)
-val Value       = atomic   (value       -:       1);
+val Value       = atomic   (Value       -:       1);
 
-val Sequence    = active   (sequence    -:       1);
-val Next        = passive0 (next                  );
+val Sequence    = active   (Sequence    -:       1);
+val Next        = passive0 (Next                  );
 
-val Flow        = active   (flow        -:       1);
+val Flow        = active   (Flow        -:       1);
 
-val While       = passive  (whileC      -:       1);
+val While       = passive  (While       -:       1);
 
-val If          = passive  (ifC          -:       1);
-val Condition   = passive0 (condition             );
-val Then        = passive0 (thenC                  );
-val Else        = passive0 (elseC                  );
-val True        = atomic0  (trueC                  );
-val False       = atomic0  (falseC                 );
+val If          = passive  (If          -:       1);
+val Condition   = passive0 (Condition             );
+val Then        = passive0 (Then                  );
+val Else        = passive0 (Else                  );
+val True        = atomic0  (True                  );
+val False       = atomic0  (False                 );
 
-val Assign      = passive  (assign      -:       1);
-val Copy        = passive0 (copy                  );
+val Assign      = passive  (Assign      -:       1);
+val Copy        = passive0 (Copy                  );
 (* The first free port of a To or From node should be connected to a
  * variable name, and the second should be connected to the scope port of
  * the node delimiting its scope. *)
-val To          = atomic   (to          -:       2);
-val From        = atomic   (from        -:       2);
+val To          = atomic   (To          -:       2);
+val From        = atomic   (From        -:       2);
 
 (* The free ports of an Invoke node should be connected:
  * 
@@ -133,16 +133,16 @@ val From        = atomic   (from        -:       2);
  *   #5 to the same scope port as the output variable
  *   #6 to the instance identifier
  *)
-val Invoke      = atomic   (invoke      -:       6);
+val Invoke      = atomic   (Invoke      -:       6);
 
-val Proxies     = passive0 (proxies               );
+val Proxies     = passive0 (Proxies               );
 (* The free ports of a RecProxy node should be connected:
  *
  *   #1 to the name of the operation
  *   #2 to the instance identifier
  *)
-val RecProxy    = passive  (recProxy    -:       2);
-val Parameter   = passive0 (parameter             );
+val RecProxy    = passive  (RecProxy    -:       2);
+val Parameter   = passive0 (Parameter             );
 (* The free ports of a Receive node should be connected:
  * 
  *   #1 to the name of the operation
@@ -150,14 +150,14 @@ val Parameter   = passive0 (parameter             );
  *   #3 to the same scope port as the variable
  *   #4 to the instance identifier
  *)
-val Receive     = atomic   (receive     -:       4);
+val Receive     = atomic   (Receive     -:       4);
 (* The free ports of a Reply node should be connected:
  * 
  *   #1 to the name of the variable
  *   #2 to the same scope port as the variable
  *   #3 to the instance identifier of its enclosing instance
  *)
-val Reply       = atomic   (reply       -:       3);
+val Reply       = atomic   (Reply       -:       3);
 (* The free ports of a GetReply node should be connected:
  * 
  *   #1 to the name of the output variable
@@ -165,11 +165,11 @@ val Reply       = atomic   (reply       -:       3);
  *   #3 to the instance identifier of its enclosing instance
  *   #4 to the instance identifier of the replying instance
  *)
-val GetReply    = atomic   (getReply    -:       4);
+val GetReply    = atomic   (GetReply    -:       4);
 
 (* The free port should be connected to the instance identifier of the
  * enclosing instance. *)
-val Exit        = atomic   (exit        -:       1);
+val Exit        = atomic   (Exit        -:       1);
 
 
 (*******************************)
