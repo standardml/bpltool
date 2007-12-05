@@ -213,7 +213,12 @@ in
     ("Local links must not be matched by global links, part 2",
      {agent = <[x]> M1[x],
       redex = `[]` `|` (<["x"]> "x"//[]  * <->)},
-     JUST [])
+     JUST []),
+    ("Barren root should match at the top-most level even in the presence of nodes.",
+     {agent = K0 o <->,
+      redex = <->},
+     HAS [{context   = K0 o <-> `|` `[]`,
+           parameter = idx0}])
   ]
 end
   
