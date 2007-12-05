@@ -2675,9 +2675,9 @@ struct
       fun try rho =
         let
           val mss = Partition.next rho
-          (*val _ = print' (fn () => "match.sml: DEBUG: Partitioning " ^ Int.toString (length ms)
+          val _ = print' (fn () => "match.sml: DEBUG: Partitioning " ^ Int.toString (length ms)
           ^ " into [ " ^ concat (map (fn ms => Int.toString (length ms) ^ " ") mss)
-          ^ "].\n")*)
+          ^ "].\n")
           val gs = map makeG mss
           val matches
             = matchPER (lvl + 1) {ename = ename, matchE = matchDG false,
@@ -2795,7 +2795,8 @@ struct
    *    if possible, return a PAX rule match,
    *    else, return any SWX rule matches,
    * 2) Then return any ION rule matches, unless PAX matched an id_0 redex
-   * 3) Then if the agent contains n > 1 top-level molecules
+   * 3) Then if [DEPRECATED: the agent contains n > 1 top-level molecules]
+   *    MER is allowed
    *    (to avoid infinite recursion via MER-PAR-PARe-PARn),
    *    return any MER rule matches.
    *)
@@ -2815,7 +2816,7 @@ struct
 		    	(if allowMER then
 			      (lzmake (fn () =>
 		        	case #Ss (unmkG g) of
-		          	(_ :: _ :: _) => lzunmk (matchMER lvl args)
+		          	((*DEPRECATED: _ :: *) _ :: _) => lzunmk (matchMER lvl args)
 		        	| _ => LazyList.Nil))
 		      else
 		        lzNil))
