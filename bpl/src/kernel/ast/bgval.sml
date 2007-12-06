@@ -821,7 +821,10 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
         val i2 = innerface v2
         val o1 = outerface v1
         val o2 = outerface v2
-        val X = NameSet.difference (Interface.glob o2) (Interface.glob i1)
+        val i1_loc_ns = foldr (fn (X, Y) => NameSet.union X Y) NameSet.empty (Interface.loc i1)
+        val X = NameSet.difference
+                  (NameSet.difference (Interface.glob o2) (Interface.glob i1))
+                  i1_loc_ns
         fun disjoint X Y =
           (NameSet.union X Y; true)
           handle NameSet.DuplicatesRemoved => false
@@ -836,7 +839,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
             case id_o2_loc of
               [] => (v1, o1)
             | vs =>
-              let val v1' = Ten i (v1 :: vs)
+              let val v1' = Ten i (v1 :: vs) handle e => raise e
               in (v1', outerface v1') end
           else
             let
@@ -844,13 +847,29 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
                 if not (disjoint (Interface.names o1) X) then
                   Par' i (v1 :: Wir i (Wiring.id_X X) :: id_o2_loc)
                 else
-                  Ten i (v1 :: Wir i (Wiring.id_X X) :: id_o2_loc)
+                  Ten i (v1 :: Wir i (Wiring.id_X X) :: id_o2_loc)  handle e => raise e
             in
               (v1', outerface v1')
             end
+
+         val v2' =
+           if Interface.width o2 = 1 then
+             let
+               val Y = NameSet.intersect (Interface.glob o2) i1_loc_ns
+             in
+               if NameSet.isEmpty Y then
+                 v2
+               else
+                 Abs i (Y, v2)
+                 handle _ =>
+                   raise NotComposable 
+                     (v1, v2, "Interface mismatch for composition in Com'")
+             end
+           else
+             v2
       in
-        if arecomposable v1' v2 then 
-          VCom (v1', v2, (i2, o1', i))
+        if arecomposable v1' v2' then 
+          VCom (v1', v2', (i2, o1', i))
         else
           raise NotComposable 
             (v1, v2, "Interface mismatch for composition in Com'")
