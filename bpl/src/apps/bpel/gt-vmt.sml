@@ -47,7 +47,8 @@ val Exit        = "Exit"
 (*    For names                *)
 val inst_id         = "inst_id"
 val scope           = "scope"
-val scope'          = "scope'"
+val scope1          = "scope1"
+val scope2          = "scope2"
 val f               = "f"
 val t               = "t"
 val proc_name       = "proc_name"
@@ -60,6 +61,18 @@ val invar_scope     = "invar_scope"
 val oper            = "op"
 val inst_id_invoker = "inst_id_invoker"
 val inst_id_invoked = "inst_id_invoked"
+val echo            = "echo"
+val echo_id         = "echo_id"
+val echo_process    = "echo_process"
+val val_1           = "val_1"
+val val_2           = "val_2"
+val val_42          = "val_42"
+val x               = "x"
+val y               = "y"
+val z               = "z"
+val caller          = "caller"
+val caller_id       = "caller_id"
+
 
 
 (*******************************)
@@ -237,15 +250,15 @@ val rule_while_unfold       =
 (* Variable assignment *)
 val rule_variable_copy      =
     "variable copy"      ::: (Assign[inst_id] o Copy
-                              o (From[f, scope]
-                                 `|` To[t, scope']))
-                             || Variable[f, scope]
-                             || Variable[t, scope']
+                              o (From[f, scope1]
+                                 `|` To[t, scope2]))
+                             || Variable[f, scope1]
+                             || Variable[t, scope2]
                              || Running[inst_id]
                            --[1 |-> 0]--|>
                              <->
-                             || Variable[f, scope]
-                             || Variable[t, scope']
+                             || Variable[f, scope1]
+                             || Variable[t, scope2]
                              || Running[inst_id];
 
 (* Process communication *)
@@ -342,60 +355,57 @@ val tactic = roundrobin;
 (* A simple echo process: it provides an operation "echo" which receives
  * a value and sends the value back.
  *
- * <process name="EchoProcess" scope="EchoId">
+ * <process name="echo_process" scope="echo_id">
  * <variables>
- *   <variable name="x" scope="EchoId">42</variable>
+ *   <variable name="x" scope="echo_id">val_42</variable>
  * </variables>
  * <proxies>
- *   <recproxy op="echo" inst_id="EchoId" />
+ *   <recproxy op="echo" inst_id="echo_id" />
  * </proxies>
- * <sequence inst_id="EchoId">
- *   <receive op="echo" var="x" var_scope="EchoId" inst_id="EchoId" />
+ * <sequence inst_id="echo_id">
+ *   <receive op="echo" var="x" var_scope="echo_id" inst_id="echo_id" />
  *   <next>
- *     <sequence inst_id="EchoId">
- *       <reply var="x" var_scope="EchoId" inst_id="EchoId" />
+ *     <sequence inst_id="echo_id">
+ *       <reply var="x" var_scope="echo_id" inst_id="echo_id" />
  *       <next>
- *         <exit inst_id="EchoId">
+ *         <exit inst_id="echo_id">
  *       </next>
  *     </sequence>
  *   </next>
  * </sequence>
  * </process>
  *)
-val echo_process = Process["EchoProcess"][["EchoId"]]
-                   o (<["EchoId"]>
-                      ("EchoId"//["EchoId", "EchoScope"] * idp(1))
-                      o (Variables o Variable["x", "EchoScope"] o Value["42"]
-                         `|` Proxies o RecProxy["echo", "EchoId"] o <->
-                         `|` Sequence["EchoId"]
-                             o (Receive["echo", "x", "EchoScope", "EchoId"]
-                                `|` Next o Sequence["EchoId"]
-                                         o (Reply["x", "EchoScope", "EchoId"]
-                                            `|` Next o Exit["EchoId"]))));
+val echo_process = Process[echo_process][[echo_id]]
+                   o (<[echo_id]>
+                      Variables o Variable[x, echo_id] o Value[val_42]
+                      `|` Proxies o RecProxy[echo, echo_id] o <->
+                      `|` Sequence[echo_id]
+                          o (Receive[echo, x, echo_id, echo_id]
+                             `|` Next o Sequence[echo_id]
+                                      o (Reply[x, echo_id, echo_id]
+                                         `|` Next o Exit[echo_id])));
 
 (* An instance which is about to invoke the echo process:
  * 
- * <instance name"Caller" inst_id="CallerId">
- * <running inst_id="CallerId" />
+ * <instance name"caller" inst_id="caller_id">
+ * <running inst_id="caller_id" />
  * <variables>
- *   <variable name="y" scope="CallerId">foo</variable>
- *   <variable name="z" scope="CallerId">bar</variable>
+ *   <variable name="y" scope="caller_id">val_1</variable>
+ *   <variable name="z" scope="caller_id">val_2</variable>
  * </variables>
- * <invoke op="echo" invar="y" invar_scope="CallerId"
- *                   outvar="z" outvar_scope="CallerId"
- *                   inst_id="CallerId" />
+ * <invoke op="echo" invar="y" invar_scope="caller_id"
+ *                   outvar="z" outvar_scope="caller_id"
+ *                   inst_id="caller_id" />
  * </instance>
  *)
-val caller_inst = -/"CallerId"
-                  o Instance["Caller", "CallerId"]
-                  o ("CallerId"//["CallerId", "CallerScope"] * idp(1))
-                  o (Running["CallerId"]
+val caller_inst = -/caller_id
+                  o Instance[caller, caller_id]
+                  o (Running[caller_id]
                      `|` Variables
-                         o (Variable["y", "CallerScope"] o Value["foo"]
-                            `|` Variable["z", "CallerScope"] o Value["bar"])
-                     `|` "CallerScope"//["CallerScope", "CallerScope'"]
-                         o Invoke["echo", "y", "CallerScope",
-                                          "z", "CallerScope'", "CallerId"]);
+                         o (Variable[y, caller_id] o Value[val_1]
+                            `|` Variable[z, caller_id] o Value[val_2])
+                     `|` Invoke[echo, y, caller_id,
+                                z, caller_id, caller_id]);
 
 (* NB! Non-terminating:
 val ms = matches (mkrules [rule_reply]) (echo_process || caller_inst);
