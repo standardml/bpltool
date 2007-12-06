@@ -882,9 +882,6 @@ fun prog2bgval ast =
 			    of [Value(i,b)] => b (* singleton by invar. *)
 	    (* make bgvals *)
 	    val mainBgval = big2bgval mainVal' signa'
-	    val _ = print("mainBgval = " ^
-			  B.toString(B.simplify(mainBgval))
-			  ^ "\n")
 	    val rules' = rules2bgvals rules_nmaps signa'
 	in (signa', mainBgval, rules') end
 
