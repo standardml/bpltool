@@ -1,6 +1,16 @@
-Expect error: Testing ion with duplicate/>1(?) names/sets(elements)
+Testing ion with duplicate/>1(?) names/sets(elements) (syntactic sugar makes it valid)
 
 K<x,y,x><{y,x},{}>
 
-exception:
-DuplicateNames
+result:
+
+(///[x/{x_37, x_39}, y/y_38] * idp_1)
+ o (idw_0
+    * `**[(idw_{x_37, y_38, x_39} * (({})(idw_0 * idp_1) o '{}'))
+         o (({})
+            (idw_{x_37, y_38, x_39} * merge_1)
+             o `**[(idw_0 * K<x_39, y_38, x_37><{x, y}, {}>)
+                   o ({x, y})
+                     (idw_{x, y} * merge_1)
+                      o `**[(idw_{x, y} * idp_1) o '{x, y}']])]
+       o [0{x, y}])

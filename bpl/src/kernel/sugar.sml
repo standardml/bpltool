@@ -105,7 +105,7 @@ fun explain_WrongArity (WrongArity msg) =
   | explain_WrongArity _ = raise Match
 val _ = add_explainer explain_WrongArity
 
-val Ion = BgVal.Ion Info.noinfo
+val Ion = BgVal.Ion' Info.noinfo
 val Mer = BgVal.Mer Info.noinfo
 val Wir = BgVal.Wir Info.noinfo
 fun Per x = BgVal.Per Info.noinfo x

@@ -955,13 +955,43 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	  Abs i (alllocnames, ABvs)
       end
 
+  fun Ion' i KyX =
+      let
+	      val Xs = Ion.innernames KyX 
+	          handle DuplicatesRemoved =>
+		        raise DuplicateNames 
+			            (i, (map NameSet.list o #bound o Ion.unmk) KyX,
+			             "Inner ion names must be distinct")
+        val {ctrl, free, bound} = Ion.unmk KyX
+
+        fun find_duplicates (y, (has_duplicates, ys, y's, ls)) =
+            (has_duplicates, NameSet.insert y ys, y::y's,
+             Link.make {outer = SOME y, inner = NameSet.singleton y} :: ls)
+            handle DuplicatesRemoved =>
+            let
+              val y' = Name.fresh (SOME y)
+            in
+              (true, ys, y'::y's,
+               Link.make {outer = SOME y, inner = NameSet.singleton y'} :: ls)
+            end
+        val (has_duplicates, ys, y's, ls)
+          = foldr find_duplicates (false, NameSet.empty, [], []) free
+      in
+        if has_duplicates then
+          Com' i (Wir i (Wiring.make' ls),
+                  VIon (Ion.make {ctrl = ctrl,
+                                  free = y's,
+                                  bound = bound}, i))
+        else
+          VIon (KyX, i)
+      end
 
   fun make t2i =
       let
 	fun make' (t as (BgTerm.Mer (n, _)))      = VMer (n, (t2i t))
 	  | make' (t as (BgTerm.Con (X, _)))      = VCon (X, (t2i t))
 	  | make' (t as (BgTerm.Wir (w, _)))      = VWir (w, (t2i t))
-	  | make' (t as (BgTerm.Ion (KyX, _)))    = Ion (t2i t) KyX
+	  | make' (t as (BgTerm.Ion (KyX, _)))    = Ion' (t2i t) KyX
     | make' (t as (BgTerm.Hop (t', _)))     = raise Fail "FIXME BgTerm.Hop not supported in BgVal.make"
 	  | make' (t as (BgTerm.Per (pi, _)))     = Per (t2i t) pi
 	  | make' (t as (BgTerm.Abs (X, t', _)))
