@@ -83,7 +83,10 @@ sig
   
   sharing type BgBDNF.bgbdnf = PPSVG.bgbdnf
   sharing type BgBDNF.B = PPSVG.B
-  val ppsvgdoc : PPSVG.config option -> B bgbdnf -> string
+  (** Return an SVG representation of a bigraph. *)
+  val toSVGString : PPSVG.config option -> B bgbdnf -> string
+  (** Return an SVG representation of a bigraph. *)
+  val bgvalToSVGString : PPSVG.config option -> bgval -> string
 
   structure BgTermParser : PARSER
   

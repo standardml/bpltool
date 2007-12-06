@@ -142,7 +142,8 @@ structure PPSVG =
     structure BgVal       = BgVal
     structure BgBDNF      = BgBDNF)  
 
-fun ppsvgdoc bdnf = PPSVG.ppsvgdoc bdnf
+val toSVGString = PPSVG.ppsvgdoc
+fun bgvalToSVGString c v = toSVGString c (BgBDNF.make v)
 
 fun pp bdnf = BgBDNF.pp (!indent) bdnf
 
