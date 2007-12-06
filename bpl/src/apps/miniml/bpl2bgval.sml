@@ -580,7 +580,7 @@ fun big2bgval (ast:bigraph) signa =
 		 in barren end
 
 (* take a rule and a natmap and produce a rule of bgvals with inst *)
-fun rule2bgval p signa =
+fun rule2bgval (p:dec*natmaps) signa =
     case p
      of (Rule(i,b1,b2), nmaps) =>
 	let val b1sites = getSites b1
@@ -604,7 +604,7 @@ fun rule2bgval p signa =
 fun rules2bgvals (rules_natmaps:(dec*natmaps) list) signa =
     case rules_natmaps
      of [] => []
-      | (p::ps) => rule2bgval p :: rules2bgvals ps signa
+      | (p::ps) => rule2bgval p signa :: rules2bgvals ps signa
 
 (* take numbered declist, output main bgval and rules list (bgval pairs) *)
 (*
