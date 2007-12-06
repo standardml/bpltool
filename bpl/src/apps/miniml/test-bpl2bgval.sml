@@ -35,9 +35,9 @@ val Passive = Control.Passive
 val Active = Control.Active
 val Atomic = Control.Atomic
 
-val signat = [Cdef("k1",Passive,1,2),
+val signat = [(*Cdef("k1",Passive,1,2),
 	      Cdef("k2",Atomic,0,2),
-	      Cdef("k3",Atomic,0,0),
+	      Cdef("k3",Atomic,0,0),*)
 	      Cdef("K",Atomic,0,0),
 	      Cdef("L",Atomic,0,0),
 	      Cdef("M",Passive,0,0),
@@ -63,16 +63,17 @@ val b8 = Emb(Wir([IdleG("v")]),Empty)
 val b9 = Ten(b7,b8)
 val b10 = Ion("k2",[],["f1","f2"])
 val b11 = Ion("k3",[],[])
+*)
 
+(* K-L-M example *)
 val K = Ion("K",[],[])
 val L = Ion("L",[],[])
 val M = Ion("M",[],[])
 val C = Pri(M,id1 "site")
 val a = Ten(K,L)
 val b = Ten(L,K)
-*)
 
-(* Pi *)
+(* Pi, send/get example *)
 val send = Ion("send",[],["a","w"])
 val get = Ion("get",["x"],["a"])
 
@@ -106,14 +107,14 @@ val idle__a = Wir([IdleG("a")])
 (*
 rule comm =
   send_aw([0]) | get_a(x)([1]<x>)
-    ->
+    -->
   [0] tt a/ | sub_(x)([1]<x> | ({x})def_x(msg_w))
 *)
 
-val decs = [(*Value("v1",Com(C,a)),
+val decs = [Value("v1",Com(C,a)),
 	    Value("v2",Com(C,b)),
 	    Value("state",Pri(Id("v1"),Id("v2"))),
-	    Rule("r1",K,L),*)
+	    Rule("r1",K,L),
 	    Value("v_null",null),
 	    Value("v_send",send_null),
 	    Value("v_get",get_null),
@@ -151,4 +152,13 @@ val _ = print "printing rules...\n"
 val _ = print("rule = " ^ h ^ "\n")
 *)
 val _ = printRules rules
+val _ = print "printing rule_r1 ifaces...\n"
+val {name,redex,react,inst,info} = Rule.unmk(List.hd(rules))
+val _ = printIfaces "redex" (BgBdnf.innerface redex) (BgBdnf.outerface redex)
+val _ = printIfaces "react" (B.innerface react) (B.outerface react)
+val _ = print "\n"
+val _ = print "printing rule_comm ifaces...\n"
+val {name,redex,react,inst,info} = Rule.unmk(List.hd(List.tl(rules)))
+val _ = printIfaces "redex'" (BgBdnf.innerface redex) (BgBdnf.outerface redex)
+val _ = printIfaces "react'" (B.innerface react) (B.outerface react)
 val _ = print "\n"
