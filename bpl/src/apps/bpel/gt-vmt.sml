@@ -4,6 +4,7 @@
  * NB! Uses the SML/NJ version of the BPLtool command line.
  *)
 
+SMLofNJ.Internals.GC.messages false;
 val cur_dir = OS.FileSys.getDir ();
 val _ = OS.FileSys.chDir "../bpl/";
 use "smlnj.sml";
