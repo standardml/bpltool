@@ -76,16 +76,22 @@ val b = Ten(L,K)
 val send = Ion("send",[],["a","w"])
 val get = Ion("get",["x"],["a"])
 
-val null = Ion("null",[],[])                        (* 0 *)
-val send_null = Emb(send,null)                      (* aw.0 *)
-val get_null = Emb(get,Pri(null,Wir([IdleL("x")]))) (* a(x).0 *)
-val agent = Pri(send_null,get_null)                 (* aw.0 | a(x).0 *)
+(* barren region with local outer name x *)
+val region_idle_x = Com(Wir([IdleL("x")]),Empty)
 
+(* terms *)
+val null = Ion("null",[],[])                     (* 0 *)
+val send_null = Emb(send,null)                   (* aw.0 *)
+val get_null = Emb(get,Pri(null,region_idle_x))  (* a(x).0 *)
+val agent = Pri(send_null,get_null)              (* aw.0 | a(x).0 *)
+
+(* sites *)
 val site0 = Site(Num(0),Namelist([]))
 val site1 = Site(Var("s1"),Namelist(["x"]))
 
-val send_ion = Emb(send,site0)                      (* aw.[0] *)
-val get_ion = Emb(get,site1)                        (* a(x).[1] *)
+(* contexts *)
+val send_ion = Emb(send,site0)                   (* aw.[0] *)
+val get_ion = Emb(get,site1)                     (* a(x).[1] *)
 
 val sub__x = Ion("sub",["x"],[])
 fun abs_x b = Abs(["x"],b)
@@ -116,23 +122,33 @@ val decs = [(*Value("v1",Com(C,a)),
 		 Pri(send_ion,get_ion),
 		 Pri(Ten(site0,idle__a),get_sub))]
 val prog = Prog(signat,decs)
-val (s,b,r) = prog2bgval prog
-val bgval = (B.toString o B.simplify) b
+val (signa,mainbgval,rules) = prog2bgval prog
+val state = (B.toString o B.simplify) mainbgval
 
 (* printing *)
-fun printRule r =
+fun printRule r = print(Rule.toString r)
+(*
     let val {name,redex,react,inst,info} = Rule.unmk r
 	val redex' = (B.toString o B.simplify o BgBdnf.unmk) redex
 	val react' = (B.toString o B.simplify) react
 	val inst' = "dummyinst"
-    in print("(" ^
-	     name ^ "," ^ redex' ^ "," ^ react' ^ "," ^ inst'
-	     ^ ")" ^ "\n")
+    in ( print("name: " ^ name ^ "\n")
+       ; print("redex: " ^ redex' ^ "\n")
+       ; print("react: " ^ react' ^ "\n")
+       ; print("inst: " ^ inst' ^ "\n") )
     end
+*)
+fun printRules [] = print "done printing rules...\n"
+  | printRules (r::rs) = ( printRule r ; printRules rs)
 
-fun printRules l = List.map printRule l
-
-val _ = print bgval
+val _ = print "state = "
+val _ = print state
 val _ = print "\n"
-val _ = printRules r
+val _ = printIfaces "state" (B.innerface mainbgval) (B.outerface mainbgval)
+val h = Rule.toString(List.hd(rules))
+(*
+val _ = print "printing rules...\n"
+val _ = print("rule = " ^ h ^ "\n")
+val _ = printRules rules
 val _ = print "\n"
+*)
