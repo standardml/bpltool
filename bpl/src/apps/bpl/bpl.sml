@@ -104,7 +104,8 @@ fun help' [] = ()
 	  \  inst    rule              Extract the instantiation of a rule\n";
 	  help'' topics)
   | help' ("operation" :: topics) = (print
-	  "Bigraph operations (A,B,R : 'a bgbdnf; a,r,v : bgval; e : exn):\n\
+	  "Bigraph operations (A,B,R : 'a bgbdnf; a,r,v : bgval; e : exn;\n\
+	  \                    u : real; c : config; f : filename):\n\
 	  \  norm_v v             denorm_b B           (De)normalise\n\
 	  \  regl_v v             regl_b B             Regularise\n\
 	  \  simpl_v v            simpl_b B            Attempt to simplify\n\
@@ -112,12 +113,28 @@ fun help' [] = ()
 	  \           redex = r}           redex = R}    returning lazy list of matches\n\
 	  \  str_v v              str_b B              Return as a string\n\
 	  \  print_v v            print_b B            Print to stdOut\n\
+	  \  svg_v c v            svg_b c B            Return as SVG fragment string\n\
+	  \  svg v                                     Return as SVG fragment string\n\
+	  \  svgdoc_v c v         svgdoc_b c B         Return as SVG document string\n\
+	  \  svgdoc v                                  Return as SVG document string\n\
+	  \  tikz_v u c v         tikz_b u c B         Return as TikZ string\n\
+	  \  tikz v                                    Return as TikZ string\n\
+	  \  outputsvgdoc_v f c v outputsvgdoc_b f c B Output as SVG document to file f\n\
+	  \  outputsvgdoc f v                          Output as SVG document to file f\n\
+	  \  outputtikz_v f u c v outputtikz_b f u c B Output as TikZ to file f\n\
+	  \  outputtikz f v                            Output as TikZ to file f\n\
 	  \  print_mv mz          print_mb mz          Print lazy list of matches\n\
 	  \  print_mtv mz         print_mtb mz         Print lazy list of matches with trees\n\
 	  \  str_r r                                   Return rule as a string\n\
 	  \  print_r r                                 Print rule\n\
 	  \  explain e                                 Explain exception in detail\n\
 	  \  use_shorthands on/off                     hide/show identities when displaying\n";
+	  help'' topics)
+  | help' ("figure" :: topics) = (print
+	  "Figures: (c : config; f : string * path -> configinfo)\n\
+	  \  makecfg f                                 Construct a config\n\
+	  \  unmkcfg c                                 Deconstruct a config\n\
+	  \  defaultcfg                                Default config\n";
 	  help'' topics)
   | help' ("tactic" :: topics) = (print
 	  "Tactics: (N : string; t : tactic)\n\
@@ -155,15 +172,16 @@ fun help' [] = ()
 	  help'' topics)
 	| help' _
 	= help'
-	    ["control", "bigraph", "operator", "rule", "operation", "tactic", "reaction", "example"]
+	    ["control", "bigraph", "operator", "rule",
+	     "operation", "figure", "tactic", "reaction", "example"]
 and help'' [] = ()
   | help'' topics = (print "\n"; help' topics)
 fun help''' []
   = (help' ["control", "bigraph", "operator", "rule", "operation",
-            "tactic", "reaction", "example"];
+            "figure", "tactic", "reaction", "example"];
      print "\n\n(help \
           	\[\"control\", \"bigraph\", \"operator\", \"rule\",\
-          	\ \"operation\", \"tactic\", \"reaction\", \"example\"])\n\n")
+          	\ \"operation\", \"figure\", \"tactic\", \"reaction\", \"example\"])\n\n")
   | help''' topics = (help' topics; print "\n\n'(help []' for all topics)\n\n")
 in
 fun help topics =
@@ -242,10 +260,41 @@ fun react_b {agent, rules} =
 fun react_v {agent, rules} =
   react_b {agent = norm_v agent, rules = rules}
 
-val str_b = BG.BgBDNF.toString
-val str_v = BG.BgVal.toString
-fun print_b b = print (str_b b)
-fun print_v v = print (str_v v)
+type config = BG.PPSVG.config
+type configinfo = BG.PPSVG.configinfo
+val makecfg = BG.PPSVG.makeconfig
+val unmkcfg = BG.PPSVG.unmkconfig
+val defaultcfg = BG.PPSVG.defaultconfig
+
+fun outputStr fname str =
+  let
+    val file = TextIO.openOut fname
+  in
+    TextIO.output (file, str); TextIO.closeOut file
+  end
+
+val str_b                    = BG.BgBDNF.toString
+fun print_b b                = print (str_b b)
+val svg_b                    = BG.toSVGString
+val svgdoc_b                 = BG.PPSVG.ppsvgdoc
+val tikz_b                   = BG.PPSVG.ppTikZ
+fun outputsvgdoc_b fname c b = outputStr fname (svgdoc_b c b)
+fun outputtikz_b fname u c b = outputStr fname (tikz_b u c b)
+
+val str_v                    = BG.BgVal.toString
+fun print_v v                = print (str_v v)
+val svg_v                    = BG.bgvalToSVGString
+fun svgdoc_v c v             = BG.PPSVG.ppsvgdoc c (norm_v v)
+fun tikz_v u c v             = BG.PPSVG.ppTikZ u c (norm_v v)
+fun outputsvgdoc_v fname c v = outputsvgdoc_b fname c (norm_v v)
+fun outputtikz_v fname u c v = outputtikz_b fname u c (norm_v v)
+
+fun svg v                    = svg_v NONE v
+fun svgdoc v                 = svgdoc_v NONE v
+fun tikz v                   = tikz_v NONE NONE v
+fun outputsvgdoc fname v     = outputsvgdoc_v fname NONE v 
+fun outputtikz fname v       = outputtikz_v fname NONE NONE v
+
 fun print_mb mz
   = (LazyList.lzprintln BG.Match.toString mz; print "\n")
 fun print_mtb mz
