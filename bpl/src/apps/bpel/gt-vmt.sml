@@ -270,11 +270,10 @@ val rule_invoke             =
                              || Variable[invar, invar_scope]
                              || Running[inst_id_invoker]
                              || Process[proc_name][[scope]]
-                                o (<[scope]>
-                                   ((Proxies
-                                     o (RecProxy[oper, scope] o <->
-                                        `|` `[]`))
-                                    `|` `[scope]`))
+                                o ((Proxies
+                                    o (RecProxy[oper, scope] o <->
+                                       `|` `[]`))
+                                   `|` `[scope]`)
 
                            --[3 |-> 0, 4 |-> 1, 5&[inst_id_invoked] |--> 2&[scope]]--|>
 
@@ -284,11 +283,10 @@ val rule_invoke             =
                                 || Variable[invar, invar_scope]
                                 || Running[inst_id_invoker]
                                 || ((Process[proc_name][[scope]]
-                                     o (<[scope]>
-                                        ((Proxies
-                                          o (RecProxy[oper, scope] o <->
-                                             `|` `[]`))
-                                         `|` `[scope]`)))
+                                     o ((Proxies
+                                         o (RecProxy[oper, scope] o <->
+                                            `|` `[]`))
+                                        `|` `[scope]`))
                                     `|` (Instance[proc_name, inst_id_invoked]
                                          o ((Proxies
                                              o ((RecProxy[oper, inst_id_invoked]
@@ -377,8 +375,7 @@ val tactic = roundrobin;
  * </process>
  *)
 val echo_process = Process[echo_process][[echo_id]]
-                   o (<[echo_id]>
-                      Variables o Variable[x, echo_id] o Value[val_42]
+                   o (Variables o Variable[x, echo_id] o Value[val_42]
                       `|` Proxies o RecProxy[echo, echo_id] o <->
                       `|` Sequence[echo_id]
                           o (Receive[echo, x, echo_id, echo_id]
