@@ -138,17 +138,17 @@ fun printRule r = print(Rule.toString r)
        ; print("inst: " ^ inst' ^ "\n") )
     end
 *)
-fun printRules [] = print "done printing rules...\n"
+fun printRules [] = print "\ndone printing rules...\n"
   | printRules (r::rs) = ( printRule r ; printRules rs)
 
 val _ = print "state = "
 val _ = print state
 val _ = print "\n"
 val _ = printIfaces "state" (B.innerface mainbgval) (B.outerface mainbgval)
-val h = Rule.toString(List.hd(rules))
 (*
+val h = Rule.toString(List.hd(rules))
 val _ = print "printing rules...\n"
 val _ = print("rule = " ^ h ^ "\n")
+*)
 val _ = printRules rules
 val _ = print "\n"
-*)
