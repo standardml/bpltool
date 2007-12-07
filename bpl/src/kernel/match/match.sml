@@ -1,4 +1,4 @@
-(* Copyright (c) 2006  The BPL Group at the IT University of Copenhagen
+(* Copyright (c) 2006-2007  The BPL Group at the IT University of Copenhagen
  *
  * This file is part of BPL.
  *

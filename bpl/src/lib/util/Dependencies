@@ -60,3 +60,5 @@ errorhandler-sig: baseerrorhandler-sig
 printerrorhandler: + baseerrorhandler errorhandler-sig origin origin-sig
    debug /lib/compat/mosml/exception/.
    /lib/pp/smlnj/prettyprint /lib/pp/smlnj/prettyprint-sig %NODASHSIG
+geometry2d-sig:
+geometry2d: /lib/coll/orderset
