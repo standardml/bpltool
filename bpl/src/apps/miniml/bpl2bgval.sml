@@ -19,7 +19,7 @@
  *)
 
 (*
- Ebbe Elsborg, November 9 2007
+ Author: Ebbe Elsborg (elsborg@itu.dk)
 
  Mapping from BPL abstract syntax tree to BgVal. 
  Implements bpl/bplproject/doc/projects/contextawareness/plato/bpl-bnf.tex
@@ -52,8 +52,8 @@ structure BgBdnf = BG.BgBDNF
 structure Interface = BG.Interface
 
 (***** BNF *****)
-type id = string (* HERE: Use a 'name' instead? *)
-type ctrlid = string (* HERE: Use a 'name' instead? *)
+type id = string
+type ctrlid = string
 type nat = int
 datatype siteId = Num of nat
 		| Var of id
@@ -74,7 +74,7 @@ datatype bigraph = Wir of wires
 		 | Ion of ctrlid * ports * ports
 		 | Clo of names * bigraph
 		 | Abs of names * bigraph
-		 | Conc of names * bigraph (* new, 29/11-07 *)
+		 | Conc of names * bigraph
 		 | Site of siteId * namelist
 		 | Id of id
 		 | Empty
@@ -109,13 +109,18 @@ fun (b1:bgval) pp (b2:bgval) = Sugar.`|` (b1,b2)
 fun (b1:bgval) tt (b2:bgval) = Sugar.* (b1,b2)
 fun (b1:bgval) oo (b2:bgval) = Sugar.o (b1,b2)
 
-(* PRINTING *)
+(* CONVERSION FUNCTIONS *)
 
-(* shorthand functions *)
+(* convert strings and vars into names, and names back into strings *)
 fun s2n s = Name.make s
+fun v2n x = s2n (String.toString x)
 fun n2s n = Name.unmk n
-fun v2n x = Name.make (String.toString x)
-fun ion2bg ion = B.Ion info ion
+
+(* convert names and strings to name sets *)
+fun nm2nmSet n = NameSet.insert n NameSet.empty
+fun s2nmSet s = (nm2nmSet o s2n) s
+
+(* PRINTING *)
 
 (* interface functions *)
 fun getInner b = let val (b,inn,out) = B.unmk b in inn end
@@ -206,7 +211,7 @@ fun printNmaps [] = []
 (***** AUXILIARY FUNCTIONS *****)
 
 (* return list of sites of a bigraph *)
-fun getSites (b:bigraph) =
+fun getSites b =
     case b of Wir(w) => []
 	    | Par(b1,b2) => (getSites b1) @ (getSites b2)
 	    | Pri(b1,b2) => (getSites b1) @ (getSites b2)
@@ -221,26 +226,6 @@ fun getSites (b:bigraph) =
 	    | Id(i) => []
 	    | Empty => []
 
-(* return list of sites ids (nats) of a bigraph *)
-(*
-fun getSiteNums (b:bigraph) =
-    case b of Wir(w) => []
-	    | Par(b1,b2) => (getSiteNums b1) @ (getSiteNums b2)
-	    | Pri(b1,b2) => (getSiteNums b1) @ (getSiteNums b2)
-	    | Com(b1,b2) => (getSiteNums b1) @ (getSiteNums b2)
-	    | Emb(b1,b2) => (getSiteNums b1) @ (getSiteNums b2)
-	    | Ten(b1,b2) => (getSiteNums b1) @ (getSiteNums b2)
-	    | Ion(i,b,f) => [] (* reached atomic control *)
-	    | Clo(n,b) => getSiteNums b
-	    | Abs(n,b) => getSiteNums b
-	    | Conc(n,b) => getSiteNums b
-	    | Site(i,l) =>
-	      ( case i (* assume that sites are nats already *)
-		 of Num(n) => [n]
-		  | _ => raise Fail("getSiteNums: Site with non-nat id\n") )
-	    | Id(i) => []
-	    | Empty => []
-*)
 (* lookup first occurence of id and return corresponding key (Site) *)
 fun lookupSite [] id = NONE
   | lookupSite (s::m) id =
@@ -256,14 +241,6 @@ fun lookupSiteId [] id = NONE
 (* lookup first occurence of n1 and return corresponding key (nat) *)
 fun lookupSnd [] id = NONE
   | lookupSnd ((n1,n2)::m) id = if id=n1 then SOME(n2) else lookupSnd m id
-
-(* convert strings and vars into names *)
-fun s2n s = Name.make s
-fun v2n x = s2n (String.toString x)
-
-(* convert names and strings to name sets *)
-fun nm2nmSet n = NameSet.insert n NameSet.empty
-fun s2nmSet s = (nm2nmSet o s2n) s
 
 (* string list to name set list *)
 fun strList2nmSetList l = List.map (nm2nmSet o s2n) l
@@ -291,10 +268,6 @@ fun lookupCtrl cid signa =
 	  | loop ((i,k,b,f)::m) = if cid = i then SOME (i,k,b,f) else loop m
     in loop signa end
 
-(* find the last key (nat/int) of an assoc. list *)
-fun lastCnt [] = 0
-  | lastCnt ((k,v)::m) = #1(List.hd(List.rev((k,v)::m)))
-
 (* raise an error message that a particular control is not in the sig. *)
 fun ctrlNotInSig cid =
     raise Fail("Control does not exist in signature: " ^ cid ^ "\n")
@@ -304,96 +277,17 @@ fun rmDubs [] = []
   | rmDubs (x::xs) =
     if List.exists (fn y => y = x) xs then rmDubs xs else x :: rmDubs xs
 
-(* for each name in a set, convert it to the string it originated from *)
-(*
-fun nmSet2sList set =
-    List.map
-	(fn n => Name.ekam n) (* recover original string by 'ekam' *)
-	(NameSet.list set)
-*)
-(* partition an smap into two smaps *)
-(*
-fun partSmap [] acc = (acc,[])
-  | partSmap ((n,i)::m) acc p =
-    if p=n then (rev acc, (n,i)::m)
-    else partSmap m ((n,i) :: acc) p
-*)
-
-(* compare two lists of namesets for equality *)
-(*
-fun cmprNSlists [] [] = true
-  | cmprNSlists (n::ns) [] = false
-  | cmprNSlists [] (n::ns) = false
-  | cmprNSlists (n::ns) (n'::ns') =
-    if NameSet.eq n n' then cmprNSlists ns ns' else false
-*)
-(* check composability of two interfaces; 'inner o outer' *)
-(*
-fun chkIcomp inner outer = 
-    let val _ = print "chkIcomp called...\n"
-	val i_glob = Interface.glob inner
-	val i_loc = Interface.loc inner
-	val i_width = Interface.width inner
-	val _ = print("i_width: " ^ Int.toString i_width ^ "\n")
-	val o_glob = Interface.glob outer
-	val o_loc = Interface.loc outer
-	val o_width = Interface.width outer
-	val _ = print("o_width: " ^ Int.toString o_width ^ "\n")
-	val _ = printIfaces " " inner outer
-    in if i_width = o_width
-       then if NameSet.eq i_glob o_glob
-	    then if cmprNSlists i_loc o_loc
-		 then true
-		 else raise Fail("chkIcomp: Com/Emb " ^
-				 "has local name mismatch\n")
-	    else raise Fail("chkIcomp: Com/Emb " ^
-			    "has global name mismatch\n")
-       else raise Fail("chkIcomp: Com/Emb has width mismatch\n")
-    end
-*)
 (* some error functions used by makeMaps in calcMaps *)
 fun err1 n = "makeMaps: Site " ^ Int.toString(n) ^
 	     " has no LHS counterpart\n"
 fun err2 n = "makeMaps: Shouldn't happen... " ^ Int.toString(n) ^ "\n"
 val err3 = "makeMaps: Unnumbered site\n"
 
-(* peel off options from second components of generated auxList *)
-(*
-fun peel (assocOptList:(nat*nat option) list) =
-    case assocOptList
-     of [] => []
-      | ((n,x)::m) => ( case x
-			 of NONE => raise Fail(err1 n)
-			  | SOME(n') => (n,n') :: peel m )
-*)
 (* peel off Namelist constructor *)
 fun peelNamelist l =
     case l of Namelist(nms) => List.map (fn s => s2n s) nms
 
-(* calculate 'maps', i.e. a 'map list', for instantiation *)
-(*
-fun calcMaps (b1:bigraph) (b2:bigraph) (smaps:sitemaps) =
-    let val _ = print "calcMaps called...\n"
-	(* for each site in b2, find target site in b1 if it exists *)
-	val (smap1,smap2) = ...
-	val _ = print "smap1 = "
-	val _ = printSmaps smap1
-	val _ = print "\n"
-	val _ = print "smap2 = "
-	val _ = printSmaps smap2
-	val _ = print "\n"
-	val auxList = (*:(nat*nat option) list*)
-	    List.map
-		(fn s => let val natkey = #1(s)
-			     val site_id = #2(s)
-			     val opt = lookupSiteId smap1 site_id
-			 in (natkey,opt) end)
-		smap2
-	val pldList = (*:(nat*nat) list*) peel auxList
-	(* generate 'maps'; (int * name list) * (int * name list) list *)
-	val sites1 = getSites b1
-	val sites2 = getSites b2
-*)
+(* in: nat-ID-site lists and natmaps, out: relate Sites *)
 fun makeMaps slist1 slist2 (nmaps:natmaps) =
     List.map
 	( fn s =>
@@ -417,31 +311,10 @@ fun makeMaps slist1 slist2 (nmaps:natmaps) =
 		 | _ => raise Fail(err3) )
 	)
 	slist2
-(*
-	val maps = makeMaps sites1 sites2 pldList
-    in maps end
-*)
-(* compose two bigraphs checking their interfaces *)
-(*
-fun compBigs b1 b2 =
-    let val b1' = big2bgval b1 signa
-	val b2' = big2bgval b2 signa
-	(* requires:
-	 - width(dom(b1')) = width(cod(b2'))
-	 - glob(dom(b1')) \subseteq glob(cod(b2'))
-	 *)
-	val loc_diff = 
 
-	val composable = chkIcomp (B.innerface b1') (B.outerface b2')
-	(* we only get here if the 'composable' flag is true *)	
-
-	val b2'o_glob = (Interface.glob o B.outerface) b2'
-	val id_b2glob = (Sugar.idw o nmSet2sList) b2'o_glob(*s2n*)
-    in (b1' tt id_b2glob) oo b2' end (* just add the names,  *)
-*)
 (***** TRANSLATION *****)
 
-(* short-hand funs *)
+(* short-hand funs used by big2bgval *)
 fun abs (nameset,prime) = B.Abs info (nameset,prime)
 fun con nameset = B.Con info nameset
 fun par bgvallist = B.Par info bgvallist
@@ -606,61 +479,6 @@ fun rules2bgvals (rules_natmaps:(dec*natmaps) list) signa =
      of [] => []
       | (p::ps) => rule2bgval p signa :: rules2bgvals ps signa
 
-(* take numbered declist, output main bgval and rules list (bgval pairs) *)
-(*
-fun decs2bgvals decls mainVal rules signa smap =
-    case decls
-     of [] => (mainVal, rules)
-      | (d::ds) =>
-	( case d
-	   of Value(i,b) =>
-	      let val _ = print "decs2bgvals...value branch\n"
-		  val mainBgval = big2bgval b signa
-	      in decs2bgvals ds mainBgval rules signa smap end
-	    | Rule(i,b1,b2) =>
-	      let val _ = print "decs2bgvals...rule branch\n"
-		  (*
-		  val b1sites = getSiteNums b1
-		  val _ = print("length(b1sites) = " ^ Int.toString(List.length b1sites) ^ "\n")
-	      
-		  val pivot = if List.length(b1sites) > 0
-			      then (List.last b1sites) + 1
-			      else 0 (* yields empty maplist *)
-		   *)
-		  val maplist = calcMaps b1 b2 (*pivot*)smap1 smap2
-		  val _ = print "length(maplist): "
-		  val _ = print(Int.toString(List.length maplist) ^ "\n")
-		  val _ = printMaps maplist
-		  val _ = print "\n"
-		  val b1' = big2bgval b1 signa
-		  val b2' = big2bgval b2 signa
-		  val b2'' = (BgBdnf.regularize o BgBdnf.make) b2'
-		  val _ = print("b1': " ^ 
-				(Interface.toString o B.innerface) b1'
-				^ " -> ...\n")
-		  val _ = print("b2': " ^ 
-				(Interface.toString o B.innerface) b2'
-				^ " -> ...\n")
-		  val ins = Instantiation.make { I = B.innerface b1',
-						 J = B.innerface b2',
-						 maps = maplist }
-		      handle Instantiation.InvalidSiteNumber
-				 (map,int,iface) => raise Fail "yikes\n"
-(*			     ( printMap map
-			     ; print(Int.toString(int))
-			     ; printIface iface
-			     ; Instantiation.make' { I = B.innerface b1',
-						    J = B.innerface b2'})
-*)
-		  val rule = Rule.make { info = Origin.unknown_origin,
-					 inst = ins,
-					 name = i,
-					 react = b1',
-					 redex = b2''}
-		  val rules' = rule :: rules
-	      in decs2bgvals ds mainVal rules' signa smap1 smap2 end
-	)
-*)
 (* substitute a bigraph b1 into a bigraph b2, recursively *)
 fun sub (i1,b1) b2 =
     case b2 of Wir(w) => Wir(w)
@@ -725,12 +543,6 @@ fun nextNat (smaps:sitemaps) =
      of [] => 0
       | (x::xs) => #1(List.last smaps) + 1
 
-(* compute next unused nat site-identifier of natmaps *)
-fun nextNat' (nmaps:natmaps) =
-    case nmaps
-     of [] => 0
-      | (x::xs) => #1(List.last nmaps) + 1
-
 (* replace siteIds in redex by contiguous nats, create smaps for reactum *)
 fun traverse big (smaps:sitemaps) =
     case big
@@ -773,6 +585,12 @@ fun traverse big (smaps:sitemaps) =
 
 (* error value used by traverse' *)
 val err_rhs = "traverse': RHS site id without corresponding LHS id"
+
+(* compute next unused nat site-identifier of natmaps *)
+fun nextNat' (nmaps:natmaps) =
+    case nmaps
+     of [] => 0
+      | (x::xs) => #1(List.last nmaps) + 1
 
 (* replace siteIds in react. by contig. nats wrt. smaps, create natmaps *)
 fun traverse' big (smaps:sitemaps) (nmaps:natmaps) =
