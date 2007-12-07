@@ -24,7 +24,28 @@
  Mapping from BPL abstract syntax tree to BgVal. 
  Implements bpl/bplproject/doc/projects/contextawareness/plato/bpl-bnf.tex
 
- Algorithm: todo explanation
+ Algorithm.
+   Input: A list of decls (Values and Rules) and a signature.
+   Output: A signature, a main bgval (the state of the BRS), and
+	   a set of rules of bgvals with instantiations.
+   1. Roll the Values into one main Value -- the last one found.
+   2. Delete the used Values.
+   3. Rules are on form (identifier,bigraph1,bigraph2). The site
+      identifiers (in the bigraphs) can be either a variable (string) or a
+      number (nat). For each LHS bigraph b1, number the sites from 0,
+      depth-first, and create a 'sitemap' from "old id" to "new id".
+      Pass this sitemap to RHS bigraph b2 and insert nat identifiers acc.
+      to this sitemap, and also return a 'natmap' from b2 sites to b1
+      sites, which is used to generate an instantiation later.
+   4. Make the main Value into a bgval by calling the function 'big2bgval'.
+   5. Make the Rules into rules of the BPL Rule functor.
+
+ Comments:
+   - There is at least one Value in the input, and exactly one main bgval,
+     i.e there is just one "state" of the system (BRS).
+   - Ions are used to represent both ions, molecules, and atoms. Atoms are
+     just special cases and are constructed by "filling the hole" using
+     Emb/Com in the AST.
 
  Compile: cd <src-dir of BPL-root>; make bpl2bgval
 *)
@@ -218,7 +239,7 @@ fun getSites b =
 	    | Com(b1,b2) => (getSites b1) @ (getSites b2)
 	    | Emb(b1,b2) => (getSites b1) @ (getSites b2)
 	    | Ten(b1,b2) => (getSites b1) @ (getSites b2)
-	    | Ion(i,b,f) => [] (* reached atomic control *)
+	    | Ion(i,b,f) => [] (* reached atom *)
 	    | Clo(n,b) => getSites b
 	    | Abs(n,b) => getSites b
 	    | Conc(n,b) => getSites b
@@ -277,40 +298,40 @@ fun rmDubs [] = []
   | rmDubs (x::xs) =
     if List.exists (fn y => y = x) xs then rmDubs xs else x :: rmDubs xs
 
-(* some error functions used by makeMaps in calcMaps *)
-fun err1 n = "makeMaps: Site " ^ Int.toString(n) ^
-	     " has no LHS counterpart\n"
-fun err2 n = "makeMaps: Shouldn't happen... " ^ Int.toString(n) ^ "\n"
-val err3 = "makeMaps: Unnumbered site\n"
-
 (* peel off Namelist constructor *)
 fun peelNamelist l =
     case l of Namelist(nms) => List.map (fn s => s2n s) nms
 
 (* in: nat-ID-site lists and natmaps, out: relate Sites *)
 fun makeMaps slist1 slist2 (nmaps:natmaps) =
-    List.map
-	( fn s =>
-	     ( case s
-		of Site(Num(n),l) =>
-		   let val b1siteId = lookupSnd nmaps n
-		       val b1site =
-			   case b1siteId
-			    of SOME(n') => (* exists LHS site id *)
-			       ( case lookupSite slist1 n'
-				  of SOME(s) => s (* id |-> site *)
-				   | NONE => raise Fail(err2 n') )
-			     | NONE => raise Fail(err1 n)
-		       val (n1,l1) =
-			   case b1site
-			    of Site(Num(n'),l') =>
-			       (n', peelNamelist l')
-			     | _ => raise Fail(err3)
-		       val (n2,l2) = (n, peelNamelist l)
-		   in ((n2,l2), (n1,l1)) end
-		 | _ => raise Fail(err3) )
-	)
-	slist2
+    let fun err1 n = "makeMaps: Site " ^ Int.toString(n) ^
+		     " has no LHS counterpart\n"
+	fun err2 n = "makeMaps: Shouldn't happen... "
+		     ^ Int.toString(n) ^ "\n"
+	val err3 = "makeMaps: Unnumbered site\n"
+    in List.map
+	   ( fn s =>
+		( case s
+		   of Site(Num(n),l) =>
+		      let val b1siteId = lookupSnd nmaps n
+			  val b1site =
+			      case b1siteId
+			       of SOME(n') => (* exists LHS site id *)
+				  ( case lookupSite slist1 n'
+				     of SOME(s) => s (* id |-> site *)
+				      | NONE => raise Fail(err2 n') )
+				| NONE => raise Fail(err1 n)
+			  val (n1,l1) =
+			      case b1site
+			       of Site(Num(n'),l') =>
+				  (n', peelNamelist l')
+				| _ => raise Fail(err3)
+			  val (n2,l2) = (n, peelNamelist l)
+		      in ((n2,l2), (n1,l1)) end
+		    | _ => raise Fail(err3) )
+	   )
+	   slist2
+    end
 
 (***** TRANSLATION *****)
 
@@ -321,9 +342,10 @@ fun par bgvallist = B.Par info bgvallist
 fun com (b1,b2) = B.Com' info (b1,b2)
 fun conc (nameset,b) = (con nameset) oo b
 
-(* transform a bigraph into a bgval *)
-fun big2bgval (ast:bigraph) signa =
-    (* HERE...insert also id_n ? *)
+(* transform a bigraph -- abstract syntax tree -- into a bgval *)
+fun big2bgval ast signa =
+    (* translate into bgval, and wire through surplus global names,
+       but what about local names? *)
     case ast
      of Wir(w) =>
 	let val _ = print "big2bgval: Wir...\n"
@@ -361,10 +383,14 @@ fun big2bgval (ast:bigraph) signa =
 	let val _ = print "big2bgval: Com...\n"
 	    val b1' = big2bgval b1 signa
 	    val b2' = big2bgval b2 signa
+	(* (b1' || id) o b2', requires:
+	 - width(dom(b1')) = width(cod(b2'))
+	 - glob(dom(b1')) \subseteq glob(cod(b2'))
+	 *)
 	in com(b1',b2') before printIfaces "Emb"
 					   (B.innerface(com(b1',b2')))
 					   (B.outerface(com(b1',b2')))
-	end (* (b1' || id) o b2' *)
+	end
       | Emb(b1,b2) =>
 	let val _ = print "big2bgval: Emb...\n"
 	    val b1' = big2bgval b1 signa
@@ -401,12 +427,12 @@ fun big2bgval (ast:bigraph) signa =
 			val bgval = B.Ion info ion
 		    in if k = Control.Atomic
 		       then if bSz = 0
-			    then (bgval oo barren) (* atomic control *)
+			    then (bgval oo barren) (* make an atom *)
 				 before printIfaces
 					    "Ctrl"
 					    (B.innerface(bgval oo barren))
 					    (B.outerface(bgval oo barren))
-			    else raise Fail("big2bgval: Atomic control "
+			    else raise Fail("big2bgval: Atom "
 					    ^ i ^ " with bound names\n")
 		       else let val _ = printIfaces
 					    "Ion"
@@ -452,8 +478,8 @@ fun big2bgval (ast:bigraph) signa =
       | Empty => let val _ = print "big2bgval: Empty...\n"
 		 in barren end
 
-(* take a rule and a natmap and produce a rule of bgvals with inst *)
-fun rule2bgval (p:dec*natmaps) signa =
+(* take a rule with natmaps and produce a rule of bgvals with inst. *)
+fun rule2bgval p signa =
     case p
      of (Rule(i,b1,b2), nmaps) =>
 	let val b1sites = getSites b1
@@ -474,8 +500,8 @@ fun rule2bgval (p:dec*natmaps) signa =
       | _ => raise Fail("rule2bgval: Encountered a Value\n")
 
 (* translate rules with natmaps into rules of bgvals with insts *)
-fun rules2bgvals (rules_natmaps:(dec*natmaps) list) signa =
-    case rules_natmaps
+fun rules2bgvals rules_nmaps signa =
+    case rules_nmaps
      of [] => []
       | (p::ps) => rule2bgval p signa :: rules2bgvals ps signa
 
@@ -487,7 +513,7 @@ fun sub (i1,b1) b2 =
 	    | Com(b,b') => Com(sub (i1,b1) b, sub (i1,b1) b')
 	    | Emb(b,b') => Emb(sub (i1,b1) b, sub (i1,b1) b')
 	    | Ten(b,b') => Ten(sub (i1,b1) b, sub (i1,b1) b')
-	    | Ion(i,b,f) => Ion(i,b,f) (* reached atomic control *)
+	    | Ion(i,b,f) => Ion(i,b,f) (* reached atom *)
 	    | Clo(n,b) => Clo(n, sub (i1,b1) b)
 	    | Abs(n,b) => Abs(n, sub (i1,b1) b)
 	    | Conc(n,b) => Conc(n, sub (i1,b1) b)
@@ -538,13 +564,13 @@ fun delAuxVals [] = []
 	    | Rule(i,b1,b2) => d :: delAuxVals ds
 
 (* compute next unused nat site-identifier of sitemaps *)
-fun nextNat (smaps:sitemaps) =
+fun nextNat smaps =
     case smaps
      of [] => 0
       | (x::xs) => #1(List.last smaps) + 1
 
 (* replace siteIds in redex by contiguous nats, create smaps for reactum *)
-fun traverse big (smaps:sitemaps) =
+fun traverse big smaps =
     case big
      of Wir(w) => (Wir(w), smaps) (* done *)
       | Par(b1,b2) =>
@@ -567,7 +593,7 @@ fun traverse big (smaps:sitemaps) =
 	let val (b1',smaps') = traverse b1 smaps
 	    val (b2',smaps'') = traverse b2 smaps'
 	in (Ten(b1',b2'), smaps'') end
-      | Ion(i,b,f) => (Ion(i,b,f), smaps) (* done, reached atomic control *)
+      | Ion(i,b,f) => (Ion(i,b,f), smaps) (* reached atom *)
       | Clo(n,b) =>
 	let val (b',smaps') = traverse b smaps
 	in (Clo(n,b'), smaps') end
@@ -587,13 +613,13 @@ fun traverse big (smaps:sitemaps) =
 val err_rhs = "traverse': RHS site id without corresponding LHS id"
 
 (* compute next unused nat site-identifier of natmaps *)
-fun nextNat' (nmaps:natmaps) =
+fun nextNat' nmaps =
     case nmaps
      of [] => 0
       | (x::xs) => #1(List.last nmaps) + 1
 
 (* replace siteIds in react. by contig. nats wrt. smaps, create natmaps *)
-fun traverse' big (smaps:sitemaps) (nmaps:natmaps) =
+fun traverse' big smaps nmaps =
     case big
      of Wir(w) => (Wir(w), nmaps) (* done *)
       | Par(b1,b2) =>
@@ -616,7 +642,7 @@ fun traverse' big (smaps:sitemaps) (nmaps:natmaps) =
 	let val (b1',nmaps') = traverse' b1 smaps nmaps
 	    val (b2',nmaps'') = traverse' b2 smaps nmaps'
 	in (Ten(b1',b2'), nmaps'') end
-      | Ion(i,b,f) => (Ion(i,b,f), nmaps) (* done, reached atomic control *)
+      | Ion(i,b,f) => (Ion(i,b,f), nmaps) (* reached atom *)
       | Clo(n,b) =>
 	let val (b',nmaps') = traverse' b smaps nmaps
 	in (Clo(n,b'), nmaps') end
@@ -644,7 +670,7 @@ fun traverse' big (smaps:sitemaps) (nmaps:natmaps) =
       | Id(i) => raise Fail("traverse': Bigraph with an id " ^ i ^ "\n")
       | Empty => (Empty, nmaps) (* done *)
 
-(* number the sites of a rule and generate a natmap *)
+(* number the sites of a rule and generate natmaps *)
 fun numberSites rule =
     case rule
      of Rule(i,b1,b2) =>
@@ -680,27 +706,34 @@ fun peelCdef [] = []
 fun prog2bgval ast =
     case ast
      of Prog(signa,declist) =>
-	let val rolledList = roll declist
-	    val rolledList' = delAuxVals rolledList
-	    val (mainVal,rules) =
-		List.partition
-		    (fn d => case d of Value(i,b) => true
-				     | _ => false)
-		    rolledList'
-(*
-	    val _ = print("length(mainVal) = " ^
-			  Int.toString(List.length(mainVal)) ^ "\n")
-	    val _ = print("length(rules) = " ^
-			  Int.toString(List.length(rules)) ^ "\n")
-*)
-	    (* number sites in rules and generate natmaps: (nat*nat) list *)
-	    val rules_nmaps = List.map numberSites rules
-	    val signa' = peelCdef signa
-	    val mainVal' = case mainVal
-			    of [Value(i,b)] => b (* singleton by invar. *)
-	    (* make bgvals *)
-	    val mainBgval = big2bgval mainVal' signa'
-	    val rules' = rules2bgvals rules_nmaps signa'
-	in (signa', mainBgval, rules') end
+	if List.exists (fn d => case d
+				 of Value(i,b) => true
+				  | _ => false)
+		       declist
+	then
+	    let val rolledList = roll declist
+		val rolledList' = delAuxVals rolledList
+		val (mainVal,rules) =
+		    List.partition
+			(fn d => case d of Value(i,b) => true
+					 | _ => false)
+			rolledList'
+		(*
+		 val _ = print("length(mainVal) = " ^
+			       Int.toString(List.length(mainVal)) ^ "\n")
+		 val _ = print("length(rules) = " ^
+			       Int.toString(List.length(rules)) ^ "\n")
+		 *)
+		(* number sites in rules and generate natmaps *)
+		val rules_nmaps = List.map numberSites rules
+		val signa' = peelCdef signa
+		val mainVal' =
+		    case mainVal
+		     of [Value(i,b)] => b (* singleton by invar. *)
+		(* make bgvals *)
+		val mainBgval = big2bgval mainVal' signa'
+		val rules' = rules2bgvals rules_nmaps signa'
+	    in (signa', mainBgval, rules') end
+	else raise Fail("prog2bgval: There are no Values\n")
 
 end (* structure Bpl2bgval *)
