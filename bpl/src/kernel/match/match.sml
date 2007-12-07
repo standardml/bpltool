@@ -1607,25 +1607,15 @@ struct
       | _ => (print' (fn () => Int.toString lvl ^ ".ION'f "); Nil))
         handle e => raise e)
 
-  (* Match a global discrete prime using a PAX, MER or ION rule:
+  (* Match a global discrete prime using a PAX or ION rule:
    * 1) If PAX rule matches return this match,
-   *    else if ION rule matches return this match,
-   *    else if MER matching is allowed
-   *    (to avoid infinite recursion via MER-PAR-PARe-PARn),
-   *    return any MER rule matches.
+   *    else if ION rule matches return this match.
    *)
-  and matchDG' allowMER lvl (args as {ename, s_a, s_C, g, G}) =
+  and matchDG' lvl (args as {ename, s_a, s_C, g, G}) =
     lzmake (fn () =>
       case lzunmk (matchPAX' lvl args) of
         mz as (LazyList.Cons _) => mz
-      | _
-      => case (lzunmk (matchION' lvl args), allowMER) of
-           (mz as (LazyList.Cons _), _) => mz
-         | (_, true)
-         => (case #Ss (unmkG g) of
-               (_ :: _) => lzunmk (matchMER' lvl args)
-             | _ => Nil)
-         | _ => Nil)
+      | _ => lzunmk (matchION' lvl args))
          
 (*    
     lzappend (matchPAX' args)
@@ -1673,7 +1663,7 @@ struct
            W
 
         val premise_matches =
-          matchDG' true (lvl + 1)
+          matchDP' (lvl + 1)
            {ename = ename'',
             s_a   = {s_a_e = s_a_e', s_a_n = s_a_n},
             s_C   = {s_C_e = s_C_e', s_C_n = s_C_n},
@@ -1725,7 +1715,7 @@ struct
                 ({ename' = ename_i, s_C', Y, qss, tree = PARn' trees}, newresults)
               = let
                   val premise_matches
-                    = matchDG' false (lvl + 1)
+                    = matchDG' (lvl + 1)
                         {ename = ename_i, s_a = s_a, s_C = s_C, g = e_i, G = E_i}
                   (* add_match combines a single match of (e_i, E_i) with
                    * a single, previous result, prepending it to newresults.
@@ -1858,6 +1848,9 @@ struct
       in
         lzunmk matches
       end handle e => raise e)
+
+  and matchDP' lvl args
+    = lzappend (matchDG' lvl args) (matchMER' lvl args)
   
   (* Match a global discrete prime using the SWX rule:
    * If Ps = [P], where P = (id_Z * ^s)(W)G, then
@@ -1909,7 +1902,7 @@ struct
                 rest ()
             end)
         val matches
-          = matchDG' true 0
+          = matchDP' 0
                      {ename = ename,
                       s_a = {s_a_e = s_a_e, s_a_n = s_a_n},
                       s_C = {s_C_e = s_C_e, s_C_n = s_C_n},
@@ -2675,12 +2668,12 @@ struct
       fun try rho =
         let
           val mss = Partition.next rho
-          val _ = print' (fn () => "match.sml: DEBUG: Partitioning " ^ Int.toString (length ms)
+          (*val _ = print' (fn () => "match.sml: DEBUG: Partitioning " ^ Int.toString (length ms)
           ^ " into [ " ^ concat (map (fn ms => Int.toString (length ms) ^ " ") mss)
-          ^ "].\n")
+          ^ "].\n")*)
           val gs = map makeG mss
           val matches
-            = matchPER (lvl + 1) {ename = ename, matchE = matchDG false,
+            = matchPER (lvl + 1) {ename = ename, matchE = matchDG,
                   s_a = s_a, L = L, s_R = s_R, es = gs, Qs = Ps}
         in
           lzappend (lzfoldr toMER lzNil matches) (try rho)
@@ -2790,17 +2783,13 @@ struct
       | _ => (print' (fn () => Int.toString lvl ^ ".IONb "); Nil))
        handle e => raise e)
   
-  (* Match a global discrete prime using a SWX, PAX, MER or ION rule:
+  (* Match a global discrete prime using a SWX, PAX or ION rule:
    * 1) First
    *    if possible, return a PAX rule match,
    *    else, return any SWX rule matches,
    * 2) Then return any ION rule matches, unless PAX matched an id_0 redex
-   * 3) Then if [DEPRECATED: the agent contains n > 1 top-level molecules]
-   *    MER is allowed
-   *    (to avoid infinite recursion via MER-PAR-PARe-PARn),
-   *    return any MER rule matches.
    *)
-  and matchDG allowMER lvl (args as {ename, s_a, L, s_R, e = g, Ps}) =
+  and matchDG lvl (args as {ename, s_a, L, s_R, e = g, Ps}) =
     let
       val (paxswxz, paxmatch) = 
 	        case lzunmk (matchPAX lvl args) of
@@ -2809,17 +2798,9 @@ struct
     in
       lzappend
         (lzmake (fn () => paxswxz))
-				(lzappend 
-				  (case (paxmatch, Ps) of
-				     (true, []) => lzNil
-				   | _ =>  matchION lvl args)
-		    	(if allowMER then
-			      (lzmake (fn () =>
-		        	case #Ss (unmkG g) of
-		          	((*DEPRECATED: _ :: *) _ :: _) => lzunmk (matchMER lvl args)
-		        	| _ => LazyList.Nil))
-		      else
-		        lzNil))
+				(case (paxmatch, Ps) of
+				   (true, []) => lzNil
+				 | _ =>  matchION lvl args)
 		end
 
   (* Match an abstraction:
@@ -2864,7 +2845,7 @@ struct
 		           (fn () =>
 		               (print' (fn () => Int.toString lvl ^ ".ABS ");
 		                Nil)))
-            (matchDG true (lvl + 1) 
+            (matchDP (lvl + 1) 
                      {ename = ename,
                       s_a = {s_a_e = s_a_e, s_a_n = s_a_n_new},
                       L = L_new,
@@ -2874,6 +2855,9 @@ struct
     in
       lzunmk matches
     end handle e => raise e))
+
+  and matchDP lvl (args as {e, Ps, ...})
+    = lzappend (matchDG lvl args) (matchMER lvl args)
 
   (* Match a closure:
    * 1) Open w_a, yielding s_a = s_a_e * s_a_n
