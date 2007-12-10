@@ -458,27 +458,27 @@ struct
         let
           val ((width', height), (nws', sws', nes', ses'), i, mksvg')
             = pp (branch :: path) i e
-          fun xshift maxheight =
+          fun xshift yadjust =
             let
-              val yoff = (maxheight - height) div 2
+              val yadjust = yadjust height
             in
-              fn ((x, y), xys) => (x + width, y + yoff) :: xys
+              fn ((x, y), xys) => (x + width, yadjust y) :: xys
             end
         in
           (branch + 1,
            width + xsep + width',
            Int.max (height, maxheight),
-           (fn maxheight => foldr (xshift maxheight) (nws maxheight) nws',
-            fn maxheight => foldr (xshift maxheight) (sws maxheight) sws',
-            fn maxheight => foldr (xshift maxheight) (nes maxheight) nes',
-            fn maxheight => foldr (xshift maxheight) (ses maxheight) ses'),
+           (fn yadjust => foldr (xshift yadjust) (nws yadjust) nws',
+            fn yadjust => foldr (xshift yadjust) (sws yadjust) sws',
+            fn yadjust => foldr (xshift yadjust) (nes yadjust) nes',
+            fn yadjust => foldr (xshift yadjust) (ses yadjust) ses'),
            i,
-           fn maxheight => fn xy => fn mknext =>
+           fn yadjust => fn xy => fn mknext =>
              mksvgs
-               maxheight
+               yadjust
                xy
                (fn (x, y) =>
-                mksvg' (x, y + (maxheight - height) div 2) ::
+                mksvg' (x, yadjust height y) ::
                   mknext (x + width' + xsep, y)))
         end
       open BgBDNF
@@ -741,7 +741,7 @@ struct
                 (xe, iheight + nodeyoff),            (* sse corner of octagon *)
                 (iwidth, ys + nodeyoff)]             (* ese corner of octagon *)
         in
-          ((iwidth, iheight + nodeyoff),
+          ((iwidth, Int.max (iheight + nodeyoff, textypos)),
            (nws, sws, nes, ses),
            i,
            draw)
@@ -827,23 +827,6 @@ struct
           val {xsep, ...} = cfg
           val {absnames, G} = unmkN n
           val {idxmerge, Ss} = unmkG G
-(*          val (_, width, maxheight, Sdatas, i) =
-            foldl
-              (fn (S, (branch, width, maxheight, Sdatas, i)) =>
-               let
-                 val ((w, h), corners, i, mksvgs) =
-                   ppS p (branch :: path) i S
-               in
-                 (branch + 1,
-                  width + w + xsep,
-                  Int.max (maxheight, h),
-                  (h, corners) :: Sdatas,
-                  i,
-                  fn xy => ...)
-               end)
-              (0, 0, 0, [], i)
-              Ss
-*)
           val (_, width, maxheight, (nws, sws, nes, ses), i, mksvgs) =
             foldl
               (hlayout xsep (ppS pi) path)
@@ -852,8 +835,14 @@ struct
                fn _ => fn xy => fn mksvg => mksvg xy)
               Ss
           val xsep = case Ss of [] => 0 | _ => xsep
-          val mksvgs = fn xy => mksvgs maxheight xy (fn _ => [])
-          val corners = (nws maxheight, sws maxheight, nes maxheight, ses maxheight)
+          fun yadjust height =
+            let
+              val yoff = (maxheight - height) div 2
+            in
+              fn y => y + yoff
+            end
+          val mksvgs = fn xy => mksvgs yadjust xy (fn _ => [])
+          val corners = (nws yadjust, sws yadjust, nes yadjust, ses yadjust)
         in
           ((width - xsep, maxheight), corners, i, concatpairs o mksvgs)
         end
@@ -964,7 +953,7 @@ struct
                      x = xpos, y = y + myheight,
                      text = iname, anchor = "middle"} :: svgs)
                 end
-              val mksvgs = fn xy => mksvgs maxheight xy (fn _ => [])
+              val mksvgs = fn xy => mksvgs (fn _ => fn y => y) xy (fn _ => [])
               fun merge ((pmap, sxx, svgs), (pmap', sxxs, svgs')) =
                 (NameMap.plus (pmap, pmap'), sxx :: sxxs, svgs @ svgs')
               val (pmap, sxxs, svgs) =
@@ -994,7 +983,7 @@ struct
             BgVal.MTen [BgVal.MWir w, _] =>
             let
               val ls = Wiring.unmk w
-              val ((mywidth, _), mksvgs) = ppD cfg (Wiring.has_edge w) D
+              val ((mywidth, _), mksvgs) = ppD cfg (not (LinkSet.isEmpty ls)) D
               fun draw (x, y) = 
                 let
                   val unique = ref 0
