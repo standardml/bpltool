@@ -200,7 +200,7 @@ val rule_scope_activation   =
                              || Running[inst_id];
 
 val rule_scope_completed    =
-    "scope completed"    ::: -/scope o ActiveScope[scope, inst_id] o <->
+    "scope completed"    ::: -/scope o (ActiveScope[scope, inst_id] o <->)
                              || Running[inst_id]
                            ----|>
 			     <-> || Running[inst_id];
@@ -331,7 +331,8 @@ val rule_exit_stop_inst     =
                              <->
                              || Stopped[inst_id];
 val rule_exit_remove_inst   =
-    "exit remove inst"   ::: -/inst_id o (Instance[proc_name, inst_id]
+    "exit remove inst"   ::: -/inst_id
+                             o (Instance[proc_name, inst_id]
                                 o (Stopped[inst_id] `|` `[]`))
                            ----|>
                              proc_name//[] * <->;
@@ -397,15 +398,15 @@ val echo_process = Process[echo_process][[echo_id]]
  * </instance>
  *)
 val caller_inst = -/caller_id
-                  o Instance[caller, caller_id]
-                  o (Running[caller_id]
-                     `|` Variables
-                         o (Variable[y, caller_id] o Value[val_1]
-                            `|` Variable[z, caller_id] o Value[val_2])
-                     `|` Invoke[echo, y, caller_id,
-                                z, caller_id, caller_id]);
+                  o (Instance[caller, caller_id]
+                     o (Running[caller_id]
+                        `|` Variables
+                            o (Variable[y, caller_id] o Value[val_1]
+                               `|` Variable[z, caller_id] o Value[val_2])
+                        `|` Invoke[echo, y, caller_id,
+                                   z, caller_id, caller_id]));
 
-(* NB! Non-terminating:
+(* 
 val ms = matches (mkrules [rule_reply]) (echo_process || caller_inst);
 val ms = matches (mkrules [rule_invoke]) (echo_process || caller_inst);
 print_mv ms;*)
