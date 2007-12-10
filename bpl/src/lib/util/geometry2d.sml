@@ -61,13 +61,16 @@ struct
     val lt = lt
   )
   
+  (* Exception that should never be raised. *)
+  exception Impossible
+  
   infix 7 *** ** mul div
   infix 6 +++ ++
   infix 6 --- --
   
   fun (x1, y1) +++ (x2, y2) = (x1 ++ x2, y1 ++ y2)
   
-  fun ((x1, y1):vec) --- (x2, y2) = (x1 -- x2, y1 -- y2)
+  fun (x1, y1) --- (x2, y2) = (x1 -- x2, y1 -- y2)
   
   fun (x1, y1) *** (x2, y2) = x1 ** x2 ++ y1 ** y2
   
@@ -117,7 +120,7 @@ struct
    * Note: reverse is not necessary, but provides tail recursion.
    *)
   fun convexhull vs =
-    case (VecSet.list o VecSet.fromList) vs of
+    case (VecSet.list o VecSet.fromList') vs of
       v0 :: (vs as (_ :: _ :: _)) =>
       let
         fun addpt v _ [] = [(v : vec, origo)]
@@ -175,7 +178,7 @@ struct
               else (b, c, bc) (* bc longest *)
           val (x, y) = (v1 +++ v2) mul 0.5
         in
-          ((fromReal x, fromReal y), fromReal (r + 0.5))
+          ((fromReal x, fromReal y), fromReal r)
         end
       else
         let
@@ -193,7 +196,7 @@ struct
           val dy = y - real ay
         in
           ((fromReal x, fromReal y),
-           fromReal (sqrt (dx * dx + dy * dy) + 0.5))
+           fromReal (sqrt (dx * dx + dy * dy)))
         end 
     end
   (** Compute the minimal enclosing circle using a simple algorithm
@@ -209,9 +212,11 @@ struct
    *   corners, and repeat from step 4.
    * 7 If v-v1-v2 is nonobtuse, return touching circle of [v,v1,v2].
    *)
-  fun minenclosingcircle vs =
+  fun minenclosingcircle [] = raise Empty
+    | minenclosingcircle vs =
     case convexhull vs of
-      [v] => (v, zero)
+      [] => raise Empty
+    | [v] => (v, zero)
     | [v1, v2] =>
       (fromRealVec ((v1 +++ v2) mul 0.5), fromReal (length (v1 --- v2) * 0.5))
     | (v1 :: v2 :: vs) => 
@@ -226,8 +231,9 @@ struct
             else
               minangle' v1 v2 (v :: lvs) rvs (vmax, lmax)
           end
-        fun minangle v1 v2 (v3 :: vs) =
-          minangle' v1 v2 [] vs (v3, projlen (v2 --- v3) (v1 --- v3))
+        fun minangle v1 v2 (v3 :: vs)
+          = minangle' v1 v2 [] vs (v3, projlen (v2 --- v3) (v1 --- v3))
+          | minangle _ _ [] = raise Impossible
           
         fun doside v1 v2 vs =
           let

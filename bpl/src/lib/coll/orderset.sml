@@ -186,9 +186,11 @@ functor OrderSet(Order : ORDERING): MONO_SET =
 	end
 *)
     fun addList es s = List.foldl (fn (e,s) => insert e s) s es
+    fun addList' es s = List.foldl (fn (e,s) => insert' e s) s es
 
     (* TCD: June 05 - recoded s.t duplication removal is signaled *)
     fun fromList (l:elt list) : Set = addList l empty
+    fun fromList' (l:elt list) : Set = addList' l empty
 
     fun union0 (s1:Set) (s2:Set) : Set =
 	case s2 of

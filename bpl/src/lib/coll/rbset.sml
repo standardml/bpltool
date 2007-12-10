@@ -105,6 +105,7 @@ struct
   fun add (elm, set) = insert elm set		
   fun add' (elm, set) = insert' elm set     
   fun addList xs set = List.foldl add set xs
+  fun addList' xs set = List.foldl add' set xs
 
   fun push LEAF stack = stack
     | push tree stack = tree :: stack
@@ -230,6 +231,7 @@ struct
       in  (buildAll digits, toInt digits) end
           
   fun fromList ls = addList ls empty
+  fun fromList' ls = addList' ls empty
 
   (* FIXME: it *must* be possible to write union, equal, isSubset,
             intersection, and difference more elegantly. 

@@ -22,19 +22,30 @@ signature MONO_SET =
     exception Empty
 
     val list : Set -> elt list
-      (** fromList l : Constructs a set containing the elements in l.
-       * Raises DuplicatesRemoved if a an element of the list l appears
+      (** Constructs a set containing the elements in l.
+       * @params l
+       * @exception DuplicatesRemoved if an element of the list l appears
        * twice.
        *)
     val fromList : elt list -> Set 
+      (** Constructs a set containing the elements in l; duplicate
+       * elements are allowed
+       * @params l
+       *)
+    val fromList' : elt list -> Set 
 (*
     val addList1 : elt list -> elt list -> Set -> Set * elt list
 *)
-      (** addList l s : Add elements in list l to s. 
-       * Raises DuplicatesRemoved if a an element of the list l is already
+      (** Add elements in list l to s. 
+       * @params l s
+       * @exception DuplicatesRemoved if a an element of the list l is already
        * in the set s.
        *)
     val addList : elt list -> Set -> Set
+      (** Add elements in list l to s; no exceptions are raised.
+       * @params l s
+       *)
+    val addList' : elt list -> Set -> Set
 
       (** insert a s : Add the element a to s.
        * Raises DuplicatesRemoved if a is already in the set.

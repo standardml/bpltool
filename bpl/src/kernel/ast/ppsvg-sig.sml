@@ -51,6 +51,8 @@ sig
   type 'class bgbdnf
   (** A representation of location-dependent configuration data. *)
   type config
+  (** Compass direction type. *)
+  datatype direction = NW | NE | SW | SE | AUTO
   (** Syntax tree location type.  @see mkconfig. *)
   type path = int list
   (** Configuration parameters. *)
@@ -87,6 +89,8 @@ sig
       nodeminwidth   : int,
     (** Minimum height of a node. *)
       nodeminheight  : int,
+    (** Position of node control label. *)
+      labelpos       : direction,
     (** Horizontal spacing between node ports. *)
       portsep        : int,
     (** Radius of binders. *)

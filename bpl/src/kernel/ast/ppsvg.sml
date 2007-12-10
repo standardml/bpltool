@@ -57,6 +57,18 @@ functor PPSVG (
 struct
   type B = BgBDNF.B
   type 'class bgbdnf = 'class BgBDNF.bgbdnf
+  structure Geometry2D =
+    Geometry2D (
+      type num = real
+      val zero = 0.0
+      fun real n = n
+      fun fromReal n = n
+      val compare = Real.compare
+      val (op --) = Real.-
+      val (op ++) = Real.+
+      val (op **) = Real.*
+      val (op ==) = Real.==)
+  datatype direction = NW | NE | SW | SE | AUTO
   type path = int list
   type configinfo = {
       xsep           : int,
@@ -75,6 +87,7 @@ struct
       rootrounding   : int,
       nodeminwidth   : int,
       nodeminheight  : int,
+      labelpos       : direction,
       portsep        : int,
       binderradius   : int,
       sitewidth      : int,
@@ -393,7 +406,7 @@ struct
   exception Impossible
   fun makeconfig f = f
   fun unmkconfig f = f
-  fun defaultconfig _ = {
+  fun defaultconfig (ctrlname, _) = {
       xsep           = 4,
       ysep           = 4,
       ctrlfontheight = 16,
@@ -408,8 +421,9 @@ struct
       rootwidth      = 40,
       rootheight     = 30,
       rootrounding   = 5,
-      nodeminwidth   = 50,
+      nodeminwidth   = Int.max (50, 10 * size ctrlname),
       nodeminheight  = 40,
+      labelpos       = SW,
       portsep        = 7,
       binderradius   = 3,
       sitewidth      = 40,
@@ -444,18 +458,28 @@ struct
         let
           val ((width', height), (nws', sws', nes', ses'), i, mksvg')
             = pp (branch :: path) i e
-          fun xshift ((x, y), xys) = (x + width + xsep, y) :: xys
+          fun xshift maxheight =
+            let
+              val yoff = (maxheight - height) div 2
+            in
+              fn ((x, y), xys) => (x + width, y + yoff) :: xys
+            end
         in
           (branch + 1,
            width + xsep + width',
            Int.max (height, maxheight),
-           (foldr xshift nws nws',
-            foldr xshift sws sws',
-            foldr xshift nes nes',
-            foldr xshift ses ses'),
+           (fn maxheight => foldr (xshift maxheight) (nws maxheight) nws',
+            fn maxheight => foldr (xshift maxheight) (sws maxheight) sws',
+            fn maxheight => foldr (xshift maxheight) (nes maxheight) nes',
+            fn maxheight => foldr (xshift maxheight) (ses maxheight) ses'),
            i,
-           fn xy => fn mknext =>
-             mksvgs xy (fn (x, y) => mksvg' (x, y) :: mknext (x + width' + xsep, y)))
+           fn maxheight => fn xy => fn mknext =>
+             mksvgs
+               maxheight
+               xy
+               (fn (x, y) =>
+                mksvg' (x, y + (maxheight - height) div 2) ::
+                  mknext (x + width' + xsep, y)))
         end
       open BgBDNF
 
@@ -510,45 +534,30 @@ struct
           val (K, _, b, f) = Control.unmk ctrl
           val cfg as {
             ctrlfontheight, ctrlcharwidth, textysep, textmargin,
-            nodeminwidth, nodeminheight, portsep, binderradius,
+            nodeminwidth, nodeminheight, labelpos, portsep, binderradius,
             xsep, ysep, ...}
             = config (K, path)
           val textwidth = String.size K * ctrlcharwidth
+          (* Calculate recursively children sizes *)
           val ((nwidth, nheight), (nws, sws, nes, ses), i, mksvgs)
             = ppN cfg path pi i N
-          val cx = nwidth div 2
-          val cy = nheight div 2
-          val nwidthsqr = real (nwidth * nwidth)
-          val nheightsqr = real (nheight * nheight)
-          val rsqr =
-            (* square of maximum distance from (cx,cy) to
-             * corner points, in a normalised coordinate system of
-             * size 1 x 1
-             *)
-            foldl
-              (fn (cs, rsqr) =>
-               Real.max (
-                 rsqr,
-                 (foldl
-                   (fn ((x, y), rsqr) =>
-                   let
-                     val dx = real (x - cx)
-                     val dy = real (y - cy)
-                   in
-                     Real.max (
-                       rsqr,
-                       dx * dx / nwidthsqr +
-                       dy * dy / nheightsqr)
-                   end)
-                   0.0
-                   cs)))
-              0.0
+          (* Calculate node ellipse size *)
+          val (rwidth, rheight) = (real nwidth, real nheight)
+          val normpts =
+            foldr
+              (fn (pts, pts') =>
+               foldr
+                 (fn ((x, y), pts') =>
+                  (real x / rwidth, real y / rheight) :: pts')
+                 pts'
+                 pts)
+              []
               [nws, sws, nes, ses]
-          (* Deprecated:
-          val width  = Real.max (real nwidth * sqrt2, real nodeminwidth)
-          val height = Real.max (real nheight * sqrt2, real nodeminheight)
-          *)
-          val r = Math.sqrt rsqr
+          val ((rcx, rcy), r) =
+            case normpts of
+              [] => ((0.0,0.0), 0.0)
+            | _  => Geometry2D.minenclosingcircle normpts
+          val (cx, cy) = (round (rcx * rwidth), round (rcy * rheight))
           val width =
             Real.max
               (2.0 * ((r * real nwidth) + real xsep), real nodeminwidth)
@@ -561,8 +570,14 @@ struct
           val hh = height / 2.0
           val halfwidth  = round hw
           val halfheight = round hh
-          
-          val texty = (* y pos of control text relative to node top *)
+          (* Calculate control text position *)
+          val (above, left) =
+            case labelpos of
+              NW => (true, true)
+            | NE => (true, false)
+            | SE => (false, false)
+            | _ => (false, true)
+          val texty = (* y pos of control text relative to node ellipse top *)
             if textwidth >= halfwidth then
               0
             else
@@ -571,11 +586,15 @@ struct
               in
                 round (height * (1.0 - Math.sqrt (1.0 - dx * dx)) / 2.0)
               end
-          val yoff (* height of control text that lies below node top level *)
+          val texty = if above then texty else iheight - texty + ctrlfontheight
+          val yoff (* height of control text that lies below node ellipse top level *)
             = Int.min (texty, ctrlfontheight + textysep)
-          val nodeyoff (* y position of node *)
+          val nodeyoff (* y position of node ellipse *)
             = ctrlfontheight + textysep - yoff
-          val textypos = Int.max (texty, ctrlfontheight)
+          val textypos = (* y position of text relative to boundingbox top *)
+            Int.max (texty, ctrlfontheight)
+          val textxpos = if left then 0 else iwidth - textwidth
+          (* Define port drawing function *)
           fun ports (x0, y0) pmap svgs =
             let
               val space = iwidth - textwidth - textmargin
@@ -646,15 +665,17 @@ struct
             in
               (pmap, List.revAppend (bsvgs, List.revAppend (fsvgs, svgs)))
             end
+          (* Calculate coordinates for enclosing octagon *)
           val xe = round (sqrt2div2 * width)
           val xw = iwidth - xe
           val ys = round (sqrt2div2 * height)
           val yn = iheight - ys
+          (* Define drawing function *)
           fun draw (x, y) =
             let
               val (pmap1, svgs) = mksvgs (
-               x + round ((width - real nwidth) / 2.0),
-               y + round ((height - real nheight) / 2.0) + ctrlfontheight - yoff)
+               x + halfwidth - cx,
+               y + halfheight - cy + ctrlfontheight - yoff)
               val (pmap2, svgs) = ports (x, y + ctrlfontheight + textysep - yoff) pmap1 svgs
             in
               (NameMap.plus (pmap1, pmap2),
@@ -665,22 +686,63 @@ struct
                 rx = halfwidth, ry = halfheight} ::
               Text {
                 class = "nodetext",
-                x = x,
+                x = x + textxpos,
                 y = y + textypos,
-                text = K, anchor = ""} ::
+                text = K, anchor = ""} :: 
               svgs)
             end
+          val nws =
+            case labelpos of
+              NW => [
+                (0, textypos - ctrlfontheight - textysep), (* top left corner of node text *)
+                (xw, nodeyoff)]                      (* nnw corner of octagon *)
+            | NE => [
+                (yn, nodeyoff),                      (* wnw corner of octagon *)
+                (0, textypos - ctrlfontheight - textysep), (* top left corner of node text *)
+                (xw, nodeyoff)]                      (* nnw corner of octagon *)
+            | _ => [
+                (yn, nodeyoff),                      (* wnw corner of octagon *)
+                (xw, nodeyoff)]                      (* nnw corner of octagon *)
+          val nes =
+            case labelpos of
+              NW => [
+                (textwidth, textypos - ctrlfontheight - textysep), (* top right corner of node text *)
+                (xe, nodeyoff),                      (* nne corner of octagon *)
+                (iwidth, yn + nodeyoff)]             (* ene corner of octagon *)
+            | NE => [
+                (iwidth, textypos - ctrlfontheight - textysep), (* top right corner of node text *)
+                (xe, nodeyoff)]                      (* nne corner of octagon *)
+            | _ => [
+                (xe, nodeyoff),                      (* nne corner of octagon *)
+                (iwidth, yn + nodeyoff)]             (* ene corner of octagon *)
+          val sws =
+            case (above, left) of
+              (false, true) => [
+                (0, textypos),                       (* bottom left corner of node text *)
+                (xw, iheight + nodeyoff)]            (* ssw corner of octagon *)
+            | (false, false) => [
+                (0, ys + nodeyoff),                  (* wsw corner of octagon *)
+                (xw, iheight + nodeyoff),            (* ssw corner of octagon *)
+                (textxpos, textypos)]                (* bottom left corner of node text *)
+            | _ => [
+                (0, ys + nodeyoff),                  (* wsw corner of octagon *)
+                (xw, iheight + nodeyoff)]            (* ssw corner of octagon *)
+          val ses =
+            case (above, left) of
+              (false, true) => [
+                (textwidth, textypos),               (* bottom right corner of node text *)
+                (xe, iheight + nodeyoff),            (* sse corner of octagon *)
+                (iwidth, ys + nodeyoff)]             (* ese corner of octagon *)
+            | (false, false) => [
+                (iwidth, textypos),                  (* bottom right corner of node text *)
+                (xe, iheight + nodeyoff),            (* sse corner of octagon *)
+                (iwidth, ys + nodeyoff)]             (* ese corner of octagon *)
+            | _ => [
+                (xe, iheight + nodeyoff),            (* sse corner of octagon *)
+                (iwidth, ys + nodeyoff)]             (* ese corner of octagon *)
         in
           ((iwidth, iheight + nodeyoff),
-           ([(0, textypos - ctrlfontheight - textysep), (* top left corner of node label *)
-             (xw, nodeyoff)],                        (* nnw corner of octagon *)
-            [(0, ys + nodeyoff),                     (* wsw corner of octagon *)
-             (xw, iheight + nodeyoff)],              (* ssw corner of octagon *)
-            [(0, textypos - ctrlfontheight - textysep), (* top left corner of node label *)
-             (xe, nodeyoff),                         (* nne corner of octagon *)
-             (iwidth, yn + nodeyoff)],               (* ene corner of octagon *)
-            [(xe, iheight + nodeyoff),               (* sse corner of octagon *)
-             (iwidth, ys + nodeyoff)]),              (* ese corner of octagon *)
+           (nws, sws, nes, ses),
            i,
            draw)
         end
@@ -765,14 +827,33 @@ struct
           val {xsep, ...} = cfg
           val {absnames, G} = unmkN n
           val {idxmerge, Ss} = unmkG G
-          val (_, width, maxheight, corners, i, mksvgs) =
+(*          val (_, width, maxheight, Sdatas, i) =
+            foldl
+              (fn (S, (branch, width, maxheight, Sdatas, i)) =>
+               let
+                 val ((w, h), corners, i, mksvgs) =
+                   ppS p (branch :: path) i S
+               in
+                 (branch + 1,
+                  width + w + xsep,
+                  Int.max (maxheight, h),
+                  (h, corners) :: Sdatas,
+                  i,
+                  fn xy => ...)
+               end)
+              (0, 0, 0, [], i)
+              Ss
+*)
+          val (_, width, maxheight, (nws, sws, nes, ses), i, mksvgs) =
             foldl
               (hlayout xsep (ppS pi) path)
-              (0, 0, 0, ([],[],[],[]), i,
-               fn xy => fn mksvg => mksvg xy)
+              (0, 0, 0, 
+               (fn _ => [], fn _ => [], fn _ => [], fn _ => []), i,
+               fn _ => fn xy => fn mksvg => mksvg xy)
               Ss
           val xsep = case Ss of [] => 0 | _ => xsep
-          val mksvgs = fn xy => mksvgs xy (fn _ => [])
+          val mksvgs = fn xy => mksvgs maxheight xy (fn _ => [])
+          val corners = (nws maxheight, sws maxheight, nes maxheight, ses maxheight)
         in
           ((width - xsep, maxheight), corners, i, concatpairs o mksvgs)
         end
@@ -844,7 +925,9 @@ struct
           val (_, width, maxheight, _, _, mksvgs) =
             foldl
               (hlayout xsep (ppP hasedges pi) [])
-              (0, 0, 0, ([],[],[],[]), 0, fn xy => fn mksvg => mksvg xy)
+              (0, 0, 0,
+               (fn _ => [], fn _ => [], fn _ => [], fn _ => []),
+               0, fn _ => fn xy => fn mksvg => mksvg xy)
               Ps
           val xsep = case Ps of [] => 0 | _ => xsep
           val wd =
@@ -881,7 +964,7 @@ struct
                      x = xpos, y = y + myheight,
                      text = iname, anchor = "middle"} :: svgs)
                 end
-              val mksvgs = fn xy => mksvgs xy (fn _ => [])
+              val mksvgs = fn xy => mksvgs maxheight xy (fn _ => [])
               fun merge ((pmap, sxx, svgs), (pmap', sxxs, svgs')) =
                 (NameMap.plus (pmap, pmap'), sxx :: sxxs, svgs @ svgs')
               val (pmap, sxxs, svgs) =
