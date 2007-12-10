@@ -101,7 +101,7 @@ val def_x = Ion("def",[],["x"])
 val msg_w = Ion("msg",[],["w"])
 (* it is troublesome to have to globalise names for Pri... *)
 val get_sub = Emb(sub__x,abs_x(Pri(con_x(site1),Emb(def_x,msg_w))))
-
+(*val get_sub = Emb(sub__x,abs_x(Pri(site1,Emb(def_x,msg_w))))*)
 val idle__a = Wir([IdleG("a")])
 
 (*
