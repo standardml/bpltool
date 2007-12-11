@@ -629,6 +629,7 @@ fun numberSites rule =
 	    val (b1',smaps') = traverse b1 smaps
 	    val (b2',nmaps') = traverse' b2 smaps' nmaps
 	in (Rule(i,b1',b2'),nmaps') end
+      | _ => raise Fail("numberSites: Called on a non-Rule\n")
 
 (* take ctrldef list and peel off Cdef constructor from the 4-tuples *)
 fun peelCdef [] = []
@@ -657,6 +658,7 @@ fun prog2bgval ast =
 		val mainVal' =
 		    case mainVal
 		     of [Value(i,b)] => b (* singleton by invar. *)
+		      | _ => raise Fail("prog2bgval: There is not exactly one main Value\n")
 		(* make bgvals *)
 		val mainBgval = big2bgval mainVal' signa'
 		val rules' = rules2bgvals rules_nmaps signa'
