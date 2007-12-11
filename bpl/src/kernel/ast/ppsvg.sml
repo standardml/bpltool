@@ -801,11 +801,11 @@ struct
                   in
                     (x + (inamesize + 1) * namecharwidth,
                      NameMap.add
-                       (oname, (xpos, y + sitefontheight + textysep), pmap),
+                       (oname, (xpos, y + labelheight), pmap),
                      Text {
                        class = "nametext",
                        x = xpos, 
-                       y = y + (namefontheight + sitefontheight + 2 * textysep),
+                       y = y + (namefontheight + labelheight + textysep),
                        text = iname,
                        anchor = "middle"} :: svgs)
                   end
