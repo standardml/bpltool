@@ -347,8 +347,6 @@ fun conc (nameset,b) = (con nameset) oo b
 
 (* transform a bigraph -- abstract syntax tree -- into a bgval *)
 fun big2bgval ast signa =
-    (* translate into bgval, and wire through surplus global names,
-       but what about local names? *)
     case ast
      of Wir(w) =>
 	let fun w2bgval wire =
@@ -374,7 +372,7 @@ fun big2bgval ast signa =
 	let val b1' = big2bgval b1 signa
 	    val b2' = big2bgval b2 signa
 	in (b1' pp b2')	end
-      | Com(b1,b2) =>
+      | Com(b1,b2) => (* wire through surplus global names *)
 	let val b1' = big2bgval b1 signa
 	    val b2' = big2bgval b2 signa
 	(* (b1' || id) o b2', requires:
@@ -382,14 +380,8 @@ fun big2bgval ast signa =
 	 - glob(dom(b1')) \subseteq glob(cod(b2'))
 	 *)
 	in com(b1',b2')	end
-      | Emb(b1,b2) =>
-	let val b1' = big2bgval b1 signa
-	    val b2' = big2bgval b2 signa
-	(* (b1' || id) o b2', requires:
-	 - width(dom(b1')) = width(cod(b2'))
-	 - glob(dom(b1')) \subseteq glob(cod(b2'))
-	 *)
-	in com(b1',b2')	end
+      | Emb(b1,b2) => (* embedding is just composition *)
+	big2bgval (Com(b1,b2)) signa
       | Ten(b1,b2) =>
 	let val b1' = big2bgval b1 signa
 	    val b2' = big2bgval b2 signa
