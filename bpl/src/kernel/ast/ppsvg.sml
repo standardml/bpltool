@@ -1010,9 +1010,9 @@ struct
                   ls
               val topsep = (* spacing between node top and prime edge *)
                 if edgecount > 0 then
-                  (edgecount + 1) * ysep
+                  (edgecount + 3) * ysep
                 else
-                  if LinkSet.isEmpty ls then 0 else 2 * ysep
+                  if LinkSet.isEmpty ls then 0 else 4 * ysep
               val ((mywidth, _), mksvgs) = ppD cfg topsep D
               fun draw (x, y) = 
                 let
