@@ -46,6 +46,9 @@
    - Ions are used to represent both ions, molecules, and atoms. Atoms are
      just special cases and are constructed by "filling the hole" using
      Emb/Com in the AST.
+   - Sites go from local names to local names (and have widths 1) because
+     they are usually used in rules, where they are typically bound in
+     redeces.
 
  Compile: cd <src-dir of BPL-root>; make bpl2bgval
 *)
@@ -220,7 +223,7 @@ fun printMap (m:map) =
 fun printMaps m = List.map printMap m
 
 (* print nmap, i.e. a (nat*nat) list *)
-fun printNmap m =
+fun printNmap (m:natmap) =
     let val n1 = Int.toString(#1(m))
 	val n2 = Int.toString(#2(m))
     in print("(" ^ n1 ^ "," ^ n2 ^ ") ") end
@@ -348,8 +351,7 @@ fun big2bgval ast signa =
        but what about local names? *)
     case ast
      of Wir(w) =>
-	let val _ = print "big2bgval: Wir...\n"
-	    fun w2bgval wire =
+	let fun w2bgval wire =
 		case wire
 		 of Global(out,inn) => mkWir2 out inn
 		  | Local(out,inn) =>
@@ -363,57 +365,37 @@ fun big2bgval ast signa =
 		  | IdleL(x) => abs (s2nmSet x, (mkWir1 x) tt Sugar.idp(1))
 	    val wires = List.map w2bgval w
 	    val bgval = par wires
-	in bgval before printIfaces "Wir"
-				    (B.innerface bgval)
-				    (B.outerface bgval)
-	end
+	in bgval end
       | Par(b1,b2) =>
 	let val b1' = big2bgval b1 signa
 	    val b2' = big2bgval b2 signa
 	in b1' || b2' end
       | Pri(b1,b2) =>
-	let val _ = print "big2bgval: Pri...\n"
-	    val b1' = big2bgval b1 signa
+	let val b1' = big2bgval b1 signa
 	    val b2' = big2bgval b2 signa
-	in (b1' pp b2') before printIfaces "Pri"
-					   (B.innerface(b1' pp b2'))
-					   (B.outerface(b1' pp b2'))
-	end
+	in (b1' pp b2')	end
       | Com(b1,b2) =>
-	let val _ = print "big2bgval: Com...\n"
-	    val b1' = big2bgval b1 signa
+	let val b1' = big2bgval b1 signa
 	    val b2' = big2bgval b2 signa
 	(* (b1' || id) o b2', requires:
 	 - width(dom(b1')) = width(cod(b2'))
 	 - glob(dom(b1')) \subseteq glob(cod(b2'))
 	 *)
-	in com(b1',b2') before printIfaces "Emb"
-					   (B.innerface(com(b1',b2')))
-					   (B.outerface(com(b1',b2')))
-	end
+	in com(b1',b2')	end
       | Emb(b1,b2) =>
-	let val _ = print "big2bgval: Emb...\n"
-	    val b1' = big2bgval b1 signa
+	let val b1' = big2bgval b1 signa
 	    val b2' = big2bgval b2 signa
 	(* (b1' || id) o b2', requires:
 	 - width(dom(b1')) = width(cod(b2'))
 	 - glob(dom(b1')) \subseteq glob(cod(b2'))
 	 *)
-	in com(b1',b2') before printIfaces "Emb"
-					   (B.innerface(com(b1',b2')))
-					   (B.outerface(com(b1',b2')))
-	end
+	in com(b1',b2')	end
       | Ten(b1,b2) =>
-	let val _ = print "big2bgval: Ten...\n"
-	    val b1' = big2bgval b1 signa
+	let val b1' = big2bgval b1 signa
 	    val b2' = big2bgval b2 signa
-	in (b1' tt b2') before printIfaces "Ten"
-					 (B.innerface(b1' tt b2'))
-					 (B.outerface(b1' tt b2'))
-	end
+	in (b1' tt b2')	end
       | Ion(cid,bports,fports) =>
-        let val _ = print "big2bgval: Ion...\n"
-	    val boundnames = strList2nmSetList bports
+        let val boundnames = strList2nmSetList bports
 	    val freenames = List.map s2n fports
 	    val bSz = List.length bports
 	    val fSz = List.length fports
@@ -428,17 +410,9 @@ fun big2bgval ast signa =
 		    in if k = Control.Atomic
 		       then if bSz = 0
 			    then (bgval oo barren) (* make an atom *)
-				 before printIfaces
-					    "Ctrl"
-					    (B.innerface(bgval oo barren))
-					    (B.outerface(bgval oo barren))
 			    else raise Fail("big2bgval: Atom "
 					    ^ i ^ " with bound names\n")
-		       else let val _ = printIfaces
-					    "Ion"
-					    (B.innerface bgval)
-					    (B.outerface bgval)
-			    in bgval end
+		       else bgval
 		    end
 	       else raise Fail("big2bgval: Control " ^ i ^ 
 			       " used in non-accordance with signature\n")
@@ -449,34 +423,26 @@ fun big2bgval ast signa =
 	    val bgval2 = big2bgval b signa
 	in bgval1 oo bgval2 end
       | Abs(nms,b) =>
-	let val _ = print "big2bgval: Abs...\n"
-	    val nmSetList = strList2nmSetList (rmDubs nms)
+	let val nmSetList = strList2nmSetList (rmDubs nms)
 	    val union = fn (nmset,acc) => NameSet.union nmset acc
 	    val nmSet = List.foldr union NameSet.empty nmSetList
 	    val b' = big2bgval b signa
 	    val abst = abs (nmSet, b')
-	    val _ = printIfaces "Abs" (B.innerface abst) (B.outerface abst)
 	in abst end
       | Conc(nms,b) =>
-	let val _ = print "big2bgval: Conc...\n"
-	    val nmSetList = strList2nmSetList (rmDubs nms)
+	let val nmSetList = strList2nmSetList (rmDubs nms)
 	    val union = fn (nmset,acc) => NameSet.union nmset acc
 	    val nmSet = List.foldr union NameSet.empty nmSetList
 	    val b' = big2bgval b signa
 	    val conc = conc (nmSet, b')
-	    val _ = printIfaces "Conc" (B.innerface conc) (B.outerface conc)
 	in conc end
-      | Site(i,l) =>
-	let val _ = print "big2bgval: Site...\n"
-	    (* (/X tt id_1) o `[X]` *)
-	    val X' = case l of Namelist(sl) => rmDubs sl
+      | Site(i,l) => (* ({X}) o `[X]`, i.e. id_<1,({X}),X> *)
+	let val X' = case l of Namelist(sl) => rmDubs sl
 	    val X = NameSet.fromList(List.map s2n X')
-	    val site = (*(Sugar.-//X') oo*) abs(X,con X)
-	    val _ = printIfaces "Site" (B.innerface site) (B.outerface site)
+	    val site = abs(X,con X)
 	in site end
       | Id(i) => raise Fail("big2bgval: Unbound identifier: " ^ i ^ "\n")
-      | Empty => let val _ = print "big2bgval: Empty...\n"
-		 in barren end
+      | Empty => barren
 
 (* take a rule with natmaps and produce a rule of bgvals with inst. *)
 fun rule2bgval p signa =
@@ -657,15 +623,7 @@ fun traverse' big smaps nmaps =
 		case lookupSiteId smaps i
 		 of NONE => raise Fail(err_rhs)
 		  | SOME(n) => n
-			       before print("lhsSiteNum = " ^
-					    Int.toString(n) ^ "\n")
 	    val next = nextNat' nmaps
-	    val _ = print "nmaps = "
-	    val _ = printNmaps nmaps
-	    val _ = print "\n"
-	    val _ = print "nmaps' = "
-	    val _ = printNmaps(nmaps@[(next,lhsSiteNum)])
-	    val _ = print "\n"
 	in (Site(Num(next),l), nmaps@[(next,lhsSiteNum)]) end
       | Id(i) => raise Fail("traverse': Bigraph with an id " ^ i ^ "\n")
       | Empty => (Empty, nmaps) (* done *)
@@ -674,27 +632,10 @@ fun traverse' big smaps nmaps =
 fun numberSites rule =
     case rule
      of Rule(i,b1,b2) =>
-	let val _ = print "numberSites called...\n"
-	    val smaps = []
+	let val smaps = []
 	    val nmaps = []
 	    val (b1',smaps') = traverse b1 smaps
-	    val _ = print "b1' sites = "
-	    val _ = List.map
-			(fn n => print(Int.toString(n)))
-			(List.map (fn Site(Num(n),l) => n) (getSites b1'))
-	    val _ = print "\n"
-	    val _ = print "smaps' = "
-	    val _ = printSmaps smaps'
-	    val _ = print "\n"
 	    val (b2',nmaps') = traverse' b2 smaps' nmaps
-	    val _ = print "b2' sites = "
-	    val _ = List.map
-			(fn n => print(Int.toString(n)))
-			(List.map (fn Site(Num(n),l) => n) (getSites b2'))
-	    val _ = print "\n"
-	    val _ = print "nmaps = "
-	    val _ = printNmaps nmaps'
-	    val _ = print "\n"
 	in (Rule(i,b1',b2'),nmaps') end
 
 (* take ctrldef list and peel off Cdef constructor from the 4-tuples *)
@@ -718,12 +659,6 @@ fun prog2bgval ast =
 			(fn d => case d of Value(i,b) => true
 					 | _ => false)
 			rolledList'
-		(*
-		 val _ = print("length(mainVal) = " ^
-			       Int.toString(List.length(mainVal)) ^ "\n")
-		 val _ = print("length(rules) = " ^
-			       Int.toString(List.length(rules)) ^ "\n")
-		 *)
 		(* number sites in rules and generate natmaps *)
 		val rules_nmaps = List.map numberSites rules
 		val signa' = peelCdef signa
