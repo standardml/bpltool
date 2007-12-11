@@ -318,6 +318,10 @@ struct
   exception MoveToExpected of pathdata list
   fun svgToTikZ unitsize =
   let
+    val escapeLaTeX =
+      String.translate
+        (fn #"_" => "\\_" | #"$" => "\\$" | #"&" => "\\&"
+          | #"{" => "\\{" | #"}" => "\\}" | c => String.str c)
     fun xy2str (x, y) = intToString x ^ "," ^ intToString y
     fun pair xy = "(" ^ xy2str xy ^ ")"
     fun styleis "" = "" | styleis class = "style=" ^ class
@@ -399,7 +403,7 @@ struct
            "middle" => "south"
          | "end" => "south east"
          | _ => "south west") ^
-        "] {" ^ text ^ "};\n" ^ s
+        "] {" ^ escapeLaTeX text ^ "};\n" ^ s
       | svgToTikZ' (Rectangle {class, x, y, r, width, height}) s
       = "  \\draw[" ^ styleis class ^ "] " ^ pair (x, y) ^
         " rectangle +" ^ pair (width, height) ^ ";\n" ^ s
@@ -617,21 +621,21 @@ struct
               val bspace = b * portsep
               val fspace = f * portsep
               val minspace = bspace + fspace
+              val bplusf = b + f
               val (start, myportsep) =
                 if minspace > iwidth then (* too little room in general *)
-                  let
-                    val sep = iwidth div (b + f)
-                  in
-                    (0, sep)
-                  end
+                  (0, iwidth div bplusf)
                 else
-                  if bspace >= textwidth then
-                    (portsep div 2, portsep)
-                  else (* adjust so free ports start after text *)
-                    if space < fspace then
-                      (0, portsep)
-                    else
-                      (textwidth + textmargin - b * portsep, portsep)
+                  case labelpos of
+                    NW =>
+                    if bspace >= textwidth then
+                      (portsep div 2, portsep)
+                    else (* adjust so free ports start after text *)
+                      if space < fspace then
+                        (0, portsep)
+                      else
+                        (textwidth + textmargin - b * portsep, portsep)
+                  | _ => ((iwidth - bplusf) div 2, portsep)
               fun placeport addmap addsvgs (n, (x, pmap, svgs)) =
                 let
                   val x' = real x - hw (* relative to node centre *)
