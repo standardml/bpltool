@@ -142,6 +142,8 @@ fun printRule r = print(Rule.toString r)
 fun printRules [] = print "\ndone printing rules...\n"
   | printRules (r::rs) = ( printRule r ; printRules rs)
 
+val _ = print "\ntest-bpl2bgval.sml called...\n\n"
+
 val _ = print "state = "
 val _ = print state
 val _ = print "\n"
