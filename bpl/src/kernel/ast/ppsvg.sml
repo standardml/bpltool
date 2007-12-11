@@ -133,6 +133,22 @@ struct
           | GREATER => true
           | EQUAL => n1 > n2)
 
+  structure EdgeSet =
+    OrderSet (
+      type T =
+        int * int * int * int * bool * string *
+        int * int * int * int * (int * int) list
+      fun lt ((_, dx1, u1, _, _, _, _, _, _, y1, _) : T)
+             ((_, dx2, u2, _, _, _, _, _, _, y2, _) : T) =
+        case Int.compare (y1, y2) of
+          LESS => true
+        | GREATER => false
+        | EQUAL =>
+          case Int.compare (dx1, dx2) of
+            LESS => false
+          | GREATER => true
+          | EQUAL => u1 < u2)
+
   fun intToString i = if i < 0 then "-" ^ Int.toString (~i) else Int.toString i
   
   (* SVG data types ************************************************)
@@ -771,6 +787,8 @@ struct
             val nameswidth = 
               if w = 0 then 0 else (w - 1) * namecharwidth
             val mywidth = Int.max (sitewidth, nameswidth + 2 * xsep)
+            val labelheight =
+              if showsitenums then sitefontheight + textysep else 0
             fun draw (x, y) =
               let
                 fun dolink l (x, pmap, svgs) =
@@ -800,7 +818,7 @@ struct
                 (pmap,
                  Rectangle {
                    class = "site",
-                   x = x, y = y + sitefontheight + textysep, r = siterounding,
+                   x = x, y = y + labelheight, r = siterounding,
                    width = mywidth, height = siteheight} ::
                  (if showsitenums then
                     Text {
@@ -810,7 +828,7 @@ struct
                   else
                     svgs))
               end
-            val myheight = siteheight + sitefontheight + textysep
+            val myheight = siteheight + labelheight
           in
             ((mywidth, myheight),
              ([(0, 0)], [(0, myheight)],
@@ -849,7 +867,7 @@ struct
 
       (* P: Discrete primes ****************************************)
 
-      fun ppP hasedges pi path i p =
+      fun ppP topsep pi path i p =
         let
           val cfg as {
             namecharwidth, rootwidth, rootheight, rootrounding,
@@ -867,16 +885,14 @@ struct
           val mywidth' = width + 2 * xsep
           val mywidth =
             Int.max (mywidth', Int.max (namewidth, rootwidth))
-          val edgespace =
-            if hasedges then ctrlfontheight + textysep + 5 else 0
           val myheight =
-            Int.max (height + 2 * ysep + edgespace, rootheight)
+            Int.max (height + 2 * ysep + topsep, rootheight)
           fun draw (x, y) =
             let
               val (pmap, svgs) =
                 mksvgs (
                   x + (mywidth - width) div 2,
-                  y + ysep + edgespace)
+                  y + ysep + topsep)
             in
              (pmap, (s, x + rootrounding, x + mywidth - rootrounding),
              Rectangle {
@@ -896,7 +912,7 @@ struct
 
       (* D: Discrete bigraphs **************************************)
 
-      fun ppD cfg hasedges d =
+      fun ppD cfg topsep d =
         let
           val {
             namecharwidth, namefontheight, rootheight,
@@ -913,7 +929,7 @@ struct
             | _ => raise Impossible 
           val (_, width, maxheight, _, _, mksvgs) =
             foldl
-              (hlayout xsep (ppP hasedges pi) [])
+              (hlayout xsep (ppP topsep pi) [])
               (0, 0, 0,
                (fn _ => [], fn _ => [], fn _ => [], fn _ => []),
                0, fn _ => fn xy => fn mksvg => mksvg xy)
@@ -976,14 +992,28 @@ struct
           val cfg as {
             namefontheight, namecharwidth, ctrlfontheight, 
             textysep, binderradius, idleedgelength, rootrounding,
-            ...} = config ("", [])
+            ysep, ...} = config ("", [])
           val {wirxid, D} = unmkB b
         in
           case BgVal.match (BgVal.PTen [BgVal.PWir, BgVal.PVar]) wirxid of
             BgVal.MTen [BgVal.MWir w, _] =>
             let
               val ls = Wiring.unmk w
-              val ((mywidth, _), mksvgs) = ppD cfg (not (LinkSet.isEmpty ls)) D
+              val edgecount =
+                LinkSet.fold
+                  (fn l => case Link.unmk l of
+                     {outer = NONE, inner} => 
+                      (fn i =>
+                       if NameSet.size inner > 1 then i + 1 else i)
+                    | _ => fn i => i)
+                  0
+                  ls
+              val topsep = (* spacing between node top and prime edge *)
+                if edgecount > 0 then
+                  (edgecount + 1) * ysep
+                else
+                  if LinkSet.isEmpty ls then 0 else 2 * ysep
+              val ((mywidth, _), mksvgs) = ppD cfg topsep D
               fun draw (x, y) = 
                 let
                   val unique = ref 0
@@ -1097,10 +1127,33 @@ struct
                             dx1, u1, s1, b1, name1, xmin1, xmax1, ymin1, xys1) :: links2)
                   end
                 | place [] links = links
-              fun drawlinks [] svgs = svgs
-                | drawlinks ((xx, dx, _, _, _, "", _, _, ymin, xys) :: links) svgs
+              val links = place (LSet.list links) []
+              fun separate (e as (_,_,_,_,_,"",_,_,_,_), (es, ls)) = (e :: es, ls)
+                | separate (l as (_,_,_,_,_, _,_,_,_,_), (es, ls)) = (es, l :: ls)
+              val (edges, links) = foldr separate ([], []) links
+              val edges = (* Calculate estimate for y positions of edges *)
+                map
+                  (fn (x, dx, u, s, b, name, xmin, xmax, ymin, xys) =>
+                   (x, dx, u, s, b, name, xmin, xmax, ymin, 
+                   ymin - ctrlfontheight - textysep - (dx - 40) div 10,
+                   xys))
+                  edges
+              val edges = (EdgeSet.list o EdgeSet.fromList) edges (* sort them *)
+              val (_, edges) = (* Adjust so edges are spaced below prime top *)
+                foldl
+                  (fn (e as (x, dx, u, s, b, name, xmin, xmax, ymin, y, xys),
+                       (lasty, es)) =>
+                     let
+                       val limit = lasty + ysep
+                       val y = if y < limit then limit else y
+                     in
+                       (y, (x, dx, u, s, b, name, xmin, xmax, ymin, y, xys) :: es)
+                     end)
+                  (namefontheight + textysep + binderradius, [])
+                  edges
+              fun drawedges [] svgs = svgs
+                | drawedges ((xx, dx, _, _, _, _, _, _, ymin, yy, xys) :: edges) svgs
                 = let
-                    val yy = ymin - ctrlfontheight - textysep - (dx - 40) div 10
                     fun drawedge' [] svgs = svgs
                       | drawedge' ((x', y') :: xys) svgs
                       = drawedge'
@@ -1122,8 +1175,9 @@ struct
                              LineTo[(x', y' - idleedgelength)]]} :: svgs)
                       | drawedge xys svgs = drawedge' xys svgs
                   in
-                    drawedge xys (drawlinks links svgs)
+                    drawedge xys (drawedges edges svgs)
                   end
+              fun drawlinks [] svgs = svgs
                 | drawlinks ((xx, _, _, _, bound, name, _, _, _, xys) :: links) svgs
                 = let
                     val namey =
@@ -1161,8 +1215,7 @@ struct
                        else
                          svgs)
                   end
-              val links = place (LSet.list links) []
-              val svgs = svgs @ drawlinks links []
+              val svgs = svgs @ drawlinks links (drawedges edges [])
                 in
                   svgs
                 end
