@@ -621,10 +621,9 @@ struct
               val bspace = b * portsep
               val fspace = f * portsep
               val minspace = bspace + fspace
-              val bplusf = b + f
               val (start, myportsep) =
                 if minspace > iwidth then (* too little room in general *)
-                  (0, iwidth div bplusf)
+                  (0, iwidth div b + f)
                 else
                   case labelpos of
                     NW =>
@@ -635,7 +634,7 @@ struct
                         (0, portsep)
                       else
                         (textwidth + textmargin - b * portsep, portsep)
-                  | _ => ((iwidth - bplusf) div 2, portsep)
+                  | _ => ((iwidth - minspace) div 2, portsep)
               fun placeport addmap addsvgs (n, (x, pmap, svgs)) =
                 let
                   val x' = real x - hw (* relative to node centre *)
