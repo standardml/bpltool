@@ -1,6 +1,6 @@
 val smallcfg = makecfg (fn (ctrlname, _) => {
       xsep           = 4,
-      ysep           = 3,
+      ysep           = 4,
       ctrlfontheight = 12,
       ctrlcharwidth  = 8,
       namefontheight = 10,
@@ -9,6 +9,7 @@ val smallcfg = makecfg (fn (ctrlname, _) => {
       sitecharwidth  = 8,
       textmargin     = 2,
       textysep       = 3,
+      edgeysep       = 52,
       idleedgelength = 8,
       rootwidth      = 40,
       rootheight     = 30,

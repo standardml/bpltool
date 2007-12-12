@@ -77,6 +77,8 @@ sig
       textmargin     : int,
     (** Vertical space below text. *)
       textysep       : int,
+    (** Vertical space between global edges. *)
+      edgeysep       : int,
     (** Length of single-point edges. *)
       idleedgelength : int,
     (** Minimum width of a root. *)

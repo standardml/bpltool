@@ -42,12 +42,12 @@ sig
   (** Normalised vector. *)
   val norm : vec -> real * real
   (** Compute the convex hull.
-   * @returns  The coordinates that define the convex hull of
+   * @return  The coordinates that define the convex hull of
    *          the given coordinates.
    *)
   val convexhull : vec list -> vec list
   (** Compute the minimal enclosing circle.
-   * @returns    (c, r) where c is the centre, and r the radius.
+   * @return    (c, r) where c is the centre, and r the radius.
    * @exception  Empty if the list of points is empty.
    *)
   val minenclosingcircle : vec list -> vec * num

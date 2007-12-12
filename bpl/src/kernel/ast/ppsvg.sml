@@ -81,6 +81,7 @@ struct
       sitecharwidth  : int,
       textmargin     : int,
       textysep       : int,
+      edgeysep       : int,
       idleedgelength : int,
       rootwidth      : int,
       rootheight     : int,
@@ -437,6 +438,7 @@ struct
       sitecharwidth  = 8,
       textmargin     = 2,
       textysep       = 3,
+      edgeysep       = 6,
       idleedgelength = 8,
       rootwidth      = 40,
       rootheight     = 30,
@@ -623,7 +625,7 @@ struct
               val minspace = bspace + fspace
               val (start, myportsep) =
                 if minspace > iwidth then (* too little room in general *)
-                  (0, iwidth div b + f)
+                  (0, iwidth div (b + f))
                 else
                   case labelpos of
                     NW =>
@@ -790,6 +792,11 @@ struct
             val nameswidth = 
               if w = 0 then 0 else (w - 1) * namecharwidth
             val mywidth = Int.max (sitewidth, nameswidth + 2 * xsep)
+            val mysiteheight =
+              if LinkSet.isEmpty ls then
+                siteheight
+              else
+                Int.max (siteheight, namefontheight + textysep)
             val labelheight =
               if showsitenums then sitefontheight + textysep else 0
             fun draw (x, y) =
@@ -822,7 +829,7 @@ struct
                  Rectangle {
                    class = "site",
                    x = x, y = y + labelheight, r = siterounding,
-                   width = mywidth, height = siteheight} ::
+                   width = mywidth, height = mysiteheight} ::
                  (if showsitenums then
                     Text {
                       class = "sitetext",
@@ -831,7 +838,7 @@ struct
                   else
                     svgs))
               end
-            val myheight = siteheight + labelheight
+            val myheight = mysiteheight + labelheight
           in
             ((mywidth, myheight),
              ([(0, 0)], [(0, myheight)],
@@ -995,7 +1002,7 @@ struct
           val cfg as {
             namefontheight, namecharwidth, ctrlfontheight, 
             textysep, binderradius, idleedgelength, rootrounding,
-            ysep, ...} = config ("", [])
+            ysep, edgeysep, ...} = config ("", [])
           val {wirxid, D} = unmkB b
         in
           case BgVal.match (BgVal.PTen [BgVal.PWir, BgVal.PVar]) wirxid of
@@ -1013,9 +1020,9 @@ struct
                   ls
               val topsep = (* spacing between node top and prime edge *)
                 if edgecount > 0 then
-                  (edgecount + 3) * ysep
+                  (edgecount + 3) * edgeysep
                 else
-                  if LinkSet.isEmpty ls then 0 else 4 * ysep
+                  if LinkSet.isEmpty ls then 0 else 4 * edgeysep
               val ((mywidth, _), mksvgs) = ppD cfg topsep D
               fun draw (x, y) = 
                 let
