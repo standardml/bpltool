@@ -18,7 +18,13 @@
  * USA
  *)
 
-(** Abstract data type for an alternative variant of bigraph terms.
+(** 
+ * Authors: Henning Niss and Ebbe Elsborg
+ *
+ * Abstract data type for an alternative variant of bigraph terms.
+ * The aim is to be able to express location- and context models in BPL
+ * and then programatically get them transformed into input for the BPL
+ * tool -- e.g. a BRS. Work in progess.
  *
  *
  * TODO: UPDATE THIS OUT-OF-DATE-DOCUMENTATION:
