@@ -21,6 +21,7 @@
 (** Glue to combine BPL lexer and parser.
  * @version $LastChangedRevision: 442 $
  * Modified: $Date: 2006/09/04 21:48:46 $ by: $Author: hniss $
+ * Modified by Ebbe Elsborg on December 12 2007.
  *)
 
 structure BPLParser =
@@ -30,7 +31,7 @@ struct
 
     type pos = int * int
 
-    (* Create the Lexer and Parser *)
+    (* Create the Lexer and Parser by ML-Yacc magic *)
     structure BplLrVals = 
 	BplLrValsFun(structure Token = LrParser.Token)
     structure BplL = 
@@ -40,39 +41,43 @@ struct
 		    structure Lex = BplL
 		    structure LrParser = LrParser)
 
+    (* prettyprint a tree to stdErr *)
     fun ppToStdErr pptree =
-	Pretty.ppPrint pptree (Pretty.plainOutput ("(*","*)")) TextIO.stdErr
-    fun printError (s, {pos=p1,src={file=file}}, {pos=p2,src=s2}) = 
-	ppToStdErr(SourceLocation.ppSourceLocation file (p1,p2) [Pretty.ppString s])
+	Pretty.ppPrint
+	    pptree
+	    (Pretty.plainOutput ("(*","*)"))
+	    TextIO.stdErr
 
+    (* print an error message *)
+    fun printError (s, {pos=p1,src={file=file}}, {pos=p2,src=s2}) =
+	let val func = SourceLocation.ppSourceLocation
+	    val res = func file (p1,p2) [Pretty.ppString s]
+	in ppToStdErr res end
+
+    (* parse a stream and return an ast or a ParseError *)
     fun parseStream src stream =
 	let val lexarg = {src=src}
-
 	    val lexer = 
-		BplP.makeLexer (fn i => TextIO.inputN (stream, i)) 
-		               lexarg
-
+		BplP.makeLexer
+		    (fn i => TextIO.inputN (stream, i)) 
+		    lexarg
 	    val (ast, stream) = 
 		BplP.parse(15, lexer, printError, ())
-	             handle BplP.ParseError => raise ParseError
-	in
-	    ast
-	end
+	        handle BplP.ParseError => raise ParseError
+	in ast end
 
-    (* General function for parsing input streams
+    (* general function for parsing input streams
      * - used for all the main functions below.
      *)
-
     fun parseFile file =
 	let val stream = TextIO.openIn file
 	    val result = parseStream {file=file} stream
-	in  result before TextIO.closeIn stream
-	end
+	in result before TextIO.closeIn stream end
 
 end (* structure Parse *)
 
 (*val _ = 
     let val ast = BPLParser.parseFile (hd(CommandLine.arguments()))
-    in  Pretty.ppPrint (BPLTerm.pp ast)
-		       (Pretty.plainOutput ("(*","*)")) TextIO.stdOut
+    in Pretty.ppPrint (BPLTerm.pp ast)
+		      (Pretty.plainOutput ("(*","*)")) TextIO.stdOut
     end*)
