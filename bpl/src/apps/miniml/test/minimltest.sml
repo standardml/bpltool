@@ -45,16 +45,18 @@
    expected output.
 *)
 
-functor MiniMLTest(structure BG : BG
-                   structure MiniMLToBG : MINIMLTOBG
-                   structure Assert : ASSERT
-		  structure Test :
-			    sig
-			      type testFunction = unit -> unit
-			      type test
-			      val labelTests : (string * testFunction) list -> test
-			    end
-		  ) : sig val suite : unit -> Test.test end =
+functor MiniMLTest(
+structure BG : BG
+structure MiniMLToBG : MINIMLTOBG
+structure Assert : ASSERT
+structure Test :
+	  sig
+	      type testFunction = unit -> unit
+	      type test
+	      val labelTests : (string * testFunction) list -> test
+	  end
+) : sig val suite : unit -> Test.test end =
+
 struct
 
     val suite = 
@@ -70,22 +72,29 @@ struct
                   "fun"
                 ]
 
+            (* translate files and check whether results are as expected *)
 	    fun test1 infile resfile expectedfile =
-		let val _ = MiniMLToBG.compile infile resfile
+		let (* call compile func in $SRC/apps/miniml/mml2bg.sml *)
+                    val _ = MiniMLToBG.compile infile resfile
 		    val res = BG.bgvalToString(BG.bgvalUsefile'' resfile)
 		    val exp = BG.bgvalToString(BG.bgvalUsefile'' expectedfile)
-		in  Assert.assertEqualString res exp ; ()
+		in Assert.assertEqualString res exp ; ()
 		end handle MiniMLToBG.CompileError (reason, expl)
 			   => Assert.fail (reason ^ Pretty.ppToString expl)
-	    fun test1 infile resfile expectedfile =
-		let val _ = MiniMLToBG.compile infile resfile
-		in  Assert.assertEqualUnit () ()
+
+	    (* translate files not checking whether results are as expect. *)
+	    fun test2 infile resfile expectedfile =
+		let (* call compile func in $SRC/apps/miniml/mml2bg.sml *)
+		    val _ = MiniMLToBG.compile infile resfile
+		in Assert.assertEqualUnit () ()
 		end handle MiniMLToBG.CompileError (reason, expl)
 			   => Assert.fail (reason ^ Pretty.ppToString expl)
 	    fun testfile base =
-		(base, fn () => test1 (base^".mml") (base^".tmp.bpl") (base^".bpl"))
+		(base, fn () => test2 (base^".mml")
+				      (base^".tmp.bpl")
+				      (base^".bpl"))
 
-	in  Test.labelTests o (fn () => List.map testfile testfiles)
+	in Test.labelTests o (fn () => List.map testfile testfiles)
 	end
 
 end

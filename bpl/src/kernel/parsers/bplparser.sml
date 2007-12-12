@@ -19,6 +19,7 @@
  *)
 
 (** Glue to combine BPL lexer and parser.
+ *  Lexes and parses a .bpl file, outputs (pp) a bplterm ast.
  * @version $LastChangedRevision: 442 $
  * Modified: $Date: 2006/09/04 21:48:46 $ by: $Author: hniss $
  * Modified by Ebbe Elsborg on December 12 2007.
@@ -76,8 +77,11 @@ struct
 
 end (* structure Parse *)
 
-(*val _ = 
+exception MissingInFile
+
+val _ =
     let val ast = BPLParser.parseFile (hd(CommandLine.arguments()))
+	    handle Empty => raise MissingInFile
     in Pretty.ppPrint (BPLTerm.pp ast)
 		      (Pretty.plainOutput ("(*","*)")) TextIO.stdOut
-    end*)
+    end

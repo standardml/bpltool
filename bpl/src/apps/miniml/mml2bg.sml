@@ -37,7 +37,7 @@ functor MiniMLToBG(structure BG : BG_ADT
     val dump_bgval =
 	Flags.makeBoolFlag{name="/dump/bgval",arg="",
 			   short="",long="dump-bgval",default=false,
-			   desc="Dump BG term prior to normalization"}
+			   desc="Dump bgval prior to normalization"}
 
     val statistics =
 	Flags.makeBoolFlag{name="/compile/stats",arg="",

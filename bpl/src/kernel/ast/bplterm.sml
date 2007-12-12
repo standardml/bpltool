@@ -18,7 +18,12 @@
  * USA
  *)
 
-(** Abstract data type for an alternative variant of bigraph terms.
+(** 
+ * Abstract data type for an alternative variant of bigraph terms,
+ * and functions to prettyprint this abstract datatype.
+ *
+ * Henning Niss and Ebbe Elsborg
+ *
  * @version $LastChangedRevision: 923 $
  *)
 structure BPLTerm :> BPL_TERM = struct
