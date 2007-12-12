@@ -1,6 +1,9 @@
 % Encoding of Extended Mini-ML using LOCAL bigraphs.
+% 
+% This version uses explicit substitution propagation because
+% substitutions are parts of terms in the bigraphical representation.
 %
-% Bug-fixing and extending Lars Birkedal's encoding of 2005-07-11.
+% Extending Lars Birkedal's encoding of 2005-07-11.
 %
 % Ebbe Elsborg and Henning Niss, 2005-01-03.
 % Revised by Ebbe Elsborg, 2007-04-23.
