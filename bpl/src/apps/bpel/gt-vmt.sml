@@ -5,10 +5,11 @@
  *)
 
 SMLofNJ.Internals.GC.messages false;
-val cur_dir = OS.FileSys.getDir ();
+val bpel_dir = OS.FileSys.getDir ();
 val _ = OS.FileSys.chDir "../bpl/";
 use "smlnj.sml";
-val _ = OS.FileSys.chDir cur_dir;
+val _ = OS.FileSys.chDir bpel_dir;
+use "figinfo.sml";
 
 (*******************************)
 (*     String Declarations     *)
