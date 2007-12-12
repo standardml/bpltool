@@ -9,7 +9,7 @@ val smallcfg = makecfg (fn (ctrlname, _) => {
       sitecharwidth  = 8,
       textmargin     = 2,
       textysep       = 3,
-      edgeysep       = 52,
+      edgeysep       = 22,
       idleedgelength = 8,
       rootwidth      = 40,
       rootheight     = 30,

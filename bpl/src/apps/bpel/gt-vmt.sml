@@ -320,7 +320,7 @@ Assign[inst_id] o Copy o (From[f, scope1]
 
 
 (* Process communication *)
-val rule_invoke = "invoke" :::
+val rule_invoke_slow = "invoke" :::
 Invoke[partner_link_invoker, oper, invar, invar_scope,
        outvar, outvar_scope, inst_id_invoker]
 || PartnerLink[partner_link_invoker, inst_id_invoker] o <->
@@ -353,7 +353,7 @@ o (GetReply[partner_link, oper, outvar, outvar_scope, inst_id_invoker]
               `|` Invoked[inst_id_invoked]
               `|` `[inst_id_invoked]`)));
 
-val rule_invoke_fast = "invoke" :::
+val rule_invoke = "invoke" :::
    (    PartnerLinks
          o (PartnerLink[partner_link_invoker, inst_id_invoker] o <-> `|` `[]`)
     `|` Variables o (Variable[invar, invar_scope] o `[]` `|` `[]`)
@@ -631,9 +631,10 @@ o (Instance[caller, caller_id]
              `|` Exit[caller_id])));
 
 
-(* 
-val ms = matches (mkrules [rule_reply]) (echo_process || caller_inst);
-val ms = matches (mkrules [rule_invoke]) (echo_process || caller_inst);
-print_mv ms;*)
+
+val mz1 = matches (mkrules [rule_reply]) (caller_inst1 `|` echo_process1);
+val mz2 = matches (mkrules [rule_invoke]) (caller_inst1 `|` echo_process1);
+(*print_mv ms;*)
 
 (*val final_state = run rules tactic (echo_process || caller_inst);*)
+(*val final_state = run rules (react_rule "invoke") (caller_inst1 `|` echo_process1);*)
