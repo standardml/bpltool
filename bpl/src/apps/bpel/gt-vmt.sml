@@ -76,6 +76,7 @@ val echo_value           = "echo_value"
 val echo_service         = "echo_service"
 val x                    = "x"
 val y                    = "y"
+val z                    = "z"
 val caller               = "caller"
 val caller_id            = "caller_id"
 
@@ -352,6 +353,41 @@ o (GetReply[partner_link, oper, outvar, outvar_scope, inst_id_invoker]
               `|` Invoked[inst_id_invoked]
               `|` `[inst_id_invoked]`)));
 
+val rule_invoke_fast = "invoke" :::
+   (    PartnerLinks
+         o (PartnerLink[partner_link_invoker, inst_id_invoker] o <-> `|` `[]`)
+    `|` Variables o (Variable[invar, invar_scope] o `[]` `|` `[]`)
+    `|` Running[inst_id_invoker])
+|| Invoke[partner_link_invoker, oper, invar, invar_scope,
+          outvar, outvar_scope, inst_id_invoker]
+|| Process[proc_name][[scope]]
+   o (PartnerLinks
+      o (PartnerLink[partner_link, scope] o (CreateInstance[oper] `|` `[]`)
+         `|` `[]`)
+      `|` `[scope]`)
+
+  --[6 |-> 0, 7 |-> 4, 8&[inst_id_invoked] |--> 5&[scope]]--|>
+
+-/inst_id_invoked
+o ((   PartnerLinks
+        o (PartnerLink[partner_link_invoker, inst_id_invoker]
+            o Link[inst_id_invoked] `|` `[]`)
+    `|` Variables o (Variable[invar, invar_scope] o `[]` `|` `[]`)
+    `|` Running[inst_id_invoker])
+   || GetReply[partner_link, oper, outvar, outvar_scope, inst_id_invoker]
+   || (Process[proc_name][[scope]]
+       o (PartnerLinks
+          o (PartnerLink[partner_link, scope] o (CreateInstance[oper] `|` `[]`)
+             `|` `[]`)
+          `|` `[scope]`)
+       `|` Instance[proc_name, inst_id_invoked]
+           o (PartnerLinks
+              o (PartnerLink[partner_link, inst_id_invoked]
+                 o (Link[inst_id_invoker] `|` Message[oper] o `[]`)
+                 `|` `[]`)
+              `|` Invoked[inst_id_invoked]
+              `|` `[inst_id_invoked]`)));
+
 
 val rule_receive = "receive" :::
 Receive[partner_link, oper, var, var_scope, inst_id]
@@ -490,10 +526,10 @@ o (Instance[caller, caller_id]
    o (PartnerLinks o PartnerLink[echo_service, caller_id] o <->
       `|` Running[caller_id]
       `|` Variables
-           o (Variable[x, caller_id] o True
-              `|` Variable[y, caller_id] o False)
-          `|` Invoke[echo_service, echo, x, caller_id,
-                     y, caller_id, caller_id]));
+           o (Variable[y, caller_id] o True
+              `|` Variable[z, caller_id] o False)
+          `|` Invoke[echo_service, echo, y, caller_id,
+                     z, caller_id, caller_id]));
 
 
 (* A slightly more advanced echo process: 
