@@ -530,7 +530,9 @@ val rules =
              rule_flow_completed, rule_sequence_completed,
              rule_if_true, rule_if_false, rule_while_unfold,
              rule_variable_copy,
-             rule_invoke_slow, rule_invoke, rule_receive, rule_invoke_receive, rule_reply,
+             rule_invoke_general, rule_invoke,
+             rule_receive_general, rule_receive,
+             rule_invoke_receive, rule_reply,
              rule_exit_stop_inst, rule_exit_remove_inst,
              rule_inst_completed];
 
