@@ -167,7 +167,7 @@ val From         = atomic   (From        -:       2);
  *)
 val Invoke       = atomic   (Invoke      -:       7);
 
-val PartnerLinks = passive0 (PartnerLinks          );
+val PartnerLinks = active0 (PartnerLinks          );
 (* The free ports of a PartnerLink node should be connected:
  *
  *   #1 to the name of the partner link
@@ -327,7 +327,7 @@ Assign[inst_id] o Copy o (From[f, scope1]
 
 
 (* Process communication *)
-val rule_invoke_slow = "invoke" :::
+val rule_invoke_slow = "invoke_slow" :::
 Invoke[partner_link_invoker, oper, invar, invar_scope,
        outvar, outvar_scope, inst_id_invoker]
 || PartnerLink[partner_link_invoker, inst_id_invoker] o <->
@@ -348,6 +348,40 @@ o (GetReply[partner_link, oper, outvar, outvar_scope, inst_id_invoker]
       o Link[inst_id_invoked]
    || Variable[invar, invar_scope] o `[]`
    || Running[inst_id_invoker]
+   || (Process[proc_name][[scope]]
+       o (scope//[scope1, scope2]
+          o (PartnerLinks
+             o (PartnerLink[partner_link, scope] o (CreateInstance[oper] `|` `[]`)
+                `|` `[scope1]`)
+             `|` `[scope2]`))
+       `|` Instance[proc_name, inst_id_invoked]
+           o (inst_id_invoked//[inst_id_invoked1, inst_id_invoked2]
+              o (PartnerLinks
+                 o (PartnerLink[partner_link, inst_id_invoked]
+                    o (Link[inst_id_invoker] `|` Message[oper] o `[]`)
+                    `|` `[inst_id_invoked1]`)
+                 `|` Invoked[inst_id_invoked]
+                 `|` `[inst_id_invoked2]`))));
+
+val rule_invoke_general = "invoke_general" :::
+Invoke[partner_link_invoker, oper, invar, invar_scope,
+       outvar, outvar_scope, inst_id_invoker]
+|| PartnerLink[partner_link_invoker, inst_id_invoker] o <->
+|| Variable[invar, invar_scope] o `[]`
+|| Process[proc_name][[scope]]
+   o (scope//[scope1, scope2]
+      o (PartnerLinks
+         o (PartnerLink[partner_link, scope] o (CreateInstance[oper] `|` `[]`)
+            `|` `[scope1]`)
+         `|` `[scope2]`))
+
+  --[4 |-> 0, 5&[inst_id_invoked1] |--> 2&[scope1], 6&[inst_id_invoked2] |--> 3&[scope2]]--|>
+
+-/inst_id_invoked
+o (GetReply[partner_link, oper, outvar, outvar_scope, inst_id_invoker]
+   || PartnerLink[partner_link_invoker, inst_id_invoker]
+      o Link[inst_id_invoked]
+   || Variable[invar, invar_scope] o `[]`
    || (Process[proc_name][[scope]]
        o (scope//[scope1, scope2]
           o (PartnerLinks
@@ -400,6 +434,18 @@ o ((   PartnerLinks
 
 
 val rule_receive = "receive" :::
+Receive[partner_link, oper, var, var_scope, inst_id]
+|| (    PartnerLink[partner_link, inst_id] o (`[]` `|` Message[oper] o `[]`)
+    `|` Variable[var, var_scope] o `[]`
+    `|` Invoked[inst_id])
+  ----|>
+<-> || oper//[]
+|| (    PartnerLink[partner_link, inst_id] o `[]`
+    `|` Variable[var, var_scope] o `[]`
+    `|` Running[inst_id]);
+
+
+val rule_receive_general = "receive_general" :::
 Receive[partner_link, oper, var, var_scope, inst_id]
 || PartnerLink[partner_link, inst_id] o (`[]` `|` Message[oper] o `[]`)
 || Variable[var, var_scope] o `[]`
@@ -494,7 +540,7 @@ val rules =
              rule_flow_completed, rule_sequence_completed,
              rule_if_true, rule_if_false, rule_while_unfold,
              rule_variable_copy,
-             rule_invoke, rule_receive, rule_invoke_receive, rule_reply,
+             rule_invoke_slow, rule_invoke, rule_receive, rule_invoke_receive, rule_reply,
              rule_exit_stop_inst, rule_exit_remove_inst,
              rule_inst_completed];
 
@@ -661,7 +707,46 @@ o (Instance[caller, caller_id]
 
 val mz1 = matches (mkrules [rule_reply]) (caller_inst1 `|` echo_process1);
 val mz2 = matches (mkrules [rule_invoke]) (caller_inst1 `|` echo_process1);
-(*print_mv ms;*)
+val mz3 = matches (mkrules [rule_invoke_general]) (caller_inst1 `|` echo_process1);
+(*print_mv mz2;*)
 
 (*val final_state = run rules tactic (echo_process || caller_inst);*)
 (*val final_state = run rules (react_rule "invoke") (caller_inst1 `|` echo_process1);*)
+
+val state1_0 = caller_inst1 `|` echo_process1
+
+val tac_invoke =
+  react_rule "invoke" ++
+  react_rule "receive" ++
+  react_rule "sequence completed"
+
+val state1_invokedz = stepz rules tac_invoke state1_0
+
+val tac_while =
+  react_rule "while unfold" ++
+  react_rule "variable reference" ++
+  react_rule "if true" ++
+  react_rule "scope activation" ++
+  react_rule "invoke" ++
+  react_rule "invoke receive" ++
+  react_rule "sequence completed" ++
+  react_rule "reply" ++
+  react_rule "sequence completed" ++
+  react_rule "variable copy" ++
+  react_rule "sequence completed"
+
+fun state1_unroll1z state1_invoked = stepz rules tac_while state1_invoked
+
+fun showsteps ((rulename, agent), t) = (
+  print (rulename ^ ":\n" ^ str_v agent ^ "\n");
+  fn _ => t () agent)
+fun init agent = agent
+
+(*
+val state1_invoked = lzfoldr showsteps init state1_invokedz
+*)
+
+(*
+val state1_unroll1 =
+  lzfoldr showsteps init (state1_unroll1z state1_invoked)
+*)
