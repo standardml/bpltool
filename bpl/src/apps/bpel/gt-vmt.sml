@@ -78,9 +78,11 @@ val echo_id              = "echo_id"
 val echo_process         = "echo_process"
 val echo_value           = "echo_value"
 val echo_service         = "echo_service"
+val echo_client          = "echo_client"
 val x                    = "x"
 val y                    = "y"
 val z                    = "z"
+val v                    = "v"
 val caller               = "caller"
 val caller_id            = "caller_id"
 
@@ -229,98 +231,109 @@ val Exit         = atomic   (Exit        -:       1);
 (* Scope *)
 val rule_scope_activation = "scope activation" :::
 
-Scope[inst_id][[scope]] o `[scope]`
+   Scope[inst_id][[scope]] o `[scope]`
 || Running[inst_id]
   ----|>
--/scope o (ActiveScope[scope, inst_id] o `[scope]`)
+   -/scope o (ActiveScope[scope, inst_id] o `[scope]`)
 || Running[inst_id];
 
 
 val rule_scope_completed = "scope completed" :::
 
--/scope
-o (ActiveScope[scope, inst_id]
-   o (scope//[scope1, scope2]
-      o (Variables o `[scope1]` `|` PartnerLinks o `[scope2]`)))
+   -/scope
+   o (ActiveScope[scope, inst_id]
+      o (    Variables    o (scope//[scope1] o `[scope1]`)
+         `|` PartnerLinks o (scope//[scope2] o `[scope2]`)))
 || Running[inst_id]
   ----|>
-<->
+   <->
 || Running[inst_id];
 
 
 (* Structural activities *)
 val rule_flow_completed = "flow completed" :::
 
-Flow[inst_id] o <->
+   Flow[inst_id] o <->
 || Running[inst_id]
   ----|>
-<->
+   <->
 || Running[inst_id];
 
 
 val rule_sequence_completed = "sequence completed" :::
 
-Sequence[inst_id] o Next o `[]`
+   Sequence[inst_id] o Next o `[]`
 || Running[inst_id]
   ----|>
-`[]`
+   `[]`
 || Running[inst_id];
 
 
 val rule_if_true = "if true" :::
 
-If[inst_id] o (Condition o True
-               `|` Then o `[]`
-               `|` Else o `[]`)
+   If[inst_id] o (    Condition o True
+                  `|` Then o `[]`
+                  `|` Else o `[]`)
 || Running[inst_id]
   ----|>
-`[]`
+   `[]`
 || Running[inst_id];
 
 
 val rule_if_false = "if false" :::
-If[inst_id] o (Condition o False
-               `|` Then o `[]`
-               `|` Else o `[]`)
+
+   If[inst_id] o (    Condition o False
+                  `|` Then o `[]`
+                  `|` Else o `[]`)
 || Running[inst_id]
   --[0 |-> 1]--|>
-`[]`
+   `[]`
 || Running[inst_id];
 
 
 val rule_while_unfold = "while unfold" :::
-While[inst_id] o (Condition o `[]` `|` `[]`)
+
+   While[inst_id] o (Condition o `[]` `|` `[]`)
 || Running[inst_id]
+
   --[2 |-> 0, 3 |-> 1]--|>
-If[inst_id] o (Condition o `[]`
-               `|` Then o Sequence[inst_id]
-                          o (`[]` 
-                             `|` Next
-                                 o While[inst_id] o (Condition o `[]` `|` `[]`))
-               `|` Else o <->)
+
+   If[inst_id] o (    Condition o `[]`
+                  `|` Then o Sequence[inst_id]
+                             o (`[]` 
+                                `|` Next
+                                    o While[inst_id]
+                                      o (Condition o `[]` `|` `[]`))
+                  `|` Else o <->)
 || Running[inst_id];
 
 
 (* Expression evaluation *)
 val rule_variable_reference = "variable reference" :::
-VariableRef[var, var_scope, inst_id]
+
+   VariableRef[var, var_scope, inst_id]
 || Variable[var, var_scope] o `[]`
 || Running[inst_id]
+
   --[1 |-> 0]--|>
-`[]`
+
+   `[]`
 || Variable[var, var_scope] o `[]`
 || Running[inst_id];
 
 
 (* Variable assignment *)
 val rule_variable_copy = "variable copy" :::
-Assign[inst_id] o Copy o (From[f, scope1]
-                          `|` To[t, scope2])
+
+   Assign[inst_id] o Copy o (    From[f, scope1]
+                             `|` To[t, scope2])
 || Variable[f, scope1] o `[]`
 || Variable[t, scope2] o `[]`
 || Running[inst_id]
+
   --[1 |-> 0]--|>
-<->
+
+   <->
 || Variable[f, scope1] o `[]`
 || Variable[t, scope2] o `[]`
 || Running[inst_id];
@@ -328,40 +341,43 @@ Assign[inst_id] o Copy o (From[f, scope1]
 
 (* Process communication *)
 val rule_invoke_slow = "invoke_slow" :::
-Invoke[partner_link_invoker, oper, invar, invar_scope,
-       outvar, outvar_scope, inst_id_invoker]
+
+   Invoke[partner_link_invoker, oper, invar, invar_scope,
+          outvar, outvar_scope, inst_id_invoker]
 || PartnerLink[partner_link_invoker, inst_id_invoker] o <->
 || Variable[invar, invar_scope] o `[]`
 || Running[inst_id_invoker]
 || Process[proc_name][[scope]]
-   o (scope//[scope1, scope2]
-      o (PartnerLinks
-         o (PartnerLink[partner_link, scope] o (CreateInstance[oper] `|` `[]`)
-            `|` `[scope1]`)
-         `|` `[scope2]`))
+   o (    PartnerLinks
+          o (    PartnerLink[partner_link, scope]
+                 o (CreateInstance[oper] `|` `[]`)
+             `|` scope//[scope1] o `[scope1]`)
+      `|` scope//[scope2] o `[scope2]`)
 
-  --[4 |-> 0, 5&[inst_id_invoked1] |--> 2&[scope1], 6&[inst_id_invoked2] |--> 3&[scope2]]--|>
+  --[4 |-> 0, 5&[inst_id_invoked1] |--> 2&[scope1],
+     6&[inst_id_invoked2] |--> 3&[scope2]]--|>
 
 -/inst_id_invoked
-o (GetReply[partner_link, oper, outvar, outvar_scope, inst_id_invoker]
+o (   GetReply[partner_link, oper, outvar, outvar_scope, inst_id_invoker]
    || PartnerLink[partner_link_invoker, inst_id_invoker]
       o Link[inst_id_invoked]
    || Variable[invar, invar_scope] o `[]`
    || Running[inst_id_invoker]
    || (Process[proc_name][[scope]]
-       o (scope//[scope1, scope2]
-          o (PartnerLinks
-             o (PartnerLink[partner_link, scope] o (CreateInstance[oper] `|` `[]`)
-                `|` `[scope1]`)
-             `|` `[scope2]`))
+       o (    PartnerLinks
+              o (    PartnerLink[partner_link, scope]
+                     o (CreateInstance[oper] `|` `[]`)
+                 `|` scope//[scope1] o `[scope1]`)
+          `|` scope//[scope2] o `[scope2]`)
        `|` Instance[proc_name, inst_id_invoked]
-           o (inst_id_invoked//[inst_id_invoked1, inst_id_invoked2]
-              o (PartnerLinks
-                 o (PartnerLink[partner_link, inst_id_invoked]
-                    o (Link[inst_id_invoker] `|` Message[oper] o `[]`)
-                    `|` `[inst_id_invoked1]`)
-                 `|` Invoked[inst_id_invoked]
-                 `|` `[inst_id_invoked2]`))));
+           o (    PartnerLinks
+                  o (    PartnerLink[partner_link, inst_id_invoked]
+                         o (Link[inst_id_invoker] `|` Message[oper] o `[]`)
+                     `|` inst_id_invoked//[inst_id_invoked1]
+                         o `[inst_id_invoked1]`)
+              `|` Invoked[inst_id_invoked]
+              `|` inst_id_invoked//[inst_id_invoked2]
+                  o `[inst_id_invoked2]`)));
 
 val rule_invoke_general = "invoke_general" :::
 Invoke[partner_link_invoker, oper, invar, invar_scope,
@@ -434,7 +450,8 @@ o ((   PartnerLinks
 
 
 val rule_receive = "receive" :::
-Receive[partner_link, oper, var, var_scope, inst_id]
+
+   Receive[partner_link, oper, var, var_scope, inst_id]
 || (    PartnerLink[partner_link, inst_id] o (`[]` `|` Message[oper] o `[]`)
     `|` Variable[var, var_scope] o `[]`
     `|` Invoked[inst_id])
@@ -450,16 +467,19 @@ Receive[partner_link, oper, var, var_scope, inst_id]
 || PartnerLink[partner_link, inst_id] o (`[]` `|` Message[oper] o `[]`)
 || Variable[var, var_scope] o `[]`
 || Invoked[inst_id]
+
   ----|>
-<-> || oper//[]
+
+   <-> || oper//[]
 || PartnerLink[partner_link, inst_id] o `[]`
 || Variable[var, var_scope] o `[]`
 || Running[inst_id];
 
 
 val rule_invoke_receive = "invoke_receive" :::
-Invoke[partner_link_invoker, oper,
-       invar, invar_scope, outvar, outvar_scope, inst_id_invoker]
+
+   Invoke[partner_link_invoker, oper,
+          invar, invar_scope, outvar, outvar_scope, inst_id_invoker]
 || PartnerLink[partner_link_invoker, inst_id_invoker]
    o (Link[inst_id_invoked] `|` `[]`)
 || Variable[invar, invar_scope] o `[]`
@@ -470,7 +490,7 @@ Invoke[partner_link_invoker, oper,
 
   --[2 |-> 1]--|>
 
-GetReply[partner_link_invoker, oper, outvar, outvar_scope, inst_id_invoker]
+   GetReply[partner_link_invoker, oper, outvar, outvar_scope, inst_id_invoker]
 || PartnerLink[partner_link_invoker, inst_id_invoker]
    o (Link[inst_id_invoked] `|` `[]`)
 || Variable[invar, invar_scope] o `[]`
@@ -481,7 +501,8 @@ GetReply[partner_link_invoker, oper, outvar, outvar_scope, inst_id_invoker]
 
 
 val rule_reply = "reply" :::
-Reply[partner_link_invoked, oper, var, var_scope, inst_id_invoked]
+
+   Reply[partner_link_invoked, oper, var, var_scope, inst_id_invoked]
 || PartnerLink[partner_link_invoked, inst_id_invoked]
    o (Link[inst_id_invoker] `|` `[]`)
 || Variable[var, var_scope] o `[]`
@@ -493,7 +514,7 @@ Reply[partner_link_invoked, oper, var, var_scope, inst_id_invoked]
 
   --[2 |-> 1]--|>
 
-<-> || oper//[]
+   <-> || oper//[]
 || PartnerLink[partner_link_invoked, inst_id_invoked]
    o (Link[inst_id_invoker] `|` `[]`)
 || Variable[var, var_scope] o `[]`
@@ -505,30 +526,32 @@ Reply[partner_link_invoked, oper, var, var_scope, inst_id_invoked]
 
 (* Process cancellation *)
 val rule_exit_stop_inst = "exit stop inst" :::
-Exit[inst_id]
+
+   Exit[inst_id]
 || Running[inst_id]
   ----|>
-<->
+   <->
 || Stopped[inst_id];
 
 
 val rule_exit_remove_inst = "exit remove inst" :::
+
 -/inst_id
 o (Instance[proc_name, inst_id]
-   o (inst_id//[inst_id1, inst_id2]
-      o (Stopped[inst_id1] `|` `[inst_id2]`)))
+   o (    inst_id//[inst_id1] o Stopped[inst_id1]
+      `|` inst_id//[inst_id2] o `[inst_id2]`))
   ----|>
 <-> || proc_name//[];
 
 
 (* Normal process termination *)
 val rule_inst_completed = "inst completed" :::
+
 -/inst_id
 o (Instance[proc_name, inst_id]
-   o (inst_id//[inst_id1, inst_id2]
-      o (Variables o `[inst_id1]`
-         `|` PartnerLinks o `[inst_id2]`
-         `|` Running[inst_id])))
+   o (    Variables    o (inst_id//[inst_id1] o `[inst_id1]`)
+      `|` PartnerLinks o (inst_id//[inst_id2] o `[inst_id2]`)
+      `|` Running[inst_id]))
   ----|>
 <-> || proc_name//[];
 
@@ -555,27 +578,27 @@ val tactic = roundrobin;
  *
  * <process name="echo_process">
  * <partnerLinks>
- *   <partnerLink name="echo_service" />
+ *   <partnerLink name="echo_client" />
  * </partnerLinks>
  * <variables>
- *   <variable name="x"><from>true()</from></variable>
+ *   <variable name="x" />
  * </variables>
  * <sequence>
- *   <receive partnerLink="echo_service" operation="echo"
+ *   <receive partnerLink="echo_client" operation="echo"
  *            createInstance="yes" variable="x" />
- *   <reply   partnerLink="echo_service" operation="echo" variable="x" />
+ *   <reply   partnerLink="echo_client" operation="echo" variable="x" />
  *   <exit>
  * </sequence>
  * </process>
  *)
 val echo_process1 =
 Process[echo_process][[echo_id]]
-o (PartnerLinks o PartnerLink[echo_service, echo_id] o CreateInstance[echo]
-   `|` Variables o Variable[x, echo_id] o True
+o (    PartnerLinks o PartnerLink[echo_client, echo_id] o CreateInstance[echo]
+   `|` Variables o Variable[x, echo_id] o <->
    `|` Sequence[echo_id]
-       o (Receive[echo_service, echo, x, echo_id, echo_id]
+       o (    Receive[echo_client, echo, x, echo_id, echo_id]
           `|` Next o Sequence[echo_id]
-                   o (Reply[echo_service, echo, x, echo_id, echo_id]
+                   o (    Reply[echo_client, echo, x, echo_id, echo_id]
                       `|` Next o Exit[echo_id])));
 
 (* An instance which is about to invoke the echo process:
@@ -585,20 +608,20 @@ o (PartnerLinks o PartnerLink[echo_service, echo_id] o CreateInstance[echo]
  *   <partnerLink name="echo_service" />
  * </partnerLinks>
  * <variables>
- *   <variable name="x"><from>true()</from></variable>
- *   <variable name="y"><from>false()</from></variable>
+ *   <variable name="y"><from>true()</from></variable>
+ *   <variable name="z"><from>false()</from></variable>
  * </variables>
  * <invoke partnerLink="echo_service" operation="echo"
- *         inputVariable="x" outputVariable="y" />
+ *         inputVariable="y" outputVariable="z" />
  * </instance>
  *)
 val caller_inst1 =
 -/caller_id
 o (Instance[caller, caller_id]
-   o (PartnerLinks o PartnerLink[echo_service, caller_id] o <->
-      `|` Running[caller_id]
+   o (    Running[caller_id]
+      `|` PartnerLinks o PartnerLink[echo_service, caller_id] o <->
       `|` Variables
-           o (Variable[y, caller_id] o True
+           o (    Variable[y, caller_id] o True
               `|` Variable[z, caller_id] o False)
           `|` Invoke[echo_service, echo, y, caller_id,
                      z, caller_id, caller_id]));
@@ -612,14 +635,15 @@ o (Instance[caller, caller_id]
  *
  * <process name="echo_process">
  * <partnerLinks>
- *   <partnerLink name="echo_service" />
+ *   <partnerLink name="echo_client" />
  * </partnerLinks>
  * <variables>
- *   <variable name="x"><from>true()</from></variable>
+ *   <variable name="x" />
  * </variables>
  * <sequence>
- *   <receive partnerLink="echo_service" operation="echo"
+ *   <receive partnerLink="echo_client" operation="echo"
  *            createInstance="yes" variable="x" />
+ *   <reply   partnerLink="echo_client" operation="echo" variable="x" />
  *   <while>
  *     <condition>$x</condition>
  *     <scope>
@@ -627,8 +651,8 @@ o (Instance[caller, caller_id]
  *         <variable name="y" />
  *       </variables>
  *       <sequence>
- *         <receive partnerLink="echo_service" operation="echo_value" variable="y" />
- *         <reply   partnerLink="echo_service" operation="echo_value" variable="y" />
+ *         <receive partnerLink="echo_client" operation="echo_value" variable="y" />
+ *         <reply   partnerLink="echo_client" operation="echo_value" variable="y" />
  *         <assign>
  *           <copy>
  *             <from variable="y" />
@@ -638,36 +662,34 @@ o (Instance[caller, caller_id]
  *       </sequence>
  *     </scope>
  *   </while>
- *   <reply partnerLink="echo_service" operation="echo" variable="x" />
  * </sequence>
  * </process>
  *)
+val while_loop =
+While[echo_id]
+o (    Condition o VariableRef[x, echo_id, echo_id]
+   `|` Scope[echo_id][[scope]]
+       o (    PartnerLinks o <->
+          `|` Variables    o Variable[y, scope] o <->
+          `|` Sequence[echo_id]
+              o (    Receive[echo_client, echo_value, y, scope, echo_id]
+                 `|` Next
+                     o Sequence[echo_id]
+                     o (    Reply[echo_client, echo_value, y, scope, echo_id]
+                        `|` Next
+                            o Assign[echo_id]
+                            o Copy o (    From[y, scope]
+                                      `|` To[x, echo_id])))));
 val echo_process2 = 
 Process[echo_process][[echo_id]]
-o (PartnerLinks o PartnerLink[echo_service, echo_id] o CreateInstance[echo]
-   `|` Variables o Variable[x, echo_id] o True
+o (    PartnerLinks o PartnerLink[echo_client, echo_id] o CreateInstance[echo]
+   `|` Variables    o Variable[x, echo_id] o True
    `|` Sequence[echo_id]
-       o (Receive[echo_service, echo, x, echo_id, echo_id]
+       o (    Receive[echo_client, echo, x, echo_id, echo_id]
           `|` Next
               o Sequence[echo_id]
-              o (While[echo_id]
-                 o (Condition o VariableRef[x, echo_id, echo_id]
-                    `|` Scope[echo_id][[scope]]
-                        o (PartnerLinks o <->
-                           `|` Variables o Variable[y, scope] o <->
-                           `|` Sequence[echo_id]
-                               o (Receive[echo_service, echo_value,
-                                          y, scope, echo_id]
-                                  `|` Next
-                                      o Sequence[echo_id]
-                                      o (Reply[echo_service, echo_value,
-                                               y, scope, echo_id]
-                                         `|` Next
-                                             o Assign[echo_id]
-                                             o Copy
-                                             o (From[y, scope]
-                                                `|` To[x, echo_id])))))
-                 `|` Next o Reply[echo_service, echo, x, echo_id, echo_id])));
+              o (    Reply[echo_client, echo, x, echo_id, echo_id]
+                 `|` Next o while_loop)));
 
 (* An instance which is about to invoke the advanced echo process:
  * 
@@ -676,14 +698,16 @@ o (PartnerLinks o PartnerLink[echo_service, echo_id] o CreateInstance[echo]
  *   <partnerLink name="echo_service" />
  * </partnerLinks>
  * <variables>
- *   <variable name="x"><from>true()</from></variable>
- *   <variable name="y"><from>false()</from></variable>
+ *   <variable name="z"><from>true()</from></variable>
+ *   <variable name="v"><from>false()</from></variable>
  * </variables>
  * <flow>
- *   <invoke partnerLink="echo_service" operation="echo"
- *           inputVariable="x" outputVariable="y" />
- *   <invoke partnerLink="echo_service" operation="echo_value"
- *           inputVariable="y" outputVariable="y" />
+ *   <sequence>
+ *     <invoke partnerLink="echo_service" operation="echo"
+ *             inputVariable="z" outputVariable="v" />
+ *     <invoke partnerLink="echo_service" operation="echo_value"
+ *             inputVariable="v" outputVariable="v" />
+ *   </sequence>
  *   <exit />
  * </flow>
  * </instance>
@@ -691,16 +715,17 @@ o (PartnerLinks o PartnerLink[echo_service, echo_id] o CreateInstance[echo]
 val caller_inst2 =
 -/caller_id
 o (Instance[caller, caller_id]
-   o (PartnerLinks o PartnerLink[echo_service, caller_id] o <->
-      `|` Running[caller_id]
+   o (    Running[caller_id]
+      `|` PartnerLinks o PartnerLink[echo_service, caller_id] o <->
       `|` Variables
-          o (Variable[x, caller_id] o True
-             `|` Variable[y, caller_id] o False)
+          o (    Variable[z, caller_id] o True
+             `|` Variable[v, caller_id] o False)
       `|` Flow[caller_id]
-          o (Invoke[echo_service, echo,
-                    x, caller_id, y, caller_id, caller_id]
-             `|` Invoke[echo_service, echo_value,
-                        y, caller_id, y, caller_id, caller_id]
+          o (    Sequence[caller_id]
+                 o (    Invoke[echo_service, echo,
+                               z, caller_id, v, caller_id, caller_id]
+                    `|` Next o Invoke[echo_service, echo_value,
+                                      v, caller_id, v, caller_id, caller_id])
              `|` Exit[caller_id])));
 
 
