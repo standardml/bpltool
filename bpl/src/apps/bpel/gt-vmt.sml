@@ -234,7 +234,9 @@ Scope[inst_id][[scope]]
 
 val rule_scope_completed = "scope completed" :::
 
--/scope o (ActiveScope[scope, inst_id] o <->)
+-/scope
+o (ActiveScope[scope, inst_id]
+   o (Variables o `[]` `|` PartnerLinks o `[]`))
 || Running[inst_id]
   ----|>
 <->
@@ -462,7 +464,18 @@ o (Instance[proc_name, inst_id]
    o (Stopped[inst_id] `|` `[]`))
   ----|>
 <-> || proc_name//[];
-                             
+
+
+(* Normal process termination *)
+val rule_inst_completed = "inst completed" :::
+-/inst_id
+o (Instance[proc_name, inst_id]
+   o (Variables o `[]` `|` PartnerLinks o `[]` `|` Running[inst_id]))
+  ----|>
+<-> || proc_name//[];
+
+
+
 
 val rules =
     mkrules [rule_scope_activation, rule_scope_completed,
@@ -470,7 +483,8 @@ val rules =
              rule_if_true, rule_if_false, rule_while_unfold,
              rule_variable_copy,
              rule_invoke, rule_receive, rule_invoke_receive, rule_reply,
-             rule_exit_stop_inst, rule_exit_remove_inst];
+             rule_exit_stop_inst, rule_exit_remove_inst,
+             rule_inst_completed];
 
 val tactic = roundrobin;
 
@@ -581,7 +595,8 @@ o (PartnerLinks o PartnerLink[echo_service, echo_id] o CreateInstance[echo]
               o (While[echo_id]
                  o (Condition o VariableRef[x, echo_id, echo_id]
                     `|` Scope[echo_id][[scope]]
-                        o (Variables o Variable[y, scope] o <->
+                        o (PartnerLinks o <->
+                           `|` Variables o Variable[y, scope] o <->
                            `|` Sequence[echo_id]
                                o (Receive[echo_service, echo_value,
                                           y, scope, echo_id]
