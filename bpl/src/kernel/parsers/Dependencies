@@ -24,9 +24,9 @@ bpl.lex: bpl.grm-sig /lib/util/sourceloc /lib/compat/mosml/. /lib/pp/mak/.
 bpl.grm: bpl.grm-sig /kernel/ast/bplterm
    /lib/util/sourceloc /lib/ml-yacc/.
    %NODASHSIG
-bplparser: bpl.grm bpl.lex /kernel/ast/bplterm
+bplparser: %PROGRAM
+   bpl.grm bpl.lex /kernel/ast/bplterm
    /lib/ml-yacc/. /lib/pp/mak/. /lib/util/sourceloc
-   %PROGRAM
 bigraphdata-sig: /kernel/bg/sigs
 bigraphdata: /kernel/bg/sigs /kernel/ast/sigs bigraphdata-sig %NODASHSIG
 bplxmlhooks-sig: /lib/fxp/src/Parser/Params/hooks
