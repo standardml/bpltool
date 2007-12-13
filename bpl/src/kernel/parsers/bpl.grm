@@ -141,7 +141,7 @@ AtBigraph:
     | BARREN                           ( T.Empty )
     | LPAR Bigraph RPAR                ( Bigraph )
     | INT                              ( if INT = 1 then T.EmptyPri
-                                         else raise Fail("yada yada") )
+                                         else raise Fail("bpl.grm: AtBigraph of INT encountered, but not 1 (barren root)") )
       (* Hmm, need to be able to refer to a bigraph by id, but if
          bigraph identifier and ctrl identifier are the same, how
          do we know if ID is a ion or a bigraph id? *)
