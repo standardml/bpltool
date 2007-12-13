@@ -340,7 +340,7 @@ val rule_variable_copy = "variable copy" :::
 
 
 (* Process communication *)
-val rule_invoke_slow = "invoke_slow" :::
+val rule_invoke_general = "invoke_general" :::
 
    Invoke[partner_link_invoker, oper, invar, invar_scope,
           outvar, outvar_scope, inst_id_invoker]
@@ -378,40 +378,6 @@ o (   GetReply[partner_link, oper, outvar, outvar_scope, inst_id_invoker]
               `|` Invoked[inst_id_invoked]
               `|` inst_id_invoked//[inst_id_invoked2]
                   o `[inst_id_invoked2]`)));
-
-val rule_invoke_general = "invoke_general" :::
-Invoke[partner_link_invoker, oper, invar, invar_scope,
-       outvar, outvar_scope, inst_id_invoker]
-|| PartnerLink[partner_link_invoker, inst_id_invoker] o <->
-|| Variable[invar, invar_scope] o `[]`
-|| Process[proc_name][[scope]]
-   o (scope//[scope1, scope2]
-      o (PartnerLinks
-         o (PartnerLink[partner_link, scope] o (CreateInstance[oper] `|` `[]`)
-            `|` `[scope1]`)
-         `|` `[scope2]`))
-
-  --[4 |-> 0, 5&[inst_id_invoked1] |--> 2&[scope1], 6&[inst_id_invoked2] |--> 3&[scope2]]--|>
-
--/inst_id_invoked
-o (GetReply[partner_link, oper, outvar, outvar_scope, inst_id_invoker]
-   || PartnerLink[partner_link_invoker, inst_id_invoker]
-      o Link[inst_id_invoked]
-   || Variable[invar, invar_scope] o `[]`
-   || (Process[proc_name][[scope]]
-       o (scope//[scope1, scope2]
-          o (PartnerLinks
-             o (PartnerLink[partner_link, scope] o (CreateInstance[oper] `|` `[]`)
-                `|` `[scope1]`)
-             `|` `[scope2]`))
-       `|` Instance[proc_name, inst_id_invoked]
-           o (inst_id_invoked//[inst_id_invoked1, inst_id_invoked2]
-              o (PartnerLinks
-                 o (PartnerLink[partner_link, inst_id_invoked]
-                    o (Link[inst_id_invoker] `|` Message[oper] o `[]`)
-                    `|` `[inst_id_invoked1]`)
-                 `|` Invoked[inst_id_invoked]
-                 `|` `[inst_id_invoked2]`))));
 
 val rule_invoke = "invoke" :::
    (    PartnerLinks
@@ -463,7 +429,8 @@ val rule_receive = "receive" :::
 
 
 val rule_receive_general = "receive_general" :::
-Receive[partner_link, oper, var, var_scope, inst_id]
+
+   Receive[partner_link, oper, var, var_scope, inst_id]
 || PartnerLink[partner_link, inst_id] o (`[]` `|` Message[oper] o `[]`)
 || Variable[var, var_scope] o `[]`
 || Invoked[inst_id]
