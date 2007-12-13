@@ -55,6 +55,8 @@ val inst_id1             = "inst_id1"
 val inst_id2             = "inst_id2"
 val inst_id_invoker      = "inst_id_invoker"
 val inst_id_invoked      = "inst_id_invoked"
+val inst_id_invoked1     = "inst_id_invoked1"
+val inst_id_invoked2     = "inst_id_invoked2"
 val scope                = "scope"
 val scope1               = "scope1"
 val scope2               = "scope2"
@@ -227,7 +229,7 @@ val Exit         = atomic   (Exit        -:       1);
 (* Scope *)
 val rule_scope_activation = "scope activation" :::
 
-Scope[inst_id][[scope]]
+Scope[inst_id][[scope]] o `[scope]`
 || Running[inst_id]
   ----|>
 -/scope o (ActiveScope[scope, inst_id] o `[scope]`)
@@ -332,12 +334,13 @@ Invoke[partner_link_invoker, oper, invar, invar_scope,
 || Variable[invar, invar_scope] o `[]`
 || Running[inst_id_invoker]
 || Process[proc_name][[scope]]
-   o (PartnerLinks
-      o (PartnerLink[partner_link, scope] o (CreateInstance[oper] `|` `[]`)
-         `|` `[]`)
-      `|` `[scope]`)
+   o (scope//[scope1, scope2]
+      o (PartnerLinks
+         o (PartnerLink[partner_link, scope] o (CreateInstance[oper] `|` `[]`)
+            `|` `[scope1]`)
+         `|` `[scope2]`))
 
-  --[4 |-> 0, 5 |-> 2, 6&[inst_id_invoked] |--> 3&[scope]]--|>
+  --[4 |-> 0, 5&[inst_id_invoked1] |--> 2&[scope1], 6&[inst_id_invoked2] |--> 3&[scope2]]--|>
 
 -/inst_id_invoked
 o (GetReply[partner_link, oper, outvar, outvar_scope, inst_id_invoker]
@@ -346,17 +349,19 @@ o (GetReply[partner_link, oper, outvar, outvar_scope, inst_id_invoker]
    || Variable[invar, invar_scope] o `[]`
    || Running[inst_id_invoker]
    || (Process[proc_name][[scope]]
-       o (PartnerLinks
-          o (PartnerLink[partner_link, scope] o (CreateInstance[oper] `|` `[]`)
-             `|` `[]`)
-          `|` `[scope]`)
+       o (scope//[scope1, scope2]
+          o (PartnerLinks
+             o (PartnerLink[partner_link, scope] o (CreateInstance[oper] `|` `[]`)
+                `|` `[scope1]`)
+             `|` `[scope2]`))
        `|` Instance[proc_name, inst_id_invoked]
-           o (PartnerLinks
-              o (PartnerLink[partner_link, inst_id_invoked]
-                 o (Link[inst_id_invoker] `|` Message[oper] o `[]`)
-                 `|` `[]`)
-              `|` Invoked[inst_id_invoked]
-              `|` `[inst_id_invoked]`)));
+           o (inst_id_invoked//[inst_id_invoked1, inst_id_invoked2]
+              o (PartnerLinks
+                 o (PartnerLink[partner_link, inst_id_invoked]
+                    o (Link[inst_id_invoker] `|` Message[oper] o `[]`)
+                    `|` `[inst_id_invoked1]`)
+                 `|` Invoked[inst_id_invoked]
+                 `|` `[inst_id_invoked2]`))));
 
 val rule_invoke = "invoke" :::
    (    PartnerLinks
