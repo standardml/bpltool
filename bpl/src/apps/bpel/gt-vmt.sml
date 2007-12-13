@@ -51,6 +51,8 @@ val Exit           = "Exit"
 
 (*    For names                *)
 val inst_id              = "inst_id"
+val inst_id1             = "inst_id1"
+val inst_id2             = "inst_id2"
 val inst_id_invoker      = "inst_id_invoker"
 val inst_id_invoked      = "inst_id_invoked"
 val scope                = "scope"
@@ -236,7 +238,8 @@ val rule_scope_completed = "scope completed" :::
 
 -/scope
 o (ActiveScope[scope, inst_id]
-   o (Variables o `[]` `|` PartnerLinks o `[]`))
+   o (scope//[scope1, scope2]
+      o (Variables o `[scope1]` `|` PartnerLinks o `[scope2]`)))
 || Running[inst_id]
   ----|>
 <->
@@ -461,7 +464,8 @@ Exit[inst_id]
 val rule_exit_remove_inst = "exit remove inst" :::
 -/inst_id
 o (Instance[proc_name, inst_id]
-   o (Stopped[inst_id] `|` `[]`))
+   o (inst_id//[inst_id1, inst_id2]
+      o (Stopped[inst_id1] `|` `[inst_id2]`)))
   ----|>
 <-> || proc_name//[];
 
@@ -470,7 +474,10 @@ o (Instance[proc_name, inst_id]
 val rule_inst_completed = "inst completed" :::
 -/inst_id
 o (Instance[proc_name, inst_id]
-   o (Variables o `[]` `|` PartnerLinks o `[]` `|` Running[inst_id]))
+   o (inst_id//[inst_id1, inst_id2]
+      o (Variables o `[inst_id1]`
+         `|` PartnerLinks o `[inst_id2]`
+         `|` Running[inst_id])))
   ----|>
 <-> || proc_name//[];
 
