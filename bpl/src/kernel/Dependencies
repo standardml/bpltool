@@ -22,3 +22,6 @@ bg: bgadt sugar parsers/. ast/ppsvg bg-sig /lib/coll/lazylist
    /lib/coll/set /lib/pp/smlnj/. /lib/ml-yacc/. /lib/util/errormsg
    /lib/util/errorhandler-sig /lib/util/debug /lib/util/origin %NODASHSIG
 bpl: bg-sig bg /lib/util/printerrorhandler /lib/util/origin %NODASHSIG
+bpl2bgval: %PROGRAM bg /lib/util/printerrorhandler 
+   ast/bgval /lib/util/origin
+test-bpl2bgval: %PROGRAM bpl2bgval
