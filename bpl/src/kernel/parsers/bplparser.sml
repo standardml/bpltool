@@ -79,6 +79,7 @@ end (* structure Parse *)
 
 exception MissingInFile
 
+(* prettyprint the constructed ast parsed from file *)
 val _ =
     let val ast = BPLParser.parseFile (hd(CommandLine.arguments()))
 	    handle Empty => raise MissingInFile

@@ -26,3 +26,6 @@ ppsvg-sig:
 ppsvg: bgbdnf-sig bgval-sig /kernel/bg/sigs /lib/coll/monoset-sig
   /lib/coll/monofinmap-sig /lib/coll/orderfinmap /lib/coll/orderset
   /lib/util/geometry2d-sig /lib/util/geometry2d
+bpl2bgval: %PROGRAM /kernel/bg /lib/util/printerrorhandler 
+   /kernel/ast/bgval /lib/util/origin
+test-bpl2bgval: %PROGRAM bpl2bgval

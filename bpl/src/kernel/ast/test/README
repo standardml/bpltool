@@ -23,33 +23,38 @@ README file for kernel/ast/test
 
 This directory contains:
 
-bdnfTest.sml:  SML code for running tests
+bdnfTest.sml:  SML code for running tests on .bgtest
 
-*-*.bg: Sample bigraph input for testing
+bplTest.sml: SML code for running tests on .bpltest
 
+*-*.bgtest: Sample bigraph input for testing
 
+*.bpltest: Sample bigraph input for testing
 
-The sample files are numbered lexicographically, MAJOR-MINOR[-MINOR2].bg,
-with the intention that it tests the MINOR2 aspect of MINOR aspect
-of feature number MAJOR.
+The bgtest sample files are numbered lexicographically,
+MAJOR-MINOR[-MINOR2].bgtest, with the intention that it tests the
+MINOR2 aspect of MINOR aspect of feature number MAJOR. The bpltest
+files are merely named after their "main test subject".
 
-There is no strict way of determining what counts as MAJOR or
-MINOR aspects; look at the examples and use your own Common Sense(tm).
-The main point is to allow numbering to be multidimensionally
-extendable so that new test cases can be added to already tested
-MAJOR or MINOR features in a systematic way.
+There is no strict way of determining what counts as MAJOR or MINOR
+aspects; look at the examples and use your own Common Sense(tm). The
+main point is to allow numbering to be multidimensionally extendable
+so that new test cases can be added to already tested MAJOR or MINOR
+features in a systematic way.
 
 
 TESTING
 =======
 
-Testing is probably best done from the top directory.  bdnfTest.sml is
-intended to be run by the SMLUnit framework (see the SML# project
-at http://www.pllab.riec.tohoku.ac.jp/smlsharp/ ), but one can 
-probably hack up an adequate similar framework relatively quickly.
+Testing is probably best done from the top directory. bdnfTest.sml is
+intended to be run by the SMLUnit framework (see the SML# project at
+http://www.pllab.riec.tohoku.ac.jp/smlsharp/ ), but one can probably
+hack up an adequate similar framework relatively quickly. 
 
+Testing with .bpltest files can be done by cd'ing to the dir $SRC and
+executing './bplparser kernel/ast/test/<filename>'.
 
 IF YOU FIND A BUG...
 ====================
 
-..then add a minimal test case that detects the bug!
+...then please add a minimal test case that detects the bug!
