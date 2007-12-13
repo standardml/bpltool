@@ -1,4 +1,4 @@
-val smallcfg = makecfg (fn (ctrlname, _) => {
+val smallcfg = makecfg (fn (ctrlname, path) => {
       xsep           = 4,
       ysep           = 4,
       ctrlfontheight = 12,
@@ -16,7 +16,7 @@ val smallcfg = makecfg (fn (ctrlname, _) => {
       rootrounding   = 5,
       nodeminwidth   = Int.max (30, Int.* (8, size ctrlname)),
       nodeminheight  = 25,
-      labelpos       = BG.PPSVG.SW,
+      labelpos       = case path of 0 :: _ => BG.PPSVG.SE | _ => BG.PPSVG.SW,
       portsep        = 7,
       binderradius   = 3,
       sitewidth      = 30,

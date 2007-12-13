@@ -417,15 +417,24 @@ o ((   PartnerLinks
 
 val rule_receive = "receive" :::
 
-   Receive[partner_link, oper, var, var_scope, inst_id]
-|| (    PartnerLink[partner_link, inst_id] o (`[]` `|` Message[oper] o `[]`)
-    `|` Variable[var, var_scope] o `[]`
-    `|` Invoked[inst_id])
+   (    PartnerLinks o (
+          `[]` `|`
+          PartnerLink[partner_link, inst_id] o (
+            `[]` `|` Message[oper] o `[]`))
+    `|` Invoked[inst_id]
+    `|` Variables o (
+          `[]` `|`
+          Variable[var, var_scope] o `[]`))
+|| Receive[partner_link, oper, var, var_scope, inst_id]
   ----|>
-<-> || oper//[]
-|| (    PartnerLink[partner_link, inst_id] o `[]`
-    `|` Variable[var, var_scope] o `[]`
-    `|` Running[inst_id]);
+   (    PartnerLinks o (
+          `[]` `|`
+          PartnerLink[partner_link, inst_id] o `[]`)
+    `|` Running[inst_id]
+    `|` Variables o (
+          `[]` `|`
+          Variable[var, var_scope] o `[]`))
+|| <-> || oper//[];
 
 
 val rule_receive_general = "receive_general" :::
@@ -708,13 +717,15 @@ val mz3 = matches (mkrules [rule_invoke_general]) (caller_inst1 `|` echo_process
 (*val final_state = run rules (react_rule "invoke") (caller_inst1 `|` echo_process1);*)
 
 val state1_0 = caller_inst1 `|` echo_process1
+val state2_0 = caller_inst2 `|` echo_process2;
 
 val tac_invoke =
   react_rule "invoke" ++
   react_rule "receive" ++
   react_rule "sequence completed"
 
-val state1_invokedz = stepz rules tac_invoke state1_0
+val state1_invokedz = stepz rules tac_invoke state1_0;
+(*val state2_invokedz = stepz rules tac_invoke state2_0;*)
 
 val tac_while =
   react_rule "while unfold" ++
@@ -729,18 +740,23 @@ val tac_while =
   react_rule "variable copy" ++
   react_rule "sequence completed"
 
-fun state1_unroll1z state1_invoked = stepz rules tac_while state1_invoked
+fun state2_unroll1z state2_invoked = stepz rules tac_while state2_invoked
 
 fun showsteps ((rulename, agent), t) = (
-  print (rulename ^ ":\n" ^ str_v agent ^ "\n");
+  print (
+    "-----------------\nNew agent after using rule " ^ rulename ^
+    "\n" ^ str_v agent ^ "\n");
   fn _ => t () agent)
 fun init agent = agent
 
 (*
-val state1_invoked = lzfoldr showsteps init state1_invokedz
-*)
+val _ = use_shorthands on;
+val state1_invoked = lzfoldr showsteps init state1_invokedz <->;
+val _ = outputsvgdoc_v "state1_invoked.svg" (SOME smallcfg) state1_invoked;
 
-(*
-val state1_unroll1 =
-  lzfoldr showsteps init (state1_unroll1z state1_invoked)
+val state2_invoked = lzfoldr showsteps init state2_invokedz <->;
+val _ = outputsvgdoc_v "state2_invoked.svg" (SOME smallcfg) state2_invoked;
+val state2_unroll1 =
+  lzfoldr showsteps init (state2_unroll1z state2_invoked);
+val _ = outputsvgdoc_v "state2_unroll1.svg" (SOME smallcfg) state2_unroll1;
 *)
