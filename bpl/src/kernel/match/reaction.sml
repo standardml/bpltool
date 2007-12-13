@@ -149,6 +149,16 @@ struct
     end
 *)
 
+  (* steps' runs the rules on the agent using the tactics.
+   * at each step, f will be called with the match, the
+   * current agent in which the match occurs, and a thunk
+   * that, upon activation, will return the result of 
+   * the rest of the steps.  The value returned from f
+   * is passed back via previous thunks.
+   * Reaction stops when the 
+   * tactics no longer return any matches, returning
+   * g applied to the last agent back to previous thunks.
+   *)
   fun steps' f g rules tactic agent =
     let
       val regagent = BgBDNF.regularize (BgBDNF.make agent)
@@ -180,15 +190,16 @@ struct
   val stepz =
     steps'
      (fn m => fn a => (fn t => lzmake (fn () =>
-      case lzunmk (t ()) of
-        Nil => raise ThisCannotHappen
-      | Cons ((_, a'), t_aas) =>
         Cons (
           ("<INITIAL>:", BgVal.simplify (BgBDNF.unmk (BgBDNF.make a))),
           (lzmake (
-            fn () => Cons ((
-              #name (Rule.unmk (#rule (Match.unmk m))) ^ ":",
-              BgVal.simplify (BgBDNF.unmk (BgBDNF.make a'))), t_aas)))))))
+            fn () =>
+              case lzunmk (t ()) of
+                Nil => raise ThisCannotHappen
+              | Cons ((_, a'), t_aas) =>
+                Cons ((
+                    #name (Rule.unmk (#rule (Match.unmk m))) ^ ":",
+                    a'), t_aas)))))))
      (fn a =>
        lzmake (fn () =>
          Cons (

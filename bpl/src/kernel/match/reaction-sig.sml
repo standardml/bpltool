@@ -85,9 +85,11 @@ sig
    *)
   val run : rules -> tactic -> agent -> agent
 
-  (** Return the steps (applied rules on which agents)
+  (** Return the steps
    * resulting from running a system
    * of reaction rules, using a tactic, on an agent.
+   * Each step (n, a) consists of the rule name n applied,
+   * and the resulting agent a after reacting.
    * @params R t a
    * @param R  The reaction rules.
    * @param t  The tactic to use.
@@ -96,9 +98,11 @@ sig
    *)
   val steps : rules -> tactic -> agent -> (rulename * agent) list
 
-  (** Return the steps (applied rules on which agents)
+  (** Return the steps
    * resulting from running a system
    * of reaction rules, using a tactic, on an agent.
+   * Each step (n, a) consists of the rule name n applied,
+   * and the resulting agent a after reacting.
    * @params R t a
    * @param R  The reaction rules.
    * @param t  The tactic to use.

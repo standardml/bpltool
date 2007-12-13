@@ -1154,7 +1154,7 @@ struct
                   (fn (e as (x, dx, u, s, b, name, xmin, xmax, ymin, y, xys),
                        (lasty, es)) =>
                      let
-                       val limit = lasty + ysep
+                       val limit = lasty + edgeysep
                        val y = if y < limit then limit else y
                      in
                        (y, (x, dx, u, s, b, name, xmin, xmax, ymin, y, xys) :: es)
