@@ -392,7 +392,7 @@ val rule_invoke = "invoke" :::
          `|` `[]`)
       `|` `[scope]`)
 
-  --[6 |-> 0, 7 |-> 4, 8&[inst_id_invoked] |--> 5&[scope]]--|>
+  --[6 |-> 1, 7 |-> 4, 8&[inst_id_invoked] |--> 5&[scope]]--|>
 
 -/inst_id_invoked
 o ((   PartnerLinks
