@@ -661,7 +661,7 @@ o (    Condition o VariableRef[x, echo_id, echo_id]
 val echo_process2 = 
 Process[echo_process][[echo_id]]
 o (    PartnerLinks o PartnerLink[echo_client, echo_id] o CreateInstance[echo]
-   `|` Variables    o Variable[x, echo_id] o True
+   `|` Variables    o Variable[x, echo_id] o <->
    `|` Sequence[echo_id]
        o (    Receive[echo_client, echo, x, echo_id, echo_id]
           `|` Next
