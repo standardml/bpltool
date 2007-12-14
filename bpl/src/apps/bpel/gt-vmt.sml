@@ -426,7 +426,7 @@ val rule_receive = "receive" :::
           `[]` `|`
           Variable[var, var_scope] o `[]`))
 || Receive[partner_link, oper, var, var_scope, inst_id]
-  ----|>
+  --[2 |-> 3, 3 |-> 2]--|>
    (    PartnerLinks o (
           `[]` `|`
           PartnerLink[partner_link, inst_id] o `[]`)
@@ -658,7 +658,7 @@ o (    Condition o VariableRef[x, echo_id, echo_id]
                             o Assign[echo_id]
                             o Copy o (    From[y, scope]
                                       `|` To[x, echo_id])))));
-val echo_process2 = 
+val echo_process2_context = 
 Process[echo_process][[echo_id]]
 o (    PartnerLinks o PartnerLink[echo_client, echo_id] o CreateInstance[echo]
    `|` Variables    o Variable[x, echo_id] o <->
@@ -667,7 +667,10 @@ o (    PartnerLinks o PartnerLink[echo_client, echo_id] o CreateInstance[echo]
           `|` Next
               o Sequence[echo_id]
               o (    Reply[echo_client, echo, x, echo_id, echo_id]
-                 `|` Next o while_loop)));
+                 `|` Next o `[]`)));
+
+val echo_process2 = echo_process2_context o while_loop;
+val echo_process2_emptyloop = echo_process2_context o While[echo_id] o <->;
 
 (* An instance which is about to invoke the advanced echo process:
  * 
@@ -707,17 +710,20 @@ o (Instance[caller, caller_id]
              `|` Exit[caller_id])));
 
 
+val _ = use_shorthands on;
 
+(*
 val mz1 = matches (mkrules [rule_reply]) (caller_inst1 `|` echo_process1);
 val mz2 = matches (mkrules [rule_invoke]) (caller_inst1 `|` echo_process1);
 val mz3 = matches (mkrules [rule_invoke_general]) (caller_inst1 `|` echo_process1);
-(*print_mv mz2;*)
+print_mv mz2;*)
 
 (*val final_state = run rules tactic (echo_process || caller_inst);*)
 (*val final_state = run rules (react_rule "invoke") (caller_inst1 `|` echo_process1);*)
 
 val state1_0 = caller_inst1 `|` echo_process1
 val state2_0 = caller_inst2 `|` echo_process2;
+val state_0 = caller_inst2 `|` echo_process2_emptyloop;
 
 val tac_invoke =
   react_rule "invoke" ++
@@ -726,6 +732,7 @@ val tac_invoke =
 
 val state1_invokedz = stepz rules tac_invoke state1_0;
 (*val state2_invokedz = stepz rules tac_invoke state2_0;*)
+val state_invokedz = stepz rules tac_invoke state_0;
 
 val tac_while =
   react_rule "while unfold" ++
@@ -740,17 +747,17 @@ val tac_while =
   react_rule "variable copy" ++
   react_rule "sequence completed"
 
-fun state2_unroll1z state2_invoked = stepz rules tac_while state2_invoked
+fun state_unroll1z state_invoked = stepz rules tac_while state_invoked
 
 fun showsteps ((rulename, agent), t) = (
   print (
-    "-----------------\nNew agent after using rule " ^ rulename ^
-    "\n" ^ str_v agent ^ "\n");
+    "----------------------------------------------------\n\
+    \New agent after using rule " ^ rulename ^
+    "\n\n" ^ str_v agent ^ "\n");
   fn _ => t () agent)
 fun init agent = agent
 
 (*
-val _ = use_shorthands on;
 val state1_invoked = lzfoldr showsteps init state1_invokedz <->;
 val _ = outputsvgdoc_v "state1_invoked.svg" (SOME smallcfg) state1_invoked;
 
@@ -760,3 +767,41 @@ val state2_unroll1 =
   lzfoldr showsteps init (state2_unroll1z state2_invoked);
 val _ = outputsvgdoc_v "state2_unroll1.svg" (SOME smallcfg) state2_unroll1;
 *)
+
+val state_invoked = lzfoldr showsteps init state_invokedz <->;
+val _ = outputsvgdoc_v "state_invoked.svg" (SOME smallcfg) state_invoked;
+
+val Body = atomic("Body" -: 5);
+ 
+local
+  open BG.BgBDNF
+  val glob = BG.Interface.glob
+  val Wir = BG.BgVal.Wir (BG.Info.noinfo)
+  val state_invoked_b = make state_invoked;
+  val {wirxid, D}        = unmkB state_invoked_b
+  val {ren, Ps, perm}    = unmkD D
+  val {id_Z, Y, s, X, N} = unmkP (hd Ps)
+  val {absnames, G}      = unmkN N
+  val {idxmerge, Ss}     = unmkG G
+  val caller   = List.nth (Ss, 0)
+  val proc     = List.nth (Ss, 1)
+  val instance = List.nth (Ss, 2)
+  val wir_X = glob (BG.BgVal.innerface wirxid)
+  val intro = Wir (BG.Wiring.introduce wir_X)
+in
+  val state_invoked_caller   = wirxid o (unmk caller || intro)
+  val state_invoked_proc     = unmk (List.nth (Ss, 1))
+  val state_invoked_instance = wirxid o (unmk instance || intro)
+end;
+val _ =
+  outputsvgdoc_v
+    "state_invoked_caller.svg" (SOME smallcfg) state_invoked_caller;
+val _ =
+  outputsvgdoc_v
+    "state_invoked_instance.svg" (SOME smallcfg) state_invoked_instance;
+val _ =
+  outputtikz_v
+    "state_invoked_caller.tex" (SOME 0.017) (SOME smallcfg) state_invoked_caller;
+val _ =
+  outputtikz_v
+    "state_invoked_instance.tex" (SOME 0.017) (SOME smallcfg) state_invoked_instance;
