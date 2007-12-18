@@ -50,6 +50,13 @@ sig
    * @param c2  the second control.
    *)
   val eq : control -> control -> bool
+  (** Compare two controls lexically, using the order:
+   * name, kine, bound, free
+   * @params c1 c2
+   * @param c1  the first control.
+   * @param c2  the second control.
+   *)
+  val compare : control * control -> order
   val kind2String : kind -> string
   val toString : control -> string
 end

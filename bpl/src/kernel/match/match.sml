@@ -2629,6 +2629,65 @@ struct
       lzunmk (nextmatch (firstperm (map (hd o loc o outerface) Qs)))
     end) handle e => raise e)
 
+  local
+    structure ControlOrder
+      = struct type t = Control.control
+               val compare = Control.compare
+        end
+    structure ControlSet = Rbset(ControlOrder)
+
+    (* determine whether all top-level nodes of a global discrete
+     * primes have non-active controls, and return the set of controls *)
+    fun only_non_active_top_level_nodes (G : G bgbdnf) =
+      let
+        fun only_non_active_top_level_nodes_S (S, (non_active, ctrls)) =
+          case unmkS S of
+            BgBDNF.SMol M =>
+            let
+              val ctrl  = #ctrl (Ion.unmk (#KyX (unmkM M)))
+              val ctrls = ControlSet.insert' ctrl ctrls
+            in
+              (Control.Active <> Control.kind ctrl andalso non_active, ctrls)
+            end
+          | _ => (non_active, ctrls)
+                 
+        val {Ss, ...} = unmkG G
+      in
+        foldr only_non_active_top_level_nodes_S (true, ControlSet.empty) Ss
+      end
+
+    (* determine whether a discrete prime has a node with a control not
+     * in the given set of controls
+     *)
+    fun has_unknown_control ctrls (P : P bgbdnf) : bool =
+      let
+        fun has_unknown_control_S S =
+          case unmkS S of
+            BgBDNF.SMol M => 
+            let
+              val ctrl = #ctrl (Ion.unmk (#KyX (unmkM M)))
+            in
+              not (ControlSet.member ctrl ctrls)
+            end
+          | _             => false
+
+        val {N, ...}  = unmkP P
+        val {G, ...}  = unmkN N
+        val {Ss, ...} = unmkG G
+      in
+        List.exists has_unknown_control_S Ss
+      end
+
+  in
+    (* Check conservatively and fast whether there can be no matches
+     * of Ps in g based on the top-level nodes in each. *)
+    fun no_possible_matches (g : G bgbdnf) (Ps : P bgbdnf list) =
+      let
+        val (g_non_active, g_ctrls) = only_non_active_top_level_nodes g
+      in
+        g_non_active andalso List.exists (has_unknown_control g_ctrls) Ps
+      end
+  end
 
   (* Match a global discrete prime using the MER rule:
    * 1) Deconstruct agent g into molecule list ms of length n.
@@ -2646,6 +2705,9 @@ struct
    *           return ename', Y, s_C, Ss', qs
    *)
   fun matchMER lvl (args as {ename, s_a, L, s_R, e = g, Ps}) =
+    if no_possible_matches g Ps then
+      lzNil
+    else
     lzmake (fn () =>
     let val _ =  print' (fn () => Int.toString lvl ^ ">MER ")
       val {idxmerge, Ss = ms} = unmkG g
@@ -2716,8 +2778,7 @@ struct
           val {ctrl, free = ys, bound = Xs} = Ion.unmk KyX
         in
           case Control.kind ctrl of
-            Control.Passive => (print' (fn () => Int.toString lvl ^ ".ION "); Nil)
-          | _ =>
+            Control.Active =>
 	          let
 		          val Y = foldr (fn (y, Y) => NameSet.insert y Y) NameSet.empty ys
 		          val {inDom = s_Y_n, notInDom = s_a_n_new} = Wiring.split s_a_n Y
@@ -2778,6 +2839,7 @@ struct
 		        in
 		          lzunmk matches
 		        end
+          | _ => (print' (fn () => Int.toString lvl ^ ".ION "); Nil)
 	      end
        | _ => raise AgentNotGround (BgBDNF.unmk g, "in matchDS"))
       | _ => (print' (fn () => Int.toString lvl ^ ".IONb "); Nil))

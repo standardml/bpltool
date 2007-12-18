@@ -42,6 +42,30 @@ struct
   fun eq (n1, k1, b1, f1)  (n2, k2, b2, f2) =
     strEq n1 n2 andalso kindEq k1 k2 andalso
     b1 = b2 andalso f1 = f2
+  fun compare (c1, c2) =
+    let
+      val (name1, kind1, bound1, free1) = unmk c1
+      val (name2, kind2, bound2, free2) = unmk c2
+    in
+      case String.compare (name1, name2) of
+        EQUAL =>
+      (case Int.compare (bound1, bound2) of
+        EQUAL =>
+      (case Int.compare (free1, free2) of
+        EQUAL =>
+      (case (kind1, kind2) of
+        (Active,  Passive) => LESS
+      | (Passive, Active)  => GREATER
+      | (Active,  Atomic)  => LESS
+      | (Atomic,  Active)  => GREATER
+      | (Passive, Atomic)  => LESS
+      | (Atomic,  Passive) => GREATER
+      | _ => EQUAL)
+      | x => x)
+      | x => x)
+      | x => x
+    end
+
   fun kind2String Active  = "Active"
     | kind2String Passive = "Passive"
     | kind2String Atomic  = "Atomic"
