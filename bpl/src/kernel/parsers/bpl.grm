@@ -19,37 +19,40 @@
  *)
 
 structure T = BPLTerm
-
+type id = T.id
+type ctrldef = id * T.kind * int * int
+type bigraph = T.bigraph
 %%
 %term EOF
     | ID of string | INT of int | NAME of string
     | LPAR | RPAR | LANG | RANG | LBRC | RBRC | LBRK | RBRK | BARREN
-    | SLASH | COMMA | ARROW | COLON | EQUAL | DOT | STAR | COMP | UNDERSCORE
+    | SLASH | COMMA | ARROW | COLON | EQUAL | DOT | STAR | COMP
+    | QUOT | UNDERSCORE
     | DPAR | PAR
 
     | ACTIVE | ATOMIC | END | PASSIVE | RULE | SIG | SIGNATURE | USING | VAL
 
 %nonterm
   Prog of T.prog
-| Dec of T.dec
+| Dec of T.dec list
 | AtDec of T.dec
 | Sig of T.sign
 | SigDefs of T.sigdef list
 | SigDef of T.sigdef
-| CtrlDefs of T.ctrldef list
-| CtrlDef of T.ctrldef
-| CtrlKind of T.ctrlkind
+| CtrlDefs of ctrldef list
+| CtrlDef of ctrldef
+| CtrlKind of T.kind
 | Bigraph of T.bigraph
 | OpBigraph of T.bigraph
 | JuxtBigraph of T.bigraph
 | AtBigraph of T.bigraph
-| PortsOpt of T.edge list option
-| Ports of T.edge list
-| EdgeList of T.edge list
-| Edges of T.edge list
+| PortsOpt of T.id list
+| Ports of T.id list
+| EdgeList of T.id list
+| Edges of T.id list
 | Wiring of T.wire list
 | Wire of T.wire
-| Rule of T.rule
+| Rule of bigraph * bigraph
 
 %pos {pos: int, src: {file: string}}
 %verbose
@@ -75,17 +78,17 @@ structure T = BPLTerm
 Prog:
       SigDefs 
       USING ID
-      Dec                              ( T.Prog(SigDefs, ID, Dec) )
+      Dec                              ( (SigDefs, ID, Dec) )
 
 SigDefs:
       SigDef SigDefs                   ( SigDef :: SigDefs )
     |                                  ( [] )
 
 SigDef:
-      SIGNATURE ID EQUAL Sig           ( T.SigDef(ID, Sig) )
+      SIGNATURE ID EQUAL Sig           ( (ID, Sig) )
 
 Sig:
-      SIG CtrlDefs END                 ( T.Sig(CtrlDefs) )
+      SIG CtrlDefs END                 ( CtrlDefs )
 
 CtrlDefs:
       CtrlDef CtrlDefs                 ( CtrlDef :: CtrlDefs )
@@ -93,7 +96,7 @@ CtrlDefs:
 
 CtrlDef:
       ID COLON CtrlKind LPAR INT ARROW INT RPAR
-                                       ( T.Ctrl(ID, CtrlKind, INT1, INT2) )
+                                       ( (ID, CtrlKind, INT1, INT2) )
 
 CtrlKind:
       ACTIVE                           ( T.Active )
@@ -101,19 +104,19 @@ CtrlKind:
     | ATOMIC                           ( T.Atomic )
 
 Dec:
-      AtDec                            ( AtDec )
-    | AtDec Dec                        ( T.Seq(AtDec, Dec) )
+      AtDec                            ( [AtDec] )
+    | AtDec Dec                        ( AtDec :: Dec )
 
 AtDec:
-      RULE ID EQUAL Rule               ( T.RuleDec(ID, Rule) )
-    | VAL  ID EQUAL Bigraph            ( T.ValDec(ID, Bigraph) )
+      RULE ID EQUAL Rule               ( T.Rul(ID, Rule) )
+    | VAL  ID EQUAL Bigraph            ( T.Val(ID, Bigraph) )
 
 Bigraph:
       OpBigraph                        ( OpBigraph )
     | SLASH EdgeList DOT Bigraph       ( T.Clo(EdgeList, Bigraph) )
-(*
-    | LBRC  EdgeList RBRC Bigraph    ( BAbs(EdgeList, AtBigraph) )
-*)
+    | QUOT  EdgeList QUOT Bigraph      ( T.Con(EdgeList, Bigraph) )
+    | LBRC  EdgeList RBRC Bigraph      ( T.Abs(EdgeList, Bigraph) )
+
       (* I was thinking that a wiring should be an AtBigraph, but
          that gives loads of shift/reduce conflicts *)
     | Wiring                           ( T.Wir(Wiring) )
@@ -136,19 +139,19 @@ AtBigraph:
     | ID UNDERSCORE LPAR Edges RPAR    ( T.Ion(ID,[],Edges) )
     | ID LANG EdgeList LPAR EdgeList RPAR RANG
                                        ( T.Ion(ID,EdgeList1,EdgeList2) )
-    | LBRK INT RBRK PortsOpt           ( T.Site(INT, PortsOpt) )
-    | NAME PortsOpt                    ( T.Nsite(NAME, PortsOpt) )
-    | BARREN                           ( T.Empty )
+    | LBRK INT RBRK PortsOpt           ( T.Sit(T.SiteNum INT, PortsOpt) )
+    | NAME PortsOpt                    ( T.Sit(T.SiteName NAME, PortsOpt) )
+    | BARREN                           ( T.Bar )
     | LPAR Bigraph RPAR                ( Bigraph )
-    | INT                              ( if INT = 1 then T.EmptyPri
+    | INT                              ( if INT = 1 then T.Bar
                                          else raise Fail("bpl.grm: AtBigraph of INT encountered, but not 1 (barren root)") )
       (* Hmm, need to be able to refer to a bigraph by id, but if
          bigraph identifier and ctrl identifier are the same, how
          do we know if ID is a ion or a bigraph id? *)
 
 PortsOpt:
-      Ports                            ( SOME Ports )
-    |                                  ( NONE )
+      Ports                            ( Ports )
+    |                                  ( [] )
 
 Ports:
       LANG EdgeList RANG               ( EdgeList )
@@ -167,8 +170,8 @@ Wiring:
 
 Wire:
       ID SLASH ID                      ( T.GRen(ID1,ID2) )
-    | ID SLASH                         ( T.GIdle(ID) )
+    | ID SLASH                         ( T.GInt(ID) )
     | LBRC ID RBRC SLASH LBRC ID RBRC  ( T.LRen(ID1,ID2) )
-    | LBRC ID RBRC SLASH               ( T.LIdle(ID) )
+    | LBRC ID RBRC SLASH               ( T.LInt(ID) )
 Rule:
-      Bigraph ARROW Bigraph            ( T.Rule(Bigraph1,Bigraph2) )
+      Bigraph ARROW Bigraph            ( (Bigraph1,Bigraph2) )

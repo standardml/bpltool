@@ -113,6 +113,7 @@ end (*local*)
 <INITIAL>"."     => (tok arg DOT(yypos,yypos+1));
 <INITIAL>"*"     => (tok arg STAR(yypos,yypos+1));
 <INITIAL>"o"     => (tok arg COMP(yypos,yypos+1));
+<INITIAL>"'"     => (tok arg QUOT(yypos,yypos+1));
 <INITIAL>"_"     => (tok arg UNDERSCORE(yypos,yypos+1));
 
 <INITIAL>"(*"    => (comlevel := 1; YYBEGIN COM; continue());
