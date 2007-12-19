@@ -121,6 +121,11 @@ sig
    *                          names.
    *)
   val Abs : info -> nameset * bgval -> bgval
+  (** Construct a bigraph equivalent to (X)(P * Y) where Y are the names
+   * of X which are not in the outer face of P.
+   * @exception NotPrime     i P is not prime.
+   *)
+  val Abs' : info -> nameset * bgval -> bgval
   (** Signal that the inner or outer name sets of a list of bigraphs
    * were not disjoint. 
    * @params vs errtxt
@@ -145,11 +150,11 @@ sig
    *)
   val Com : info -> bgval * bgval -> bgval
   (** Construct a bigraph equivalent to (b_1 || id) b_2 or
-   * (b_1 || id) ((X) b_2), that is, a composition of a pair of bigraphs,
-   * where id is an appropriate identity and, if b_2 is prime, X an
-   * appropriate nameset allowing composition.  This will only work when
-   * the inner width of b_1 matches the outer width of b_2, or if b_1 is
-   * a wiring.
+   * (b_1 || id) ((X) (b_2 * Y)), that is, a composition of a pair of
+   * bigraphs, where id is an appropriate identity and, if b_2 is prime,
+   * X and Y appropriate namesets allowing composition.  This will only
+   * work when the inner width of b_1 matches the outer width of b_2, or
+   * if b_1 is a wiring.
    * @exception NotComposable  if the inner face of b_1 is positive and
    *                           different
    *                           from outer face of b_2 (b_1 is allowed

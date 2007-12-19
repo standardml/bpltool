@@ -815,16 +815,34 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
       Par' i vs
     end 
 
+  fun Abs' i (X, v) =
+    let
+      val Y = NameSet.difference X (Interface.names (outerface v))
+    in
+      if NameSet.isEmpty Y then
+        Abs i (X, v)
+      else
+        Abs i (X, Ten i [v, Wir i (Wiring.introduce Y)])
+    end
+
   fun Com' i (v1, v2) =
       let
         val i1 = innerface v1
         val i2 = innerface v2
         val o1 = outerface v1
         val o2 = outerface v2
-        val i1_loc_ns = foldr (fn (X, Y) => NameSet.union X Y) NameSet.empty (Interface.loc i1)
-        val X = NameSet.difference
-                  (NameSet.difference (Interface.glob o2) (Interface.glob i1))
-                  i1_loc_ns
+        val i1_loc_ns
+          = foldr
+              (fn (X, Y) => NameSet.union X Y)
+              NameSet.empty (Interface.loc i1)
+        val o2_loc_ns
+          = foldr
+              (fn (X, Y) => NameSet.union X Y)
+              NameSet.empty (Interface.loc o2)
+        val X
+          = NameSet.difference
+              (NameSet.difference (Interface.glob o2) (Interface.glob i1))
+              i1_loc_ns
         fun disjoint X Y =
           (NameSet.union X Y; true)
           handle NameSet.DuplicatesRemoved => false
@@ -855,12 +873,12 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
          val v2' =
            if Interface.width o2 = 1 then
              let
-               val Y = NameSet.intersect (Interface.glob o2) i1_loc_ns
+               val Y = NameSet.difference i1_loc_ns o2_loc_ns
              in
                if NameSet.isEmpty Y then
                  v2
                else
-                 Abs i (Y, v2)
+                 Abs' i (Y, v2)
                  handle _ =>
                    raise NotComposable 
                      (v1, v2, "Interface mismatch for composition in Com'")

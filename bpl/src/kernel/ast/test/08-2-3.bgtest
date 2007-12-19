@@ -1,7 +1,18 @@
-Expect error: Testing composition with inner/outer local name set sizes >0/0
+Testing composition with inner/outer local name set sizes >0/0 (syntactic sugar makes this legal)
 
 K<><{x,y}> o merge_2
 
 
-exception:
-NotComposable
+result:
+
+(idw_0 * idp_1)
+ o (idw_0
+    * `**[(idw_0 * ({})(idw_0 * idp_1) o '{}')
+         o (({})
+            (idw_0 * merge_1)
+             o `**[(idw_0 * K<><{}>)
+                   o ({})
+                     (idw_0 * merge_2)
+                      o `**[(idw_0 * idp_1) o '{}',
+											      (idw_0 * idp_1) o '{}']])]
+       o idp_2)
