@@ -77,6 +77,9 @@ struct
 
 end (* structure Parse *)
 
+(* panic@itu.dk: Kernel files should be libraries, so the following
+ * is commented out:
+ 
 exception MissingInFile
 
 (* prettyprint the constructed ast parsed from file *)
@@ -86,3 +89,5 @@ val _ =
     in Pretty.ppPrint (BPLTerm.pp ast)
 		      (Pretty.plainOutput ("(*","*)")) TextIO.stdOut
     end
+
+*)
