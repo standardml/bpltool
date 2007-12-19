@@ -81,9 +81,9 @@ val get = Ion("get",["x"],["a"])
 val region_idle_x = Com(Wir([IdleL("x")]),Empty)
 
 (* terms *)
-val null = Ion("null",[],[])                     (* 0 *)
-val send_null = Emb(send,null)                   (* aw.0 *)
-val get_null = Emb(get,Pri(null,region_idle_x))  (* a(x).0 *)
+val null' = Ion("null",[],[])                     (* 0 *)
+val send_null = Emb(send,null')                   (* aw.0 *)
+val get_null = Emb(get,Pri(null',region_idle_x))  (* a(x).0 *)
 val agent = Pri(send_null,get_null)              (* aw.0 | a(x).0 *)
 
 (* sites *)
@@ -115,7 +115,7 @@ val decs = [Value("v1",Com(C,a)),
 	    Value("v2",Com(C,b)),
 	    Value("state",Pri(Id("v1"),Id("v2"))),
 	    Rule("r1",K,L),
-	    Value("v_null",null),
+	    Value("v_null",null'),
 	    Value("v_send",send_null),
 	    Value("v_get",get_null),
 	    Value("agent",agent),
