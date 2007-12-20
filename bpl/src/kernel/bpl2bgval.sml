@@ -19,14 +19,14 @@
  *)
 
 (**
- * @author: Ebbe Elsborg (elsborg@itu.dk)
- *
  * Mapping from BPL abstract syntax tree to BgVal.
  * Implements bpl/bplproject/doc/projects/contextawareness/plato/bpl-bnf.tex
  * <p>
  * Input: A list of decls (Values and Rules) and a signature.          <br />
  * Output: A signature, a main bgval (the state of the BRS), and
  *   a set of rules of bgvals with instantiations.
+ *
+ * @author: Ebbe Elsborg (elsborg@itu.dk) et al.
  * @version $LastChangedRevision: 923 $
  *)
 functor Bpl2bgval (
