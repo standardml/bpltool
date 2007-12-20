@@ -15,11 +15,15 @@ use "figinfo.sml";
 (*     String Declarations     *)
 (*******************************)
 val Process        = "Process"
+val SubProcesses   = "SubProcesses"
+val SubProcess     = "SubProcess"
+val Instances      = "Instances"
 val Instance       = "Instance"
 val Scope          = "Scope"
 val ActiveScope    = "ActiveScope"
-val Running        = "Running"
 val Invoked        = "Invoked"
+val Running        = "Running"
+val Freezing       = "Freezing"
 val Stopped        = "Stopped"
 val Variables      = "Variables"
 val Variable       = "Variable"
@@ -38,88 +42,176 @@ val Assign         = "Assign"
 val Copy           = "Copy"
 val To             = "To"
 val From           = "From"
-val Invoke         = "Invoke"
 val PartnerLinks   = "PartnerLinks"    
 val PartnerLink    = "PartnerLink"
+val SubLinks       = "SubLinks"
+val SubLink        = "SubLink"
 val Message        = "Message"
 val Link           = "Link"
 val CreateInstance = "CreateInstance"
+val Invoke         = "Invoke"
 val Receive        = "Receive"
 val Reply          = "Reply"
 val GetReply       = "GetReply"
+val InvokeSub      = "InvokeSub"
+val ReceiveSub     = "ReceiveSub"
+val ReplySub       = "ReplySub"
+val GetReplySub    = "GetReplySub"
+val IvokeSup       = "InvokeSup"
+val ReceiveSup     = "ReceiveSup"
+val ReplySup       = "ReplySup"
+val GetReplySup    = "GetReplySup"
 val Exit           = "Exit"
 
 (*    For names                *)
-val inst_id              = "inst_id"
-val inst_id1             = "inst_id1"
-val inst_id2             = "inst_id2"
-val inst_id_invoker      = "inst_id_invoker"
-val inst_id_invoked      = "inst_id_invoked"
-val inst_id_invoked1     = "inst_id_invoked1"
-val inst_id_invoked2     = "inst_id_invoked2"
-val scope                = "scope"
-val scope1               = "scope1"
-val scope2               = "scope2"
-val f                    = "f"
-val t                    = "t"
-val proc_name            = "proc_name"
-val var                  = "var"
-val var_scope            = "var_scope"
-val outvar               = "outvar"
-val outvar_scope         = "outvar_scope"
-val invar                = "invar"
-val invar_scope          = "invar_scope"
-val oper                 = "oper"
-val partner_link         = "partner_link"
-val partner_link_invoker = "partner_link_invoker"
-val partner_link_invoked = "partner_link_invoked"
-val echo                 = "echo"
-val echo_id              = "echo_id"
-val echo_process         = "echo_process"
-val echo_value           = "echo_value"
-val echo_service         = "echo_service"
-val echo_client          = "echo_client"
-val x                    = "x"
-val y                    = "y"
-val z                    = "z"
-val v                    = "v"
-val caller               = "caller"
-val caller_id            = "caller_id"
+val inst_id                    = "inst_id"
+val inst_id1                   = "inst_id1"
+val inst_id2                   = "inst_id2"
+val inst_id3                   = "inst_id3"
+val inst_id_invoker            = "inst_id_invoker"
+val inst_id_invoked            = "inst_id_invoked"
+val inst_id_invoked1           = "inst_id_invoked1"
+val inst_id_invoked2           = "inst_id_invoked2"
+val scope                      = "scope"
+val scope1                     = "scope1"
+val scope2                     = "scope2"
+val scope3                     = "scope3"
+val active_scopes              = "active_scopes"
+val active_scopes_invoker      = "active_scopes_invoker"
+val active_scopes_invoked      = "active_scopes_invoked"
+val scopes_invoked             = "scopes_invoked"
+val scopes_invoker             = "scopes_invoker"
+val f                          = "f"
+val t                          = "t"
+val proc_name                  = "proc_name"
+val var                        = "var"
+val var_scope                  = "var_scope"
+val outvar                     = "outvar"
+val outvar_scope               = "outvar_scope"
+val invar                      = "invar"
+val invar_scope                = "invar_scope"
+val oper                       = "oper"
+val partner_link               = "partner_link"
+val partner_link_invoker       = "partner_link_invoker"
+val partner_link_invoked       = "partner_link_invoked"
+val partner_link_scope         = "partner_link_scope"
+val partner_link_scope_invoker = "partner_link_scope_invoker"
+val partner_link_scope_invoked = "partner_link_scope_invoked"
+val echo                       = "echo"
+val echo_id                    = "echo_id"
+val echo_process               = "echo_process"
+val echo_value                 = "echo_value"
+val echo_service               = "echo_service"
+val echo_client                = "echo_client"
+val x                          = "x"
+val y                          = "y"
+val z                          = "z"
+val v                          = "v"
+val caller                     = "caller"
+val caller_id                  = "caller_id"
 
 
 
 (*******************************)
 (*          Signature          *)
 (*******************************)
-(* The binding port of a Process is used to delimit the scope of
- * variables within the process to the process itself.
- * The free port should be connected to name of the process. *)
+(* The binding ports of a Process
+ *
+ *   #1 should be used to delimit the scope of variables within the
+ *        process to the process itself.
+ *
+ * The free ports
+ *
+ *   #1 should be connected to name of the process.
+ *)
 val Process      = passive  (Process     =: 1 --> 1);
 
-(* The first free port should be connected to name of the process.
- * The second free port of an instance is the instance identifier
- * which (among other things) is used to determine the scope of
- * variables within the instance to the instance itself. *)
+(* SubProcesses is just a container node for SubProcess nodes.
+ *)
+val SubProcesses = active0  (SubProcesses          );
+
+(* We use a different control for sub processes than processes to
+ * prevent the invokation of sub processes using the Invoke activity -
+ * in particular it prevents a process from invoking sub processes of
+ * other processes.
+ * 
+ * The binding ports of a SubProcess
+ *
+ *   #1 should be used to delimit the scope of variables within the
+ *        process to the process itself.
+ *
+ * The free ports should be connected
+ *
+ *   #1 to the name of the process.
+ *   #2 to the scope port of the node delimiting its scope.
+ *)
+val SubProcess   = passive  (SubProcess  =: 1 --> 2);
+
+
+(* Instances is just a container node for Instance nodes.
+ *)
+val Instances    = active0  (Instances             );
+
+(* The free ports of an Instance
+ * 
+ *   #1 should be connected to name of the process.
+ *   #2 The second free port of an instance is the instance identifier
+ *        which (among other things) is used to determine the scope of
+ *        variables within the instance to the instance itself. 
+ *)
 val Instance     = active   (Instance    -:       2);
 
-(* The binding port of a Scope is used to delimit the scope of
- * variables within the scope to the scope itself. *)
+(* The following controls are used to keep track of the state of
+ * instances:
+ *
+ *   Invoked:  an instance which has just been instantiated and still
+ *               needs to copy the contents of the invoke message into
+ *               the proper variable before beginning execution.
+ *
+ *   Running:  an executing instance.
+ *
+ *   Freezing: an instance in the process of being frozen.
+ *
+ *   Stopped:  a stopped instance which must not take any steps and
+ *               should be garbage collected.
+ *
+ * The free ports of an Invoked, Running, Freezing, or Stopped node
+ *
+ *   #1 should be connected to the scope port of the parent
+ *        process/instance.
+ *   #2 should be connected to all the ActiveScope nodes of the
+ *        instance.
+ *)
+val Invoked      = atomic   (Invoked     -:       1);
+val Running      = atomic   (Running     -:       2);
+val Freezing     = atomic   (Freezing    -:       2);
+val Stopped      = atomic   (Stopped     -:       1);
+
+(* The binding ports of a Scope
+ *
+ *   #1 is used to delimit the scope of variables within the scope to
+ *        the scope itself.
+ *
+ * The free ports
+ *
+ *   #1 should be connected to the scope port of the parent
+ *        process/instance.
+ *)
 val Scope        = passive  (Scope       =: 1 --> 1);
 (* Scopes have to be initialized before they can be used. An ActiveScope
  * is a scope that has has been initialized.
- * The first free port of an ActiveScope is used to delimit the scope of
- * variables within the scope to the scope itself.
- * The second free port should be connected to the instance identifier.
+ *
+ * The free ports of an ActiveScope
+ *
+ *   #1 is used to delimit the scope of variables within the scope to
+ *        the scope itself.
+ *   #2 should be connected to the state node of the instance.
+ *   #3 should be connected to the instance identifier.
  *)
-val ActiveScope  = active   (ActiveScope -:       2);
+val ActiveScope  = active   (ActiveScope -:       3);
 
-(* The free port of a 'running', 'invoked', or 'stopped' node should
- * be connected to the scope port of the parent process/instance.
+(* Variables is just a container node for Variable nodes.
  *)
-val Running      = atomic   (Running     -:       1);
-val Invoked      = atomic   (Invoked     -:       1);
-val Stopped      = atomic   (Stopped     -:       1);
-
 val Variables    = active0  (Variables             );
 (* The free ports of a variable should be connected
  *
@@ -135,6 +227,11 @@ val Variable     = passive  (Variable    -:       2);
  *)
 val VariableRef  = atomic   (VariableRef -:       3);
 
+(* The free ports of the main node (Sequence, Flow, While, If, Assign)
+ * of a structural activity should be connected
+ * 
+ *   #1 to the instance identifier
+ *)
 val Sequence     = active   (Sequence    -:       1);
 val Next         = passive0 (Next                  );
 
@@ -151,31 +248,47 @@ val False        = atomic0  (False                 );
 
 val Assign       = passive  (Assign      -:       1);
 val Copy         = passive0 (Copy                  );
-(* The first free port of a To or From node should be connected to a
- * variable name, and the second should be connected to the scope port of
- * the node delimiting its scope. *)
+(* The free ports of a To or From node should be connected
+ *
+ *   #1 to a variable name.
+ *   #2 to the scope port of the node delimiting the variables scope.
+ *)
 val To           = atomic   (To          -:       2);
 val From         = atomic   (From        -:       2);
 
 (* The free ports of an Invoke node should be connected:
  * 
  *   #1 to the name of the partner link
- *   #2 to the name of the operation to be invoked
- *   #3 to the name of the input variable
- *   #4 to the same scope port as the input variable
- *   #5 to the name of the output variable
- *   #6 to the same scope port as the output variable
- *   #7 to the instance identifier
+ *   #2 to the same scope port as the partner link
+ *   #3 to the name of the operation to be invoked
+ *   #4 to the name of the input variable
+ *   #5 to the same scope port as the input variable
+ *   #6 to the name of the output variable
+ *   #7 to the same scope port as the output variable
+ *   #8 to the instance identifier
  *)
-val Invoke       = atomic   (Invoke      -:       7);
+val Invoke       = atomic   (Invoke      -:       8);
 
-val PartnerLinks = active0 (PartnerLinks          );
+(* PartnerLinks is just a container node for PartnerLink nodes.
+ *)
+val PartnerLinks = active0 (PartnerLinks           );
 (* The free ports of a PartnerLink node should be connected:
+ *
+ *   #1 to the name of the partner link
+ *   #2 to the scope port of the node delimiting its scope
+ *)
+val PartnerLink  = passive  (PartnerLink -:       2);
+
+(* SubLinks is just a container node for SubLink nodes.
+ *)
+val SubLinks     = active0  (SubLinks              );
+(* The free ports of a SubLink node should be connected:
  *
  *   #1 to the name of the partner link
  *   #2 to the instance identifier
  *)
-val PartnerLink  = passive  (PartnerLink -:       2);
+val SubLink      = passive  (SubLink -:           2);
+
 (* The free port of a Message should be connected:
  *
  *   #1 to the name of the operation the message pertains to
@@ -195,33 +308,38 @@ val CreateInstance = atomic (CreateInstance -:    1);
 (* The free ports of a Receive node should be connected:
  * 
  *   #1 to the name of the partner link
- *   #2 to the name of the operation
- *   #3 to the name of the variable
- *   #4 to the same scope port as the variable
- *   #5 to the instance identifier
+ *   #2 to the same scope port as the partner link
+ *   #3 to the name of the operation
+ *   #4 to the name of the variable
+ *   #5 to the same scope port as the variable
+ *   #6 to the instance identifier
  *)
-val Receive      = atomic   (Receive     -:       5);
+val Receive      = atomic   (Receive     -:       6);
 (* The free ports of a Reply node should be connected:
  * 
  *   #1 to the name of the partner link
- *   #2 to the name of the operation
- *   #3 to the name of the variable
- *   #4 to the same scope port as the variable
- *   #5 to the instance identifier of its enclosing instance
+ *   #2 to the same scope port as the partner link
+ *   #3 to the name of the operation
+ *   #4 to the name of the variable
+ *   #5 to the same scope port as the variable
+ *   #6 to the instance identifier of its enclosing instance
  *)
-val Reply        = atomic   (Reply       -:       5);
+val Reply        = atomic   (Reply       -:       6);
 (* The free ports of a GetReply node should be connected:
  * 
  *   #1 to the name of the partner link
- *   #2 to the name of the operation
- *   #3 to the name of the output variable
- *   #4 to the same scope port as the output variable
- *   #5 to the instance identifier of its enclosing instance
+ *   #2 to the same scope port as the partner link
+ *   #3 to the name of the operation
+ *   #4 to the name of the output variable
+ *   #5 to the same scope port as the output variable
+ *   #6 to the instance identifier of its enclosing instance
  *)
-val GetReply     = atomic   (GetReply    -:       5);
+val GetReply     = atomic   (GetReply    -:       6);
 
-(* The free port should be connected to the instance identifier of the
- * enclosing instance. *)
+(* The free ports of an Exit node should be connected
+ *
+ *   #1 to the instance identifier of the enclosing instance.
+ *)
 val Exit         = atomic   (Exit        -:       1);
 
 
@@ -239,19 +357,19 @@ val Exit         = atomic   (Exit        -:       1);
 val rule_flow_completed = "flow completed" :::
 
    Flow[inst_id] o <->
-|| Running[inst_id]
+|| Running[inst_id, active_scopes]
   ----|>
    <->
-|| Running[inst_id];
+|| Running[inst_id, active_scopes];
 
 
 val rule_sequence_completed = "sequence completed" :::
 
    Sequence[inst_id] o Next o `[]`
-|| Running[inst_id]
+|| Running[inst_id, active_scopes]
   ----|>
    `[]`
-|| Running[inst_id];
+|| Running[inst_id, active_scopes];
 
 (* The rules for evaluating an if-then-else statement is as expected. If
  * the condition is True we execute the then-branch, otherwise we execute
@@ -262,10 +380,10 @@ val rule_if_true = "if true" :::
    If[inst_id] o (    Condition o True
                   `|` Then o `[]`
                   `|` Else o `[]`)
-|| Running[inst_id]
+|| Running[inst_id, active_scopes]
   ----|>
    `[]`
-|| Running[inst_id];
+|| Running[inst_id, active_scopes];
 
 
 val rule_if_false = "if false" :::
@@ -273,10 +391,10 @@ val rule_if_false = "if false" :::
    If[inst_id] o (    Condition o False
                   `|` Then o `[]`
                   `|` Else o `[]`)
-|| Running[inst_id]
+|| Running[inst_id, active_scopes]
   --[0 |-> 1]--|>
    `[]`
-|| Running[inst_id];
+|| Running[inst_id, active_scopes];
 
 (* We give semantics to a while-loop in the traditional manner, by
  * unfolding the loop once and using an if-then-else construct with the
@@ -285,7 +403,7 @@ val rule_if_false = "if false" :::
 val rule_while_unfold = "while unfold" :::
 
    While[inst_id] o (Condition o `[]` `|` `[]`)
-|| Running[inst_id]
+|| Running[inst_id, active_scopes]
 
   --[2 |-> 0, 3 |-> 1]--|>
 
@@ -296,7 +414,7 @@ val rule_while_unfold = "while unfold" :::
                                     o While[inst_id]
                                       o (Condition o `[]` `|` `[]`))
                   `|` Else o <->)
-|| Running[inst_id];
+|| Running[inst_id, active_scopes];
 
 
 (* Expression evaluation *)
@@ -315,13 +433,13 @@ val rule_variable_reference = "variable reference" :::
 
    VariableRef[var, var_scope, inst_id]
 || Variable[var, var_scope] o `[]`
-|| Running[inst_id]
+|| Running[inst_id, active_scopes]
 
   --[1 |-> 0]--|>
 
    `[]`
 || Variable[var, var_scope] o `[]`
-|| Running[inst_id];
+|| Running[inst_id, active_scopes];
 
 
 (* Assignment *)
@@ -340,14 +458,14 @@ val rule_assign_copy_variable = "assign copy variable" :::
                              `|` To[t, scope2])
 || Variable[f, scope1] o `[]`
 || Variable[t, scope2] o `[]`
-|| Running[inst_id]
+|| Running[inst_id, active_scopes]
 
   --[1 |-> 0]--|>
 
    <->
 || Variable[f, scope1] o `[]`
 || Variable[t, scope2] o `[]`
-|| Running[inst_id];
+|| Running[inst_id, active_scopes];
 
 
 
@@ -360,24 +478,26 @@ val rule_assign_copy_variable = "assign copy variable" :::
 val rule_scope_activation = "scope activation" :::
 
    Scope[inst_id][[scope]] o `[scope]`
-|| Running[inst_id]
+|| Running[inst_id, active_scopes]
   ----|>
-   -/scope o (ActiveScope[scope, inst_id] o `[scope]`)
-|| Running[inst_id];
+   -/scope o (ActiveScope[scope, active_scopes, inst_id] o `[scope]`)
+|| Running[inst_id, active_scopes];
 
-(* When we are finished executing the body of the scope we remove the
- * scope, including its variables, partner links, and its associated
- * "scope"-edge. *)
+(* When we are finished executing the body and all sub-instances of the
+ * scope we remove the scope, including its variables, partner links,
+ * and its associated "scope"-edge. *)
 val rule_scope_completed = "scope completed" :::
 
    -/scope
-   o (ActiveScope[scope, inst_id]
+   o (ActiveScope[scope, active_scopes, inst_id]
       o (    Variables    o (scope//[scope1] o `[scope1]`)
-         `|` PartnerLinks o (scope//[scope2] o `[scope2]`)))
-|| Running[inst_id]
+         `|` PartnerLinks o (scope//[scope2] o `[scope2]`)
+         `|` SubProcesses o (scope//[scope3] o `[scope3]`)
+         `|` Instances    o <->))
+|| Running[inst_id, active_scopes]
   ----|>
    <->
-|| Running[inst_id];
+|| Running[inst_id, active_scopes];
 
 
 
@@ -393,11 +513,13 @@ val rule_scope_completed = "scope completed" :::
  *)
 val rule_inst_completed = "inst completed" :::
 
--/inst_id
+-//[inst_id, active_scopes]
 o (Instance[proc_name, inst_id]
    o (    Variables    o (inst_id//[inst_id1] o `[inst_id1]`)
       `|` PartnerLinks o (inst_id//[inst_id2] o `[inst_id2]`)
-      `|` Running[inst_id]))
+      `|` SubProcesses o (inst_id//[inst_id3] o `[inst_id3]`)
+      `|` Instances    o <->
+      `|` Running[inst_id, active_scopes]))
   ----|>
 <-> || proc_name//[];
 
@@ -410,10 +532,10 @@ o (Instance[proc_name, inst_id]
 val rule_exit_stop_inst = "exit stop inst" :::
 
    Exit[inst_id]
-|| Running[inst_id]
+|| Running[inst_id, active_scopes]
   ----|>
    <->
-|| Stopped[inst_id];
+|| Stopped[inst_id] || active_scopes//[];
 
 (* Once an Instance node contains a Stopped node we garbage collect the
  * instance together with all its remaining content.
@@ -456,11 +578,11 @@ o (Instance[proc_name, inst_id]
  *)
 val rule_invoke = "invoke" :::
 
-   Invoke[partner_link_invoker, oper, invar, invar_scope,
-          outvar, outvar_scope, inst_id_invoker]
-|| PartnerLink[partner_link_invoker, inst_id_invoker] o <->
+   Invoke[partner_link_invoker, partner_link_scope_invoker, oper,
+          invar, invar_scope, outvar, outvar_scope, inst_id_invoker]
+|| PartnerLink[partner_link_invoker, partner_link_scope_invoker] o <->
 || Variable[invar, invar_scope] o `[]`
-|| Running[inst_id_invoker]
+|| Running[inst_id_invoker, active_scopes_invoker]
 || Process[proc_name][[scope]]
    o (    PartnerLinks
           o (    PartnerLink[partner_link, scope]
@@ -472,11 +594,12 @@ val rule_invoke = "invoke" :::
      6&[inst_id_invoked2] |--> 3&[scope2]]--|>
 
 -/inst_id_invoked
-o (   GetReply[partner_link, oper, outvar, outvar_scope, inst_id_invoker]
-   || PartnerLink[partner_link_invoker, inst_id_invoker]
+o (   GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
+               outvar, outvar_scope, inst_id_invoker]
+   || PartnerLink[partner_link_invoker, partner_link_scope_invoker]
       o Link[inst_id_invoked]
    || Variable[invar, invar_scope] o `[]`
-   || Running[inst_id_invoker]
+   || Running[inst_id_invoker, active_scopes_invoker]
    || (Process[proc_name][[scope]]
        o (    PartnerLinks
               o (    PartnerLink[partner_link, scope]
@@ -492,42 +615,6 @@ o (   GetReply[partner_link, oper, outvar, outvar_scope, inst_id_invoker]
               `|` Invoked[inst_id_invoked]
               `|` inst_id_invoked//[inst_id_invoked2]
                   o `[inst_id_invoked2]`)));
-(* A specialized version of the above rule, where the partner link and
- * variable must be at the top-level scope. *)
-val rule_invoke_specialized = "invoke_specialized" :::
-   (    PartnerLinks
-         o (PartnerLink[partner_link_invoker, inst_id_invoker] o <-> `|` `[]`)
-    `|` Variables o (Variable[invar, invar_scope] o `[]` `|` `[]`)
-    `|` Running[inst_id_invoker])
-|| Invoke[partner_link_invoker, oper, invar, invar_scope,
-          outvar, outvar_scope, inst_id_invoker]
-|| Process[proc_name][[scope]]
-   o (PartnerLinks
-      o (PartnerLink[partner_link, scope] o (CreateInstance[oper] `|` `[]`)
-         `|` `[]`)
-      `|` `[scope]`)
-
-  --[6 |-> 1, 7 |-> 4, 8&[inst_id_invoked] |--> 5&[scope]]--|>
-
--/inst_id_invoked
-o ((   PartnerLinks
-        o (PartnerLink[partner_link_invoker, inst_id_invoker]
-            o Link[inst_id_invoked] `|` `[]`)
-    `|` Variables o (Variable[invar, invar_scope] o `[]` `|` `[]`)
-    `|` Running[inst_id_invoker])
-   || GetReply[partner_link, oper, outvar, outvar_scope, inst_id_invoker]
-   || (Process[proc_name][[scope]]
-       o (PartnerLinks
-          o (PartnerLink[partner_link, scope] o (CreateInstance[oper] `|` `[]`)
-             `|` `[]`)
-          `|` `[scope]`)
-       `|` Instance[proc_name, inst_id_invoked]
-           o (PartnerLinks
-              o (PartnerLink[partner_link, inst_id_invoked]
-                 o (Link[inst_id_invoker] `|` Message[oper] o `[]`)
-                 `|` `[]`)
-              `|` Invoked[inst_id_invoked]
-              `|` `[inst_id_invoked]`)));
 
 
 (* The receive rule takes care of activating the instance, by removing a
@@ -538,40 +625,19 @@ o ((   PartnerLinks
  *)
 val rule_receive = "receive" :::
 
-   Receive[partner_link, oper, var, var_scope, inst_id]
-|| PartnerLink[partner_link, inst_id] o (`[]` `|` Message[oper] o `[]`)
+   Receive[partner_link, partner_link_scope, oper, var, var_scope, inst_id]
+|| PartnerLink[partner_link, partner_link_scope]
+   o (`[]` `|` Message[oper] o `[]`)
 || Variable[var, var_scope] o `[]`
 || Invoked[inst_id]
 
   ----|>
 
    <-> || oper//[]
-|| PartnerLink[partner_link, inst_id] o `[]`
+|| PartnerLink[partner_link, partner_link_scope]
+   o `[]`
 || Variable[var, var_scope] o `[]`
-|| Running[inst_id];
-
-(* A specialized version of the above rule, where the partner link and
- * variable must be at the top-level scope. *)
-val rule_receive_specialized = "receive_specialized" :::
-
-   (    PartnerLinks o (
-          `[]` `|`
-          PartnerLink[partner_link, inst_id] o (
-            `[]` `|` Message[oper] o `[]`))
-    `|` Invoked[inst_id]
-    `|` Variables o (
-          `[]` `|`
-          Variable[var, var_scope] o `[]`))
-|| Receive[partner_link, oper, var, var_scope, inst_id]
-  --[2 |-> 3, 3 |-> 2]--|>
-   (    PartnerLinks o (
-          `[]` `|`
-          PartnerLink[partner_link, inst_id] o `[]`)
-    `|` Running[inst_id]
-    `|` Variables o (
-          `[]` `|`
-          Variable[var, var_scope] o `[]`))
-|| <-> || oper//[];
+|| -/active_scopes o Running[inst_id, active_scopes];
 
 
 (* The invoke instance rule executes an Invoke activity in one instance
@@ -583,26 +649,28 @@ val rule_receive_specialized = "receive_specialized" :::
  *)
 val rule_invoke_instance = "invoke_instance" :::
 
-   Invoke[partner_link_invoker, oper,
+   Invoke[partner_link_invoker, partner_link_scope_invoker, oper,
           invar, invar_scope, outvar, outvar_scope, inst_id_invoker]
-|| PartnerLink[partner_link_invoker, inst_id_invoker]
+|| PartnerLink[partner_link_invoker, partner_link_scope_invoker]
    o (Link[inst_id_invoked] `|` `[]`)
 || Variable[invar, invar_scope] o `[]`
-|| Running[inst_id_invoker]
-|| Receive[partner_link_invoked, oper, var, var_scope, inst_id_invoked]
+|| Running[inst_id_invoker, active_scopes_invoker]
+|| Receive[partner_link_invoked, partner_link_scope_invoked, oper,
+           var, var_scope, inst_id_invoked]
 || Variable[var, var_scope] o `[]`
-|| Running[inst_id_invoked]
+|| Running[inst_id_invoked, active_scopes_invoked]
 
   --[2 |-> 1]--|>
 
-   GetReply[partner_link_invoker, oper, outvar, outvar_scope, inst_id_invoker]
-|| PartnerLink[partner_link_invoker, inst_id_invoker]
+   GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
+            outvar, outvar_scope, inst_id_invoker]
+|| PartnerLink[partner_link_invoker, partner_link_scope_invoker]
    o (Link[inst_id_invoked] `|` `[]`)
 || Variable[invar, invar_scope] o `[]`
-|| Running[inst_id_invoker]
-|| <-> || partner_link_invoked//[]
+|| Running[inst_id_invoker, active_scopes_invoker]
+|| <-> || partner_link_invoked//[] || partner_link_scope_invoked//[]
 || Variable[var, var_scope] o `[]`
-|| Running[inst_id_invoked];
+|| Running[inst_id_invoked, active_scopes_invoked];
 
 
 (* The Reply activity inside one instance can synchronize together with
@@ -611,26 +679,27 @@ val rule_invoke_instance = "invoke_instance" :::
  *)
 val rule_reply = "reply" :::
 
-   Reply[partner_link_invoked, oper, var, var_scope, inst_id_invoked]
-|| PartnerLink[partner_link_invoked, inst_id_invoked]
+   Reply[partner_link_invoked, partner_link_scope_invoked, oper,
+         var, var_scope, inst_id_invoked]
+|| PartnerLink[partner_link_invoked, partner_link_scope_invoked]
    o (Link[inst_id_invoker] `|` `[]`)
 || Variable[var, var_scope] o `[]`
-|| Running[inst_id_invoked]
-|| GetReply[partner_link_invoker, oper,
+|| Running[inst_id_invoked, active_scopes_invoked]
+|| GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
             outvar, outvar_scope, inst_id_invoker]
 || Variable[outvar, outvar_scope] o `[]`
-|| Running[inst_id_invoker]
+|| Running[inst_id_invoker, active_scopes_invoker]
 
   --[2 |-> 1]--|>
 
    <-> || oper//[]
-|| PartnerLink[partner_link_invoked, inst_id_invoked]
+|| PartnerLink[partner_link_invoked, partner_link_scope_invoked]
    o (Link[inst_id_invoker] `|` `[]`)
 || Variable[var, var_scope] o `[]`
-|| Running[inst_id_invoked]
-|| <-> || partner_link_invoker//[]
+|| Running[inst_id_invoked, active_scopes_invoked]
+|| <-> || partner_link_invoker//[] || partner_link_scope_invoker//[]
 || Variable[outvar, outvar_scope] o `[]`
-|| Running[inst_id_invoker];
+|| Running[inst_id_invoker, active_scopes_invoker];
 
 
 
@@ -640,8 +709,8 @@ val rules =
              rule_flow_completed, rule_sequence_completed,
              rule_if_true, rule_if_false, rule_while_unfold,
              rule_assign_copy_variable,
-             rule_invoke, rule_invoke_specialized,
-             rule_receive, rule_receive_specialized,
+             rule_invoke,
+             rule_receive,
              rule_invoke_instance, rule_reply,
              rule_exit_stop_inst, rule_exit_remove_inst,
              rule_inst_completed];
@@ -651,7 +720,7 @@ val tactic = roundrobin;
 (*******************************)
 (*       Example processes     *)
 (*******************************)
-
+(*
 (* A simple echo process: it provides an operation "echo" which receives
  * a value and sends the value back.
  *
@@ -675,9 +744,9 @@ Process[echo_process][[echo_id]]
 o (    PartnerLinks o PartnerLink[echo_client, echo_id] o CreateInstance[echo]
    `|` Variables o Variable[x, echo_id] o <->
    `|` Sequence[echo_id]
-       o (    Receive[echo_client, echo, x, echo_id, echo_id]
+       o (    Receive[echo_client, echo_id, echo, x, echo_id, echo_id]
           `|` Next o Sequence[echo_id]
-                   o (    Reply[echo_client, echo, x, echo_id, echo_id]
+                   o (    Reply[echo_client, echo_id, echo, x, echo_id, echo_id]
                       `|` Next o Exit[echo_id])));
 
 (* An instance which is about to invoke the echo process:
@@ -695,15 +764,15 @@ o (    PartnerLinks o PartnerLink[echo_client, echo_id] o CreateInstance[echo]
  * </instance>
  *)
 val caller_inst1 =
--/caller_id
+-//[caller_id, caller_active_scopes]
 o (Instance[caller, caller_id]
-   o (    Running[caller_id]
+   o (    Running[caller_id, caller_active_scopes]
       `|` PartnerLinks o PartnerLink[echo_service, caller_id] o <->
       `|` Variables
            o (    Variable[y, caller_id] o True
               `|` Variable[z, caller_id] o False)
-          `|` Invoke[echo_service, echo, y, caller_id,
-                     z, caller_id, caller_id]));
+          `|` Invoke[echo_service, caller_id, echo,
+                     y, caller_id, z, caller_id, caller_id]));
 
 
 (* A slightly more advanced echo process: 
@@ -751,10 +820,11 @@ o (    Condition o VariableRef[x, echo_id, echo_id]
        o (    PartnerLinks o <->
           `|` Variables    o Variable[y, scope] o <->
           `|` Sequence[echo_id]
-              o (    Receive[echo_client, echo_value, y, scope, echo_id]
+              o (    Receive[echo_client, echo_id, echo_value, y, scope, echo_id]
                  `|` Next
                      o Sequence[echo_id]
-                     o (    Reply[echo_client, echo_value, y, scope, echo_id]
+                     o (    Reply[echo_client, echo_id, echo_value,
+                                  y, scope, echo_id]
                         `|` Next
                             o Assign[echo_id]
                             o Copy o (    From[y, scope]
@@ -764,10 +834,10 @@ Process[echo_process][[echo_id]]
 o (    PartnerLinks o PartnerLink[echo_client, echo_id] o CreateInstance[echo]
    `|` Variables    o Variable[x, echo_id] o <->
    `|` Sequence[echo_id]
-       o (    Receive[echo_client, echo, x, echo_id, echo_id]
+       o (    Receive[echo_client, echo_id, echo, x, echo_id, echo_id]
           `|` Next
               o Sequence[echo_id]
-              o (    Reply[echo_client, echo, x, echo_id, echo_id]
+              o (    Reply[echo_client, echo_id, echo, x, echo_id, echo_id]
                  `|` Next o `[]`)));
 
 val echo_process2 = echo_process2_context o while_loop;
@@ -795,7 +865,7 @@ val echo_process2_emptyloop = echo_process2_context o While[echo_id] o <->;
  * </instance>
  *)
 val caller_inst2 =
--/caller_id
+-//[caller_id, caller_active_scopes]
 o (Instance[caller, caller_id]
    o (    Running[caller_id]
       `|` PartnerLinks o PartnerLink[echo_service, caller_id] o <->
@@ -815,12 +885,12 @@ val _ = use_shorthands on;
 
 (*
 val mz1 = matches (mkrules [rule_reply]) (caller_inst1 `|` echo_process1);
-val mz2 = matches (mkrules [rule_invoke_specialized]) (caller_inst1 `|` echo_process1);
+val mz2 = matches (mkrules [rule_invoke]) (caller_inst1 `|` echo_process1);
 val mz3 = matches (mkrules [rule_invoke]) (caller_inst1 `|` echo_process1);
 print_mv mz2;*)
 
 (*val final_state = run rules tactic (echo_process || caller_inst);*)
-(*val final_state = run rules (react_rule "invoke_specialized") (caller_inst1 `|` echo_process1);*)
+(*val final_state = run rules (react_rule "invoke") (caller_inst1 `|` echo_process1);*)
 
 (*
 val state1_0 = caller_inst1 `|` echo_process1
@@ -828,8 +898,8 @@ val state2_0 = caller_inst2 `|` echo_process2;
 val state_0 = caller_inst2 `|` echo_process2_emptyloop;
 
 val tac_invoke =
-  react_rule "invoke_specialized" ++
-  react_rule "receive_specialized" ++
+  react_rule "invoke" ++
+  react_rule "receive" ++
   react_rule "sequence completed"
 
 val state1_invokedz = stepz rules tac_invoke state1_0;
@@ -841,7 +911,7 @@ val tac_while =
   react_rule "variable reference" ++
   react_rule "if true" ++
   react_rule "scope activation" ++
-  react_rule "invoke_specialized" ++
+  react_rule "invoke" ++
   react_rule "invoke receive" ++
   react_rule "sequence completed" ++
   react_rule "reply" ++
@@ -907,4 +977,5 @@ val _ =
 val _ =
   outputtikz_v
     "state_invoked_instance.tex" (SOME 0.017) (SOME smallcfg) state_invoked_instance;
+*)
 *)
