@@ -25,30 +25,35 @@
  Run: ./test-bpl2bgval
 *)
 
-open TextIO;
+structure BPL2bgvalTest =
+struct
+structure B2 = Bpl2bgval (structure BPLTerm = BPLTerm)
 
-structure B2 = Bpl2bgval
+fun run _ =
+let
+open TextIO;
 
 open B2;
 
-val Passive = Control.Passive
+(*val Passive = Control.Passive
 val Active = Control.Active
 val Atomic = Control.Atomic
+*)
 
-val signat = [(*Cdef("k1",Passive,1,2),
-	      Cdef("k2",Atomic,0,2),
-	      Cdef("k3",Atomic,0,0),*)
-	      Cdef("K",Atomic,0,0),
-	      Cdef("L",Atomic,0,0),
-	      Cdef("M",Passive,0,0),
-	      Cdef("null",Atomic,0,0),
-	      Cdef("send",Passive,0,2),
-	      Cdef("get",Passive,1,1),
-	      Cdef("sub",Active,1,0),
-	      Cdef("def",Passive,0,1),
-	      Cdef("msg",Atomic,0,1)]
+val signat = [(*("k1",Passive,1,2),
+	      ("k2",Atomic,0,2),
+	      ("k3",Atomic,0,0),*)
+	      ("K",Atomic,0,0),
+	      ("L",Atomic,0,0),
+	      ("M",Passive,0,0),
+	      ("null",Atomic,0,0),
+	      ("send",Passive,0,2),
+	      ("get",Passive,1,1),
+	      ("sub",Active,1,0),
+	      ("def",Passive,0,1),
+	      ("msg",Atomic,0,1)]
 
-fun id1 id = Site(Var(id),Namelist([]))
+fun id1 id = Sit(SiteName(id),[])
 
 (*
 val b0 = Empty
@@ -78,31 +83,31 @@ val send = Ion("send",[],["a","w"])
 val get = Ion("get",["x"],["a"])
 
 (* barren region with local outer name x *)
-val region_idle_x = Com(Wir([IdleL("x")]),Empty)
+val region_idle_x = Com(Wir([LInt("x")]),Bar)
 
 (* terms *)
 val null' = Ion("null",[],[])                     (* 0 *)
-val send_null = Emb(send,null')                   (* aw.0 *)
-val get_null = Emb(get,Pri(null',region_idle_x))  (* a(x).0 *)
+val send_null = Com(send,null')                   (* aw.0 *)
+val get_null = Com(get,Pri(null',region_idle_x))  (* a(x).0 *)
 val agent = Pri(send_null,get_null)              (* aw.0 | a(x).0 *)
 
 (* sites *)
-val site0 = Site(Num(0),Namelist([]))
-val site1 = Site(Var("s1"),Namelist(["x"]))
+val site0 = Sit(SiteNum(0),[])
+val site1 = Sit(SiteName("s1"),["x"])
 
 (* contexts *)
-val send_ion = Emb(send,site0)                   (* aw.[0] *)
-val get_ion = Emb(get,site1)                     (* a(x).[1] *)
+val send_ion = Com(send,site0)                   (* aw.[0] *)
+val get_ion = Com(get,site1)                     (* a(x).[1] *)
 
 val sub__x = Ion("sub",["x"],[])
 fun abs_x b = Abs(["x"],b)
-fun con_x b = Conc(["x"],b)
+fun con_x b = Con(["x"],b)
 val def_x = Ion("def",[],["x"])
 val msg_w = Ion("msg",[],["w"])
 (* it is troublesome to have to globalise names for Pri... *)
-val get_sub = Emb(sub__x,abs_x(Pri(con_x(site1),Emb(def_x,msg_w))))
+val get_sub = Com(sub__x,abs_x(Pri(con_x(site1),Com(def_x,msg_w))))
 (*val get_sub = Emb(sub__x,abs_x(Pri(site1,Emb(def_x,msg_w))))*)
-val idle__a = Wir([IdleG("a")])
+val idle__a = Wir([GInt("a")])
 
 (*
 rule comm =
@@ -111,18 +116,18 @@ rule comm =
   [0] tt a/ | sub_(x)([1]<x> | ({x})def_x(msg_w))
 *)
 
-val decs = [Value("v1",Com(C,a)),
-	    Value("v2",Com(C,b)),
-	    Value("state",Pri(Id("v1"),Id("v2"))),
-	    Rule("r1",K,L),
-	    Value("v_null",null'),
-	    Value("v_send",send_null),
-	    Value("v_get",get_null),
-	    Value("agent",agent),
-	    Rule("comm",
-		 Pri(send_ion,get_ion),
-		 Pri(Ten(site0,idle__a),get_sub))]
-val prog = Prog(signat,decs)
+val decs = [Val("v1",Com(C,a)),
+	    Val("v2",Com(C,b)),
+	    Val("state",Pri(Ref("v1"),Ref("v2"))),
+	    Rul("r1",(K,L)),
+	    Val("v_null",null'),
+	    Val("v_send",send_null),
+	    Val("v_get",get_null),
+	    Val("agent",agent),
+	    Rul("comm",
+		 (Pri(send_ion,get_ion),
+		 Pri(Ten(site0,idle__a),get_sub)))]
+val prog = (signat,"default", decs)
 val (signa,mainbgval,rules) = prog2bgval prog
 val state = (B.toString o B.simplify) mainbgval
 
@@ -142,7 +147,7 @@ fun printRule r = print(Rule.toString r)
 fun printRules [] = print "\ndone printing rules...\n"
   | printRules (r::rs) = ( printRule r ; printRules rs)
 
-val _ = print "\ntest-bpl2bgval.sml called...\n\n"
+val _ = print "\nbpl2bgvalTest.sml called...\n\n"
 
 val _ = print "state = "
 val _ = print state
@@ -164,3 +169,10 @@ val {name,redex,react,inst,info} = Rule.unmk(List.hd(List.tl(rules)))
 val _ = printIfaces "redex'" (BgBdnf.innerface redex) (BgBdnf.outerface redex)
 val _ = printIfaces "react'" (B.innerface react) (B.outerface react)
 val _ = print "\n"
+
+in
+  ()
+end
+end
+
+val _ = BPL2bgvalTest.run ();

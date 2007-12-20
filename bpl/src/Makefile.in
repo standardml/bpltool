@@ -203,7 +203,15 @@ prepare-mosml:
 
 .PHONY: prepare
 
-# Testing
+# APPLICATIONS ---------------------------------------------
+# Web backend
+apps/bplweb/backend/mlton: prepare-mlton $(PARSINGFILES)
+	$(MLTON) apps/bplweb/backend/mlton.mlb
+# bg2svg backend
+apps/svg/bg2svg/bg2svg: prepare-mlton $(PARSINGFILES)
+	$(MLTON) -output "$@" apps/svg/bg2svg/mlton.mlb
+
+# TESTING --------------------------------------------------
 check: test
 
 test: test-$(MLC)
@@ -230,14 +238,11 @@ test-bg2svg: test-bg2svg-mlton
 test-bg2svg-smlnj: prepare-smlnj $(PARSINGFILES)
 	echo "CM.make' \"apps/svg/bg2svg/sources.cm\";" | $(SMLNJ)
 
-test-bg2svg-mlton: apps/svg/bg2svg/bg2svg
-	apps/svg/bg2svg/bg2svg < apps/svg/bg2svg/bg2svg-test.txt
-
 test-bg2svg-mosml: bg2svg
 	apps/svg/bg2svg/bg2svg < apps/svg/bg2svg/bg2svg-test.txt
 
-apps/svg/bg2svg/bg2svg: prepare-mlton $(PARSINGFILES)
-	$(MLTON) -output "$@" apps/svg/bg2svg/mlton.mlb
+test-bg2svg-mlton: apps/svg/bg2svg/bg2svg
+	apps/svg/bg2svg/bg2svg < apps/svg/bg2svg/bg2svg-test.txt
 
 # Web application
 test-webapp: test-webapp-mlton
@@ -250,10 +255,24 @@ test-webapp-mosml: bplwebback
 
 test-webapp-mlton: apps/bplweb/backend/mlton
 	apps/bplweb/backend/mlton < apps/bplweb/backend/test/matching1.cmd
+.PHONY: test-webapp test-webapp-smlnj test-webapp-mosml test-webapp-mlton
 
-apps/bplweb/backend/mlton: prepare-mlton $(PARSINGFILES)
-	$(MLTON) apps/bplweb/backend/mlton.mlb
+# bpl2bgval
+test-bpl2bgval: test-bpl2bgval-$(MLC)
 
+test-bpl2bgval-smlnj: prepare-smlnj $(PARSINGFILES)
+	echo "val pwd = OS.FileSys.getDir ();\
+	      val _   = OS.FileSys.chDir \"lib/compat/smlnj/\";\
+	      use \"cmmakedefine.sml\";\
+              val _   = OS.FileSys.chDir pwd;\
+              val _   = SMLofNJ.Internals.GC.messages false;\
+              CM_make \"test/bpl2bgvalTest.cm\"" | $(SMLNJ)
+
+test-bpl2bgval-mosml: bpl2bgvalTest
+	./bpl2bgvalTest
+.PHONY: test-bpl2bgval
+
+# REBUILD, RESTART, UPDATE ---------------------------------
 # Update web application pages and XML RPC server, but not backend executable
 update-webapp:
 	ssh $(WEBAPP-SERVER) 'cd $(WEBAPP-BPLDIR)/src/apps/bplweb && svn update'
@@ -270,7 +289,8 @@ restart-webapp:
 
 .PHONY: test-webapp update-webapp remake-uploaded-webapp restart-webapp test-webapp-smlnj
 .PHONY: test-webapp-mosml test-webapp-mlton
-# Clean up
+
+# CLEAN UP -------------------------------------------------
 clean:
 	$(RM) *~ 
 

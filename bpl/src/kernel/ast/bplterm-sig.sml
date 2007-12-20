@@ -19,17 +19,19 @@
  *)
 
 (** 
- * Authors: Henning Niss, Ebbe Elsborg et al.
+ * @author Henning Niss, Ebbe Elsborg et al.
  *
  * Abstract data type for an alternative variant of bigraph terms.
  * The aim is to be able to express location- and context models in BPL
  * and then programatically get them transformed into input for the BPL
  * tool -- e.g. a BRS. Work in progess.
  *
+ * <p>
  * The data type does not prevent the representation of non-bigraphs,
  * e.g. prime products of bigraphs with local inner names, products
  * of bigraphs with inner name clashes, compositions of bigraphs with
  * incompatible interfaces, etc.
+ * </p>
  *
  * TODO: UPDATE THIS OUT-OF-DATE-DOCUMENTATION:
  *
@@ -42,7 +44,7 @@
  * information (e.g., source file location for the term).
  * @version $LastChangedRevision: 930 $
  *)
-signature BPL_TERM = sig
+signature BPLTERM = sig
 	(** General identifier type. *)
 	type id = string
   (** Site identifier type.  A site is either indexed by a natural
@@ -76,7 +78,7 @@ signature BPL_TERM = sig
   (** A tensor product b1 * b2 of bigraphs. *)
   | Ten of bigraph * bigraph
   (** An ion K[y1,...,ym][[x1], ..., [xn]].
-   * @params K xs ys
+   * @params K ys xs
    *)
   | Ion of id * id list * id list
   (** A closure /X o b of a bigraph. *)

@@ -26,7 +26,8 @@
  *
  * @version $LastChangedRevision: 923 $
  *)
-structure BPLTerm :> BPL_TERM = struct
+structure BPLTerm :> BPLTERM =
+struct
 
 	type id = string
   datatype siteid = SiteNum of int | SiteName of id
