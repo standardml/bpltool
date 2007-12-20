@@ -19,8 +19,6 @@
  *)
 
 (** 
- * @author Henning Niss, Ebbe Elsborg et al.
- *
  * Abstract data type for an alternative variant of bigraph terms.
  * The aim is to be able to express location- and context models in BPL
  * and then programatically get them transformed into input for the BPL
@@ -42,6 +40,8 @@
  * <p>
  * Each constructor takes an info argument that can contain contextual
  * information (e.g., source file location for the term).
+ *
+ * @author Henning Niss, Ebbe Elsborg et al.
  * @version $LastChangedRevision: 930 $
  *)
 signature BPLTERM = sig
