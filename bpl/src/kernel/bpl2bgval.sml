@@ -26,8 +26,13 @@
  * <p>
  * Input: A list of decls (Values and Rules) and a signature.          <br />
  * Output: A signature, a main bgval (the state of the BRS), and
- *   a set of rules of bgvals with instantiations.                     
+ *   a set of rules of bgvals with instantiations.
+ * @version $LastChangedRevision: 923 $
  *)
+functor Bpl2bgval (
+  structure BPLTerm : BPLTERM) =
+struct
+
  (* Algorithm:
    1. Roll the Values into one main Value -- the last one found.
    2. Delete the used Values.
@@ -54,9 +59,7 @@
  Compile: cd <src-dir of BPL-root>; make bpl2bgval
 *)
 
-functor Bpl2bgval (
-  structure BPLTerm : BPLTERM) =
-struct
+
 open TextIO;
 
 structure BG = BG (structure ErrorHandler = PrintErrorHandler);
