@@ -1,0 +1,4 @@
+(* Use this file to run the unit tests with SML/NJ *)
+Group is
+  sources.cm
+  bpl2bgvalTest.sml
