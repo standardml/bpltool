@@ -18,4 +18,4 @@ unittest: %PROGRAM
    /kernel/ast/test/bdnfTest /kernel/match/test/matchTest
    /kernel/match/test/reactionTest
    /apps/miniml/test/minimltest
-bpl2bgvalTest: %PROGRAM /kernel/bpl2bgval
+bpl2bgvalTest: %PROGRAM /kernel/bpl2bgval /kernel/ast/bplterm
