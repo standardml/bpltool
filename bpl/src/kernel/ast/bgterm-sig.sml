@@ -94,6 +94,13 @@ sig
    * @param t       The bgterm to print.
    *)
   val pp : int -> PrettyPrint.ppstream -> bgterm -> unit
+  (** Prettyprint a bgterm without parentheses around it, using 
+   * the old syntax.
+   * @params indent pps t
+   * @param indent  Indentation at each block level.
+   * @param pps     Prettyprint stream on which to output.
+   * @param t       The bgterm to print.
+   *)
   val oldpp : int -> PrettyPrint.ppstream -> bgterm -> unit
   
   val size : bgterm -> int

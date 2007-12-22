@@ -348,6 +348,13 @@ sig
    * @param t       The bgval to print.
    *)
   val pp : int -> PrettyPrint.ppstream -> bgval -> unit
+  (** Prettyprint a bgval without parentheses around it,
+   * using the old syntax.
+   * @params indent pps t
+   * @param indent  Indentation at each block level.
+   * @param pps     Prettyprint stream on which to output.
+   * @param t       The bgval to print.
+   *)
   val oldpp : int -> PrettyPrint.ppstream -> bgval -> unit
   (** Prettyprint a bgval without parentheses around it, using the
    * long version of link names that include the internal number. *)
