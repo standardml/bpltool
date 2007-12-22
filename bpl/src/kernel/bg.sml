@@ -225,7 +225,7 @@ fun parseStr (kind, mkkind) filename str =
     end
 
 
-fun bgvalUsefile'' filename =
+fun bgvalUseBgTermfile'' filename =
     let 
       val _ = (ErrorMsg.reset(); ErrorMsg.fileName := filename)
       val file = TextIO.openIn filename
@@ -245,10 +245,38 @@ fun bgvalUsefile'' filename =
       bgval
     end
 
+fun bgvalUsefile'' filename =
+    let 
+      val _ = (ErrorMsg.reset(); ErrorMsg.fileName := filename)
+      val file = TextIO.openIn filename
+      fun get _ = TextIO.input file
+      fun parseerror (s, p1, p2) = ErrorMsg.error p1 p2 s
+      val (kind, mkkind) = BGTERM
+      val lexer =
+        RulesParser.Stream.cons
+            (kind (~1, ~1),
+             RulesParser.Stream.streamify (RulesLex.makeLexer get))
+      val (result, _) =
+        (RulesParser.parse (300, lexer, parseerror, ()))
+          handle e => (TextIO.closeIn file; raise e)
+      val bgval = BgVal.make BgTerm.info (mkkind result)
+    in
+      TextIO.closeIn file;
+      bgval
+    end
+
 fun bgvalUsefile' filename =
     bgvalUsefile'' filename
       handle BgTermParser.ParseError => raise ErrorMsg.Error
 	   | error => (ErrorHandler.explain error; raise ErrorMsg.Error)
+
+fun useBgTermfile'' filename = 
+    let
+      val bgval = bgvalUseBgTermfile'' filename
+      val bgbdnf = BgBDNF.make bgval
+    in
+      bgbdnf
+    end
 
 fun usefile'' filename = 
     let

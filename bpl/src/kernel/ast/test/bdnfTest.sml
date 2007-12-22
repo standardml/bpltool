@@ -145,14 +145,14 @@ nameOfException
                 let
                   val () = close_files ()
                   val input_bgval
-                    = (bgvalUsefile'' input_file)
+                    = (bgvalUseBgTermfile'' input_file)
                       handle e => (  rm_tmp_files()
                                    ; raise InvalidTestFile
                                              (test_file,
                                               "the input is not a /\
                                                \well-formed bgterm"))
                   val result_bgval
-                    = (bgvalUsefile'' result_file)
+                    = (bgvalUseBgTermfile'' result_file)
                       handle e => (  rm_tmp_files()
                                    ; raise InvalidTestFile
                                              (test_file,
@@ -166,7 +166,7 @@ nameOfException
                 end
               | SOME exnname =>
                 (  close_files ()
-                 ; usefile'' input_file
+                 ; useBgTermfile'' input_file
                  ; raise Assert.Fail
                            (GeneralFailure ("expected exception "
                                             ^ exnname)))

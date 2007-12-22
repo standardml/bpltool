@@ -42,13 +42,173 @@ sig
   (** List of rules contents. *)
   val RULES : ruledata list kind
 
-  (** Parse a string as a bigraph term.
+  (** Parse a string as a bigraph term, using the old syntax.
+   * The following grammar is used, with where the regexps for
+   * keywords are CTRLID = [A-Z?!][A-Za-z0-9_]* and
+   * ID = [a-z][A-Za-z0-9_]*
+   * <pre>
+bg              ::= altbg
+                 |  bg * bg
+                 |  `**[ bglist ]
+                 |  bg | bg
+                 |  bg || bg
+                 |  bg o bg
+
+bglist          ::= bg , bglist
+                 |  bg
+                 |
+
+altbg           ::= ( )
+                 |  "idx_0"
+                 |  "id||_0"
+                 |  "merge_" N
+                 |  "1"
+                 |  ' nset '
+                 |  link
+                 |  "idw_" nset
+                 |  "idw_0"
+                 |  CTRLID < nlist > < nsetlist >
+                 |  CTRLID < nlist >
+                 |  CTRLID
+                 |  [ permentrylist ]
+                 |  "idp_" N
+                 |  ( nset ) bg
+                 |  ( bg )
+                 |  ///[ wiringentrylist ]
+
+nlist           ::= ID , nlist
+                 |  ID
+                 |
+
+nsetlist        ::= nset , nsetlist
+                 |  nset
+                 |
+
+nset            ::= { nlist }
+
+link            ::= ID / ID
+                 |  ID / nset
+                 |  / ID
+                 |  / nset
+
+permentrylist   ::= permentry , permentrylist
+                 |  permentry
+                 |
+
+permentry       ::= INT nset
+                 |  INT
+
+wiringentrylist ::= link , wiringentrylist
+                 |  link
+                 |
+   * </pre>
    * @params filename s
    * @param filename  File name to use when reporting errors.
    * @param s         The string to be parsed.
    *)
   val parseBgTermStr : string -> string -> bgterm
   (** Parse a string as a kind of contents.
+   * The following grammar is used, with where the regexps for
+   * keywords are CTRLID = [A-Z?!][A-Za-z0-9_]* and
+   * ID = [a-z][A-Za-z0-9_]*
+   * <pre>
+start         ::= bg                ; Bigraph
+               |  rulelist          ; List of rules
+               |  ctrllist          ; Signature
+
+ctrllist      ::= [ ctrls ]
+               |  [ ]
+
+ctrls         ::= ctrl
+               |  ctrl , ctrls
+
+ctrl          ::= kind ( cdata )
+
+kind          ::= "active"  | "active0"
+               |  "passive" | "passive0"
+               |  "atomic"  | "atomic0"
+
+cdata         ::= CTRLID
+               |  CTRLID -: INT
+               |  CTRLID =: INT --> INT
+
+rulelist      ::= [ rules ]
+               |  [ ]
+         
+rules         ::= rule
+               |  rule , rules
+
+rule          ::= [ rulefields ]
+
+rulefields    ::= rulefield
+               |  rulefield , rulefields
+
+rulefield     ::= "redex" = bg
+               |  "react" = bg
+               |  "inst"  = inst
+               |  "name"  = STRING
+
+inst          ::= [ maps ]
+               |  [ ]
+
+maps          ::= map
+               |  map , maps
+
+map           ::= INT |-> INT
+               |  INT & nset |--> INT & nset
+
+bg            ::= altbg
+               |  bg  *  bg           ; Tensor product
+               |  bg `|` bg           ; Prime product
+               |  bg  || bg           ; Parallel product
+               |  bg  o  bg           ; Composition
+
+altbg         ::= <->                 ; Barren root
+               |  idx0                ; Empty tensor product
+               |  id||0               ; Empty parallel product
+               |  "merge" pint        ; Merge
+               |  ` nset `            ; Concretion
+               |  link                ; Wiring
+               | "idw" nset           ; Identity wiring
+               | "idw0"               ; Empty wiring
+               | CTRLID fports bports ; Binding ion
+               | CTRLID fports        ; Ion
+               | CTRLID               ; Portless ion
+               | [ permentrylist ]    ; Permutation
+               | "idp" pint           ; Identity permutation
+               | < nset > bg          ; Abstraction
+               | ( bg )
+               | << bg >>             ; Hole puncher for atomic ions
+
+fports	      ::= [ names ]
+
+names         ::= ID , names
+               |  ID
+               |
+
+bports	      ::= [ nsetlist ]
+
+nsetlist      ::= nset , nsetlist
+	       |  nset
+               |
+
+nset          ::= [ names ]
+
+link	      ::= ID /  ID           ; Renaming
+               |  ID // nset         ; Substitution
+ 	       |  -/  ID             ; Closure
+               |  -// nset           ; Multiple closures
+
+permentrylist ::= permentry , permentrylist
+	       |  permentry
+	       |
+
+permentry     ::= INT & nset
+	       |  INT
+
+pint          ::= INT
+               |  ( pint )
+   * </pre>
    * @params kind filename s
    * @param kind      The kind of contents to expect when parsing.
    * @param filename  File name to use when reporting errors.
@@ -63,12 +223,16 @@ sig
   val usefile' : string -> B bgbdnf
   (** Read a BG expression from a file, return it as BDNF. *)
   val usefile'' : string -> B bgbdnf
+  (** Read a BG expression, using old syntax, from a file, return it as BDNF. *)
+  val useBgTermfile'' : string -> B bgbdnf
   (** Read a BG expression from a file, return it as a bgval, explain
    * any errors on stdOut.
    *)
   val bgvalUsefile' : string -> bgval
   (** Read a BG expression from a file, return it as a bgval. *)
   val bgvalUsefile'' : string -> bgval
+  (** Read a BG expression, using old syntax, from a file, return it as a bgval. *)
+  val bgvalUseBgTermfile'' : string -> bgval
   (** Read a bigraphical signature from one XML file and a BRS from
    * another XML file. *)
   val brsUseXMLfiles : string -> string -> control list * ruledata list
