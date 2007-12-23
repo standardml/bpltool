@@ -15,16 +15,19 @@ use "figinfo.sml";
 (*     String Declarations     *)
 (*******************************)
 val Process        = "Process"
+val Instance       = "Instance"
 val SubProcesses   = "SubProcesses"
 val SubProcess     = "SubProcess"
-val Instances      = "Instances"
-val Instance       = "Instance"
+val SubInstances   = "SubInstances"
+val SubInstance    = "SubInstance"
 val Scope          = "Scope"
 val ActiveScope    = "ActiveScope"
 val Invoked        = "Invoked"
 val Running        = "Running"
 val Freezing       = "Freezing"
 val Stopped        = "Stopped"
+val TopRunning     = "TopRunning"
+val SubTransition  = "SubTransition"
 val Variables      = "Variables"
 val Variable       = "Variable"
 val VariableRef    = "VariableRef" 
@@ -68,14 +71,19 @@ val inst_id                    = "inst_id"
 val inst_id1                   = "inst_id1"
 val inst_id2                   = "inst_id2"
 val inst_id3                   = "inst_id3"
+val inst_id4                   = "inst_id4"
 val inst_id_invoker            = "inst_id_invoker"
 val inst_id_invoked            = "inst_id_invoked"
 val inst_id_invoked1           = "inst_id_invoked1"
 val inst_id_invoked2           = "inst_id_invoked2"
+val inst_id_top                = "inst_id_top"
+val inst_id_top_invoker        = "inst_id_top_invoker"
+val inst_id_top_invoked        = "inst_id_top_invoked"
 val scope                      = "scope"
 val scope1                     = "scope1"
 val scope2                     = "scope2"
 val scope3                     = "scope3"
+val scope4                     = "scope4"
 val active_scopes              = "active_scopes"
 val active_scopes_invoker      = "active_scopes_invoker"
 val active_scopes_invoked      = "active_scopes_invoked"
@@ -126,10 +134,18 @@ val caller_id                  = "caller_id"
  *)
 val Process      = passive  (Process     =: 1 --> 1);
 
+(* The free ports of an Instance
+ * 
+ *   #1 should be connected to name of the process.
+ *   #2 is the instance identifier which (among other things) is used to
+ *        determine the scope of variables within the instance to the
+ *        instance itself. 
+ *)
+val Instance     = active   (Instance    -:       2);
+
 (* SubProcesses is just a container node for SubProcess nodes.
  *)
 val SubProcesses = active0  (SubProcesses          );
-
 (* We use a different control for sub processes than processes to
  * prevent the invokation of sub processes using the Invoke activity -
  * in particular it prevents a process from invoking sub processes of
@@ -147,22 +163,42 @@ val SubProcesses = active0  (SubProcesses          );
  *)
 val SubProcess   = passive  (SubProcess  =: 1 --> 2);
 
-
-(* Instances is just a container node for Instance nodes.
+(* SubInstances is just a container node for SubInstance nodes.
  *)
-val Instances    = active0  (Instances             );
-
-(* The free ports of an Instance
+val SubInstances = active0  (SubInstances          );
+(* The free ports of a SubInstance
  * 
  *   #1 should be connected to name of the process.
- *   #2 The second free port of an instance is the instance identifier
- *        which (among other things) is used to determine the scope of
- *        variables within the instance to the instance itself. 
+ *   #2 is the sub-instance identifier analogous to the instance
+ *        identifier for instances.
+ *   #3 should be connected to the state node of the immediately
+ *        enclosing instance (like active scopes).
+ *   #4 should be connected to the instance identifier of the enclosing
+ *        top-level instance
  *)
-val Instance     = active   (Instance    -:       2);
+val SubInstance  = active   (SubInstance -:       3);
+
+(* The following controls are used to control the execution of an
+ * instance and all its subinstances as a whole. They are used to make
+ * the freeze and exit activities atomic though several transitions are
+ * required to perform them.
+ *
+ *   TopRunning:    indicates that the instance and its children are
+ *                    allowed to take normal transitions.
+ *
+ *   SubTransition: indicates that a multi-transition activity is in
+ *                    progress within the instance.
+ *
+ * The free ports of a TopRunning or SubTransition node
+ *
+ *   #1 should be connected to the instance identifier of the enclosing
+ *        top-level instance
+ *)
+val TopRunning    = atomic   (TopRunning    -:       1);
+val SubTransition = atomic   (SubTransition -:       1);
 
 (* The following controls are used to keep track of the state of
- * instances:
+ * individual instances:
  *
  *   Invoked:  an instance which has just been instantiated and still
  *               needs to copy the contents of the invoke message into
@@ -176,16 +212,16 @@ val Instance     = active   (Instance    -:       2);
  *               should be garbage collected.
  *
  * The free ports of an Invoked, Running, Freezing, or Stopped node
+ * should be connected:
  *
- *   #1 should be connected to the scope port of the parent
- *        process/instance.
- *   #2 should be connected to all the ActiveScope nodes of the
- *        instance.
+ *   #1 to the scope port of the parent process/instance.
+ *   #2 to all the ActiveScope and SubProcess nodes of the instance.
+ *   #3 to the instance identifier of the enclosing top-level instance
  *)
-val Invoked      = atomic   (Invoked     -:       1);
-val Running      = atomic   (Running     -:       2);
-val Freezing     = atomic   (Freezing    -:       2);
-val Stopped      = atomic   (Stopped     -:       1);
+val Invoked      = atomic   (Invoked     -:       3);
+val Running      = atomic   (Running     -:       3);
+val Freezing     = atomic   (Freezing    -:       3);
+val Stopped      = atomic   (Stopped     -:       3);
 
 (* The binding ports of a Scope
  *
@@ -357,19 +393,23 @@ val Exit         = atomic   (Exit        -:       1);
 val rule_flow_completed = "flow completed" :::
 
    Flow[inst_id] o <->
-|| Running[inst_id, active_scopes]
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top]
   ----|>
    <->
-|| Running[inst_id, active_scopes];
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top];
 
 
 val rule_sequence_completed = "sequence completed" :::
 
    Sequence[inst_id] o Next o `[]`
-|| Running[inst_id, active_scopes]
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top]
   ----|>
    `[]`
-|| Running[inst_id, active_scopes];
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top];
 
 (* The rules for evaluating an if-then-else statement is as expected. If
  * the condition is True we execute the then-branch, otherwise we execute
@@ -380,10 +420,12 @@ val rule_if_true = "if true" :::
    If[inst_id] o (    Condition o True
                   `|` Then o `[]`
                   `|` Else o `[]`)
-|| Running[inst_id, active_scopes]
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top]
   ----|>
    `[]`
-|| Running[inst_id, active_scopes];
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top];
 
 
 val rule_if_false = "if false" :::
@@ -391,10 +433,12 @@ val rule_if_false = "if false" :::
    If[inst_id] o (    Condition o False
                   `|` Then o `[]`
                   `|` Else o `[]`)
-|| Running[inst_id, active_scopes]
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top]
   --[0 |-> 1]--|>
    `[]`
-|| Running[inst_id, active_scopes];
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top];
 
 (* We give semantics to a while-loop in the traditional manner, by
  * unfolding the loop once and using an if-then-else construct with the
@@ -403,7 +447,8 @@ val rule_if_false = "if false" :::
 val rule_while_unfold = "while unfold" :::
 
    While[inst_id] o (Condition o `[]` `|` `[]`)
-|| Running[inst_id, active_scopes]
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top]
 
   --[2 |-> 0, 3 |-> 1]--|>
 
@@ -414,7 +459,8 @@ val rule_while_unfold = "while unfold" :::
                                     o While[inst_id]
                                       o (Condition o `[]` `|` `[]`))
                   `|` Else o <->)
-|| Running[inst_id, active_scopes];
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top];
 
 
 (* Expression evaluation *)
@@ -433,13 +479,15 @@ val rule_variable_reference = "variable reference" :::
 
    VariableRef[var, var_scope, inst_id]
 || Variable[var, var_scope] o `[]`
-|| Running[inst_id, active_scopes]
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top]
 
   --[1 |-> 0]--|>
 
    `[]`
 || Variable[var, var_scope] o `[]`
-|| Running[inst_id, active_scopes];
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top];
 
 
 (* Assignment *)
@@ -458,14 +506,16 @@ val rule_assign_copy_variable = "assign copy variable" :::
                              `|` To[t, scope2])
 || Variable[f, scope1] o `[]`
 || Variable[t, scope2] o `[]`
-|| Running[inst_id, active_scopes]
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top]
 
   --[1 |-> 0]--|>
 
    <->
 || Variable[f, scope1] o `[]`
 || Variable[t, scope2] o `[]`
-|| Running[inst_id, active_scopes];
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top];
 
 
 
@@ -478,10 +528,12 @@ val rule_assign_copy_variable = "assign copy variable" :::
 val rule_scope_activation = "scope activation" :::
 
    Scope[inst_id][[scope]] o `[scope]`
-|| Running[inst_id, active_scopes]
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top]
   ----|>
    -/scope o (ActiveScope[scope, active_scopes, inst_id] o `[scope]`)
-|| Running[inst_id, active_scopes];
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top];
 
 (* When we are finished executing the body and all sub-instances of the
  * scope we remove the scope, including its variables, partner links,
@@ -493,11 +545,14 @@ val rule_scope_completed = "scope completed" :::
       o (    Variables    o (scope//[scope1] o `[scope1]`)
          `|` PartnerLinks o (scope//[scope2] o `[scope2]`)
          `|` SubProcesses o (scope//[scope3] o `[scope3]`)
-         `|` Instances    o <->))
-|| Running[inst_id, active_scopes]
+         `|` SubLinks     o (scope//[scope4] o `[scope4]`)
+         `|` SubInstances o <->))
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top]
   ----|>
    <->
-|| Running[inst_id, active_scopes];
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top];
 
 
 
@@ -518,10 +573,13 @@ o (Instance[proc_name, inst_id]
    o (    Variables    o (inst_id//[inst_id1] o `[inst_id1]`)
       `|` PartnerLinks o (inst_id//[inst_id2] o `[inst_id2]`)
       `|` SubProcesses o (inst_id//[inst_id3] o `[inst_id3]`)
-      `|` Instances    o <->
-      `|` Running[inst_id, active_scopes]))
+      `|` SubLinks     o (inst_id//[inst_id4] o `[inst_id4]`)
+      `|` SubInstances o <->
+      `|` Running[inst_id, active_scopes, inst_id]
+      `|` TopRunning[inst_id]))
   ----|>
 <-> || proc_name//[];
+
 
 (* In the case of an Exit activity we change the status of the instance
  * from running to stopped by replacing the Running node inside the
@@ -532,20 +590,21 @@ o (Instance[proc_name, inst_id]
 val rule_exit_stop_inst = "exit stop inst" :::
 
    Exit[inst_id]
-|| Running[inst_id, active_scopes]
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top]
   ----|>
    <->
-|| Stopped[inst_id] || active_scopes//[];
+|| Stopped[inst_id, active_scopes, inst_id_top]
+|| SubTransition[inst_id_top];
 
 (* Once an Instance node contains a Stopped node we garbage collect the
  * instance together with all its remaining content.
  *)
 val rule_exit_remove_inst = "exit remove inst" :::
 
--/inst_id
+-//[inst_id, active_scopes]
 o (Instance[proc_name, inst_id]
-   o (    inst_id//[inst_id1] o Stopped[inst_id1]
-      `|` inst_id//[inst_id2] o `[inst_id2]`))
+   o (Stopped[inst_id, active_scopes, inst_id] `|` `[inst_id, active_scopes]`))
   ----|>
 <-> || proc_name//[];
 
@@ -582,10 +641,11 @@ val rule_invoke = "invoke" :::
           invar, invar_scope, outvar, outvar_scope, inst_id_invoker]
 || PartnerLink[partner_link_invoker, partner_link_scope_invoker] o <->
 || Variable[invar, invar_scope] o `[]`
-|| Running[inst_id_invoker, active_scopes_invoker]
+|| Running[inst_id_invoker, active_scopes_invoker, inst_id_top_invoker]
+|| TopRunning[inst_id_top_invoker]
 || Process[proc_name][[scope]]
    o (    PartnerLinks
-          o (    PartnerLink[partner_link, scope]
+          o (    PartnerLink[partner_link_invoked, scope]
                  o (CreateInstance[oper] `|` `[]`)
              `|` scope//[scope1] o `[scope1]`)
       `|` scope//[scope2] o `[scope2]`)
@@ -599,20 +659,23 @@ o (   GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
    || PartnerLink[partner_link_invoker, partner_link_scope_invoker]
       o Link[inst_id_invoked]
    || Variable[invar, invar_scope] o `[]`
-   || Running[inst_id_invoker, active_scopes_invoker]
+   || Running[inst_id_invoker, active_scopes_invoker, inst_id_top_invoker]
+   || TopRunning[inst_id_top_invoker]
    || (Process[proc_name][[scope]]
        o (    PartnerLinks
-              o (    PartnerLink[partner_link, scope]
+              o (    PartnerLink[partner_link_invoked, scope]
                      o (CreateInstance[oper] `|` `[]`)
                  `|` scope//[scope1] o `[scope1]`)
           `|` scope//[scope2] o `[scope2]`)
        `|` Instance[proc_name, inst_id_invoked]
            o (    PartnerLinks
-                  o (    PartnerLink[partner_link, inst_id_invoked]
+                  o (    PartnerLink[partner_link_invoked, inst_id_invoked]
                          o (Link[inst_id_invoker] `|` Message[oper] o `[]`)
                      `|` inst_id_invoked//[inst_id_invoked1]
                          o `[inst_id_invoked1]`)
-              `|` Invoked[inst_id_invoked]
+              `|` -/active_scopes
+                  o Invoked[inst_id_invoked, active_scopes, inst_id_invoked]
+              `|` SubTransition[inst_id_invoked]
               `|` inst_id_invoked//[inst_id_invoked2]
                   o `[inst_id_invoked2]`)));
 
@@ -629,7 +692,8 @@ val rule_receive = "receive" :::
 || PartnerLink[partner_link, partner_link_scope]
    o (`[]` `|` Message[oper] o `[]`)
 || Variable[var, var_scope] o `[]`
-|| Invoked[inst_id]
+|| Invoked[inst_id, active_scopes, inst_id]
+|| SubTransition[inst_id]
 
   ----|>
 
@@ -637,7 +701,8 @@ val rule_receive = "receive" :::
 || PartnerLink[partner_link, partner_link_scope]
    o `[]`
 || Variable[var, var_scope] o `[]`
-|| -/active_scopes o Running[inst_id, active_scopes];
+|| Running[inst_id, active_scopes, inst_id]
+|| TopRunning[inst_id]
 
 
 (* The invoke instance rule executes an Invoke activity in one instance
@@ -654,11 +719,13 @@ val rule_invoke_instance = "invoke_instance" :::
 || PartnerLink[partner_link_invoker, partner_link_scope_invoker]
    o (Link[inst_id_invoked] `|` `[]`)
 || Variable[invar, invar_scope] o `[]`
-|| Running[inst_id_invoker, active_scopes_invoker]
+|| Running[inst_id_invoker, active_scopes_invoker, inst_id_top_invoker]
+|| TopRunning[inst_id_top_invoker]
 || Receive[partner_link_invoked, partner_link_scope_invoked, oper,
            var, var_scope, inst_id_invoked]
 || Variable[var, var_scope] o `[]`
-|| Running[inst_id_invoked, active_scopes_invoked]
+|| Running[inst_id_invoked, active_scopes_invoked, inst_id_top_invoked]
+|| TopRunning[inst_id_top_invoked]
 
   --[2 |-> 1]--|>
 
@@ -667,10 +734,12 @@ val rule_invoke_instance = "invoke_instance" :::
 || PartnerLink[partner_link_invoker, partner_link_scope_invoker]
    o (Link[inst_id_invoked] `|` `[]`)
 || Variable[invar, invar_scope] o `[]`
-|| Running[inst_id_invoker, active_scopes_invoker]
+|| Running[inst_id_invoker, active_scopes_invoker, inst_id_top_invoker]
+|| TopRunning[inst_id_top_invoker]
 || <-> || partner_link_invoked//[] || partner_link_scope_invoked//[]
 || Variable[var, var_scope] o `[]`
-|| Running[inst_id_invoked, active_scopes_invoked];
+|| Running[inst_id_invoked, active_scopes_invoked, inst_id_top_invoked]
+|| TopRunning[inst_id_top_invoked];
 
 
 (* The Reply activity inside one instance can synchronize together with
@@ -684,11 +753,13 @@ val rule_reply = "reply" :::
 || PartnerLink[partner_link_invoked, partner_link_scope_invoked]
    o (Link[inst_id_invoker] `|` `[]`)
 || Variable[var, var_scope] o `[]`
-|| Running[inst_id_invoked, active_scopes_invoked]
+|| Running[inst_id_invoked, active_scopes_invoked, inst_id_top_invoked]
+|| TopRunning[inst_id_top_invoked]
 || GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
             outvar, outvar_scope, inst_id_invoker]
 || Variable[outvar, outvar_scope] o `[]`
-|| Running[inst_id_invoker, active_scopes_invoker]
+|| Running[inst_id_invoker, active_scopes_invoker, inst_id_top_invoker]
+|| TopRunning[inst_id_top_invoker]
 
   --[2 |-> 1]--|>
 
@@ -696,10 +767,12 @@ val rule_reply = "reply" :::
 || PartnerLink[partner_link_invoked, partner_link_scope_invoked]
    o (Link[inst_id_invoker] `|` `[]`)
 || Variable[var, var_scope] o `[]`
-|| Running[inst_id_invoked, active_scopes_invoked]
+|| Running[inst_id_invoked, active_scopes_invoked, inst_id_top_invoked]
+|| TopRunning[inst_id_top_invoked]
 || <-> || partner_link_invoker//[] || partner_link_scope_invoker//[]
 || Variable[outvar, outvar_scope] o `[]`
-|| Running[inst_id_invoker, active_scopes_invoker];
+|| Running[inst_id_invoker, active_scopes_invoker, inst_id_top_invoker]
+|| TopRunning[inst_id_top_invoker];
 
 
 
