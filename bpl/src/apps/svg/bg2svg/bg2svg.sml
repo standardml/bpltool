@@ -126,6 +126,16 @@ struct
       else
         getInput ()
     end
+  
+  fun toCDATA s =
+    let
+      fun to (#"]" :: #"]" :: #">" :: cs)
+        = #"]" :: #"]" :: #"&" :: #"g" :: #"t" :: #";" :: to cs
+        | to (c :: cs) = c :: to cs
+        | to [] = []
+    in
+      implode (to (explode s))
+    end
       	  
   fun run () =
     let
@@ -141,22 +151,16 @@ struct
       val {ctrlcharwidth, ctrlfontheight, ...} =
         unmkconfig defaultconfig ("", [])
       val svgstr =
-        svgToString "" "svg:" (ctrlcharwidth, ctrlfontheight) svg ""
+        svgToString "" "svg:" NONE (ctrlcharwidth, ctrlfontheight) svg ""
       val TikZstr = svgToTikZ 0.02 svg ""
     in
       print svgstr;
       print "\n<div class='source' style='display:none'>\n  <![CDATA[\n";
-      print svgstr;
-      print ("\n\n" ^ TikZstr);
+      print (toCDATA svgstr);
+      print ("\n\n" ^ toCDATA TikZstr);
       print "\n]]>\n</div>\n"
     end
 end
-
-fun toHTML #"<" = "&lt;"
-  | toHTML #">" = "&gt;"
-  | toHTML #"&" = "&amp;"
-  | toHTML #"\n" = "<br />\n"
-  | toHTML c = String.str c
 
 structure HTMLErrorHandler
   :> ERRORHANDLER
@@ -167,6 +171,12 @@ structure HTMLErrorHandler
 struct
   open BaseErrorHandler
   open Debug
+
+  fun toHTML #"<" = "&lt;"
+    | toHTML #">" = "&gt;"
+    | toHTML #"&" = "&amp;"
+    | toHTML #"\n" = "<br />\n"
+    | toHTML c = String.str c
 
   fun explain e =
       let

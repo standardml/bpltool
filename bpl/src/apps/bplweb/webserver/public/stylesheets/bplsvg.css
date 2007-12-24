@@ -1,4 +1,4 @@
-text.nametext {
+text[cls="nametext"] {
   font-family: serif;
   font-size: smaller;
   font-weight: normal;
@@ -6,41 +6,32 @@ text.nametext {
   fill: black
 }
 
-rect.root {
+rect[cls="root"] {
   fill: none;
   stroke: black;
   stroke-dasharray: 10,5
 }
 
-circle.binder {
-  fill: white;
-  stroke: black
-}
+circle[cls="binder"] { fill: white; stroke: black }
 
-ellipse.node {
-  fill: none;
-  stroke: black
-}
+ellipse[cls="node"] { fill: none; stroke: black }
 
-text.nodetext {
+text[cls="nodetext"] {
   font-weight: bold;
   fill: blue;
   stroke: none
 }
 
-rect.site {
-  fill: silver;
-  stroke: none
-}
+rect[cls="site"] { fill: silver; stroke: none }
 
-text.sitetext {
+text[cls="sitetext"] {
   font-size: smaller;
   font-weight: normal;
   fill: black;
   stroke: none
 }
 
-path.link {
+path[cls="link"] {
   stroke: black;
   fill: none
 }

@@ -274,25 +274,66 @@ struct
     | pathstr (SQCurveTo [], s) = s
     | pathstr (ClosePath, s) = "z" ^ s
   
-  fun svgToString atts ns maxcharsize = 
+  (* SVG utilities **************************************************)
+
+  val defaultCSS =
+    "      text[cls=\"nametext\"] {\n\
+    \        font-family: serif;\n\
+    \        font-size: smaller;\n\
+    \        font-weight: normal;\n\
+    \        stroke: none;\n\
+    \        fill: black\n\
+    \      }\n\
+    \      rect[cls=\"root\"] {\n\
+    \        fill: none;\n\
+    \        stroke: black;\n\
+    \        stroke-dasharray: 10,5\n\
+    \      }\n\
+    \      circle[cls=\"binder\"] { fill: white; stroke: black }\n\
+    \      ellipse[cls=\"node\"] { fill: none; stroke: black }\n\
+    \      text[cls=\"nodetext\"] {\n\
+    \        font-weight: bold;\n\
+    \        fill: blue;\n\
+    \        stroke: none\n\
+    \      }\n\
+    \      rect[cls=\"site\"] { fill: silver; stroke: none }\n\
+    \      text[cls=\"sitetext\"] {\n\
+    \        font-size: smaller;\n\
+    \        font-weight: normal;\n\
+    \        fill: black;\n\
+    \        stroke: none\n\
+    \      }\n\
+    \      path[cls=\"link\"] { stroke: black; fill: none }"
+  
+  fun svgToString atts ns CSS maxcharsize = 
     let
+      fun addinternalCSS CSS svgs =
+        "  <" ^ ns ^ "defs>\n\
+        \    <" ^ ns ^ "style type='text/css'><![CDATA[\n" ^ CSS ^ "\n\
+        \    ]]></" ^ ns ^ "style>\n\
+        \  </" ^ ns ^ "defs>\n" ^ svgs
   fun str' (svg as (Svg svgs)) s
     = let
         val ((x1, y1), (x2, y2))
           = maxpair (((0, 0), (0, 0)), svgsize maxcharsize svg)
+        val svgs =
+          foldr (fn (svg, s) => str' svg s) ("</" ^ ns ^ "svg>\n" ^ s) svgs 
       in
         "<" ^ ns ^ "svg " ^ atts ^ "\n  width='" ^ intToString (x2 - x1 + 1) ^ 
         "' height='" ^ intToString (y2 - y1 + 1) ^ "' version='1.1'\n\
           \  fill='none' stroke='black'>\n" ^
-          foldr (fn (svg, s) => str' svg s) ("</" ^ ns ^ "svg>\n" ^ s) svgs
+          (case CSS of
+             NONE => addinternalCSS defaultCSS svgs
+           | SOME "" => svgs
+           | SOME CSS => addinternalCSS CSS svgs)
       end
     | str' (Text {class, x, y, text, anchor}) s
-    = "  <" ^ ns ^ "text " ^ (if class = "" then "" else "class='" ^ class ^ "' ") ^
+    = "  <" ^ ns ^ "text " ^ (if class = "" then "" else "cls='" ^ class ^ "' ") ^
       "x='" ^ intToString x ^ "' y='" ^ intToString y ^ "'" ^
       (if anchor = "" then "" else " text-anchor='" ^ anchor ^ "'") ^
       ">" ^ text ^ "</" ^ ns ^ "text>\n" ^ s
     | str' (Rectangle {class, x, y, r, width, height}) s
-    = "  <" ^ ns ^ "rect " ^ (if class = "" then "" else "class='" ^ class ^ "' ") ^
+    = "  <" ^ ns ^ "rect " ^ (if class = "" then "" else "cls='" ^ class ^ "' ") ^
       "x='" ^ intToString x ^ "' y='" ^ intToString y ^
       (if r = 0 then 
          ""
@@ -301,16 +342,16 @@ struct
       "' width='" ^ intToString width ^
       "' height='" ^ intToString height ^ "' />\n" ^ s
     | str' (Circle {class, cx, cy, r}) s
-    = "  <" ^ ns ^ "circle " ^ (if class = "" then "" else "class='" ^ class ^ "' ") ^
+    = "  <" ^ ns ^ "circle " ^ (if class = "" then "" else "cls='" ^ class ^ "' ") ^
       "cx='" ^ intToString cx ^ "' cy='" ^ intToString cy ^
       "' r='" ^ intToString r ^ "' />\n" ^ s
     | str' (Ellipse {class, cx, cy, rx, ry}) s
-    = "  <" ^ ns ^ "ellipse " ^ (if class = "" then "" else "class='" ^ class ^ "' ") ^
+    = "  <" ^ ns ^ "ellipse " ^ (if class = "" then "" else "cls='" ^ class ^ "' ") ^
       "cx='" ^ intToString cx ^ "' cy='" ^ intToString cy ^
       "' rx='" ^ intToString rx ^
       "' ry='" ^ intToString ry ^ "' />\n" ^ s
     | str' (Path {class, d}) s
-    = "  <" ^ ns ^ "path " ^ (if class = "" then "" else "class='" ^ class ^ "' ") ^
+    = "  <" ^ ns ^ "path " ^ (if class = "" then "" else "cls='" ^ class ^ "' ") ^
       "d='" ^ foldr pathstr ("' />\n" ^ s) d
      in
        str'
@@ -1238,12 +1279,12 @@ struct
       Svg (ppB b (0, 0))
     end
 
-  fun ppsvg atts ns config b =
+  fun ppsvg atts ns CSS config b =
     let
       val {ctrlcharwidth, ctrlfontheight, ...} =
         getOpt (config, defaultconfig) ("", [])
     in
-      svgToString atts ns (ctrlcharwidth, ctrlfontheight) (makesvg config b) ""
+      svgToString atts ns CSS (ctrlcharwidth, ctrlfontheight) (makesvg config b) ""
     end
 
   fun ppsvgdoc config b =
@@ -1252,9 +1293,9 @@ struct
     \  href=\"http://www.itu.dk/research/theory/bpl/css/bplsvg.css\" ?>\n\
     \<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 20010904//EN\"\n\
     \\"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">\n" ^
-    ppsvg "xmlns='http://www.w3.org/2000/svg'" "" config b
+    ppsvg "xmlns='http://www.w3.org/2000/svg'" "" (SOME "") config b
 
-  fun ppxhtmldoc title config b =
+  fun ppxhtmldoc title CSS config b =
     "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"no\"?>\n\
     \<?xml-stylesheet type=\"text/css\"\n\
     \  href=\"http://www.itu.dk/research/theory/bpl/css/bplsvg.css\" ?>\n\
@@ -1269,7 +1310,7 @@ struct
     \  <?import namespace='svg' implementation='#AdobeSVG'?>\n\
     \</head>\n\
     \<body>\n  " ^
-    ppsvg "" "svg:" config b ^
+    ppsvg "" "svg:" CSS config b ^
     "\n</body>\n\
     \</html>\n"
   fun ppTikZ unitsize config b =
