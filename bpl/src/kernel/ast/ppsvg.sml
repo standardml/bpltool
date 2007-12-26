@@ -309,8 +309,8 @@ struct
     let
       fun addinternalCSS CSS svgs =
         "  <" ^ ns ^ "defs>\n\
-        \    <" ^ ns ^ "style type='text/css'><![CDATA[\n" ^ CSS ^ "\n\
-        \    ]]></" ^ ns ^ "style>\n\
+        \    <" ^ ns ^ "style type='text/css'>\n" ^ CSS ^ "\n\
+        \    </" ^ ns ^ "style>\n\
         \  </" ^ ns ^ "defs>\n" ^ svgs
   fun str' (svg as (Svg svgs)) s
     = let
