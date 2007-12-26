@@ -100,6 +100,7 @@ val scopes_invoked             = "scopes_invoked"
 val scopes_invoker             = "scopes_invoker"
 val f                          = "f"
 val t                          = "t"
+val name                       = "name"
 val proc_name                  = "proc_name"
 val sub_name                   = "sub_name"
 val var                        = "var"
@@ -869,23 +870,48 @@ o (   Freezing[inst_id, active_scopes, inst_id_top]
    || `[active_scopes]`);
 
 
-(* Sub-instances of a sub-instance which is being frozen, are frozen in
- * the same way as active scopes.
+(* Sub-instances of a sub-instance which is being frozen, are frozen by
+ * propagating the freezing state, which again allows its scopes and
+ * subinstances to be frozen. When all those are frozen, ie. the
+ * active_scopes link of the sub-sub-instance is only connected to the
+ * state node, the sub-sub-instance is frozen (remaining at the same
+ * location).
  *)
 val rule_freeze_sub_instance = "freeze sub instance" :::
 
--/active_scopes
-o (   Freezing[inst_id_sup, active_scopes, inst_id_top]
-   || -/inst_id_sub o (SubInstance[sub_name, inst_id_sub, active_scopes]
-                       o `[inst_id_sub]`)
-   || `[active_scopes]`)
+SubInstance[name, inst_id, active_scopes_sup]
+o (    Freezing[inst_id, active_scopes, inst_id_top]
+   `|` SubInstances
+       o (    SubInstance[sub_name, inst_id_sub, active_scopes]
+              o (    Running[inst_id_sub, active_scopes_sub, inst_id_top]
+                 `|` `[]`)
+          `|` `[]`)
+   `|` `[]`)
 
   ----|>
 
--/active_scopes
-o (   Freezing[inst_id_sup, active_scopes, inst_id_top]
-   || FrozenSub[sub_name, inst_id_sup][[inst_id_sub]] o `[inst_id_sub]`
-   || `[active_scopes]`);
+SubInstance[name, inst_id, active_scopes_sup]
+o (    Freezing[inst_id, active_scopes, inst_id_top]
+   `|` SubInstances
+       o (    SubInstance[sub_name, inst_id_sub, active_scopes]
+              o (    Freezing[inst_id_sub, active_scopes_sub, inst_id_top]
+                 `|` `[]`)
+          `|` `[]`)
+   `|` `[]`);
+
+val rule_freeze_sub_instance2 = "freeze sub instance2" :::
+
+   Freezing[inst_id_sup, active_scopes, inst_id_top]
+|| -/inst_id_sub
+   o (SubInstance[sub_name, inst_id_sub, active_scopes]
+      o (    -/active_scopes_sub
+             o Freezing[inst_id_sub, active_scopes_sub, inst_id_top]
+         `|` `[inst_id_sub]`))
+
+  ----|>
+
+   Freezing[inst_id_sup, active_scopes, inst_id_top]
+|| FrozenSub[sub_name, inst_id_sup][[inst_id_sub]] o `[inst_id_sub]` handle e => explain e;
 
 
 (* When no more sub-instances and scopes are connected to the
