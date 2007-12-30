@@ -143,13 +143,13 @@ val caller_id                  = "caller_id"
  *
  * The free ports
  *
- *   #1 should be connected to name of the process.
+ *   #1 should be connected to the name of the process.
  *)
 val Process      = passive  (Process     =: 1 --> 1);
 
 (* The free ports of an Instance
  * 
- *   #1 should be connected to name of the process.
+ *   #1 should be connected to the name of the process.
  *   #2 is the instance identifier which (among other things) is used to
  *        determine the scope of variables within the instance to the
  *        instance itself. 
@@ -159,6 +159,7 @@ val Instance     = active   (Instance    -:       2);
 (* SubProcesses is just a container node for SubProcess nodes.
  *)
 val SubProcesses = active0  (SubProcesses          );
+
 (* We use a different control for sub processes than processes to
  * prevent the invokation of sub processes using the Invoke activity -
  * in particular it prevents a process from invoking sub processes of
@@ -179,9 +180,10 @@ val SubProcess   = passive  (SubProcess  =: 1 --> 2);
 (* SubInstances is just a container node for SubInstance nodes.
  *)
 val SubInstances = active0  (SubInstances          );
+
 (* The free ports of a SubInstance
  * 
- *   #1 should be connected to name of the process.
+ *   #1 should be connected to the name of the process.
  *   #2 is the sub-instance identifier analogous to the instance
  *        identifier for instances.
  *   #3 should be connected to the state node of the immediately
@@ -259,6 +261,7 @@ val Stopped      = atomic   (Stopped     -:       3);
  *        process/instance.
  *)
 val Scope        = passive  (Scope       =: 1 --> 1);
+
 (* Scopes have to be initialized before they can be used. An ActiveScope
  * is a scope that has has been initialized.
  *
@@ -280,6 +283,7 @@ val Variables    = active0  (Variables             );
  *   #2 to the scope port of the node delimiting its scope
  *)
 val Variable     = passive  (Variable    -:       2);
+
 (* The free ports of a variable reference should be connected
  *
  *   #1 to the variable name
@@ -309,6 +313,7 @@ val False        = atomic0  (False                 );
 
 val Assign       = passive  (Assign      -:       1);
 val Copy         = passive0 (Copy                  );
+
 (* The free ports of a To or From node should be connected
  *
  *   #1 to a variable name.
@@ -355,17 +360,20 @@ val SubLink      = passive  (SubLink -:           2);
  *   #1 to the name of the operation the message pertains to
  *)
 val Message      = passive  (Message     -:       1);
+
 (* The free port of a Link should be connected:
  *
  *   #1 to the instance identifier of a partner instance
  *)
 val Link         = atomic   (Link        -:       1);
+
 (* The free port of a Link should be connected:
  *
  *   #1 to the name of the operation which can create instances
  *        of the enclosing process
  *)
 val CreateInstance = atomic (CreateInstance -:    1);
+
 (* The free ports of a Receive node should be connected:
  * 
  *   #1 to the name of the partner link
@@ -376,6 +384,7 @@ val CreateInstance = atomic (CreateInstance -:    1);
  *   #6 to the instance identifier
  *)
 val Receive      = atomic   (Receive     -:       6);
+
 (* The free ports of a Reply node should be connected:
  * 
  *   #1 to the name of the partner link
@@ -386,6 +395,7 @@ val Receive      = atomic   (Receive     -:       6);
  *   #6 to the instance identifier of its enclosing instance
  *)
 val Reply        = atomic   (Reply       -:       6);
+
 (* The free ports of a GetReply node should be connected:
  * 
  *   #1 to the name of the partner link
@@ -831,7 +841,7 @@ val rule_reply = "reply" :::
 
 
 
-(* Sub-instance hibernation. *)
+(* Sub-instance hibernation *)
 val rule_freeze_sub = "freeze sub" :::
 
    FreezeSub[sub_link, sub_link_scope, var, var_scope, inst_id_sup]
@@ -899,6 +909,7 @@ o (    Freezing[inst_id, active_scopes, inst_id_top]
           `|` `[]`)
    `|` `[]`);
 
+(* MISSING *)
 val rule_freeze_sub_instance2 = "freeze sub instance2" :::
 
    Freezing[inst_id_sup, active_scopes, inst_id_top]
