@@ -991,6 +991,9 @@ val rule_thaw_sub = "thaw sub" :::
 
    <->
    (* FIXME should thawing leave the variable unchanged? *)
+   (* I (Mikkel) would say so, since this makes it possible *)
+   (* to copy subprocesses, at least this is the traditional *)
+   (* behaviour in higher-order calculi *)
 || Variable[var, var_scope] o <->
 || -/inst_id_sub
    o (    SubLinks o (    SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
