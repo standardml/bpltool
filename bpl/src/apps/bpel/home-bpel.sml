@@ -116,6 +116,8 @@ val partner_link_invoked       = "partner_link_invoked"
 val partner_link_scope         = "partner_link_scope"
 val partner_link_scope_invoker = "partner_link_scope_invoker"
 val partner_link_scope_invoked = "partner_link_scope_invoked"
+val sub                        = "sub"
+val sub_scope                  = "sub_scope"
 val sub_link                   = "sub_link"
 val sub_link_scope             = "sub_link_scope"
 val echo                       = "echo"
@@ -331,9 +333,23 @@ val From         = atomic   (From        -:       2);
  *)
 val Invoke       = atomic   (Invoke      -:       8);
 
+(* The free ports of an Invoke node should be connected:
+ * 
+ *   #1 to the name of the sub link
+ *   #2 to the same scope port as the sub link
+ *   #3 to the name of the sub-process to be invoked
+ *   #4 to the same scope port as the sub-process
+ *   #5 to the name of the input variable
+ *   #6 to the same scope port as the input variable
+ *   #7 to the name of the output variable
+ *   #8 to the same scope port as the output variable
+ *   #9 to the instance identifier
+ *)
+val InvokeSub    = atomic   (InvokeSub   -:       9);
+
 (* PartnerLinks is just a container node for PartnerLink nodes.
  *)
-val PartnerLinks = active0 (PartnerLinks           );
+val PartnerLinks = active0  (PartnerLinks          );
 (* The free ports of a PartnerLink node should be connected:
  *
  *   #1 to the name of the partner link
@@ -349,13 +365,13 @@ val SubLinks     = active0  (SubLinks              );
  *   #1 to the name of the sub link
  *   #2 to the scope port of the node delimiting its scope
  *)
-val SubLink      = passive  (SubLink -:           2);
+val SubLink      = passive  (SubLink     -:        2);
 
 (* The free port of a Message should be connected:
  *
  *   #1 to the name of the operation the message pertains to
  *)
-val Message      = passive  (Message     -:       1);
+val Message      = passive  (Message     -:        1);
 
 (* The free port of a Link should be connected:
  *
@@ -670,7 +686,7 @@ val rule_sub_completed = "sub completed" :::
 || TopRunning[inst_id_top]
   ----|>
    <-> || proc_name//[] || active_scopes_sup//[]
-|| TopRunning[inst_id_top] handle e => explain e;
+|| TopRunning[inst_id_top];
 
 
 (* In the case of an Exit activity we change the status of the
@@ -700,17 +716,25 @@ o (Instance[proc_name, inst_id]
   ----|>
 <-> || proc_name//[];
 
-(* and the same for sub-instances... *)
+(* We do the same for sub-instances, and detach the attached sub-link. *)
 val rule_exit_remove_sub = "exit remove sub" :::
 
    -//[inst_id, active_scopes]
-   o (SubInstance[proc_name, inst_id, active_scopes_sup]
-      o (    Stopped[inst_id, active_scopes, inst_id_top]
-         `|` `[inst_id, active_scopes]`))
+   o (    SubLinks
+          o (SubLink[sub_link, sub_link_scope] o Link[inst_id] `|` `[]`)
+      `|` SubInstances
+          o (    SubInstance[proc_name, inst_id, active_scopes_sup]
+                 o (    Stopped[inst_id, active_scopes, inst_id_top]
+                    `|` `[inst_id, active_scopes]`)
+             `|` `[]`))
 || SubTransition[inst_id_top]
-  ----|>
-   <-> || proc_name//[] || active_scopes_sup//[]
-|| TopRunning[inst_id_top];
+
+  --[1 |-> 2]--|>
+
+   proc_name//[] || active_scopes_sup//[]
+|| (   SubLinks o (SubLink[sub_link, sub_link_scope] o <-> `|` `[]`)
+    `|` SubInstances o `[]`)
+|| TopRunning[inst_id_top] handle e => explain e;
 
 
 
