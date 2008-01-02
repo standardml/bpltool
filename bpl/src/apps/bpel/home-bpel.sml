@@ -672,20 +672,29 @@ o (Instance[proc_name, inst_id]
   ----|>
 <-> || proc_name//[];
 
-(* and the same for sub-instances... *)
+(* we do the same for sub-instances, and detach the attached sub-link. *)
 val rule_sub_completed = "sub completed" :::
 
    -//[inst_id, active_scopes]
-   o (SubInstance[proc_name, inst_id, active_scopes_sup]
-      o (    Variables    o (inst_id//[inst_id1] o `[inst_id1]`)
-         `|` PartnerLinks o (inst_id//[inst_id2] o `[inst_id2]`)
-         `|` SubProcesses o (inst_id//[inst_id3] o `[inst_id3]`)
-         `|` SubLinks     o (inst_id//[inst_id4] o `[inst_id4]`)
-         `|` SubInstances o <->
-         `|` Running[inst_id, active_scopes, inst_id_top]))
+   o (    SubLinks
+          o (SubLink[sub_link, sub_link_scope] o Link[inst_id] `|` `[]`)
+      `|` SubInstances
+          o (    SubInstance[proc_name, inst_id, active_scopes_sup]
+                 o (    Variables    o (inst_id//[inst_id1] o `[inst_id1]`)
+                    `|` PartnerLinks o (inst_id//[inst_id2] o `[inst_id2]`)
+                    `|` SubProcesses o (inst_id//[inst_id3] o `[inst_id3]`)
+                    `|` SubLinks     o (inst_id//[inst_id4] o `[inst_id4]`)
+                    `|` SubInstances o <->
+                    `|` Running[inst_id, active_scopes, inst_id_top])
+             `|` `[]`))
 || TopRunning[inst_id_top]
-  ----|>
-   <-> || proc_name//[] || active_scopes_sup//[]
+
+  --[1 |-> 5]--|>
+
+   proc_name//[] || active_scopes_sup//[]
+|| (    SubLinks
+        o (SubLink[sub_link, sub_link_scope] o <-> `|` `[]`)
+    `|` SubInstances o `[]`)
 || TopRunning[inst_id_top];
 
 
