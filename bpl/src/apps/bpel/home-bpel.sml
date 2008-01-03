@@ -16,11 +16,11 @@ use "figinfo.sml";
 (*******************************)
 val Process        = "Process"
 val Instance       = "Instance"
-val SubProcesses   = "SubProcesses"
+(*val SubProcesses   = "SubProcesses"*)
 val SubProcess     = "SubProcess"
 val SubInstances   = "SubInstances"
 val SubInstance    = "SubInstance"
-val FrozenSub      = "FrozenSub"
+(*val FrozenSub      = "FrozenSub"*)
 val Scope          = "Scope"
 val ActiveScope    = "ActiveScope"
 val Invoked        = "Invoked"
@@ -62,7 +62,7 @@ val InvokeSub      = "InvokeSub"
 val ReceiveSub     = "ReceiveSub"
 val ReplySub       = "ReplySub"
 val GetReplySub    = "GetReplySub"
-val IvokeSup       = "InvokeSup"
+val InvokeSup       = "InvokeSup"
 val ReceiveSup     = "ReceiveSup"
 val ReplySup       = "ReplySup"
 val GetReplySup    = "GetReplySup"
@@ -158,9 +158,9 @@ val Process      = passive  (Process     =: 1 --> 1);
  *)
 val Instance     = active   (Instance    -:       2);
 
-(* SubProcesses is just a container node for SubProcess nodes.
+(*(* SubProcesses is just a container node for SubProcess nodes.
  *)
-val SubProcesses = active0  (SubProcesses          );
+val SubProcesses = active0  (SubProcesses          );*)
 
 (* We use a different control for sub processes than processes to
  * prevent the invokation of sub processes using the Invoke activity -
@@ -175,9 +175,9 @@ val SubProcesses = active0  (SubProcesses          );
  * The free ports should be connected
  *
  *   #1 to the name of the process.
- *   #2 to the scope port of the node delimiting its scope.
+ *   (#2 to the scope port of the node delimiting its scope.)
  *)
-val SubProcess   = passive  (SubProcess  =: 1 --> 2);
+val SubProcess   = passive  (SubProcess  =: 1 --> 1);
 
 (* SubInstances is just a container node for SubInstance nodes.
  *)
@@ -193,7 +193,7 @@ val SubInstances = active0  (SubInstances          );
  *)
 val SubInstance  = active   (SubInstance -:       3);
 
-(* The binding ports of a FrozenSub
+(*(* The binding ports of a FrozenSub
  *
  *   #1 should be used to delimit the scope of variables within the
  *        process to the process itself.
@@ -202,7 +202,7 @@ val SubInstance  = active   (SubInstance -:       3);
  *
  *   #1 to the name of the process.
  *)
-val FrozenSub    = passive  (FrozenSub   =: 1 --> 1);
+val FrozenSub    = passive  (FrozenSub   =: 1 --> 1);*)
 
 (* The following controls are used to control the execution of an
  * instance and all its subinstances as a whole. They are used to make
@@ -333,19 +333,29 @@ val From         = atomic   (From        -:       2);
  *)
 val Invoke       = atomic   (Invoke      -:       8);
 
-(* The free ports of an Invoke node should be connected:
+(* The free ports of an InvokeSub node should be connected:
  * 
- *   #1 to the name of the sub link
- *   #2 to the same scope port as the sub link
- *   #3 to the name of the sub-process to be invoked
- *   #4 to the same scope port as the sub-process
- *   #5 to the name of the input variable
- *   #6 to the same scope port as the input variable
- *   #7 to the name of the output variable
- *   #8 to the same scope port as the output variable
- *   #9 to the instance identifier
+ *   #1 to the name of the sub-link
+ *   #2 to the same scope port as the sub-link
+ *   #3 to the name of the operation to be invoked
+ *   #4 to the name of the input variable
+ *   #5 to the same scope port as the input variable
+ *   #6 to the name of the output variable
+ *   #7 to the same scope port as the output variable
+ *   #8 to the instance identifier
  *)
-val InvokeSub    = atomic   (InvokeSub   -:       9);
+val InvokeSub    = atomic   (InvokeSub   -:       8);
+
+(* The free ports of an InvokeSup node should be connected:
+ * 
+ *   #1 to the name of the operation to be invoked
+ *   #2 to the name of the input variable
+ *   #3 to the same scope port as the input variable
+ *   #4 to the name of the output variable
+ *   #5 to the same scope port as the output variable
+ *   #6 to the instance identifier
+ *)
+val InvokeSup    = atomic   (InvokeSup   -:       6);
 
 (* PartnerLinks is just a container node for PartnerLink nodes.
  *)
@@ -397,6 +407,26 @@ val CreateInstance = atomic (CreateInstance -:    1);
  *)
 val Receive      = atomic   (Receive     -:       6);
 
+(* The free ports of a ReceiveSub node should be connected:
+ * 
+ *   #1 to the name of the sub-link
+ *   #2 to the same scope port as the sub-link
+ *   #3 to the name of the operation
+ *   #4 to the name of the variable
+ *   #5 to the same scope port as the variable
+ *   #6 to the instance identifier
+ *)
+val ReceiveSub   = atomic   (ReceiveSub  -:       6);
+
+(* The free ports of a ReceiveSup node should be connected:
+ * 
+ *   #1 to the name of the operation
+ *   #2 to the name of the variable
+ *   #3 to the same scope port as the variable
+ *   #4 to the instance identifier
+ *)
+val ReceiveSup   = atomic   (ReceiveSup  -:       4);
+
 (* The free ports of a Reply node should be connected:
  * 
  *   #1 to the name of the partner link
@@ -408,6 +438,26 @@ val Receive      = atomic   (Receive     -:       6);
  *)
 val Reply        = atomic   (Reply       -:       6);
 
+(* The free ports of a ReplySub node should be connected:
+ * 
+ *   #1 to the name of the sub-link
+ *   #2 to the same scope port as the sub-link
+ *   #3 to the name of the operation
+ *   #4 to the name of the variable
+ *   #5 to the same scope port as the variable
+ *   #6 to the instance identifier of its enclosing instance
+ *)
+val ReplySub     = atomic   (ReplySub    -:       6);
+
+(* The free ports of a ReplySup node should be connected:
+ * 
+ *   #1 to the name of the operation
+ *   #2 to the name of the variable
+ *   #3 to the same scope port as the variable
+ *   #4 to the instance identifier of its enclosing instance
+ *)
+val ReplySup     = atomic   (ReplySup    -:       4);
+
 (* The free ports of a GetReply node should be connected:
  * 
  *   #1 to the name of the partner link
@@ -418,6 +468,26 @@ val Reply        = atomic   (Reply       -:       6);
  *   #6 to the instance identifier of its enclosing instance
  *)
 val GetReply     = atomic   (GetReply    -:       6);
+
+(* The free ports of a GetReplySub node should be connected:
+ * 
+ *   #1 to the name of the sub-link
+ *   #2 to the same scope port as the sub-link
+ *   #3 to the name of the operation
+ *   #4 to the name of the output variable
+ *   #5 to the same scope port as the output variable
+ *   #6 to the instance identifier of its enclosing instance
+ *)
+val GetReplySub  = atomic   (GetReplySub -:       6);
+
+(* The free ports of a GetReplySup node should be connected:
+ * 
+ *   #1 to the name of the operation
+ *   #2 to the name of the output variable
+ *   #3 to the same scope port as the output variable
+ *   #4 to the instance identifier of its enclosing instance
+ *)
+val GetReplySup  = atomic   (GetReplySup -:       4);
 
 (* The free ports of an Exit node should be connected
  *
@@ -636,8 +706,7 @@ val rule_scope_completed = "scope completed" :::
    o (ActiveScope[scope, active_scopes]
       o (    Variables    o (scope//[scope1] o `[scope1]`)
          `|` PartnerLinks o (scope//[scope2] o `[scope2]`)
-         `|` SubProcesses o (scope//[scope3] o `[scope3]`)
-         `|` SubLinks     o (scope//[scope4] o `[scope4]`)
+         `|` SubLinks     o (scope//[scope3] o `[scope3]`)
          `|` SubInstances o <->))
 || Running[inst_id, active_scopes, inst_id_top]
 || TopRunning[inst_id_top]
@@ -664,8 +733,7 @@ val rule_inst_completed = "inst completed" :::
 o (Instance[proc_name, inst_id]
    o (    Variables    o (inst_id//[inst_id1] o `[inst_id1]`)
       `|` PartnerLinks o (inst_id//[inst_id2] o `[inst_id2]`)
-      `|` SubProcesses o (inst_id//[inst_id3] o `[inst_id3]`)
-      `|` SubLinks     o (inst_id//[inst_id4] o `[inst_id4]`)
+      `|` SubLinks     o (inst_id//[inst_id3] o `[inst_id3]`)
       `|` SubInstances o <->
       `|` Running[inst_id, active_scopes, inst_id]
       `|` TopRunning[inst_id]))
@@ -682,14 +750,13 @@ val rule_sub_completed = "sub completed" :::
           o (    SubInstance[proc_name, inst_id, active_scopes_sup]
                  o (    Variables    o (inst_id//[inst_id1] o `[inst_id1]`)
                     `|` PartnerLinks o (inst_id//[inst_id2] o `[inst_id2]`)
-                    `|` SubProcesses o (inst_id//[inst_id3] o `[inst_id3]`)
-                    `|` SubLinks     o (inst_id//[inst_id4] o `[inst_id4]`)
+                    `|` SubLinks     o (inst_id//[inst_id3] o `[inst_id3]`)
                     `|` SubInstances o <->
                     `|` Running[inst_id, active_scopes, inst_id_top])
              `|` `[]`))
 || TopRunning[inst_id_top]
 
-  --[1 |-> 5]--|>
+  --[1 |-> 4]--|>
 
    proc_name//[] || active_scopes_sup//[]
 || (    SubLinks
@@ -839,7 +906,7 @@ val rule_receive = "receive" :::
    o `[]`
 || Variable[var, var_scope] o `[]`
 || Running[inst_id, active_scopes, inst_id]
-|| TopRunning[inst_id]
+|| TopRunning[inst_id];
 
 
 (* The invoke instance rule executes an Invoke activity in one instance
@@ -910,6 +977,118 @@ val rule_reply = "reply" :::
 || Variable[outvar, outvar_scope] o `[]`
 || Running[inst_id_invoker, active_scopes_invoker, inst_id_top_invoker]
 || TopRunning[inst_id_top_invoker];
+
+
+
+(* Communication between parent and child instances *)
+(* Send a message from a parent instance to a sub-instance using the
+ * invokeSub and receiveSup activities respectively.
+ *)
+val rule_invoke_sub = "invoke sub" :::
+
+   InvokeSub[sub_link, sub_link_scope, oper, invar, invar_scope,
+             outvar, outvar_scope, inst_id_sup]
+|| SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+|| Variable[invar, invar_scope] o `[]`
+|| Running[inst_id_sup, active_scopes_sup, inst_id_top]
+|| ReceiveSup[oper, var, var_scope, inst_id_sub]
+|| Variable[var, var_scope]
+|| Running[inst_id_sub, active_scopes_sub, inst_id_top]
+|| TopRunning[inst_id_top]
+
+  --[1 |-> 0]--|>
+
+   GetReplySub[sub_link, sub_link_scope, oper,
+               outvar, outvar_scope, inst_id_sup]
+|| SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+|| Variable[invar, invar_scope] o `[]`
+|| Running[inst_id_sup, active_scopes_sup, inst_id_top]
+|| <->
+|| Variable[var, var_scope] o `[]`
+|| Running[inst_id_sub, active_scopes_sub, inst_id_top]
+|| TopRunning[inst_id_top];
+
+
+(* The ReplySup activity inside one instance can synchronize together
+ * with a GetReplySub activity inside another instance, thereby copying
+ * the content from variable var to variable outvar.
+ *)
+val rule_reply_sup = "reply sup" :::
+
+   ReplySup[oper, var, var_scope, inst_id_sub]
+|| Variable[var, var_scope] o `[]`
+|| Running[inst_id_sub, active_scopes_sub, inst_id_top]
+|| GetReplySub[sub_link, sub_link_scope, oper,
+               outvar, outvar_scope, inst_id_sup]
+|| SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+|| Variable[outvar, outvar_scope] o `[]`
+|| Running[inst_id_sup, active_scopes_sup, inst_id_top]
+|| TopRunning[inst_id_top]
+
+  --[1 |-> 0]--|>
+
+   <-> || oper//[]
+|| Variable[var, var_scope] o `[]`
+|| Running[inst_id_sub, active_scopes_sub, inst_id_top]
+|| <->
+|| SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+|| Variable[outvar, outvar_scope] o `[]`
+|| Running[inst_id_sup, active_scopes_sup, inst_id_top]
+|| TopRunning[inst_id_top];
+
+
+(* Symmetrically, a sub-instance can invoke its parent. *)
+(* Send a message from a sub-instance to its parent instance using the
+ * invokeSup and receiveSub activities respectively.
+ *)
+val rule_invoke_sup = "invoke sup" :::
+
+   InvokeSup[oper, invar, invar_scope, outvar, outvar_scope, inst_id_sub]
+|| Variable[invar, invar_scope] o `[]`
+|| Running[inst_id_sub, active_scopes_sub, inst_id_top]
+|| ReceiveSub[sub_link, sub_link_scope, oper, var, var_scope, inst_id_sup]
+|| SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+|| Variable[var, var_scope]
+|| Running[inst_id_sup, active_scopes_sup, inst_id_top]
+|| TopRunning[inst_id_top]
+
+  --[1 |-> 0]--|>
+
+   GetReplySup[oper, outvar, outvar_scope, inst_id_sub]
+|| Variable[invar, invar_scope] o `[]`
+|| Running[inst_id_sub, active_scopes_sub, inst_id_top]
+|| <->
+|| SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+|| Variable[var, var_scope] o `[]`
+|| Running[inst_id_sup, active_scopes_sup, inst_id_top]
+|| TopRunning[inst_id_top];
+
+
+(* The ReplySub activity inside one instance can synchronize together
+ * with a GetReplySup activity inside a sub-instance, thereby copying
+ * the content from variable var to variable outvar.
+ *)
+val rule_reply_sub = "reply sub" :::
+
+   ReplySub[sub_link, sub_link_scope, oper, var, var_scope, inst_id_sup]
+|| SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+|| Variable[var, var_scope] o `[]`
+|| Running[inst_id_sup, active_scopes_sup, inst_id_top]
+|| GetReplySup[oper, outvar, outvar_scope, inst_id_sub]
+|| Variable[outvar, outvar_scope] o `[]`
+|| Running[inst_id_sub, active_scopes_sub, inst_id_top]
+|| TopRunning[inst_id_top]
+
+  --[1 |-> 0]--|>
+
+   <-> || oper//[]
+|| SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+|| Variable[var, var_scope] o `[]`
+|| Running[inst_id_sup, active_scopes_sup, inst_id_top]
+|| <->
+|| Variable[outvar, outvar_scope] o `[]`
+|| Running[inst_id_sub, active_scopes_sub, inst_id_top]
+|| TopRunning[inst_id_top];
 
 
 
@@ -1003,7 +1182,7 @@ o (   Freezing[inst_id_sup, active_scopes, inst_id_top]
    Freezing[inst_id_sup, active_scopes, inst_id_top]
 || (    SubLinks o `[]`
     `|` SubInstances
-        o (    FrozenSub[sub_name][[inst_id_sub]]
+        o (    SubProcess[sub_name][[inst_id_sub]]
                o (    SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
                   `|` `[inst_id_sub]`)
            `|` `[]`));
@@ -1030,7 +1209,7 @@ o (   FreezingSub[sub_link, sub_link_scope, var, var_scope, inst_id_sup]
 
    <->
 || Variable[var, var_scope]
-   o FrozenSub[sub_name][[inst_id_sub]] o `[inst_id_sub]`
+   o SubProcess[sub_name][[inst_id_sub]] o `[inst_id_sub]`
 || SubLink[sub_link, sub_link_scope] o <->
 || Running[inst_id_sup, active_scopes_sup, inst_id_top]
 || TopRunning[inst_id_top]
@@ -1042,20 +1221,17 @@ val rule_thaw_sub = "thaw sub" :::
 
    ThawSub[sub_link, sub_link_scope, var, var_scope, inst_id_sup]
 || Variable[var, var_scope]
-   o FrozenSub[sub_name][[inst_id_sub]] o `[inst_id_sub]`
+   o SubProcess[sub_name][[sub_scope]] o `[sub_scope]`
 || (    SubLinks o (SubLink[sub_link, sub_link_scope] o <-> `|` `[]`)
     `|` SubInstances o `[]`)
 || Running[inst_id_sup, active_scopes_sup, inst_id_top]
 || TopRunning[inst_id_top]
 
-  --[0 |-> 1, 1 |-> 2, 2 |-> 0]--|>
+  --[3&[inst_id_sub] |--> 0&[sub_scope]]--|>
 
    <->
-   (* FIXME should thawing leave the variable unchanged? *)
-   (* I (Mikkel) would say so, since this makes it possible *)
-   (* to copy subprocesses, at least this is the traditional *)
-   (* behaviour in higher-order calculi *)
-|| Variable[var, var_scope] o <->
+|| Variable[var, var_scope]
+   o SubProcess[sub_name][[sub_scope]] o `[sub_scope]`
 || -/inst_id_sub
    o (    SubLinks o (    SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
                       `|` `[]`)
@@ -1078,7 +1254,7 @@ val rule_thaw_sub_instance = "thaw sub instance" :::
 
    (    SubLinks o `[]`
     `|` SubInstances
-        o (    FrozenSub[sub_name][[inst_id_sub]]
+        o (    SubProcess[sub_name][[inst_id_sub]]
                o (    SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
                   `|` `[inst_id_sub]`)
            `|` `[]`))
