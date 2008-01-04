@@ -134,6 +134,45 @@ struct
 
   val op * = x
 
+  exception AbsOfNonPrimeIface of interface
+  exception AbsLocalNameClash of interface * nameset
+  exception AbsMissingGlobalNames of interface * nameset
+
+  (* abs checks for requirements 
+   * width = 1
+   * X \subseteq glob (TODO: Should move/make impl. of subseteq to NameSet)
+   * X \not \subseteq loc 
+   *
+   * NOT TESTED
+   *)
+  fun abs X (i as {width = 1, loc = [locs], glob}) =
+      (* Quick and dirty subset func - should really be in NameSet... *)
+      let val XsubsetOfGlob = NameSet.fold (fn n => fn c => ((NameSet.member n glob) andalso c)) true X
+      in
+	  if XsubsetOfGlob then
+	      {width = 1, loc = [NameSet.union locs X] handle e => raise AbsLocalNameClash(i,X),
+	       glob = NameSet.difference glob X}
+	  else raise AbsMissingGlobalNames(i,X)
+      end
+    | abs _ i = raise AbsOfNonPrimeIface i
+
+  (*
+   * NOT TESTED
+   *)
+  fun par ({width = width1, loc = loc1, glob = glob1},
+	   {width = width2, loc = loc2, glob = glob2}) =
+      {width = width1 + width2,
+       loc = loc1 @ loc2,
+       glob = NameSet.union' glob1 glob2}
+
+  val op || = par
+
+  (*
+   * NOT TESTED
+   *)
+  fun wpar ifaces = List.foldl par zero ifaces
+
+  val op ||| = wpar
 end
 
 

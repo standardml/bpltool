@@ -19,6 +19,10 @@
  *)
 
 (** Testing module for bdnf stuff.
+ *  Tests for correct normalization, and also for 
+ * correct tensor2parallel conversion 
+ * (see <pre>fun t2p</pre> in <pre>bgval</pre>.)
+ * 
  * @version $LastChangedRevision$
  *)
 
@@ -61,6 +65,23 @@ nameOfException
   val assertEqualBgVal
     = assertEqual (fn (b1, b2) => BgVal.eq b1 b2)
                   (PrettyPrint.pp_to_string 72 (BgVal.pp 0))
+
+  val assertEqualBgBDNF
+    = let val ppids  = Flags.getBoolFlag "/kernel/ast/bgterm/ppids"
+	  val pp0abs = Flags.getBoolFlag "/kernel/ast/bgterm/pp0abs"
+      in 
+	  ( Flags.setBoolFlag "/kernel/ast/bgterm/ppids" true;
+	    Flags.setBoolFlag "/kernel/ast/bgterm/pp0abs" true;
+	    assertEqual (fn (b1, b2) => BgBDNF.eq' 
+					    ((BgBDNF.make o (BgVal.make BgTerm.info)) b1) 
+					    ((BgBDNF.make o (BgVal.make BgTerm.info)) b2))
+			(PrettyPrint.pp_to_string 72 (BgTerm.pp 0))
+
+			 
+	    before 
+	    (Flags.setBoolFlag "/kernel/ast/bgterm/ppids" ppids;
+	     Flags.setBoolFlag "/kernel/ast/bgterm/pp0abs" pp0abs))
+      end
 
   exception InvalidTestFile of string * string
 
@@ -144,25 +165,67 @@ nameOfException
                 NONE =>
                 let
                   val () = close_files ()
+
+(* TODO: (TCD) Shouldn't InvalidTestFile exception be Fails rather than Errors?
+ ... Allows the testsuite to show these explanations. 
+ UPDATE: I've implemented this below. *)
+
+		  val input_bgterm 
+		    = (bgtermUsefile'' input_file)
+                      handle e => ( rm_tmp_files()
+                                   ; 
+				   raise Assert.Fail
+				     (GeneralFailure 
+					  ("testfile is invalid - the input is not parsable as /\
+                                               \a bgterm")))
+(*
+                          		      raise InvalidTestFile
+                                             (test_file,
+                                              "the input is not parsable as /\
+                                               \a bgterm"))
+*)
+
                   val input_bgval
                     = (bgvalUseBgTermfile'' input_file)
                       handle e => (  rm_tmp_files()
-                                   ; raise InvalidTestFile
+                                   ; 
+				   raise Assert.Fail
+				     (GeneralFailure 
+					  ("testfile is invalid - the input is not parsable as /\
+                                               \a wellformed bgterm")))
+(*
+				   raise InvalidTestFile
                                              (test_file,
                                               "the input is not a /\
                                                \well-formed bgterm"))
+*)
                   val result_bgval
                     = (bgvalUseBgTermfile'' result_file)
                       handle e => (  rm_tmp_files()
-                                   ; raise InvalidTestFile
+                                   ; 
+				   raise Assert.Fail
+				     (GeneralFailure 
+					  ("testfile is invalid - the result is not parsable as /\
+                                               \a wellformed bgterm")))
+(*
+                                             raise InvalidTestFile
                                              (test_file,
                                               "the result is not a /\
                                               \well-formed bgterm"))
+*)
+		       
                 in
+		    
                   (  assertEqualBgVal
-                       result_bgval
-                       (BgBDNF.unmk (BgBDNF.make input_bgval))
-                   ; rm_tmp_files ())
+			 result_bgval
+			 (BgBDNF.unmk (BgBDNF.make input_bgval))
+                   ; (* UPDATE: Added bgval tensor2parallel testing *)
+                     assertEqualBgBDNF
+    			 input_bgterm		 
+			 ((#1 o BgVal.t2p) input_bgval)
+                   ;
+                   rm_tmp_files ())
+		    
                 end
               | SOME exnname =>
                 (  close_files ()
@@ -183,7 +246,7 @@ nameOfException
                                      ("expected exception " ^
                                       exnname ^ ", got " ^
                                       exnName exn))))
-            end
+            end		   
 
         (* scan the test data directory for *.bgtest files *)
         val dirstream = openDir test_data_dir

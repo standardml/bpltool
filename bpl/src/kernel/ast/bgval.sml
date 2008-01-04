@@ -138,6 +138,36 @@ struct
     | info (VTen (_, (_, _, i)))    = i
     | info (VCom (_, _, (_, _, i))) = i
 
+
+  fun innerface (VMer (n, i))   = Interface.m n
+    | innerface (VCon (X, i)) 
+      = Interface.make {loc = [X], glob = NameSet.empty}
+    | innerface (VWir (w, i))   = Interface.X (Wiring.innernames w)
+    | innerface (VIon (KyX, i)) 
+      = Interface.make {loc = [Ion.innernames KyX], glob = NameSet.empty}
+    | innerface (VPer (pi, _))  = Permutation.innerface pi
+    | innerface (VAbs (_, _, (innf, _, _))) = innf
+    | innerface (VTen (_, (innf, _, _)))    = innf
+    | innerface (VCom (_, _, (innf, _, _))) = innf
+
+  fun outerface (VMer (_, i))   = Interface.one
+    | outerface (VCon (X, i)) 
+      = Interface.make {loc = [NameSet.empty], glob = X}
+    | outerface (VWir (w, i))   = Interface.X (Wiring.outernames w)
+    | outerface (VIon (KyX, i)) =
+      let
+	val {free, ...} = Ion.unmk KyX
+	val y = NameSet.fromList free
+      in
+	Interface.make {loc = [NameSet.empty], glob = y}
+      end
+    | outerface (VPer (pi, _))  = Permutation.outerface pi
+    | outerface (VAbs (_, _, (_, outf, _))) = outf
+    | outerface (VTen (_, (_, outf, _)))    = outf
+    | outerface (VCom (_, _, (_, outf, _))) = outf
+
+  fun arecomposable v1 v2 = Interface.eq (innerface v1, outerface v2)
+
   val unmk =
       let
 	fun unmk' (v as (VMer (n, i)))
@@ -172,9 +202,171 @@ struct
 	unmk'
       end
 
+  (* t2p' : (bgval, substitution) -> (((bgterm, innerface, outerface), isNewId?), newSubstitution)
+   *
+   * Note: Take care - I am using a global wiring (substition) s as a
+   * general namemap, that may apply to both global and local wiring.
+   * 
+   * TODO: NOT FULLY TESTED. *)
+  fun t2p' (VMer (n, i), s) =
+      (((BgTerm.Mer (n, i), Interface.m n, Interface.one), false), s) (* s = id_e*)
+    | t2p' (VCon (X, i), s) =
+      let val outernames = Wiring.outernames s
+      in
+	  ((((BgTerm.Con (Wiring.app s X, i),
+	      Interface.make {loc = [outernames], glob = NameSet.empty},
+	      Interface.make {loc = [NameSet.empty], glob = outernames}), false), s)
+       handle e => raise e)
+      end
+    | t2p' (VWir (w, i), s) = 
+      if ((NameSet.size o Wiring.outernames) w = 0) then (* w = /X => s = id_e*)
+	  let val X = Wiring.innernames w
+	  in
+	      ((((BgTerm.Wir (w, i), Interface.X X, Interface.zero), false), Wiring.id_X X) 
+	       handle e => raise e )
+	  end
+      else (* w = y/X => s = z/y *)
+	  let val Z = Wiring.outernames s (* Z = {z}*)
+	  in
+	      if ((NameSet.size o Wiring.innernames) w > 0) then
+		  (* X is non-empty, i.e. w is a substitution - link continues. *)
+		  (((BgTerm.Wir (Wiring.id_X Z, i), Interface.X Z,Interface.X Z), true), Wiring.o(s,w))
+	      else (* X is empty, i.e. w is name introduction - link stops here.*)
+		  (((BgTerm.Wir (Wiring.introduce Z, i),
+		     Interface.zero,Interface.X Z),false), Wiring.id_0)
+	  end
+    | t2p' (VIon (KyX, i), s) =
+      let val {ctrl, free, bound} = Ion.unmk KyX
+	  val free'      = (List.map (fn y => getOpt (Wiring.app_x s y, y)) free handle e => raise e)
+	  val innernames = Ion.innernames KyX
+      in 
+	  (((BgTerm.Ion (Ion.make {ctrl = ctrl, free= free', bound = bound}, i), 
+    	     Interface.make {loc = [innernames], glob = NameSet.empty},
+	     Interface.make {loc = [NameSet.empty], glob = Wiring.outernames s}), false),
+	   Wiring.id_X innernames)
+      end
+    | t2p' (VPer (pi, i), s) =
+      (* Renaming names of a permutation; should perhaps be a Permutation function.*)
+      let val mathpi  = Permutation.unmk pi (* mathpi : (int * nameset) list *)
+	  val mathpi' = List.map (fn (i,X) => (i,Wiring.app s X)) mathpi
+	  val pi'     = Permutation.make mathpi'
+      in
+	  (((BgTerm.Per (pi', i), Permutation.innerface pi', Permutation.outerface pi'),
+	    false), s)
+      end
+    | t2p' (VAbs (X, P, (_, _, i)), s) = 
+      let val (((P', inf', outf'),_),s') = t2p'(P,s) (* (X) P is an id iff it was before, *)
+	  val X' = Wiring.app s X                    (* and we only aim to weed out new ids. *)
+      in
+	  ((((BgTerm.Abs (X', P', i), 
+	      inf', Interface.abs X' outf'), false), s') handle e => raise e)
+      end
+    | t2p' (VTen (Gs, (_, _, i)), s) =
+      let val ress       = Wiring.restrict'' s (* Note: Is it restrict'' I want here? *)
+	  val outernames = Interface.names o outerface
+	  val (GsandIdQs', Ss')     = 
+	      (ListPair.unzip o List.map (fn G => t2p'(G, ress (outernames G)))) Gs
+	  val (GsWIfaces', isNewId) = 
+	      foldr (fn ((H,QId),(Hs,QidAcc)) => (H::Hs,QId andalso QidAcc)) ([],false) GsandIdQs'
+      in
+	  (((BgTerm.Par(List.map #1 GsWIfaces', i), 
+	     Interface.||| (List.map #2 GsWIfaces'), Interface.||| (List.map #3 GsWIfaces')), 
+	    isNewId), Wiring.** Ss')
+      end
+    | t2p' (VCom (G, H, (_, _, i)), s) = 
+      let val (((G', Ginf, Goutf),GisNewId),s') = t2p'(G,s)
+	  val (((H', Hinf, Houtf),HisNewId),s'') = t2p'(H,s')
+      in
+	  if GisNewId then (((H', Hinf, Houtf),HisNewId),s'')
+	  (* Hmmm - check the next two lines... *)
+	  else if HisNewId then (((G', Ginf, Goutf),GisNewId),s'')
+	  else (((BgTerm.Com(G', H', i), Hinf, Goutf), GisNewId orelse HisNewId),s'')
+      end
+
+
+  (* tensor2parallel : bgval -> (bgterm, innerface, outerface)
+   *
+   * Substitutes || for ** by removal of y//X's.
+   * 
+   * TODO: NOT FULLY TESTED.*)
+  fun t2p G =
+      let val Y = (Interface.names o outerface) G
+	  val (((G', innf, outf),isId),s) = t2p'(G, Wiring.id_X Y)
+	  fun localize(s, iface) = 
+              (* substitution wiring s as a product of local and global wiring, 
+	         s.t. it has outerface = iface. *)
+	      let val {width, loc, glob} = Interface.unmk iface
+		  val ress               = Wiring.restrict_outer s
+		  val globwir            = ress glob
+		  val locwirs            = map ress loc
+		  val locwir             = BgTerm.WLS Info.noinfo locwirs
+	      in
+		  (BgTerm.Par([(BgTerm.Wir (globwir, Info.noinfo)),locwir], Info.noinfo),
+		   Interface.make {loc = map Wiring.innernames locwirs, glob = Wiring.innernames globwir})
+	      end
+      (* Note: Could really also throw out G' if G' isId.*)
+      in if Wiring.is_id(s) then (G', innf, outf)
+	 else 
+	     let val (W, Wiface) = localize(s, innf)
+	     in (* ( *)
+		 (BgTerm.Com(G', W, Info.noinfo), Wiface, outf)
+		 (* , innerface v2, outerface v1) ... Necessary? *)
+	     end
+      end
+
+  (* TODO: m2pp - taking (merge * id)(G || ... || H) to (G | ... | H) *)
+   
+  (* NOTE: It might be easier - typewise - to collapse 
+   * m2pp and t2p functions, since they both need to return a BgTerm. If 
+   * the processing is _not_ done in parallel I would need to create a 
+   * separate datatype for the intermediate format, that one function 
+   * returns.
+   *
+   * A really ugly alternative is to let t2p return a (nonvalid) bgval with 
+   * *-products standing for ||'s; which is then substituted
+   * for ||'s by removeMerge.
+   *)
+      
+  val _ = Flags.makeBoolFlag
+            {name = "/kernel/ast/bgval/tensor2parallel",
+             default = false,
+             short = "", long = "--t2p",
+             arg = "",
+             desc = "Substitute || for * by removal of y//X's before prettyprinting."}
+
+  fun pp' BgTerm_pp withIface (indent:int) pps v =
+    let
+      val t2pflag = Flags.getBoolFlag "/kernel/ast/bgval/tensor2parallel"
+      val bgval2bgterm = if t2pflag then t2p else unmk
+      val (t, iface, oface) = bgval2bgterm v handle e => raise e
+      (* try to print the interfaces using the names given in the input *)
+      val ()
+        = (Name.pp_unchanged (Interface.names iface) (Interface.names oface))
+          handle Name.PPUnchangedNameClash _ =>
+            (Name.pp_unchanged NameSet.empty NameSet.empty handle e => raise e)
+    in
+      if withIface then PrettyPrint.begin_block pps PrettyPrint.CONSISTENT 0 else ();
+      BgTerm_pp indent pps t;
+      if withIface then
+    	  (  PrettyPrint.add_break pps (1, 0);
+             PrettyPrint.add_string pps ": ";
+           PrettyPrint.begin_block pps PrettyPrint.CONSISTENT 0;
+	     Interface.pp indent pps iface;
+    	     PrettyPrint.add_break pps (1, 0);
+    	     PrettyPrint.add_string pps "-> ";
+    	     Interface.pp indent pps oface;
+    	     PrettyPrint.end_block pps;
+    	     PrettyPrint.end_block pps
+          )
+      else ()
+    end
+
+(* OLD pp' - now refactored into ppWithIface.
   fun pp' BgTerm_pp indent pps v =
       let
-        val (t, iface, oface) = unmk v handle e => raise e
+	val t2pflag = Flags.getBoolFlag "/kernel/ast/bgval/tensor2parallel"
+	val bgval2bgterm = if t2pflag then t2p else unmk
+        val (t, iface, oface) = bgval2bgterm v handle e => raise e
         (* try to print the interfaces using the names given in the input *)
         val ()
           = (Name.pp_unchanged (Interface.names iface) (Interface.names oface))
@@ -183,36 +375,17 @@ struct
       in
         BgTerm_pp indent pps t handle e => raise e
       end handle e => raise e
+*)
+  val ppWithIface = pp' BgTerm.pp true
 
-  val oldpp = pp' BgTerm.oldpp
+  val oldpp = pp' BgTerm.oldpp false
   
-  val pp = pp' BgTerm.pp
+  val pp = pp' BgTerm.pp false
 
   fun pp_unchanged indent pps v =
     (Name.pp_unchanged NameSet.empty NameSet.empty;
      BgTerm.pp indent pps (#1 (unmk v)))
 
-  fun ppWithIface (indent:int) pps v =
-    let
-      val (t, iface, oface) = unmk v
-      (* try to print the interfaces using the names given in the input *)
-      val ()
-        = (Name.pp_unchanged (Interface.names iface) (Interface.names oface))
-          handle Name.PPUnchangedNameClash _ =>
-            Name.pp_unchanged NameSet.empty NameSet.empty
-    in
-      PrettyPrint.begin_block pps PrettyPrint.CONSISTENT 0;
-    	BgTerm.pp indent pps t;
-    	PrettyPrint.add_break pps (1, 0);
-    	PrettyPrint.add_string pps ": ";
-      PrettyPrint.begin_block pps PrettyPrint.CONSISTENT 0;
-    	Interface.pp indent pps iface;
-    	PrettyPrint.add_break pps (1, 0);
-    	PrettyPrint.add_string pps "-> ";
-    	Interface.pp indent pps oface;
-    	PrettyPrint.end_block pps;
-    	PrettyPrint.end_block pps
-    end
 
   val _ = Flags.makeIntFlag
             {name = "/misc/linewidth",
@@ -290,35 +463,6 @@ struct
             (mk_explainer "bgvals are not tensorable, due \
                           \to inner or outer name clash"
                           explain_NotTensorable)
-
-  fun innerface (VMer (n, i))   = Interface.m n
-    | innerface (VCon (X, i)) 
-      = Interface.make {loc = [X], glob = NameSet.empty}
-    | innerface (VWir (w, i))   = Interface.X (Wiring.innernames w)
-    | innerface (VIon (KyX, i)) 
-      = Interface.make {loc = [Ion.innernames KyX], glob = NameSet.empty}
-    | innerface (VPer (pi, _))  = Permutation.innerface pi
-    | innerface (VAbs (_, _, (innf, _, _))) = innf
-    | innerface (VTen (_, (innf, _, _)))    = innf
-    | innerface (VCom (_, _, (innf, _, _))) = innf
-
-  fun outerface (VMer (_, i))   = Interface.one
-    | outerface (VCon (X, i)) 
-      = Interface.make {loc = [NameSet.empty], glob = X}
-    | outerface (VWir (w, i))   = Interface.X (Wiring.outernames w)
-    | outerface (VIon (KyX, i)) =
-      let
-	val {free, ...} = Ion.unmk KyX
-	val y = NameSet.fromList free
-      in
-	Interface.make {loc = [NameSet.empty], glob = y}
-      end
-    | outerface (VPer (pi, _))  = Permutation.outerface pi
-    | outerface (VAbs (_, _, (_, outf, _))) = outf
-    | outerface (VTen (_, (_, outf, _)))    = outf
-    | outerface (VCom (_, _, (_, outf, _))) = outf
-
-  fun arecomposable v1 v2 = Interface.eq (innerface v1, outerface v2)
 
   fun Mer i n   = VMer (n, i)
   fun Con i X   = VCon (X, i)
@@ -1300,6 +1444,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	    end   
 	  | simplify (VWir (w, i)) = VWir (Wiring.removeidles w, i)              
     | simplify v = v
+
 
   (* Rxxx rules.
    * NB: We don't keep track of used names, but rely on

@@ -385,4 +385,12 @@ sig
 
   (** Revision number.*)
   val revision : string
+
+  (** tensor2parallel
+   * Substitutes || for ** by removal of y//X's.
+   * 
+   * TODO: NOT FULLY TESTED.
+   **)
+  val t2p : bgval -> (bgterm * interface * interface)
+
 end

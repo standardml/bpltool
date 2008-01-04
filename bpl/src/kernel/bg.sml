@@ -225,6 +225,26 @@ fun parseStr (kind, mkkind) filename str =
     end
 
 
+(* bgterm correspondent of bgvalUsefile'' *)
+fun bgtermUsefile'' filename =
+    let 
+      val _ = (ErrorMsg.reset(); ErrorMsg.fileName := filename)
+      val file = TextIO.openIn filename
+      fun get _ = TextIO.input file
+      fun parseerror (s, p1, p2) = ErrorMsg.error p1 p2 s
+      val lexer = BgTermLex.makeLexer get
+      val (bgterm, _)
+	= (BgTermParser.parse
+	     (30, 
+	      BgTermParser.Stream.streamify (lexer),
+	      parseerror, 
+	      ()))
+          handle e => (TextIO.closeIn file; raise e)
+    in
+      TextIO.closeIn file;
+      bgterm
+    end
+
 fun bgvalUseBgTermfile'' filename =
     let 
       val _ = (ErrorMsg.reset(); ErrorMsg.fileName := filename)

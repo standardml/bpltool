@@ -78,4 +78,38 @@ sig
   val pp : int -> PrettyPrint.ppstream -> interface -> unit
   (** Return a prettyprinted string representation of an interface. *)
   val toString : interface -> string
+
+  (** Abstraction on interface 
+   * Raises an error if abstraction is not welldefined.
+   * 
+   * @param X   Names to be abstracted.
+   * @param I   Interface to be abstracted.
+   * @return I' Interface I' = (X)I --- i.e. I with names X localized.
+   *)
+  val abs : nameset -> interface -> interface
+
+  (** Signals an attempted abstraction of a nonprime interface.
+   * @param interface      The nonprime interface.
+   *)
+  exception AbsOfNonPrimeIface of interface
+
+  (** Signals an attempted abstraction an interface of names 
+   * already local in that interface.
+   * @param interface      An interface.
+   * @param X              A set of names.
+   *)
+  exception AbsLocalNameClash of interface * nameset
+
+  (** Signals an attempted abstraction an interface of names
+   * not global in the interface.
+   * @param interface      An interface.
+   * @param X              A set of names.
+   *)
+   exception AbsMissingGlobalNames of interface * nameset
+
+  (** Construct the parallel product of two interfaces. *)
+  val || : (interface * interface) -> interface
+
+  (** Construct the parallel product of a list of interfaces. *)
+  val ||| : interface list -> interface
 end
