@@ -17,9 +17,10 @@ use "figinfo.sml";
 val Process        = "Process"
 val Instance       = "Instance"
 (*val SubProcesses   = "SubProcesses"*)
-val SubProcess     = "SubProcess"
-val SubInstances   = "SubInstances"
-val SubInstance    = "SubInstance"
+(*val SubProcess     = "SubProcess"*)
+val Instances      = "Instances"
+(*val Instances   = "Instances"*)
+(*val SubInstance    = "SubInstance"*)
 (*val FrozenSub      = "FrozenSub"*)
 val Scope          = "Scope"
 val ActiveScope    = "ActiveScope"
@@ -155,14 +156,16 @@ val Process      = passive  (Process     =: 1 --> 1);
  *   #2 is the instance identifier which (among other things) is used to
  *        determine the scope of variables within the instance to the
  *        instance itself. 
+ *   #3 if the instance has a parent the port should be connected to the
+ *        state node of the parent instance (like active scopes).
  *)
-val Instance     = active   (Instance    -:       2);
+val Instance     = active   (Instance    -:       3);
 
 (*(* SubProcesses is just a container node for SubProcess nodes.
  *)
 val SubProcesses = active0  (SubProcesses          );*)
 
-(* We use a different control for sub processes than processes to
+(*(* We use a different control for sub processes than processes to
  * prevent the invokation of sub processes using the Invoke activity -
  * in particular it prevents a process from invoking sub processes of
  * other processes.
@@ -177,13 +180,17 @@ val SubProcesses = active0  (SubProcesses          );*)
  *   #1 to the name of the process.
  *   (#2 to the scope port of the node delimiting its scope.)
  *)
-val SubProcess   = passive  (SubProcess  =: 1 --> 1);
+val SubProcess   = passive  (SubProcess  =: 1 --> 1);*)
 
-(* SubInstances is just a container node for SubInstance nodes.
+(* Instances is just a container node for Instance nodes.
  *)
-val SubInstances = active0  (SubInstances          );
+val Instances    = active0  (Instances             );
 
-(* The free ports of a SubInstance
+(*(* SubInstances is just a container node for SubInstance nodes.
+ *)
+val SubInstances = active0  (SubInstances          );*)
+
+(*(* The free ports of a SubInstance
  * 
  *   #1 should be connected to the name of the process.
  *   #2 is the sub-instance identifier analogous to the instance
@@ -191,7 +198,7 @@ val SubInstances = active0  (SubInstances          );
  *   #3 should be connected to the state node of the immediately
  *        enclosing instance (like active scopes).
  *)
-val SubInstance  = active   (SubInstance -:       3);
+val SubInstance  = active   (SubInstance -:       3);*)
 
 (*(* The binding ports of a FrozenSub
  *
@@ -707,7 +714,7 @@ val rule_scope_completed = "scope completed" :::
       o (    Variables    o (scope//[scope1] o `[scope1]`)
          `|` PartnerLinks o (scope//[scope2] o `[scope2]`)
          `|` SubLinks     o (scope//[scope3] o `[scope3]`)
-         `|` SubInstances o <->))
+         `|` Instances o <->))
 || Running[inst_id, active_scopes, inst_id_top]
 || TopRunning[inst_id_top]
   ----|>
@@ -729,29 +736,46 @@ val rule_scope_completed = "scope completed" :::
  *)
 val rule_inst_completed = "inst completed" :::
 
--//[inst_id, active_scopes]
-o (Instance[proc_name, inst_id]
+   Instance[proc_name, inst_id, active_scopes_sup]
    o (    Variables    o (inst_id//[inst_id1] o `[inst_id1]`)
       `|` PartnerLinks o (inst_id//[inst_id2] o `[inst_id2]`)
       `|` SubLinks     o (inst_id//[inst_id3] o `[inst_id3]`)
-      `|` SubInstances o <->
+      `|` Instances    o <->
+      `|` Running[inst_id, active_scopes, inst_id_top])
+|| TopRunning[inst_id_top]
+
+  ----|>
+
+   <-> || proc_name//[] || inst_id//[]
+       || active_scopes_sup//[] || active_scopes//[]
+|| TopRunning[inst_id_top];
+
+(*val rule_inst_completed = "inst completed" :::
+
+-//[inst_id, active_scopes]
+o (Instance[proc_name, inst_id, active_scopes_sup]
+   o (    Variables    o (inst_id//[inst_id1] o `[inst_id1]`)
+      `|` PartnerLinks o (inst_id//[inst_id2] o `[inst_id2]`)
+      `|` SubLinks     o (inst_id//[inst_id3] o `[inst_id3]`)
+      `|` Instances    o <->
       `|` Running[inst_id, active_scopes, inst_id]
       `|` TopRunning[inst_id]))
   ----|>
-<-> || proc_name//[];
-
+<-> || proc_name//[] || active_scopes_sup//[];
+*)
+(*
 (* we do the same for sub-instances, and detach the attached sub-link. *)
 val rule_sub_completed = "sub completed" :::
 
    -//[inst_id, active_scopes]
    o (    SubLinks
           o (SubLink[sub_link, sub_link_scope] o Link[inst_id] `|` `[]`)
-      `|` SubInstances
-          o (    SubInstance[proc_name, inst_id, active_scopes_sup]
+      `|` Instances
+          o (    Instance[proc_name, inst_id, active_scopes_sup]
                  o (    Variables    o (inst_id//[inst_id1] o `[inst_id1]`)
                     `|` PartnerLinks o (inst_id//[inst_id2] o `[inst_id2]`)
                     `|` SubLinks     o (inst_id//[inst_id3] o `[inst_id3]`)
-                    `|` SubInstances o <->
+                    `|` Instances    o <->
                     `|` Running[inst_id, active_scopes, inst_id_top])
              `|` `[]`))
 || TopRunning[inst_id_top]
@@ -761,9 +785,9 @@ val rule_sub_completed = "sub completed" :::
    proc_name//[] || active_scopes_sup//[]
 || (    SubLinks
         o (SubLink[sub_link, sub_link_scope] o <-> `|` `[]`)
-    `|` SubInstances o `[]`)
+    `|` Instances o `[]`)
 || TopRunning[inst_id_top];
-
+*)
 
 (* In the case of an Exit activity we change the status of the
  * (sub-)instance from running to stopped by replacing the Running node
@@ -786,19 +810,34 @@ val rule_exit_stop_inst = "exit stop inst" :::
  *)
 val rule_exit_remove_inst = "exit remove inst" :::
 
--//[inst_id, active_scopes]
-o (Instance[proc_name, inst_id]
-   o (Stopped[inst_id, active_scopes, inst_id] `|` `[inst_id, active_scopes]`))
-  ----|>
-<-> || proc_name//[];
+   Instance[proc_name, inst_id, active_scopes_sup]
+   o (    Stopped[inst_id, active_scopes, inst_id_top]
+      `|` `[inst_id, active_scopes]`)
+|| SubTransition[inst_id_top]
 
-(* We do the same for sub-instances, and detach the attached sub-link. *)
+  ----|>
+
+   <-> || proc_name//[] || inst_id//[]
+       || active_scopes_sup//[] || active_scopes//[]
+|| TopRunning[inst_id_top];
+
+(* If a top-level instance has completed or has been stopped, we
+ * garbage-collect the associated TopRunning node. *)
+val rule_gc_top_running = "gc top running" :::
+
+-/inst_id_top o TopRunning[inst_id_top]
+
+  ----|>
+
+<->;
+
+(*(* We do the same for sub-instances, and detach the attached sub-link. *)
 val rule_exit_remove_sub = "exit remove sub" :::
 
    -//[inst_id, active_scopes]
    o (    SubLinks
           o (SubLink[sub_link, sub_link_scope] o Link[inst_id] `|` `[]`)
-      `|` SubInstances
+      `|` Instances
           o (    SubInstance[proc_name, inst_id, active_scopes_sup]
                  o (    Stopped[inst_id, active_scopes, inst_id_top]
                     `|` `[inst_id, active_scopes]`)
@@ -809,8 +848,8 @@ val rule_exit_remove_sub = "exit remove sub" :::
 
    proc_name//[] || active_scopes_sup//[]
 || (   SubLinks o (SubLink[sub_link, sub_link_scope] o <-> `|` `[]`)
-    `|` SubInstances o `[]`)
-|| TopRunning[inst_id_top] handle e => explain e;
+    `|` Instances o `[]`)
+|| TopRunning[inst_id_top] handle e => explain e;*)
 
 
 
@@ -871,17 +910,18 @@ o (   GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
                      o (CreateInstance[oper] `|` `[]`)
                  `|` scope//[scope1] o `[scope1]`)
           `|` scope//[scope2] o `[scope2]`)
-       `|` Instance[proc_name, inst_id_invoked]
-           o (    PartnerLinks
-                  o (    PartnerLink[partner_link_invoked, inst_id_invoked]
-                         o (Link[inst_id_invoker] `|` Message[oper] o `[]`)
-                     `|` inst_id_invoked//[inst_id_invoked1]
-                         o `[inst_id_invoked1]`)
-              `|` -/active_scopes
-                  o Invoked[inst_id_invoked, active_scopes, inst_id_invoked]
-              `|` SubTransition[inst_id_invoked]
-              `|` inst_id_invoked//[inst_id_invoked2]
-                  o `[inst_id_invoked2]`)));
+       `|` -/active_scopes_sup
+           o Instance[proc_name, inst_id_invoked, active_scopes_sup]
+             o (    PartnerLinks
+                    o (    PartnerLink[partner_link_invoked, inst_id_invoked]
+                           o (Link[inst_id_invoker] `|` Message[oper] o `[]`)
+                       `|` inst_id_invoked//[inst_id_invoked1]
+                           o `[inst_id_invoked1]`)
+                `|` -/active_scopes
+                    o Invoked[inst_id_invoked, active_scopes, inst_id_invoked]
+                `|` inst_id_invoked//[inst_id_invoked2]
+                    o `[inst_id_invoked2]`)
+       `|` SubTransition[inst_id_invoked]));
 
 
 (* The receive rule takes care of activating the instance, by removing a
@@ -1097,28 +1137,31 @@ val rule_reply_sub = "reply sub" :::
  * FreezeSub activity.
  *
  * FIXME give tactic describing the intended use of the freezing rules
- *
- * Note: the following rule could be made less wide (=> faster matching)
- *       by exploiting the fact that a SubLink and the corresponding
- *       SubInstance always are in the same scope.
  *)
 val rule_freeze_sub = "freeze sub" :::
 
    FreezeSub[sub_link, sub_link_scope, var, var_scope, inst_id_sup]
-|| SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
-|| SubInstance[sub_name, inst_id_sub, active_scopes_sup]
-   o (Running[inst_id_sub, active_scopes_sub, inst_id_top] `|` `[]`)
+|| (    SubLinks
+        o (SubLink[sub_link, sub_link_scope] o Link[inst_id_sub] `|` `[]`)
+    `|` Instances
+        o (    Instance[sub_name, inst_id_sub, active_scopes_sup]
+               o (Running[inst_id_sub, active_scopes_sub, inst_id_top] `|` `[]`)
+           `|` `[]`))
 || Running[inst_id_sup, active_scopes_sup, inst_id_top]
 || TopRunning[inst_id_top]
 
   ----|>
 
    FreezingSub[sub_link, sub_link_scope, var, var_scope, inst_id_sup]
-|| SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
-|| SubInstance[sub_name, inst_id_sub, active_scopes_sup]
-   o (Freezing[inst_id_sub, active_scopes_sub, inst_id_top] `|` `[]`)
+|| (    SubLinks
+        o (SubLink[sub_link, sub_link_scope] o Link[inst_id_sub] `|` `[]`)
+    `|` Instances
+        o (    Instance[sub_name, inst_id_sub, active_scopes_sup]
+               o (Freezing[inst_id_sub, active_scopes_sub, inst_id_top] `|` `[]`)
+           `|` `[]`))
 || Running[inst_id_sup, active_scopes_sup, inst_id_top]
 || SubTransition[inst_id_top];
+
 
 (* An active scope can be frozen when all nested scopes and
  * sub-instances have been frozen. This is ensured by requiring that the
@@ -1147,14 +1190,14 @@ o (   Freezing[inst_id, active_scopes, inst_id_top]
 val rule_freeze_sub_instance = "freeze sub instance" :::
 
    Freezing[inst_id, active_scopes, inst_id_top]
-|| SubInstance[sub_name, inst_id_sub, active_scopes]
+|| Instance[sub_name, inst_id_sub, active_scopes]
    o (    Running[inst_id_sub, active_scopes_sub, inst_id_top]
       `|` `[]`)
 
   ----|>
 
    Freezing[inst_id, active_scopes, inst_id_top]
-|| SubInstance[sub_name, inst_id_sub, active_scopes]
+|| Instance[sub_name, inst_id_sub, active_scopes]
    o (    Freezing[inst_id_sub, active_scopes_sub, inst_id_top]
       `|` `[]`);
 
@@ -1170,8 +1213,8 @@ val rule_freeze_sub_instance2 = "freeze sub instance2" :::
 o (   Freezing[inst_id_sup, active_scopes, inst_id_top]
    || (    SubLinks
            o (SubLink[sub_link, sub_link_scope] o Link[inst_id_sub] `|` `[]`)
-       `|` SubInstances
-           o (    SubInstance[sub_name, inst_id_sub, active_scopes]
+       `|` Instances
+           o (    Instance[sub_name, inst_id_sub, active_scopes]
                   o (    -/active_scopes_sub
                          o Freezing[inst_id_sub, active_scopes_sub, inst_id_top]
                      `|` `[inst_id_sub]`)
@@ -1181,8 +1224,8 @@ o (   Freezing[inst_id_sup, active_scopes, inst_id_top]
 
    Freezing[inst_id_sup, active_scopes, inst_id_top]
 || (    SubLinks o `[]`
-    `|` SubInstances
-        o (    SubProcess[sub_name][[inst_id_sub]]
+    `|` Instances
+        o (    Process[sub_name][[inst_id_sub]]
                o (    SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
                   `|` `[inst_id_sub]`)
            `|` `[]`));
@@ -1200,7 +1243,7 @@ o (   FreezingSub[sub_link, sub_link_scope, var, var_scope, inst_id_sup]
    || SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
    || Running[inst_id_sup, active_scopes_sup, inst_id_top]
    || SubTransition[inst_id_top]
-   || SubInstance[sub_name, inst_id_sub, active_scopes_sup]
+   || Instance[sub_name, inst_id_sub, active_scopes_sup]
       o (    -/active_scopes_sub
              o Freezing[inst_id_sub, active_scopes_sub, inst_id_top]
          `|` `[inst_id_sub]`))
@@ -1209,7 +1252,7 @@ o (   FreezingSub[sub_link, sub_link_scope, var, var_scope, inst_id_sup]
 
    <->
 || Variable[var, var_scope]
-   o SubProcess[sub_name][[inst_id_sub]] o `[inst_id_sub]`
+   o Process[sub_name][[inst_id_sub]] o `[inst_id_sub]`
 || SubLink[sub_link, sub_link_scope] o <->
 || Running[inst_id_sup, active_scopes_sup, inst_id_top]
 || TopRunning[inst_id_top]
@@ -1221,9 +1264,9 @@ val rule_thaw_sub = "thaw sub" :::
 
    ThawSub[sub_link, sub_link_scope, var, var_scope, inst_id_sup]
 || Variable[var, var_scope]
-   o SubProcess[sub_name][[sub_scope]] o `[sub_scope]`
-|| (    SubLinks o (SubLink[sub_link, sub_link_scope] o <-> `|` `[]`)
-    `|` SubInstances o `[]`)
+   o Process[sub_name][[sub_scope]] o `[sub_scope]`
+|| (    SubLinks o (SubLink[sub_link, sub_link_scope] o `[]` `|` `[]`)
+    `|` Instances o `[]`)
 || Running[inst_id_sup, active_scopes_sup, inst_id_top]
 || TopRunning[inst_id_top]
 
@@ -1231,13 +1274,13 @@ val rule_thaw_sub = "thaw sub" :::
 
    <->
 || Variable[var, var_scope]
-   o SubProcess[sub_name][[sub_scope]] o `[sub_scope]`
+   o Process[sub_name][[sub_scope]] o `[sub_scope]`
 || -/inst_id_sub
    o (    SubLinks o (    SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
                       `|` `[]`)
-      `|` SubInstances
+      `|` Instances
           o (    `[]`
-             `|` SubInstance[sub_name, inst_id_sub, active_scopes_sup]
+             `|` Instance[sub_name, inst_id_sub, active_scopes_sup]
                  o (    -/active_scopes_sub
                         o Running[inst_id_sub, active_scopes_sub, inst_id_top]
                     `|` `[inst_id_sub]`)))
@@ -1253,8 +1296,8 @@ val rule_thaw_sub = "thaw sub" :::
 val rule_thaw_sub_instance = "thaw sub instance" :::
 
    (    SubLinks o `[]`
-    `|` SubInstances
-        o (    SubProcess[sub_name][[inst_id_sub]]
+    `|` Instances
+        o (    Process[sub_name][[inst_id_sub]]
                o (    SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
                   `|` `[inst_id_sub]`)
            `|` `[]`))
@@ -1266,8 +1309,8 @@ val rule_thaw_sub_instance = "thaw sub instance" :::
 -/inst_id_sub
 o (   (    SubLinks o (    SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
                        `|` `[]`)
-       `|` SubInstances
-           o (    SubInstance[sub_name, inst_id_sub, active_scopes_sup]
+       `|` Instances
+           o (    Instance[sub_name, inst_id_sub, active_scopes_sup]
                   o (    -/active_scopes_sub
                          o Running[inst_id_sub, active_scopes_sub, inst_id_top]
                      `|` `[inst_id_sub]`)
