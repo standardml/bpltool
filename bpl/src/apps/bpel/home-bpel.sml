@@ -48,6 +48,8 @@ val Assign         = "Assign"
 val Copy           = "Copy"
 val To             = "To"
 val From           = "From"
+val ToPLink        = "ToPLink"
+val FromPLink      = "FromPLink"
 val Exit           = "Exit"
 val PartnerLinks   = "PartnerLinks"    
 val PartnerLink    = "PartnerLink"
@@ -324,10 +326,18 @@ val Copy         = passive0 (Copy                  );
 (* The free ports of a To or From node should be connected
  *
  *   #1 to a variable name.
- *   #2 to the scope port of the node delimiting the variables scope.
+ *   #2 to the scope port of the node delimiting the variable's scope.
  *)
 val To           = atomic   (To          -:       2);
 val From         = atomic   (From        -:       2);
+
+(* The free ports of a ToPLink or FromPLink node should be connected
+ *
+ *   #1 to a partner link name.
+ *   #2 to the scope port of the node delimiting the partner link's scope.
+ *)
+val ToPLink      = atomic   (ToPLink     -:       2);
+val FromPLink    = atomic   (FromPLink   -:       2);
 
 (* The free ports of an Invoke node should be connected:
  * 
@@ -681,11 +691,10 @@ val rule_variable_reference = "variable reference" :::
  * describing their semantics.
  *)
 
-(* The assign copy activity copies the content inside the Variable node
- * pointed to by the From node to the Variable node pointed to by the To
- * node.
+(* The assign copy activity copies the content of a Variable/PartnerLink
+ * to a Variable/PartnerLink.
  *)
-val rule_assign_copy_variable = "assign copy variable" :::
+val rule_assign_copy_var2var = "assign copy var2var" :::
 
    Assign[inst_id] o Copy o (    From[f, scope1]
                              `|` To[t, scope2])
@@ -699,6 +708,57 @@ val rule_assign_copy_variable = "assign copy variable" :::
    <->
 || Variable[f, scope1] o `[]`
 || Variable[t, scope2] o `[]`
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top];
+
+val rule_assign_copy_var2plink = "assign copy var2plink" :::
+
+   Assign[inst_id] o Copy o (    From[f, scope1]
+                             `|` ToPLink[t, scope2])
+|| Variable[f, scope1] o `[]`
+|| PartnerLink[t, scope2] o `[]`
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top]
+
+  --[1 |-> 0]--|>
+
+   <->
+|| Variable[f, scope1] o `[]`
+|| PartnerLink[t, scope2] o `[]`
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top];
+
+val rule_assign_copy_plink2var = "assign copy plink2var" :::
+
+   Assign[inst_id] o Copy o (    FromPLink[f, scope1]
+                             `|` To[t, scope2])
+|| PartnerLink[f, scope1] o `[]`
+|| Variable[t, scope2] o `[]`
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top]
+
+  --[1 |-> 0]--|>
+
+   <->
+|| PartnerLink[f, scope1] o `[]`
+|| Variable[t, scope2] o `[]`
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top];
+
+val rule_assign_copy_plink2plink = "assign copy plink2plink" :::
+
+   Assign[inst_id] o Copy o (    FromPLink[f, scope1]
+                             `|` ToPLink[t, scope2])
+|| PartnerLink[f, scope1] o `[]`
+|| PartnerLink[t, scope2] o `[]`
+|| Running[inst_id, active_scopes, inst_id_top]
+|| TopRunning[inst_id_top]
+
+  --[1 |-> 0]--|>
+
+   <->
+|| PartnerLink[f, scope1] o `[]`
+|| PartnerLink[t, scope2] o `[]`
 || Running[inst_id, active_scopes, inst_id_top]
 || TopRunning[inst_id_top];
 
@@ -1346,7 +1406,7 @@ val rules =
     mkrules [rule_scope_activation, rule_scope_completed,
              rule_flow_completed, rule_sequence_completed,
              rule_if_true, rule_if_false, rule_while_unfold,
-             rule_assign_copy_variable,
+             rule_assign_copy_var2var,
              rule_invoke,
              rule_receive,
              rule_invoke_instance, rule_reply,
