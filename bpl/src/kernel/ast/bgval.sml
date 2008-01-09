@@ -267,7 +267,7 @@ struct
 	  val (GsandIdQs', Ss')     = 
 	      (ListPair.unzip o List.map (fn G => t2p'(G, ress (outernames G)))) Gs
 	  val (GsWIfaces', isNewId) = 
-	      foldr (fn ((H,QId),(Hs,QidAcc)) => (H::Hs,QId andalso QidAcc)) ([],false) GsandIdQs'
+	      foldr (fn ((H,QId),(Hs,QidAcc)) => (H::Hs,QId andalso QidAcc)) ([],true) GsandIdQs'
       in
 	  (((BgTerm.Par(List.map #1 GsWIfaces', i), 
 	     Interface.||| (List.map #2 GsWIfaces'), Interface.||| (List.map #3 GsWIfaces')), 
