@@ -10,6 +10,7 @@ val _ = OS.FileSys.chDir "../bpl/";
 use "smlnj.sml";
 val _ = OS.FileSys.chDir bpel_dir;
 use "figinfo.sml";
+Flags.setBoolFlag "/kernel/ast/bgval/tensor2parallel" true;
 
 (*******************************)
 (*     String Declarations     *)
@@ -52,6 +53,7 @@ val PartnerLinks   = "PartnerLinks"
 val PartnerLink    = "PartnerLink"
 val SubLinks       = "SubLinks"
 val SubLink        = "SubLink"
+val FrozenSupLink  = "FrozenSupLink"
 val Message        = "Message"
 val Link           = "Link"
 val CreateInstance = "CreateInstance"
@@ -63,7 +65,7 @@ val InvokeSub      = "InvokeSub"
 val ReceiveSub     = "ReceiveSub"
 val ReplySub       = "ReplySub"
 val GetReplySub    = "GetReplySub"
-val InvokeSup       = "InvokeSup"
+val InvokeSup      = "InvokeSup"
 val ReceiveSup     = "ReceiveSup"
 val ReplySup       = "ReplySup"
 val GetReplySup    = "GetReplySup"
@@ -383,6 +385,20 @@ val SubLinks     = active0  (SubLinks              );
  *   #2 to the scope port of the node delimiting its scope
  *)
 val SubLink      = passive  (SubLink     -:        2);
+(* The connection between a sub-link and a sub-instance cannot be
+ * maintained when the surrounding instance is frozen, since the
+ * sub-instance has to be frozen as well which means its instance-id
+ * must be bound.
+ * Thus we break the link, and instead insert a FrozenSupLink in the
+ * frozen sub-instance, which remembers which sub-link it was connected
+ * to.
+ *
+ * The free ports of a FrozenSupLink node should be connected:
+ *
+ *   #1 to the name of the sub link
+ *   #2 to the scope port of the node delimiting its scope
+ *)
+val FrozenSupLink = atomic (FrozenSupLink -: 2);
 
 (* The free port of a Message should be connected:
  *
@@ -1028,7 +1044,7 @@ val rule_invoke_sub = "invoke sub" :::
 
    InvokeSub[sub_link, sub_link_scope, oper, invar, invar_scope,
              outvar, outvar_scope, inst_id_sup]
-|| SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+|| SubLink[sub_link, sub_link_scope] o (Link[inst_id_sub] `|` `[]`)
 || Variable[invar, invar_scope] o `[]`
 || Running[inst_id_sup, active_scopes_sup, inst_id_top]
 || ReceiveSup[oper, var, var_scope, inst_id_sub]
@@ -1036,11 +1052,11 @@ val rule_invoke_sub = "invoke sub" :::
 || Running[inst_id_sub, active_scopes_sub, inst_id_top]
 || TopRunning[inst_id_top]
 
-  --[1 |-> 0]--|>
+  --[2 |-> 1]--|>
 
    GetReplySub[sub_link, sub_link_scope, oper,
                outvar, outvar_scope, inst_id_sup]
-|| SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+|| SubLink[sub_link, sub_link_scope] o (Link[inst_id_sub] `|` `[]`)
 || Variable[invar, invar_scope] o `[]`
 || Running[inst_id_sup, active_scopes_sup, inst_id_top]
 || <->
@@ -1060,18 +1076,18 @@ val rule_reply_sup = "reply sup" :::
 || Running[inst_id_sub, active_scopes_sub, inst_id_top]
 || GetReplySub[sub_link, sub_link_scope, oper,
                outvar, outvar_scope, inst_id_sup]
-|| SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+|| SubLink[sub_link, sub_link_scope] o (Link[inst_id_sub] `|` `[]`)
 || Variable[outvar, outvar_scope] o `[]`
 || Running[inst_id_sup, active_scopes_sup, inst_id_top]
 || TopRunning[inst_id_top]
 
-  --[1 |-> 0]--|>
+  --[2 |-> 0]--|>
 
    <-> || oper//[]
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_sub, active_scopes_sub, inst_id_top]
 || <->
-|| SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+|| SubLink[sub_link, sub_link_scope] o (Link[inst_id_sub] `|` `[]`)
 || Variable[outvar, outvar_scope] o `[]`
 || Running[inst_id_sup, active_scopes_sup, inst_id_top]
 || TopRunning[inst_id_top];
@@ -1087,18 +1103,18 @@ val rule_invoke_sup = "invoke sup" :::
 || Variable[invar, invar_scope] o `[]`
 || Running[inst_id_sub, active_scopes_sub, inst_id_top]
 || ReceiveSub[sub_link, sub_link_scope, oper, var, var_scope, inst_id_sup]
-|| SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+|| SubLink[sub_link, sub_link_scope] o (Link[inst_id_sub] `|` `[]`)
 || Variable[var, var_scope]
 || Running[inst_id_sup, active_scopes_sup, inst_id_top]
 || TopRunning[inst_id_top]
 
-  --[1 |-> 0]--|>
+  --[2 |-> 0]--|>
 
    GetReplySup[oper, outvar, outvar_scope, inst_id_sub]
 || Variable[invar, invar_scope] o `[]`
 || Running[inst_id_sub, active_scopes_sub, inst_id_top]
 || <->
-|| SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+|| SubLink[sub_link, sub_link_scope] o (Link[inst_id_sub] `|` `[]`)
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_sup, active_scopes_sup, inst_id_top]
 || TopRunning[inst_id_top];
@@ -1111,7 +1127,7 @@ val rule_invoke_sup = "invoke sup" :::
 val rule_reply_sub = "reply sub" :::
 
    ReplySub[sub_link, sub_link_scope, oper, var, var_scope, inst_id_sup]
-|| SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+|| SubLink[sub_link, sub_link_scope] o (Link[inst_id_sub] `|` `[]`)
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_sup, active_scopes_sup, inst_id_top]
 || GetReplySup[oper, outvar, outvar_scope, inst_id_sub]
@@ -1119,10 +1135,10 @@ val rule_reply_sub = "reply sub" :::
 || Running[inst_id_sub, active_scopes_sub, inst_id_top]
 || TopRunning[inst_id_top]
 
-  --[1 |-> 0]--|>
+  --[2 |-> 1]--|>
 
    <-> || oper//[]
-|| SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+|| SubLink[sub_link, sub_link_scope] o (Link[inst_id_sub] `|` `[]`)
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_sup, active_scopes_sup, inst_id_top]
 || <->
@@ -1141,8 +1157,9 @@ val rule_reply_sub = "reply sub" :::
 val rule_freeze_sub = "freeze sub" :::
 
    FreezeSub[sub_link, sub_link_scope, var, var_scope, inst_id_sup]
-|| (    SubLinks
-        o (SubLink[sub_link, sub_link_scope] o Link[inst_id_sub] `|` `[]`)
+|| (    SubLinks o (    SubLink[sub_link, sub_link_scope]
+                        o (Link[inst_id_sub] `|` `[]`)
+                    `|` `[]`)
     `|` Instances
         o (    Instance[sub_name, inst_id_sub, active_scopes_sup]
                o (Running[inst_id_sub, active_scopes_sub, inst_id_top] `|` `[]`)
@@ -1153,8 +1170,9 @@ val rule_freeze_sub = "freeze sub" :::
   ----|>
 
    FreezingSub[sub_link, sub_link_scope, var, var_scope, inst_id_sup]
-|| (    SubLinks
-        o (SubLink[sub_link, sub_link_scope] o Link[inst_id_sub] `|` `[]`)
+|| (    SubLinks o (    SubLink[sub_link, sub_link_scope]
+                        o (Link[inst_id_sub] `|` `[]`)
+                    `|` `[]`)
     `|` Instances
         o (    Instance[sub_name, inst_id_sub, active_scopes_sup]
                o (Freezing[inst_id_sub, active_scopes_sub, inst_id_top] `|` `[]`)
@@ -1203,16 +1221,17 @@ val rule_freeze_sub_instance = "freeze sub instance" :::
 
 (* When all those are frozen, ie. the active_scopes link of the
  * sub-sub-instance is only connected to the state node, the
- * sub-sub-instance is frozen (remaining at the same location) and the
- * SubLink is moved inside (to keep it connected to the instance id of
- * the sub-instance).
+ * sub-sub-instance is frozen (remaining at the same location) and a
+ * FrozenSupLink is inserted in the frozen instance to remember which
+ * SubLink it was connected to.
  *)
 val rule_freeze_sub_instance2 = "freeze sub instance2" :::
 
 -/inst_id_sub
 o (   Freezing[inst_id_sup, active_scopes, inst_id_top]
-   || (    SubLinks
-           o (SubLink[sub_link, sub_link_scope] o Link[inst_id_sub] `|` `[]`)
+   || (    SubLinks o (    SubLink[sub_link, sub_link_scope]
+                           o (Link[inst_id_sub] `|` `[]`)
+                       `|` `[]`)
        `|` Instances
            o (    Instance[sub_name, inst_id_sub, active_scopes]
                   o (    -/active_scopes_sub
@@ -1223,10 +1242,10 @@ o (   Freezing[inst_id_sup, active_scopes, inst_id_top]
   ----|>
 
    Freezing[inst_id_sup, active_scopes, inst_id_top]
-|| (    SubLinks o `[]`
+|| (    SubLinks o (SubLink[sub_link, sub_link_scope] o `[]` `|` `[]`)
     `|` Instances
         o (    Process[sub_name][[inst_id_sub]]
-               o (    SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+               o (    FrozenSupLink[sub_link, sub_link_scope]
                   `|` `[inst_id_sub]`)
            `|` `[]`));
 
@@ -1240,7 +1259,7 @@ val rule_freeze_complete = "freeze complete" :::
 -/inst_id_sub
 o (   FreezingSub[sub_link, sub_link_scope, var, var_scope, inst_id_sup]
    || Variable[var, var_scope] o `[]`
-   || SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+   || SubLink[sub_link, sub_link_scope] o (Link[inst_id_sub] `|` `[]`)
    || Running[inst_id_sup, active_scopes_sup, inst_id_top]
    || SubTransition[inst_id_top]
    || Instance[sub_name, inst_id_sub, active_scopes_sup]
@@ -1248,12 +1267,12 @@ o (   FreezingSub[sub_link, sub_link_scope, var, var_scope, inst_id_sup]
              o Freezing[inst_id_sub, active_scopes_sub, inst_id_top]
          `|` `[inst_id_sub]`))
 
-  --[0 |-> 1]--|>
+  --[0 |-> 2]--|>
 
    <->
 || Variable[var, var_scope]
    o Process[sub_name][[inst_id_sub]] o `[inst_id_sub]`
-|| SubLink[sub_link, sub_link_scope] o <->
+|| SubLink[sub_link, sub_link_scope] o `[]`
 || Running[inst_id_sup, active_scopes_sup, inst_id_top]
 || TopRunning[inst_id_top]
 || <->;
@@ -1270,13 +1289,14 @@ val rule_thaw_sub = "thaw sub" :::
 || Running[inst_id_sup, active_scopes_sup, inst_id_top]
 || TopRunning[inst_id_top]
 
-  --[3&[inst_id_sub] |--> 0&[sub_scope]]--|>
+  --[4&[inst_id_sub] |--> 0&[sub_scope]]--|>
 
    <->
 || Variable[var, var_scope]
    o Process[sub_name][[sub_scope]] o `[sub_scope]`
 || -/inst_id_sub
-   o (    SubLinks o (    SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+   o (    SubLinks o (    SubLink[sub_link, sub_link_scope]
+                          o (Link[inst_id_sub] `|` `[]`)
                       `|` `[]`)
       `|` Instances
           o (    `[]`
@@ -1295,10 +1315,10 @@ val rule_thaw_sub = "thaw sub" :::
  *)
 val rule_thaw_sub_instance = "thaw sub instance" :::
 
-   (    SubLinks o `[]`
+   (    SubLinks o (SubLink[sub_link, sub_link_scope] o `[]` `|` `[]`)
     `|` Instances
         o (    Process[sub_name][[inst_id_sub]]
-               o (    SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+               o (    FrozenSupLink[sub_link, sub_link_scope]
                   `|` `[inst_id_sub]`)
            `|` `[]`))
 || Running[inst_id_sup, active_scopes_sup, inst_id_top]
@@ -1307,7 +1327,8 @@ val rule_thaw_sub_instance = "thaw sub instance" :::
   ----|>
 
 -/inst_id_sub
-o (   (    SubLinks o (    SubLink[sub_link, sub_link_scope] o Link[inst_id_sub]
+o (   (    SubLinks o (    SubLink[sub_link, sub_link_scope]
+                           o (Link[inst_id_sub] `|` `[]`)
                        `|` `[]`)
        `|` Instances
            o (    Instance[sub_name, inst_id_sub, active_scopes_sup]
