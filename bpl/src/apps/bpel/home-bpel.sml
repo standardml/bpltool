@@ -1484,10 +1484,10 @@ val engine_process = <->;
 
 <instance name="engine" id="1">
   <partnerLinks>
-    <partnerLink name="engine_client"><link ref="2" />/<partnerLink>
+    <partnerLink name="engine_client"><link ref="2" /></partnerLink>
   </partnerLinks>
   <subLinks>
-    <subLink name="subinsts"><link ref="3" /><link ref="4" />/<subLink>
+    <subLink name="subinsts"><link ref="3" /><link ref="4" /></subLink>
   </subLinks>
   <variables>
     <variable name="in"><process name="treatment">...</process></variable>
