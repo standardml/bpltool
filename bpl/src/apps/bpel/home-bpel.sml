@@ -82,8 +82,7 @@ val inst_id1                   = "inst_id1"
 val inst_id2                   = "inst_id2"
 val inst_id3                   = "inst_id3"
 val inst_id4                   = "inst_id4"
-val inst_id_invoker            = "inst_id_invoker"
-val inst_id_invoked            = "inst_id_invoked"
+val inst_id_invoker            = "inst_id_invoker"val inst_id_invoked            = "inst_id_invoked"
 val inst_id_invoked1           = "inst_id_invoked1"
 val inst_id_invoked2           = "inst_id_invoked2"
 val inst_id_top                = "inst_id_top"
@@ -141,6 +140,7 @@ val caller_id                  = "caller_id"
 
 
 (* NEW PART *)
+val doctor_hired               = "doctor_hired"
 val doctor_id                  = "doctor_id"
 val doctor                     = "doctor"
 val doctor_scope               = "doctor_scope"
@@ -1575,7 +1575,73 @@ val engine_instance = <->;
   </sequence>
 </process>
  *)
-val doctor_process = <->;
+(* FIXME some of the names should probably be closed ? *)
+(* I have only used doctor_id since I got confused making the 
+   doctor_instance, see below :D *)
+
+val doctor_process = 
+Process[doctor][[doctor_id]] o 
+(
+      PartnerLinks o (
+          PartnerLink[hospital, doctor_id] o CreateInstance[doctor_hired]
+      `|` PartnerLink[patient, doctor_id]  o <->
+      ) 
+  `|` SubLinks o SubLink[treatment, doctor_id] o <->
+  `|` Variables o (
+          Variable[invar, doctor_id] o <->
+      `|` Variable[out, doctor_id] o True
+      ) 
+(* what about an empty `|` Instances o <-> ???? *)
+  `|` 
+  Sequence[doctor_id] 
+  o (  Receive[hospital, doctor_id, doctor_hired, invar, doctor_id, doctor_id]   
+   `|` Next o Sequence[doctor_id] 
+       o (  Reply[hospital, doctor_id, doctor_hired, out, doctor_id, doctor_id]
+	`|` Next o While[doctor_id] 
+	    o (  Condition o True
+	     `|` Sequence[doctor_id]
+		o (  Receive[hospital, doctor_id, patient, 
+			     invar, doctor_id, doctor_id]
+		 `|` Next o Sequence[doctor_id]
+		     o (  Reply[hospital, doctor_id, patient, out, 
+				doctor_id, doctor_id]
+		      `|` Next o Sequence[doctor_id]
+			  o (  Assign[doctor_id] o Copy o 
+			       ( From[invar, doctor_id] 
+				 `|` ToPLink[patient, doctor_id])
+		           `|` Next o Sequence[doctor_id]
+    (* So there is a sublink called treatment and an operation on a  *)
+    (* partnerlink called treatment ???? *)
+			       o (  Receive[hospital, doctor_id, treatment, invar, 
+					    doctor_id, doctor_id]
+				`|` Next o Sequence[doctor_id]
+				    o (  Reply[hospital, doctor_id, treatment, out, 
+					       doctor_id, doctor_id]
+			             `|` Next o Sequence[doctor_id] 
+					 o (  ThawSub[treatment, doctor_id, invar, 
+						      doctor_id, doctor_id] 
+				          `|` Next o Sequence[doctor_id] 
+					      o (  InvokeSub[treatment, doctor_id, perform_treatment, 
+							     out, doctor_id, out, doctor_id, 
+							     doctor_id]
+				               `|` Next o Sequence[doctor_id] 
+						   o (  FreezeSub[treatment, doctor_id, invar, 
+								  doctor_id, doctor_id]
+				                    `|` Next o Invoke[patient, doctor_id, run, 
+								      invar, doctor_id, out, 
+								      doctor_id, doctor_id]
+						     )
+						)
+					   )
+				      )
+				 )
+			    )
+		       )
+		  )
+	      )
+	 )
+    )
+)
 
 (* A doctor instance:
 
@@ -1607,6 +1673,8 @@ val doctor_process = <->;
 (* FIXME *)
 (* close several of the links *)
 (* insert while-loop ??? *)
+(* TO ESPEN: I think I got confused between 'scope port' and 'instance identifier' *)
+(* and thereby both created doctor_id and doctor_scope, but shouldn't they be the same ? *)
 val doctor_instance = 
 -//[doctor_id, parent, doctor_scope] o
 (
@@ -1615,8 +1683,8 @@ val doctor_instance =
   (Instance[doctor, doctor_id, parent] o 
         Running[doctor_scope, active_scopes, doctor_id] 
     `|` PartnerLinks o (
-             PartnerLink[hospital, doctor_scope] o Link[hospital_id]
-         `|` PartnerLink[patient, doctor_scope] o Link[engine_id]
+            PartnerLink[hospital, doctor_scope] o Link[hospital_id]
+        `|` PartnerLink[patient, doctor_scope] o Link[engine_id]
         )
     `|` SubLinks o SubLink[treatment, doctor_scope] o Link[surgery_id]
     `|` Variables o (
