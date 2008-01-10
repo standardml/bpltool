@@ -140,6 +140,26 @@ val caller                     = "caller"
 val caller_id                  = "caller_id"
 
 
+(* NEW PART *)
+val doctor_id                  = "doctor_id"
+val doctor                     = "doctor"
+val doctor_scope               = "doctor_scope"
+val parent                     = "parent"
+val surgery_id                 = "surgery_id"
+val surgery                    = "surgery"
+val surgery_scope              = "surgery_scope"
+val patient                    = "patient"
+val patient_scope              = "patient_scope"
+val out                        = "out"
+val run                        = "run"
+val hospital_id                = "hospital_id"
+val hospital                   = "hospital"
+val treatment                  = "treatment"
+val engine_id                  = "engine_id"
+val active_scopes              = "active_scopes"
+val perform_treatment          = "perform_treatment"
+
+
 
 (*******************************)
 (*          Signature          *)
@@ -229,8 +249,7 @@ val FrozenSub    = passive  (FrozenSub   =: 1 --> 1);*)
  *
  * The free ports of a TopRunning or SubTransition node
  *
- *   #1 should be connected to the instance identifier of the enclosing
- *        top-level instance
+ *   #1 should be connected to the instance identifier of the instance
  *)
 val TopRunning    = atomic   (TopRunning    -:       1);
 val SubTransition = atomic   (SubTransition -:       1);
@@ -1428,6 +1447,7 @@ val rules =
     mkrules [rule_scope_activation, rule_scope_completed,
              rule_flow_completed, rule_sequence_completed,
              rule_if_true, rule_if_false, rule_while_unfold,
+	     rule_variable_reference,
              rule_assign_copy_var2var,
              rule_assign_copy_var2plink,
              rule_assign_copy_plink2var,
@@ -1435,8 +1455,14 @@ val rules =
              rule_invoke,
              rule_receive,
              rule_invoke_instance, rule_reply,
+	     rule_invoke_sub, rule_reply_sup,
+	     rule_invoke_sup, rule_reply_sub,
+	     rule_freeze_sub, rule_freeze_scope,
+	     rule_freeze_sub_instance, rule_freeze_sub_instance2,
+	     rule_freeze_complete, rule_thaw_sub,
+	     rule_thaw_sub_instance, 
              rule_exit_stop_inst, rule_exit_remove_inst,
-             rule_inst_completed];
+             rule_inst_completed, rule_gc_top_running];
 
 val tactic = roundrobin;
 
@@ -1578,7 +1604,44 @@ val doctor_process = <->;
   </sequence>
 </instance>
 *)
-val doctor_instance = <->;
+(* FIXME *)
+(* close several of the links *)
+(* insert while-loop ??? *)
+val doctor_instance = 
+-//[doctor_id, parent, doctor_scope] o
+(
+  TopRunning[doctor_id] 
+  `|`
+  (Instance[doctor, doctor_id, parent] o 
+        Running[doctor_scope, active_scopes, doctor_id] 
+    `|` PartnerLinks o (
+             PartnerLink[hospital, doctor_scope] o Link[hospital_id]
+         `|` PartnerLink[patient, doctor_scope] o Link[engine_id]
+        )
+    `|` SubLinks o SubLink[treatment, doctor_scope] o Link[surgery_id]
+    `|` Variables o (
+            Variable[invar, doctor_scope] o Process[surgery][[surgery_scope]] o <->  (* ... *)
+        `|` Variable[out, doctor_scope] o True
+        ) 
+    `|` Instances o Instance[surgery, surgery_id, doctor_id] o <->
+    `|`
+    Sequence[doctor_id] 
+    o (    InvokeSub[treatment, doctor_scope, perform_treatment, out, doctor_scope, 
+		     out, doctor_scope, doctor_id]
+       `|` Next o Sequence[doctor_id]
+                o (    FreezeSub[treatment, doctor_scope, invar, 
+				 doctor_scope, doctor_id]
+                   `|` Next o Sequence[doctor_id] 
+		            o (    Invoke[patient, patient_scope, run, 
+					  invar, doctor_scope, out, doctor_scope, 
+					  doctor_id] 
+                               `|` Next o While[doctor_id] o <-> (* ... *)
+
+			      )
+		  )
+      )
+  )
+);
 
 
 (* The rest is unchanged from the GT-VMT version. *)
