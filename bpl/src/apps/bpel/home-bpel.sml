@@ -502,16 +502,21 @@ val ReplySup     = atomic   (ReplySup    -:       4);
  *)
 val GetReply     = atomic   (GetReply    -:       6);
 
-(* The free ports of a GetReplySub node should be connected:
+(* As a sub-link doesn't uniquely identify the sub-instance to which the
+ * corresponding InvokeSub sent a message, GetReplySub needs a direct
+ * link to the instance identifier of that particular sub-instance.
+ *
+ * The free ports of a GetReplySub node should be connected:
  * 
  *   #1 to the name of the sub-link
  *   #2 to the same scope port as the sub-link
- *   #3 to the name of the operation
- *   #4 to the name of the output variable
- *   #5 to the same scope port as the output variable
- *   #6 to the instance identifier of its enclosing instance
+ *   #3 to the instance identifier of the sub-instance
+ *   #4 to the name of the operation
+ *   #5 to the name of the output variable
+ *   #6 to the same scope port as the output variable
+ *   #7 to the instance identifier of its enclosing instance
  *)
-val GetReplySub  = atomic   (GetReplySub -:       6);
+val GetReplySub  = atomic   (GetReplySub -:       7);
 
 (* The free ports of a GetReplySup node should be connected:
  * 
@@ -1114,7 +1119,7 @@ val rule_invoke_sub = "invoke sub" :::
 
   --[2 |-> 1]--|>
 
-   GetReplySub[sub_link, sub_link_scope, oper,
+   GetReplySub[sub_link, sub_link_scope, inst_id_sub, oper,
                outvar, outvar_scope, inst_id_sup]
 || SubLink[sub_link, sub_link_scope] o (Link[inst_id_sub] `|` `[]`)
 || Variable[invar, invar_scope] o `[]`
@@ -1134,7 +1139,7 @@ val rule_reply_sup = "reply sup" :::
    ReplySup[oper, var, var_scope, inst_id_sub]
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_sub, active_scopes_sub, inst_id_top]
-|| GetReplySub[sub_link, sub_link_scope, oper,
+|| GetReplySub[sub_link, sub_link_scope, inst_id_sub, oper,
                outvar, outvar_scope, inst_id_sup]
 || SubLink[sub_link, sub_link_scope] o (Link[inst_id_sub] `|` `[]`)
 || Variable[outvar, outvar_scope] o `[]`
