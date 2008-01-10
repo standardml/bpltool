@@ -62,6 +62,7 @@ val CreateInstance = "CreateInstance"
 val Invoke         = "Invoke"
 val Receive        = "Receive"
 val Reply          = "Reply"
+val ReplyTo        = "ReplyTo"
 val GetReply       = "GetReply"
 val InvokeSub      = "InvokeSub"
 val ReceiveSub     = "ReceiveSub"
@@ -394,7 +395,7 @@ val SubLinks     = active0  (SubLinks              );
  *   #1 to the name of the sub link
  *   #2 to the scope port of the node delimiting its scope
  *)
-val SubLink      = passive  (SubLink     -:        2);
+val SubLink      = passive  (SubLink     -:       2);
 (* The connection between a sub-link and a sub-instance cannot be
  * maintained when the surrounding instance is frozen, since the
  * sub-instance has to be frozen as well which means its instance-id
@@ -408,13 +409,13 @@ val SubLink      = passive  (SubLink     -:        2);
  *   #1 to the name of the sub link
  *   #2 to the scope port of the node delimiting its scope
  *)
-val FrozenSupLink = atomic (FrozenSupLink -: 2);
+val FrozenSupLink = atomic  (FrozenSupLink -:     2);
 
 (* The free port of a Message should be connected:
  *
  *   #1 to the name of the operation the message pertains to
  *)
-val Message      = passive  (Message     -:        1);
+val Message      = passive  (Message     -:       1);
 
 (* The free port of a Link should be connected:
  *
@@ -470,6 +471,18 @@ val ReceiveSup   = atomic   (ReceiveSup  -:       4);
  *   #6 to the instance identifier of its enclosing instance
  *)
 val Reply        = atomic   (Reply       -:       6);
+
+(* Since it is possible to copy partner-links, an instance can be
+ * invoked by previously unknown partners. When invoked, it therefor
+ * needs a way to "remember" whom to reply to -- this is accomplished
+ * by placing a ReplyTo node in the relevant partner-link.
+ *
+ * The free ports of a ReplyTo node should be connected:
+ * 
+ *   #1 to the name of the operation
+ *   #2 to the instance identifier of the instance to reply to.
+ *)
+val ReplyTo      = atomic   (ReplyTo     -:       2);
 
 (* The free ports of a ReplySub node should be connected:
  * 
@@ -995,7 +1008,9 @@ o (   GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
            o Instance[proc_name, inst_id_invoked, active_scopes_sup]
              o (    PartnerLinks
                     o (    PartnerLink[partner_link_invoked, inst_id_invoked]
-                           o (Link[inst_id_invoker] `|` Message[oper] o `[]`)
+                           o (    Link[inst_id_invoker]
+                              `|` Message[oper] o `[]`
+                              `|` ReplyTo[oper, inst_id_invoker])
                        `|` inst_id_invoked//[inst_id_invoked1]
                            o `[inst_id_invoked1]`)
                 `|` -/active_scopes
@@ -1048,11 +1063,12 @@ val rule_invoke_instance = "invoke_instance" :::
 || TopRunning[inst_id_top_invoker]
 || Receive[partner_link_invoked, partner_link_scope_invoked, oper,
            var, var_scope, inst_id_invoked]
+|| PartnerLink[partner_link_invoked, partner_link_scope_invoked] o `[]`
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_invoked, active_scopes_invoked, inst_id_top_invoked]
 || TopRunning[inst_id_top_invoked]
 
-  --[2 |-> 1]--|>
+  --[3 |-> 1]--|>
 
    GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
             outvar, outvar_scope, inst_id_invoker]
@@ -1061,7 +1077,9 @@ val rule_invoke_instance = "invoke_instance" :::
 || Variable[invar, invar_scope] o `[]`
 || Running[inst_id_invoker, active_scopes_invoker, inst_id_top_invoker]
 || TopRunning[inst_id_top_invoker]
-|| <-> || partner_link_invoked//[] || partner_link_scope_invoked//[]
+|| <->
+|| PartnerLink[partner_link_invoked, partner_link_scope_invoked]
+   o (`[]` `|` ReplyTo[oper, inst_id_invoker])
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_invoked, active_scopes_invoked, inst_id_top_invoked]
 || TopRunning[inst_id_top_invoked];
@@ -1076,7 +1094,7 @@ val rule_reply = "reply" :::
    Reply[partner_link_invoked, partner_link_scope_invoked, oper,
          var, var_scope, inst_id_invoked]
 || PartnerLink[partner_link_invoked, partner_link_scope_invoked]
-   o (Link[inst_id_invoker] `|` `[]`)
+   o (ReplyTo[oper, inst_id_invoker] `|` `[]`)
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_invoked, active_scopes_invoked, inst_id_top_invoked]
 || TopRunning[inst_id_top_invoked]
@@ -1089,8 +1107,7 @@ val rule_reply = "reply" :::
   --[2 |-> 1]--|>
 
    <-> || oper//[]
-|| PartnerLink[partner_link_invoked, partner_link_scope_invoked]
-   o (Link[inst_id_invoker] `|` `[]`)
+|| PartnerLink[partner_link_invoked, partner_link_scope_invoked] o `[]`
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_invoked, active_scopes_invoked, inst_id_top_invoked]
 || TopRunning[inst_id_top_invoked]
@@ -1412,9 +1429,9 @@ val rules =
              rule_flow_completed, rule_sequence_completed,
              rule_if_true, rule_if_false, rule_while_unfold,
              rule_assign_copy_var2var,
-	     rule_assign_copy_var2plink,
-	     rule_assign_copy_plink2var,
-	     rule_assign_copy_plink2plink,
+             rule_assign_copy_var2plink,
+             rule_assign_copy_plink2var,
+             rule_assign_copy_plink2plink,
              rule_invoke,
              rule_receive,
              rule_invoke_instance, rule_reply,
@@ -1422,6 +1439,147 @@ val rules =
              rule_inst_completed];
 
 val tactic = roundrobin;
+
+
+(*******************************)
+(*       Example processes     *)
+(*******************************)
+
+(* A simple engine process: it is started by the operation
+ * "start_engine" after which it repeatedly provides the operation "run"
+ * which receives a process and executes it.
+ * It replies True to the sender in response to both operations, since
+ * replies are required.
+ *
+ * <process name="engine">
+ *   <partnerLinks>
+ *     <partnerLink name="engine_client" />
+ *   </partnerLinks>
+ *   <subLinks>
+ *     <subLink name="subinsts" />
+ *   </subLinks>
+ *   <variables>
+ *     <variable name="in" />
+ *     <variable name="out"><from>true()</from></variable>
+ *   </variables>
+ *   <sequence>
+ *     <receive partnerLink="engine_client" operation="start_engine"
+ *              createInstance="yes" variable="in" />
+ *     <reply   partnerLink="engine_client" operation="start_engine"
+ *              variable="out" />
+ *     <while>
+ *       <condition>true()</condition>
+ *       <sequence>
+ *         <receive partnerLink="engine_client" operation="run" variable="in" />
+ *         <reply   partnerLink="engine_client" operation="run" variable="out" />
+ *         <thaw variable="in" subLink="subinsts" />
+ *       </sequence>
+ *     </while>
+ *   </sequence>
+ * </process>
+ *)
+val engine_process = <->;
+
+(* An engine instance:
+
+<instance name="engine" id="1">
+  <partnerLinks>
+    <partnerLink name="engine_client"><link ref="2" />/<partnerLink>
+  </partnerLinks>
+  <subLinks>
+    <subLink name="subinsts"><link ref="3" /><link ref="4" />/<subLink>
+  </subLinks>
+  <variables>
+    <variable name="in"><process name="treatment">...</process></variable>
+    <variable name="out"><true /></variable>
+  </variables>
+  <instances>
+    <instance name="medication" id="3">...</instance>
+    <instance name="treatment" id="4">...</instance>
+  </instances>
+  <sequence>
+     <receive partnerLink="engine_client" operation="run" variable="in" />
+     <reply   partnerLink="engine_client" operation="run" variable="out" />
+     <thaw variable="in" subLink="subinsts" />
+     <while>[the same as in the process definition]</while>
+  </sequence>
+</instance>
+ *)
+val engine_instance = <->;
+
+(* A doctor process: 
+ *
+<process name="doctor">
+  <partnerLinks>
+    <partnerLink name="hospital" />
+    <partnerLink name="patient" />
+  </partnerLinks>
+  <subLinks>
+    <subLink name="treatment" />
+  </subLinks>
+  <variables>
+    <variable name="in" />
+    <variable name="out"><from>true()</from></variable>
+  </variables>
+  <sequence>
+    <receive partnerLink="hospital" operation="doctor_hired"
+             createInstance="yes" variable="in" />
+    <reply   partnerLink="hospital" operation="doctor_hired" variable="out" />
+    <while>
+      <condition>true()</condition>
+      <sequence>
+        <receive partnerLink="hospital" operation="patient" variable="in" />
+        <reply   partnerLink="hospital" operation="patient" variable="out" />
+        <assign><copy>
+            <from variable="in" />
+            <to   partnerLink="patient" />
+        </copy></assign>
+        <receive partnerLink="hospital" operation="treatment"
+                 variable="in" />
+        <reply   partnerLink="hospital" operation="treatment"
+                 variable="out" />
+        <thawSub   subLink="treatment" variable="in" />
+        <invokeSub subLink="treatment" operation="perform_treatment"
+                   inputVariable="out" outputVariable="out" />
+        <freezeSub subLink="treatment" variable="in" />
+        <invoke partnerLink="patient" operation="run"
+                inputVariable="in" outputVariable="out" />
+      </sequence>
+    </while>
+  </sequence>
+</process>
+ *)
+val doctor_process = <->;
+
+(* A doctor instance:
+
+<instance name="doctor" id="2">
+  <partnerLinks>
+    <partnerLink name="hospital"><link ref="5" /></partnerLink>
+    <partnerLink name="patient"><link ref="1" /></partnerLink>
+  </partnerLinks>
+  <subLinks>
+    <subLink name="treatment"><link ref="6" /></subLink>
+  </subLinks>
+  <variables>
+    <variable name="in"><process name="surgery">...</process></variable>
+    <variable name="out"><true /></variable>
+  </variables>
+  <instances>
+    <instance name="surgery" id="6">...</instance>
+  </instances>
+  <sequence>
+    <invokeSub subLink="treatment" operation="perform_treatment"
+               inputVariable="out" outputVariable="out" />
+    <freezeSub subLink="treatment" variable="in" />
+    <invoke partnerLink="patient" operation="run"
+            inputVariable="in" outputVariable="out" />
+    <while>[the same as in the process definition]</while>
+  </sequence>
+</instance>
+*)
+val doctor_instance = <->;
+
 
 (* The rest is unchanged from the GT-VMT version. *)
 
