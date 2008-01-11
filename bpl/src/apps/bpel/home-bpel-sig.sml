@@ -91,6 +91,11 @@ val FrozenSub    = passive  (FrozenSub   =: 1 --> 1);*)
 val TopRunning    = atomic   (TopRunning    -:       1);
 val SubTransition = atomic   (SubTransition -:       1);
 
+(* To keep top-level instances related to the associated TopRunning/
+ * SubTransition node, we encapsulate them in a TopInstance node.
+ *)
+val TopInstance   = active0  (TopInstance             );
+
 (* The following controls are used to keep track of the state of
  * individual instances:
  *

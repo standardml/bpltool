@@ -322,13 +322,11 @@ val rule_exit_remove_inst = "exit remove inst" :::
 || TopRunning[inst_id_top];
 
 (* If a top-level instance has completed or has been stopped, we
- * garbage-collect the associated TopRunning node. *)
-val rule_gc_top_running = "gc top running" :::
+ * garbage-collect it. *)
+val rule_top_instance_completed = "top instance completed" :::
 
--/inst_id_top o TopRunning[inst_id_top]
-
+TopInstance o (-/inst_id_top o TopRunning[inst_id_top])
   ----|>
-
 <->;
 
 (*(* We do the same for sub-instances, and detach the attached sub-link. *)
@@ -404,26 +402,27 @@ o (   GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
    || Variable[invar, invar_scope] o `[]`
    || Running[inst_id_invoker, active_scopes_invoker, inst_id_top_invoker]
    || TopRunning[inst_id_top_invoker]
-   || (Process[proc_name][[scope]]
-       o (    PartnerLinks
-              o (    PartnerLink[partner_link_invoked, scope]
-                     o (CreateInstance[oper] `|` `[]`)
-                 `|` scope//[scope1] o `[scope1]`)
-          `|` scope//[scope2] o `[scope2]`)
-       `|` -/active_scopes_sup
-           o Instance[proc_name, inst_id_invoked, active_scopes_sup]
-             o (    PartnerLinks
-                    o (    PartnerLink[partner_link_invoked, inst_id_invoked]
-                           o (    Link[inst_id_invoker]
-                              `|` Message[oper] o `[]`
-                              `|` ReplyTo[oper, inst_id_invoker])
-                       `|` inst_id_invoked//[inst_id_invoked1]
-                           o `[inst_id_invoked1]`)
-                `|` -/active_scopes
-                    o Invoked[inst_id_invoked, active_scopes, inst_id_invoked]
-                `|` inst_id_invoked//[inst_id_invoked2]
-                    o `[inst_id_invoked2]`)
-       `|` SubTransition[inst_id_invoked]));
+   || (    Process[proc_name][[scope]]
+           o (    PartnerLinks
+                  o (    PartnerLink[partner_link_invoked, scope]
+                         o (CreateInstance[oper] `|` `[]`)
+                     `|` scope//[scope1] o `[scope1]`)
+              `|` scope//[scope2] o `[scope2]`)
+       `|` TopInstance
+           o (    SubTransition[inst_id_invoked]
+              `|` -/active_scopes_sup
+                  o Instance[proc_name, inst_id_invoked, active_scopes_sup]
+                    o (    PartnerLinks
+                           o (    PartnerLink[partner_link_invoked, inst_id_invoked]
+                                  o (    Link[inst_id_invoker]
+                                     `|` Message[oper] o `[]`
+                                     `|` ReplyTo[oper, inst_id_invoker])
+                              `|` inst_id_invoked//[inst_id_invoked1]
+                                  o `[inst_id_invoked1]`)
+                       `|` -/active_scopes
+                           o Invoked[inst_id_invoked, active_scopes, inst_id_invoked]
+                       `|` inst_id_invoked//[inst_id_invoked2]
+                           o `[inst_id_invoked2]`))));
 
 
 (* The receive rule takes care of activating the instance, by removing a
@@ -849,4 +848,4 @@ val rules =
              rule_freeze_complete, rule_thaw_sub,
              rule_thaw_sub_instance, 
              rule_exit_stop_inst, rule_exit_remove_inst,
-             rule_inst_completed, rule_gc_top_running];
+             rule_inst_completed, rule_top_instance_completed];
