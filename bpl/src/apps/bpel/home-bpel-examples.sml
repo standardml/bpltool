@@ -111,68 +111,52 @@ val engine_instance = <->;
    doctor_instance, see below :D *)
 
 val doctor_process = 
-Process[doctor][[doctor_id]] o 
-(
-      PartnerLinks o (
-          PartnerLink[hospital, doctor_id] o CreateInstance[doctor_hired]
-      `|` PartnerLink[patient, doctor_id]  o <->
-      ) 
-  `|` SubLinks o SubLink[treatment, doctor_id] o <->
-  `|` Variables o (
-          Variable[invar, doctor_id] o <->
-      `|` Variable[out, doctor_id] o True
-      ) 
-(* what about an empty `|` Instances o <-> ???? *)
-  `|` 
-  Sequence[doctor_id] 
-  o (  Receive[hospital, doctor_id, doctor_hired, invar, doctor_id, doctor_id]   
-   `|` Next o Sequence[doctor_id] 
-       o (  Reply[hospital, doctor_id, doctor_hired, out, doctor_id, doctor_id]
-  `|` Next o While[doctor_id] 
-      o (  Condition o True
-       `|` Sequence[doctor_id]
-    o (  Receive[hospital, doctor_id, patient, 
-           invar, doctor_id, doctor_id]
-     `|` Next o Sequence[doctor_id]
-         o (  Reply[hospital, doctor_id, patient, out, 
-        doctor_id, doctor_id]
-          `|` Next o Sequence[doctor_id]
-        o (  Assign[doctor_id] o Copy o 
-             ( From[invar, doctor_id] 
-         `|` ToPLink[patient, doctor_id])
-               `|` Next o Sequence[doctor_id]
+Process[doctor][[doctor_id]] o (
+
+    PartnerLinks o (
+        PartnerLink[hospital, doctor_id] o CreateInstance[doctor_hired]
+    `|` PartnerLink[patient, doctor_id]  o <->) 
+`|` SubLinks o SubLink[treatment, doctor_id] o <->
+`|` Variables o (
+        Variable[invar, doctor_id] o <->
+    `|` Variable[out, doctor_id] o True) 
+`|` Instances o <->
+
+`|` Sequence[doctor_id] o (
+      Receive[hospital, doctor_id, doctor_hired, invar, doctor_id, doctor_id]   
+`|` Next o Sequence[doctor_id] o (
+      Reply[hospital, doctor_id, doctor_hired, out, doctor_id, doctor_id]
+`|` Next o
+      While[doctor_id] o (
+          Condition o True
+
+      `|` Sequence[doctor_id] o (
+            Receive[hospital, doctor_id, patient, invar, doctor_id, doctor_id]
+      `|` Next o Sequence[doctor_id] o (
+            Reply[hospital, doctor_id, patient, out, doctor_id, doctor_id]
+      `|` Next o Sequence[doctor_id] o (
+            Assign[doctor_id] o Copy o (
+                From[invar, doctor_id] 
+            `|` ToPLink[patient, doctor_id])
+      `|` Next o Sequence[doctor_id] o (
     (* So there is a sublink called treatment and an operation on a  *)
-    (* partnerlink called treatment ???? *)
-             o (  Receive[hospital, doctor_id, treatment, invar, 
-              doctor_id, doctor_id]
-        `|` Next o Sequence[doctor_id]
-            o (  Reply[hospital, doctor_id, treatment, out, 
-                 doctor_id, doctor_id]
-                   `|` Next o Sequence[doctor_id] 
-           o (  ThawSub[treatment, doctor_id, invar, 
-                  doctor_id, doctor_id] 
-                  `|` Next o Sequence[doctor_id] 
-                o (  InvokeSub[treatment, doctor_id, perform_treatment, 
-                   out, doctor_id, out, doctor_id, 
-                   doctor_id]
-                       `|` Next o Sequence[doctor_id] 
-               o (  FreezeSub[treatment, doctor_id, invar, 
-                  doctor_id, doctor_id]
-                            `|` Next o Invoke[patient, doctor_id, run, 
-                      invar, doctor_id, out, 
-                      doctor_id, doctor_id]
-                 )
-            )
-             )
-              )
-         )
-          )
-           )
+    (* partnerlink called treatment ???? yep :-) /Espen *)
+            Receive[hospital, doctor_id, treatment, invar, doctor_id, doctor_id]
+      `|` Next o Sequence[doctor_id] o (
+            Reply[hospital, doctor_id, treatment, out, doctor_id, doctor_id]
+      `|` Next o Sequence[doctor_id] o (
+            ThawSub[treatment, doctor_id, invar, doctor_id, doctor_id] 
+      `|` Next o Sequence[doctor_id] o (
+            InvokeSub[treatment, doctor_id, perform_treatment, 
+                      out, doctor_id, out, doctor_id, doctor_id]
+      `|` Next o Sequence[doctor_id] o (
+            FreezeSub[treatment, doctor_id, invar, doctor_id, doctor_id]
+      `|` Next o Invoke[patient, doctor_id, run, invar, doctor_id,
+                         out, doctor_id, doctor_id]
+          ))))))))
       )
-        )
-   )
-    )
-)
+    ))
+);
 
 (* A doctor instance:
 
