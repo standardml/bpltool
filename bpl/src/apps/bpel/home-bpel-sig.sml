@@ -410,7 +410,7 @@ val Exit         = atomic   (Exit        -:       1);
 (* Freezing a sub-instance means stopping its execution and moving it to
  * a variable.
  *
- * The free ports of an FreezeSub node should be connected
+ * The free ports of an Freeze node should be connected
  *
  *   #1 to the name of the sub-link connected to the instance which
  *        should be frozen.
@@ -420,7 +420,7 @@ val Exit         = atomic   (Exit        -:       1);
  *   #4 to the same scope port as the above variable.
  *   #5 to the instance identifier of the enclosing instance.
  *)
-val FreezeSub    = atomic   (FreezeSub   -:       5);
+val Freeze       = atomic   (Freeze      -:       5);
 
 (* While waiting for the sub-instance to be frozen, the FreezeSub
  * activity is changed to a FreezingSub activity.
@@ -440,7 +440,7 @@ val FreezingSub  = atomic   (FreezingSub -:       5);
 (* Thawing a sub-instance means restarting its execution by moving it
  * from a variable and connecting it to a sub-link.
  *
- * The free ports of an FreezeSub node should be connected
+ * The free ports of a Thaw node should be connected
  *
  *   #1 to the name of the sub-link to connect to the instance which
  *        is thawed.
@@ -450,4 +450,4 @@ val FreezingSub  = atomic   (FreezingSub -:       5);
  *   #4 to the same scope port as the above variable.
  *   #5 to the instance identifier of the enclosing instance.
  *)
-val ThawSub      = atomic   (ThawSub      -:       5);
+val Thaw         = atomic   (Thaw         -:       5);

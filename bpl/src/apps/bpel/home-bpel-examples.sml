@@ -25,17 +25,48 @@
  *     <reply   partnerLink="engine_client" operation="start_engine"
  *              variable="out" />
  *     <while>
- *       <condition>true()</condition>
+ *       <condition>$out</condition>
  *       <sequence>
  *         <receive partnerLink="engine_client" operation="run" variable="in" />
- *         <reply   partnerLink="engine_client" operation="run" variable="out" />
  *         <thaw variable="in" subLink="subinsts" />
+ *         <reply   partnerLink="engine_client" operation="run" variable="out" />
  *       </sequence>
  *     </while>
  *   </sequence>
  * </process>
  *)
-val engine_process = <->;
+val engine_while_loop =
+While[engine_id] o (
+
+    Condition o VariableRef[out, engine_id, engine_id]
+
+`|` Sequence[engine_id] o (
+      Receive[engine_client, engine_id, run, invar, engine_id, engine_id]
+`|` Next o Sequence[engine_id] o (
+      Thaw[subinsts, engine_id, invar, engine_id, engine_id]
+`|` Next o
+      Reply[engine_client, engine_id, run, out, engine_id, engine_id]
+)));
+
+val engine_process = 
+Process[engine][[engine_id]] o (
+
+    PartnerLinks o
+        PartnerLink[engine_client, engine_id] o CreateInstance[start_engine]
+`|` SubLinks o SubLink[subinsts, engine_id] o <->
+`|` Variables o (
+        Variable[invar, engine_id] o <->
+    `|` Variable[out, engine_id] o True)
+`|` Instances o <->
+
+`|` Sequence[engine_id] o (
+      Receive[engine_client, engine_id, start_engine, invar, engine_id, engine_id]
+`|` Next o Sequence[engine_id] o (
+      Reply[engine_client, engine_id, start_engine, out, engine_id, engine_id]
+`|` Next o
+      engine_while_loop
+    ))
+);
 
 (* An engine instance:
 
@@ -56,13 +87,42 @@ val engine_process = <->;
   </instances>
   <sequence>
      <receive partnerLink="engine_client" operation="run" variable="in" />
-     <reply   partnerLink="engine_client" operation="run" variable="out" />
      <thaw variable="in" subLink="subinsts" />
+     <reply   partnerLink="engine_client" operation="run" variable="out" />
      <while>[the same as in the process definition]</while>
   </sequence>
 </instance>
  *)
-val engine_instance = <->;
+val engine_instance =
+TopInstance o (
+-//[engine_id, parent_active_scopes, active_scopes, medication_id, treatment_id] o (
+    TopRunning[engine_id]
+`|` Instance[engine, engine_id, parent_active_scopes] o (
+        Running[engine_id, active_scopes, engine_id]
+    `|` PartnerLinks o
+            PartnerLink[engine_client, engine_id] o Link[doctor_id]
+    `|` SubLinks o SubLink[subinsts, engine_id] o (
+                       Link[medication_id] `|` Link[treatment_id])
+    `|` Variables o (
+            Variable[invar, engine_id] o
+                Process[treatment][[treatment_scope]] o <->  (* ... *)
+        `|` Variable[out, engine_id] o True)
+    `|` Instances o (
+            Instance[medication, medication_id, active_scopes] o <->  (* ... *)
+        `|` Instance[treatment, treatment_id, active_scopes]   o <->) (* ... *)
+
+    `|` Sequence[engine_id] o (
+          Receive[engine_client, engine_id, run, invar, engine_id, engine_id]
+    `|` Next o Sequence[engine_id] o (
+          Thaw[subinsts, engine_id, invar, engine_id, engine_id]
+    `|` Next o Sequence[engine_id] o (
+          Reply[engine_client, engine_id, run, out, engine_id, engine_id]
+    `|` Next o
+          engine_while_loop
+        )))
+    )
+));
+
 
 (* A doctor process: 
  *
@@ -145,12 +205,12 @@ Process[doctor][[doctor_id]] o (
       `|` Next o Sequence[doctor_id] o (
             Reply[hospital, doctor_id, treatment, out, doctor_id, doctor_id]
       `|` Next o Sequence[doctor_id] o (
-            ThawSub[treatment, doctor_id, invar, doctor_id, doctor_id] 
+            Thaw[treatment, doctor_id, invar, doctor_id, doctor_id] 
       `|` Next o Sequence[doctor_id] o (
             InvokeSub[treatment, doctor_id, perform_treatment, 
                       out, doctor_id, out, doctor_id, doctor_id]
       `|` Next o Sequence[doctor_id] o (
-            FreezeSub[treatment, doctor_id, invar, doctor_id, doctor_id]
+            Freeze[treatment, doctor_id, invar, doctor_id, doctor_id]
       `|` Next o Invoke[patient, doctor_id, run, invar, doctor_id,
                          out, doctor_id, doctor_id]
           ))))))))
@@ -188,28 +248,30 @@ Process[doctor][[doctor_id]] o (
 (* FIXME *)
 (* insert while-loop ??? *)
 val doctor_instance = 
+TopInstance o (
 -//[doctor_id, parent_active_scopes, active_scopes, surgery_id] o (
     TopRunning[doctor_id] 
 `|` Instance[doctor, doctor_id, parent_active_scopes] o (
         Running[doctor_id, active_scopes, doctor_id] 
     `|` PartnerLinks o (
             PartnerLink[hospital, doctor_id] o Link[hospital_id]
-        `|` PartnerLink[patient, doctor_id] o Link[engine_id]))
+        `|` PartnerLink[patient, doctor_id] o Link[engine_id])
     `|` SubLinks o SubLink[treatment, doctor_id] o Link[surgery_id]
     `|` Variables o (
             Variable[invar, doctor_id] o
                 Process[surgery][[surgery_scope]] o <->  (* ... *)
         `|` Variable[out, doctor_id] o True)
-    `|` Instances o Instance[surgery, surgery_id, active_scopes] o <->
+    `|` Instances o Instance[surgery, surgery_id, active_scopes] o <-> (* ... *)
    
     `|` Sequence[doctor_id] o (
           InvokeSub[treatment, doctor_id, perform_treatment, out, doctor_id, 
                     out, doctor_id, doctor_id]
     `|` Next o Sequence[doctor_id] o (
-          FreezeSub[treatment, doctor_id, invar, doctor_id, doctor_id]
+          Freeze[treatment, doctor_id, invar, doctor_id, doctor_id]
     `|` Next o Sequence[doctor_id] o (
           Invoke[patient, doctor_id, run, invar, doctor_id,
                  out, doctor_id, doctor_id] 
     `|` Next o While[doctor_id] o <-> (* ... *)
         )))
-);
+    )
+));

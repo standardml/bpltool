@@ -637,13 +637,13 @@ val rule_reply_sub = "reply sub" :::
 
 (* Sub-instance hibernation *)
 (* Freezing a sub-instance requires several transitions, initiated by a
- * FreezeSub activity.
+ * Freeze activity.
  *
  * FIXME give tactic describing the intended use of the freezing rules
  *)
 val rule_freeze_sub = "freeze sub" :::
 
-   FreezeSub[sub_link, sub_link_scope, var, var_scope, inst_id_sup]
+   Freeze[sub_link, sub_link_scope, var, var_scope, inst_id_sup]
 || (    SubLinks o (    SubLink[sub_link, sub_link_scope]
                         o (Link[inst_id_sub] `|` `[]`)
                     `|` `[]`)
@@ -768,7 +768,7 @@ o (   FreezingSub[sub_link, sub_link_scope, var, var_scope, inst_id_sup]
 (* Thawing *)
 val rule_thaw_sub = "thaw sub" :::
 
-   ThawSub[sub_link, sub_link_scope, var, var_scope, inst_id_sup]
+   Thaw[sub_link, sub_link_scope, var, var_scope, inst_id_sup]
 || Variable[var, var_scope]
    o Process[sub_name][[sub_scope]] o `[sub_scope]`
 || (    SubLinks o (SubLink[sub_link, sub_link_scope] o `[]` `|` `[]`)

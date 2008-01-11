@@ -3,12 +3,7 @@
 (*******************************)
 val Process        = "Process"
 val Instance       = "Instance"
-(*val SubProcesses   = "SubProcesses"*)
-(*val SubProcess     = "SubProcess"*)
 val Instances      = "Instances"
-(*val Instances   = "Instances"*)
-(*val SubInstance    = "SubInstance"*)
-(*val FrozenSub      = "FrozenSub"*)
 val Scope          = "Scope"
 val ActiveScope    = "ActiveScope"
 val Invoked        = "Invoked"
@@ -59,9 +54,9 @@ val InvokeSup      = "InvokeSup"
 val ReceiveSup     = "ReceiveSup"
 val ReplySup       = "ReplySup"
 val GetReplySup    = "GetReplySup"
-val FreezeSub      = "FreezeSub"
+val Freeze         = "Freeze"
 val FreezingSub    = "FreezingSub"
-val ThawSub        = "ThawSub"
+val Thaw           = "Thaw"
 
 (*    For names                *)
 val inst_id                    = "inst_id"
@@ -144,7 +139,15 @@ val run                        = "run"
 val hospital_id                = "hospital_id"
 val hospital                   = "hospital"
 val treatment                  = "treatment"
+val treatment_id               = "treatment_id"
+val treatment_scope            = "treatment_scope"
+val medication                 = "medication"
+val medication_id              = "medication_id"
+val engine                     = "engine"
 val engine_id                  = "engine_id"
+val engine_client              = "engine_client"
+val start_engine               = "start_engine"
+val subinsts                   = "subinsts"
 val active_scopes              = "active_scopes"
 val perform_treatment          = "perform_treatment"
 
