@@ -155,10 +155,10 @@ TopInstance o (
                  variable="in" />
         <reply   partnerLink="hospital" operation="treatment"
                  variable="out" />
-        <thawSub   subLink="treatment" variable="in" />
+        <thaw      subLink="treatment" variable="in" />
         <invokeSub subLink="treatment" operation="perform_treatment"
                    inputVariable="out" outputVariable="out" />
-        <freezeSub subLink="treatment" variable="in" />
+        <freeze subLink="treatment" variable="in" />
         <invoke partnerLink="patient" operation="run"
                 inputVariable="in" outputVariable="out" />
       </sequence>
@@ -238,7 +238,7 @@ Process[doctor][[doctor_id]] o (
   <sequence>
     <invokeSub subLink="treatment" operation="perform_treatment"
                inputVariable="out" outputVariable="out" />
-    <freezeSub subLink="treatment" variable="in" />
+    <freeze subLink="treatment" variable="in" />
     <invoke partnerLink="patient" operation="run"
             inputVariable="in" outputVariable="out" />
     <while>[the same as in the process definition]</while>

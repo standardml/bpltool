@@ -422,7 +422,7 @@ val Exit         = atomic   (Exit        -:       1);
  *)
 val Freeze       = atomic   (Freeze      -:       5);
 
-(* While waiting for the sub-instance to be frozen, the FreezeSub
+(* While waiting for the sub-instance to be frozen, the Freeze
  * activity is changed to a FreezingSub activity.
  *
  * The free ports of an FreezingSub node should be connected
