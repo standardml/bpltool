@@ -209,16 +209,15 @@ val rule_scope_activation = "scope activation" :::
  * and its associated "scope"-edge. *)
 val rule_scope_completed = "scope completed" :::
 
-   -/scope
-   o (ActiveScope[scope, active_scopes]
-      o (    Variables    o (scope//[scope1] o `[scope1]`)
-         `|` PartnerLinks o (scope//[scope2] o `[scope2]`)
-         `|` SubLinks     o (scope//[scope3] o `[scope3]`)
-         `|` Instances o <->))
+   ActiveScope[scope, active_scopes]
+   o (    Variables    o `[]`
+      `|` PartnerLinks o `[]`
+      `|` SubLinks     o `[]`
+      `|` Instances o <->)
 || Running[inst_id, active_scopes, inst_id_top]
 || TopRunning[inst_id_top]
   ----|>
-   <->
+   <-> || scope//[]
 || Running[inst_id, active_scopes, inst_id_top]
 || TopRunning[inst_id_top];
 
@@ -237,9 +236,9 @@ val rule_scope_completed = "scope completed" :::
 val rule_inst_completed = "inst completed" :::
 
    Instance[proc_name, inst_id, active_scopes_sup]
-   o (    Variables    o (inst_id//[inst_id1] o `[inst_id1]`)
-      `|` PartnerLinks o (inst_id//[inst_id2] o `[inst_id2]`)
-      `|` SubLinks     o (inst_id//[inst_id3] o `[inst_id3]`)
+   o (    Variables    o `[]`
+      `|` PartnerLinks o `[]`
+      `|` SubLinks     o `[]`
       `|` Instances    o <->
       `|` Running[inst_id, active_scopes, inst_id_top])
 || TopRunning[inst_id_top]
@@ -250,44 +249,6 @@ val rule_inst_completed = "inst completed" :::
        || active_scopes_sup//[] || active_scopes//[]
 || TopRunning[inst_id_top];
 
-(*val rule_inst_completed = "inst completed" :::
-
--//[inst_id, active_scopes]
-o (Instance[proc_name, inst_id, active_scopes_sup]
-   o (    Variables    o (inst_id//[inst_id1] o `[inst_id1]`)
-      `|` PartnerLinks o (inst_id//[inst_id2] o `[inst_id2]`)
-      `|` SubLinks     o (inst_id//[inst_id3] o `[inst_id3]`)
-      `|` Instances    o <->
-      `|` Running[inst_id, active_scopes, inst_id]
-      `|` TopRunning[inst_id]))
-  ----|>
-<-> || proc_name//[] || active_scopes_sup//[];
-*)
-(*
-(* we do the same for sub-instances, and detach the attached sub-link. *)
-val rule_sub_completed = "sub completed" :::
-
-   -//[inst_id, active_scopes]
-   o (    SubLinks
-          o (SubLink[sub_link, sub_link_scope] o Link[inst_id] `|` `[]`)
-      `|` Instances
-          o (    Instance[proc_name, inst_id, active_scopes_sup]
-                 o (    Variables    o (inst_id//[inst_id1] o `[inst_id1]`)
-                    `|` PartnerLinks o (inst_id//[inst_id2] o `[inst_id2]`)
-                    `|` SubLinks     o (inst_id//[inst_id3] o `[inst_id3]`)
-                    `|` Instances    o <->
-                    `|` Running[inst_id, active_scopes, inst_id_top])
-             `|` `[]`))
-|| TopRunning[inst_id_top]
-
-  --[1 |-> 4]--|>
-
-   proc_name//[] || active_scopes_sup//[]
-|| (    SubLinks
-        o (SubLink[sub_link, sub_link_scope] o <-> `|` `[]`)
-    `|` Instances o `[]`)
-|| TopRunning[inst_id_top];
-*)
 
 (* In the case of an Exit activity we change the status of the
  * (sub-)instance from running to stopped by replacing the Running node
@@ -311,8 +272,7 @@ val rule_exit_stop_inst = "exit stop inst" :::
 val rule_exit_remove_inst = "exit remove inst" :::
 
    Instance[proc_name, inst_id, active_scopes_sup]
-   o (    Stopped[inst_id, active_scopes, inst_id_top]
-      `|` `[inst_id, active_scopes]`)
+   o (Stopped[inst_id, active_scopes, inst_id_top] `|` `[]`)
 || SubTransition[inst_id_top]
 
   ----|>
@@ -329,25 +289,6 @@ TopInstance o (-/inst_id_top o TopRunning[inst_id_top])
   ----|>
 <->;
 
-(*(* We do the same for sub-instances, and detach the attached sub-link. *)
-val rule_exit_remove_sub = "exit remove sub" :::
-
-   -//[inst_id, active_scopes]
-   o (    SubLinks
-          o (SubLink[sub_link, sub_link_scope] o Link[inst_id] `|` `[]`)
-      `|` Instances
-          o (    SubInstance[proc_name, inst_id, active_scopes_sup]
-                 o (    Stopped[inst_id, active_scopes, inst_id_top]
-                    `|` `[inst_id, active_scopes]`)
-             `|` `[]`))
-|| SubTransition[inst_id_top]
-
-  --[1 |-> 2]--|>
-
-   proc_name//[] || active_scopes_sup//[]
-|| (   SubLinks o (SubLink[sub_link, sub_link_scope] o <-> `|` `[]`)
-    `|` Instances o `[]`)
-|| TopRunning[inst_id_top] handle e => explain e;*)
 
 
 
