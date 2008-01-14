@@ -58,7 +58,7 @@ struct
 
   val _ = Flags.makeBoolFlag {
     name = "/kernel/ast/bgterm/ppids",
-    desc = "Explicitly display identities in tensor products",
+    desc = "Explicitly display identities in tensor and parallel products",
     short = "",
     long = "--ppids",
     arg = "",
@@ -525,8 +525,20 @@ struct
                    >>()
                  end) handle e => raise e)
             | pp' outermost innermost (Par (bs, _)) =
-              ((case bs of
-                 [] => show "idx0"
+              (let
+                val bs' =
+                  if ppids then
+                    bs
+                  else if innermost then
+                    List.filter (not o is_id0') bs
+                  else
+                    List.filter (not o is_id') bs
+              in
+                case bs' of
+                 []
+               => (case bs of
+                     [] => show "idx0"
+                   | bs => pp' outermost innermost (widest bs))
                | [b] => pp' outermost innermost b
                | (b :: bs) => 
                  let
@@ -548,7 +560,8 @@ struct
                    mappp bs;
                    showrpar();
                    >>()
-                 end) handle e => raise e)
+                 end
+               end handle e => raise e)
             | pp' outermost innermost (Com (b1, b2, _)) =
               let
                 val (showlpar, pal', par', prr', showrpar)
