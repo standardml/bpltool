@@ -8,32 +8,61 @@
  * It replies True to the sender in response to both operations, since
  * replies are required.
  *
- * <process name="engine">
- *   <partnerLinks>
- *     <partnerLink name="engine_client" />
- *   </partnerLinks>
- *   <subLinks>
- *     <subLink name="subinsts" />
- *   </subLinks>
- *   <variables>
- *     <variable name="in" />
- *     <variable name="out"><from>true()</from></variable>
- *   </variables>
- *   <sequence>
- *     <receive partnerLink="engine_client" operation="start_engine"
- *              createInstance="yes" variable="in" />
- *     <reply   partnerLink="engine_client" operation="start_engine"
- *              variable="out" />
- *     <while>
- *       <condition>$out</condition>
- *       <sequence>
- *         <receive partnerLink="engine_client" operation="run" variable="in" />
- *         <thaw variable="in" subLink="subinsts" />
- *         <reply   partnerLink="engine_client" operation="run" variable="out" />
- *       </sequence>
- *     </while>
- *   </sequence>
- * </process>
+<process name="engine">
+  <partnerLinks>
+    <partnerLink name="engine_client" />
+    <partnerLink name="task_list_UI" />
+  </partnerLinks>
+  <subLinks>
+    <subLink name="subinsts" />
+  </subLinks>
+  <variables>
+    <variable name="in" />
+    <variable name="out"><from>true()</from></variable>
+  </variables>
+  <sequence>
+    <receive partnerLink="engine_client" operation="start_engine"
+             createInstance="yes" variable="in" />
+    <invoke  partnerLink="task_list_UI" operation="init_UI"
+             input_variable="in" output_variable="out" />
+    <reply   partnerLink="engine_client" operation="start_engine"
+             variable="out" />
+    <flow>
+      <while>
+        <condition>$out</condition>
+        <sequence>
+          <receive partnerLink="engine_client" operation="run" variable="in" />
+          <thaw variable="in" subLink="subinsts" />
+          <reply   partnerLink="engine_client" operation="run" variable="out" />
+        </sequence>
+      </while>
+      <while>
+        <condition>true</condition>
+        <scope>
+          <variables>
+            <variable name="task" />
+            <variable name="reply" />
+          </variables>
+          <sequence>
+            <receiveSub subLink="subinsts" operation="task" variable="task" />
+            <invoke     partnerLink="task_list_UI" operation="add_task"
+                        input_variable="task" output_variable="reply" />
+            <replySub   subLink="subinsts" operation="task" variable="reply" />
+          </sequence>
+        </scope>
+      </while>
+    </flow>
+  </sequence>
+</process>
+
+ * FIXME: update example BPL code
+
+split up into
+    - body = flow
+    - UI loop
+    - "the old loop"
+
+visualize "the old loop" instead of the whole process
  *)
 val engine_while_loop =
 While[engine_id] o (
@@ -69,6 +98,7 @@ Process[engine][[engine_id]] o (
 );
 
 (* An engine instance:
+ * FIXME: update instance to reflect updated process
 
 <instance name="engine" id="1">
   <partnerLinks>
@@ -130,39 +160,58 @@ TopInstance o (
   <partnerLinks>
     <partnerLink name="hospital" />
     <partnerLink name="patient" />
+    <partnerLink name="task_list_UI" />
   </partnerLinks>
   <subLinks>
     <subLink name="treatment" />
   </subLinks>
   <variables>
+    <variable name="treatment_template">
+      <process name="treatment_template">...</process>
+    </variable>
     <variable name="in" />
     <variable name="out"><from>true()</from></variable>
   </variables>
   <sequence>
     <receive partnerLink="hospital" operation="doctor_hired"
              createInstance="yes" variable="in" />
+    <invoke  partnerLink="task_list_UI" operation="init_UI"
+             input_variable="in" output_variable="out" />
     <reply   partnerLink="hospital" operation="doctor_hired" variable="out" />
-    <while>
-      <condition>true()</condition>
-      <sequence>
-        <receive partnerLink="hospital" operation="patient" variable="in" />
-        <reply   partnerLink="hospital" operation="patient" variable="out" />
-        <assign><copy>
-            <from variable="in" />
-            <to   partnerLink="patient" />
-        </copy></assign>
-        <receive partnerLink="hospital" operation="treatment"
-                 variable="in" />
-        <reply   partnerLink="hospital" operation="treatment"
-                 variable="out" />
-        <thaw      subLink="treatment" variable="in" />
-        <invokeSub subLink="treatment" operation="perform_treatment"
-                   inputVariable="out" outputVariable="out" />
-        <freeze subLink="treatment" variable="in" />
-        <invoke partnerLink="patient" operation="run"
-                inputVariable="in" outputVariable="out" />
-      </sequence>
-    </while>
+    <flow>
+      <while>
+        <condition>true()</condition>
+        <sequence>
+          <receive partnerLink="hospital" operation="patient" variable="in" />
+          <reply   partnerLink="hospital" operation="patient" variable="out" />
+          <assign><copy>
+              <from variable="in" />
+              <to   partnerLink="patient" />
+          </copy></assign>
+          <thaw      subLink="treatment" variable="treatment_template" />
+          <invokeSub subLink="treatment" operation="consultation"
+                     inputVariable="out" outputVariable="out" />
+          <freeze subLink="treatment" variable="in" />
+          <invoke partnerLink="patient" operation="run"
+                  inputVariable="in" outputVariable="out" />
+        </sequence>
+      </while>
+      <while>
+        <condition>true</condition>
+        <scope>
+          <variables>
+            <variable name="task" />
+            <variable name="reply" />
+          </variables>
+          <sequence>
+            <receiveSub subLink="subinsts" operation="task" variable="task" />
+            <invoke     partnerLink="task_list_UI" operation="add_task"
+                        input_variable="task" output_variable="reply" />
+            <replySub   subLink="subinsts" operation="task" variable="reply" />
+          </sequence>
+        </scope>
+      </while>
+    </flow>
   </sequence>
 </process>
  *)
@@ -275,3 +324,25 @@ TopInstance o (
         )))
     )
 ));
+
+
+
+(* An example treatment process
+
+<process name="treatment_template">
+  <variables>
+    <variable name="in" />
+    <variable name="out" />
+  </variables>
+  <sequence>
+    <!-- Doctor initializes treatment -->
+    <receiveSup operation="consultation" variable="in" />
+    <invokeSup  operation="task" input_variable="in" output_variable="out" />
+    <replySup   operation="consultation" variable="in" />
+    <!-- Tell the patient what to do -->
+    <invokeSup  operation="task" input_variable="" output_variable="" />
+  </sequence>
+</process>
+
+* FIXME: write BPL term
+*)
