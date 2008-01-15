@@ -61,18 +61,21 @@
 visualize "the old loop" instead of the whole process
  *)
 
-val thaw_loop =
-While[engine_id] o (
-
-    Condition o VariableRef[out, engine_id, engine_id]
-
-`|` Sequence[engine_id] o (
+val thaw_loop_body =
+    Sequence[engine_id] o (
       Receive[engine_client, engine_id, run, invar, engine_id, engine_id]
 `|` Next o Sequence[engine_id] o (
       Thaw[subinsts, engine_id, invar, engine_id, engine_id]
 `|` Next o
       Reply[engine_client, engine_id, run, out, engine_id, engine_id]
-)));
+    ));
+
+val thaw_loop =
+While[engine_id] o (
+
+    Condition o VariableRef[out, engine_id, engine_id]
+`|` thaw_loop_body
+);
 
 val task_loop =
 While[engine_id] o (
