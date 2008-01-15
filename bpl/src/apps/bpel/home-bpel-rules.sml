@@ -72,11 +72,11 @@ val rule_while_unfold = "while unfold" :::
   --[2 |-> 0, 3 |-> 1]--|>
 
    If[inst_id] o (    Condition o `[]`
-                  `|` Then o Sequence[inst_id]
-                             o (    `[]` 
-                                `|` Next
-                                    o While[inst_id]
-                                      o (Condition o `[]` `|` `[]`))
+                  `|` Then o Sequence[inst_id] o (
+                               `[]` 
+                         `|` Next o
+                               While[inst_id]
+                               o (Condition o `[]` `|` `[]`))
                   `|` Else o <->)
 || Running[inst_id, active_scopes, inst_id_top]
 || TopRunning[inst_id_top];
