@@ -28,16 +28,19 @@
     <reply   partnerLink="engine_client" operation="start_engine"
              variable="out" />
     <flow>
+      <!-- Continually receive and execute subinstances -->
       <while>
         <condition>$out</condition>
         <sequence>
           <receive partnerLink="engine_client" operation="run" variable="in" />
-          <thaw variable="in" subLink="subinsts" />
+          <thaw    subLink="subinsts" variable="in" />
           <reply   partnerLink="engine_client" operation="run" variable="out" />
         </sequence>
       </while>
+      <!-- Continually receive tasks from subinstances and pass them
+           on to the UI service -->
       <while>
-        <condition>true</condition>
+        <condition>$out</condition>
         <scope>
           <variables>
             <variable name="task" />
@@ -55,16 +58,10 @@
   </sequence>
 </process>
 
- * FIXME: update example BPL code
-
-split up into
-    - body = flow
-    - UI loop
-    - "the old loop"
-
 visualize "the old loop" instead of the whole process
  *)
-val engine_while_loop =
+
+val thaw_loop =
 While[engine_id] o (
 
     Condition o VariableRef[out, engine_id, engine_id]
@@ -77,11 +74,43 @@ While[engine_id] o (
       Reply[engine_client, engine_id, run, out, engine_id, engine_id]
 )));
 
+val task_loop =
+While[engine_id] o (
+
+    Condition o VariableRef[out, engine_id, engine_id]
+
+`|` Scope[engine_id][[scope]] o (
+        PartnerLinks o <->
+    `|` SubLinks     o <->
+    `|` Instances    o <->
+    `|` Variables o (
+            Variable[task, scope]
+        `|` Variable[reply, scope]
+        )
+    `|` Sequence[engine_id] o (
+          ReceiveSub[subinsts, engine_id, task, task, scope, engine_id]
+    `|` Next o Sequence[engine_id] o (
+          Invoke[task_list_UI, engine_id, add_task,
+                 task, scope, reply, scope, engine_id]
+    `|` Next o (
+          ReplySub[subinsts, engine_id, task, reply, scope, engine_id]
+        )))
+    )
+);
+
+val engine_body =
+Flow[engine_id] o (
+    thaw_loop
+`|` task_loop
+);
+
 val engine_process = 
 Process[engine][[engine_id]] o (
 
-    PartnerLinks o
+    PartnerLinks o (
         PartnerLink[engine_client, engine_id] o CreateInstance[start_engine]
+    `|` PartnerLink[task_list_UI, engine_id]  o <->
+    )
 `|` SubLinks o SubLink[subinsts, engine_id] o <->
 `|` Variables o (
         Variable[invar, engine_id] o <->
@@ -93,7 +122,7 @@ Process[engine][[engine_id]] o (
 `|` Next o Sequence[engine_id] o (
       Reply[engine_client, engine_id, start_engine, out, engine_id, engine_id]
 `|` Next o
-      engine_while_loop
+      engine_body
     ))
 );
 
@@ -123,6 +152,7 @@ Process[engine][[engine_id]] o (
   </sequence>
 </instance>
  *)
+(*
 val engine_instance =
 TopInstance o (
 -//[engine_id, parent_active_scopes, active_scopes, medication_id, treatment_id] o (
@@ -152,7 +182,7 @@ TopInstance o (
         )))
     )
 ));
-
+*)
 
 (* A doctor process: 
  *

@@ -150,6 +150,11 @@ val start_engine               = "start_engine"
 val subinsts                   = "subinsts"
 val active_scopes              = "active_scopes"
 val perform_treatment          = "perform_treatment"
+val task                       = "task"
+val reply                      = "reply"
+val task_list_UI               = "task_list_UI"
+val add_task                   = "add_task"
+
 
 
 
