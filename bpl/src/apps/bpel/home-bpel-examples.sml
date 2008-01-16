@@ -2,45 +2,46 @@
 (*       Example processes     *)
 (*******************************)
 
-(* A simple engine process: it is started by the operation
- * "start_engine" after which it repeatedly provides the operation "run"
+(* A simple patient process: it is started by the operation
+ * "start" after which it repeatedly provides the operation "run"
  * which receives a process and executes it.
  * It replies True to the sender in response to both operations, since
  * replies are required.
  *
-<process name="engine">
+<process name="patient">
   <partnerLinks>
-    <partnerLink name="engine_client" />
+    <partnerLink name="patient_client" />
     <partnerLink name="task_list_UI" />
   </partnerLinks>
   <subLinks>
     <subLink name="subinsts" />
   </subLinks>
   <variables>
-    <variable name="in" />
-    <variable name="out"><from>true()</from></variable>
+    <variable name="x" />
+    <variable name="y"><from>true()</from></variable>
   </variables>
   <sequence>
-    <receive partnerLink="engine_client" operation="start_engine"
-             createInstance="yes" variable="in" />
+    <receive partnerLink="patient_client" operation="start"
+             createInstance="yes" variable="x" />
     <invoke  partnerLink="task_list_UI" operation="init_UI"
-             input_variable="in" output_variable="out" />
-    <reply   partnerLink="engine_client" operation="start_engine"
-             variable="out" />
+             input_variable="x" output_variable="y" />
+    <reply   partnerLink="patient_client" operation="start"
+             variable="y" />
     <flow>
       <!-- Continually receive and execute subinstances -->
       <while>
-        <condition>$out</condition>
+        <condition>$y</condition>
         <sequence>
-          <receive partnerLink="engine_client" operation="run" variable="in" />
-          <thaw    subLink="subinsts" variable="in" />
-          <reply   partnerLink="engine_client" operation="run" variable="out" />
+          <receive   partnerLink="patient_client" operation="run" variable="x" />
+          <thaw      subLink="subinsts" variable="x" />
+          <invokeSub subLink="subinsts" operation="resume" variable="y" />
+          <reply     partnerLink="patient_client" operation="run" variable="y" />
         </sequence>
       </while>
       <!-- Continually receive tasks from subinstances and pass them
            on to the UI service -->
       <while>
-        <condition>$out</condition>
+        <condition>$y</condition>
         <scope>
           <variables>
             <variable name="task" />
@@ -62,27 +63,27 @@ visualize "the old loop" instead of the whole process
  *)
 
 val thaw_loop_body =
-    Sequence[engine_id] o (
-      Receive[engine_client, engine_id, run, invar, engine_id, engine_id]
-`|` Next o Sequence[engine_id] o (
-      Thaw[subinsts, engine_id, invar, engine_id, engine_id]
+    Sequence[patient_id] o (
+      Receive[patient_client, patient_id, run, x, patient_id, patient_id]
+`|` Next o Sequence[patient_id] o (
+      Thaw[subinsts, patient_id, x, patient_id, patient_id]
 `|` Next o
-      Reply[engine_client, engine_id, run, out, engine_id, engine_id]
+      Reply[patient_client, patient_id, run, y, patient_id, patient_id]
     ));
 
 val thaw_loop =
-While[engine_id] o (
+While[patient_id] o (
 
-    Condition o VariableRef[out, engine_id, engine_id]
+    Condition o VariableRef[y, patient_id, patient_id]
 `|` thaw_loop_body
 );
 
 val task_loop =
-While[engine_id] o (
+While[patient_id] o (
 
-    Condition o VariableRef[out, engine_id, engine_id]
+    Condition o VariableRef[y, patient_id, patient_id]
 
-`|` Scope[engine_id][[scope]] o (
+`|` Scope[patient_id][[scope]] o (
         PartnerLinks o <->
     `|` SubLinks     o <->
     `|` Instances    o <->
@@ -90,46 +91,46 @@ While[engine_id] o (
             Variable[task, scope]
         `|` Variable[reply, scope]
         )
-    `|` Sequence[engine_id] o (
-          ReceiveSub[subinsts, engine_id, task, task, scope, engine_id]
-    `|` Next o Sequence[engine_id] o (
-          Invoke[task_list_UI, engine_id, add_task,
-                 task, scope, reply, scope, engine_id]
+    `|` Sequence[patient_id] o (
+          ReceiveSub[subinsts, patient_id, task, task, scope, patient_id]
+    `|` Next o Sequence[patient_id] o (
+          Invoke[task_list_UI, patient_id, add_task,
+                 task, scope, reply, scope, patient_id]
     `|` Next o (
-          ReplySub[subinsts, engine_id, task, reply, scope, engine_id]
+          ReplySub[subinsts, patient_id, task, reply, scope, patient_id]
         )))
     )
 );
 
-val engine_body =
-Flow[engine_id] o (
+val patient_body =
+Flow[patient_id] o (
     thaw_loop
 `|` task_loop
 );
 
-val engine_process = 
-Process[engine][[engine_id]] o (
+val patient_process = 
+Process[patient][[patient_id]] o (
 
     PartnerLinks o (
-        PartnerLink[engine_client, engine_id] o CreateInstance[start_engine]
-    `|` PartnerLink[task_list_UI, engine_id]  o <->
+        PartnerLink[patient_client, patient_id] o CreateInstance[start]
+    `|` PartnerLink[task_list_UI, patient_id]  o <->
     )
-`|` SubLinks o SubLink[subinsts, engine_id] o <->
+`|` SubLinks o SubLink[subinsts, patient_id] o <->
 `|` Variables o (
-        Variable[invar, engine_id] o <->
-    `|` Variable[out, engine_id] o True)
+        Variable[x, patient_id] o <->
+    `|` Variable[y, patient_id] o True)
 `|` Instances o <->
 
-`|` Sequence[engine_id] o (
-      Receive[engine_client, engine_id, start_engine, invar, engine_id, engine_id]
-`|` Next o Sequence[engine_id] o (
-      Reply[engine_client, engine_id, start_engine, out, engine_id, engine_id]
+`|` Sequence[patient_id] o (
+      Receive[patient_client, patient_id, start, x, patient_id, patient_id]
+`|` Next o Sequence[patient_id] o (
+      Reply[patient_client, patient_id, start, y, patient_id, patient_id]
 `|` Next o
-      engine_body
+      patient_body
     ))
 );
 
-(* An engine instance:
+(* An patient instance:
  * FIXME: update instance to reflect updated process
 
 <instance name="engine" id="1">
@@ -140,17 +141,17 @@ Process[engine][[engine_id]] o (
     <subLink name="subinsts"><link ref="3" /><link ref="4" /></subLink>
   </subLinks>
   <variables>
-    <variable name="in"><process name="treatment">...</process></variable>
-    <variable name="out"><true /></variable>
+    <variable name="x"><process name="treatment">...</process></variable>
+    <variable name="y"><true /></variable>
   </variables>
   <instances>
     <instance name="medication" id="3">...</instance>
     <instance name="treatment" id="4">...</instance>
   </instances>
   <sequence>
-     <receive partnerLink="engine_client" operation="run" variable="in" />
-     <thaw variable="in" subLink="subinsts" />
-     <reply   partnerLink="engine_client" operation="run" variable="out" />
+     <receive partnerLink="engine_client" operation="run" variable="x" />
+     <thaw variable="x" subLink="subinsts" />
+     <reply   partnerLink="engine_client" operation="run" variable="y" />
      <while>[the same as in the process definition]</while>
   </sequence>
 </instance>
@@ -167,19 +168,19 @@ TopInstance o (
     `|` SubLinks o SubLink[subinsts, engine_id] o (
                        Link[medication_id] `|` Link[treatment_id])
     `|` Variables o (
-            Variable[invar, engine_id] o
+            Variable[x, engine_id] o
                 Process[treatment][[treatment_scope]] o <->  (* ... *)
-        `|` Variable[out, engine_id] o True)
+        `|` Variable[y, engine_id] o True)
     `|` Instances o (
             Instance[medication, medication_id, active_scopes] o <->  (* ... *)
         `|` Instance[treatment, treatment_id, active_scopes]   o <->) (* ... *)
 
     `|` Sequence[engine_id] o (
-          Receive[engine_client, engine_id, run, invar, engine_id, engine_id]
+          Receive[engine_client, engine_id, run, x, engine_id, engine_id]
     `|` Next o Sequence[engine_id] o (
-          Thaw[subinsts, engine_id, invar, engine_id, engine_id]
+          Thaw[subinsts, engine_id, x, engine_id, engine_id]
     `|` Next o Sequence[engine_id] o (
-          Reply[engine_client, engine_id, run, out, engine_id, engine_id]
+          Reply[engine_client, engine_id, run, y, engine_id, engine_id]
     `|` Next o
           engine_while_loop
         )))
@@ -202,31 +203,31 @@ TopInstance o (
     <variable name="treatment_template">
       <process name="treatment_template">...</process>
     </variable>
-    <variable name="in" />
-    <variable name="out"><from>true()</from></variable>
+    <variable name="x" />
+    <variable name="y"><from>true()</from></variable>
   </variables>
   <sequence>
     <receive partnerLink="hospital" operation="doctor_hired"
-             createInstance="yes" variable="in" />
+             createInstance="yes" variable="x" />
     <invoke  partnerLink="task_list_UI" operation="init_UI"
-             input_variable="in" output_variable="out" />
-    <reply   partnerLink="hospital" operation="doctor_hired" variable="out" />
+             input_variable="x" output_variable="y" />
+    <reply   partnerLink="hospital" operation="doctor_hired" variable="y" />
     <flow>
       <while>
         <condition>true()</condition>
         <sequence>
-          <receive partnerLink="hospital" operation="patient" variable="in" />
-          <reply   partnerLink="hospital" operation="patient" variable="out" />
+          <receive partnerLink="hospital" operation="patient" variable="x" />
+          <reply   partnerLink="hospital" operation="patient" variable="y" />
           <assign><copy>
-              <from variable="in" />
+              <from variable="x" />
               <to   partnerLink="patient" />
           </copy></assign>
           <thaw      subLink="treatment" variable="treatment_template" />
           <invokeSub subLink="treatment" operation="consultation"
-                     inputVariable="out" outputVariable="out" />
-          <freeze subLink="treatment" variable="in" />
+                     inputVariable="y" outputVariable="y" />
+          <freeze subLink="treatment" variable="x" />
           <invoke partnerLink="patient" operation="run"
-                  inputVariable="in" outputVariable="out" />
+                  inputVariable="x" outputVariable="y" />
         </sequence>
       </while>
       <while>
@@ -260,46 +261,47 @@ Process[doctor][[doctor_id]] o (
     `|` PartnerLink[patient, doctor_id]  o <->) 
 `|` SubLinks o SubLink[treatment, doctor_id] o <->
 `|` Variables o (
-        Variable[invar, doctor_id] o <->
-    `|` Variable[out, doctor_id] o True) 
+        Variable[x, doctor_id] o <->
+    `|` Variable[y, doctor_id] o True) 
 `|` Instances o <->
 
 `|` Sequence[doctor_id] o (
-      Receive[hospital, doctor_id, doctor_hired, invar, doctor_id, doctor_id]   
+      Receive[hospital, doctor_id, doctor_hired, x, doctor_id, doctor_id]   
 `|` Next o Sequence[doctor_id] o (
-      Reply[hospital, doctor_id, doctor_hired, out, doctor_id, doctor_id]
+      Reply[hospital, doctor_id, doctor_hired, y, doctor_id, doctor_id]
 `|` Next o
       While[doctor_id] o (
           Condition o True
 
       `|` Sequence[doctor_id] o (
-            Receive[hospital, doctor_id, patient, invar, doctor_id, doctor_id]
+            Receive[hospital, doctor_id, patient, x, doctor_id, doctor_id]
       `|` Next o Sequence[doctor_id] o (
-            Reply[hospital, doctor_id, patient, out, doctor_id, doctor_id]
+            Reply[hospital, doctor_id, patient, y, doctor_id, doctor_id]
       `|` Next o Sequence[doctor_id] o (
             Assign[doctor_id] o Copy o (
-                From[invar, doctor_id] 
+                From[x, doctor_id] 
             `|` ToPLink[patient, doctor_id])
       `|` Next o Sequence[doctor_id] o (
     (* So there is a sublink called treatment and an operation on a  *)
     (* partnerlink called treatment ???? yep :-) /Espen *)
-            Receive[hospital, doctor_id, treatment, invar, doctor_id, doctor_id]
+            Receive[hospital, doctor_id, treatment, x, doctor_id, doctor_id]
       `|` Next o Sequence[doctor_id] o (
-            Reply[hospital, doctor_id, treatment, out, doctor_id, doctor_id]
+            Reply[hospital, doctor_id, treatment, y, doctor_id, doctor_id]
       `|` Next o Sequence[doctor_id] o (
-            Thaw[treatment, doctor_id, invar, doctor_id, doctor_id] 
+            Thaw[treatment, doctor_id, x, doctor_id, doctor_id] 
       `|` Next o Sequence[doctor_id] o (
             InvokeSub[treatment, doctor_id, perform_treatment, 
-                      out, doctor_id, out, doctor_id, doctor_id]
+                      y, doctor_id, y, doctor_id, doctor_id]
       `|` Next o Sequence[doctor_id] o (
-            Freeze[treatment, doctor_id, invar, doctor_id, doctor_id]
-      `|` Next o Invoke[patient, doctor_id, run, invar, doctor_id,
-                         out, doctor_id, doctor_id]
+            Freeze[treatment, doctor_id, x, doctor_id, doctor_id]
+      `|` Next o Invoke[patient, doctor_id, run, x, doctor_id,
+                         y, doctor_id, doctor_id]
           ))))))))
       )
     ))
 );
 
+(* FIXME: update to match process:
 (* A doctor instance:
 
 <instance name="doctor" id="2">
@@ -311,18 +313,18 @@ Process[doctor][[doctor_id]] o (
     <subLink name="treatment"><link ref="6" /></subLink>
   </subLinks>
   <variables>
-    <variable name="in"><process name="surgery">...</process></variable>
-    <variable name="out"><true /></variable>
+    <variable name="x"><process name="surgery">...</process></variable>
+    <variable name="y"><true /></variable>
   </variables>
   <instances>
     <instance name="surgery" id="6">...</instance>
   </instances>
   <sequence>
     <invokeSub subLink="treatment" operation="perform_treatment"
-               inputVariable="out" outputVariable="out" />
-    <freeze subLink="treatment" variable="in" />
+               inputVariable="y" outputVariable="y" />
+    <freeze subLink="treatment" variable="x" />
     <invoke partnerLink="patient" operation="run"
-            inputVariable="in" outputVariable="out" />
+            inputVariable="x" outputVariable="y" />
     <while>[the same as in the process definition]</while>
   </sequence>
 </instance>
@@ -340,40 +342,43 @@ TopInstance o (
         `|` PartnerLink[patient, doctor_id] o Link[engine_id])
     `|` SubLinks o SubLink[treatment, doctor_id] o Link[surgery_id]
     `|` Variables o (
-            Variable[invar, doctor_id] o
+            Variable[x, doctor_id] o
                 Process[surgery][[surgery_scope]] o <->  (* ... *)
-        `|` Variable[out, doctor_id] o True)
+        `|` Variable[y, doctor_id] o True)
     `|` Instances o Instance[surgery, surgery_id, active_scopes] o <-> (* ... *)
    
     `|` Sequence[doctor_id] o (
-          InvokeSub[treatment, doctor_id, perform_treatment, out, doctor_id, 
-                    out, doctor_id, doctor_id]
+          InvokeSub[treatment, doctor_id, perform_treatment, y, doctor_id, 
+                    y, doctor_id, doctor_id]
     `|` Next o Sequence[doctor_id] o (
-          Freeze[treatment, doctor_id, invar, doctor_id, doctor_id]
+          Freeze[treatment, doctor_id, x, doctor_id, doctor_id]
     `|` Next o Sequence[doctor_id] o (
-          Invoke[patient, doctor_id, run, invar, doctor_id,
-                 out, doctor_id, doctor_id] 
+          Invoke[patient, doctor_id, run, x, doctor_id,
+                 y, doctor_id, doctor_id] 
     `|` Next o While[doctor_id] o <-> (* ... *)
         )))
     )
 ));
-
+*)
 
 
 (* An example treatment process
 
 <process name="treatment_template">
   <variables>
-    <variable name="in" />
-    <variable name="out" />
+    <variable name="x" />
+    <variable name="y" />
   </variables>
   <sequence>
     <!-- Doctor initializes treatment -->
-    <receiveSup operation="consultation" variable="in" />
-    <invokeSup  operation="task" input_variable="in" output_variable="out" />
-    <replySup   operation="consultation" variable="in" />
+    <receiveSup operation="consultation" variable="x" />
+    <invokeSup  operation="task" input_variable="x" output_variable="y" />
+    <replySup   operation="consultation" variable="x" />
+    <!-- Wait to be moved and resumed -->
+    <receiveSup operation="resume" variable="x" />
+    <replySup   operation="resume" variable="x" />
     <!-- Tell the patient what to do -->
-    <invokeSup  operation="task" input_variable="" output_variable="" />
+    <invokeSup  operation="task" input_variable="x" output_variable="y" />
   </sequence>
 </process>
 
