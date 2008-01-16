@@ -47,7 +47,7 @@ struct
   fun unmk x = x
   fun innernames {ctrl, free, bound} =
       foldl (fn (Xs, X) => NameSet.union X Xs) NameSet.empty bound
-  fun outernames ({ctrl, free, bound}) = NameSet.fromList free
+  fun outernames ({ctrl, free, bound}) = NameSet.fromList' free
 
   exception WrongArity of ion
 

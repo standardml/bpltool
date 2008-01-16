@@ -128,6 +128,14 @@ struct
 	 | VTen of bgval list * (interface * interface * info)
 	 (** b_1 b_2 = a composition of a pair of bigraphs. *)
 	 | VCom of bgval * bgval * (interface * interface * info)
+   (* NB: VPar and VPri are only for internal use - the must not leave the
+    *     module!
+    *     They are use when converting to the bgterm datatype for
+    *     prettyprinting. *)
+   (** b_1 ||...|| b_n-1 = a parallel product of n bigraphs. *)
+   | VPar of bgval list * (interface * interface * info)
+   (** b_1 |...| b_n-1 = a prime product of n bigraphs. *)
+   | VPri of bgval list * (interface * interface * info)
 
   fun info (VMer (_, i))            = i
     | info (VCon (_, i))            = i
@@ -136,6 +144,8 @@ struct
     | info (VPer (_, i))            = i
     | info (VAbs (_, _, (_, _, i))) = i 
     | info (VTen (_, (_, _, i)))    = i
+    | info (VPar (_, (_, _, i)))    = i
+    | info (VPri (_, (_, _, i)))    = i
     | info (VCom (_, _, (_, _, i))) = i
 
 
@@ -148,6 +158,8 @@ struct
     | innerface (VPer (pi, _))  = Permutation.innerface pi
     | innerface (VAbs (_, _, (innf, _, _))) = innf
     | innerface (VTen (_, (innf, _, _)))    = innf
+    | innerface (VPar (_, (innf, _, _)))    = innf
+    | innerface (VPri (_, (innf, _, _)))    = innf
     | innerface (VCom (_, _, (innf, _, _))) = innf
 
   fun outerface (VMer (_, i))   = Interface.one
@@ -157,13 +169,15 @@ struct
     | outerface (VIon (KyX, i)) =
       let
 	val {free, ...} = Ion.unmk KyX
-	val y = NameSet.fromList free
+	val y = NameSet.fromList' free
       in
 	Interface.make {loc = [NameSet.empty], glob = y}
       end
     | outerface (VPer (pi, _))  = Permutation.outerface pi
     | outerface (VAbs (_, _, (_, outf, _))) = outf
     | outerface (VTen (_, (_, outf, _)))    = outf
+    | outerface (VPar (_, (_, outf, _)))    = outf
+    | outerface (VPri (_, (_, outf, _)))    = outf
     | outerface (VCom (_, _, (_, outf, _))) = outf
 
   fun arecomposable v1 v2 = Interface.eq (innerface v1, outerface v2)
@@ -194,6 +208,10 @@ struct
 	    = ((BgTerm.Abs (X, #1 (unmk' v'), (info v)), innf, outf) handle e => raise e)
 	  | unmk' (v as (VTen (vs, (innf, outf, i)))) 
 	    = ((BgTerm.Ten (List.map (#1 o unmk') vs, (info v)), innf, outf) handle e => raise e)
+	  | unmk' (v as (VPar (vs, (innf, outf, i)))) 
+	    = ((BgTerm.Par (List.map (#1 o unmk') vs, (info v)), innf, outf) handle e => raise e)
+	  | unmk' (v as (VPri (vs, (innf, outf, i)))) 
+	    = ((BgTerm.Pri (List.map (#1 o unmk') vs, (info v)), innf, outf) handle e => raise e)
 	  | unmk' (v as (VCom (v1, v2, (innf, outf, i)))) 
 	    = ((BgTerm.Com (#1 (unmk' v1), #1 (unmk' v2), (info v)),
 	       innf,
@@ -202,143 +220,578 @@ struct
 	unmk'
       end
 
-  (* t2p' : (bgval, substitution) -> (((bgterm, innerface, outerface), isNewId?), newSubstitution)
+exception NotImplemented of string
+fun explain_NotImplemented (NotImplemented errtxt) =
+    [Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+  | explain_NotImplemented _ = raise Match
+val _ = add_explainer
+          (mk_explainer "feature not implemented" explain_NotImplemented)
+
+(* Determine whether a (X)v is the identity. *)
+fun is_concretion_of X (VMer (1, _))      = NameSet.isEmpty X
+  | is_concretion_of X (VMer _)           = false
+  | is_concretion_of X (VCon (Y, _))      = NameSet.eq X Y
+  | is_concretion_of X (VWir _)           = false
+  | is_concretion_of X (VIon _)           = false
+  | is_concretion_of X (VPer (pi, _))     = NameSet.isEmpty X andalso
+					                                  Permutation.is_id pi
+  | is_concretion_of X (VAbs (Y, v, _))  
+    = is_concretion_of (NameSet.union X Y) v
+  | is_concretion_of X (VTen ([v], _))    = is_concretion_of X v
+  | is_concretion_of _ (VTen _)           = false
+  | is_concretion_of X (VPar ([v], _))    = is_concretion_of X v
+  | is_concretion_of _ (VPar _)           = false
+  | is_concretion_of X (VPri ([v], _))    = is_concretion_of X v
+  | is_concretion_of _ (VPri _)           = false
+  | is_concretion_of X (VCom (v1, v2, _))
+    = raise NotImplemented "is_concretion_of for composition"
+
+and is_concretion_of' X v 
+  = is_concretion_of X v handle NotImplemented _ => false
+
+
+and is_id (VMer (1, _))      = true
+  | is_id (VMer _)           = false
+  | is_id (VCon (X, _))      = NameSet.isEmpty X
+  | is_id (VWir (w, _))      = Wiring.is_id w
+  | is_id (VIon _)           = false
+  | is_id (VPer (pi, _))     = Permutation.is_id pi
+  | is_id (VAbs (X, v, _))   = is_concretion_of' X v
+  | is_id (VTen (vs, _))     = List.all is_id vs
+  | is_id (VPar (vs, _))     = List.all is_id vs
+  | is_id (VPri ([v], _))    = is_id v
+  | is_id (VPri _)           = false
+  | is_id (VCom (v1, v2, _))
+    = raise NotImplemented "is_id for composition"
+
+fun is_id' v = is_id v handle NotImplemented _ => false
+
+fun is_id0 (VMer (1, _))      = false
+  | is_id0 (VMer _)           = false
+  | is_id0 (VCon (X, _))      = false
+  | is_id0 (VWir (w, _))      = Wiring.is_id0 w
+  | is_id0 (VIon _)           = false
+  | is_id0 (VPer (pi, _))     = Permutation.is_id0 pi
+  | is_id0 (VAbs (X, v, _))   = false
+  | is_id0 (VTen (vs, _))     = List.all is_id0 vs
+  | is_id0 (VPar (vs, _))     = List.all is_id0 vs
+  | is_id0 (VPri _)           = false
+  | is_id0 (VCom (v1, v2, _))
+    = raise NotImplemented "is_id0 for composition"
+
+fun is_id0' v = is_id0 v handle NotImplemented _ => false
+
+  fun simplify (VAbs (X, v, ioi as (_, _, i))) = 
+    (* ({})P -> P
+     * (X)(X')P -> (X u X')P
+     * (X)"X" -> id_(X)
+     *)
+    if NameSet.isEmpty X then
+      simplify v
+    else
+	  	(case simplify v of
+	  	   VAbs (X', v', ioi') => VAbs (NameSet.union' X X', v', ioi)
+	  	 | v' as (VCon (X', i'))
+	  	 => if NameSet.eq X X' then
+	  	      VPer (Permutation.id [X], i)
+	  	    else
+	  	      VAbs (X, v', ioi)
+	  	 | v' => VAbs (X, v', ioi))
+	  | simplify (VTen (vs, ioi as (_, _, i))) =
+	  (* vsl * Ten vs' * vsr -> vsl * vs' * vsr
+	   * vsl * id_0 * vsr -> vsl * vsr
+	   * vs0 * w1 * vs1 * w2 * ... * wn * vsn
+	   *  -> [[w1 * ... * wn]] * vs0 * ... * vsn
+	   * vsl * pi1 * pi2 * vsr -> vsl * [[pi1 * pi2]] * vsr
+     * Ten [v] -> v
+	   *)
+	    let
+	      val vs = map simplify vs
+	      val vs
+	        = foldr
+	            (fn (VTen (vs', _), vs) => vs' @ vs
+	              | (v, vs) => v :: vs)
+	            []
+	            vs
+	      val vs = List.filter (not o is_id0') vs
+	      fun extractwiring [] = (Wiring.id_0, NONE, [])
+	        | extractwiring (v :: vs) =
+	          let
+	            val (w', i', vs') = extractwiring vs
+	          in
+	            case v of
+	              VWir (w, i'')
+	            => (Wiring.* (w, w'),
+	                SOME (case i' of SOME _ => i | NONE => i''),
+	                vs')
+	            | v => (w', i', v :: vs')
+	          end
+	      val (w, iw, vs) = extractwiring vs
+	      val vs
+	       = if Wiring.is_id0 w then
+	           vs
+	         else
+	           VWir (w, case iw of SOME i' => i' | NONE => i) :: vs
+	      fun mergepis [] = []
+	        | mergepis ((v as (VPer (pi, i))) :: vs) =
+	          (case mergepis vs of
+	             (VPer (pi', i') :: vs') => (VPer (Permutation.* (pi, pi'), i) :: vs')
+	           | vs' => v :: vs')
+	        | mergepis (v :: vs) = v :: mergepis vs
+	      val vs = mergepis vs
+	    in
+	      case vs of
+	        [v] => v
+	      | vs => VTen (vs, ioi)
+	    end
+    | simplify (VPar vs) =
+      (case simplify (VTen vs) of
+         VTen vs' => VPar vs'
+       | v'       => v')
+	  | simplify (VCom (v1, v2, ioi as (_, _, i))) =
+	  (* "X"(X)P -> P
+	   * w1 w2 -> [[w1 w2]]
+	   * pi1 pi2 -> [[pi1 pi2]]
+	   * id v -> v
+	   * v id -> v
+	   * (v1 * v2)(v1' * v2') -> v1 v1' * v2 v2', if vi : Ii ->, vi' : -> Ii
+		 * (alpha * id_1) K_y(X) -> K_{alpha(y)}(X)
+		 * (alpha * id_1) (beta * K_y(X)) -> alpha' beta * K_{alpha(y)}(X) [not implemented]
+		 * (w1 * id_n) (w2 * v) -> w1 w2 * v, if v : -> n        [not implemented]
+		 * A o (B o C) -> (A o B) o C    (for nicer prettyprinting)
+	   *)
+	    let
+	      val v1' = simplify v1
+	      val v2' = simplify v2
+	    in
+	      if is_id' v1' then
+	        v2'
+	      else if is_id' v2' then
+	        v1'
+	      else case (v1', v2') of
+	        (VCon (X, _), VAbs (X', v, _))
+	      => if NameSet.eq X X' then v else VCom (v1', v2', ioi)
+	      | (VWir (w1, _), VWir (w2, _)) => VWir (Wiring.o (w1, w2), i)
+	      | (VPer (pi1, _), VPer (pi2, _))
+	      => VPer (Permutation.o (pi1, pi2), i)
+	      | (VTen (vs1, (innf1, _, _)), VTen (vs2, _)) =>
+          (case (vs1, vs2) of
+             ([VWir (w1, _), v1], [VWir (w2, _), v2]) =>
+             if is_id' v1
+             andalso NameSet.isEmpty (Interface.names (outerface v2)) then
+               VTen ([VWir (Wiring.o (w1, w2), i), v2], ioi)
+             else
+               if NameSet.eq
+                    (Wiring.innernames w1) (Wiring.outernames w2) then
+                 simplify
+                   (VTen ([VWir (Wiring.o (w1, w2), i),
+                           VCom (v1, v2, (innerface v2, outerface v1, i))],
+                          ioi))
+               else
+                 VCom (v1', v2', ioi)
+           | _ =>
+	           if NameSet.isEmpty (Interface.glob innf1) then
+		           let
+		             fun mkiface is = foldr Interface.* Interface.zero (rev is)
+	               fun mkinterface face = foldr Interface.* Interface.zero o map face 
+	               fun add (vs1, is1, os1) (vs2, is2, os2) rest =
+	                 let
+	                   val i2 = mkiface is2
+	                   val o1 = mkiface os1
+	                 in
+	                   simplify
+	                     (VCom (VTen (rev vs1, (mkiface is1, o1, i)),
+	                            VTen (rev vs2, (i2, mkiface os2, i)),
+	                            (i2, o1,i)))
+	                   :: rest
+	                 end
+	               (* distrib first (vs1, m1, X1, is1, os1) (vs2, n2, Y2, is2, os2) vs1' vs2'
+	                * takes the shortest sublists of vs1' and vs2' whose interfaces
+	                * match, and composes them.
+	                * vs1 accumulates elements from vs1' not yet composed with
+	                * elements from vs2', its interfaces is described by is1 and os1;
+	                * m1 is the width of vs1, X1 the global inner names not yet
+	                * matched by global outer names of vs2'.
+	                * vs2 is used analogously.
+	                *)
+		             fun distrib first (vs1, _, _, is1, os1) (vs2, _, _, is2, os2) [] []
+			             = let
+			                 val i2 = mkiface is2
+			                 val o1 = mkiface os1
+			               in
+			                 (if first then (fn x => x) else simplify) (* avoid looping *)
+			                 (VCom (VTen (rev vs1, (mkiface is1, o1, i)),
+			                        VTen (rev vs2, (i2, mkiface os2, i)),
+			                        (i2, o1, i)))
+			                 :: []
+			               end
+		               | distrib _ (vs1, m1, X1, is1, os1) (vs2, n2, Y2, is2, os2)
+		                           (v1 :: vs1') (v2 :: vs2')
+		               = let
+		                   val iface1' = innerface v1
+		                   val oface2' = outerface v2
+		                   val m1' = Interface.width (iface1')
+		                   val n2' = Interface.width (oface2')
+                       val X1' = Interface.glob (iface1') 
+                       val Y2' = Interface.glob (oface2')
+                       val X1''= NameSet.union' X1 X1' 
+                       val Y2''= NameSet.union' Y2 Y2'
+                       val X1''minusY2 = NameSet.difference X1'' Y2
+                       val Y2minusX1'' = NameSet.difference Y2 X1''
+		                 in
+		                   if m1 + m1' < n2 then
+		                     distrib false 
+		                       (v1 :: vs1, m1 + m1', X1''minusY2,
+		                        iface1' :: is1, outerface v1 :: os1)
+		                       (vs2, n2, Y2minusX1'', is2, os2) vs1' (v2 :: vs2')
+		                   else if m1 + m1' = n2 (* Will faces match if we add v1? *)
+		                        andalso NameSet.isEmpty X1''minusY2
+		                        andalso NameSet.isEmpty Y2minusX1'' then
+		                     add (v1 :: vs1, iface1' :: is1, outerface v1 :: os1)
+		                         (vs2, is2, os2) 
+		                         (distrib false ([], 0, NameSet.empty, [], [])
+		                                        ([], 0, NameSet.empty, [], [])
+		                                        vs1' (v2 :: vs2'))
+		                   else 
+		                     let
+                           val X1minusY2'' = NameSet.difference X1 Y2''
+                           val Y2''minusX1 = NameSet.difference Y2'' X1
+		                     in
+		                       if n2 + n2' < m1 then
+		                         distrib false 
+		                           (vs1, m1, X1minusY2'', is1, os1)
+		                           (v2 :: vs2, n2 + n2', Y2''minusX1,
+		                            innerface v2 :: is2, oface2' :: os2)
+		                           (v1 :: vs1') vs2'
+		                       else if n2 + n2' = m1 (* Facematch if we add v2? *)
+		                            andalso NameSet.isEmpty X1minusY2''
+		                            andalso NameSet.isEmpty Y2''minusX1 then
+		                         add (vs1, is1, os1)
+		                             (v2 :: vs2, innerface v2 :: is2, oface2' :: os2)
+		                             (distrib false ([], 0, NameSet.empty, [], []) 
+		                                            ([], 0, NameSet.empty, [], [])
+		                                            (v1 :: vs1') vs2')
+		                       else
+		                         let
+                               val X1''minusY2'' = NameSet.difference X1'' Y2''
+                               val Y2''minusX1'' = NameSet.difference Y2'' X1''
+                             in
+ 		                           if n2 + n2' = m1 + m1' (* Facematch adding both? *)
+		                           andalso NameSet.isEmpty X1''minusY2''
+		                           andalso NameSet.isEmpty Y2''minusX1'' then
+		                             add (v1 :: vs1, iface1' :: is1, outerface v1 :: os1)
+		                                 (v2 :: vs2, innerface v2 :: is2, oface2' :: os2)
+		                                 (distrib false
+		                                   ([], 0, NameSet.empty, [], [])
+		                                   ([], 0, NameSet.empty, [], []) vs1' vs2')
+		                           else
+		                             distrib false
+		                               (v1 :: vs1, m1 + m1', X1''minusY2'',
+		                                iface1' :: is1, outerface v1 :: os1)
+		                               (v2 :: vs2, n2 + n2', Y2''minusX1'',
+		                                innerface v2 :: is2, oface2' :: os2)
+		                               vs1' vs2'
+		                         end
+		                     end
+	                   end
+		               | distrib _ (vs1, _, _, is1, os1) (vs2, _, _, is2, os2) [] vs2'
+		               = let
+		                   val iface2' = mkinterface innerface (rev vs2')
+		                   val oface2' = mkinterface outerface (rev vs2')
+		                 in
+	                     add (vs1, is1, os1)
+	                         (rev vs2' @ vs2, iface2' :: is2, oface2' :: os2)
+	                         []
+	                   end
+		               | distrib _ (vs1, _, _, is1, os1) (vs2, _, _, is2, os2) vs1' []
+		               = let
+		                   val iface1' = mkinterface innerface (rev vs1')
+		                   val oface1' = mkinterface outerface (rev vs1')
+		                 in
+	                     add (rev vs1' @ vs1, iface1' :: is1, oface1' :: os1)
+	                         (vs2, is2, os2)
+	                         []
+	                   end
+	               val vs = distrib true ([], 0, NameSet.empty, [], [])
+	                                     ([], 0, NameSet.empty, [], []) vs1 vs2
+		           in
+		             simplify (* Does this loop??? *)
+		               (VTen (vs, (mkinterface innerface vs,
+		                           mkinterface outerface vs,
+	                             i)))
+		           end
+	           else
+	             VCom (v1', v2', ioi))
+	      | (VTen ([VWir (w, _), v], _), VIon (KyX, _))
+	      => if is_id' v andalso Wiring.is_renaming w then
+	           let
+	             val {ctrl, free, bound} = Ion.unmk KyX
+	             val free = map (Option.valOf o Wiring.app_x w) free
+	             val KyX
+	               = Ion.make {ctrl = ctrl, free = free, bound = bound}
+	           in
+	             VIon (KyX, i)
+	           end
+	         else
+	           VCom (v1', v2', ioi)
+          (* The following is disabled, as it in a lot of cases prevents the
+           * m2pp function from replacing merges with prime products.
+          (* FIXME somethings wrong with the interfaces: *)
+	      | (v1', VCom (v2a, v2b, _)) => VCom (VCom (v1', v2a, ioi), v2b, ioi) *)
+	      | (v1', v2') => VCom (v1', v2', ioi)
+	    end   
+	  | simplify (VWir (w, i)) = VWir (Wiring.removeidles w, i)              
+    | simplify v = v
+
+  (* t2p'' : (bgval, substitution) -> ((bgval, isNewId?), newSubstitution)
    *
    * Note: Take care - I am using a global wiring (substition) s as a
    * general namemap, that may apply to both global and local wiring.
    * 
    * TODO: NOT FULLY TESTED. *)
-  fun t2p' (VMer (n, i), s) =
-      (((BgTerm.Mer (n, i), Interface.m n, Interface.one), false), s) (* s = id_e*)
-    | t2p' (VCon (X, i), s) =
-      let val outernames = Wiring.outernames s
+  fun t2p'' (v as (VMer (n, i)), s) =
+      ((v, false), s) (* s = id_e*)
+    | t2p'' (VCon (X, i), s) =
+      let val outernames = Wiring.outernames s handle e => raise e
       in
-	  ((((BgTerm.Con (Wiring.app s X, i),
-	      Interface.make {loc = [outernames], glob = NameSet.empty},
-	      Interface.make {loc = [NameSet.empty], glob = outernames}), false), s)
-       handle e => raise e)
+        ((VCon (Wiring.app s X, i), false), s) handle e => raise e
       end
-    | t2p' (VWir (w, i), s) = 
+    | t2p'' (VWir (w, i), s) = 
       if ((NameSet.size o Wiring.outernames) w = 0) then (* w = /X => s = id_e*)
-	  let val X = Wiring.innernames w
-	  in
-	      ((((BgTerm.Wir (w, i), Interface.X X, Interface.zero), false), Wiring.id_X X) 
-	       handle e => raise e )
-	  end
+        let val X = Wiring.innernames w
+        in
+          ((VWir (w, i), false), Wiring.id_X X)
+        end
       else (* w = y/X => s = z/y *)
-	  let val Z = Wiring.outernames s (* Z = {z}*)
-	  in
-	      if ((NameSet.size o Wiring.innernames) w > 0) then
-		  (* X is non-empty, i.e. w is a substitution - link continues. *)
-		  (((BgTerm.Wir (Wiring.id_X Z, i), Interface.X Z,Interface.X Z), true), Wiring.o(s,w))
-	      else (* X is empty, i.e. w is name introduction - link stops here.*)
-		  (((BgTerm.Wir (Wiring.introduce Z, i),
-		     Interface.zero,Interface.X Z),false), Wiring.id_0)
-	  end
-    | t2p' (VIon (KyX, i), s) =
-      let val {ctrl, free, bound} = Ion.unmk KyX
-	  val free'      = (List.map (fn y => getOpt (Wiring.app_x s y, y)) free handle e => raise e)
-	  val innernames = Ion.innernames KyX
-      in 
-	  (((BgTerm.Ion (Ion.make {ctrl = ctrl, free= free', bound = bound}, i), 
-    	     Interface.make {loc = [innernames], glob = NameSet.empty},
-	     Interface.make {loc = [NameSet.empty], glob = Wiring.outernames s}), false),
-	   Wiring.id_X innernames)
+        let val Z = Wiring.outernames s (* Z = {z}*)
+        in
+          if ((NameSet.size o Wiring.innernames) w > 0) then
+            (* X is non-empty, i.e. w is a substitution - link continues. *)
+            ((VWir (Wiring.id_X Z, i), true), Wiring.o (s,w))
+          else (* X is empty, i.e. w is name introduction - link stops here.*)
+            ((VWir (Wiring.introduce Z, i), false), Wiring.id_0)
+        end
+    | t2p'' (VIon (KyX, i), s) =
+      let
+        val {ctrl, free, bound} = Ion.unmk KyX
+        val free'      = (List.map (fn y => getOpt (Wiring.app_x s y, y)) free) handle e => raise e
+        val innernames = Ion.innernames KyX handle e => raise e
+      in
+        ((VIon (Ion.make {ctrl = ctrl, free= free', bound = bound}, i), false),
+         Wiring.id_X innernames) handle e => raise e
       end
-    | t2p' (VPer (pi, i), s) =
+    | t2p'' (VPer (pi, i), s) =
       (* Renaming names of a permutation; should perhaps be a Permutation function.*)
-      let val mathpi  = Permutation.unmk pi (* mathpi : (int * nameset) list *)
-	  val mathpi' = List.map (fn (i,X) => (i,Wiring.app s X)) mathpi
-	  val pi'     = Permutation.make mathpi'
+      let
+        val mathpi  = Permutation.unmk pi (* mathpi : (int * nameset) list *)
+        val mathpi' = List.map (fn (i,X) => (i,Wiring.app s X)) mathpi
+        val pi'     = Permutation.make mathpi'
       in
-	  (((BgTerm.Per (pi', i), Permutation.innerface pi', Permutation.outerface pi'),
-	    false), s)
+        ((VPer (pi', i), false), s)
       end
-    | t2p' (VAbs (X, P, (_, _, i)), s) = 
-      let val (((P', inf', outf'),_),s') = t2p'(P,s) (* (X) P is an id iff it was before, *)
-	  val X' = Wiring.app s X                    (* and we only aim to weed out new ids. *)
+    | t2p'' (VAbs (X, P, (_, _, i)), s) = 
+      let
+        val ((P', _), s') = t2p'' (P, s) (* (X) P is an id iff it was before, *)
+        val inf'  = innerface P' handle e => raise e
+        val outf' = outerface P' handle e => raise e
+        val X' = Wiring.app s X                    (* and we only aim to weed out new ids. *)
       in
-	  ((((BgTerm.Abs (X', P', i), 
-	      inf', Interface.abs X' outf'), false), s') handle e => raise e)
+        ((VAbs (X', P', (inf', Interface.abs X' outf', i)), false), s') handle e => raise e
       end
-    | t2p' (VTen (Gs, (_, _, i)), s) =
-      let val ress       = Wiring.restrict'' s (* Note: Is it restrict'' I want here? *)
-	  val outernames = Interface.names o outerface
-	  val (GsandIdQs', Ss')     = 
-	      (ListPair.unzip o List.map (fn G => t2p'(G, ress (outernames G)))) Gs
-	  val (GsWIfaces', isNewId) = 
-	      foldr (fn ((H,QId),(Hs,QidAcc)) => (H::Hs,QId andalso QidAcc)) ([],true) GsandIdQs'
+    | t2p'' (VTen (Gs, (_, _, i)), s) =
+      let
+        val ress       = Wiring.restrict'' s (* Note: Is it restrict'' I want here? *)
+        val outernames = Interface.names o outerface
+        val (GsandIdQs', Ss')
+          = (ListPair.unzip o List.map (fn G => t2p'' (G, ress (outernames G)))) Gs handle e => raise e
+        val (Gs', isNewId)
+          = (foldr
+               (fn ((G', QId), (Gs', QidAcc)) => (G'::Gs', QId andalso QidAcc))
+               ([], true) GsandIdQs') handle e => raise e
       in
-	  (((BgTerm.Par(List.map #1 GsWIfaces', i), 
-	     Interface.||| (List.map #2 GsWIfaces'), Interface.||| (List.map #3 GsWIfaces')), 
-	    isNewId), Wiring.** Ss')
+        ((VPar (Gs', (Interface.||| (List.map innerface Gs') handle e => raise e,
+                      Interface.||| (List.map outerface Gs') handle e => raise e,
+                      i)),
+          isNewId), Wiring.** Ss') handle e => raise e
       end
-    | t2p' (VCom (G, H, (_, _, i)), s) = 
-      let val (((G', Ginf, Goutf),GisNewId),s') = t2p'(G,s)
-	  val (((H', Hinf, Houtf),HisNewId),s'') = t2p'(H,s')
+    | t2p'' (VCom (G, H, (_, _, i)), s) = 
+      let
+        val ((G', GisNewId), s') = t2p'' (G, s) handle e => raise e
+        val Ginf'  = innerface G' handle e => raise e
+        val Goutf' = outerface G' handle e => raise e
+        val ((H', HisNewId), s'') = t2p'' (H, s') handle e => raise e
+        val Hinf'  = innerface H' handle e => raise e
+        val Houtf' = outerface H' handle e => raise e
       in
-	  if GisNewId then (((H', Hinf, Houtf),HisNewId),s'')
-	  (* Hmmm - check the next two lines... *)
-	  else if HisNewId then (((G', Ginf, Goutf),GisNewId),s'')
-	  else (((BgTerm.Com(G', H', i), Hinf, Goutf), GisNewId orelse HisNewId),s'')
+        if GisNewId then ((H', HisNewId), s'')
+        (* Hmmm - check the next two lines... *)
+        else if HisNewId then ((G', GisNewId), s'')
+        else ((VCom(G', H', (Hinf', Goutf', i)), GisNewId orelse HisNewId), s'')
       end
+    | t2p'' _ = raise NotImplemented
+                        "rename_internally' for parallel and prime product"
 
 
-  (* tensor2parallel : bgval -> (bgterm, innerface, outerface)
+
+  (* tensor2parallel : bgval -> bgval
    *
    * Substitutes || for ** by removal of y//X's.
    * 
    * TODO: NOT FULLY TESTED.*)
-  fun t2p G =
-      let val Y = (Interface.names o outerface) G
-	  val (((G', innf, outf),isId),s) = t2p'(G, Wiring.id_X Y)
-	  fun localize(s, iface) = 
-              (* substitution wiring s as a product of local and global wiring, 
-	         s.t. it has outerface = iface. *)
-	      let val {width, loc, glob} = Interface.unmk iface
-		  val ress               = Wiring.restrict_outer s
-		  val globwir            = ress glob
-		  val locwirs            = map ress loc
-		  val locwir             = BgTerm.WLS Info.noinfo locwirs
-	      in
-		  (BgTerm.Par([(BgTerm.Wir (globwir, Info.noinfo)),locwir], Info.noinfo),
-		   Interface.make {loc = map Wiring.innernames locwirs, glob = Wiring.innernames globwir})
-	      end
-      (* Note: Could really also throw out G' if G' isId.*)
-      in if Wiring.is_id(s) then (G', innf, outf)
-	 else 
-	     let val (W, Wiface) = localize(s, innf)
-	     in (* ( *)
-		 (BgTerm.Com(G', W, Info.noinfo), Wiface, outf)
-		 (* , innerface v2, outerface v1) ... Necessary? *)
-	     end
-      end
+  fun t2p' G =
+      let
+        val Y = (Interface.names o outerface) G
+        val ((G', isId), s) = t2p'' (G, Wiring.id_X Y)
+        val innf = innerface G'
+        val outf = outerface G'
+        fun localize (s, iface) = 
+            (* substitution wiring s as a product of local and global wiring, 
+             * s.t. it has outerface = iface. *)
+          let
+            val {width, loc, glob} = Interface.unmk iface
+            val ress               = Wiring.restrict_outer s
+            val globwir            = ress glob
+            val locwirs            = map ress loc
 
-  (* TODO: m2pp - taking (merge * id)(G || ... || H) to (G | ... | H) *)
-   
-  (* NOTE: It might be easier - typewise - to collapse 
-   * m2pp and t2p functions, since they both need to return a BgTerm. If 
-   * the processing is _not_ done in parallel I would need to create a 
-   * separate datatype for the intermediate format, that one function 
-   * returns.
+						fun WLS ws =
+							let
+								fun tensor (w, (vs, Xs, ys, innernames, outernames)) = 
+								  let
+										val X = Wiring.innernames w
+										val y = Wiring.outernames w
+										val v
+                      = VAbs
+                          (y,
+													 VCom
+                             (VTen ([VWir (w, Info.noinfo), 
+																		 VPer (Permutation.id_n 1,  Info.noinfo)],
+																		(Interface.make
+                                         {loc = [NameSet.empty], glob = X},
+																		 Interface.make
+                                         {loc = [NameSet.empty], glob = y},
+																		 Info.noinfo)), 
+															VCon (X, Info.noinfo),
+															(Interface.make {loc = [X], glob = NameSet.empty},
+															 Interface.make {loc = [NameSet.empty], glob = y},
+                               Info.noinfo)),
+												   (Interface.make {loc = [X], glob = NameSet.empty},
+														Interface.make {loc = [y], glob = NameSet.empty},
+                            Info.noinfo))
+									in
+										(v :: vs, X :: Xs, y :: ys,
+                     NameSet.union' X innernames,
+                     NameSet.union' y outernames)
+									end handle e => raise e
+								val (vs, Xs, ys, _, _) 
+									= foldr tensor ([], [], [], NameSet.empty, NameSet.empty) ws
+							in
+								VTen (vs, 
+											(Interface.make {loc = Xs, glob = NameSet.empty},
+											 Interface.make {loc = ys, glob = NameSet.empty}, Info.noinfo))
+							end
+
+              val locwir = WLS locwirs
+            in
+              VPar ([VWir (globwir, Info.noinfo), locwir],
+                    (Interface.make {loc  = map Wiring.innernames locwirs,
+                                     glob = Wiring.innernames globwir},
+                     Interface.make {loc  = map Wiring.outernames locwirs,
+                                     glob = Wiring.outernames globwir},
+                     Info.noinfo))
+            end
+      (* Note: Could really also throw out G' if G' isId.*)
+      in
+        if Wiring.is_id s then G'
+        else 
+          let val W = localize(s, innf)
+          in
+            (VCom (G', W, (innerface W, outf, Info.noinfo)))
+          end handle e => raise e
+      end
+	
+	val t2p = unmk o t2p'
+  
+
+  (* merge2parallelproduct : bgval -> bgval
+   * 
+   * m2pp - taking (merge * id)(G || ... || H) to (G | ... | H)
+   * 
+   * TODO: this is a simple heuristic -- Troels is working on something more clever
    *
-   * A really ugly alternative is to let t2p return a (nonvalid) bgval with 
-   * *-products standing for ||'s; which is then substituted
-   * for ||'s by removeMerge.
+   * Simply recognize terms on the exact form
+   *
+   *   (idw || merge_n) o (v_1 || ... || v_n)  and
+   *   merge_n o (v_1 || ... || v_n)
+   *
+   * and rewrite them into
+   *
+   *   v_1 | ... | v_n
+   * 
+   * where the v_i must have width 1.
    *)
-      
+  fun m2pp (VCom (v1, v2, meta)) =
+      let
+        val v1' = m2pp v1
+        val v2' = m2pp v2
+        fun has_width_1 v = 1 = Interface.width (outerface v)
+      in
+        case (v1', v2') of
+          (VPar ([VWir (w, _), VMer (n, _)], _), VPar (vs, meta')) =>
+          if Wiring.is_id w andalso length vs = n andalso List.all has_width_1 vs then
+            VPri (vs, meta)
+          else
+            VCom (v1', v2', meta)
+        | (VPar ([VMer (n, _)], _), VPar (vs, meta')) =>
+          if length vs = n andalso List.all has_width_1 vs then
+            VPri (vs, meta)
+          else
+            VCom (v1', v2', meta)
+        | (VMer (n, _), VPar (vs, meta')) =>
+          if length vs = n andalso List.all has_width_1 vs then
+            VPri (vs, meta)
+          else
+            VCom (v1', v2', meta)
+        | _ => VCom (v1', v2', meta)
+      end
+    | m2pp (VTen (vs, meta)) = VTen (map m2pp vs, meta)
+    | m2pp (VPar (vs, meta)) = VPar (map m2pp vs, meta)
+    | m2pp (VPri (vs, meta)) = VPri (map m2pp vs, meta)
+    | m2pp (VAbs (X, v, meta)) = VAbs (X, m2pp v, meta)
+    | m2pp v = v
+   
   val _ = Flags.makeBoolFlag
-            {name = "/kernel/ast/bgval/tensor2parallel",
+            {name = "/kernel/ast/bgval/pp-simplify",
              default = false,
-             short = "", long = "--t2p",
+             short = "", long = "--pp-simplified",
+             arg = "",
+             desc = "Simplify BgVal terms before prettyprinting."}
+   
+  val _ = Flags.makeBoolFlag
+            {name = "/kernel/ast/bgval/pp-tensor2parallel",
+             default = false,
+             short = "", long = "--pp-t2p",
              arg = "",
              desc = "Substitute || for * by removal of y//X's before prettyprinting."}
+   
+  val _ = Flags.makeBoolFlag
+            {name = "/kernel/ast/bgval/pp-merge2prime",
+             default = false,
+             short = "", long = "--pp-m2p",
+             arg = "",
+             desc = "Substitute | for || by removal of merges before prettyprinting."}
 
   fun pp' BgTerm_pp withIface (indent:int) pps v =
     let
-      val t2pflag = Flags.getBoolFlag "/kernel/ast/bgval/tensor2parallel"
-      val bgval2bgterm = if t2pflag then t2p else unmk
-      val (t, iface, oface) = bgval2bgterm v handle e => raise e
+      val sppflag = Flags.getBoolFlag "/kernel/ast/bgval/pp-simplify"
+      val t2pflag = Flags.getBoolFlag "/kernel/ast/bgval/pp-tensor2parallel"
+      val m2pflag = Flags.getBoolFlag "/kernel/ast/bgval/pp-merge2prime"
+
+      val simplify = if sppflag then simplify else (fn x => x) handle e => raise e
+      val t2p      = if t2pflag then t2p'     else (fn x => x) handle e => raise e
+      val m2pp     = if m2pflag then m2pp     else (fn x => x) handle e => raise e
+
+      val v = (m2pp o simplify o t2p o simplify) v
+      val (t, iface, oface) = unmk v handle e => raise e
       (* try to print the interfaces using the names given in the input *)
       val ()
         = (Name.pp_unchanged (Interface.names iface) (Interface.names oface))
@@ -348,15 +801,15 @@ struct
       if withIface then PrettyPrint.begin_block pps PrettyPrint.CONSISTENT 0 else ();
       BgTerm_pp indent pps t;
       if withIface then
-    	  (  PrettyPrint.add_break pps (1, 0);
-             PrettyPrint.add_string pps ": ";
+        (  PrettyPrint.add_break pps (1, 0);
+           PrettyPrint.add_string pps ": ";
            PrettyPrint.begin_block pps PrettyPrint.CONSISTENT 0;
-	     Interface.pp indent pps iface;
-    	     PrettyPrint.add_break pps (1, 0);
-    	     PrettyPrint.add_string pps "-> ";
-    	     Interface.pp indent pps oface;
-    	     PrettyPrint.end_block pps;
-    	     PrettyPrint.end_block pps
+           Interface.pp indent pps iface;
+           PrettyPrint.add_break pps (1, 0);
+           PrettyPrint.add_string pps "-> ";
+           Interface.pp indent pps oface;
+           PrettyPrint.end_block pps;
+           PrettyPrint.end_block pps
           )
       else ()
     end
@@ -656,6 +1109,8 @@ struct
 	  | ppv (VPer _) = show "Per pi"
 	  | ppv (VAbs _) = show "Abs (X, v)"
 	  | ppv (VTen _) = show "Ten vs"
+	  | ppv (VPar _) = show "Par vs"
+	  | ppv (VPri _) = show "Pri vs"
 	  | ppv (VCom _) = show "Com (v1, v2)" 
 	fun pp (MVal v) = ppv v
 	  | pp (MMer n) = show ("Mer " ^ Int.toString n)
@@ -698,56 +1153,6 @@ struct
       in
 	pp
       end
-
-exception NotImplemented of bgval * string
-fun explain_NotImplemented (NotImplemented (v, errtxt)) =
-    [Exp (LVL_USER, Info.origin (info v), pack_pp_with_data pp v, []),
-     Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
-  | explain_NotImplemented _ = raise Match
-val _ = add_explainer
-          (mk_explainer "feature not implemented"
-                        explain_NotImplemented)
-
-(* Determine whether a (X)v is the identity. *)
-fun is_concretion_of X (VMer (1, _))     = NameSet.isEmpty X
-  | is_concretion_of X (VMer _)          = false
-  | is_concretion_of X (VCon (Y, _))     = NameSet.eq X Y
-  | is_concretion_of X (VWir _)          = false
-  | is_concretion_of X (VIon _)          = false
-  | is_concretion_of X (VPer (pi, _))    = NameSet.isEmpty X andalso
-					   Permutation.is_id pi
-  | is_concretion_of X (VAbs (Y, v, _))  
-    = is_concretion_of (NameSet.union X Y) v
-  | is_concretion_of X (VTen ([v], _))   = is_concretion_of X v
-  | is_concretion_of _ (VTen _)          = false
-  | is_concretion_of X (v as (VCom _))          
-    = raise NotImplemented (v, "is_concretion_of for composition")
-
-fun is_id (VMer (1, _))    = true
-  | is_id (VMer _)         = false
-  | is_id (VCon (X, _))    = NameSet.isEmpty X
-  | is_id (VWir (w, _))    = Wiring.is_id w
-  | is_id (VIon _)         = false
-  | is_id (VPer (pi, _))   = Permutation.is_id pi
-  | is_id (VAbs (X, v, _)) = is_concretion_of X v
-  | is_id (VTen (vs, _))   = List.all is_id vs
-  | is_id (v as (VCom _))  = raise NotImplemented
-				 (v, "is_id for composition")
-
-fun is_id' v = is_id v handle NotImplemented _ => false
-
-fun is_id0 (VMer (1, _))    = false
-  | is_id0 (VMer _)         = false
-  | is_id0 (VCon (X, _))    = false
-  | is_id0 (VWir (w, _))    = Wiring.is_id0 w
-  | is_id0 (VIon _)         = false
-  | is_id0 (VPer (pi, _))   = Permutation.is_id0 pi
-  | is_id0 (VAbs (X, v, _)) = false
-  | is_id0 (VTen (vs, _))   = List.all is_id0 vs
-  | is_id0 (v as (VCom _))  = raise NotImplemented
-				 (v, "is_id0 for composition")
-
-fun is_id0' v = is_id0 v handle NotImplemented _ => false
 
   fun LS i w =
       let
@@ -925,7 +1330,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	    val (_, _, globls, wBvs)
 	      = foldr mksubs (allnames, LinkSet.empty, [], []) vs
 	    val w_inv = Wir i (Wiring.make' globls)
-	    val A = if is_id0 w_inv then
+	    val A = if is_id0' w_inv then
 		      Per i (Permutation.** (map #2 wBvs))
 		    else 
 		      Ten i [w_inv, Per i (Permutation.** (map #2 wBvs))]
@@ -1109,12 +1514,12 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 				      loc)
 	      val w = Wir i (Wiring.make ls)
 	      val idw = Wir i (Wiring.id_X glob)
-	      val idwxXs = if is_id0 idw then
+	      val idwxXs = if is_id0' idw then
 			     Ten i (map (Con i) loc)
 			   else 
 			     Ten i (idw :: map (Con i) loc)
 	      val wxidp = Ten i [w, Per i (Permutation.id_n width)]
-	      val B = if is_id wxidp then
+	      val B = if is_id' wxidp then
 			idwxXs
 		      else
 			Com i (wxidp, idwxXs)
@@ -1124,7 +1529,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	val (_, _, globls, Bvs, K)
 	  = foldr mksubs (allnames, LinkSet.empty, [], [], 0) vs
 	val w_inv = Wir i (Wiring.make' globls)
-	val A = if is_id0 w_inv then
+	val A = if is_id0' w_inv then
 		  Mer i K
 		else 
 		  Ten i [w_inv, Mer i K]
@@ -1189,261 +1594,6 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	make'
       end
 
-
-  fun simplify (VAbs (X, v, ioi as (_, _, i))) = 
-    (* ({})P -> P
-     * (X)(X')P -> (X u X')P
-     * (X)"X" -> id_(X)
-     *)
-    if NameSet.isEmpty X then
-      simplify v
-    else
-	  	(case simplify v of
-	  	   VAbs (X', v', ioi') => VAbs (NameSet.union X X', v', ioi)
-	  	 | v' as (VCon (X', i'))
-	  	 => if NameSet.eq X X' then
-	  	      VPer (Permutation.id [X], i)
-	  	    else
-	  	      VAbs (X, v', ioi)
-	  	 | v' => VAbs (X, v', ioi))
-	  | simplify (VTen (vs, ioi as (_, _, i))) =
-	  (* vsl * Ten vs' * vsr -> vsl * vs' * vsr
-	   * vsl * id_0 * vsr -> vsl * vsr
-	   * vs0 * w1 * vs1 * w2 * ... * wn * vsn
-	   *  -> [[w1 * ... * wn]] * vs0 * ... * vsn
-	   * vsl * pi1 * pi2 * vsr -> vsl * [[pi1 * pi2]] * vsr
-     * Ten [v] -> v
-	   *)
-	    let
-	      val vs = map simplify vs
-	      val vs
-	        = foldr
-	            (fn (VTen (vs', _), vs) => vs' @ vs
-	              | (v, vs) => v :: vs)
-	            []
-	            vs
-	      val vs = List.filter (not o is_id0') vs
-	      fun extractwiring [] = (Wiring.id_0, NONE, [])
-	        | extractwiring (v :: vs) =
-	          let
-	            val (w', i', vs') = extractwiring vs
-	          in
-	            case v of
-	              VWir (w, i'')
-	            => (Wiring.* (w, w'),
-	                SOME (case i' of SOME _ => i | NONE => i''),
-	                vs')
-	            | v => (w', i', v :: vs')
-	          end
-	      val (w, iw, vs) = extractwiring vs
-	      val vs
-	       = if Wiring.is_id0 w then
-	           vs
-	         else
-	           VWir (w, case iw of SOME i' => i' | NONE => i) :: vs
-	      fun mergepis [] = []
-	        | mergepis ((v as (VPer (pi, i))) :: vs) =
-	          (case mergepis vs of
-	             (VPer (pi', i') :: vs') => (VPer (Permutation.* (pi, pi'), i) :: vs')
-	           | vs' => v :: vs')
-	        | mergepis (v :: vs) = v :: mergepis vs
-	      val vs = mergepis vs
-	    in
-	      case vs of
-	        [v] => v
-	      | vs => VTen (vs, ioi)
-	    end
-	  | simplify (VCom (v1, v2, ioi as (_, _, i))) =
-	  (* "X"(X)P -> P
-	   * w1 w2 -> [[w1 w2]]
-	   * pi1 pi2 -> [[pi1 pi2]]
-	   * id v -> v
-	   * v id -> v
-	   * (v1 * v2)(v1' * v2') -> v1 v1' * v2 v2', if vi : Ii ->, vi' : -> Ii
-		 * (alpha * id_1) K_y(X) -> K_{alpha(y)}(X)
-		 * (alpha * id_1) (beta * K_y(X)) -> alpha' beta * K_{alpha(y)}(X) [not implemented]
-		 * (w1 * id_n) (w2 * v) -> w1 w2 * v, if v : -> n        [not implemented]
-		 * A o (B o C) -> (A o B) o C    (for nicer prettyprinting)
-	   *)
-	    let
-	      val v1' = simplify v1
-	      val v2' = simplify v2
-	    in
-	      if is_id' v1' then
-	        v2'
-	      else if is_id' v2' then
-	        v1'
-	      else case (v1', v2') of
-	        (VCon (X, _), VAbs (X', v, _))
-	      => if NameSet.eq X X' then v else VCom (v1', v2', ioi)
-	      | (VWir (w1, _), VWir (w2, _)) => VWir (Wiring.o (w1, w2), i)
-	      | (VPer (pi1, _), VPer (pi2, _))
-	      => VPer (Permutation.o (pi1, pi2), i)
-	      | (VTen (vs1, (innf1, _, _)), VTen (vs2, _)) =>
-          (case (vs1, vs2) of
-             ([VWir (w1, _), v1], [VWir (w2, _), v2]) =>
-             if is_id' v1
-             andalso NameSet.isEmpty (Interface.names (outerface v2)) then
-               VTen ([VWir (Wiring.o (w1, w2), i), v2], ioi)
-             else
-               if NameSet.eq
-                    (Wiring.innernames w1) (Wiring.outernames w2) then
-                 simplify
-                   (VTen ([VWir (Wiring.o (w1, w2), i),
-                           VCom (v1, v2, (innerface v2, outerface v1, i))],
-                          ioi))
-               else
-                 VCom (v1', v2', ioi)
-           | _ =>
-	           if NameSet.isEmpty (Interface.glob innf1) then
-		           let
-		             fun mkiface is = foldr Interface.* Interface.zero (rev is)
-	               fun mkinterface face = foldr Interface.* Interface.zero o map face 
-	               fun add (vs1, is1, os1) (vs2, is2, os2) rest =
-	                 let
-	                   val i2 = mkiface is2
-	                   val o1 = mkiface os1
-	                 in
-	                   simplify
-	                     (VCom (VTen (rev vs1, (mkiface is1, o1, i)),
-	                            VTen (rev vs2, (i2, mkiface os2, i)),
-	                            (i2, o1,i)))
-	                   :: rest
-	                 end
-	               (* distrib first (vs1, m1, X1, is1, os1) (vs2, n2, Y2, is2, os2) vs1' vs2'
-	                * takes the shortest sublists of vs1' and vs2' whose interfaces
-	                * match, and composes them.
-	                * vs1 accumulates elements from vs1' not yet composed with
-	                * elements from vs2', its interfaces is described by is1 and os1;
-	                * m1 is the width of vs1, X1 the global inner names not yet
-	                * matched by global outer names of vs2'.
-	                * vs2 is used analogously.
-	                *)
-		             fun distrib first (vs1, _, _, is1, os1) (vs2, _, _, is2, os2) [] []
-			             = let
-			                 val i2 = mkiface is2
-			                 val o1 = mkiface os1
-			               in
-			                 (if first then (fn x => x) else simplify) (* avoid looping *)
-			                 (VCom (VTen (rev vs1, (mkiface is1, o1, i)),
-			                        VTen (rev vs2, (i2, mkiface os2, i)),
-			                        (i2, o1, i)))
-			                 :: []
-			               end
-		               | distrib _ (vs1, m1, X1, is1, os1) (vs2, n2, Y2, is2, os2)
-		                           (v1 :: vs1') (v2 :: vs2')
-		               = let
-		                   val iface1' = innerface v1
-		                   val oface2' = outerface v2
-		                   val m1' = Interface.width (iface1')
-		                   val n2' = Interface.width (oface2')
-                       val X1' = Interface.glob (iface1') 
-                       val Y2' = Interface.glob (oface2')
-                       val X1''= NameSet.union X1 X1' 
-                       val Y2''= NameSet.union Y2 Y2'
-                       val X1''minusY2 = NameSet.difference X1'' Y2
-                       val Y2minusX1'' = NameSet.difference Y2 X1''
-		                 in
-		                   if m1 + m1' < n2 then
-		                     distrib false 
-		                       (v1 :: vs1, m1 + m1', X1''minusY2,
-		                        iface1' :: is1, outerface v1 :: os1)
-		                       (vs2, n2, Y2minusX1'', is2, os2) vs1' (v2 :: vs2')
-		                   else if m1 + m1' = n2 (* Will faces match if we add v1? *)
-		                        andalso NameSet.isEmpty X1''minusY2
-		                        andalso NameSet.isEmpty Y2minusX1'' then
-		                     add (v1 :: vs1, iface1' :: is1, outerface v1 :: os1)
-		                         (vs2, is2, os2) 
-		                         (distrib false ([], 0, NameSet.empty, [], [])
-		                                        ([], 0, NameSet.empty, [], [])
-		                                        vs1' (v2 :: vs2'))
-		                   else 
-		                     let
-                           val X1minusY2'' = NameSet.difference X1 Y2''
-                           val Y2''minusX1 = NameSet.difference Y2'' X1
-		                     in
-		                       if n2 + n2' < m1 then
-		                         distrib false 
-		                           (vs1, m1, X1minusY2'', is1, os1)
-		                           (v2 :: vs2, n2 + n2', Y2''minusX1,
-		                            innerface v2 :: is2, oface2' :: os2)
-		                           (v1 :: vs1') vs2'
-		                       else if n2 + n2' = m1 (* Facematch if we add v2? *)
-		                            andalso NameSet.isEmpty X1minusY2''
-		                            andalso NameSet.isEmpty Y2''minusX1 then
-		                         add (vs1, is1, os1)
-		                             (v2 :: vs2, innerface v2 :: is2, oface2' :: os2)
-		                             (distrib false ([], 0, NameSet.empty, [], []) 
-		                                            ([], 0, NameSet.empty, [], [])
-		                                            (v1 :: vs1') vs2')
-		                       else
-		                         let
-                               val X1''minusY2'' = NameSet.difference X1'' Y2''
-                               val Y2''minusX1'' = NameSet.difference Y2'' X1''
-                             in
- 		                           if n2 + n2' = m1 + m1' (* Facematch adding both? *)
-		                           andalso NameSet.isEmpty X1''minusY2''
-		                           andalso NameSet.isEmpty Y2''minusX1'' then
-		                             add (v1 :: vs1, iface1' :: is1, outerface v1 :: os1)
-		                                 (v2 :: vs2, innerface v2 :: is2, oface2' :: os2)
-		                                 (distrib false
-		                                   ([], 0, NameSet.empty, [], [])
-		                                   ([], 0, NameSet.empty, [], []) vs1' vs2')
-		                           else
-		                             distrib false
-		                               (v1 :: vs1, m1 + m1', X1''minusY2'',
-		                                iface1' :: is1, outerface v1 :: os1)
-		                               (v2 :: vs2, n2 + n2', Y2''minusX1'',
-		                                innerface v2 :: is2, oface2' :: os2)
-		                               vs1' vs2'
-		                         end
-		                     end
-	                   end
-		               | distrib _ (vs1, _, _, is1, os1) (vs2, _, _, is2, os2) [] vs2'
-		               = let
-		                   val iface2' = mkinterface innerface (rev vs2')
-		                   val oface2' = mkinterface outerface (rev vs2')
-		                 in
-	                     add (vs1, is1, os1)
-	                         (rev vs2' @ vs2, iface2' :: is2, oface2' :: os2)
-	                         []
-	                   end
-		               | distrib _ (vs1, _, _, is1, os1) (vs2, _, _, is2, os2) vs1' []
-		               = let
-		                   val iface1' = mkinterface innerface (rev vs1')
-		                   val oface1' = mkinterface outerface (rev vs1')
-		                 in
-	                     add (rev vs1' @ vs1, iface1' :: is1, oface1' :: os1)
-	                         (vs2, is2, os2)
-	                         []
-	                   end
-	               val vs = distrib true ([], 0, NameSet.empty, [], [])
-	                                     ([], 0, NameSet.empty, [], []) vs1 vs2
-		           in
-		             simplify (* Does this loop??? *)
-		               (VTen (vs, (mkinterface innerface vs,
-		                           mkinterface outerface vs,
-	                             i)))
-		           end
-	           else
-	             VCom (v1', v2', ioi))
-	      | (VTen ([VWir (w, _), v], _), VIon (KyX, _))
-	      => if is_id' v andalso Wiring.is_renaming w then
-	           let
-	             val {ctrl, free, bound} = Ion.unmk KyX
-	             val free = map (Option.valOf o Wiring.app_x w) free
-	             val KyX
-	               = Ion.make {ctrl = ctrl, free = free, bound = bound}
-	           in
-	             VIon (KyX, i)
-	           end
-	         else
-	           VCom (v1', v2', ioi)
-	      | (v1', VCom (v2a, v2b, _)) => VCom (VCom (v1', v2a, ioi), v2b, ioi)
-	      | (v1', v2') => VCom (v1', v2', ioi)
-	    end   
-	  | simplify (VWir (w, i)) = VWir (Wiring.removeidles w, i)              
-    | simplify v = v
 
 
   (* Rxxx rules.
@@ -1543,6 +1693,9 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
       in
         (Com i (v1', v2'), beta2)
       end
+    | rename_internally' _ _ 
+      = raise NotImplemented
+              "rename_internally' for parallel and prime product"
 
   fun rename_internally b =
       let

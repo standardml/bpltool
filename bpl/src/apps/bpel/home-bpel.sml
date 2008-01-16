@@ -10,7 +10,9 @@ val _ = OS.FileSys.chDir "../bpl/";
 use "smlnj.sml";
 val _ = OS.FileSys.chDir bpel_dir;
 use "figinfo.sml";
-Flags.setBoolFlag "/kernel/ast/bgval/tensor2parallel" true;
+Flags.setBoolFlag "/kernel/ast/bgval/pp-simplify" true;
+Flags.setBoolFlag "/kernel/ast/bgval/pp-tensor2parallel" true;
+Flags.setBoolFlag "/kernel/ast/bgval/pp-merge2prime" true;
 val _ = use_shorthands true;
 
 

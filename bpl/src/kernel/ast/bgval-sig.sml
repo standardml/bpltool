@@ -309,11 +309,10 @@ sig
    *)
   val Pri : info -> bgval list -> bgval
   (** Signal that some operation on a bgval is not implemented.
-   * @params v errtxt
-   * @param v       The bigraph value.
+   * @params errtxt
    * @param errtxt  Explanatory error text.
    *)
-  exception NotImplemented of bgval * string
+  exception NotImplemented of string
   (** Determine whether a bgval is an identity.  NOTE: An
    * implementation is not required to implement this for bgvals
    * containing compositions. 
