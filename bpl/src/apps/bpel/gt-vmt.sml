@@ -38,6 +38,8 @@ val Assign         = "Assign"
 val Copy           = "Copy"
 val To             = "To"
 val From           = "From"
+val ToPLink        = "ToPLink"
+val FromPLink      = "FromPLink"
 val Invoke         = "Invoke"
 val PartnerLinks   = "PartnerLinks"    
 val PartnerLink    = "PartnerLink"
@@ -46,6 +48,7 @@ val Link           = "Link"
 val CreateInstance = "CreateInstance"
 val Receive        = "Receive"
 val Reply          = "Reply"
+val ReplyTo        = "ReplyTo"
 val GetReply       = "GetReply"
 val Exit           = "Exit"
 
@@ -160,6 +163,14 @@ val Copy         = passive0 (Copy                  );
 val To           = atomic   (To          -:       2);
 val From         = atomic   (From        -:       2);
 
+(* The free ports of a ToPLink or FromPLink node should be connected
+ *
+ *   #1 to a partner link name.
+ *   #2 to the scope port of the node delimiting the partner link's scope.
+ *)
+val ToPLink      = atomic   (ToPLink     -:       2);
+val FromPLink    = atomic   (FromPLink   -:       2);
+
 (* The free ports of an Invoke node should be connected:
  * 
  *   #1 to the name of the partner link
@@ -216,6 +227,19 @@ val Receive      = atomic   (Receive     -:       6);
  *   #6 to the instance identifier of its enclosing instance
  *)
 val Reply        = atomic   (Reply       -:       6);
+
+(* Since it is possible to copy partner-links, an instance can be
+ * invoked by previously unknown partners. When invoked, it therefor
+ * needs a way to "remember" whom to reply to -- this is accomplished
+ * by placing a ReplyTo node in the relevant partner-link.
+ *
+ * The free ports of a ReplyTo node should be connected:
+ * 
+ *   #1 to the name of the operation
+ *   #2 to the instance identifier of the instance to reply to.
+ *)
+val ReplyTo      = atomic   (ReplyTo     -:       2);
+
 (* The free ports of a GetReply node should be connected:
  * 
  *   #1 to the name of the partner link
@@ -337,11 +361,10 @@ val rule_variable_reference = "variable reference" :::
  * describing their semantics.
  *)
 
-(* The assign copy activity copies the content inside the Variable node
- * pointed to by the From node to the Variable node pointed to by the To
- * node.
+(* The assign copy activity copies the content inside a Variable/PartnerLink
+ * to a Variable/PartnerLink.
  *)
-val rule_assign_copy_variable = "assign copy variable" :::
+val rule_assign_copy_var2var = "assign copy var2var" :::
 
    Assign[inst_id] o Copy o (    From[f, scope1]
                              `|` To[t, scope2])
@@ -354,6 +377,51 @@ val rule_assign_copy_variable = "assign copy variable" :::
    <->
 || Variable[f, scope1] o `[]`
 || Variable[t, scope2] o `[]`
+|| Running[inst_id];
+
+val rule_assign_copy_var2plink = "assign copy var2plink" :::
+
+   Assign[inst_id] o Copy o (    From[f, scope1]
+                             `|` ToPLink[t, scope2])
+|| Variable[f, scope1] o `[]`
+|| PartnerLink[t, scope2] o `[]`
+|| Running[inst_id]
+
+  --[1 |-> 0]--|>
+
+   <->
+|| Variable[f, scope1] o `[]`
+|| PartnerLink[t, scope2] o `[]`
+|| Running[inst_id];
+
+val rule_assign_copy_plink2var = "assign copy plink2var" :::
+
+   Assign[inst_id] o Copy o (    FromPLink[f, scope1]
+                             `|` To[t, scope2])
+|| PartnerLink[f, scope1] o `[]`
+|| Variable[t, scope2] o `[]`
+|| Running[inst_id]
+
+  --[1 |-> 0]--|>
+
+   <->
+|| PartnerLink[f, scope1] o `[]`
+|| Variable[t, scope2] o `[]`
+|| Running[inst_id];
+
+val rule_assign_copy_plink2plink = "assign copy plink2plink" :::
+
+   Assign[inst_id] o Copy o (    FromPLink[f, scope1]
+                             `|` ToPLink[t, scope2])
+|| PartnerLink[f, scope1] o `[]`
+|| PartnerLink[t, scope2] o `[]`
+|| Running[inst_id]
+
+  --[1 |-> 0]--|>
+
+   <->
+|| PartnerLink[f, scope1] o `[]`
+|| PartnerLink[t, scope2] o `[]`
 || Running[inst_id];
 
 
@@ -494,12 +562,15 @@ o (   GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
        `|` Instance[proc_name, inst_id_invoked]
            o (    PartnerLinks
                   o (    PartnerLink[partner_link, inst_id_invoked]
-                         o (Link[inst_id_invoker] `|` Message[oper] o `[]`)
+                         o (    Link[inst_id_invoker]
+                            `|` Message[oper] o `[]`
+                            `|` ReplyTo[oper, inst_id_invoker])
                      `|` inst_id_invoked//[inst_id_invoked1]
                          o `[inst_id_invoked1]`)
               `|` Invoked[inst_id_invoked]
               `|` inst_id_invoked//[inst_id_invoked2]
                   o `[inst_id_invoked2]`)));
+(* FIXME: Out of sync!
 (* A specialized version of the above rule, where the partner link and
  * variable must be at the top-level scope. *)
 val rule_invoke_specialized = "invoke_specialized" :::
@@ -537,6 +608,7 @@ o ((   PartnerLinks
                  `|` `[]`)
               `|` Invoked[inst_id_invoked]
               `|` `[inst_id_invoked]`)));
+*)
 
 
 (* The receive rule takes care of activating the instance, by removing a
@@ -561,6 +633,7 @@ val rule_receive = "receive" :::
 || Variable[var, var_scope] o `[]`
 || Running[inst_id];
 
+(* FIXME Out of sync!
 (* A specialized version of the above rule, where the partner link and
  * variable must be at the top-level scope. *)
 val rule_receive_specialized = "receive_specialized" :::
@@ -583,7 +656,7 @@ val rule_receive_specialized = "receive_specialized" :::
           `[]` `|`
           Variable[var, var_scope] o `[]`))
 || <-> || oper//[];
-
+*)
 
 (* The invoke instance rule executes an Invoke activity in one instance
  * simultaneously with a corresponding Receive activity in another
@@ -602,10 +675,11 @@ val rule_invoke_instance = "invoke_instance" :::
 || Running[inst_id_invoker]
 || Receive[partner_link_invoked, partner_link_scope_invoked, oper,
            var, var_scope, inst_id_invoked]
+|| PartnerLink[partner_link_invoked, partner_link_scope_invoked] o `[]`
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_invoked]
 
-  --[2 |-> 1]--|>
+  --[3 |-> 1]--|>
 
    GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
             outvar, outvar_scope, inst_id_invoker]
@@ -613,7 +687,9 @@ val rule_invoke_instance = "invoke_instance" :::
    o (Link[inst_id_invoked] `|` `[]`)
 || Variable[invar, invar_scope] o `[]`
 || Running[inst_id_invoker]
-|| <-> || partner_link_invoked//[] || partner_link_scope_invoked//[]
+|| <->
+|| PartnerLink[partner_link_invoked, partner_link_scope_invoked]
+   o (`[]` `|` ReplyTo[oper, inst_id_invoker])
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_invoked];
 
@@ -627,7 +703,7 @@ val rule_reply = "reply" :::
    Reply[partner_link_invoked, partner_link_scope_invoked, oper,
          var, var_scope, inst_id_invoked]
 || PartnerLink[partner_link_invoked, partner_link_scope_invoked]
-   o (Link[inst_id_invoker] `|` `[]`)
+   o (ReplyTo[oper, inst_id_invoker] `|` `[]`)
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_invoked]
 || GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
@@ -638,8 +714,7 @@ val rule_reply = "reply" :::
   --[2 |-> 1]--|>
 
    <-> || oper//[]
-|| PartnerLink[partner_link_invoked, partner_link_scope_invoked]
-   o (Link[inst_id_invoker] `|` `[]`)
+|| PartnerLink[partner_link_invoked, partner_link_scope_invoked] o `[]`
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_invoked]
 || <-> || partner_link_invoker//[] || partner_link_scope_invoker//[]
@@ -653,9 +728,12 @@ val rules =
     mkrules [rule_scope_activation, rule_scope_completed,
              rule_flow_completed, rule_sequence_completed,
              rule_if_true, rule_if_false, rule_while_unfold,
-             rule_assign_copy_variable,
-             rule_invoke, rule_invoke_specialized,
-             rule_receive, rule_receive_specialized,
+             rule_assign_copy_var2var,
+             rule_assign_copy_var2plink,
+             rule_assign_copy_plink2var,
+             rule_assign_copy_plink2plink,
+             rule_invoke, (*rule_invoke_specialized,*)
+             rule_receive, (*rule_receive_specialized,*)
              rule_invoke_instance, rule_reply,
              rule_exit_stop_inst, rule_exit_remove_inst,
              rule_inst_completed];
