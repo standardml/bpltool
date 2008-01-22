@@ -993,3 +993,23 @@ val _ =
   outputtikz_v
     "state_invoked_instance.tex" (SOME 0.017) (SOME smallcfg) state_invoked_instance;
 *)
+
+(*
+val figure = If[inst_id] o (    Condition o False
+                  `|` Then o `[]`
+                  `|` Else o `[]`)
+|| Running[inst_id];
+val _ =
+  outputtikz_v
+    "figures.tex" (SOME 0.017) (SOME smallcfg) figure;
+
+
+val reactum = 
+   `[]`
+|| Running[inst_id];
+
+val _ =
+  outputtikz_v
+    "reactum.tex" (SOME 0.017) (SOME smallcfg) reactum;
+
+*)
