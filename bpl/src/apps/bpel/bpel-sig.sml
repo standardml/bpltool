@@ -13,13 +13,14 @@ val Process      = passive  (Process     =: 1 --> 1);
 val Instance     = active   (Instance    -:       2);
 
 (* The binding port of a Scope is used to delimit the scope of
- * variables within the scope to the scope itself. *)
+ * variables within the scope to the scope itself.
+ * The free port should be connected to the instance identifier. *)
 val Scope        = passive  (Scope       =: 1 --> 1);
 (* Scopes have to be initialized before they can be used. An ActiveScope
  * is a scope that has has been initialized.
- * The first free port of an ActiveScope is used to delimit the scope of
+ * The first free port should be connected to the instance identifier.
+ * The second free port of an ActiveScope is used to delimit the scope of
  * variables within the scope to the scope itself.
- * The second free port should be connected to the instance identifier.
  *)
 val ActiveScope  = active   (ActiveScope -:       2);
 

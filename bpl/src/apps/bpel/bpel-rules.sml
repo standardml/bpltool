@@ -179,7 +179,7 @@ val rule_scope_activation = "scope activation" :::
    Scope[inst_id][[scope]] o `[scope]`
 || Running[inst_id]
   --[0 |-> 0]--|>
-   -//[scope] o (ActiveScope[scope, inst_id] o `[scope]`)
+   -//[scope] o (ActiveScope[inst_id, scope] o `[scope]`)
 || Running[inst_id];
 
 (* When we are finished executing the body of the scope we remove the
@@ -187,7 +187,7 @@ val rule_scope_activation = "scope activation" :::
  * "scope"-edge. *)
 val rule_scope_completed = "scope completed" :::
 
-   ActiveScope[scope, inst_id]
+   ActiveScope[inst_id, scope]
    o (Variables o `[]`  `|`  PartnerLinks o `[]`)
 || Running[inst_id]
   ----|>

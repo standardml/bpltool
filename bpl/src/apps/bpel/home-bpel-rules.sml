@@ -200,7 +200,7 @@ val rule_scope_activation = "scope activation" :::
 || Running[inst_id, active_scopes, inst_id_top]
 || TopRunning[inst_id_top]
   --[0 |-> 0]--|>
-   -//[scope] o (ActiveScope[scope, active_scopes] o `[scope]`)
+   -//[scope] o (ActiveScope[active_scopes, scope] o `[scope]`)
 || Running[inst_id, active_scopes, inst_id_top]
 || TopRunning[inst_id_top];
 
@@ -209,7 +209,7 @@ val rule_scope_activation = "scope activation" :::
  * and its associated "scope"-edge. *)
 val rule_scope_completed = "scope completed" :::
 
-   ActiveScope[scope, active_scopes]
+   ActiveScope[active_scopes, scope]
    o (    Variables    o `[]`
       `|` PartnerLinks o `[]`
       `|` SubLinks     o `[]`
@@ -619,7 +619,7 @@ val rule_freeze_scope = "freeze scope" :::
 
 -//[active_scopes]
 o (   Freezing[inst_id, active_scopes, inst_id_top]
-   || -//[scope] o (ActiveScope[scope, active_scopes] o `[scope]`)
+   || -//[scope] o (ActiveScope[active_scopes, scope] o `[scope]`)
    || `[active_scopes]`)
 
   --[0 |-> 0, 1 |-> 1]--|>

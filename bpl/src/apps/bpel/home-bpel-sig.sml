@@ -139,9 +139,9 @@ val Scope        = passive  (Scope       =: 1 --> 1);
  *
  * The free ports of an ActiveScope
  *
- *   #1 is used to delimit the scope of variables within the scope to
+ *   #1 should be connected to the state node of the instance.
+ *   #2 is used to delimit the scope of variables within the scope to
  *        the scope itself.
- *   #2 should be connected to the state node of the instance.
  *)
 val ActiveScope  = active   (ActiveScope -:       2);
 
