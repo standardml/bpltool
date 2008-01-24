@@ -306,45 +306,6 @@ o (   GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
               `|` Invoked[inst_id_invoked]
               `|` inst_id_invoked//[inst_id_invoked2]
                   o `[inst_id_invoked2]`)));
-(* FIXME: Out of sync!
-(* A specialized version of the above rule, where the partner link and
- * variable must be at the top-level scope. *)
-val rule_invoke_specialized = "invoke_specialized" :::
-   (    PartnerLinks
-         o (PartnerLink[partner_link_invoker, inst_id_invoker] o <-> `|` `[]`)
-    `|` Variables o (Variable[invar, invar_scope] o `[]` `|` `[]`)
-    `|` Running[inst_id_invoker])
-|| Invoke[partner_link_invoker, inst_id_invoker, oper,
-          invar, invar_scope, outvar, outvar_scope, inst_id_invoker]
-|| Process[proc_name][[scope]]
-   o (PartnerLinks
-      o (PartnerLink[partner_link, scope] o (CreateInstance[oper] `|` `[]`)
-         `|` `[]`)
-      `|` `[scope]`)
-
-  --[6 |-> 1, 7 |-> 4, 8&[inst_id_invoked] |--> 5&[scope]]--|>
-
--//[inst_id_invoked]
-o ((   PartnerLinks
-        o (PartnerLink[partner_link_invoker, inst_id_invoker]
-            o Link[inst_id_invoked] `|` `[]`)
-    `|` Variables o (Variable[invar, invar_scope] o `[]` `|` `[]`)
-    `|` Running[inst_id_invoker])
-   || GetReply[partner_link_invoker, inst_id_invoker, oper,
-               outvar, outvar_scope, inst_id_invoker]
-   || (Process[proc_name][[scope]]
-       o (PartnerLinks
-          o (PartnerLink[partner_link, scope] o (CreateInstance[oper] `|` `[]`)
-             `|` `[]`)
-          `|` `[scope]`)
-       `|` Instance[proc_name, inst_id_invoked]
-           o (PartnerLinks
-              o (PartnerLink[partner_link, inst_id_invoked]
-                 o (Link[inst_id_invoker] `|` Message[oper] o `[]`)
-                 `|` `[]`)
-              `|` Invoked[inst_id_invoked]
-              `|` `[inst_id_invoked]`)));
-*)
 
 
 (* The receive rule takes care of activating the instance, by removing a
@@ -369,30 +330,6 @@ val rule_receive = "receive" :::
 || Variable[var, var_scope] o `[]`
 || Running[inst_id];
 
-(* FIXME Out of sync!
-(* A specialized version of the above rule, where the partner link and
- * variable must be at the top-level scope. *)
-val rule_receive_specialized = "receive_specialized" :::
-
-   (    PartnerLinks o (
-          `[]` `|`
-          PartnerLink[partner_link, inst_id] o (
-            `[]` `|` Message[oper] o `[]`))
-    `|` Invoked[inst_id]
-    `|` Variables o (
-          `[]` `|`
-          Variable[var, var_scope] o `[]`))
-|| Receive[partner_link, inst_id, oper, var, var_scope, inst_id]
-  --[2 |-> 3, 3 |-> 2]--|>
-   (    PartnerLinks o (
-          `[]` `|`
-          PartnerLink[partner_link, inst_id] o `[]`)
-    `|` Running[inst_id]
-    `|` Variables o (
-          `[]` `|`
-          Variable[var, var_scope] o `[]`))
-|| <-> || oper//[];
-*)
 
 (* The invoke instance rule executes an Invoke activity in one instance
  * simultaneously with a corresponding Receive activity in another
@@ -468,8 +405,8 @@ val rules =
              rule_assign_copy_var2plink,
              rule_assign_copy_plink2var,
              rule_assign_copy_plink2plink,
-             rule_invoke, (*rule_invoke_specialized,*)
-             rule_receive, (*rule_receive_specialized,*)
+             rule_invoke,
+             rule_receive,
              rule_invoke_instance, rule_reply,
              rule_exit_stop_inst, rule_exit_remove_inst,
              rule_inst_completed];
