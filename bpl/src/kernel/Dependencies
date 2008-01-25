@@ -10,7 +10,7 @@ sugar-sig:
 sugar: ast/info-sig /lib/coll/monoset-sig /lib/coll/pp bg/sigs ast/sigs
    ast/funs match/rule-sig match/instantiation-sig
    /lib/util/errorhandler-sig /lib/util/origin /lib/util/debug
-   /lib/pp/smlnj/.
+   /lib/pp/smlnj/. /lib/coll/listsort
 bgadt-sig: bg/sigs ast/sigs match/sigs sugar-sig /lib/coll/set /lib/util/errorhandler-sig
 bgadt: bgadt-sig bg/funs ast/funs sugar match/funs /lib/pp/smlnj/.
    /lib/coll/set /lib/coll/pp /lib/coll/lzlist /lib/util/errorhandler-sig

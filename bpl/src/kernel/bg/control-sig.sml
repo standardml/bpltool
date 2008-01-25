@@ -32,10 +32,22 @@ sig
    * @params (name, kind, bound, free)
    *)
   val make : (string * kind * int * int) -> control
+  (** Construct a control with named ports.
+   * The order of the names is significant: the first name corresponds
+   * to the first port and so forth.
+   * @params (name, kind, boundports, freeports)
+   *)
+  val make' : (string * kind * string list * string list) -> control
   (** Deconstruct a control.
    * @return (name, kind, bound, free)
    *)
   val unmk : control -> (string * kind * int * int)
+  (** Deconstruct a control which might have named ports
+   * @return (name, kind, bound, free, {boundports, freeports} option)
+   *)
+  val unmk' : control
+              -> (string * kind * int * int
+                  * {boundports : string list, freeports : string list} option)
   (** Return the name of a control. *)
   val name : control -> string
   (** Return the kind of a control. *)
@@ -44,6 +56,8 @@ sig
   val bound : control -> int
   (** Return the free arity of a control. *)
   val free : control -> int
+  (** Return the port names of a control (if present). *)
+  val portnames : control -> {boundports : string list, freeports : string list} option
   (** Test two controls for equality.
    * @params c1 c2
    * @param c1  the first control.

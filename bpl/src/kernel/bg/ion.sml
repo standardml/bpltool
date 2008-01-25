@@ -67,13 +67,22 @@ struct
         in
           lk ctrllist
         end
-      val ctrl = lookup ctrl
+      val ctrl' = lookup ctrl
     in
-      if Control.bound ctrl <> length bound orelse
-        Control.free ctrl <> length free then
-        raise WrongArity ion
-      else
-        {ctrl = ctrl, free = free, bound = bound}
+      case (Control.portnames ctrl, Control.portnames ctrl') of
+        (NONE, NONE) =>
+        if Control.bound ctrl' <> length bound orelse
+           Control.free ctrl' <> length free then
+          raise WrongArity ion
+        else
+          {ctrl = ctrl', free = free, bound = bound}
+      | (SOME {boundports = bps, freeports = fps},
+         SOME {boundports = bps', freeports = fps'}) =>
+        if bps = bps' andalso fps = fps' then
+          {ctrl = ctrl', free = free, bound = bound}
+        else
+          raise WrongArity ion
+      | (_, _) => raise WrongArity ion
     end
 
 
@@ -121,35 +130,52 @@ struct
   fun pp' langle rangle lbrack rbrack
           indent pps ({ctrl, free, bound} : ion) =
       let
-	open PrettyPrint
-	val show = add_string pps
-	fun << () = begin_block pps INCONSISTENT indent
-	fun >> () = end_block pps
-	fun <<< () = begin_block pps CONSISTENT indent
-	fun >>> () = end_block pps
-	fun brk () = add_break pps (1, 0)
-	fun brk0 () = add_break pps (0, 0)
-	fun pplist pp_y ys =
-	    (<<(); show langle;
-	     foldl (fn (y, notfirst) => 
-		       (if notfirst then (show ","; brk()) else ();
-			pp_y y;
-			true)) false ys;
-	     show rangle; >>())
+        open PrettyPrint
+        val show = add_string pps
+        fun << () = begin_block pps INCONSISTENT indent
+        fun >> () = end_block pps
+        fun <<< () = begin_block pps CONSISTENT indent
+        fun >>> () = end_block pps
+        fun brk () = add_break pps (1, 0)
+        fun brk0 () = add_break pps (0, 0)
+        fun pplist pp_y ys =
+            (<<(); show langle;
+             foldl (fn (y, notfirst) => 
+                       (if notfirst then (show ","; brk()) else ();
+                        pp_y y;
+                        true)) false ys;
+             show rangle; >>())
+        fun ppportassign unwrap (portname, link) =
+            (<<(); show portname; brk();
+             show "=="; brk();
+             Name.pp indent pps (unwrap link); >>())
+        val (name, _, b, f, portnames) = Control.unmk' ctrl
       in
-	<<<();
-	show (#1 (Control.unmk ctrl));
-	case bound of
-	  [] =>
-	  (case free of
-	     [] => ()
-	   | (y :: ys) => pplist (Name.pp indent pps) free)
-	| (X :: Xs) =>
-	  (brk0();
-	   pplist (Name.pp indent pps) free;
-	   brk0();
-	   pplist (NameSetPP.ppbr indent lbrack rbrack pps) bound);
-	>>>()
+        <<<();
+        show name;
+        case portnames of
+          SOME {boundports, freeports} =>
+          if b = 0 then
+            if f = 0 then ()
+            else
+              pplist (ppportassign (fn x => x)) (ListPair.zip (freeports, free))
+          else
+            (brk0();
+             pplist (ppportassign (fn x => x)) (ListPair.zip (freeports, free));
+             brk0();
+             pplist (ppportassign (fn X => NameSet.someElement X))
+                    (ListPair.zip (boundports, bound)))
+        | NONE =>
+          if b = 0 then
+            if f = 0 then ()
+            else
+              pplist (Name.pp indent pps) free
+          else
+            (brk0();
+             pplist (Name.pp indent pps) free;
+             brk0();
+             pplist (NameSetPP.ppbr indent lbrack rbrack pps) bound);
+        >>>()
       end handle e => raise e
       
   val pp = pp' "[" "]" "[" "]"

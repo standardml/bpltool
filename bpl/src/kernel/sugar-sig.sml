@@ -65,6 +65,8 @@ signature SUGAR =
     (** Name type. *)
     type name = string
     type arities
+    type namedports
+    type portassign 
     type mapinfo
     type placeinfo
     type absinfo
@@ -118,6 +120,16 @@ signature SUGAR =
     val -: : string * int -> ctrlkind -> name list -> bgval
     (** Operator to put between inner and outer arity. *)
     val --> : int * int -> arities
+    (** Operator to put between control name and port names spec. *)
+    val ==: : string * namedports -> ctrlkind 
+	     -> portassign list -> portassign list -> bgval
+    (** Operator to put between control name and port names spec with
+     * no binding ports. *)
+    val --: : string * string list -> ctrlkind -> portassign list -> bgval
+    (** Operator to put between inner and outer named ports descriptions *)
+    val ---> : string list * string list -> namedports
+    (** Operator to put between port name and link name. *)
+    val == : string * name -> portassign
     (** Turn an atomic molecule into an atomic ion. *)
     val << : bgval -> unit -> bgval
     (** Sugar for the unit argument to the << function.

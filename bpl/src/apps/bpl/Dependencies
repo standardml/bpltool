@@ -24,4 +24,4 @@
 
 bpl: /lib/pp/smlnj/prettyprint /lib/util/origin /lib/util/printerrorhandler /kernel/bg
    /lib/coll/lazylist /kernel/ast/bgbdnf /kernel/ast/bgval /kernel/match/match
-   %NODASHSIG
+   /lib/coll/listsort %NODASHSIG

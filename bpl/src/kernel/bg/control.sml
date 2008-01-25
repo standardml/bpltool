@@ -25,27 +25,26 @@
 structure Control' : CONTROL =
 struct
   datatype kind = Active | Passive | Atomic
-  type control = string * kind * int * int
-  fun make c = c
-  fun unmk c = c
-  fun name  (n, _, _, _) = n  
-  fun kind  (_, k, _, _) = k  
-  fun bound (_, _, b, _) = b  
-  fun free  (_, _, _, f) = f  
-  fun strEq s1 s2 = (case String.compare (s1, s2) of
-                       EQUAL => true
-                     | _     => false)
-  fun kindEq Active  Active  = true
-    | kindEq Passive Passive = true
-    | kindEq Atomic  Atomic  = true
-    | kindEq _       _       = false
-  fun eq (n1, k1, b1, f1)  (n2, k2, b2, f2) =
-    strEq n1 n2 andalso kindEq k1 k2 andalso
-    b1 = b2 andalso f1 = f2
+  type control = string * kind * int * int * {boundports : string list, freeports : string list} option
+  fun make (name, kind, bound, free)    = (name, kind, bound, free, NONE)
+  fun unmk (name, kind, bound, free, _) = (name, kind, bound, free)
+  fun make' (name, kind, boundports, freeports)
+    = (name, kind, length boundports, length freeports,
+       SOME {boundports = boundports, freeports  = freeports})
+  fun unmk' c = c
+  fun name  (n, _, _, _, _) = n
+  fun kind  (_, k, _, _, _) = k
+  fun bound (_, _, b, _, _) = b
+  fun free  (_, _, _, f, _) = f
+  fun portnames (_, _, _, _, p) = p
+
+  fun eq (n1, k1, b1, f1, p1)  (n2, k2, b2, f2, p2) =
+    n1 = n2 andalso k1 = k2 andalso
+    b1 = b2 andalso f1 = f2 andalso p1 = p2
   fun compare (c1, c2) =
     let
-      val (name1, kind1, bound1, free1) = unmk c1
-      val (name2, kind2, bound2, free2) = unmk c2
+      val (name1, kind1, bound1, free1, p1) = unmk' c1
+      val (name2, kind2, bound2, free2, p2) = unmk' c2
     in
       case String.compare (name1, name2) of
         EQUAL =>
@@ -60,7 +59,16 @@ struct
       | (Atomic,  Active)  => GREATER
       | (Passive, Atomic)  => LESS
       | (Atomic,  Passive) => GREATER
-      | _ => EQUAL)
+      | _ =>
+      (case (p1, p2) of
+         (SOME {boundports = bound1, freeports = free1},
+          SOME {boundports = bound2, freeports = free2}) =>
+      (case List.collate String.compare (bound1, bound2) of
+         EQUAL => List.collate String.compare (free1, free2)
+       | x => x)
+       | (NONE, NONE) => EQUAL
+       | (NONE, _)    => LESS
+       | _            => GREATER))
       | x => x)
       | x => x)
       | x => x
@@ -69,7 +77,8 @@ struct
   fun kind2String Active  = "Active"
     | kind2String Passive = "Passive"
     | kind2String Atomic  = "Atomic"
-  fun toString (n, k, b, f) = n ^ " : " ^ kind2String k ^ "(" ^
+  (* FIXME prettyprint named ports *)
+  fun toString (n, k, b, f, _) = n ^ " : " ^ kind2String k ^ "(" ^
     (if b > 0 then Int.toString b ^ " -> " else "") ^
     Int.toString f ^ ")"
 end

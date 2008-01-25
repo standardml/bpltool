@@ -27,7 +27,7 @@ permutation: /lib/compat/common/legacyarray /lib/coll/set
    /lib/util/errorhandler-sig /lib/util/origin /lib/util/debug
    /lib/coll/bijectionconstraints-sig /lib/coll/listsort
 control-sig:
-control:
+control: /lib/coll/listsort
 ion-sig: /lib/pp/smlnj/.
 ion: /lib/coll/set /lib/coll/pp /lib/pp/smlnj/. control-sig name-sig
    /lib/coll/bijectionconstraints-sig

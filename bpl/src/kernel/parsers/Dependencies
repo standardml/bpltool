@@ -17,7 +17,8 @@ rules.grm-sig: /lib/ml-yacc/.
 rules.lex: /lib/util/errormsg /lib/compat/mosml/. rules.grm-sig
 rules.grm: /lib/ml-yacc/.  /lib/coll/monoset-sig rules.grm-sig
    /kernel/bg/sigs /kernel/ast/sigs /kernel/match/sigs /lib/util/errormsg
-   /lib/util/origin-sig /lib/util/origin /lib/pp/smlnj/. %NODASHSIG
+   /lib/util/origin-sig /lib/util/origin /lib/pp/smlnj/. /lib/coll/listsort
+   %NODASHSIG
 
 bpl.grm-sig: /lib/ml-yacc/.
 bpl.lex: bpl.grm-sig /lib/util/sourceloc /lib/compat/mosml/. /lib/pp/mak/.

@@ -41,20 +41,27 @@ in
 end
 
 local
-fun help' [] = ()
-  | help' ("control" :: topics) = (print
-  	"Node controls (K,L,M : string; m,n >= 0):\n\
+val help_topics = [ (* {topic, text} *)
+  {topic = "control", text =
+  	"Node controls (K,L,M,p_i,p'_i : string; m,n >= 0):\n\
   	\  active   (K -: n)         Active node of global arity n\n\
   	\  passive  (L =: m --> n)   Passive node of local/global arity m/n\n\
   	\  atomic   (L =: m --> n)   Atomic node of local/global arity m/n\n\
+  	\  passive  (L --: [...,p_i,...])\n\
+    \                            Passive node with named free ports [...,p_i,...]\n\
+  	\  passive  (L ==: [...,p'_i,...] ---> [...,p_i,...])\n\
+    \                            Passive node with named bound ports [...,p'_i,...]\n\
+    \                            and named free ports [...,p_i,...]\n\
   	\  active0  (M)              Active node without ports\n\
   	\  passive0 (M)              Passive node without ports\n\
-  	\  atomic0  (M)              Atomic node without ports\n";
-  	help'' topics)
-  | help' ("bigraph" :: topics) = (print
-	  "Ions (K,L,M : control; x,y : string):\n\
+  	\  atomic0  (M)              Atomic node without ports\n"
+  },
+  {topic = "bigraph", text =
+	  "Ions (K,L,M : control; x,y,p,p' : string):\n\
 	  \  K[y,...]                  Ion with control of global arity\n\
-	  \  L[y,...][[x,...],...]     Ion with control of global/local arity\n\n\
+	  \  L[y,...][[x,...],...]     Ion with control of global/local arity\n\
+	  \  K[p==y,...]               Ion with control of global arity with named ports\n\
+	  \  L[p==y,...][p'==x,...]    Ion with control of global/local arity with named ports\n\n\
 	  \Wirings (x,y : string):\n\
 	  \  y/x                       Renaming link\n\
 	  \  y//[x,...]                Substitution link\n\
@@ -78,17 +85,16 @@ fun help' [] = ()
 	  \  **[A,...]                 Tensor procuct of n factors\n\
 	  \  |||[A,...]                Parallel product of n factors\n\
 	  \  `|``[A,...]               Prime product of n factors\n\
-	  \  A o B                     Composition\n";
-	  help'' topics)
-  | help' ("operator" :: topics) = (print
+	  \  A o B                     Composition\n"
+  },
+  {topic = "operator", text =
 	  "ML function composition (f : 'b -> c; g : 'a -> 'b):\n\
 	  \  f oo g\n\n\
 	  \Precedence:\n\
 	  \  o                         Composition (strongest)\n\
 	  \  *, ||, `|`                Product, left associative\n\
-	  \  <[x,...]> P               Abstraction (weakest)\n";
-	  help'' topics)
-  | help' ("rule" :: topics) = (print
+	  \  <[x,...]> P               Abstraction (weakest)\n"},
+  {topic = "rule", text =
 	  "Rules: (R, R' : bgval; rho : inst; N,x : string; i,j : int)\n\
 	  \  R ----|> R'               Rule with redex R, reactum R' and default instantiation\n\
 	  \  R --rho--|> R'            Rule with redex R, reactum R' and instantiation rho\n\
@@ -101,9 +107,8 @@ fun help' [] = ()
 	  \                              name x_k to redex name y_k\n\
 	  \  redex   rule              Extract the redex of a rule\n\
 	  \  reactum rule              Extract the reactum of a rule\n\
-	  \  inst    rule              Extract the instantiation of a rule\n";
-	  help'' topics)
-  | help' ("operation" :: topics) = (print
+	  \  inst    rule              Extract the instantiation of a rule\n"},
+  {topic = "operation", text =
 	  "Bigraph operations (A,B,R : 'a bgbdnf; a,r,v : bgval; e : exn;\n\
 	  \                    u : real; c : config; f : filename):\n\
 	  \  norm_v v             denorm_b B           (De)normalise\n\
@@ -128,15 +133,13 @@ fun help' [] = ()
 	  \  str_r r                                   Return rule as a string\n\
 	  \  print_r r                                 Print rule\n\
 	  \  explain e                                 Explain exception in detail\n\
-	  \  use_shorthands on/off                     hide/show identities when displaying\n";
-	  help'' topics)
-  | help' ("figure" :: topics) = (print
+	  \  use_shorthands on/off                     hide/show identities when displaying\n"},
+  {topic = "figure", text =
 	  "Figures: (c : config; f : string * path -> configinfo)\n\
 	  \  makecfg f                                 Construct a config\n\
 	  \  unmkcfg c                                 Deconstruct a config\n\
-	  \  defaultcfg                                Default config\n";
-	  help'' topics)
-  | help' ("tactic" :: topics) = (print
+	  \  defaultcfg                                Default config\n"},
+  {topic = "tactic", text =
 	  "Tactics: (N : string; t : tactic)\n\
 	  \  react_rule N                              Apply rule N\n\
 	  \  react_rule_any                            Apply any rule\n\
@@ -147,9 +150,8 @@ fun help' [] = ()
 	  \  REPEAT t                                  Repeat t until it fails\n\
 	  \  i TIMES_DO t                              Use t i times\n\
 	  \  finish                                    Finish tactic\n\
-	  \  fail                                      Fail tactic\n";
-	  help'' topics)
-  | help' ("reaction" :: topics) = (print
+	  \  fail                                      Fail tactic\n"},
+  {topic = "reaction", text =
 	  "Reaction operations (v : bgval; m : match; r : rule, N : string, rs : rules):\n\
 	  \  react m                                   Perform a single reaction step\n\
 	  \  mkrules [r_0, ..., r_n]                   Construct a rule map\n\
@@ -158,9 +160,8 @@ fun help' [] = ()
 	  \  run rs t v                                Perform agent reactions using a tactic\n\
 	  \  steps rs t v                              Return agent for each step using a tactic\n\
 	  \  stepz rs t v                              Return lazily agent for each step using a tactic\n\
-	  \  \n";
-	  help'' topics)
-  | help' ("example" :: topics) = (print
+	  \  \n"},
+  {topic = "example", text =
 	  "Example:\n\
 	  \  let val K = active   (\"K\" =: 2 --> 1)\n\
 	  \      val L = passive0 (\"L\")\n\
@@ -168,21 +169,34 @@ fun help' [] = ()
 	  \      val KtoL = \"KtoL\" ::: K[z][[y,z],[]] ----|> L * z//[y,z] o `[y,z]`\n\
 	  \  in <[y]> (y//[x,z] * merge(2)) o (K[z][[y,z],[]] * idw[x] * L)\n\
 	  \            o (@@[1&[],0&[y,z]] * x//[])\n\
-	  \  end handle error => explain error\n";
-	  help'' topics)
-	| help' _
-	= help'
-	    ["control", "bigraph", "operator", "rule",
-	     "operation", "figure", "tactic", "reaction", "example"]
-and help'' [] = ()
+	  \  end handle error => explain error\n"}
+];
+
+val all_topics     = ListSort.sort String.compare (map #topic help_topics)
+val all_topics_str = #1 (foldl
+                          (fn (topic, (str, first)) =>
+                              ((if first then "" else str ^ ", ")
+                               ^ "\"" ^ topic ^ "\"", false)) 
+                          ("", true) all_topics)
+
+fun eq s1 s2 = s1 = s2
+
+fun help_topic topic =
+    case List.find ((eq topic) o #topic) help_topics of
+      SOME {text, ...} => (print text; true)
+    | NONE             => (print ("Sorry, no help on topic \"" ^ topic ^ "\"\n"); false)
+
+fun help' [] = true
+  | help' (topic::topics) =
+    let val found = help_topic topic in help'' topics andalso found end
+and help'' [] = true
   | help'' topics = (print "\n"; help' topics)
 fun help''' []
-  = (help' ["control", "bigraph", "operator", "rule", "operation",
-            "figure", "tactic", "reaction", "example"];
-     print "\n\n(help \
-          	\[\"control\", \"bigraph\", \"operator\", \"rule\",\
-          	\ \"operation\", \"figure\", \"tactic\", \"reaction\", \"example\"])\n\n")
-  | help''' topics = (help' topics; print "\n\n'(help []' for all topics)\n\n")
+  = (help' all_topics;
+     print ("\n(help [" ^ all_topics_str ^ "])\n\n"))
+  | help''' topics = (if help' topics then ()
+                      else print ("\navailable topics: " ^ all_topics_str);
+                      print "\n('help []' for all topics)\n\n")
 in
 fun help topics =
   (print "BPL Usage Help\n\n"; help''' topics)
@@ -195,8 +209,8 @@ infix 7 /  infix 7 //
 infix 6 o
 infix 5 *  infix 5 ||  infix 5 `|`
 infix 4 >
-infix 3 &  infix 3 --> infix 3 --   infix 3 --|>  infix 3----|>
-infix 2 =: infix 2 -:  infix 2 |->  infix 2 |-->  infix 2 :::
+infix 3 &  infix 3 -->  infix 3 ---> infix 3 --   infix 3 --|>  infix 3----|>
+infix 2 =: infix 2 ==:  infix 2 ==  infix 2 -:  infix 2 --:  infix 2 |->  infix 2 |-->  infix 2 :::
 nonfix @
 nonfix <
 

@@ -82,6 +82,10 @@ type name = string
 type nameset = NameSet.Set
 type bgval = BgVal.bgval
 type arities = {boundarity : int, freearity : int}
+type namedports = {boundports : string list, (* both lists should be sorted *)
+                     freeports  : string list,
+                     arities    : arities}
+type portassign = {port : string, link : name}
 type placeinfo = int * Name.name list
 datatype mapinfo = |--> of placeinfo * placeinfo
 type absinfo = nameset
@@ -149,13 +153,13 @@ fun explain_DuplicateName (DuplicateName (K, ys, Xs, errtxt)) =
               [] =>
               (case ys of
                  [] => ()
-               | _  => mk_list_pp' "<" ">" "," string_pp indent pps ys)
+               | _  => mk_list_pp' "[" "]" "," string_pp indent pps ys)
             | _ =>
               (brk();
-               mk_list_pp' "<" ">" "," string_pp indent pps ys;
+               mk_list_pp' "[" "]" "," string_pp indent pps ys;
                brk();
-               mk_list_pp' "<" ">" ","
-                           (mk_list_pp' "{" "}" "," string_pp) indent pps Xs);
+               mk_list_pp' "[" "]" ","
+                           (mk_list_pp' "[" "]" "," string_pp) indent pps Xs);
             >>()
           end
     in
@@ -165,6 +169,33 @@ fun explain_DuplicateName (DuplicateName (K, ys, Xs, errtxt)) =
   | explain_DuplicateName _ = raise Match
 val _ = add_explainer
           (mk_explainer "duplicate name in ion" explain_DuplicateName)
+
+exception DuplicatePort of string list * string list * string
+fun explain_DuplicatePort (DuplicatePort (boundports, freeports, errtxt)) =
+    let
+      fun pp_ctrl_sig indent pps =
+          let
+            open PrettyPrint
+            fun string_pp indent pps s = add_string pps s
+            fun << () = begin_block pps CONSISTENT indent
+            fun >> () = end_block pps
+            fun brk () = add_break pps (0, 0)
+          in
+            <<();
+            mk_list_pp' "[" "]" "," string_pp indent pps boundports;
+            brk();
+            add_string pps "--->";
+            brk();
+            mk_list_pp' "[" "]" "," string_pp indent pps freeports;
+            >>()
+          end
+    in
+      [Exp (LVL_USER, Origin.unknown_origin, pp_ctrl_sig, []),
+       Exp (LVL_LOW, file_origin, mk_string_pp errtxt, [])]
+    end
+  | explain_DuplicatePort _ = raise Match
+val _ = add_explainer
+          (mk_explainer "duplicate port name in control" explain_DuplicatePort)
 
 fun listToString printfun ns =
     "[" 
@@ -177,6 +208,33 @@ fun listToString printfun ns =
 val namelistToString = listToString (fn s => s)
 val namelistlistToString = listToString namelistToString
 
+fun mkion ctrl free bound =
+    let
+      val ion
+        = Ion (Ion.make
+                   {ctrl  = ctrl,
+                    free  = map Name.make free, 
+                    bound = map (NameSet.fromList o map Name.make) bound})
+          handle 
+          NameSet.DuplicatesRemoved
+          => raise DuplicateName 
+                       (Control.name ctrl, free, bound,
+                        "Duplicate names are not allowed in ions")
+    in
+      case Control.kind ctrl of
+        Control.Atomic =>
+        let
+          val X = (hd o Interface.loc o BgVal.innerface) ion
+          val barrenroot
+            = if NameSet.isEmpty X then
+                Mer 0
+              else
+                Ten [Wir (Wiring.introduce X), Mer 0]
+        in
+          Com (ion, Abs (X, barrenroot))
+        end
+      | _ => ion
+    end
 fun =: (K, {freearity, boundarity}) kind free bound =
     if length free <> freearity then
       raise WrongArity ("Control " ^ K ^ " takes "
@@ -189,64 +247,69 @@ fun =: (K, {freearity, boundarity}) kind free bound =
 			^ " bound name sets, but was given `"
 			^ namelistlistToString bound ^ "'\n")
     else
-      let
-        val ion
-	        = Ion
-	            (Ion.make
-	            {ctrl  = Control.make (K, kind, boundarity, freearity),
-	             free  = map Name.make free, 
-	             bound = map (NameSet.fromList o map Name.make) bound})
-	          handle 
-	            NameSet.DuplicatesRemoved
-	          => raise DuplicateName 
-			           (K, free, bound,
-			            "Duplicate names are not allowed in ions")
+      mkion (Control.make (K, kind, boundarity, freearity)) free bound
+fun ==: (K, {freeports, boundports, arities}) kind free bound =
+    let
+      fun compare ({port = port1, link = _}, {port = port2, link = _})
+        = String.compare (port1, port2)
+      val free  = ListSort.sort compare free
+      val bound = ListSort.sort compare bound
 
-      in
-        case kind of
-          Control.Atomic =>
-            let
-        		  val X = (hd o Interface.loc o BgVal.innerface) ion
-					    val barrenroot
-					      = if NameSet.isEmpty X then
-						        Mer 0
-						      else
-						        Ten [Wir (Wiring.introduce X), Mer 0]
-			      in
-				      Com (ion, Abs (X, barrenroot))
-			      end
-        | _ => ion
-      end
+      (* verify the given port assignments and extract the assigned names *)
+      fun verify_ports _    wrap [] []    = []
+        | verify_ports bOrF wrap ports [] =
+          raise WrongArity ("Named " ^ bOrF ^ " ports `"
+                            ^ namelistToString ports
+                            ^ "' of control " ^ K ^ " were unspecified\n")
+        | verify_ports bOrF wrap [] pas   =
+          raise WrongArity (bOrF ^ " port assignments `"
+                            ^ listToString
+                                  (fn {port, link} => port ^ " == " ^ link)
+                                  pas
+                            ^ "' are superfluous\n")
+        | verify_ports bOrF wrap (port'::ports) ({port, link}::pas) =
+          case String.compare (port', port) of
+            EQUAL   => (wrap link) :: (verify_ports bOrF wrap ports pas)
+          | LESS    => raise WrongArity ("Control " ^ K
+                                         ^ " has " ^ bOrF ^ " named port `" ^ port'
+                                         ^ "' which is not assigned\n")
+          | GREATER => raise WrongArity (bOrF ^ " port name `" ^ port
+                                         ^ "' is not in the signature for control "
+                                         ^ K ^ "\n")
+
+      val free'  = verify_ports "free"  (fn x => x)   freeports  free
+      val bound' = verify_ports "bound" (fn x => [x]) boundports bound
+    in
+      mkion (Control.make' (K, kind, boundports, freeports)) free' bound'
+    end
 fun -: (K, freearity) kind free =
-    if length free <> freearity then
-      raise WrongArity ("Control " ^ K ^ " takes "
-			^ Int.toString freearity
-			^ " free names, but was given `"
-			^ namelistToString free ^ "'\n")
+    =: (K, {freearity = freearity, boundarity = 0}) kind free []
+fun --: (K, freeports) kind free =
+    ==: (K, {freeports = freeports, boundports = [],
+             arities = {freearity = length freeports, boundarity = 0}})
+        kind free []
+
+fun --> (boundarity, freearity) = {freearity  = freearity,
+				                           boundarity = boundarity}
+fun ---> (boundports, freeports) =
+  let
+    fun unique_names [] = true
+      | unique_names [_] = true
+      | unique_names (n1::(rest as (n2::_))) 
+        = String.< (n1, n2) andalso unique_names rest
+    val boundports = ListSort.sort String.compare boundports
+    val freeports  = ListSort.sort String.compare freeports
+  in
+    if unique_names boundports andalso unique_names freeports then
+      {boundports = boundports, freeports = freeports,
+       arities = {freearity  = length freeports,
+                  boundarity = length boundports}}
     else
-      let
-        val ion
-	        = Ion 
-	            (Ion.make {ctrl = Control.make (K, kind, 0, freearity),
-		                     free = map Name.make free, 
-		                     bound = []})
-      in
-        case kind of
-          Control.Atomic =>
-            let
-        		  val X = (hd o Interface.loc o BgVal.innerface) ion
-					    val barrenroot
-					      = if NameSet.isEmpty X then
-						        Mer 0
-						      else
-						        Ten [Wir (Wiring.introduce X), Mer 0]
-			      in
-				      Com (ion, Abs (X, barrenroot))
-			      end
-        | _ => ion
-      end
-fun --> (boundarity, freearity) = {freearity = freearity,
-				   boundarity = boundarity}
+      raise DuplicatePort (boundports, freeports,
+                           "Duplicate port names are not allowed in controls")
+  end
+fun == (port, link) = {port = port, link = link}
+
 val <-> = Mer 0
 val op @ = Per o Permutation.make o map (fn j => (j, NameSet.empty))
 val @@ = Per o Permutation.make o map (fn (j, Xs) => (j, NameSet.fromList Xs))

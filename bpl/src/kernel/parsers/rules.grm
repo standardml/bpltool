@@ -99,6 +99,10 @@ type rule = {
   react : bgterm,
   maps : map list,
   info : info}
+datatype ctrlarity = INTARITY of int * int
+                     | PORTNAMES of string list * string list
+datatype ports = ORDEREDPORTS of name list * nameset list
+                | NAMEDPORTS of (string * name) list * (string * name) list
 datatype fieldval = REDEX    of bgterm
                   | REACT    of bgterm
                   | INST     of map list * (int * int)
@@ -187,7 +191,7 @@ fun nset2idlinkset nset =
 %term EOF | BGTERM | RULELIST | SIGNATURE
 	 | ID of string | INT of int | CTRLID of string | STRING of string
 	 | ACTIVE | PASSIVE | ATOMIC
-	 | AMP | EQ | MAPSTO | MAPPSTO | DASHCOLON | EQCOLON | RARROW
+	 | AMP | EQ | MAPSTO | MAPPSTO | DASHCOLON | EQCOLON | DASHDASHCOLON | EQEQCOLON | RARROW | RRARROW | EQEQ
 	 | NAME | REDEX | REACT | INST
 	 | MERGE
 	 | LPAREN | RPAREN | LBRACK | RBRACK | LBRACE | RBRACE | GT | LT
@@ -202,7 +206,7 @@ fun nset2idlinkset nset =
 | ctrllist of control list
 | ctrls of control list
 | kind of kind
-| cdata of (string * int * int)
+| cdata of string * ctrlarity
 | rule of rule
 | rulelist of rule list
 | rules of rule list
@@ -213,10 +217,15 @@ fun nset2idlinkset nset =
 | maps of map list
 | bg of bgterm
 | altbg of bgterm
-| fports of name list
+| slist of string list
+| strings of string list
 | nlist of name list
+| name of name
 | names of name list
+| ports of ports
 | bports of nameset list
+| portassigns of (string * name) list
+| portsassign of (string * name) list
 | nsetlist of nameset list
 | nset of nameset
 | ctrlid of control
@@ -306,17 +315,24 @@ ctrls : ctrl                  ([ctrl])
       | ctrl COMMA ctrls      (ctrl :: ctrls)
 
 ctrl : kind LPAREN cdata RPAREN
-                              (Control.make
-                                 (#1 cdata, kind, #2 cdata, #3 cdata))
+                              (case #2 cdata of
+                                 INTARITY (b, f) =>
+                                 Control.make (#1 cdata, kind, b, f)
+                               | PORTNAMES (b, f) =>
+                                 Control.make' (#1 cdata, kind, b, f))
 
 kind : ACTIVE                 (Control.Active)
      | PASSIVE                (Control.Passive)
      | ATOMIC                 (Control.Atomic)
 
-cdata : CTRLID                ((CTRLID, 0, 0))
-      | CTRLID DASHCOLON int  ((CTRLID, 0, int))
+cdata : CTRLID                ((CTRLID, INTARITY (0, 0)))
+      | CTRLID DASHCOLON int  ((CTRLID, INTARITY (0, int)))
       | CTRLID EQCOLON int RARROW int
-                              ((CTRLID, int1, int2))
+                              ((CTRLID, INTARITY (int1, int2)))
+      | CTRLID DASHDASHCOLON slist 
+                              ((CTRLID, PORTNAMES ([], slist)))
+      | CTRLID EQEQCOLON slist RRARROW slist
+                              ((CTRLID, PORTNAMES (slist1, slist2)))
 
 rulelist : LBRACK rules RBRACK (rules)
          | LBRACK RBRACK      ([])
@@ -365,41 +381,64 @@ altbg : ONE                   (Mer (0, mk_info ONEright ONEleft))
    | IDW nset                 (Wir (Wiring.make (nset2idlinkset nset),
 				    mk_info IDWleft IDWright))
    | IDW0                     (Wir (Wiring.id_0, mk_info IDW0left IDW0right))
-   | ctrlid fports bports     (let 
-				 val fp = fports
-				 val bp = bports
-			       in
-				 Ion (Ion.make 
-					({ctrl = ctrlid, 
-					  free = fports,
-					  bound = bports}),
-					mk_info ctrlidleft bportsright)
-			       end)
-   | ctrlid fports            (let 
-				 val fp = fports
-			       in
-				 Ion (Ion.make 
-					({ctrl = ctrlid, 
-					  free = fports,
-					  bound = []}),
-					mk_info ctrlidleft fportsright)
-			       end)
+   | ctrlid ports             (case ports of
+                                 ORDEREDPORTS (fp, bp) =>
+                                 Ion (Ion.make 
+                                          ({ctrl  = ctrlid, 
+                                            free  = fp,
+                                            bound = bp}),
+                                          mk_info ctrlidleft portsright)
+                               | NAMEDPORTS (fp, bp) =>
+                                 let
+                                   fun compare ((p1,_), (p2,_)) = String.compare (p1, p2)
+                                   val K  = Control.name ctrlid
+                                   val fp = ListSort.sort compare fp
+                                   val bp = ListSort.sort compare bp
+                                 in
+                                   Ion (Ion.make {ctrl = Control.make'
+                                                           (K, Control.Active,
+                                                            map #1 bp,
+                                                            map #1 fp),
+                                                  free  = map #2 fp,
+                                                  bound = map (fn (_, n) => NameSet.singleton n) bp},
+                                        mk_info ctrlidleft portsright)
+                                 end)
    | ctrlid                   (Ion (Ion.make 
-					({ctrl = ctrlid, 
-					  free = [],
-					  bound = []}),
-					mk_info ctrlidleft ctrlidright))
+                                        ({ctrl = ctrlid, 
+                                          free = [],
+                                          bound = []}),
+                                        mk_info ctrlidleft ctrlidright))
    | perm                     (Per (perm, mk_info permleft permright))
    | IDP pint                 (Per (Permutation.id_n pint, mk_info IDPleft pintright))
-   | LT nset GT bg    (Abs (nset, bg, mk_info LTleft bgright))
+   | LT nset GT bg            (Abs (nset, bg, mk_info LTleft bgright))
    | LPAREN bg RPAREN         (bg)
    | LTLT bg GTGT             (Hop (bg, mk_info LTLTleft GTGTright))
 
-fports	: LBRACK names RBRACK (names)
+ports : LBRACK RBRACK bports
+                              (ORDEREDPORTS ([], bports))
+      | LBRACK name RBRACK bports
+                              (ORDEREDPORTS ([name], bports))
+      | LBRACK name COMMA names RBRACK bports
+                              (ORDEREDPORTS (name::names, bports))
+      | LBRACK id EQEQ name RBRACK portsassign
+                              (NAMEDPORTS ([(id, name)], portsassign))
+      | LBRACK id EQEQ name COMMA portassigns RBRACK portsassign
+                              (NAMEDPORTS ((id, name)::portassigns, portsassign))
 
-names   : id COMMA names      (Name.make id :: names)
-        | id		      ([Name.make id])
-        |		      ([])
+portsassign : LBRACK portassigns RBRACK       (portassigns)
+            | LBRACK RBRACK                   ([])
+
+portassigns : id EQEQ name COMMA portassigns  ((id, name) :: portassigns)
+            | id EQEQ name                    ([(id, name)])
+
+names   : name COMMA names    (name :: names)
+        | name                ([name])
+
+name    : id                  (Name.make id)
+
+strings : id COMMA strings    (id :: strings)
+        | id                  ([id])
+        |                     ([])
 
 id      : ID                  (ID)
         | IDX0                ("idx0")
@@ -413,14 +452,19 @@ id      : ID                  (ID)
         | INST                ("inst")
 
 bports	: LBRACK nsetlist RBRACK      (nsetlist)
+        |                             ([])
 
 nsetlist : nset COMMA nsetlist (nset :: nsetlist)
 	 | nset		      ([nset])
          |		      ([])
 
-nlist   : LBRACK names RBRACK (names)
+nlist   : LBRACK RBRACK       ([])
+        | LBRACK names RBRACK (names)
 
-nset    : LBRACK names RBRACK (NameSet.fromList (names)
+slist   : LBRACK strings RBRACK (strings)
+
+nset    : LBRACK RBRACK       (NameSet.empty)
+        | LBRACK names RBRACK (NameSet.fromList (names)
 			       handle NameSet.DuplicatesRemoved
 				      => raise 
 					DuplicateNames 
