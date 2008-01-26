@@ -556,21 +556,40 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
       in
         ((VCon (Wiring.app s X, i), false), s) handle e => raise e
       end
-    | t2p'' (VWir (w, i), s) = 
-      if ((NameSet.size o Wiring.outernames) w = 0) then (* w = /X => s = id_e*)
-        let val X = Wiring.innernames w
-        in
-          ((VWir (w, i), false), Wiring.id_X X)
-        end
-      else (* w = y/X => s = z/y *)
-        let val Z = Wiring.outernames s (* Z = {z}*)
-        in
-          if ((NameSet.size o Wiring.innernames) w > 0) then
-            (* X is non-empty, i.e. w is a substitution - link continues. *)
-            ((VWir (Wiring.id_X Z, i), true), Wiring.o (s,w))
-          else (* X is empty, i.e. w is name introduction - link stops here.*)
-            ((VWir (Wiring.introduce Z, i), false), Wiring.id_0)
-        end
+    | t2p'' (VWir (w, i), s) =
+      (* w = y_1/X_1 * ... * y_n/X_n * /Z_1 * ... * /Z_m
+         s = z_1/y_1 || ... || z_n/y_n
+
+         cases:  X_i = Ø  =>  l_i = z_i/       l'_i = id0
+               | _        =>  l_i = z_i/z_i    l'_i = z_i/X_i
+
+         w' = ... || l_i  || ... * /Z_1 * ... * /Z_m
+         s' = ... || l'_i || ... * id_Z_1 * ... * id_Z_m       *)
+      let
+        fun rename_link l (w', s') =
+            case Link.unmk l of
+              {outer = NONE, inner = Z}   =>
+              (Wiring.* (w', Wiring.make' [l]), Wiring.* (s', Wiring.id_X Z))
+            | {outer = SOME y, inner = X} =>
+              let
+                val z = valOf (Wiring.app_x s y)
+              in
+                if NameSet.isEmpty X then
+                  (Wiring.|| (w', Wiring.introduce (NameSet.singleton z)), s')
+                else
+                  (Wiring.|| (w', Wiring.id_X (NameSet.singleton z)),
+                   Wiring.|| (s', Wiring.make'
+                                    [Link.make {outer = SOME z, inner = X}]))
+              end
+                
+        val (w', s') = LinkSet.fold
+                         rename_link
+                         (Wiring.id_0, Wiring.id_0)
+                         (Wiring.unmk w)
+      in
+        (* FIXME check for identity *)
+        ((VWir (w', i), false), s')
+      end
     | t2p'' (VIon (KyX, i), s) =
       let
         val {ctrl, free, bound} = Ion.unmk KyX
