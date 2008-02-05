@@ -206,8 +206,8 @@ open BG.Sugar
 infix 3 oo
 val op oo = General.o
 infix 7 /  infix 7 //
-infix 6 o
-infix 5 *  infix 5 ||  infix 5 `|`
+infixr 6 o
+infixr 5 *  infixr 5 ||  infixr 5 `|`
 infix 4 >
 infix 3 &  infix 3 -->  infix 3 ---> infix 3 --   infix 3 --|>  infix 3----|>
 infix 2 =: infix 2 ==:  infix 2 ==  infix 2 -:  infix 2 --:  infix 2 |->  infix 2 |-->  infix 2 :::
@@ -344,5 +344,6 @@ infixr 1 ELSE
 
 fun use_shorthands flag =
  (Flags.setBoolFlag "/kernel/ast/bgterm/ppids" (not flag);
+  Flags.setBoolFlag "/kernel/ast/bgterm/ppabs" (not flag);
   Flags.setBoolFlag "/kernel/ast/bgterm/pp0abs" (not flag))
 val (on, off) = (true, false) 

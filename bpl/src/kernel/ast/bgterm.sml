@@ -64,8 +64,17 @@ struct
     arg = "",
     default = true}
   val _ = Flags.makeBoolFlag {
+    name = "/kernel/ast/bgterm/ppabs",
+    desc = "Explicitly display abstractions \
+           \(abstractions on roots are always displayed)",
+    short = "",
+    long = "--ppabs",
+    arg = "",
+    default = true}
+  val _ = Flags.makeBoolFlag {
     name = "/kernel/ast/bgterm/pp0abs",
-    desc = "Explicitly display empty-set abstractions",
+    desc = "Explicitly display empty-set abstractions \
+           \(ignored if ppabs is false)",
     short = "",
     long = "--pp0abs",
     arg = "",
@@ -381,7 +390,8 @@ struct
 
   fun pp indent pps =
     let
-      val ppids = Flags.getBoolFlag "/kernel/ast/bgterm/ppids"
+      val ppids  = Flags.getBoolFlag "/kernel/ast/bgterm/ppids"
+      val ppabs  = Flags.getBoolFlag "/kernel/ast/bgterm/ppabs"
       val pp0abs = Flags.getBoolFlag "/kernel/ast/bgterm/pp0abs"
       open PrettyPrint
       val PrMax = 9
@@ -397,8 +407,8 @@ struct
       fun brk () = add_break pps (1, 0)
       fun brk0 () = add_break pps (0, 0)
       fun brkindent () = add_break pps (1, indent)
-      (* Pretty print using precedences.  Operator precedences
-       * (highest binds tightest):
+      (* Pretty print using precedences (binary operators are right associative).
+       * Operator precedences (highest binds tightest):
        *  8 (X) abstraction (only affects expressions to the right)
        *  7  o  composition
        *  6  *  tensor product
@@ -416,7 +426,7 @@ struct
       fun ppp pal par prr aih =
         let 
           fun checkprec prec =
-            if pal >= prec orelse par > prec then
+            if pal > prec orelse par >= prec then
               (fn () => show "(", 
                PrMin, PrMin, PrMax, 
                fn () => show ")")
@@ -427,7 +437,12 @@ struct
             | pp' _ _ (Con (X, _))
             = ((show "`"; NameSetPP.ppbr indent "[" "]" pps X; show "`")
                handle e => raise e)
-            | pp' _ _ (Wir (w, _)) = (Wiring.pp indent pps w handle e => raise e)
+            | pp' _ _ (Wir (w, _)) = 
+              (let
+                 val w' = if ppids then w else Wiring.removeids w
+               in 
+                 Wiring.pp indent pps w'
+               end handle e => raise e)
             | pp' _ _ (Ion (KyX, _))
             = if aih andalso
                  Control.kind (#ctrl (Ion.unmk KyX)) = Control.Atomic
@@ -438,7 +453,9 @@ struct
             | pp' outermost innermost (Hop (t, _)) = (show "<<("; pp' outermost innermost t; show ")>>")
             | pp' _ _ (Per (pi, _)) = (Permutation.pp indent pps pi handle e => raise e)
             | pp' outermost innermost (Abs (X, b, _))
-            = ((if pp0abs orelse not (NameSet.isEmpty X) then
+            = ((if (outermost andalso not (NameSet.isEmpty X)) orelse
+                   ppabs andalso
+                   (pp0abs orelse not (NameSet.isEmpty X)) then
                   let
                     val (showlpar, pal', par', prr', showrpar) = 
                       if prr < PrAbs orelse
@@ -485,7 +502,7 @@ struct
                      | mappp [b]
                      = (show " *"; brk();
                         ppp PrTen par' prr' aih outermost innermost b)
-                     | mappp (b :: b' :: bs) 
+                     | mappp (b :: b' :: bs)
                      = (show " *";
                         brk();
                         ppp PrTen PrTen PrTen aih outermost innermost b;

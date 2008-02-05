@@ -298,8 +298,8 @@ fun nset2idlinkset nset =
 %left COMMA
 %nonassoc LPAREN RPAREN
 %nonassoc LT GT
-%left XX PRI PAR
-%left OO
+%right XX PRI PAR
+%right OO
 %nonassoc LBRACE RBRACE
 %left SLASH
 

@@ -130,7 +130,7 @@ struct
 	 | VCom of bgval * bgval * (interface * interface * info)
    (* NB: VPar and VPri are only for internal use - the must not leave the
     *     module!
-    *     They are use when converting to the bgterm datatype for
+    *     They are used when converting to the bgterm datatype for
     *     prettyprinting. *)
    (** b_1 ||...|| b_n-1 = a parallel product of n bigraphs. *)
    | VPar of bgval list * (interface * interface * info)
@@ -358,7 +358,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 		 * (alpha * id_1) K_y(X) -> K_{alpha(y)}(X)
 		 * (alpha * id_1) (beta * K_y(X)) -> alpha' beta * K_{alpha(y)}(X) [not implemented]
 		 * (w1 * id_n) (w2 * v) -> w1 w2 * v, if v : -> n        [not implemented]
-		 * A o (B o C) -> (A o B) o C    (for nicer prettyprinting)
+		 * (A o B) o C -> A o (B o C)    (for nicer prettyprinting)
 	   *)
 	    let
 	      val v1' = simplify v1
@@ -534,10 +534,8 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	           end
 	         else
 	           VCom (v1', v2', ioi)
-          (* The following is disabled, as it in a lot of cases prevents the
-           * m2pp function from replacing merges with prime products.
           (* FIXME somethings wrong with the interfaces: *)
-	      | (v1', VCom (v2a, v2b, _)) => VCom (VCom (v1', v2a, ioi), v2b, ioi) *)
+	      | (VCom (v1a, v1b, _), v2') => VCom (v1a, VCom (v1b, v2', ioi), ioi)
 	      | (v1', v2') => VCom (v1', v2', ioi)
 	    end   
 	  | simplify (VWir (w, i)) = VWir (Wiring.removeidles w, i)              
@@ -552,10 +550,9 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
   fun t2p'' (v as (VMer (n, i)), s) =
       ((v, false), s) (* s = id_e*)
     | t2p'' (VCon (X, i), s) =
-      let val outernames = Wiring.outernames s handle e => raise e
-      in
-        ((VCon (Wiring.app s X, i), false), s) handle e => raise e
-      end
+      (* FIXME this is unsound!
+       * E.g. x//[y, z] o (`[y]` * `[z]`)   =>   `[x]` || `[x]` *)
+      ((VCon (Wiring.app s X, i), false), s) handle e => raise e
     | t2p'' (VWir (w, i), s) =
       (* w = y_1/X_1 * ... * y_n/X_n * /Z_1 * ... * /Z_m
          s = z_1/y_1 || ... || z_n/y_n
@@ -631,7 +628,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
         ((VPar (Gs', (Interface.||| (List.map innerface Gs') handle e => raise e,
                       Interface.||| (List.map outerface Gs') handle e => raise e,
                       i)),
-          isNewId), Wiring.** Ss') handle e => raise e
+          isNewId), Wiring.||| Ss') handle e => raise e
       end
     | t2p'' (VCom (G, H, (_, _, i)), s) = 
       let
@@ -674,7 +671,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 
 						fun WLS ws =
 							let
-								fun tensor (w, (vs, Xs, ys, innernames, outernames)) = 
+								fun tensor (w, (vs, Xs, ys, innernames, outernames)) =
 								  let
 										val X = Wiring.innernames w
 										val y = Wiring.outernames w
