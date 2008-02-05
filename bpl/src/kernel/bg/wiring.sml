@@ -289,7 +289,7 @@ struct
         | nonidles l ls = Link'Set.insert l ls
     in
       (Link'Set.fold nonidles Link'Set.empty ls, ht)
-    end      
+    end
 
   fun is_id (ls, ht) = 
       let
@@ -493,6 +493,23 @@ struct
        => raise InnerNameClash (ls, "in Wiring.make'") 
 
   fun make ls = make' (LinkSet.list ls)
+
+  fun removeids (ls, _) =
+    let
+	    val ht = createNameHashMap 1
+      fun nonids (l as {outer = ne as (Name y), inner}) ls
+          = if NameSet.size inner = 1 andalso
+               Name.== (y, NameSet.someElement inner) then
+              ls
+            else
+              ( NameSet.apply (fn x => NameHashMap.insert ht (x, ne)) inner
+                ; Link'Set.insert l ls)
+        | nonids (l as {outer = ne, inner}) ls
+          = ( NameSet.apply (fn x => NameHashMap.insert ht (x, ne)) inner
+            ; Link'Set.insert l ls)
+    in
+      (Link'Set.fold nonids Link'Set.empty ls, ht)
+    end      
 
   (*FIXME not necessarily the most efficient way to do it... *)
   fun make_ren nm =
