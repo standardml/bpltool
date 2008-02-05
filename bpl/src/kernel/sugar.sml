@@ -249,39 +249,51 @@ fun =: (K, {freearity, boundarity}) kind free bound =
     else
       mkion (Control.make (K, kind, boundarity, freearity)) free bound
 fun ==: (K, {freeports, boundports, arities}) kind free bound =
-    let
-      fun compare ({port = port1, link = _}, {port = port2, link = _})
-        = String.compare (port1, port2)
-      val free  = ListSort.sort compare free
-      val bound = ListSort.sort compare bound
+  let
+    fun unique_names [] = true
+      | unique_names [_] = true
+      | unique_names (n1::(rest as (n2::_))) 
+        = String.< (n1, n2) andalso unique_names rest
+    val boundports = ListSort.sort String.compare boundports
+    val freeports  = ListSort.sort String.compare freeports
+    fun compare ({port = port1, link = _}, {port = port2, link = _})
+      = String.compare (port1, port2)
+    val free  = ListSort.sort compare free
+    val bound = ListSort.sort compare bound
 
-      (* verify the given port assignments and extract the assigned names *)
-      fun verify_ports _    wrap [] []    = []
-        | verify_ports bOrF wrap ports [] =
-          raise WrongArity ("Named " ^ bOrF ^ " ports `"
-                            ^ namelistToString ports
-                            ^ "' of control " ^ K ^ " were unspecified\n")
-        | verify_ports bOrF wrap [] pas   =
-          raise WrongArity (bOrF ^ " port assignments `"
-                            ^ listToString
-                                  (fn {port, link} => port ^ " == " ^ link)
-                                  pas
-                            ^ "' are superfluous\n")
-        | verify_ports bOrF wrap (port'::ports) ({port, link}::pas) =
-          case String.compare (port', port) of
-            EQUAL   => (wrap link) :: (verify_ports bOrF wrap ports pas)
-          | LESS    => raise WrongArity ("Control " ^ K
-                                         ^ " has " ^ bOrF ^ " named port `" ^ port'
-                                         ^ "' which is not assigned\n")
-          | GREATER => raise WrongArity (bOrF ^ " port name `" ^ port
-                                         ^ "' is not in the signature for control "
-                                         ^ K ^ "\n")
+    (* verify the given port assignments and extract the assigned names *)
+    fun verify_ports _    wrap [] []    = []
+      | verify_ports bOrF wrap ports [] =
+        raise WrongArity ("Named " ^ bOrF ^ " ports `"
+                          ^ namelistToString ports
+                          ^ "' of control " ^ K ^ " were unspecified\n")
+      | verify_ports bOrF wrap [] pas   =
+        raise WrongArity (bOrF ^ " port assignments `"
+                          ^ listToString
+                              (fn {port, link} => port ^ " == " ^ link)
+                              pas
+                          ^ "' are superfluous\n")
+      | verify_ports bOrF wrap (port'::ports) ({port, link}::pas) =
+        case String.compare (port', port) of
+          EQUAL   => (wrap link) :: (verify_ports bOrF wrap ports pas)
+        | LESS    => raise WrongArity ("Control " ^ K
+                                       ^ " has " ^ bOrF ^ " named port `" ^ port'
+                                       ^ "' which is not assigned\n")
+        | GREATER => raise WrongArity (bOrF ^ " port name `" ^ port
+                                       ^ "' is not in the signature for control "
+                                       ^ K ^ "\n")
 
+      val _ = if unique_names boundports andalso unique_names freeports then
+                ()
+              else
+                raise DuplicatePort (boundports, freeports,
+                                     "Duplicate port names are \
+                                     \not allowed in controls")
       val free'  = verify_ports "free"  (fn x => x)   freeports  free
       val bound' = verify_ports "bound" (fn x => [x]) boundports bound
-    in
-      mkion (Control.make' (K, kind, boundports, freeports)) free' bound'
-    end
+  in
+    mkion (Control.make' (K, kind, boundports, freeports)) free' bound'
+  end
 fun -: (K, freearity) kind free =
     =: (K, {freearity = freearity, boundarity = 0}) kind free []
 fun --: (K, freeports) kind free =
@@ -292,22 +304,9 @@ fun --: (K, freeports) kind free =
 fun --> (boundarity, freearity) = {freearity  = freearity,
 				                           boundarity = boundarity}
 fun ---> (boundports, freeports) =
-  let
-    fun unique_names [] = true
-      | unique_names [_] = true
-      | unique_names (n1::(rest as (n2::_))) 
-        = String.< (n1, n2) andalso unique_names rest
-    val boundports = ListSort.sort String.compare boundports
-    val freeports  = ListSort.sort String.compare freeports
-  in
-    if unique_names boundports andalso unique_names freeports then
-      {boundports = boundports, freeports = freeports,
-       arities = {freearity  = length freeports,
-                  boundarity = length boundports}}
-    else
-      raise DuplicatePort (boundports, freeports,
-                           "Duplicate port names are not allowed in controls")
-  end
+    {boundports = boundports, freeports = freeports,
+     arities = {freearity  = length freeports,
+                boundarity = length boundports}}
 fun == (port, link) = {port = port, link = link}
 
 val <-> = Mer 0
