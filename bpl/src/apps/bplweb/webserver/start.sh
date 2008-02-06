@@ -48,4 +48,5 @@ do
   pid=$!
   read dummy < restart
   kill $pid
+  wait $pid # Make sure zombie process is completely garbage collected
 done

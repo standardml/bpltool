@@ -205,6 +205,7 @@ print "Server call returned to simplifyrequest " + id.to_s + ".\n"
       f.puts "ENDBIGRAPH"
       @result = ""
       @result += f.gets while !f.eof?
+      f.close
     rescue StandardError => txt
       @result = "<p class='info'>[unable to generate image: " + txt.to_s + "]</p>"
     end
