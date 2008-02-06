@@ -147,10 +147,10 @@ struct
       val matches : (int * match lazylist * match list) array ref
         = ref (Array.fromList [])
 
-      (* Print terms as simplified as possible. *)
-      val _ = Flags.setBoolFlag "/kernel/ast/bgval/pp-simplify" true;
-      val _ = Flags.setBoolFlag "/kernel/ast/bgval/pp-tensor2parallel" true;
-      val _ = Flags.setBoolFlag "/kernel/ast/bgval/pp-merge2prime" true;
+      (* DISABLED! Print terms as simplified as possible. *)
+      val _ = Flags.setBoolFlag "/kernel/ast/bgval/pp-simplify" false;
+      val _ = Flags.setBoolFlag "/kernel/ast/bgval/pp-tensor2parallel" false;
+      val _ = Flags.setBoolFlag "/kernel/ast/bgval/pp-merge2prime" false;
       
       fun domatch (SOME signaturestr, SOME agentstr, SOME rulesstr,
                    SOME userulesstr, SOME matchcountstr, simplifymatches) =
