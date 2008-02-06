@@ -37,7 +37,13 @@ struct
   fun bound (_, _, b, _, _) = b
   fun free  (_, _, _, f, _) = f
   fun portnames (_, _, _, _, p) = p
-
+  fun collate f ([], []) = EQUAL
+    | collate f ([], _::_) = LESS
+    | collate f (_::_, []) = GREATER
+    | collate f (x :: xs, y :: ys)
+    = case f (x, y) of
+        EQUAL => collate f (xs, ys)
+      | c => c
   fun eq (n1, k1, b1, f1, p1)  (n2, k2, b2, f2, p2) =
     n1 = n2 andalso k1 = k2 andalso
     b1 = b2 andalso f1 = f2 andalso p1 = p2
@@ -63,8 +69,8 @@ struct
       (case (p1, p2) of
          (SOME {boundports = bound1, freeports = free1},
           SOME {boundports = bound2, freeports = free2}) =>
-      (case List.collate String.compare (bound1, bound2) of
-         EQUAL => List.collate String.compare (free1, free2)
+      (case collate String.compare (bound1, bound2) of
+         EQUAL => collate String.compare (free1, free2)
        | x => x)
        | (NONE, NONE) => EQUAL
        | (NONE, _)    => LESS

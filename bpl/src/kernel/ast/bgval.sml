@@ -552,12 +552,12 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
     | t2p'' (VCon (X, i), s) =
       (* FIXME this is unsound!
        * E.g. x//[y, z] o (`[y]` * `[z]`)   =>   `[x]` || `[x]` *)
-      ((VCon (Wiring.app s X, i), false), s)
+      (((VCon (Wiring.app s X, i), false), s) handle e => raise e)
     | t2p'' (VWir (w, i), s) =
       (* w = y_1/X_1 * ... * y_n/X_n * /Z_1 * ... * /Z_m
          s = z_1/y_1 || ... || z_n/y_n
 
-         cases:  X_i = Ø  =>  l_i = z_i/       l'_i = id0
+         cases:  X_i = ï¿½  =>  l_i = z_i/       l'_i = id0
                | _        =>  l_i = z_i/z_i    l'_i = z_i/X_i
 
          w' = ... || l_i  || ... * /Z_1 * ... * /Z_m

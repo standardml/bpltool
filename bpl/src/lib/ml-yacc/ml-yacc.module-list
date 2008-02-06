@@ -1,2 +1,19 @@
 structure LrParser {
 }
+structure ParserData{
+ structure Header{
+  type parserresult
+ }
+}
+structure Tokens{
+ type svalue
+ type token
+}
+functor BgTermLrVals{
+ structure ParserData => structure ParserData
+ structure Tokens => structure Tokens
+}
+functor RulesLrVals{
+ structure ParserData => structure ParserData
+ structure Tokens => structure Tokens
+}
