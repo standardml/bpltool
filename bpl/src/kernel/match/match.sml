@@ -1849,8 +1849,11 @@ struct
         lzunmk matches
       end handle e => raise e)
 
-  and matchDP' lvl args
-    = lzappend (matchDG' lvl args) (matchMER' lvl args)
+  and matchDP' lvl args =
+      lzmake (fn () =>
+        case lzunmk (matchDG' lvl args) of
+          mz as (Cons _) => mz
+        | Nil            => lzunmk (matchMER' lvl args))
   
   (* Match a global discrete prime using the SWX rule:
    * If Ps = [P], where P = (id_Z * ^s)(W)G, then
