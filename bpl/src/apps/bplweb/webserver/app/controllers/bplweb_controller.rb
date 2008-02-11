@@ -18,14 +18,14 @@ class BplwebController < ApplicationController
     @agent = "-//[e1,e2] o (\n" +
              " K21[f][[],[b1,b2]] o (<[b1,b2]> L2[b1,b2] o M1[e1]) `|`\n" +
              " L1[e2] o M2[e1,e2]                                  `|`\n" +
-             " K1[e2] o M                                           *\n" +
+             " K1[e2] o M                                          `|`\n" +
              " L20[][[b1],[b2]] o (<[b1,b2]> L2[b1,b2] o <->)\n" +
              ")"
     @simplifymatches = params[:simplifymatches] == "on"
     @rules = [Rule.new(:redex => "(<[y1,y2]> L2[y1,y2] o `[x1]`) ||\n" +
                                  "L1[x2] ||\n" +
                                  "K1[x2] o merge(2)",
-                       :react => "((<[y1,y2]> y1//[] * y2//[] * K) * x1//[] * x2//[]\n" +
+                       :react => "((<[y1,y2]> y1//[] * y2//[] * K) * x1//[] * x2//[] *\n" +
                                  " (-/x1 o (L1[x1] o (`[]` `|` `[x1]`)) `|` `[]`) *\n" +
                                  " <->) o\n" +
                                  "@@[2&[x1],0&[],1&[],3&[]]",
