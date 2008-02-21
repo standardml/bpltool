@@ -149,6 +149,8 @@ structure BgBDNF
        structure NameSetPP        = NameSetPP
        structure ListPP           = ListPP)
 
+structure BPLTerm = BPLTerm
+
 type bgterm = BgTerm.bgterm
 
 type bgval = BgVal.bgval
@@ -190,6 +192,26 @@ structure Rule = Rule
    structure ErrorHandler  = ErrorHandler)
 
 type rule = Rule.rule
+
+structure BPL2BgVal = BPL2BgVal (
+  structure Info          = Info
+  structure Origin        = Origin
+  structure Name          = Name
+  structure NameSet       = NameSet
+  structure Interface     = Interface
+  structure Link          = Link
+  structure LinkSet       = LinkSet
+  structure Wiring        = Wiring
+  structure Permutation   = Permutation
+  structure Control       = Control
+  structure Ion           = Ion
+  structure BgTerm        = BgTerm
+  structure BgVal         = BgVal
+  structure BgBDNF        = BgBDNF
+  structure Instantiation = Instantiation
+  structure Rule          = Rule
+  structure BPLTerm       = BPLTerm
+)
 
 structure Match = Match'
   (structure Info         = Info

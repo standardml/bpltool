@@ -7,7 +7,7 @@
 # INCLUDE=../../lib/fxp/src/Parser/Parse
 
 . = bg.grm bg.lex rules.grm rules.lex bplxmlparser bigraphxmlhooks
-  signaturexmlhooks bigraphdata
+  signaturexmlhooks bigraphdata bplparser
 bg.grm-sig: /lib/ml-yacc/.
 bg.lex: /lib/util/errormsg /lib/compat/mosml/. bg.grm-sig
 bg.grm: /lib/ml-yacc/.  /lib/coll/monoset-sig bg.grm-sig
@@ -25,8 +25,7 @@ bpl.lex: bpl.grm-sig /lib/util/sourceloc /lib/compat/mosml/. /lib/pp/mak/.
 bpl.grm: bpl.grm-sig /kernel/ast/bplterm
    /lib/util/sourceloc /lib/ml-yacc/.
    %NODASHSIG
-bplparser: %PROGRAM
-   bpl.grm bpl.lex /kernel/ast/bplterm
+bplparser: bpl.grm bpl.lex /kernel/ast/bplterm
    /lib/ml-yacc/. /lib/pp/mak/. /lib/util/sourceloc
 bigraphdata-sig: /kernel/bg/sigs
 bigraphdata: /kernel/bg/sigs /kernel/ast/sigs bigraphdata-sig %NODASHSIG

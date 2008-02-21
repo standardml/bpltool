@@ -1,4 +1,4 @@
-(* Copyright (c) 2007  The BPL Group at the IT University of Copenhagen
+(* Copyright (c) 2007-2008  The BPL Group at the IT University of Copenhagen
  *
  * This file is part of BPL.
  *
@@ -29,8 +29,70 @@
  * @author: Ebbe Elsborg (elsborg@itu.dk) et al.
  * @version $LastChangedRevision: 923 $
  *)
-functor Bpl2bgval (
-  structure BPLTerm : BPLTERM) =
+functor BPL2BgVal (
+  structure Info          : INFO
+  structure Origin        : ORIGIN
+  structure Name          : NAME
+  structure NameSet       : MONO_SET
+  structure Interface     : INTERFACE
+  structure Link          : LINK
+  structure LinkSet       : MONO_SET
+  structure Wiring        : WIRING
+  structure Permutation   : PERMUTATION
+  structure Control       : CONTROL
+  structure Ion           : ION
+  structure BgTerm        : BGTERM
+  structure BgVal         : BGVAL 
+  structure BgBDNF        : BGBDNF
+  structure Instantiation : INSTANTIATION
+  structure Rule          : RULE
+  structure BPLTerm       : BPLTERM
+  sharing type Name.name =
+               NameSet.elt =
+               BgVal.name =
+               Link.name =
+               Ion.name =
+               Wiring.name =
+               Instantiation.name
+  sharing type Link.link =
+               LinkSet.elt
+  sharing type LinkSet.Set =
+               Wiring.linkset
+  sharing type Interface.interface =
+               BgVal.interface =
+               Instantiation.interface
+  sharing type Info.info =
+               BgVal.info =
+               Rule.info =
+               Origin.origin
+  sharing type NameSet.Set =
+               Link.nameset =
+               BgVal.nameset =
+               Ion.nameset =
+               Interface.nameset =
+               Wiring.nameset
+  sharing type Control.control =
+               Ion.control
+  sharing type Ion.ion =
+               BgVal.ion
+  sharing type Wiring.wiring =
+               BgVal.wiring
+  sharing type Permutation.permutation =
+               BgVal.permutation
+  sharing type BgVal.bgval =
+               BgBDNF.bgval =
+               Rule.bgval
+  sharing type BgBDNF.BR =
+               Rule.BR
+  sharing type BgBDNF.bgbdnf =
+               Rule.bgbdnf
+  sharing type Instantiation.inst =
+               Rule.inst
+  ) :> BPL2BGVAL 
+  where type rule = Rule.rule
+    and type dec  = BPLTerm.dec 
+    and type sign = BPLTerm.sign
+    and type bgval = BgVal.bgval =
 struct
 
  (* Algorithm:
@@ -62,22 +124,20 @@ struct
 
 open TextIO;
 
-structure BG = BG (structure ErrorHandler = PrintErrorHandler);
-structure B = BG.BgVal
-structure BgTerm = BG.BgTerm
-structure Sugar = BG.Sugar
-structure Rule = BG.Rule
-structure Control = BG.Control
-structure Ion = BG.Ion
-structure Name = BG.Name
-structure NameSet = BG.NameSet
-structure Wiring  = BG.Wiring
-structure Link = BG.Link
-structure LinkSet = BG.LinkSet
 structure Origin = Origin
-structure Instantiation = BG.Instantiation
-structure BgBdnf = BG.BgBDNF
-structure Interface = BG.Interface
+structure Name = Name
+structure NameSet = NameSet
+structure Interface     = Interface
+structure Link = Link
+structure LinkSet = LinkSet
+structure Wiring  = Wiring
+structure Control = Control
+structure Ion = Ion
+structure BgTerm = BgTerm
+structure B = BgVal
+structure BgBdnf        = BgBDNF
+structure Instantiation = Instantiation
+structure Rule = Rule
 
 open BPLTerm
 
@@ -119,16 +179,21 @@ type signatur = ctrldefs
 datatype prog = Prog of signatur * decs
 *)
 
+(* Exported types. *)
+type sign   = BPLTerm.sign
+type dec    = BPLTerm.dec
+type bgval  = BgVal.bgval
+type rule   = Rule.rule
+
 (* aux. types and vals *)
-type bgval = B.bgval
 type sitemap = int * siteid
 type sitemaps = sitemap list
 type natmap = int * int
 type natmaps = natmap list
 type map = Instantiation.map
 type maps = map list
-val barren = Sugar.<-> (* barren root *)
-val info = BG.Info.noinfo
+val info = Info.noinfo
+val barren = BgVal.Mer info 0 (* barren root *)
 
 (* OPERATORS *)
 
@@ -136,10 +201,10 @@ infixr || (* parallel product *)
 infixr pp (* prime product *)
 infixr tt (* tensor product *)
 infixr oo (* composition *)
-fun (b1:bgval) || (b2:bgval) = Sugar.|| (b1,b2)
-fun (b1:bgval) pp (b2:bgval) = Sugar.`|` (b1,b2)
-fun (b1:bgval) tt (b2:bgval) = Sugar.* (b1,b2)
-fun (b1:bgval) oo (b2:bgval) = Sugar.o (b1,b2)
+fun (b1:bgval) || (b2:bgval) = BgVal.Par info [b1,b2]
+fun (b1:bgval) pp (b2:bgval) = BgVal.Pri info [b1,b2]
+fun (b1:bgval) tt (b2:bgval) = BgVal.Ten info [b1,b2]
+fun (b1:bgval) oo (b2:bgval) = BgVal.Com info (b1,b2)
 
 (* CONVERSION FUNCTIONS *)
 
@@ -365,12 +430,12 @@ fun big2bgval ast signa =
 		  | LRen(out,inn) =>
 		    (* inn must be local to obey the scope rule *)
 		    let val glob_inn = (con o nm2nmSet o s2n) inn
-			val wir_perm = (mkWir2 out inn) tt Sugar.idp(1)
+			val wir_perm = (mkWir2 out inn) tt (BgVal.Per info (Permutation.id_n(1)))
 			val comp_wir = wir_perm oo glob_inn
 			val loc2loc = abs (s2nmSet out, comp_wir)
 		    in loc2loc end
 		  | GInt(x) => mkWir1 x
-		  | LInt(x) => abs (s2nmSet x, (mkWir1 x) tt Sugar.idp(1))
+		  | LInt(x) => abs (s2nmSet x, (mkWir1 x) tt (BgVal.Per info (Permutation.id_n(1))))
 	    val wires = List.map w2bgval w
 	    val bgval = par wires
 	in bgval end
@@ -419,7 +484,7 @@ fun big2bgval ast signa =
 	     | NONE => ctrlNotInSig cid
 	end
       | Clo(nms,b) =>
-	let val bgval1 = Sugar.-//nms(*(List.map s2n nms)*)
+	let val bgval1 = BgVal.Wir info (Wiring.close (NameSet.fromList (map Name.make nms)))
 	    val bgval2 = big2bgval b signa
 	in bgval1 oo bgval2 end
       | Abs(nms,b) =>
@@ -457,7 +522,7 @@ fun rule2bgval p signa =
 	    val ins = Instantiation.make { I = B.innerface b1',
 					   J = B.innerface b2',
 					   maps = maplist }
-	in Rule.make { info = Origin.unknown_origin,
+	in Rule.make { info = Info.noinfo,
 		       inst = ins,
 		       name = i,
 		       react = b1',
@@ -638,7 +703,7 @@ fun peelCdef [] = []
 *)
 
 (* toplevel *)
-fun prog2bgval (signa, _, declist) =
+fun prog2bgval (signa, declist) =
 	if List.exists (fn d => case d
 				 of Val(i,b) => true
 				  | _ => false)
@@ -661,7 +726,7 @@ fun prog2bgval (signa, _, declist) =
 		(* make bgvals *)
 		val mainBgval = big2bgval mainVal' signa'
 		val rules' = rules2bgvals rules_nmaps signa'
-	    in (signa', mainBgval, rules') end
+	    in (mainBgval, rules') end
 	else raise Fail("prog2bgval: There are no Values\n")
 
 end (* structure Bpl2bgval *)

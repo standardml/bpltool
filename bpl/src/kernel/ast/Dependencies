@@ -1,7 +1,7 @@
 # INCLUDE=../../lib/coll
 # INCLUDE=../bg
-sigs = info-sig bgterm-sig bgval-sig bgbdnf-sig
-funs = info bgterm bgval bgbdnf
+sigs = info-sig bgterm-sig bgval-sig bgbdnf-sig bplterm-sig
+funs = info bgterm bgval bgbdnf bplterm
 
 info-sig: /lib/util/origin
 info: info-sig /lib/util/origin %NODASHSIG

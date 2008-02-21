@@ -61,9 +61,13 @@ sig
   type control
 
   structure Info          : INFO
+  
   structure BgTerm        : BGTERM
   structure BgVal         : BGVAL
   structure BgBDNF        : BGBDNF
+  structure BPLTerm       : BPLTERM
+  structure BPL2BgVal     : BPL2BGVAL
+  
   structure Match         : MATCH
   structure Instantiation : INSTANTIATION
   structure Rule          : RULE
@@ -142,16 +146,21 @@ sig
   sharing type bgval =
                BgVal.bgval =
                BgBDNF.bgval =
+               BPL2BgVal.bgval =
                Instantiation.bgval =
                Sugar.bgval =
                Rule.bgval =
                Reaction.bgval
 
+  sharing type BPLTerm.dec =
+               BPL2BgVal.dec
+
   sharing type rule =
                Rule.rule =
                Match.rule =
                Reaction.rule =
-               Sugar.rule
+               Sugar.rule =
+               BPL2BgVal.rule
 
   sharing type control =
                Control.control =

@@ -4,4 +4,4 @@
 
 bdnfTest: /lib/smlunit/. /kernel/bpl /lib/util/errormsg
    /lib/util/origin-sig /lib/util/errorhandler-sig /lib/pp/smlnj/.
-   /lib/compat/common/.
+   /lib/compat/common/. /lib/util/flags

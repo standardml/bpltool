@@ -116,8 +116,8 @@ signature BPLTERM = sig
 	| Val of id * bigraph
   
   (** Bigraphical program type.  A program is a list of named
-   * signatures, an identifier specifying which to use, and a
-   * list of declarations.
+   * signatures, an identifier specifying which to use, and
+   * a list of declarations.
    *)
   type prog = sigdef list * id * dec list
 

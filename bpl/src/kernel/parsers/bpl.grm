@@ -30,7 +30,7 @@ type bigraph = T.bigraph
     | QUOT | UNDERSCORE
     | DPAR | PAR
 
-    | ACTIVE | ATOMIC | END | PASSIVE | RULE | SIG | SIGNATURE | USING | VAL
+    | ACTIVE | ATOMIC | END | PASSIVE | RULE | SIG | SIGNATURE | USING | VAL | STATE
 
 %nonterm
   Prog of T.prog
@@ -92,7 +92,7 @@ Sig:
 
 CtrlDefs:
       CtrlDef CtrlDefs                 ( CtrlDef :: CtrlDefs )
-    | CtrlDef                          ( [CtrlDef] )
+    |                                  ( [] )
 
 CtrlDef:
       ID COLON CtrlKind LPAR INT ARROW INT RPAR
@@ -108,8 +108,8 @@ Dec:
     | AtDec Dec                        ( AtDec :: Dec )
 
 AtDec:
-      RULE ID EQUAL Rule               ( T.Rul(ID, Rule) )
-    | VAL  ID EQUAL Bigraph            ( T.Val(ID, Bigraph) )
+      RULE  ID EQUAL Rule              ( T.Rul(ID, Rule) )
+    | VAL   ID EQUAL Bigraph           ( T.Val(ID, Bigraph) )
 
 Bigraph:
       OpBigraph                        ( OpBigraph )

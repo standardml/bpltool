@@ -333,6 +333,31 @@ fun brsUseXMLfiles sigfilename brsfilename =
     | BigraphData.BIGRAPH _ => (cs,[]) (* TODO! *) 
   end
 
+exception UndefinedSignatureId of string * BPLTerm.sigdef list * string
+fun explain_UndefinedSignatureId 
+    (UndefinedSignatureId (id, signatures, filename)) =
+      [Exp (
+        LVL_USER,
+        Info.make (Origin.mk_file_origin filename Origin.NOPOS),     
+        mk_string_pp (
+          "Undefined signature id '" ^ id ^ "', known ids:" ^
+          foldr (fn ((id, _), s) => " " ^ id ^ s) "." signatures),
+        [])]
+    | explain_UndefinedSignatureId _ = raise Match
+  val _ = add_explainer
+            (mk_explainer "Parsing error" explain_UndefinedSignatureId)
+
+fun brsUseBPLTermFile filename =
+  let
+    val (signatures, sigid, decs) = BPLParser.parseFile filename
+    fun lookup sigid []
+      = raise UndefinedSignatureId (sigid, signatures, filename)
+      | lookup sigid ((sigid', signatur) :: signatures)
+      = if sigid = sigid' then signatur else lookup sigid signatures
+  in
+    BPL2BgVal.prog2bgval (lookup sigid signatures, decs)
+  end
+
 end
 
 functor BG (structure ErrorHandler : ERRORHANDLER

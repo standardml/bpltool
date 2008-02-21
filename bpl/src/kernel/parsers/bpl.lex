@@ -50,6 +50,7 @@ local
 	, ("signature",SIGNATURE)
         , ("using",    USING)
 	, ("val",      VAL)
+	, ("state",      STATE)
 	]
 
     structure HT = HashTable

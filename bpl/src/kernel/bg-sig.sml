@@ -233,12 +233,16 @@ pint          ::= INT
   val bgvalUsefile'' : string -> bgval
   (** Read a BG expression, using old syntax, from a file, return it as a bgval. *)
   val bgvalUseBgTermfile'' : string -> bgval
-  (** Read a bigraphical signature from one XML file and a BRS from
-   * another XML file. *)
-
   (** ADDED - necessary? *)
   val bgtermUsefile'' : string -> bgterm			    
 
+  (** Read a BPL program (a BRS consisting of agent and rules) from
+   * a file, return it as a bgval and a list of rules.
+   *)
+  val brsUseBPLTermFile : string -> bgval * rule list
+
+  (** Read a bigraphical signature from one XML file and a BRS from
+   * another XML file. *)
   val brsUseXMLfiles : string -> string -> control list * ruledata list
   (** Prettyprinter for bigraphs. *)
   val pp : PrettyPrint.ppstream -> 'class bgbdnf -> unit
