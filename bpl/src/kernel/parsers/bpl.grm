@@ -53,6 +53,7 @@ type bigraph = T.bigraph
 | Wiring of T.wire list
 | Wire of T.wire
 | Rule of bigraph * bigraph
+| NAMEID of string
 
 %pos {pos: int, src: {file: string}}
 %verbose
@@ -77,15 +78,15 @@ type bigraph = T.bigraph
 
 Prog:
       SigDefs 
-      USING ID
-      Dec                              ( (SigDefs, ID, Dec) )
+      USING NAMEID
+      Dec                              ( (SigDefs, NAMEID, Dec) )
 
 SigDefs:
       SigDef SigDefs                   ( SigDef :: SigDefs )
     |                                  ( [] )
 
 SigDef:
-      SIGNATURE ID EQUAL Sig           ( (ID, Sig) )
+      SIGNATURE NAMEID EQUAL Sig       ( (NAMEID, Sig) )
 
 Sig:
       SIG CtrlDefs END                 ( CtrlDefs )
@@ -95,8 +96,8 @@ CtrlDefs:
     |                                  ( [] )
 
 CtrlDef:
-      ID COLON CtrlKind LPAR INT ARROW INT RPAR
-                                       ( (ID, CtrlKind, INT1, INT2) )
+      NAME COLON CtrlKind LPAR INT ARROW INT RPAR
+                                       ( (NAME, CtrlKind, INT1, INT2) )
 
 CtrlKind:
       ACTIVE                           ( T.Active )
@@ -108,7 +109,7 @@ Dec:
     | AtDec Dec                        ( AtDec :: Dec )
 
 AtDec:
-      RULE  ID EQUAL Rule              ( T.Rul(ID, Rule) )
+      RULE  NAMEID EQUAL Rule          ( T.Rul(NAMEID, Rule) )
     | VAL   ID EQUAL Bigraph           ( T.Val(ID, Bigraph) )
 
 Bigraph:
@@ -134,13 +135,13 @@ JuxtBigraph:
     | JuxtBigraph AtBigraph            ( T.Com (JuxtBigraph, AtBigraph) )
 
 AtBigraph:
-      ID                               ( T.Ion(ID,[],[]) )
-    | ID UNDERSCORE Edges              ( T.Ion(ID,Edges,[]) )
-    | ID UNDERSCORE LPAR Edges RPAR    ( T.Ion(ID,[],Edges) )
-    | ID LANG EdgeList LPAR EdgeList RPAR RANG
-                                       ( T.Ion(ID,EdgeList1,EdgeList2) )
+      NAME                             ( T.Ion(NAME,[],[]) )
+    | NAME UNDERSCORE Edges            ( T.Ion(NAME,Edges,[]) )
+    | NAME UNDERSCORE LPAR Edges RPAR  ( T.Ion(NAME,[],Edges) )
+    | NAME LANG EdgeList LPAR EdgeList RPAR RANG
+                                       ( T.Ion(NAME,EdgeList1,EdgeList2) )
     | LBRK INT RBRK PortsOpt           ( T.Sit(T.SiteNum INT, PortsOpt) )
-    | NAME PortsOpt                    ( T.Sit(T.SiteName NAME, PortsOpt) )
+    | LBRK NAMEID RBRK PortsOpt        ( T.Sit(T.SiteName NAMEID, PortsOpt) )
     | BARREN                           ( T.Bar )
     | LPAR Bigraph RPAR                ( Bigraph )
     | INT                              ( if INT = 1 then T.Bar
@@ -148,6 +149,7 @@ AtBigraph:
       (* Hmm, need to be able to refer to a bigraph by id, but if
          bigraph identifier and ctrl identifier are the same, how
          do we know if ID is a ion or a bigraph id? *)
+    | ID                               ( T.Ref (ID) )
 
 PortsOpt:
       Ports                            ( Ports )
@@ -175,3 +177,7 @@ Wire:
     | LBRC ID RBRC SLASH               ( T.LInt(ID) )
 Rule:
       Bigraph ARROW Bigraph            ( (Bigraph1,Bigraph2) )
+
+NAMEID:
+      NAME                             ( NAME )
+    | ID                               ( ID )

@@ -147,33 +147,33 @@ type id = string
 type ctrlid = string
 type nat = int
 datatype siteid = Num of nat
-		| Var of id
+                | Var of id
 datatype wire = Global of id * id
-	      | Local of id * id
-	      | IdleG of id
-	      | IdleL of id
+              | Local of id * id
+              | IdleG of id
+              | IdleL of id
 type wires = wire list
 type names = id list
 datatype namelist = Namelist of names
 type ports = names
 datatype bigraph = Wir of wires
-		 | Par of bigraph * bigraph
-		 | Pri of bigraph * bigraph
-		 | Com of bigraph * bigraph
-		 | Emb of bigraph * bigraph
-		 | Ten of bigraph * bigraph
-		 | Ion of ctrlid * ports * ports
-		 | Clo of names * bigraph
-		 | Abs of names * bigraph
-		 | Con of names * bigraph
-		 | Site of siteid * namelist
-		 | Id of id
-		 | Empty
+                 | Par of bigraph * bigraph
+                 | Pri of bigraph * bigraph
+                 | Com of bigraph * bigraph
+                 | Emb of bigraph * bigraph
+                 | Ten of bigraph * bigraph
+                 | Ion of ctrlid * ports * ports
+                 | Clo of names * bigraph
+                 | Abs of names * bigraph
+                 | Con of names * bigraph
+                 | Site of siteid * namelist
+                 | Id of id
+                 | Empty
 type ctrlkind = Control.kind (* Active | Passive | Atomic *)
 datatype ctrldef = Cdef of ctrlid * ctrlkind * nat * nat
 type ctrldefs = ctrldef list
 datatype dec = Rule of id * bigraph * bigraph
-	     | Value of id * bigraph
+             | Value of id * bigraph
 type decs = dec list
 type signatur = ctrldefs
 datatype prog = Prog of signatur * decs
@@ -275,25 +275,25 @@ fun prtSimp name bgval =
 (* print sitemaps *)
 fun printSmaps (smaps:sitemaps) =
     List.map (fn x =>
-		 let val prtnat = Int.toString(#1(x))
-		     val prtid = case #2(x)
-				  of SiteNum(n) => Int.toString n
-				   | SiteName(i) => i
-		 in print("(" ^ prtnat ^ "," ^ prtid ^ ") ") end
-	     )
-	     smaps
+                 let val prtnat = Int.toString(#1(x))
+                     val prtid = case #2(x)
+                                  of SiteNum(n) => Int.toString n
+                                   | SiteName(i) => i
+                 in print("(" ^ prtnat ^ "," ^ prtid ^ ") ") end
+             )
+             smaps
 
 (* print a map : (int * namelist) * (int * namelist) *)
 fun printMap (m:map) =
     let val (i1,l1) = #1(m)
-	val (i2,l2) = #2(m)
-	fun strList2str l =
-	    case l of [] => ""
-		    | (n::ns) => Name.unmk(n) ^ (strList2str ns)
-	val (i1',l1') = (Int.toString i1, strList2str l1)
-	val (i2',l2') = (Int.toString i2, strList2str l2)
+        val (i2,l2) = #2(m)
+        fun strList2str l =
+            case l of [] => ""
+                    | (n::ns) => Name.unmk(n) ^ (strList2str ns)
+        val (i1',l1') = (Int.toString i1, strList2str l1)
+        val (i2',l2') = (Int.toString i2, strList2str l2)
     in print("((" ^ i1' ^ "," ^ l1' ^ ")" ^ "," ^
-	     "(" ^ i2' ^ "," ^ l2' ^ ")) ")
+             "(" ^ i2' ^ "," ^ l2' ^ ")) ")
     end
 
 (* print maps : ( (int * namelist) * (int * namelist) ) list *)
@@ -302,7 +302,7 @@ fun printMaps m = List.map printMap m
 (* print nmap, i.e. a (nat*nat) list *)
 fun printNmap (m:natmap) =
     let val n1 = Int.toString(#1(m))
-	val n2 = Int.toString(#2(m))
+        val n2 = Int.toString(#2(m))
     in print("(" ^ n1 ^ "," ^ n2 ^ ") ") end
 
 (* print nmaps, i.e. an nmap list, i.e. a (nat*nat) list *)
@@ -314,17 +314,17 @@ fun printNmaps [] = []
 (* return list of sites of a bigraph *)
 fun getSites b =
     case b of Wir(w) => []
-	    | Par(b1,b2) => (getSites b1) @ (getSites b2)
-	    | Pri(b1,b2) => (getSites b1) @ (getSites b2)
-	    | Com(b1,b2) => (getSites b1) @ (getSites b2)
-	    | Ten(b1,b2) => (getSites b1) @ (getSites b2)
-	    | Ion(i,b,f) => [] (* reached atom *)
-	    | Clo(n,b) => getSites b
-	    | Abs(n,b) => getSites b
-	    | Con(n,b) => getSites b
-	    | Sit(i,l) => [Sit(i,l)]
-	    | Ref(i) => []
-	    | Bar => []
+            | Par(b1,b2) => (getSites b1) @ (getSites b2)
+            | Pri(b1,b2) => (getSites b1) @ (getSites b2)
+            | Com(b1,b2) => (getSites b1) @ (getSites b2)
+            | Ten(b1,b2) => (getSites b1) @ (getSites b2)
+            | Ion(i,b,f) => [] (* reached atom *)
+            | Clo(n,b) => getSites b
+            | Abs(n,b) => getSites b
+            | Con(n,b) => getSites b
+            | Sit(i,l) => [Sit(i,l)]
+            | Ref(i) => []
+            | Bar => []
 
 (* lookup first occurence of id and return corresponding key (Sit) *)
 fun lookupSite [] id = NONE
@@ -348,24 +348,24 @@ fun strList2nmSetList l = List.map (nm2nmSet o s2n) l
 (* make (wiring of) idle outer name *)
 fun mkWir1 ovar =
     let val link = Link.make {outer = SOME(v2n ovar),
-			      inner = NameSet.empty}
-	val linkset = LinkSet.insert link LinkSet.empty
-	val wiring = Wiring.make linkset
+                              inner = NameSet.empty}
+        val linkset = LinkSet.insert link LinkSet.empty
+        val wiring = Wiring.make linkset
     in B.Wir info wiring end
 
 (* make wiring from inner an name to an outer name *)
 fun mkWir2 ovar ivar =
     let val link = Link.make
-		       { outer = SOME(v2n ovar),
-			 inner = nm2nmSet (v2n ivar) }
-	val linkset = LinkSet.insert link LinkSet.empty
-	val wiring = Wiring.make linkset
+                       { outer = SOME(v2n ovar),
+                         inner = nm2nmSet (v2n ivar) }
+        val linkset = LinkSet.insert link LinkSet.empty
+        val wiring = Wiring.make linkset
     in B.Wir info wiring end
 
 (* lookup a control in a signature *)
 fun lookupCtrl cid signa =
     let fun loop [] = NONE
-	  | loop ((i,k,b,f)::m) = if cid = i then SOME (i,k,b,f) else loop m
+          | loop ((i,k,b,f)::m) = if cid = i then SOME (i,k,b,f) else loop m
     in loop signa end
 
 (* raise an error message that a particular control is not in the sig. *)
@@ -383,32 +383,32 @@ fun peelNamelist l = List.map (fn s => s2n s) l
 (* in: nat-ID-site lists and natmaps, out: relate Sites *)
 fun makeMaps slist1 slist2 (nmaps:natmaps) =
     let fun err1 n = "makeMaps: Site " ^ Int.toString(n) ^
-		     " has no LHS counterpart\n"
-	fun err2 n = "makeMaps: Shouldn't happen... "
-		     ^ Int.toString(n) ^ "\n"
-	val err3 = "makeMaps: Unnumbered site\n"
+                     " has no LHS counterpart\n"
+        fun err2 n = "makeMaps: Shouldn't happen... "
+                     ^ Int.toString(n) ^ "\n"
+        val err3 = "makeMaps: Unnumbered site\n"
     in List.map
-	   ( fn s =>
-		( case s
-		   of Sit(SiteNum(n),l) =>
-		      let val b1siteid = lookupSnd nmaps n
-			  val b1site =
-			      case b1siteid
-			       of SOME(n') => (* exists LHS site id *)
-				  ( case lookupSite slist1 n'
-				     of SOME(s) => s (* id |-> site *)
-				      | NONE => raise Fail(err2 n') )
-				| NONE => raise Fail(err1 n)
-			  val (n1,l1) =
-			      case b1site
-			       of Sit(SiteNum(n'),l') =>
-				  (n', peelNamelist l')
-				| _ => raise Fail(err3)
-			  val (n2,l2) = (n, peelNamelist l)
-		      in ((n2,l2), (n1,l1)) end
-		    | _ => raise Fail(err3) )
-	   )
-	   slist2
+           ( fn s =>
+                ( case s
+                   of Sit(SiteNum(n),l) =>
+                      let val b1siteid = lookupSnd nmaps n
+                          val b1site =
+                              case b1siteid
+                               of SOME(n') => (* exists LHS site id *)
+                                  ( case lookupSite slist1 n'
+                                     of SOME(s) => s (* id |-> site *)
+                                      | NONE => raise Fail(err2 n') )
+                                | NONE => raise Fail(err1 n)
+                          val (n1,l1) =
+                              case b1site
+                               of Sit(SiteNum(n'),l') =>
+                                  (n', peelNamelist l')
+                                | _ => raise Fail(err3)
+                          val (n2,l2) = (n, peelNamelist l)
+                      in ((n2,l2), (n1,l1)) end
+                    | _ => raise Fail(err3) )
+           )
+           slist2
     end
 
 (***** TRANSLATION *****)
@@ -424,88 +424,88 @@ fun conc (nameset,b) = (con nameset) oo b
 fun big2bgval ast signa =
     case ast
      of Wir(w) =>
-	let fun w2bgval wire =
-		case wire
-		 of GRen(out,inn) => mkWir2 out inn
-		  | LRen(out,inn) =>
-		    (* inn must be local to obey the scope rule *)
-		    let val glob_inn = (con o nm2nmSet o s2n) inn
-			val wir_perm = (mkWir2 out inn) tt (BgVal.Per info (Permutation.id_n(1)))
-			val comp_wir = wir_perm oo glob_inn
-			val loc2loc = abs (s2nmSet out, comp_wir)
-		    in loc2loc end
-		  | GInt(x) => mkWir1 x
-		  | LInt(x) => abs (s2nmSet x, (mkWir1 x) tt (BgVal.Per info (Permutation.id_n(1))))
-	    val wires = List.map w2bgval w
-	    val bgval = par wires
-	in bgval end
+        let fun w2bgval wire =
+                case wire
+                 of GRen(out,inn) => mkWir2 out inn
+                  | LRen(out,inn) =>
+                    (* inn must be local to obey the scope rule *)
+                    let val glob_inn = (con o nm2nmSet o s2n) inn
+                        val wir_perm = (mkWir2 out inn) tt (BgVal.Per info (Permutation.id_n(1)))
+                        val comp_wir = wir_perm oo glob_inn
+                        val loc2loc = abs (s2nmSet out, comp_wir)
+                    in loc2loc end
+                  | GInt(x) => mkWir1 x
+                  | LInt(x) => abs (s2nmSet x, (mkWir1 x) tt (BgVal.Per info (Permutation.id_n(1))))
+            val wires = List.map w2bgval w
+            val bgval = par wires
+        in bgval end
       | Par(b1,b2) =>
-	let val b1' = big2bgval b1 signa
-	    val b2' = big2bgval b2 signa
-	in b1' || b2' end
+        let val b1' = big2bgval b1 signa
+            val b2' = big2bgval b2 signa
+        in b1' || b2' end
       | Pri(b1,b2) =>
-	let val b1' = big2bgval b1 signa
-	    val b2' = big2bgval b2 signa
-	in (b1' pp b2')	end
+        let val b1' = big2bgval b1 signa
+            val b2' = big2bgval b2 signa
+        in (b1' pp b2') end
       | Com(b1,b2) => (* wire through surplus global names *)
-	let val b1' = big2bgval b1 signa
-	    val b2' = big2bgval b2 signa
-	(* (b1' || id) o b2', requires:
-	 - width(dom(b1')) = width(cod(b2'))
-	 - glob(dom(b1')) \subseteq glob(cod(b2'))
-	 *)
-	in com(b1',b2')	end
+        let val b1' = big2bgval b1 signa
+            val b2' = big2bgval b2 signa
+        (* (b1' || id) o b2', requires:
+         - width(dom(b1')) = width(cod(b2'))
+         - glob(dom(b1')) \subseteq glob(cod(b2'))
+         *)
+        in com(b1',b2') end
       | Ten(b1,b2) =>
-	let val b1' = big2bgval b1 signa
-	    val b2' = big2bgval b2 signa
-	in (b1' tt b2')	end
+        let val b1' = big2bgval b1 signa
+            val b2' = big2bgval b2 signa
+        in (b1' tt b2') end
       | Ion(cid,bports,fports) =>
         let val boundnames = strList2nmSetList bports
-	    val freenames = List.map s2n fports
-	    val bSz = List.length bports
-	    val fSz = List.length fports
-	in case lookupCtrl cid signa
-	    of SOME((i,k,b,f)) =>
-	       if bSz = b andalso fSz = f
-	       then let val ion =
-			    Ion.make {ctrl = Control.make(cid,toControl k,bSz,fSz),
-				      free = freenames,
-				      bound = boundnames}
-			val bgval = B.Ion info ion
-		    in if k = Atomic
-		       then if bSz = 0
-			    then (bgval oo barren) (* make an atom *)
-			    else raise Fail("big2bgval: Atom "
-					    ^ i ^ " with bound names\n")
-		       else bgval
-		    end
-	       else raise Fail("big2bgval: Control " ^ i ^ 
-			       " used in non-accordance with signature\n")
-	     | NONE => ctrlNotInSig cid
-	end
+            val freenames = List.map s2n fports
+            val bSz = List.length bports
+            val fSz = List.length fports
+        in case lookupCtrl cid signa
+            of SOME((i,k,b,f)) =>
+               if bSz = b andalso fSz = f
+               then let val ion =
+                            Ion.make {ctrl = Control.make(cid,toControl k,bSz,fSz),
+                                      free = freenames,
+                                      bound = boundnames}
+                        val bgval = B.Ion info ion
+                    in if k = Atomic
+                       then if bSz = 0
+                            then (bgval oo barren) (* make an atom *)
+                            else raise Fail("big2bgval: Atom "
+                                            ^ i ^ " with bound names\n")
+                       else bgval
+                    end
+               else raise Fail("big2bgval: Control " ^ i ^ 
+                               " used in non-accordance with signature\n")
+             | NONE => ctrlNotInSig cid
+        end
       | Clo(nms,b) =>
-	let val bgval1 = BgVal.Wir info (Wiring.close (NameSet.fromList (map Name.make nms)))
-	    val bgval2 = big2bgval b signa
-	in bgval1 oo bgval2 end
+        let val bgval1 = BgVal.Wir info (Wiring.close (NameSet.fromList (map Name.make nms)))
+            val bgval2 = big2bgval b signa
+        in bgval1 oo bgval2 end
       | Abs(nms,b) =>
-	let val nmSetList = strList2nmSetList (rmDubs nms)
-	    val union = fn (nmset,acc) => NameSet.union nmset acc
-	    val nmSet = List.foldr union NameSet.empty nmSetList
-	    val b' = big2bgval b signa
-	    val abst = abs (nmSet, b')
-	in abst end
+        let val nmSetList = strList2nmSetList (rmDubs nms)
+            val union = fn (nmset,acc) => NameSet.union nmset acc
+            val nmSet = List.foldr union NameSet.empty nmSetList
+            val b' = big2bgval b signa
+            val abst = abs (nmSet, b')
+        in abst end
       | Con(nms,b) =>
-	let val nmSetList = strList2nmSetList (rmDubs nms)
-	    val union = fn (nmset,acc) => NameSet.union nmset acc
-	    val nmSet = List.foldr union NameSet.empty nmSetList
-	    val b' = big2bgval b signa
-	    val conc = conc (nmSet, b')
-	in conc end
+        let val nmSetList = strList2nmSetList (rmDubs nms)
+            val union = fn (nmset,acc) => NameSet.union nmset acc
+            val nmSet = List.foldr union NameSet.empty nmSetList
+            val b' = big2bgval b signa
+            val conc = conc (nmSet, b')
+        in conc end
       | Sit(i,l) => (* ({X}) o `[X]`, i.e. id_<1,({X}),X> *)
-	let val X' = rmDubs l
-	    val X = NameSet.fromList(List.map s2n X')
-	    val site = abs(X,con X)
-	in site end
+        let val X' = rmDubs l
+            val X = NameSet.fromList(List.map s2n X')
+            val site = abs(X,con X)
+        in site end
       | Ref(i) => raise Fail("big2bgval: Unbound identifier: " ^ i ^ "\n")
       | Bar => barren
 
@@ -513,21 +513,21 @@ fun big2bgval ast signa =
 fun rule2bgval p signa =
     case p
      of (Rul(i,(b1,b2)), nmaps) =>
-	let val b1sites = getSites b1
-	    val b2sites = getSites b2
-	    val maplist = makeMaps b1sites b2sites nmaps
-	    val b1' = big2bgval b1 signa
-	    val b2' = big2bgval b2 signa
-	    val b2'' = (BgBdnf.regularize o BgBdnf.make) b2'
-	    val ins = Instantiation.make { I = B.innerface b1',
-					   J = B.innerface b2',
-					   maps = maplist }
-	in Rule.make { info = Info.noinfo,
-		       inst = ins,
-		       name = i,
-		       react = b1',
-		       redex = b2''}
-	end
+        let val b1sites = getSites b1
+            val b2sites = getSites b2
+            val maplist = makeMaps b1sites b2sites nmaps
+            val b1' = big2bgval b1 signa
+            val b2' = big2bgval b2 signa
+            val b2'' = (BgBdnf.regularize o BgBdnf.make) b2'
+            val ins = Instantiation.make { I = B.innerface b1',
+                                           J = B.innerface b2',
+                                           maps = maplist }
+        in Rule.make { info = Info.noinfo,
+                       inst = ins,
+                       name = i,
+                       react = b1',
+                       redex = b2''}
+        end
       | _ => raise Fail("rule2bgval: Encountered a Value\n")
 
 (* translate rules with natmaps into rules of bgvals with insts *)
@@ -539,19 +539,19 @@ fun rules2bgvals rules_nmaps signa =
 (* substitute a bigraph b1 into a bigraph b2, recursively *)
 fun sub (i1,b1) b2 =
     case b2 of Wir(w) => Wir(w)
-	    | Par(b,b') => Par(sub (i1,b1) b, sub (i1,b1) b')
-	    | Pri(b,b') => Pri(sub (i1,b1) b, sub (i1,b1) b')
-	    | Com(b,b') => Com(sub (i1,b1) b, sub (i1,b1) b')
-	    | Ten(b,b') => Ten(sub (i1,b1) b, sub (i1,b1) b')
-	    | Ion(i,b,f) => Ion(i,b,f) (* reached atom *)
-	    | Clo(n,b) => Clo(n, sub (i1,b1) b)
-	    | Abs(n,b) => Abs(n, sub (i1,b1) b)
-	    | Con(n,b) => Con(n, sub (i1,b1) b)
-	    | Sit(i,l) => Sit(i,l)
-	    | Ref(i) =>
-	      if i = i1 then b1 (* assumes that b1 is already rolled *)
-	      else Ref(i)
-	    | Bar => Bar
+            | Par(b,b') => Par(sub (i1,b1) b, sub (i1,b1) b')
+            | Pri(b,b') => Pri(sub (i1,b1) b, sub (i1,b1) b')
+            | Com(b,b') => Com(sub (i1,b1) b, sub (i1,b1) b')
+            | Ten(b,b') => Ten(sub (i1,b1) b, sub (i1,b1) b')
+            | Ion(i,b,f) => Ion(i,b,f) (* reached atom *)
+            | Clo(n,b) => Clo(n, sub (i1,b1) b)
+            | Abs(n,b) => Abs(n, sub (i1,b1) b)
+            | Con(n,b) => Con(n, sub (i1,b1) b)
+            | Sit(i,l) => Sit(i,l)
+            | Ref(i) =>
+              if i = i1 then b1 (* assumes that b1 is already rolled *)
+              else Ref(i)
+            | Bar => Bar
 
 (* substitute a bigraph b into every following element in a decl list *)
 fun subList [] = []
@@ -559,39 +559,39 @@ fun subList [] = []
     case d
      of Rul(i,(b1,b2)) => d :: subList ds (* rules not subst. into decls *)
       | Val(i,b) =>
-	let val newlist = 
-		List.map
-		    (fn d' =>
-			case d'
-			 of Val(i',b') => Val(i', sub (i,b) b')
-			  | Rul(i',(b1',b2'))
-			    => Rul(i', (sub (i,b) b1', sub (i,b) b2')))
-		    ds
-	in d :: newlist end
+        let val newlist = 
+                List.map
+                    (fn d' =>
+                        case d'
+                         of Val(i',b') => Val(i', sub (i,b) b')
+                          | Rul(i',(b1',b2'))
+                            => Rul(i', (sub (i,b) b1', sub (i,b) b2')))
+                    ds
+        in d :: newlist end
 
 (* roll a declist (vals/rules) *)
 fun roll [] = []
   | roll (d::ds) =
     if ds = [] then [d] (* nothing to do for last element *)
     else let val newlist = subList (d::ds)
-	     val head = List.hd newlist
-	     val tail = List.tl newlist
-	 in head :: roll tail end
+             val head = List.hd newlist
+             val tail = List.tl newlist
+         in head :: roll tail end
 
 (* delete all except the main val (and rules) from a declist *)
 fun delAuxVals [] = []
   | delAuxVals (d::ds) =
     case d of Val(i,b) =>
-	      let val moreVals =
-		      List.exists
-			  (fn d => case d of Val(i,b) => true
-					   | Rul(i,(b1,b2)) => false)
-			  ds
-	      in if moreVals
-		 then delAuxVals ds (* cont., main val is last by invar. *)
-		 else d::ds (* found the main val, terminate *)
-	      end
-	    | Rul(i,(b1,b2)) => d :: delAuxVals ds
+              let val moreVals =
+                      List.exists
+                          (fn d => case d of Val(i,b) => true
+                                           | Rul(i,(b1,b2)) => false)
+                          ds
+              in if moreVals
+                 then delAuxVals ds (* cont., main val is last by invar. *)
+                 else d::ds (* found the main val, terminate *)
+              end
+            | Rul(i,(b1,b2)) => d :: delAuxVals ds
 
 (* compute next unused nat site-identifier of sitemaps *)
 fun nextNat (smaps : (int * siteid) list) =
@@ -604,34 +604,34 @@ fun traverse big smaps =
     case big
      of Wir(w) => (Wir(w), smaps) (* done *)
       | Par(b1,b2) =>
-	let val (b1',smaps') = traverse b1 smaps
-	    val (b2',smaps'') = traverse b2 smaps'
-	in (Par(b1',b2'), smaps'') end
+        let val (b1',smaps') = traverse b1 smaps
+            val (b2',smaps'') = traverse b2 smaps'
+        in (Par(b1',b2'), smaps'') end
       | Pri(b1,b2) =>
-	let val (b1',smaps') = traverse b1 smaps
-	    val (b2',smaps'') = traverse b2 smaps'
-	in (Pri(b1',b2'), smaps'') end
+        let val (b1',smaps') = traverse b1 smaps
+            val (b2',smaps'') = traverse b2 smaps'
+        in (Pri(b1',b2'), smaps'') end
       | Com(b1,b2) =>
-	let val (b1',smaps') = traverse b1 smaps
-	    val (b2',smaps'') = traverse b2 smaps'
-	in (Com(b1',b2'), smaps'') end
+        let val (b1',smaps') = traverse b1 smaps
+            val (b2',smaps'') = traverse b2 smaps'
+        in (Com(b1',b2'), smaps'') end
       | Ten(b1,b2) =>
-	let val (b1',smaps') = traverse b1 smaps
-	    val (b2',smaps'') = traverse b2 smaps'
-	in (Ten(b1',b2'), smaps'') end
+        let val (b1',smaps') = traverse b1 smaps
+            val (b2',smaps'') = traverse b2 smaps'
+        in (Ten(b1',b2'), smaps'') end
       | Ion(i,b,f) => (Ion(i,b,f), smaps) (* reached atom *)
       | Clo(n,b) =>
-	let val (b',smaps') = traverse b smaps
-	in (Clo(n,b'), smaps') end
+        let val (b',smaps') = traverse b smaps
+        in (Clo(n,b'), smaps') end
       | Abs(n,b) =>
-	let val (b',smaps') = traverse b smaps
-	in (Abs(n,b'), smaps') end
+        let val (b',smaps') = traverse b smaps
+        in (Abs(n,b'), smaps') end
       | Con(n,b) =>
-	let val (b',smaps') = traverse b smaps
-	in (Con(n,b'), smaps') end
+        let val (b',smaps') = traverse b smaps
+        in (Con(n,b'), smaps') end
       | Sit(i,l) =>
-	let val next = nextNat smaps
-	in (Sit(SiteNum(next),l), smaps@[(next,i)]) end
+        let val next = nextNat smaps
+        in (Sit(SiteNum(next),l), smaps@[(next,i)]) end
       | Ref(i) => raise Fail("traverse: Bigraph with an id " ^ i ^ "\n")
       | Bar => (Bar, smaps) (* done *)
 
@@ -649,38 +649,38 @@ fun traverse' big (smaps : sitemaps) (nmaps : natmaps) =
     case big
      of Wir(w) => (Wir(w), nmaps) (* done *)
       | Par(b1,b2) =>
-	let val (b1',nmaps') = traverse' b1 smaps nmaps
-	    val (b2',nmaps'') = traverse' b2 smaps nmaps'
-	in (Par(b1',b2'), nmaps'') end
+        let val (b1',nmaps') = traverse' b1 smaps nmaps
+            val (b2',nmaps'') = traverse' b2 smaps nmaps'
+        in (Par(b1',b2'), nmaps'') end
       | Pri(b1,b2) =>
-	let val (b1',nmaps') = traverse' b1 smaps nmaps
-	    val (b2',nmaps'') = traverse' b2 smaps nmaps'
-	in (Pri(b1',b2'), nmaps'') end
+        let val (b1',nmaps') = traverse' b1 smaps nmaps
+            val (b2',nmaps'') = traverse' b2 smaps nmaps'
+        in (Pri(b1',b2'), nmaps'') end
       | Com(b1,b2) =>
-	let val (b1',nmaps') = traverse' b1 smaps nmaps
-	    val (b2',nmaps'') = traverse' b2 smaps nmaps'
-	in (Com(b1',b2'), nmaps'') end
+        let val (b1',nmaps') = traverse' b1 smaps nmaps
+            val (b2',nmaps'') = traverse' b2 smaps nmaps'
+        in (Com(b1',b2'), nmaps'') end
       | Ten(b1,b2) =>
-	let val (b1',nmaps') = traverse' b1 smaps nmaps
-	    val (b2',nmaps'') = traverse' b2 smaps nmaps'
-	in (Ten(b1',b2'), nmaps'') end
+        let val (b1',nmaps') = traverse' b1 smaps nmaps
+            val (b2',nmaps'') = traverse' b2 smaps nmaps'
+        in (Ten(b1',b2'), nmaps'') end
       | Ion(i,b,f) => (Ion(i,b,f), nmaps) (* reached atom *)
       | Clo(n,b) =>
-	let val (b',nmaps') = traverse' b smaps nmaps
-	in (Clo(n,b'), nmaps') end
+        let val (b',nmaps') = traverse' b smaps nmaps
+        in (Clo(n,b'), nmaps') end
       | Abs(n,b) =>
-	let val (b',nmaps') = traverse' b smaps nmaps
-	in (Abs(n,b'), nmaps') end
+        let val (b',nmaps') = traverse' b smaps nmaps
+        in (Abs(n,b'), nmaps') end
       | Con(n,b) =>
-	let val (b',nmaps') = traverse' b smaps nmaps
-	in (Con(n,b'), nmaps') end
+        let val (b',nmaps') = traverse' b smaps nmaps
+        in (Con(n,b'), nmaps') end
       | Sit(i,l) =>
-	let val lhsSiteNum =
-		case lookupsiteid smaps i
-		 of NONE => raise Fail(err_rhs)
-		  | SOME(n) => n
-	    val next = nextNat' nmaps
-	in (Sit(SiteNum(next),l), nmaps@[(next,lhsSiteNum)]) end
+        let val lhsSiteNum =
+                case lookupsiteid smaps i
+                 of NONE => raise Fail(err_rhs)
+                  | SOME(n) => n
+            val next = nextNat' nmaps
+        in (Sit(SiteNum(next),l), nmaps@[(next,lhsSiteNum)]) end
       | Ref(i) => raise Fail("traverse': Bigraph with an id " ^ i ^ "\n")
       | Bar => (Bar, nmaps) (* done *)
 
@@ -688,11 +688,11 @@ fun traverse' big (smaps : sitemaps) (nmaps : natmaps) =
 fun numberSites rule =
     case rule
      of Rul(i,(b1,b2)) =>
-	let val smaps = []
-	    val nmaps = []
-	    val (b1',smaps') = traverse b1 smaps
-	    val (b2',nmaps') = traverse' b2 smaps' nmaps
-	in (Rul(i,(b1',b2')),nmaps') end
+        let val smaps = []
+            val nmaps = []
+            val (b1',smaps') = traverse b1 smaps
+            val (b2',nmaps') = traverse' b2 smaps' nmaps
+        in (Rul(i,(b1',b2')),nmaps') end
       | _ => raise Fail("numberSites: Called on a non-Rule\n")
 
 (* take ctrldef list and peel off Cdef constructor from the 4-tuples *)
@@ -704,29 +704,29 @@ fun peelCdef [] = []
 
 (* toplevel *)
 fun prog2bgval (signa, declist) =
-	if List.exists (fn d => case d
-				 of Val(i,b) => true
-				  | _ => false)
-		       declist
-	then
-	    let val rolledList = roll declist
-		val rolledList' = delAuxVals rolledList
-		val (mainVal,rules) =
-		    List.partition
-			(fn d => case d of Val(i,b) => true
-					 | _ => false)
-			rolledList'
-		(* number sites in rules and generate natmaps *)
-		val rules_nmaps = List.map numberSites rules
-		val signa' = signa
-		val mainVal' =
-		    case mainVal
-		     of [Val(i,b)] => b (* singleton by invar. *)
-		      | _ => raise Fail("prog2bgval: There is not exactly one main Value\n")
-		(* make bgvals *)
-		val mainBgval = big2bgval mainVal' signa'
-		val rules' = rules2bgvals rules_nmaps signa'
-	    in (mainBgval, rules') end
-	else raise Fail("prog2bgval: There are no Values\n")
+        if List.exists (fn d => case d
+                                 of Val(i,b) => true
+                                  | _ => false)
+                       declist
+        then
+            let val rolledList = roll declist
+                val rolledList' = delAuxVals rolledList
+                val (mainVal,rules) =
+                    List.partition
+                        (fn d => case d of Val(i,b) => true
+                                         | _ => false)
+                        rolledList'
+                (* number sites in rules and generate natmaps *)
+                val rules_nmaps = List.map numberSites rules
+                val signa' = signa
+                val mainVal' =
+                    case mainVal
+                     of [Val(i,b)] => b (* singleton by invar. *)
+                      | _ => raise Fail("prog2bgval: There is not exactly one main Value\n")
+                (* make bgvals *)
+                val mainBgval = big2bgval mainVal' signa'
+                val rules' = rules2bgvals rules_nmaps signa'
+            in (mainBgval, rules') end
+        else raise Fail("prog2bgval: There are no Values\n")
 
 end (* structure Bpl2bgval *)
