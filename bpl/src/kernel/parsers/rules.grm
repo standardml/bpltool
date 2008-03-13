@@ -15,14 +15,14 @@
       |  -/name 
       |  name//nset
       |  -//nset
-      |  ctrlid <nlist> <nsetlist>
-      |  ctrlid <nlist>
+      |  ctrlid nset nsetlist
+      |  ctrlid nset
       |  ctrlid
       |  @[ permentrylist ]
       |  @@[ permentrylist ]
       |  <nset> bg
       |  bg * bg
-      |  bg <|> bg
+      |  bg `|` bg
       |  bg || bg
       |  bg o bg
   

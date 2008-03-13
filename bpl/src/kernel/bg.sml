@@ -170,7 +170,10 @@ fun parseBgTermStr filename str =
 				  handle ParseError
 				   => raise ParsingError (ErrorMsg.getErrors ())
     in
-      rules
+      if !ErrorMsg.anyErrors then
+        raise ParsingError (ErrorMsg.getErrors ())
+      else
+        rules
     end
 
 exception ThisCannotHappen
@@ -221,7 +224,10 @@ fun parseStr (kind, mkkind) filename str =
 				  handle RulesParser.ParseError
 				   => raise ParsingError (ErrorMsg.getErrors ())
     in
-      mkkind result
+      if !ErrorMsg.anyErrors then
+        raise ParsingError (ErrorMsg.getErrors ())
+      else
+        mkkind result
     end
 
 
@@ -242,7 +248,10 @@ fun bgtermUsefile'' filename =
           handle e => (TextIO.closeIn file; raise e)
     in
       TextIO.closeIn file;
-      bgterm
+      if !ErrorMsg.anyErrors then
+        raise ParsingError (ErrorMsg.getErrors ())
+      else
+        bgterm
     end
 
 fun bgvalUseBgTermfile'' filename =
@@ -262,7 +271,10 @@ fun bgvalUseBgTermfile'' filename =
       val bgval = BgVal.make BgTerm.info bgterm
     in
       TextIO.closeIn file;
-      bgval
+      if !ErrorMsg.anyErrors then
+        raise ParsingError (ErrorMsg.getErrors ())
+      else
+        bgval
     end
 
 fun bgvalUsefile'' filename =
@@ -282,7 +294,10 @@ fun bgvalUsefile'' filename =
       val bgval = BgVal.make BgTerm.info (mkkind result)
     in
       TextIO.closeIn file;
-      bgval
+      if !ErrorMsg.anyErrors then
+        raise ParsingError (ErrorMsg.getErrors ())
+      else
+        bgval
     end
 
 fun bgvalUsefile' filename =

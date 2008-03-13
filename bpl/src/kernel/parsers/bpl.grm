@@ -98,6 +98,8 @@ CtrlDefs:
 CtrlDef:
       NAME COLON CtrlKind LPAR INT ARROW INT RPAR
                                        ( (NAME, CtrlKind, INT1, INT2) )
+    | NAME COLON CtrlKind LPAR INT RPAR
+                                       ( (NAME, CtrlKind, 0, INT) )
 
 CtrlKind:
       ACTIVE                           ( T.Active )

@@ -19,7 +19,7 @@
  * USA
  *)
 
-(** A lexer for the bg term grammar (see bgterm-sig.sml)
+(** A lexer for the bg term grammar, including rules.
  * @version $LastChangedRevision: 102 $
  *)
 
