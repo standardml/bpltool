@@ -119,7 +119,6 @@ val () =
       ("(", Tokens.LPAREN),
       (")", Tokens.RPAREN),
       (",", Tokens.COMMA),
-      ("'", Tokens.QUOTE),
       ("`", Tokens.BQUOTE)
       ]
 
