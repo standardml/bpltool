@@ -69,7 +69,8 @@ SMLDOC-FLAGS	= --overview=overview.html --argfile=smldoc.cfg
 
 ROOTDIR		= ..
 THISDIR		= src
-MKDIRTREE	= $(PWD)/mkdirtree
+MKDIRTREE	= ./mkdirtree
+MKTAR           = ./mktar.sh
 DESCFILES	= $(shell find . -name .description)
 SMLFILES-kernel	:= $(shell find ./kernel -name CM -prune -a -type f -o -name *.sml)
 SMLFILES-lib	:= $(shell find ./lib -name CM -prune -a -type f -o -name *.sml)
@@ -291,9 +292,13 @@ restart-webapp:
 .PHONY: test-webapp update-webapp remake-uploaded-webapp restart-webapp test-webapp-smlnj
 .PHONY: test-webapp-mosml test-webapp-mlton
 
+# DISTRIBUTION ---------------------------------------------
+dist: VERSION
+	$(MKTAR) bpltool `cat VERSION`
+
 # CLEAN UP -------------------------------------------------
 clean:
-	$(RM) *~ 
+	$(RM) *~
 
 parsersclean:
 	for g in $(GRMFILES); do $(RM) $$g{.desc,.sig,-sig.sml,.sml}; done
@@ -318,5 +323,6 @@ realclean: clean cmclean mlbclean parsersclean docclean
 distclean: realclean
 	$(RM) -rf autom4te.cache
 	$(RM) $(DISTCLEANFILES)
+	$(RM) -rf bpltool-`cat VERSION`.*
 
 .PHONY: parsersclean cmclean mlbclean clean realclean distclean
