@@ -72,6 +72,7 @@ ROOTDIR		= ..
 THISDIR		= src
 MKDIRTREE	= ./mkdirtree
 MKTAR           = ./mktar.sh
+TARBUILDFLAG	= tarbuild.flag
 DESCFILES	= $(shell find . -name .description)
 SMLFILES-kernel	:= $(shell find ./kernel -name CM -prune -a -type f -o -name *.sml)
 SMLFILES-lib	:= $(shell find ./lib -name CM -prune -a -type f -o -name *.sml)
@@ -312,6 +313,7 @@ updatedist:
 	  cat $(DISTWEBDIR)/srclinks.old.html >> $(DISTWEBDIR)/srclinks.html || exit 1; \
 	  rm  $(DISTWEBDIR)/srclinks.old.html; \
 	done
+	rm $(TARBUILDFLAG)
 
 # CLEAN UP -------------------------------------------------
 clean:
