@@ -56,12 +56,13 @@ EXEEXT		= @EXEEXT@
 INSTALL		= @INSTALL@
 INSTALL_DATA= @INSTALL_DATA@
 
+TOOLNAME	= bpltool
 MOSMLFLAGS 	= -liberal
-DEPENDENCIES    := $(shell find . -name Dependencies)
+DEPENDENCIES    := $(shell find . -name $(TOOLNAME)-\* -prune -a -name Dependencies)
 MOSMAKEDIRS 	:= $(subst ./,, $(patsubst %/Dependencies,%,$(DEPENDENCIES)))
 MOSMAKE 	= lib/mosmake
 
-SVN			= svn
+SVN		= svn
 
 DOCSUBDIR	= doc
 SMLDOC		= smldoc
@@ -86,7 +87,7 @@ include $(MOSMAKE)/Makefile.inc
 #WEBAPP-SERVER	= ssh.itu.dk
 WEBAPP-BPLDIR	= /home/panic/Research/bplproject/impl/bpl
 WEBAPP-SERVER	= tiger.itu.dk
-
+DISTWEBDIR	= /import/www/research/theory/bpl/dist/bpltool
 
 # Files to clean up
 CLEANFILES :=
@@ -293,8 +294,23 @@ restart-webapp:
 .PHONY: test-webapp-mosml test-webapp-mlton
 
 # DISTRIBUTION ---------------------------------------------
+.PHONY: dist updatedist
 dist: VERSION
-	$(MKTAR) bpltool `cat VERSION`
+	$(MKTAR) $(TOOLNAME) `cat VERSION`
+
+updatedist:
+	[ -e $(TARBUILDFLAG) ] && $(MAKE) dist
+	for dist in $(TOOLNAME)-`cat VERSION`.*.tar.gz; do \
+	  mv $$dist $(DISTWEBDIR)/ || exit 1; \
+	  mv $(DISTWEBDIR)/srclinks.html $(DISTWEBDIR)/srclinks.old.html || exit 1; \
+	  echo "<tr><td><a href='$$dist'>$$dist</a></td><td>" > $(DISTWEBDIR)/srclinks.html || exit 1; \
+	  du -h $(DISTWEBDIR)/$$dist | cut -f 1 >> $(DISTWEBDIR)/srclinks.html || exit 1; \
+	  echo "</td><td>" >> $(DISTWEBDIR)/srclinks.html || exit 1; \
+	  ls -l --time-style=long-iso $(DISTWEBDIR)/$$dist | cut -d ' ' -f 7-8 >> $(DISTWEBDIR)/srclinks.html || exit 1; \
+	  echo "</td>" >> $(DISTWEBDIR)/srclinks.html || exit 1; \
+	  cat $(DISTWEBDIR)/srclinks.old.html >> $(DISTWEBDIR)/srclinks.html || exit 1; \
+	  rm  $(DISTWEBDIR)/srclinks.old.html
+	done
 
 # CLEAN UP -------------------------------------------------
 clean:
