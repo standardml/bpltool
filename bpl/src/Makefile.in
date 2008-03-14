@@ -299,10 +299,10 @@ restart-webapp:
 dist: VERSION
 	$(MKTAR) $(TOOLNAME) `cat VERSION`
 
-updatedist:
+update-dist:
 	$(SVN) update
 	[ -e $(TARBUILDFLAG) ] && $(MAKE) dist
-	for dist in $(TOOLNAME)-`cat VERSION`.*.tar.gz; do \
+	[ -e $(TARBUILDFLAG) ] && for dist in $(TOOLNAME)-`cat VERSION`.*.tar.gz; do \
 	  mv $$dist $(DISTWEBDIR)/ || exit 1; \
 	  mv $(DISTWEBDIR)/srclinks.html $(DISTWEBDIR)/srclinks.old.html || exit 1; \
 	  echo "<tr><td><a href='$$dist'>$$dist</a></td><td>" > $(DISTWEBDIR)/srclinks.html || exit 1; \
