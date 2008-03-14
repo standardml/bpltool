@@ -296,9 +296,11 @@ restart-webapp:
 
 # DISTRIBUTION ---------------------------------------------
 .PHONY: dist updatedist
+# This will build a distribution file bpltool-MAJOR.MINOR.REV.tar.gz
 dist: VERSION
 	$(MKTAR) $(TOOLNAME) `cat VERSION`
-
+# This will upload a new distribution if code has changed
+# It must be run on a machine on which the web dir DISTWEBDIR is mounted
 update-dist:
 	$(SVN) update
 	[ -e $(TARBUILDFLAG) ] && $(MAKE) dist
