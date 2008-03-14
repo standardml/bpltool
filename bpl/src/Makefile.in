@@ -299,6 +299,7 @@ dist: VERSION
 	$(MKTAR) $(TOOLNAME) `cat VERSION`
 
 updatedist:
+	$(SVN) update
 	[ -e $(TARBUILDFLAG) ] && $(MAKE) dist
 	for dist in $(TOOLNAME)-`cat VERSION`.*.tar.gz; do \
 	  mv $$dist $(DISTWEBDIR)/ || exit 1; \
@@ -309,7 +310,7 @@ updatedist:
 	  ls -l --time-style=long-iso $(DISTWEBDIR)/$$dist | cut -d ' ' -f 7-8 >> $(DISTWEBDIR)/srclinks.html || exit 1; \
 	  echo "</td>" >> $(DISTWEBDIR)/srclinks.html || exit 1; \
 	  cat $(DISTWEBDIR)/srclinks.old.html >> $(DISTWEBDIR)/srclinks.html || exit 1; \
-	  rm  $(DISTWEBDIR)/srclinks.old.html
+	  rm  $(DISTWEBDIR)/srclinks.old.html; \
 	done
 
 # CLEAN UP -------------------------------------------------
