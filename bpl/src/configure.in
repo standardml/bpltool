@@ -34,6 +34,17 @@ then
 	fi
 fi
 srcdir=`cd $srcdir && pwd`
+AC_ARG_VAR(RPMSRCDIR,RPM SOURCES directory)
+if test -z "$RPMSRCDIR"
+then
+	if test -d "$HOME/src/SOURCES"
+	then
+		RPMSRCDIR="$HOME/src/SOURCES"
+	elif test -d /usr/src/redhat/SOURCES
+	then
+		RPMSRCDIR=/usr/src/redhat/SOURCES
+	fi
+fi
 
 AC_CACHE_VAL([bpl_cv_with_smldocdir],[bpl_cv_with_smldocdir=\${datadir}/doc/bpl])
 AC_ARG_WITH([smldocdir],

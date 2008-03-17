@@ -36,8 +36,9 @@ datarootdir	= @datarootdir@
 srcdir		= @srcdir@
 datadir		= @datadir@
 smldocdir	= @smldocdir@
+libdir		= @libdir@
 
-RM              = rm -f
+RM              = rm
 export SED      = @SED@
 
 MOSMLC  	= @MOSMLC@
@@ -55,10 +56,13 @@ EXEEXT		= @EXEEXT@
 
 INSTALL		= @INSTALL@
 INSTALL_DATA= @INSTALL_DATA@
+RPMBUILD	= rpmbuild
+RPMSRCDIR	= @RPMSRCDIR@
 
 TOOLNAME	= bpltool
+VERSION		:= $(shell cat VERSION)
 MOSMLFLAGS 	= -liberal
-DEPENDENCIES    := $(shell find . -name $(TOOLNAME)-\* -prune -a -name Dependencies)
+DEPENDENCIES    := $(shell find . -name $(TOOLNAME)-\* -prune -o -name Dependencies -print)
 MOSMAKEDIRS 	:= $(subst ./,, $(patsubst %/Dependencies,%,$(DEPENDENCIES)))
 MOSMAKE 	= lib/mosmake
 
@@ -81,6 +85,11 @@ CMFILES        	= $(filter-out ./lib/compat/common/sources.cm, $(patsubst %/Depe
 CMFILES-kernel	= $(filter ./kernel/%,$(CMFILES))
 CMFILES-lib	= $(filter-out ./lib/fxp/% ./lib/compat/mosml/thread/sources.cm,$(filter ./lib/%,$(CMFILES)))
 CMFILES-miniml	= $(filter ./apps/miniml/%,$(CMFILES))
+SMLNJ-kernel	= $(shell find ./kernel -name CM -prune -o -type f -print) 
+SMLNJ-lib	= $(shell find ./lib -name CM -prune -o -type f -print) 
+SMLNJ-apps	= $(shell find ./apps -name bplweb -prune -o -name CM -prune -o -type f -a -print)
+SMLNJFILES	= $(SMLNJ-lib) $(SMLNJ-kernel) $(SMLNJ-apps)
+SMLNJDIRS	= $(shell find . -name bplweb -prune -o -name .svn -prune -o -type d -a -print)
 
 include $(MOSMAKE)/Makefile.inc
 
@@ -179,14 +188,22 @@ install-doc-kernel: doc-kernel
 install-doc-miniml: doc-miniml
 	cd apps/miniml/$(DOCSUBDIR) && \
 	find . -type f -exec $(INSTALL) '{}' '$(smldocdir)/miniml/{}' ';'
-install-doc: installdirs $(smldocdir)/index.html install-doc-lib install-doc-kernel install-doc-miniml
+install-doc: installdirs-doc $(smldocdir)/index.html install-doc-lib install-doc-kernel install-doc-miniml
 $(smldocdir)/index.html: ../www/smldoc-index.html
 	$(INSTALL) $< $@
 # Make sure all installation directories (e.g. $(smldocdir))
 # actually exist by making them if necessary.
-.PHONY: installdirs
-installdirs: mkinstalldirs
-	$(srcdir)/mkinstalldirs $(smldocdir)/lib $(smldocdir)/kernel $(smldocdir)/miniml
+.PHONY: installdirs-doc installdirs-smlnj install-smlnj
+installdirs-doc: mkinstalldirs
+	$(srcdir)/mkinstalldirs $(DESTDIR)$(smldocdir)/lib $(DESTDIR)$(smldocdir)/kernel $(DESTDIR)$(smldocdir)/miniml
+
+installdirs-smlnj: mkinstalldirs
+	$(srcdir)/mkinstalldirs $(patsubst %,$(DESTDIR)$(libdir)/$(TOOLNAME)/%,$(SMLNJDIRS))
+	
+install-smlnj: installdirs-smlnj
+	for file in $(SMLNJFILES); do \
+	  $(INSTALL) $$file $(DESTDIR)$(libdir)/$(TOOLNAME)/$$file; \
+	done
 
 # SML/NJ
 kernel.cm: kernel.cm.in
@@ -199,12 +216,21 @@ kernel.cm: kernel.cm.in
 %/mlton.mlb: %/Dependencies
 	cd $(dir $@) && $(MAKE) $(notdir $@)
 
+.PHONY: prepare prepare-smlnj prepare-mlton prepare-mosml
 prepare: prepare-$(MLC)
 prepare-smlnj: $(CMFILES)
 prepare-mlton: $(patsubst %/Dependencies,%/mlton.mlb,$(DEPENDENCIES)) $(PARSINGFILES)
 prepare-mosml: 
 
-.PHONY: prepare
+.PHONY:	compile-smlnj
+compile-smlnj: $(CMFILES)
+	echo "val pwd = OS.FileSys.getDir ();\
+	      val _   = OS.FileSys.chDir \"lib/compat/smlnj/\";\
+	      use \"cmmakedefine.sml\";\
+              val _   = OS.FileSys.chDir pwd;\
+              val _   = SMLofNJ.Internals.GC.messages false;\
+              CM_make \"kernel/sources.cm\"" | $(SMLNJ)
+
 
 # APPLICATIONS ---------------------------------------------
 # Web backend
@@ -297,14 +323,15 @@ restart-webapp:
 # DISTRIBUTION ---------------------------------------------
 .PHONY: dist updatedist
 # This will build a distribution file bpltool-MAJOR.MINOR.REV.tar.gz
-dist: VERSION
-	$(MKTAR) $(TOOLNAME) `cat VERSION`
+dist: $(TOOLNAME)-$(VERSION).$(shell svn info . -r head | grep '^Revision:' | tr -c -d 0123456789).tar.gz
+$(srcdir)/$(TOOLNAME)-$(VERSION).%.tar.gz:
+	$(MKTAR) $(TOOLNAME) $(VERSION)
 # This will upload a new distribution if code has changed
 # It must be run on a machine on which the web dir DISTWEBDIR is mounted
 update-dist:
 	$(SVN) update
 	[ -e $(TARBUILDFLAG) ] && $(MAKE) dist
-	[ -e $(TARBUILDFLAG) ] && for dist in $(TOOLNAME)-`cat VERSION`.*.tar.gz; do \
+	[ -e $(TARBUILDFLAG) ] && for dist in $(TOOLNAME)-$(VERSION).*.tar.gz; do \
 	  mv $$dist $(DISTWEBDIR)/ || exit 1; \
 	  mv $(DISTWEBDIR)/srclinks.html $(DISTWEBDIR)/srclinks.old.html || exit 1; \
 	  echo "<tr><td><a href='$$dist'>$$dist</a></td><td>" > $(DISTWEBDIR)/srclinks.html || exit 1; \
@@ -316,7 +343,15 @@ update-dist:
 	  rm  $(DISTWEBDIR)/srclinks.old.html; \
 	done
 	rm $(TARBUILDFLAG)
-
+# Make a Fedora RPM for SMLNJ
+dist-smlnj-rpm: $(TOOLNAME)-smlnj-$(VERSION).$(shell svn info . -r head | grep '^Revision:' | tr -c -d 0123456789).rpm
+$(TOOLNAME)-smlnj-$(VERSION).%.rpm: $(TOOLNAME)-smlnj-$(VERSION).%.spec $(RPMSRCDIR)/$(TOOLNAME)-$(VERSION).%.tar.gz
+	$(RPMBUILD) -bb $<
+$(TOOLNAME)-smlnj-$(VERSION).%.spec: $(TOOLNAME)-smlnj.spec.in
+	sed -e s/@release@/$*/g -e s/@version@/$(VERSION)/g \
+	    -e s+@''srcdir@+$(srcdir)+g < $< > $@
+$(RPMSRCDIR)/%: $(srcdir)/%
+	cp $< $@
 # CLEAN UP -------------------------------------------------
 clean:
 	$(RM) *~
