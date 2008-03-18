@@ -334,7 +334,7 @@ $(srcdir)/$(TOOLNAME)-$(VERSION).%.tar.gz: $(srcdir)/kernel/parsers/bg.grm.sig.s
 # It must be run on a machine on which the web dir DISTWEBDIR is mounted
 update-dist:
 	$(SVN) update
-	if [ -e $(TARBUILDFLAG) ]; then $(MAKE) dist; else true
+	if [ -e $(TARBUILDFLAG) ]; then $(MAKE) dist; else true; fi
 	if [ -e $(TARBUILDFLAG) ]; then for dist in $(TOOLNAME)-$(VERSION).*.tar.gz; do \
 	  mv $$dist $(DISTWEBDIR)/ || exit 1; \
 	  mv $(DISTWEBDIR)/srclinks.html $(DISTWEBDIR)/srclinks.old.html || exit 1; \
