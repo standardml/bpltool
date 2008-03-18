@@ -328,7 +328,9 @@ restart-webapp:
 dist: $(srcdir)/$(TOOLNAME)-$(VERSION).$(shell $(SVN) info . -r head | grep '^Revision:' | tr -c -d 0123456789).tar.gz
 $(srcdir)/$(TOOLNAME)-$(VERSION).%.tar.gz: $(srcdir)/kernel/parsers/bg.grm.sig \
 	$(srcdir)/kernel/parsers/rules.grm.sig $(srcdir)/kernel/parsers/bpl.grm.sig \
-	 $(srcdir)/apps/miniml/miniml.grm.sig $(srcdir)/kernel/parsers/bg.lex.sml \
+	 $(srcdir)/apps/miniml/miniml.grm.sig $(srcdir)/kernel/parsers/bg.grm-sig.sml \
+	$(srcdir)/kernel/parsers/rules.grm-sig.sml $(srcdir)/kernel/parsers/bpl.grm-sig.sml \
+	 $(srcdir)/apps/miniml/miniml.grm-sig.sml $(srcdir)/kernel/parsers/bg.lex.sml \
 	$(srcdir)/kernel/parsers/rules.lex.sml $(srcdir)/kernel/parsers/bpl.lex.sml \
 	 $(srcdir)/apps/miniml/miniml.lex.sml
 	$(MKTAR) $(TOOLNAME) $(VERSION)
