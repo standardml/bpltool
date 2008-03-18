@@ -35,14 +35,17 @@ then
 fi
 srcdir=`cd $srcdir && pwd`
 AC_ARG_VAR(RPMSRCDIR,RPM SOURCES directory)
+AC_ARG_VAR(RPMSDIR,RPM RPMS directory)
 if test -z "$RPMSRCDIR"
 then
 	if test -d "$HOME/src/SOURCES"
 	then
 		RPMSRCDIR="$HOME/src/SOURCES"
+		RPMSDIR="$HOME/src/RPMS/i386"
 	elif test -d /usr/src/redhat/SOURCES
 	then
 		RPMSRCDIR=/usr/src/redhat/SOURCES
+		RPMSDIR=/usr/src/redhat/RPMS/i386
 	fi
 fi
 

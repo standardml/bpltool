@@ -636,6 +636,7 @@ SMLNJ
 MLTON
 MLC
 RPMSRCDIR
+RPMSDIR
 smldocdir
 LIBOBJS
 LTLIBOBJS'
@@ -649,7 +650,8 @@ LDFLAGS
 LIBS
 CPPFLAGS
 MLC
-RPMSRCDIR'
+RPMSRCDIR
+RPMSDIR'
 
 
 # Initialize some variables set by options.
@@ -1231,6 +1233,7 @@ Some influential environment variables:
               you have headers in a nonstandard directory <include dir>
   MLC         ML compiler
   RPMSRCDIR   RPM SOURCES directory
+  RPMSDIR     RPM RPMS directory
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -3069,14 +3072,17 @@ then
 fi
 srcdir=`cd $srcdir && pwd`
 
+
 if test -z "$RPMSRCDIR"
 then
 	if test -d "$HOME/src/SOURCES"
 	then
 		RPMSRCDIR="$HOME/src/SOURCES"
+		RPMSDIR="$HOME/src/RPMS/i386"
 	elif test -d /usr/src/redhat/SOURCES
 	then
 		RPMSRCDIR=/usr/src/redhat/SOURCES
+		RPMSDIR=/usr/src/redhat/RPMS/i386
 	fi
 fi
 
@@ -3798,12 +3804,13 @@ SMLNJ!$SMLNJ$ac_delim
 MLTON!$MLTON$ac_delim
 MLC!$MLC$ac_delim
 RPMSRCDIR!$RPMSRCDIR$ac_delim
+RPMSDIR!$RPMSDIR$ac_delim
 smldocdir!$smldocdir$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 61; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 62; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

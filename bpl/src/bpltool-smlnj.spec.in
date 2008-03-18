@@ -6,7 +6,7 @@ Summary:	A Standard ML implementation of BPL, the Bigraphical Programming Langua
 Group:		Development/Tools
 License:	GPL
 URL:		http://www.itu.dk/research/pls/wiki/index.php/BPL_Tool
-Source0:	bpltool-%{version}.%{release}.tar.gz
+Source0:	bpltool-%{version}-%{release}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires:	/usr/bin/mlyacc /usr/bin/mllex
@@ -16,7 +16,7 @@ PreReq:		/usr/bin/sml
 This package includes a command line interface, as well as some example BPL input files.
 
 %prep
-%setup -q -n bpltool-%{version}.%{release}
+%setup -q -n bpltool-%{version}-%{release}
 
 
 %build

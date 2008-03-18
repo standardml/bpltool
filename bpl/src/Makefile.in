@@ -58,6 +58,7 @@ INSTALL		= @INSTALL@
 INSTALL_DATA= @INSTALL_DATA@
 RPMBUILD	= rpmbuild
 RPMSRCDIR	= @RPMSRCDIR@
+RPMSDIR		= @RPMSDIR@
 
 TOOLNAME	= bpltool
 VERSION		:= $(shell cat VERSION)
@@ -325,21 +326,21 @@ restart-webapp:
 # DISTRIBUTION ---------------------------------------------
 .PHONY: dist update-dist
 # This will build a distribution file bpltool-MAJOR.MINOR.REV.tar.gz
-dist: $(srcdir)/$(TOOLNAME)-$(VERSION).$(shell $(SVN) info . -r head | grep '^Revision:' | tr -c -d 0123456789).tar.gz
-$(srcdir)/$(TOOLNAME)-$(VERSION).%.tar.gz: $(srcdir)/kernel/parsers/bg.grm.sig \
+dist: $(srcdir)/$(TOOLNAME)-$(VERSION)-$(shell $(SVN) info . -r head | grep '^Revision:' | tr -c -d 0123456789).tar.gz
+$(srcdir)/$(TOOLNAME)-$(VERSION)-%.tar.gz: $(srcdir)/kernel/parsers/bg.grm.sig \
 	$(srcdir)/kernel/parsers/rules.grm.sig $(srcdir)/kernel/parsers/bpl.grm.sig \
 	 $(srcdir)/apps/miniml/miniml.grm.sig $(srcdir)/kernel/parsers/bg.grm-sig.sml \
 	$(srcdir)/kernel/parsers/rules.grm-sig.sml $(srcdir)/kernel/parsers/bpl.grm-sig.sml \
 	 $(srcdir)/apps/miniml/miniml.grm-sig.sml $(srcdir)/kernel/parsers/bg.lex.sml \
 	$(srcdir)/kernel/parsers/rules.lex.sml $(srcdir)/kernel/parsers/bpl.lex.sml \
 	 $(srcdir)/apps/miniml/miniml.lex.sml
-	$(MKTAR) $(TOOLNAME) $(VERSION)
+	$(MKTAR) $(TOOLNAME) $(VERSION) $*
 # This will upload a new distribution if code has changed
 # It must be run on a machine on which the web dir DISTWEBDIR is mounted
 update-dist:
 	$(SVN) update
 	if [ -e $(TARBUILDFLAG) ]; then $(MAKE) dist; else true; fi
-	if [ -e $(TARBUILDFLAG) ]; then for dist in $(TOOLNAME)-$(VERSION).*.tar.gz; do \
+	if [ -e $(TARBUILDFLAG) ]; then for dist in $(TOOLNAME)-$(VERSION)-*.tar.gz; do \
 	  mv $$dist $(DISTWEBDIR)/ || exit 1; \
 	  mv $(DISTWEBDIR)/srclinks.html $(DISTWEBDIR)/srclinks.old.html || exit 1; \
 	  echo "<tr><td><a href='$$dist'>$$dist</a></td><td>" > $(DISTWEBDIR)/srclinks.html || exit 1; \
@@ -352,14 +353,19 @@ update-dist:
 	done; else true; fi
 	rm -f $(TARBUILDFLAG)
 # Make a Fedora RPM for SMLNJ
-dist-smlnj-rpm: $(TOOLNAME)-smlnj-$(VERSION).$(shell $(SVN) info . -r head | grep '^Revision:' | tr -c -d 0123456789).rpm
-$(TOOLNAME)-smlnj-$(VERSION).%.rpm: $(TOOLNAME)-smlnj-$(VERSION).%.spec $(RPMSRCDIR)/$(TOOLNAME)-$(VERSION).%.tar.gz
+dist-smlnj-rpm: $(TOOLNAME)-smlnj-$(VERSION)-$(shell $(SVN) info . -r head | grep '^Revision:' | tr -c -d 0123456789).i386.rpm
+$(RPMSDIR)/$(TOOLNAME)-smlnj-$(VERSION)-%.i386.rpm: $(TOOLNAME)-smlnj-$(VERSION)-%.spec $(RPMSRCDIR)/$(TOOLNAME)-$(VERSION)-%.tar.gz
 	$(RPMBUILD) -bb $<
-$(TOOLNAME)-smlnj-$(VERSION).%.spec: $(TOOLNAME)-smlnj.spec.in
+$(TOOLNAME)-smlnj-$(VERSION)-%.spec: $(TOOLNAME)-smlnj.spec.in
 	sed -e s/@release@/$*/g -e s/@version@/$(VERSION)/g \
 	    -e s+@''srcdir@+$(srcdir)+g < $< > $@
+%: $(RPMSDIR)/%
+	mv $< $@
 $(RPMSRCDIR)/%: $(srcdir)/%
 	cp $< $@
+upload-dist-smlnj-rpm: $(TOOLNAME)-smlnj-$(VERSION)-$(shell $(SVN) info . -r head | grep '^Revision:' | tr -c -d 0123456789).i386.rpm
+	scp $< ssh.itu.dk:/import/www/research/theory/bpl/dist/bpltool/
+	ssh ssh.itu.dk 'cd /import/www/research/theory/bpl/dist/bpltool/ && make add-rpm-$<'
 # CLEAN UP -------------------------------------------------
 clean:
 	$(RM) *~
@@ -370,11 +376,13 @@ parsersclean:
 
 
 CMDIRS = $(filter-out lib/pp/smlnj lib/compat/common,$(MOSMAKEDIRS))
+CMCACHEDIRS = $(MOSMAKEDIRS) lib/compat/smlnj/ lib/compat/smlnj/exception \
+	lib/compat/smlnj/thread lib/compat/smlnj/word32
 cmclean:
 	for d in $(CMDIRS); do [ -r $$d/Dependencies ] && $(RM) -f $$d/sources.cm; done
 
 cmcacheclean:
-	for d in $(CMDIRS); do [ -r $$d/Dependencies ] && $(RM) -rf $$d/CM; done
+	for d in $(CMCACHEDIRS); do [ -r $$d/Dependencies ] && $(RM) -rf $$d/CM; done
 
 mlbclean:
 	$(RM) $(patsubst %/Dependencies,%/mlton.mlb,$(DEPENDENCIES)) 

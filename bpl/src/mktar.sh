@@ -4,16 +4,15 @@ svn=svn
 
 programname=`basename "$0"`
 usage () {
-  echo Usage: $programname NAME VERSION
+  echo Usage: $programname NAME VERSION REVISION
   echo "  Create in the current directory a gzipped TAR file"
-  echo "  NAME-VERSION.REVISION.tar.gz of the source files."
+  echo "  NAME-VERSION-REVISION.tar.gz of the source files."
   echo "  Source files under SVN control are included, unless they"
   echo "  are listed in .tarexclude, which is local for each subdirectory."
-  echo "  REVISION is the newest revision in the SVN repository."
   exit $1
 }
 
-[ -z "$2" ] && usage 1
+[ -z "$3" ] && usage 1
 
 case "$1" in
   -h | -help | --help) usage 0 ;;
@@ -21,8 +20,8 @@ esac
 
 name="$1"
 version="$2"
-revision=`svn info . -r head | grep '^Revision:' | tr -c -d 0123456789`
-tarbase="$name-$version.$revision"
+revision="$3"
+tarbase="$name-$version-$revision"
 tar="$tarbase.tar.gz"
 
 if [ -e $tar ]
