@@ -49,6 +49,7 @@ cd %{_prefix}/lib/bpltool && make compile-smlnj > install.log 2>&1
 %{_prefix}/lib/bpltool/kernel/parsers/bg.grm.sml
 %{_prefix}/lib/bpltool/kernel/parsers/bg.grm-sig.sml
 %{_prefix}/lib/bpltool/kernel/parsers/.description
+%{_prefix}/lib/bpltool/kernel/parsers/.tarinclude
 %{_prefix}/lib/bpltool/kernel/parsers/bg.lex.sml
 %{_prefix}/lib/bpltool/kernel/parsers/rules.grm
 %{_prefix}/lib/bpltool/kernel/parsers/rules.lex
@@ -69,10 +70,6 @@ cd %{_prefix}/lib/bpltool && make compile-smlnj > install.log 2>&1
 %{_prefix}/lib/bpltool/kernel/parsers/bpl.grm.sml
 %{_prefix}/lib/bpltool/kernel/parsers/bpl.grm-sig.sml
 %{_prefix}/lib/bpltool/kernel/parsers/bpl.lex.sml
-%{_prefix}/lib/bpltool/kernel/parsers/sources.cm
-%{_prefix}/lib/bpltool/kernel/parsers/bg.grm.sig
-%{_prefix}/lib/bpltool/kernel/parsers/rules.grm.sig
-%{_prefix}/lib/bpltool/kernel/parsers/bpl.grm.sig
 %{_prefix}/lib/bpltool/kernel/ast
 %{_prefix}/lib/bpltool/kernel/ast/test
 %{_prefix}/lib/bpltool/kernel/ast/test/.description
@@ -148,7 +145,6 @@ cd %{_prefix}/lib/bpltool && make compile-smlnj > install.log 2>&1
 %{_prefix}/lib/bpltool/kernel/ast/test/04-0-0.bgtest
 %{_prefix}/lib/bpltool/kernel/ast/test/10-2-2.bgtest
 %{_prefix}/lib/bpltool/kernel/ast/test/05-1-0.bgtest
-%{_prefix}/lib/bpltool/kernel/ast/test/sources.cm
 %{_prefix}/lib/bpltool/kernel/ast/test/01-2.bgtest
 %{_prefix}/lib/bpltool/kernel/ast/test/00-0.bgtest
 %{_prefix}/lib/bpltool/kernel/ast/test/01-1.bgtest
@@ -187,7 +183,6 @@ cd %{_prefix}/lib/bpltool && make compile-smlnj > install.log 2>&1
 %{_prefix}/lib/bpltool/kernel/ast/bplterm-sig.sml
 %{_prefix}/lib/bpltool/kernel/ast/bplterm.sml
 %{_prefix}/lib/bpltool/kernel/ast/old-bpl2bgval.sml
-%{_prefix}/lib/bpltool/kernel/ast/sources.cm
 %{_prefix}/lib/bpltool/kernel/bg
 %{_prefix}/lib/bpltool/kernel/bg/wiring.sml
 %{_prefix}/lib/bpltool/kernel/bg/ion.sml
@@ -211,9 +206,7 @@ cd %{_prefix}/lib/bpltool && make compile-smlnj > install.log 2>&1
 %{_prefix}/lib/bpltool/kernel/bg/test/Dependencies
 %{_prefix}/lib/bpltool/kernel/bg/test/Makefile
 %{_prefix}/lib/bpltool/kernel/bg/test/permutationTest.sml
-%{_prefix}/lib/bpltool/kernel/bg/test/sources.cm
 %{_prefix}/lib/bpltool/kernel/bg/.description
-%{_prefix}/lib/bpltool/kernel/bg/sources.cm
 %{_prefix}/lib/bpltool/kernel/match
 %{_prefix}/lib/bpltool/kernel/match/Makefile
 %{_prefix}/lib/bpltool/kernel/match/match-sig.sml
@@ -226,14 +219,12 @@ cd %{_prefix}/lib/bpltool && make compile-smlnj > install.log 2>&1
 %{_prefix}/lib/bpltool/kernel/match/test/Dependencies
 %{_prefix}/lib/bpltool/kernel/match/test/Makefile
 %{_prefix}/lib/bpltool/kernel/match/test/reactionTest.sml
-%{_prefix}/lib/bpltool/kernel/match/test/sources.cm
 %{_prefix}/lib/bpltool/kernel/match/rule-sig.sml
 %{_prefix}/lib/bpltool/kernel/match/rule.sml
 %{_prefix}/lib/bpltool/kernel/match/instantiation-sig.sml
 %{_prefix}/lib/bpltool/kernel/match/instantiation.sml
 %{_prefix}/lib/bpltool/kernel/match/reaction.sml
 %{_prefix}/lib/bpltool/kernel/match/reaction-sig.sml
-%{_prefix}/lib/bpltool/kernel/match/sources.cm
 %{_prefix}/lib/bpltool/kernel/examples
 %{_prefix}/lib/bpltool/kernel/examples/bgterms
 %{_prefix}/lib/bpltool/kernel/examples/bgterms/.description
@@ -257,7 +248,6 @@ cd %{_prefix}/lib/bpltool && make compile-smlnj > install.log 2>&1
 %{_prefix}/lib/bpltool/kernel/overview.html
 %{_prefix}/lib/bpltool/kernel/bpl2bgval.sml
 %{_prefix}/lib/bpltool/kernel/bpl2bgval-sig.sml
-%{_prefix}/lib/bpltool/kernel/sources.cm
 %{_prefix}/lib/bpltool/apps
 %{_prefix}/lib/bpltool/apps/miniml
 %{_prefix}/lib/bpltool/apps/miniml/test
@@ -276,7 +266,6 @@ cd %{_prefix}/lib/bpltool && make compile-smlnj > install.log 2>&1
 %{_prefix}/lib/bpltool/apps/miniml/test/tuple.mml
 %{_prefix}/lib/bpltool/apps/miniml/test/int.mml
 %{_prefix}/lib/bpltool/apps/miniml/test/fun.mml
-%{_prefix}/lib/bpltool/apps/miniml/test/sources.cm
 %{_prefix}/lib/bpltool/apps/miniml/examples
 %{_prefix}/lib/bpltool/apps/miniml/examples/prelude.mml
 %{_prefix}/lib/bpltool/apps/miniml/examples/locmod.mml
@@ -299,6 +288,7 @@ cd %{_prefix}/lib/bpltool && make compile-smlnj > install.log 2>&1
 %{_prefix}/lib/bpltool/apps/miniml/typeexp-sig.sml
 %{_prefix}/lib/bpltool/apps/miniml/bggen.sml
 %{_prefix}/lib/bpltool/apps/miniml/.description
+%{_prefix}/lib/bpltool/apps/miniml/.tarinclude
 %{_prefix}/lib/bpltool/apps/miniml/pattern.sml
 %{_prefix}/lib/bpltool/apps/miniml/miniml.grm
 %{_prefix}/lib/bpltool/apps/miniml/miniml.lex
@@ -316,8 +306,6 @@ cd %{_prefix}/lib/bpltool && make compile-smlnj > install.log 2>&1
 %{_prefix}/lib/bpltool/apps/miniml/smldoc.cfg
 %{_prefix}/lib/bpltool/apps/miniml/source.sml
 %{_prefix}/lib/bpltool/apps/miniml/tryit.sml
-%{_prefix}/lib/bpltool/apps/miniml/sources.cm
-%{_prefix}/lib/bpltool/apps/miniml/miniml.grm.sig
 %{_prefix}/lib/bpltool/apps/Makefile
 %{_prefix}/lib/bpltool/apps/bpl
 %{_prefix}/lib/bpltool/apps/bpl/bpl.sml
@@ -739,26 +727,18 @@ cd %{_prefix}/lib/bpltool && make compile-smlnj > install.log 2>&1
 %{_prefix}/lib/bpltool/VERSION
 %{_prefix}/lib/bpltool/configure.in
 %{_prefix}/lib/bpltool/mkdirtree
-%{_prefix}/lib/bpltool/config.log
 %{_prefix}/lib/bpltool/COPYING
 %{_prefix}/lib/bpltool/README
 %{_prefix}/lib/bpltool/Makefile
-%{_prefix}/lib/bpltool/config.status
 %{_prefix}/lib/bpltool/Makefile.chain
 %{_prefix}/lib/bpltool/mosmake.dep
-%{_prefix}/lib/bpltool/unittest
 %{_prefix}/lib/bpltool/Makefile.chain.in
 %{_prefix}/lib/bpltool/.description
 %{_prefix}/lib/bpltool/dep2sources.sh
-%{_prefix}/lib/bpltool/TAGS
 %{_prefix}/lib/bpltool/install-sh
 %{_prefix}/lib/bpltool/mkinstalldirs
 %{_prefix}/lib/bpltool/mktar.sh
-%{_prefix}/lib/bpltool/PROBLEMS
 %{_prefix}/lib/bpltool/bpltoolcli.sh.in
-%{_prefix}/lib/bpltool/svnkeywords.sh
-%{_prefix}/lib/bpltool/bpltoolcli.sh
-%{_prefix}/lib/bpltool/.tarexclude
 
 
 

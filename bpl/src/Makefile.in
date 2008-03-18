@@ -89,8 +89,9 @@ CMFILES-miniml	= $(filter ./apps/miniml/%,$(CMFILES))
 SMLNJ-kernel	= $(shell find ./kernel -name CM -prune -o -type f -print) 
 SMLNJ-lib	= $(shell find ./lib -name CM -prune -o -type f -print) 
 SMLNJ-apps	= $(shell find ./apps -name bplweb -prune -o -name CM -prune -o -type f -a -print)
-SMLNJFILES	= $(SMLNJ-lib) $(SMLNJ-kernel) $(SMLNJ-apps)
-SMLNJDIRS	= $(shell find . -name bplweb -prune -o -name .svn -prune -o -type d -a -print)
+SMLNJFILES	= $(shell find . -name bplweb -prune -o -name CM -prune -o -name .svn -prune -o -type f -a -print)
+#SMLNJFILES	= $(SMLNJ-lib) $(SMLNJ-kernel) $(SMLNJ-apps)
+SMLNJDIRS	= $(shell find . -name bplweb -prune -o -name CM -prune -o -name .svn -prune -o -type d -a -print)
 
 include $(MOSMAKE)/Makefile.inc
 
@@ -138,7 +139,7 @@ PARSINGFILES := $(patsubst %.grm,%.grm-sig.sml,$(GRMFILES)) $(patsubst %.grm,%.g
 # SVN
 .PHONY: svn-update
 svn-update:
-	cd .. && $(SVN) update
+	cd .. && [ -d .svn ] && $(SVN) update
 
 # Documentation
 
@@ -305,12 +306,12 @@ test-bpl2bgval-mosml: bpl2bgvalTest
 # REBUILD, RESTART, UPDATE ---------------------------------
 # Update web application pages and XML RPC server, but not backend executable
 update-webapp:
-	ssh $(WEBAPP-SERVER) 'cd $(WEBAPP-BPLDIR)/src/apps/bplweb && svn update'
+	ssh $(WEBAPP-SERVER) 'cd $(WEBAPP-BPLDIR)/src/apps/bplweb && $(SVN) update'
 
 # Rebuild backend executable and SVG prettyprinter
 remake-uploaded-webapp:
 	@echo Remaking webapp at server.  Remember to commit changes first.
-	ssh $(WEBAPP-SERVER) 'cd $(WEBAPP-BPLDIR)/src && svn update && \
+	ssh $(WEBAPP-SERVER) 'cd $(WEBAPP-BPLDIR)/src && $(SVN) update && \
 	./config.status && nice make apps/bplweb/backend/mlton apps/svg/bg2svg/bg2svg'
 
 # Restart XML RPC server
@@ -324,7 +325,7 @@ restart-webapp:
 # DISTRIBUTION ---------------------------------------------
 .PHONY: dist updatedist
 # This will build a distribution file bpltool-MAJOR.MINOR.REV.tar.gz
-dist: $(srcdir)/$(TOOLNAME)-$(VERSION).$(shell svn info . -r head | grep '^Revision:' | tr -c -d 0123456789).tar.gz
+dist: $(srcdir)/$(TOOLNAME)-$(VERSION).$(shell $(SVN) info . -r head | grep '^Revision:' | tr -c -d 0123456789).tar.gz
 $(srcdir)/$(TOOLNAME)-$(VERSION).%.tar.gz:
 	$(MKTAR) $(TOOLNAME) $(VERSION)
 # This will upload a new distribution if code has changed
@@ -345,7 +346,7 @@ update-dist:
 	done
 	rm $(TARBUILDFLAG)
 # Make a Fedora RPM for SMLNJ
-dist-smlnj-rpm: $(TOOLNAME)-smlnj-$(VERSION).$(shell svn info . -r head | grep '^Revision:' | tr -c -d 0123456789).rpm
+dist-smlnj-rpm: $(TOOLNAME)-smlnj-$(VERSION).$(shell $(SVN) info . -r head | grep '^Revision:' | tr -c -d 0123456789).rpm
 $(TOOLNAME)-smlnj-$(VERSION).%.rpm: $(TOOLNAME)-smlnj-$(VERSION).%.spec $(RPMSRCDIR)/$(TOOLNAME)-$(VERSION).%.tar.gz
 	$(RPMBUILD) -bb $<
 $(TOOLNAME)-smlnj-$(VERSION).%.spec: $(TOOLNAME)-smlnj.spec.in
