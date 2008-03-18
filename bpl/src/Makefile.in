@@ -133,7 +133,7 @@ PARSINGFILES := $(patsubst %.grm,%.grm-sig.sml,$(GRMFILES)) $(patsubst %.grm,%.g
 %.lex.sml: %.lex
 	cd $(dir $@) && $(MAKE) $(notdir $@)
 
-%.grm-sig.sml %.grm.sml: %.grm
+%.grm-sig.sml %.grm.sig %.grm.sml: %.grm
 	cd $(dir $@) && $(MAKE) $(notdir $@)
 
 # SVN
@@ -328,7 +328,9 @@ restart-webapp:
 dist: $(srcdir)/$(TOOLNAME)-$(VERSION).$(shell $(SVN) info . -r head | grep '^Revision:' | tr -c -d 0123456789).tar.gz
 $(srcdir)/$(TOOLNAME)-$(VERSION).%.tar.gz: $(srcdir)/kernel/parsers/bg.grm.sig \
 	$(srcdir)/kernel/parsers/rules.grm.sig $(srcdir)/kernel/parsers/bpl.grm.sig \
-	 $(srcdir)/apps/miniml/miniml.grm.sig
+	 $(srcdir)/apps/miniml/miniml.grm.sig $(srcdir)/kernel/parsers/bg.lex.sml \
+	$(srcdir)/kernel/parsers/rules.lex.sml $(srcdir)/kernel/parsers/bpl.lex.sml \
+	 $(srcdir)/apps/miniml/miniml.lex.sml
 	$(MKTAR) $(TOOLNAME) $(VERSION)
 # This will upload a new distribution if code has changed
 # It must be run on a machine on which the web dir DISTWEBDIR is mounted
