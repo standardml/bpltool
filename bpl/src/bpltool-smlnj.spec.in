@@ -52,7 +52,7 @@ cd %{_prefix}/lib/bpltool && rm install.log >> install.log 2>&1
 %{_prefix}/lib/bpltool/kernel/parsers/Makefile
 %{_prefix}/lib/bpltool/kernel/parsers/bg.grm.sml
 %{_prefix}/lib/bpltool/kernel/parsers/bg.grm-sig.sml
-%{_prefix}/lib/bpltool/kernel/parsers/bg.grm.sig.sml
+%{_prefix}/lib/bpltool/kernel/parsers/bg.grm.sig
 %{_prefix}/lib/bpltool/kernel/parsers/.description
 %{_prefix}/lib/bpltool/kernel/parsers/.tarinclude
 %{_prefix}/lib/bpltool/kernel/parsers/bg.lex.sml
@@ -61,7 +61,7 @@ cd %{_prefix}/lib/bpltool && rm install.log >> install.log 2>&1
 %{_prefix}/lib/bpltool/kernel/parsers/rules.grm.sml
 %{_prefix}/lib/bpltool/kernel/parsers/bigraphdata.sml
 %{_prefix}/lib/bpltool/kernel/parsers/rules.grm-sig.sml
-%{_prefix}/lib/bpltool/kernel/parsers/rules.grm.sig.sml
+%{_prefix}/lib/bpltool/kernel/parsers/rules.grm.sig
 %{_prefix}/lib/bpltool/kernel/parsers/bigraphxmlhooks.sml
 %{_prefix}/lib/bpltool/kernel/parsers/bplxmlhooks.sml
 %{_prefix}/lib/bpltool/kernel/parsers/bplxmlhooks-sig.sml
@@ -75,7 +75,7 @@ cd %{_prefix}/lib/bpltool && rm install.log >> install.log 2>&1
 %{_prefix}/lib/bpltool/kernel/parsers/bplxmlparser.sml
 %{_prefix}/lib/bpltool/kernel/parsers/bpl.grm.sml
 %{_prefix}/lib/bpltool/kernel/parsers/bpl.grm-sig.sml
-%{_prefix}/lib/bpltool/kernel/parsers/bpl.grm.sig.sml
+%{_prefix}/lib/bpltool/kernel/parsers/bpl.grm.sig
 %{_prefix}/lib/bpltool/kernel/parsers/bpl.lex.sml
 %{_prefix}/lib/bpltool/kernel/ast
 %{_prefix}/lib/bpltool/kernel/ast/test
@@ -307,7 +307,7 @@ cd %{_prefix}/lib/bpltool && rm install.log >> install.log 2>&1
 %{_prefix}/lib/bpltool/apps/miniml/desugar.sml
 %{_prefix}/lib/bpltool/apps/miniml/miniml.grm.sml
 %{_prefix}/lib/bpltool/apps/miniml/miniml.grm-sig.sml
-%{_prefix}/lib/bpltool/apps/miniml/miniml.grm.sig.sml
+%{_prefix}/lib/bpltool/apps/miniml/miniml.grm.sig
 %{_prefix}/lib/bpltool/apps/miniml/miniml.lex.sml
 %{_prefix}/lib/bpltool/apps/miniml/mml2bg-sig.sml
 %{_prefix}/lib/bpltool/apps/miniml/desugar-sig.sml
