@@ -323,17 +323,19 @@ restart-webapp:
 .PHONY: test-webapp-mosml test-webapp-mlton
 
 # DISTRIBUTION ---------------------------------------------
-.PHONY: dist updatedist
+.PHONY: dist update-dist
 # This will build a distribution file bpltool-MAJOR.MINOR.REV.tar.gz
 dist: $(srcdir)/$(TOOLNAME)-$(VERSION).$(shell $(SVN) info . -r head | grep '^Revision:' | tr -c -d 0123456789).tar.gz
-$(srcdir)/$(TOOLNAME)-$(VERSION).%.tar.gz:
+$(srcdir)/$(TOOLNAME)-$(VERSION).%.tar.gz: $(srcdir)/kernel/parsers/bg.grm.sig.sml \
+	$(srcdir)/kernel/parsers/rules.grm.sig.sml $(srcdir)/kernel/parsers/bpl.grm.sig.sml \
+	 $(srcdir)/apps/miniml/miniml.grm.sig.sml
 	$(MKTAR) $(TOOLNAME) $(VERSION)
 # This will upload a new distribution if code has changed
 # It must be run on a machine on which the web dir DISTWEBDIR is mounted
 update-dist:
 	$(SVN) update
-	[ -e $(TARBUILDFLAG) ] && $(MAKE) dist
-	[ -e $(TARBUILDFLAG) ] && for dist in $(TOOLNAME)-$(VERSION).*.tar.gz; do \
+	if [ -e $(TARBUILDFLAG) ]; then $(MAKE) dist; else true
+	if [ -e $(TARBUILDFLAG) ]; then for dist in $(TOOLNAME)-$(VERSION).*.tar.gz; do \
 	  mv $$dist $(DISTWEBDIR)/ || exit 1; \
 	  mv $(DISTWEBDIR)/srclinks.html $(DISTWEBDIR)/srclinks.old.html || exit 1; \
 	  echo "<tr><td><a href='$$dist'>$$dist</a></td><td>" > $(DISTWEBDIR)/srclinks.html || exit 1; \
@@ -343,8 +345,8 @@ update-dist:
 	  echo "</td>" >> $(DISTWEBDIR)/srclinks.html || exit 1; \
 	  cat $(DISTWEBDIR)/srclinks.old.html >> $(DISTWEBDIR)/srclinks.html || exit 1; \
 	  rm  $(DISTWEBDIR)/srclinks.old.html; \
-	done
-	rm $(TARBUILDFLAG)
+	done; else true fi
+	-rm $(TARBUILDFLAG)
 # Make a Fedora RPM for SMLNJ
 dist-smlnj-rpm: $(TOOLNAME)-smlnj-$(VERSION).$(shell $(SVN) info . -r head | grep '^Revision:' | tr -c -d 0123456789).rpm
 $(TOOLNAME)-smlnj-$(VERSION).%.rpm: $(TOOLNAME)-smlnj-$(VERSION).%.spec $(RPMSRCDIR)/$(TOOLNAME)-$(VERSION).%.tar.gz
