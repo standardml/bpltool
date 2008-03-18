@@ -85,6 +85,7 @@ CMFILES        	= $(filter-out ./lib/compat/common/sources.cm, $(patsubst %/Depe
 CMFILES-kernel	= $(filter ./kernel/%,$(CMFILES))
 CMFILES-lib	= $(filter-out ./lib/fxp/% ./lib/compat/mosml/thread/sources.cm,$(filter ./lib/%,$(CMFILES)))
 CMFILES-miniml	= $(filter ./apps/miniml/%,$(CMFILES))
+# Files to install when installing on a system running SMLNJ
 SMLNJ-kernel	= $(shell find ./kernel -name CM -prune -o -type f -print) 
 SMLNJ-lib	= $(shell find ./lib -name CM -prune -o -type f -print) 
 SMLNJ-apps	= $(shell find ./apps -name bplweb -prune -o -name CM -prune -o -type f -a -print)
@@ -323,7 +324,7 @@ restart-webapp:
 # DISTRIBUTION ---------------------------------------------
 .PHONY: dist updatedist
 # This will build a distribution file bpltool-MAJOR.MINOR.REV.tar.gz
-dist: $(TOOLNAME)-$(VERSION).$(shell svn info . -r head | grep '^Revision:' | tr -c -d 0123456789).tar.gz
+dist: $(srcdir)/$(TOOLNAME)-$(VERSION).$(shell svn info . -r head | grep '^Revision:' | tr -c -d 0123456789).tar.gz
 $(srcdir)/$(TOOLNAME)-$(VERSION).%.tar.gz:
 	$(MKTAR) $(TOOLNAME) $(VERSION)
 # This will upload a new distribution if code has changed

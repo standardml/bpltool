@@ -45,7 +45,9 @@ mksoftlinks () {
     greptarexclude=cat
   fi
   files=`$svn list | grep -v -e / | $greptarexclude`
+  [ -r .tarinclude ] && files="$files `grep -v -e / < .tarinclude`"
   dirs=`$svn list | grep / | $greptarexclude`
+  [ -r .tarinclude ] && dirs="$dirs `grep / < .tarinclude`"
   for file in $files
   do
   	ln -s "$up../$down$file" "$up$tarbase/$down$file" || exit 1
