@@ -326,9 +326,9 @@ restart-webapp:
 .PHONY: dist update-dist
 # This will build a distribution file bpltool-MAJOR.MINOR.REV.tar.gz
 dist: $(srcdir)/$(TOOLNAME)-$(VERSION).$(shell $(SVN) info . -r head | grep '^Revision:' | tr -c -d 0123456789).tar.gz
-$(srcdir)/$(TOOLNAME)-$(VERSION).%.tar.gz: $(srcdir)/kernel/parsers/bg.grm.sig.sml \
-	$(srcdir)/kernel/parsers/rules.grm.sig.sml $(srcdir)/kernel/parsers/bpl.grm.sig.sml \
-	 $(srcdir)/apps/miniml/miniml.grm.sig.sml
+$(srcdir)/$(TOOLNAME)-$(VERSION).%.tar.gz: $(srcdir)/kernel/parsers/bg.grm.sig \
+	$(srcdir)/kernel/parsers/rules.grm.sig $(srcdir)/kernel/parsers/bpl.grm.sig \
+	 $(srcdir)/apps/miniml/miniml.grm.sig
 	$(MKTAR) $(TOOLNAME) $(VERSION)
 # This will upload a new distribution if code has changed
 # It must be run on a machine on which the web dir DISTWEBDIR is mounted

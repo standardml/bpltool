@@ -1,4 +1,4 @@
 miniml.grm-sig.sml
-miniml.grm.sig.sml
+miniml.grm.sig
 miniml.grm.sml
 miniml.lex.sml

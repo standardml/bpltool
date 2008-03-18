@@ -1,12 +1,12 @@
 bg.grm-sig.sml
-bg.grm.sig.sml
+bg.grm.sig
 bg.grm.sml
 bg.lex.sml
 rules.grm.sml
 rules.grm-sig.sml
-rules.grm.sig.sml
+rules.grm.sig
 rules.lex.sml
 bpl.grm.sml
 bpl.grm-sig.sml
-bpl.grm.sig.sml
+bpl.grm.sig
 bpl.lex.sml
