@@ -138,6 +138,9 @@ val out                        = "out"
 val run                        = "run"
 val hospital_id                = "hospital_id"
 val hospital                   = "hospital"
+val guideline                  = "guideline"
+val guideline_id               = "guideline_id"
+val guideline_scope            = "guideline_scope"
 val treatment                  = "treatment"
 val treatment_id               = "treatment_id"
 val treatment_scope            = "treatment_scope"
@@ -154,7 +157,8 @@ val task                       = "task"
 val reply                      = "reply"
 val task_list_UI               = "task_list_UI"
 val add_task                   = "add_task"
-
+val consultation               = "consultation"
+val resume                     = "resume"
 
 
 

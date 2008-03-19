@@ -200,8 +200,8 @@ TopInstance o (
     <subLink name="treatment" />
   </subLinks>
   <variables>
-    <variable name="treatment_template">
-      <process name="treatment_template">...</process>
+    <variable name="guideline">
+      <process name="guideline">...</process>
     </variable>
     <variable name="x" />
     <variable name="y"><from>true()</from></variable>
@@ -222,7 +222,7 @@ TopInstance o (
               <from variable="x" />
               <to   partnerLink="patient" />
           </copy></assign>
-          <thaw      subLink="treatment" variable="treatment_template" />
+          <thaw      subLink="treatment" variable="guideline" />
           <invokeSub subLink="treatment" operation="consultation"
                      inputVariable="y" outputVariable="y" />
           <freeze subLink="treatment" variable="x" />
@@ -362,9 +362,9 @@ TopInstance o (
 *)
 
 
-(* An example treatment process
+(* An example guideline process
 
-<process name="treatment_template">
+<process name="guideline">
   <variables>
     <variable name="x" />
     <variable name="y" />
@@ -384,3 +384,26 @@ TopInstance o (
 
 * FIXME: write BPL term
 *)
+val guideline =
+Process[guideline][[guideline_id]] o (
+    PartnerLinks o <->
+`|` SubLinks     o <->
+`|` Instances    o <->
+`|` Variables o (
+        Variable[x, guideline_id] o <->
+    `|` Variable[y, guideline_id] o <->)
+
+`|` Sequence[guideline_id] o (
+      ReceiveSup[consultation, x, guideline_id, guideline_id]
+`|` Next o Sequence[guideline_id] o (
+      InvokeSup[task, x, guideline_id, y, guideline_id, guideline_id]
+`|` Next o Sequence[guideline_id] o (
+      ReplySup[consultation, x, guideline_id, guideline_id]
+`|` Next o Sequence[guideline_id] o (
+      ReceiveSup[resume, x, guideline_id, guideline_id]
+`|` Next o Sequence[guideline_id] o (
+      ReplySup[resume, x, guideline_id, guideline_id]
+`|` Next o (
+      InvokeSup[task, x, guideline_id, y, guideline_id, guideline_id]
+    ))))))
+);
