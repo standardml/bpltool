@@ -24,7 +24,7 @@
     <receive partnerLink="patient_client" operation="start"
              createInstance="yes" variable="x" />
     <invoke  partnerLink="task_list_UI" operation="init_UI"
-             input_variable="x" output_variable="y" />
+             inputVariable="x" outputVariable="y" />
     <reply   partnerLink="patient_client" operation="start"
              variable="y" />
     <flow>
@@ -34,7 +34,8 @@
         <sequence>
           <receive   partnerLink="patient_client" operation="run" variable="x" />
           <thaw      subLink="subinsts" variable="x" />
-          <invokeSub subLink="subinsts" operation="resume" variable="y" />
+          <invokeSub subLink="subinsts" operation="resume"
+                     inputVariable="y" outputVariable="x" />
           <reply     partnerLink="patient_client" operation="run" variable="y" />
         </sequence>
       </while>
@@ -50,7 +51,7 @@
           <sequence>
             <receiveSub subLink="subinsts" operation="task" variable="task" />
             <invoke     partnerLink="task_list_UI" operation="add_task"
-                        input_variable="task" output_variable="reply" />
+                        inputVariable="task" outputVariable="reply" />
             <replySub   subLink="subinsts" operation="task" variable="reply" />
           </sequence>
         </scope>
@@ -59,7 +60,7 @@
   </sequence>
 </process>
 
-visualize "the old loop" instead of the whole process
+FIXME: update BPL term to reflect changed process
  *)
 
 val thaw_loop_body =
@@ -67,9 +68,11 @@ val thaw_loop_body =
       Receive[patient_client, patient_id, run, x, patient_id, patient_id]
 `|` Next o Sequence[patient_id] o (
       Thaw[subinsts, patient_id, x, patient_id, patient_id]
+`|` Next o Sequence[patient_id] o (
+      InvokeSub[subinsts, patient_id, resume, y, patient_id, x, patient_id, patient_id]
 `|` Next o
       Reply[patient_client, patient_id, run, y, patient_id, patient_id]
-    ));
+    )));
 
 val thaw_loop =
 While[patient_id] o (
@@ -210,7 +213,7 @@ TopInstance o (
     <receive partnerLink="hospital" operation="doctor_hired"
              createInstance="yes" variable="x" />
     <invoke  partnerLink="task_list_UI" operation="init_UI"
-             input_variable="x" output_variable="y" />
+             inputVariable="x" outputVariable="y" />
     <reply   partnerLink="hospital" operation="doctor_hired" variable="y" />
     <flow>
       <while>
@@ -240,7 +243,7 @@ TopInstance o (
           <sequence>
             <receiveSub subLink="subinsts" operation="task" variable="task" />
             <invoke     partnerLink="task_list_UI" operation="add_task"
-                        input_variable="task" output_variable="reply" />
+                        inputVariable="task" outputVariable="reply" />
             <replySub   subLink="subinsts" operation="task" variable="reply" />
           </sequence>
         </scope>
@@ -372,13 +375,13 @@ TopInstance o (
   <sequence>
     <!-- Doctor initializes treatment -->
     <receiveSup operation="consultation" variable="x" />
-    <invokeSup  operation="task" input_variable="x" output_variable="y" />
+    <invokeSup  operation="task" inputVariable="x" outputVariable="y" />
     <replySup   operation="consultation" variable="x" />
     <!-- Wait to be moved and resumed -->
     <receiveSup operation="resume" variable="x" />
     <replySup   operation="resume" variable="x" />
     <!-- Tell the patient what to do -->
-    <invokeSup  operation="task" input_variable="x" output_variable="y" />
+    <invokeSup  operation="task" inputVariable="x" outputVariable="y" />
   </sequence>
 </process>
 
