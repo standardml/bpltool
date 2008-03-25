@@ -19,16 +19,18 @@
   <variables>
     <variable name="x" />
     <variable name="y"><from>true()</from></variable>
+    <variable name="task" />
+    <variable name="reply" />
   </variables>
   <sequence>
-    <receive partnerLink="patient_client" operation="start"
+    <receive partnerLink="patient_client" operation="hospitalized"
              createInstance="yes" variable="x" />
     <invoke  partnerLink="task_list_UI" operation="init_UI"
              inputVariable="x" outputVariable="y" />
-    <reply   partnerLink="patient_client" operation="start"
+    <reply   partnerLink="patient_client" operation="hospitalized"
              variable="y" />
     <flow>
-      <!-- Continually receive and execute subinstances -->
+      <!-- Thaw-loop: Continually receives and executes sub-instances -->
       <while>
         <condition>$y</condition>
         <sequence>
@@ -39,22 +41,16 @@
           <reply     partnerLink="patient_client" operation="run" variable="y" />
         </sequence>
       </while>
-      <!-- Continually receive tasks from subinstances and pass them
-           on to the UI service -->
+      <!-- UI loop: Continually receives tasks from sub-instances and 
+           pass them on to the UI service -->
       <while>
         <condition>$y</condition>
-        <scope>
-          <variables>
-            <variable name="task" />
-            <variable name="reply" />
-          </variables>
-          <sequence>
-            <receiveSub subLink="subinsts" operation="task" variable="task" />
-            <invoke     partnerLink="task_list_UI" operation="add_task"
-                        inputVariable="task" outputVariable="reply" />
-            <replySub   subLink="subinsts" operation="task" variable="reply" />
-          </sequence>
-        </scope>
+        <sequence>
+          <receiveSub subLink="subinsts" operation="task" variable="task" />
+          <invoke     partnerLink="task_list_UI" operation="add_task"
+                      inputVariable="task" outputVariable="reply" />
+          <replySub   subLink="subinsts" operation="task" variable="reply" />
+        </sequence>
       </while>
     </flow>
   </sequence>
