@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<orchestration>
+  <tasklet assembly ="HelloWorldTasklet" name="Tasklet1" type="MD">
+    <!--Tasklet1View-->
+  </tasklet>
+
+  <tasklet assembly ="IOTasklet" name="Tasklet1" type="MD">
+    <!--Tasklet1View-->
+    <input type="constant" name="ToShow" value="Hello icecream man!"/>
+    <outputs>
+      <output name="result" type="String">sdsdsdsdsdsdsdsdsdsdsd</output>
+      <output name="test" type="Int">12</output>
+    </outputs>
+  </tasklet>
+
+
+  <tasklet assembly ="IOTasklet" name="Tasklet1" type="MD">
+    <!--Tasklet1View-->
+    <input type="global" name="ToShow" value="Result"/>
+    <outputs>
+    </outputs>
+  </tasklet>
+
+
+  <tasklet assembly ="HelloWorldTasklet" name="Tasklet1" type="MD">
+    <!--Tasklet1View-->
+  </tasklet>
+
+  <tasklet assembly ="HWTasklet" name="HWForm" type="CB">
+    <input type="constant" name="default" value="Hello Tasklet"/>
+    <input type="constant" name="test" value="Hello Tasklet"/>
+  </tasklet>
+
+  <tasklet assembly ="HelloWorldTasklet" name="Tasklet1" type="MD">
+    <!--Tasklet1View-->
+  </tasklet>
+  
+</orchestration>
