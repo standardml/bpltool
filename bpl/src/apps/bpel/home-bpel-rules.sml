@@ -203,6 +203,16 @@ val rule_scope_activation = "scope activation" :::
    -//[scope] o (ActiveScope[active_scopes, scope] o `[scope]`)
 || Running[inst_id, active_scopes, inst_id_top]
 || TopRunning[inst_id_top];
+(* Scopes in newly created instances are also allowed to be activated. *)
+val rule_scope_activation2 = "scope activation 2" :::
+
+   Scope[inst_id][[scope]] o `[scope]`
+|| Invoked[inst_id, active_scopes, inst_id_top]
+|| SubTransition[inst_id_top]
+  --[0 |-> 0]--|>
+   -//[scope] o (ActiveScope[active_scopes, scope] o `[scope]`)
+|| Invoked[inst_id, active_scopes, inst_id_top]
+|| SubTransition[inst_id_top];
 
 (* When we are finished executing the body and all sub-instances of the
  * scope we remove the scope, including its variables, partner links,
