@@ -17,8 +17,8 @@ Flags.setBoolFlag "/kernel/ast/bgval/pp-merge2prime" true;
 val _ = use_shorthands true;
 
 
-use "bpel-strings.sml";
-use "bpel-sig.sml";
-use "bpel-rules.sml";
-use "bpel-examples.sml";
+use "bpel-abstract-strings.sml";
+use "bpel-abstract-sig.sml";
+use "bpel-abstract-rules.sml";
+use "bpel-abstract-examples.sml";
 

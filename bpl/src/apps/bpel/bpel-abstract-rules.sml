@@ -184,7 +184,7 @@ val rule_scope_activation = "scope activation" :::
 || Running[inst_id]
   --[0 |-> 0]--|>
 (*   -//[scope] o (ActiveScope[inst_id, scope] o `[scope]`)*)
-   -//[scope] o `[scope]`)*)
+   -//[scope] o `[scope]`
 || Running[inst_id];
 
 (* When we are finished executing the body of the scope we remove the
@@ -254,6 +254,7 @@ val rule_gc_reply = "gc reply" :::
   ----|>
    <->
 || Stopped[inst_id];
+(* ... *)
 (* and then at the end gc Stopped? *)
 val rule_gc_stopped = "gc stopped" :::
    -//[inst_id] o Stopped[inst_id]
@@ -289,45 +290,37 @@ val rule_gc_stopped = "gc stopped" :::
 val rule_invoke = "invoke" :::
 
    Invoke[partner_link_invoker, partner_link_scope_invoker, oper,
-          invar, invar_scope, outvar, outvar_scope, inst_id_invoker]
+          invar, invar_scope, outvar, outvar_scope, inst_id_invoker] o `[(*0*)]`
 || PartnerLink[partner_link_invoker, partner_link_scope_invoker] o <->
-|| Variable[invar, invar_scope] o `[]`
+|| Variable[invar, invar_scope] o `[(*1*)]`
 || Running[inst_id_invoker]
-|| Process[proc_name][[scope]]
-   o (    PartnerLinks
-          o (    PartnerLink[partner_link, scope]
-                 o (CreateInstance[oper] `|` `[]`)
-             `|` scope//[scope1] o `[scope1]`)
-      `|` scope//[scope2] o `[scope2]`)
-
+|| <[scope]>
+   o ((*? Process[proc_name, scope] `|` ?*)
+          PartnerLink[partner_link, scope]
+          o (CreateInstance[oper] `|` `[(*2*)]`)
+      `|` `[scope(*3*)]`)
+FIXME
   --[0 |-> 0, 1 |-> 1, 2 |-> 2, 3 |-> 3,
-     4 |-> 0, 5&[inst_id_invoked1] |--> 2&[scope1],
-     6&[inst_id_invoked2] |--> 3&[scope2]]--|>
+     4 |-> 1, 5&[inst_id_invoked] |--> 3&[scope]]--|>
 
 -//[inst_id_invoked]
 o (   GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
-               outvar, outvar_scope, inst_id_invoker]
+               outvar, outvar_scope, inst_id_invoker] o `[(*0*)]`
    || PartnerLink[partner_link_invoker, partner_link_scope_invoker]
       o Link[inst_id_invoked]
-   || Variable[invar, invar_scope] o `[]`
+   || Variable[invar, invar_scope] o `[(*1*)]`
    || Running[inst_id_invoker]
-   || (Process[proc_name][[scope]]
-       o (    PartnerLinks
-              o (    PartnerLink[partner_link, scope]
-                     o (CreateInstance[oper] `|` `[]`)
-                 `|` scope//[scope1] o `[scope1]`)
-          `|` scope//[scope2] o `[scope2]`)
-       `|` Instance[proc_name, inst_id_invoked]
-           o (    PartnerLinks
-                  o (    PartnerLink[partner_link, inst_id_invoked]
-                         o (    Link[inst_id_invoker]
-                            `|` Message[oper] o `[]`
-                            `|` ReplyTo[oper, inst_id_invoker])
-                     `|` inst_id_invoked//[inst_id_invoked1]
-                         o `[inst_id_invoked1]`)
-              `|` Invoked[inst_id_invoked]
-              `|` inst_id_invoked//[inst_id_invoked2]
-                  o `[inst_id_invoked2]`)));
+   || (    <[scope]>
+           o ((*? Process[proc_name, scope] `|` ?*)
+                  PartnerLink[partner_link, scope]
+                  o (CreateInstance[oper] `|` `[(*2*)]`)
+              `|` `[scope(*3*)]`)
+       `|` Invoked[inst_id_invoked]
+       `|` PartnerLink[partner_link, inst_id_invoked]
+           o (    Link[inst_id_invoker]
+              `|` Message[oper] o `[(*4*)]`
+              `|` ReplyTo[oper, inst_id_invoker])
+       `|` `[inst_id_invoked(*5*)]`));
 
 
 (* The receive rule takes care of activating the instance, by removing a
