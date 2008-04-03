@@ -1,0 +1,69 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EngineApplication", "EngineApplication\EngineApplication.csproj", "{64BA6649-7A0C-4F69-80A4-38DEAF60EC5A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EngineLibrary", "EngineLibrary\EngineLibrary.csproj", "{B3ABEF09-C8CB-4532-B147-8A5D039132C1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskletLibrary", "TaskletLibrary\TaskletLibrary.csproj", "{02AFC0F7-9F1E-4FA8-BDE8-B2867552DEB6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tasklets", "Tasklets", "{789C5500-D2A1-4539-B1A1-D4C4E6D9D4F9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOTasklet", "IOTasklet\IOTasklet.csproj", "{90EAEBCE-3F3C-4FC9-8D71-8DA22EDC3466}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HWTasklet", "HWTasklet\HWTasklet.csproj", "{1AB5D8F6-6F76-4AE8-8707-296FD8E36491}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "XML", "XML", "{E30C79D0-E76D-45F3-B04E-A2F61AF38636}"
+	ProjectSection(SolutionItems) = preProject
+		OrchestrationExample.xsd = OrchestrationExample.xsd
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "External Assembleys", "External Assembleys", "{4561A54E-5B25-4887-B72E-0AF950B9114C}"
+	ProjectSection(SolutionItems) = preProject
+		External Assembleys\HelloWorldTasklet.dll = External Assembleys\HelloWorldTasklet.dll
+		External Assembleys\Microsoft.Dynamics.Mobile.Framework.Configuration.dll = External Assembleys\Microsoft.Dynamics.Mobile.Framework.Configuration.dll
+		External Assembleys\Microsoft.Dynamics.Mobile.Framework.Controls.dll = External Assembleys\Microsoft.Dynamics.Mobile.Framework.Controls.dll
+		External Assembleys\Microsoft.Dynamics.Mobile.Framework.dll = External Assembleys\Microsoft.Dynamics.Mobile.Framework.dll
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{64BA6649-7A0C-4F69-80A4-38DEAF60EC5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64BA6649-7A0C-4F69-80A4-38DEAF60EC5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64BA6649-7A0C-4F69-80A4-38DEAF60EC5A}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{64BA6649-7A0C-4F69-80A4-38DEAF60EC5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64BA6649-7A0C-4F69-80A4-38DEAF60EC5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64BA6649-7A0C-4F69-80A4-38DEAF60EC5A}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{B3ABEF09-C8CB-4532-B147-8A5D039132C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3ABEF09-C8CB-4532-B147-8A5D039132C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3ABEF09-C8CB-4532-B147-8A5D039132C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3ABEF09-C8CB-4532-B147-8A5D039132C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02AFC0F7-9F1E-4FA8-BDE8-B2867552DEB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02AFC0F7-9F1E-4FA8-BDE8-B2867552DEB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02AFC0F7-9F1E-4FA8-BDE8-B2867552DEB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02AFC0F7-9F1E-4FA8-BDE8-B2867552DEB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90EAEBCE-3F3C-4FC9-8D71-8DA22EDC3466}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90EAEBCE-3F3C-4FC9-8D71-8DA22EDC3466}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90EAEBCE-3F3C-4FC9-8D71-8DA22EDC3466}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{90EAEBCE-3F3C-4FC9-8D71-8DA22EDC3466}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90EAEBCE-3F3C-4FC9-8D71-8DA22EDC3466}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90EAEBCE-3F3C-4FC9-8D71-8DA22EDC3466}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{1AB5D8F6-6F76-4AE8-8707-296FD8E36491}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1AB5D8F6-6F76-4AE8-8707-296FD8E36491}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1AB5D8F6-6F76-4AE8-8707-296FD8E36491}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{1AB5D8F6-6F76-4AE8-8707-296FD8E36491}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1AB5D8F6-6F76-4AE8-8707-296FD8E36491}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1AB5D8F6-6F76-4AE8-8707-296FD8E36491}.Release|Any CPU.Deploy.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{90EAEBCE-3F3C-4FC9-8D71-8DA22EDC3466} = {789C5500-D2A1-4539-B1A1-D4C4E6D9D4F9}
+		{1AB5D8F6-6F76-4AE8-8707-296FD8E36491} = {789C5500-D2A1-4539-B1A1-D4C4E6D9D4F9}
+	EndGlobalSection
+EndGlobal
