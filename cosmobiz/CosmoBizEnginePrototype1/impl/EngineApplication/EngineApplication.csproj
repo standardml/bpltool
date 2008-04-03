@@ -70,14 +70,6 @@
       <Project>{B3ABEF09-C8CB-4532-B147-8A5D039132C1}</Project>
       <Name>EngineLibrary</Name>
     </ProjectReference>
-    <ProjectReference Include="..\HWTasklet\HWTasklet.csproj">
-      <Project>{1AB5D8F6-6F76-4AE8-8707-296FD8E36491}</Project>
-      <Name>HWTasklet</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\IOTasklet\IOTasklet.csproj">
-      <Project>{90EAEBCE-3F3C-4FC9-8D71-8DA22EDC3466}</Project>
-      <Name>IOTasklet</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="OrchestrationExample.xml">

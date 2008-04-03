@@ -46,11 +46,11 @@
   <ItemGroup>
     <Reference Include="Microsoft.Dynamics.Mobile.Framework, Version=1.0.28.145, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External Assembleys\Microsoft.Dynamics.Mobile.Framework.dll</HintPath>
+      <HintPath>..\..\External Libraries\Microsoft.Dynamics.Mobile.Framework.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Dynamics.Mobile.Framework.Controls, Version=1.0.28.145, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External Assembleys\Microsoft.Dynamics.Mobile.Framework.Controls.dll</HintPath>
+      <HintPath>..\..\External Libraries\Microsoft.Dynamics.Mobile.Framework.Controls.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
