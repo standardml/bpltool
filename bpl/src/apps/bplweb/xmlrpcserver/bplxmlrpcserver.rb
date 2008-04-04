@@ -102,7 +102,7 @@ print "running matcher worker thread...\n"
               first_field = true
               ['redex', 'react', 'inst'].each {|key|
                 value = rule [key]
-                if value
+                if value && !value.empty?
                   rules_formatted += ",\n" unless first_field
                   first_field = false
                   rules_formatted += key + " = " + value
