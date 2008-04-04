@@ -102,7 +102,8 @@ val () =
       ("==:",      Tokens.EQEQCOLON),
       ("==",       Tokens.EQEQ),
       ("<<",       Tokens.LTLT),
-      (">>",       Tokens.GTGT)
+      (">>",       Tokens.GTGT),
+      ("@@",       Tokens.ATAT)
       ]
 
 val () =
@@ -112,6 +113,7 @@ val () =
       (">", Tokens.GT),
       ("=", Tokens.EQ),
       ("&", Tokens.AMP),
+      ("@", Tokens.AT),
       ("{", Tokens.LBRACE),
       ("}", Tokens.RBRACE),
       ("[", Tokens.LBRACK),
@@ -144,7 +146,7 @@ val comlevel = ref 0;
 
 %%
 %header (functor RulesLex(structure Tokens : Rules_TOKENS));
-KW_ID   = \* | `[|]` | [|][|] | [<|]-[>] | [|]?--[>] | ---[>] | "=:" | "-:" | "==:" | "--:" | "==" | "<<" | ">>" | [a-z][A-Za-z0-9_]* | 1 | -?[/][/]?;
+KW_ID   = \* | `[|]` | [|][|] | [<|]-[>] | [|]?--[>] | ---[>] | "=:" | "-:" | "==:" | "--:" | "==" | "<<" | ">>" | @@ | [a-z][A-Za-z0-9_]* | 1 | -?[/][/]?;
 CTRLID  = [A-Z?!][A-Za-z0-9_]*;
 INT     = (0 | [1-9][0-9]*);
 STRING  = \"([^\ \t\013\n]|\\\")*\";

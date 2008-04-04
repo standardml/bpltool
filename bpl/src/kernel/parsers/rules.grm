@@ -197,7 +197,7 @@ fun nset2idlinkset nset =
 	 | LPAREN | RPAREN | LBRACK | RBRACK | LBRACE | RBRACE | GT | LT
 	 | SLASH | SLASHSLASH | DASHSLASH | DASHSLASHSLASH
 	 | OO | XX | PRI | PAR | BQUOTE | COMMA
-   | LTLT | GTGT
+   | LTLT | GTGT | AT | ATAT
    | IDX0 | IDBB0 | ONE | IDW | IDW0 | IDP
 
 %nonterm
@@ -482,7 +482,8 @@ link	: DASHSLASHSLASH nset	        (map (fn name =>
 						     inner = NameSet.singleton (Name.make id)}])
 	| id SLASHSLASH nset	        ([Link.make {outer = SOME (Name.make id), inner = nset}])
 
-perm	: LBRACK permentrylist RBRACK	        (Permutation.make permentrylist)
+perm	: AT LBRACK permentrylist RBRACK	        (Permutation.make permentrylist)
+        | ATAT LBRACK permentrylist RBRACK	        (Permutation.make permentrylist)
 
 permentrylist : permentry COMMA permentrylist   (permentry :: permentrylist)
 	      | permentry                       ([permentry])
