@@ -314,7 +314,7 @@ val rule_gc_all = "gc all" :::
  * the PartnerLink nodes of the instances, with a connection to the
  * scope link of the other instance.
  *)
-(*
+
 val rule_invoke = "invoke" :::
 
    Invoke[partner_link_invoker, partner_link_scope_invoker, oper,
@@ -323,15 +323,12 @@ val rule_invoke = "invoke" :::
 || Variable[invar, invar_scope] o `[(*0*)]`
 || Running[inst_id_invoker]
 || Process[proc_name][[scope]]
-   o ( (*   PartnerLinks          o (    *)
-           PartnerLink[partner_link, scope]
+   o (    PartnerLink[partner_link, scope]
                  o (CreateInstance[oper] `|` `[(*1*)]`)
-             `|` scope//[scope1] o `[(*2*)scope1]`
-      `|` scope//[scope2] o `[(*3*)scope2]`)
+      `|` `[(*2*)scope]`)
 
-  --[0 |-> 0, 1 |-> 1, 2 |-> 2, 3 |-> 3,
-     4 |-> 0, 5&[inst_id_invoked] |--> 3&[scope],
-     6&[inst_id_invoked] |--> 3&[scope]]--|>
+  --[0 |-> 0, 1 |-> 1, 2 |-> 2, 3 |-> 0,
+     4&[inst_id_invoked] |--> 2&[scope]]--|>
 
 -//[inst_id_invoked]
 o (   GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
@@ -342,20 +339,15 @@ o (   GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
    || Running[inst_id_invoker]
    || (Process[proc_name][[scope]]
        o (    PartnerLink[partner_link, scope]
-              o (CreateInstance[oper] `|` `[(*1*)]`)
-          `|` scope//[scope1] o `[(*2*)scope1]`)
-       `|` scope//[scope2] o `[(*3*)scope2]`
-     `|` (* Instance[proc_name, inst_id_invoked] *)
-(*            o ( *)   PartnerLink[partner_link, inst_id_invoked]
+                     o (CreateInstance[oper] `|` `[(*1*)]`)
+          `|` `[(*2*)scope]`)
+       `|`    PartnerLink[partner_link, inst_id_invoked]
                   o (    Link[inst_id_invoker]
-                     `|` Message[oper] o `[(*4*)]`
+                     `|` Message[oper] o `[(*3*)]`
                      `|` ReplyTo[oper, inst_id_invoker])
-              `|` inst_id_invoked//[inst_id_invoked1]
-                  o `[(*5*)inst_id_invoked1]`
-              `|` Invoked[inst_id_invoked]
-              `|` inst_id_invoked//[inst_id_invoked2]
-                  o `[(*6*)inst_id_invoked2]`));
-*)
+              `|` `[(*4*)inst_id_invoked]`
+              `|` Invoked[inst_id_invoked]));
+
 
 (* The receive rule takes care of activating the instance, by removing a
  * receive node associated to the partner link and the operation
