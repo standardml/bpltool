@@ -58,6 +58,7 @@ val rule_if_false = "if false" :::
  * unfolding the loop once and using an if-then-else construct with the
  * loop condition.
  *)
+(* Mikkel: *)
 val rule_while_unfold = "while unfold" :::
 
    While[inst_id] o (Condition o `[]` `|` `[]`)
@@ -191,6 +192,9 @@ val rule_scope_activation = "scope activation" :::
  * scope, including its variables, partner links, and its associated
  * "scope"-edge. *)
 (* Hmm, can we make garbage collection work when ActiveScope etc. is removed? *)
+(* Mikkel: As far as I can see we can garbage collect a variable when it *)
+(* is the only entity refering a scope + name. *)
+
 (*val rule_scope_completed = "scope completed" :::
 
    ActiveScope[inst_id, scope]
@@ -247,19 +251,28 @@ o (Stopped[inst_id] `|` `[]`)
 <-> || proc_name//[] || inst_id//[];
 *)
 (* Maybe garbage collect nodes connected to a Stopped node? E.g. *)
-val rule_gc_reply = "gc reply" :::
-   Reply[partner_link, partner_link_scope, operation,
-         variable, variable_scope, inst_id]
-|| Stopped[inst_id]
-  ----|>
-   <->
-|| Stopped[inst_id];
+(* val rule_gc_reply = "gc reply" ::: *)
+(*    Reply[partner_link, partner_link_scope, operation, *)
+(*          variable, variable_scope, inst_id] *)
+(* || Stopped[inst_id] *)
+(*   ----|> *)
+(*    <-> *)
+(* || Stopped[inst_id]; *)
 (* ... *)
 (* and then at the end gc Stopped? *)
-val rule_gc_stopped = "gc stopped" :::
-   -//[inst_id] o Stopped[inst_id]
+(* val rule_gc_stopped = "gc stopped" ::: *)
+(*    -//[inst_id] o Stopped[inst_id] *)
+(*   ----|> *)
+(*    <->; *)
+
+(* Mikkel: Why don't we garbage collect all in one go ? *)
+val rule_gc_all = "gc all" :::
+   -//[inst_id] o (Stopped[inst_id] `|` `[inst_id]`)
   ----|>
    <->;
+
+
+
 
 
 (* Process communication *)
