@@ -42,8 +42,7 @@ then
 	then
 		RPMSRCDIR="$HOME/src/SOURCES"
 		RPMSDIR="$HOME/src/RPMS/i386"
-	elif test -d /usr/src/redhat/SOURCES
-	then
+	else
 		RPMSRCDIR=/usr/src/redhat/SOURCES
 		RPMSDIR=/usr/src/redhat/RPMS/i386
 	fi
