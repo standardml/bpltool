@@ -1,3 +1,9 @@
+(* FIXME *)
+(* Mikkel: All the activities: *)
+(* Exit, GetReply, Reply, Receive, Invoke, Assign, If, While *)
+(* have been assigned an additional port, but documentation  *)
+(* have not been updated *)
+
 (*******************************)
 (*          Signature          *)
 (*******************************)
@@ -47,20 +53,26 @@ val Variable     = passive  (Variable    -:       2);
 val VariableRef  = atomic   (VariableRef -:       3);
 
 (*val Sequence     = active   (Sequence    -:       1);*)
-val Next         = passive0 (Next                  );
+
+(* The free ports of a Next node should be connected
+ *
+ *   #1 to the predecessor edge
+ *   #2 to the instance identifier
+ *)
+val Next         = passive  (Next        -:       2);
 
 (*val Flow         = active   (Flow        -:       1);*)
 
-val While        = passive  (While       -:       1);
+val While        = passive  (While       =: 1 --> 2);
 
-val If           = active   (If          -:       1);
+val If           = active   (If          -:       2);
 val Condition    = active0  (Condition             );
 val Then         = passive0 (Then                  );
 val Else         = passive0 (Else                  );
 val True         = atomic0  (True                  );
 val False        = atomic0  (False                 );
 
-val Assign       = passive  (Assign      -:       1);
+val Assign       = passive  (Assign      -:       2);
 val Copy         = passive0 (Copy                  );
 (* The first free port of a To or From node should be connected to a
  * variable name, and the second should be connected to the scope port of
@@ -87,7 +99,7 @@ val FromPLink    = atomic   (FromPLink   -:       2);
  *   #7 to the same scope port as the output variable
  *   #8 to the instance identifier
  *)
-val Invoke       = atomic   (Invoke      -:       8);
+val Invoke       = atomic   (Invoke      -:       9);
 
 (*val PartnerLinks = active0  (PartnerLinks          );*)
 (* The free ports of a PartnerLink node should be connected:
@@ -121,7 +133,7 @@ val CreateInstance = atomic (CreateInstance -:    1);
  *   #5 to the same scope port as the variable
  *   #6 to the instance identifier
  *)
-val Receive      = atomic   (Receive     -:       6);
+val Receive      = atomic   (Receive     -:       7);
 (* The free ports of a Reply node should be connected:
  * 
  *   #1 to the name of the partner link
@@ -131,7 +143,7 @@ val Receive      = atomic   (Receive     -:       6);
  *   #5 to the same scope port as the variable
  *   #6 to the instance identifier of its enclosing instance
  *)
-val Reply        = atomic   (Reply       -:       6);
+val Reply        = atomic   (Reply       -:       7);
 
 (* Since it is possible to copy partner-links, an instance can be
  * invoked by previously unknown partners. When invoked, it therefor
@@ -154,8 +166,8 @@ val ReplyTo      = atomic   (ReplyTo     -:       2);
  *   #5 to the same scope port as the output variable
  *   #6 to the instance identifier of its enclosing instance
  *)
-val GetReply     = atomic   (GetReply    -:       6);
+val GetReply     = atomic   (GetReply    -:       7);
 
 (* The free port should be connected to the instance identifier of the
  * enclosing instance. *)
-val Exit         = atomic   (Exit        -:       1);
+val Exit         = atomic   (Exit        -:       2);

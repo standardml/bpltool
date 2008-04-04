@@ -21,9 +21,20 @@ val rule_flow_completed = "flow completed" :::
 
 (* Hmm, if Sequence is removed, the rule will be enabled even though the
    previous activity in the sequence has not yet completed... *)
+(*
 val rule_sequence_completed = "sequence completed" :::
 
    Sequence[inst_id] o Next o `[]`
+|| Running[inst_id]
+  --[0 |-> 0]--|>
+   `[]`
+|| Running[inst_id];
+*)
+
+(* Mikkel: New version. First gc Next when there is no predecessors *)
+val rule_sequence_completed = "sequence completed" :::
+
+   -//[pred] o Next[pred, inst_id] o `[]`
 || Running[inst_id]
   --[0 |-> 0]--|>
    `[]`
@@ -35,43 +46,46 @@ val rule_sequence_completed = "sequence completed" :::
  *)
 val rule_if_true = "if true" :::
 
-   If[inst_id] o (    Condition o True
-                  `|` Then o `[]`
-                  `|` Else o `[]`)
+   If[inst_id, succ] o (    Condition o True
+                        `|` Then o `[]`
+                        `|` Else o `[]`)
 || Running[inst_id]
   --[0 |-> 0]--|>
-   `[]`
+   `[]` || succ//[]
 || Running[inst_id];
 
 
 val rule_if_false = "if false" :::
 
-   If[inst_id] o (    Condition o False
-                  `|` Then o `[]`
-                  `|` Else o `[]`)
+   If[inst_id, succ] o (    Condition o False
+                        `|` Then o `[]`
+                        `|` Else o `[]`)
 || Running[inst_id]
   --[0 |-> 1]--|>
-   `[]`
+   `[]` || succ//[]
 || Running[inst_id];
 
 (* We give semantics to a while-loop in the traditional manner, by
  * unfolding the loop once and using an if-then-else construct with the
  * loop condition.
  *)
-(* Mikkel: *)
+(* Mikkel: Just a test, I am not sure it works *)
+(* The local name pred should refer to the last activities in the while-loop *)
 val rule_while_unfold = "while unfold" :::
 
-   While[inst_id] o (Condition o `[]` `|` `[]`)
+   While[inst_id, succ][[pred]] o (Condition o `[]` `|` `[pred]`)
 || Running[inst_id]
 
-  --[0 |-> 0, 1 |-> 1, 2 |-> 0, 3 |-> 1]--|>
+  --[0 |-> 0, 1&[pred1] |--> 1&[pred], 2 |-> 0, 3&[pred2] |--> 1&[pred]]--|>
+(*  --[0 |-> 0, 1 |-> 1, 2 |-> 0, 3 |-> 1]--|> *)
 
-   If[inst_id] o (    Condition o `[]`
-                  `|` Then o Sequence[inst_id] o (
-                               `[]` 
-                         `|` Next o
-                               While[inst_id]
-                               o (Condition o `[]` `|` `[]`))
+   If[inst_id, succ] o (    Condition o `[]`
+                  `|` Then o (
+                             -//[pred1] o (
+                                 `[pred1]` 
+                             `|` Next[pred1, inst_id] o
+                                   While[inst_id, succ][[pred2]]
+                                       o (Condition o `[]` `|` `[pred2]`)))
                   `|` Else o <->)
 || Running[inst_id];
 
@@ -112,60 +126,60 @@ val rule_variable_reference = "variable reference" :::
  *)
 val rule_assign_copy_var2var = "assign copy var2var" :::
 
-   Assign[inst_id] o Copy o (    From[f, scope1]
-                             `|` To[t, scope2])
+   Assign[inst_id, succ] o Copy o (    From[f, scope1]
+                                   `|` To[t, scope2])
 || Variable[f, scope1] o `[]`
 || Variable[t, scope2] o `[]`
 || Running[inst_id]
 
   --[0 |-> 0, 1 |-> 0]--|>
 
-   <->
+   <-> || succ//[]
 || Variable[f, scope1] o `[]`
 || Variable[t, scope2] o `[]`
 || Running[inst_id];
 
 val rule_assign_copy_var2plink = "assign copy var2plink" :::
 
-   Assign[inst_id] o Copy o (    From[f, scope1]
-                             `|` ToPLink[t, scope2])
+   Assign[inst_id, succ] o Copy o (    From[f, scope1]
+                                   `|` ToPLink[t, scope2])
 || Variable[f, scope1] o `[]`
 || PartnerLink[t, scope2] o `[]`
 || Running[inst_id]
 
   --[0 |-> 0, 1 |-> 0]--|>
 
-   <->
+   <-> || succ//[]
 || Variable[f, scope1] o `[]`
 || PartnerLink[t, scope2] o `[]`
 || Running[inst_id];
 
 val rule_assign_copy_plink2var = "assign copy plink2var" :::
 
-   Assign[inst_id] o Copy o (    FromPLink[f, scope1]
-                             `|` To[t, scope2])
+   Assign[inst_id, succ] o Copy o (    FromPLink[f, scope1]
+                                   `|` To[t, scope2])
 || PartnerLink[f, scope1] o `[]`
 || Variable[t, scope2] o `[]`
 || Running[inst_id]
 
   --[0 |-> 0, 1 |-> 0]--|>
 
-   <->
+   <-> || succ//[]
 || PartnerLink[f, scope1] o `[]`
 || Variable[t, scope2] o `[]`
 || Running[inst_id];
 
 val rule_assign_copy_plink2plink = "assign copy plink2plink" :::
 
-   Assign[inst_id] o Copy o (    FromPLink[f, scope1]
-                             `|` ToPLink[t, scope2])
+   Assign[inst_id, succ] o Copy o (    FromPLink[f, scope1]
+                                   `|` ToPLink[t, scope2])
 || PartnerLink[f, scope1] o `[]`
 || PartnerLink[t, scope2] o `[]`
 || Running[inst_id]
 
   --[0 |-> 0, 1 |-> 0]--|>
 
-   <->
+   <-> || succ//[]
 || PartnerLink[f, scope1] o `[]`
 || PartnerLink[t, scope2] o `[]`
 || Running[inst_id];
@@ -233,10 +247,10 @@ o (Variables o `[]`  `|`  PartnerLinks o `[]`  `|`  Running[inst_id])
  *)
 val rule_exit_stop_inst = "exit stop inst" :::
 
-   Exit[inst_id]
+   Exit[inst_id, succ]
 || Running[inst_id]
   ----|>
-   <->
+   <-> || succ//[]
 || Stopped[inst_id];
 
 (* Once an Instance node contains a Stopped node we garbage collect the
@@ -300,41 +314,48 @@ val rule_gc_all = "gc all" :::
  * the PartnerLink nodes of the instances, with a connection to the
  * scope link of the other instance.
  *)
+(*
 val rule_invoke = "invoke" :::
 
    Invoke[partner_link_invoker, partner_link_scope_invoker, oper,
-          invar, invar_scope, outvar, outvar_scope, inst_id_invoker] o `[(*0*)]`
+          invar, invar_scope, outvar, outvar_scope, inst_id_invoker, succ] 
 || PartnerLink[partner_link_invoker, partner_link_scope_invoker] o <->
-|| Variable[invar, invar_scope] o `[(*1*)]`
+|| Variable[invar, invar_scope] o `[(*0*)]`
 || Running[inst_id_invoker]
-|| <[scope]>
-   o ((*? Process[proc_name, scope] `|` ?*)
-          PartnerLink[partner_link, scope]
-          o (CreateInstance[oper] `|` `[(*2*)]`)
-      `|` `[scope(*3*)]`)
-FIXME
+|| Process[proc_name][[scope]]
+   o ( (*   PartnerLinks          o (    *)
+           PartnerLink[partner_link, scope]
+                 o (CreateInstance[oper] `|` `[(*1*)]`)
+             `|` scope//[scope1] o `[(*2*)scope1]`
+      `|` scope//[scope2] o `[(*3*)scope2]`)
+
   --[0 |-> 0, 1 |-> 1, 2 |-> 2, 3 |-> 3,
-     4 |-> 1, 5&[inst_id_invoked] |--> 3&[scope]]--|>
+     4 |-> 0, 5&[inst_id_invoked] |--> 3&[scope],
+     6&[inst_id_invoked] |--> 3&[scope]]--|>
 
 -//[inst_id_invoked]
 o (   GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
-               outvar, outvar_scope, inst_id_invoker] o `[(*0*)]`
+               outvar, outvar_scope, inst_id_invoker, succ]
    || PartnerLink[partner_link_invoker, partner_link_scope_invoker]
       o Link[inst_id_invoked]
-   || Variable[invar, invar_scope] o `[(*1*)]`
+   || Variable[invar, invar_scope] o `[(*0*)]`
    || Running[inst_id_invoker]
-   || (    <[scope]>
-           o ((*? Process[proc_name, scope] `|` ?*)
-                  PartnerLink[partner_link, scope]
-                  o (CreateInstance[oper] `|` `[(*2*)]`)
-              `|` `[scope(*3*)]`)
-       `|` Invoked[inst_id_invoked]
-       `|` PartnerLink[partner_link, inst_id_invoked]
-           o (    Link[inst_id_invoker]
-              `|` Message[oper] o `[(*4*)]`
-              `|` ReplyTo[oper, inst_id_invoker])
-       `|` `[inst_id_invoked(*5*)]`));
-
+   || (Process[proc_name][[scope]]
+       o (    PartnerLink[partner_link, scope]
+              o (CreateInstance[oper] `|` `[(*1*)]`)
+          `|` scope//[scope1] o `[(*2*)scope1]`)
+       `|` scope//[scope2] o `[(*3*)scope2]`
+     `|` (* Instance[proc_name, inst_id_invoked] *)
+(*            o ( *)   PartnerLink[partner_link, inst_id_invoked]
+                  o (    Link[inst_id_invoker]
+                     `|` Message[oper] o `[(*4*)]`
+                     `|` ReplyTo[oper, inst_id_invoker])
+              `|` inst_id_invoked//[inst_id_invoked1]
+                  o `[(*5*)inst_id_invoked1]`
+              `|` Invoked[inst_id_invoked]
+              `|` inst_id_invoked//[inst_id_invoked2]
+                  o `[(*6*)inst_id_invoked2]`));
+*)
 
 (* The receive rule takes care of activating the instance, by removing a
  * receive node associated to the partner link and the operation
@@ -344,7 +365,7 @@ o (   GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
  *)
 val rule_receive = "receive" :::
 
-   Receive[partner_link, partner_link_scope, oper, var, var_scope, inst_id]
+   Receive[partner_link, partner_link_scope, oper, var, var_scope, inst_id, succ]
 || PartnerLink[partner_link, partner_link_scope]
    o (`[]` `|` Message[oper] o `[]`)
 || Variable[var, var_scope] o `[]`
@@ -352,7 +373,7 @@ val rule_receive = "receive" :::
 
   --[0 |-> 0, 1 |-> 1]--|>
 
-   <-> || oper//[]
+   <-> || oper//[] || succ//[]
 || PartnerLink[partner_link, partner_link_scope]
    o `[]`
 || Variable[var, var_scope] o `[]`
@@ -369,13 +390,13 @@ val rule_receive = "receive" :::
 val rule_invoke_instance = "invoke_instance" :::
 
    Invoke[partner_link_invoker, partner_link_scope_invoker, oper,
-          invar, invar_scope, outvar, outvar_scope, inst_id_invoker]
+          invar, invar_scope, outvar, outvar_scope, inst_id_invoker, succ1]
 || PartnerLink[partner_link_invoker, partner_link_scope_invoker]
    o (Link[inst_id_invoked] `|` `[]`)
 || Variable[invar, invar_scope] o `[]`
 || Running[inst_id_invoker]
 || Receive[partner_link_invoked, partner_link_scope_invoked, oper,
-           var, var_scope, inst_id_invoked]
+           var, var_scope, inst_id_invoked, succ2]
 || PartnerLink[partner_link_invoked, partner_link_scope_invoked] o `[]`
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_invoked]
@@ -383,12 +404,12 @@ val rule_invoke_instance = "invoke_instance" :::
   --[0 |-> 0, 1 |-> 1, 2 |-> 2, 3 |-> 1]--|>
 
    GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
-            outvar, outvar_scope, inst_id_invoker]
+            outvar, outvar_scope, inst_id_invoker, succ1]
 || PartnerLink[partner_link_invoker, partner_link_scope_invoker]
    o (Link[inst_id_invoked] `|` `[]`)
 || Variable[invar, invar_scope] o `[]`
 || Running[inst_id_invoker]
-|| <->
+|| <-> || succ2//[]
 || PartnerLink[partner_link_invoked, partner_link_scope_invoked]
    o (`[]` `|` ReplyTo[oper, inst_id_invoker])
 || Variable[var, var_scope] o `[]`
@@ -402,32 +423,33 @@ val rule_invoke_instance = "invoke_instance" :::
 val rule_reply = "reply" :::
 
    Reply[partner_link_invoked, partner_link_scope_invoked, oper,
-         var, var_scope, inst_id_invoked]
+         var, var_scope, inst_id_invoked, succ1]
 || PartnerLink[partner_link_invoked, partner_link_scope_invoked]
    o (ReplyTo[oper, inst_id_invoker] `|` `[]`)
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_invoked]
 || GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
-            outvar, outvar_scope, inst_id_invoker]
+            outvar, outvar_scope, inst_id_invoker, succ2]
 || Variable[outvar, outvar_scope] o `[]`
 || Running[inst_id_invoker]
 
   --[0 |-> 0, 1 |-> 1, 2 |-> 1]--|>
 
-   <-> || oper//[]
+   <-> || oper//[] || succ1//[]
 || PartnerLink[partner_link_invoked, partner_link_scope_invoked] o `[]`
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_invoked]
 || <-> || partner_link_invoker//[] || partner_link_scope_invoker//[]
+|| succ2//[]
 || Variable[outvar, outvar_scope] o `[]`
 || Running[inst_id_invoker];
 
 
-
-
+(* Mikkel: Update the set of rules *)
+(*
 val rules =
-    mkrules [rule_scope_activation, rule_scope_completed,
-             rule_flow_completed, rule_sequence_completed,
+    mkrules [rule_scope_activation, (* rule_scope_completed, *)
+             (* rule_flow_completed, *) rule_sequence_completed,
              rule_if_true, rule_if_false, rule_while_unfold,
              rule_variable_reference,
              rule_assign_copy_var2var,
@@ -439,3 +461,4 @@ val rules =
              rule_invoke_instance, rule_reply,
              rule_exit_stop_inst, rule_exit_remove_inst,
              rule_inst_completed];
+*)
