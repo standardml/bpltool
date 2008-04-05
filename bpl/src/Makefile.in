@@ -38,7 +38,7 @@ datadir		= @datadir@
 smldocdir	= @smldocdir@
 libdir		= @libdir@
 
-RM              = rm
+RM              = rm -f
 export SED      = @SED@
 
 MOSMLC  	= @MOSMLC@
@@ -221,7 +221,7 @@ kernel.cm: kernel.cm.in
 
 .PHONY: prepare prepare-smlnj prepare-mlton prepare-mosml
 prepare: prepare-$(MLC)
-prepare-smlnj: $(CMFILES)
+prepare-smlnj: $(CMFILES) $(PARSINGFILES)
 prepare-mlton: $(patsubst %/Dependencies,%/mlton.mlb,$(DEPENDENCIES)) $(PARSINGFILES)
 prepare-mosml: 
 
@@ -379,10 +379,10 @@ CMDIRS = $(filter-out lib/pp/smlnj lib/compat/common,$(MOSMAKEDIRS))
 CMCACHEDIRS = $(MOSMAKEDIRS) lib/compat/smlnj/ lib/compat/smlnj/exception \
 	lib/compat/smlnj/thread lib/compat/smlnj/word32
 cmclean:
-	for d in $(CMDIRS); do [ -r $$d/Dependencies ] && $(RM) -f $$d/sources.cm; done
+	for d in $(CMDIRS); do [ -r $$d/Dependencies ] && $(RM) $$d/sources.cm; done
 
 cmcacheclean:
-	for d in $(CMCACHEDIRS); do [ -r $$d/Dependencies ] && $(RM) -rf $$d/CM; done
+	for d in $(CMCACHEDIRS); do [ -r $$d/Dependencies ] && $(RM) -r $$d/CM; done
 
 mlbclean:
 	$(RM) $(patsubst %/Dependencies,%/mlton.mlb,$(DEPENDENCIES)) 
@@ -393,8 +393,8 @@ docclean:
 realclean: clean cmclean mlbclean parsersclean docclean
 
 distclean: realclean
-	$(RM) -rf autom4te.cache
+	$(RM) -r autom4te.cache
 	$(RM) $(DISTCLEANFILES)
-	$(RM) -rf bpltool-`cat VERSION`.*
+	$(RM) -r bpltool-`cat VERSION`.*
 
 .PHONY: parsersclean cmclean mlbclean clean realclean distclean
