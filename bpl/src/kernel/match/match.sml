@@ -102,6 +102,14 @@ struct
       Exp (LVL_USER, Origin.unknown_origin, mk_string_pp errtitle,
            explainer e)
 
+  val _ = Flags.makeBoolFlag {
+    name = "/kernel/match/match/nodups",
+    desc = "Remove duplicate matches.",
+    short = "",
+    long = "--nodups",
+    arg = "",
+    default = true}
+
   (* FIXME move to functor argument? *)
   structure Partition = Partition(structure LazyList = LazyList)
   structure OrderedPartition
@@ -3014,6 +3022,9 @@ val _ = print' (fn () => "matchCLO: s'_C = " ^ Wiring.toString s'_C ^
                     (BgBDNF.unmk agent, "in matches")
               else
                 ()
+
+      val nodups  = Flags.getBoolFlag "/kernel/match/match/nodups"
+
       val {name, redex, react, inst, info} = Rule.unmk rule
       val {wirxid = w_axid, D = D_a} = unmkBR agent
       val ps = #Ps (unmkDR D_a) handle e => raise e
@@ -3037,14 +3048,24 @@ val _ = print' (fn () => "matchCLO: s'_C = " ^ Wiring.toString s'_C ^
            parameter = BgBDNF.makeDR Wiring.id_0 qs,
            tree = tree}
         end
+      fun matchEq ({context = c1, parameter = p1, ...} : match)
+                  ({context = c2, parameter = p2, ...} : match) =
+        BgBDNF.eq p1 p2 andalso BgBDNF.eq c1 c2
+      fun removeDuplicates known mz =
+        case lzunmk mz of
+          Nil => Nil
+        | Cons (m, mz') =>
+          if List.exists (matchEq m) known then
+            removeDuplicates known mz'
+          else
+            Cons (m, lzmake (fn () => removeDuplicates (m::known) mz'))
     val result = 
       case bgvalmatch (PTen [PWir, PVar]) w_axid of
       MTen [MWir w_a, _] =>
         (case bgvalmatch (PTen [PWir, PVar]) w_Rxid of
          MTen [MWir w_R, _]
-          => lzunmk
-              (lzmap toMatch
-               (matchCLO {w_a = w_a, w_R = w_R, ps = ps, Ps = Ps}))
+          => (if nodups then removeDuplicates [] else lzunmk)
+               (lzmap toMatch (matchCLO {w_a = w_a, w_R = w_R, ps = ps, Ps = Ps}))
          | wrongterm => 
             raise MalformedBDNF
                     (BgVal.info w_Rxid, wrongterm,
