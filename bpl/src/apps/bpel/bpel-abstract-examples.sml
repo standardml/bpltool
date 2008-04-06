@@ -48,7 +48,7 @@ Process[echo_process][[echo_id]] o
  *)
 val caller_inst1 =
 -//[caller_id,pred1]
-o (  Running[caller_id]
+o (    Running[caller_id]
    `|` PartnerLink[echo_service, caller_id] o <->
    `|` Variable[y, caller_id] o True
    `|` Variable[z, caller_id] o False
@@ -95,33 +95,35 @@ o (  Running[caller_id]
  * </process>
  *)
 
-(*
-val while_loop =
-While[echo_id]
-o (    Condition o VariableRef[x, echo_id, echo_id]
-   `|` Scope[echo_id][[scope]]
-       o (    PartnerLinks o <->
-          `|` Variables    o Variable[y, scope] o <->
-          `|` Sequence[echo_id] o (
-                Receive[echo_client, echo_id, echo_value, y, scope, echo_id]
-          `|` Next o Sequence[echo_id] o (
-                Reply[echo_client, echo_id, echo_value, y, scope, echo_id]
-          `|` Next o
-                Assign[echo_id] o Copy o (    From[y, scope]
-                                          `|` To[x, echo_id])))));
 val echo_process2_context = 
 Process[echo_process][[echo_id]]
-o (    PartnerLinks o PartnerLink[echo_client, echo_id] o CreateInstance[echo]
-   `|` Variables    o Variable[x, echo_id] o <->
-   `|` Sequence[echo_id] o (
-         Receive[echo_client, echo_id, echo, x, echo_id, echo_id]
-   `|` Next o Sequence[echo_id] o (
-         Reply[echo_client, echo_id, echo, x, echo_id, echo_id]
-   `|` Next o `[]`)));
+o (    PartnerLink[echo_client, echo_id] o CreateInstance[echo]
+   `|` Variable[x, echo_id] o <->
+   `|` -//[pred1] o (
+         Receive[echo_client, echo_id, echo, x, echo_id, echo_id, pred1]
+         `|` Next[pred1, echo_id] o (
+               -//[pred2] o (
+                 Reply[echo_client, echo_id, echo, x, echo_id, echo_id, pred2]
+                 `|` Next[pred2, echo_id] o `[]`))));
+
+(* Should a scope create a new predesssor link ?? *)
+(* Ie. should we create a new predessor inside a while-loop *)
+val while_loop =
+-//[pred3] o While[echo_id, pred3][[pred5]]
+o (    Condition o VariableRef[x, echo_id, echo_id]
+   `|` Scope[echo_id][[scope]]
+       o (    Variable[y, scope] o <->
+          `|` Receive[echo_client, echo_id, echo_value, y, scope, echo_id, pred3]
+          `|` Next[pred3, echo_id] o (
+                -//[pred4] o (
+                   Reply[echo_client, echo_id, echo_value, y, scope, echo_id, pred4]
+               `|` Next[pred4, echo_id] o
+                     Assign[echo_id, pred5] o Copy o (    From[y, scope]
+                                                      `|` To[x, echo_id])))));
 
 val echo_process2 = echo_process2_context o while_loop;
-val echo_process2_emptyloop = echo_process2_context o While[echo_id] o <->;
-*)
+val echo_process2_emptyloop = echo_process2_context o While[echo_id, pred3][[pred5]] o <->;
+
 
 
 (* An instance which is about to invoke the advanced echo process:
@@ -167,7 +169,7 @@ o (Instance[caller, caller_id]
 *)
 
 (*
-val mz1 = matches (mkrules [rule_reply]) (caller_inst1 `|` echo_process1);
+val mz1 = matches (mkrules [rule_invoke]) (caller_inst1 `|` echo_process1);
 print_mv mz1;
 *)
 
