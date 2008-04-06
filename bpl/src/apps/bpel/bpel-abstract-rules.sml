@@ -4,33 +4,6 @@
 
 (* Structural activities *)
 
-(* When a Flow is completed (i.e. there are no more instructions in the
- * flow to be executed) we garbage collect the flow.  In the same manner,
- * we garbage collect a Sequence if the current instruction is completed.
- * We then make the following instruction the next to be executed.
- *)
-(* Unnecessary
-val rule_flow_completed = "flow completed" :::
-
-   Flow[inst_id] o <->
-|| Running[inst_id]
-  ----|>
-   <->
-|| Running[inst_id];
-*)
-
-(* Hmm, if Sequence is removed, the rule will be enabled even though the
-   previous activity in the sequence has not yet completed... *)
-(*
-val rule_sequence_completed = "sequence completed" :::
-
-   Sequence[inst_id] o Next o `[]`
-|| Running[inst_id]
-  --[0 |-> 0]--|>
-   `[]`
-|| Running[inst_id];
-*)
-
 (* Mikkel: New version. First gc Next when there is no predecessors *)
 val rule_sequence_completed = "sequence completed" :::
 
