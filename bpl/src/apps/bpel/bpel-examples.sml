@@ -159,9 +159,6 @@ o (Instance[caller, caller_id]
                           v, caller_id, v, caller_id, caller_id])
              `|` Exit[caller_id])));
 
-
-val _ = use_shorthands on;
-
 (*
 val mz1 = matches (mkrules [rule_reply]) (caller_inst1 `|` echo_process1);
 val mz2 = matches (mkrules [rule_invoke_specialized]) (caller_inst1 `|` echo_process1);

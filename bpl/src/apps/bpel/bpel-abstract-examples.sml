@@ -148,25 +148,21 @@ val echo_process2_emptyloop = echo_process2_context o While[echo_id, pred3][[pre
  * </instance>
  *)
 
-(*
 val caller_inst2 =
--//[caller_id]
-o (Instance[caller, caller_id]
-   o (    Running[caller_id]
-      `|` PartnerLinks o PartnerLink[echo_service, caller_id] o <->
-      `|` Variables
-          o (    Variable[z, caller_id] o True
-             `|` Variable[v, caller_id] o False)
-      `|` Flow[caller_id]
-          o (    Sequence[caller_id] o (
-                   Invoke[echo_service, caller_id, echo,
-                          z, caller_id, v, caller_id, caller_id]
-             `|` Next o
-                   Invoke[echo_service, caller_id, echo_value,
-                          v, caller_id, v, caller_id, caller_id])
-             `|` Exit[caller_id])));
+-//[caller_id] o (
+       Running[caller_id]
+   `|` PartnerLink[echo_service, caller_id] o <->
+   `|` Variable[z, caller_id] o True
+   `|` Variable[v, caller_id] o False
+   `|` -//[pred1] o (
+          Invoke[echo_service, caller_id, echo,
+                 z, caller_id, v, caller_id, caller_id, pred1]
+   `|` Next[pred1, caller_id] o
+          -//[pred2] o (
+             Invoke[echo_service, caller_id, echo_value,
+                    v, caller_id, v, caller_id, caller_id, pred2]))
+   `|` -//[pred3] o Exit[caller_id, pred3]);
 
-*)
 
 (*
 val mz1 = matches (mkrules [rule_invoke]) (caller_inst1 `|` echo_process1);
