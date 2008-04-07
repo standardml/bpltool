@@ -33,7 +33,7 @@ val Scope        = passive  (Scope       =: 1 --> 1);
 (* The free port of a 'running', 'invoked', or 'stopped' node should
  * be connected to the scope port of the parent process/instance.
  *)
-val Running      = atomic   (Running     -:       1);
+val Run          = atomic   (Run         -:       1);
 val Invoked      = atomic   (Invoked     -:       1);
 val Stopped      = atomic   (Stopped     -:       1);
 
@@ -66,7 +66,7 @@ val Next         = passive  (Next        -:       2);
 val While        = passive  (While       =: 1 --> 2);
 
 val If           = active   (If          -:       2);
-val Condition    = active0  (Condition             );
+val Cond         = active0  (Cond                  );
 val Then         = passive0 (Then                  );
 val Else         = passive0 (Else                  );
 val True         = atomic0  (True                  );
