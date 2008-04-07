@@ -262,35 +262,33 @@ val rule_gc_all_at_once = "gc all atonce" :::
 
 val rule_invoke = "invoke" :::
 
-    Send[l1, lsc, op, v, vsc, id1, s] 
+    Inv[l1, lsc, op, v, vsc, id1, s] 
 `|` Var[l1, lsc] o <->
 `|` Var[v, vsc] o `[(*0*)]`
 `|` Run[id1]
 `|` Process[n][[sc]]
    o (    Var[l2, sc]
-                 o (CreateInstance[oper] `|` `[(*1*)]`)
-      `|` `[(*2*)scope]`)
+                 o (CrInst[op] `|` `[(*1*)]`)
+      `|` `[(*2*) sc]`)
 
   --[0 |-> 0, 1 |-> 1, 2 |-> 2, 3 |-> 0,
-     4&[id2] |--> 2&[scope]]--|>
+     4&[id2] |--> 2&[sc]]--|>
 
--//[inst_id_invoked]
-o (    GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
-               outvar, outvar_scope, inst_id_invoker, succ]
-   `|` PartnerLink[partner_link_invoker, partner_link_scope_invoker]
-       o Link[inst_id_invoked]
-   `|` Variable[invar, invar_scope] o `[(*0*)]`
-   `|` Running[inst_id_invoker]
-   `|` (Process[proc_name][[scope]]
-       o (    PartnerLink[partner_link, scope]
-                     o (CreateInstance[oper] `|` `[(*1*)]`)
-          `|` `[(*2*)scope]`)
-       `|`    PartnerLink[partner_link, inst_id_invoked]
-                  o (    Link[inst_id_invoker]
-                     `|` Message[oper] o `[(*3*)]`
-                     `|` ReplyTo[oper, inst_id_invoker])
-              `|` `[(*4*)inst_id_invoked]`
-              `|` Invoked[inst_id_invoked]));
+ -//[inst_id_invoked]
+o ( <->
+   `|` Var[l1, lsc] o Link[id2]
+   `|` Var[v, vsc] o `[(*0*)]`
+   `|` Run[id1]
+   `|` (Process[n][[sc]]
+       o (    Var[l2, sc]
+                     o (CrInst[op] `|` `[(*1*)]`)
+          `|` `[(*2*) sc]`)
+       `|`    Var[l2, id2]
+                  o (    Link[id1]
+                     `|` Mes[op] o `[(*3*)]`
+                     `|` Reply[op, id1])
+              `|` `[(*4*)id2]`
+              `|` Invoked[id2]));
 
 
 (* The receive rule takes care of activating the instance, by removing a
@@ -301,19 +299,18 @@ o (    GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
  *)
 val rule_receive = "receive" :::
 
-    Receive[partner_link, partner_link_scope, oper, var, var_scope, inst_id, succ]
-`|` PartnerLink[partner_link, partner_link_scope]
-    o (`[]` `|` Message[oper] o `[]`)
-`|` Variable[var, var_scope] o `[]`
-`|` Invoked[inst_id]
+    Rec[l, lsc, op, v, vsc, id, s]
+`|` Var[l, lsc]
+    o (`[]` `|` Mess[op] o `[]`)
+`|` Var[v, vsc] o `[]`
+`|` Invoked[id]
 
   --[0 |-> 0, 1 |-> 1]--|>
 
-    <-> `|` oper//[] `|` succ//[]
-`|` PartnerLink[partner_link, partner_link_scope]
-    o `[]`
-`|` Variable[var, var_scope] o `[]`
-`|` Running[inst_id];
+    <-> `|` op//[] `|` s//[]
+`|` Var[l, lsc] o `[]`
+`|` Var[v, vsc] o `[]`
+`|` Run[id];
 
 
 (* The invoke instance rule executes an Invoke activity in one instance
@@ -325,31 +322,25 @@ val rule_receive = "receive" :::
  *)
 val rule_invoke_instance = "invoke_instance" :::
 
-    Invoke[partner_link_invoker, partner_link_scope_invoker, oper,
-           invar, invar_scope, outvar, outvar_scope, inst_id_invoker, succ1]
-`|` PartnerLink[partner_link_invoker, partner_link_scope_invoker]
-    o (Link[inst_id_invoked] `|` `[]`)
-`|` Variable[invar, invar_scope] o `[]`
-`|` Running[inst_id_invoker]
-`|` Receive[partner_link_invoked, partner_link_scope_invoked, oper,
-            var, var_scope, inst_id_invoked, succ2]
-`|` PartnerLink[partner_link_invoked, partner_link_scope_invoked] o `[]`
-`|` Variable[var, var_scope] o `[]`
-`|` Running[inst_id_invoked]
+    Inv[l1, l1sc, op, v1 , v1sc, id1, s1]
+`|` Var[l1, l1sc] o (Link[id2] `|` `[]`)
+`|` Var[v1, v1sc] o `[]`
+`|` Run[id1]
+`|` Rec[l2, l2sc, op, v2, v2sc, id2, s2]
+`|` Var[l2, l2sc] o `[]`
+`|` Var[v2, v2sc] o `[]`
+`|` Run[id2]
 
   --[0 |-> 0, 1 |-> 1, 2 |-> 2, 3 |-> 1]--|>
 
-    GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
-             outvar, outvar_scope, inst_id_invoker, succ1]
-`|` PartnerLink[partner_link_invoker, partner_link_scope_invoker]
-    o (Link[inst_id_invoked] `|` `[]`)
-`|` Variable[invar, invar_scope] o `[]`
-`|` Running[inst_id_invoker]
-`|` <-> `|` succ2//[]
-`|` PartnerLink[partner_link_invoked, partner_link_scope_invoked]
-    o (`[]` `|` ReplyTo[oper, inst_id_invoker])
-`|` Variable[var, var_scope] o `[]`
-`|` Running[inst_id_invoked];
+   <->
+`|` Var[l1, l1sc] o (Link[id2] `|` `[]`)
+`|` Var[v1, v1sc] o `[]`
+`|` Run[id1]
+`|` <-> `|` s2//[]
+`|` Var[l2, l2sc] o (`[]` `|` Reply[op, id1])
+`|` Var[v2, v2sc] o `[]`
+`|` Run[id2];
 
 
 (* The Reply activity inside one instance can synchronize together with
@@ -358,27 +349,23 @@ val rule_invoke_instance = "invoke_instance" :::
  *)
 val rule_reply = "reply" :::
 
-    Reply[partner_link_invoked, partner_link_scope_invoked, oper,
-          var, var_scope, inst_id_invoked, succ1]
-`|` PartnerLink[partner_link_invoked, partner_link_scope_invoked]
-    o (ReplyTo[oper, inst_id_invoker] `|` `[]`)
-`|` Variable[var, var_scope] o `[]`
-`|` Running[inst_id_invoked]
-`|` GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
-            outvar, outvar_scope, inst_id_invoker, succ2]
-`|` Variable[outvar, outvar_scope] o `[]`
-`|` Running[inst_id_invoker]
+    Rep[l1, l1sc, op, v1, v1sc, id1, s1]
+`|` Var[l1, l1sc] o (Reply[op, id2] `|` `[]`)
+`|` Var[v1, v1sc] o `[]`
+`|` Run[id1]
+`|` GetRep[l2, l2sc, op, v2, v2sc, id2, s2]
+`|` Var[v2, v2sc] o `[]`
+`|` Run[id2]
 
   --[0 |-> 0, 1 |-> 1, 2 |-> 1]--|>
 
-    <-> `|` oper//[] `|` succ1//[]
-`|` PartnerLink[partner_link_invoked, partner_link_scope_invoked] o `[]`
-`|` Variable[var, var_scope] o `[]`
-`|` Running[inst_id_invoked]
-`|` <-> `|` partner_link_invoker//[] `|` partner_link_scope_invoker//[]
-`|` succ2//[]
-`|` Variable[outvar, outvar_scope] o `[]`
-`|` Running[inst_id_invoker];
+    <-> `|` op//[] `|` s1//[]
+`|` Var[l1, l1sc] o `[]`
+`|` Var[v1, v1sc] o `[]`
+`|` Run[id1]
+`|` <-> `|` l2//[] `|` l2sc//[] `|` s2//[]
+`|` Var[v2, v2sc] o `[]`
+`|` Run[id2];
 
 
 val rules =
