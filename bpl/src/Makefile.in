@@ -343,13 +343,14 @@ update-dist:
 	if [ -e $(TARBUILDFLAG) ]; then for dist in $(TOOLNAME)-$(VERSION)-*.tar.gz; do \
 	  mv $$dist $(DISTWEBDIR)/ || exit 1; \
 	  mv $(DISTWEBDIR)/srclinks.html $(DISTWEBDIR)/srclinks.old.html || exit 1; \
-	  echo "<tr><td><a href='$$dist'>$$dist</a></td><td>" > $(DISTWEBDIR)/srclinks.html || exit 1; \
-	  du -h $(DISTWEBDIR)/$$dist | cut -f 1 >> $(DISTWEBDIR)/srclinks.html || exit 1; \
-	  echo "</td><td>" >> $(DISTWEBDIR)/srclinks.html || exit 1; \
-	  ls -l --time-style=long-iso $(DISTWEBDIR)/$$dist | cut -d ' ' -f 7-8 >> $(DISTWEBDIR)/srclinks.html || exit 1; \
+	  echo -n "<tr><td><a href='$$dist'>$$dist</a></td><td>" > $(DISTWEBDIR)/srclinks.html || exit 1; \
+	  du -h $(DISTWEBDIR)/$$dist | cut -f 1 | tr -d '\n' >> $(DISTWEBDIR)/srclinks.html || exit 1; \
+	  echo -n "</td><td>" >> $(DISTWEBDIR)/srclinks.html || exit 1; \
+	  ls -l --time-style=long-iso $(DISTWEBDIR)/$$dist | cut -d ' ' -f 7-8 | tr -d '\n' >> $(DISTWEBDIR)/srclinks.html || exit 1; \
 	  echo "</td></tr>" >> $(DISTWEBDIR)/srclinks.html || exit 1; \
-	  cat $(DISTWEBDIR)/srclinks.old.html >> $(DISTWEBDIR)/srclinks.html || exit 1; \
+	  head -n 4 $(DISTWEBDIR)/srclinks.old.html >> $(DISTWEBDIR)/srclinks.html || exit 1; \
 	  rm  $(DISTWEBDIR)/srclinks.old.html; \
+	  echo rm `ls -r $(DISTWEBDIR)/$(TOOLNAME)-$(VERSION)-*.tar.gz | tail -n +6`; \
 	done; else true; fi
 	rm -f $(TARBUILDFLAG)
 # Make a Fedora RPM for SMLNJ
