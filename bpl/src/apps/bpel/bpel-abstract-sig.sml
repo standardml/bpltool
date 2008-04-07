@@ -35,7 +35,7 @@ val Scope        = passive  (Scope       =: 1 --> 1);
  *)
 val Run          = atomic   (Run         -:       1);
 val Invoked      = atomic   (Invoked     -:       1);
-val Stopped      = atomic   (Stopped     -:       1);
+val Stop         = atomic   (Stop        -:       1);
 
 (*val Variables    = active0  (Variables             );*)
 (* The free ports of a variable should be connected
@@ -50,7 +50,7 @@ val Var          = passive  (Var         -:       2);
  *   #2 to the scope port of the node delimiting the variables scope
  *   #3 to the instance identifier
  *)
-val VariableRef  = atomic   (VariableRef -:       3);
+val Ref          = atomic   (Ref         -:       3);
 
 (*val Sequence     = active   (Sequence    -:       1);*)
 
@@ -73,21 +73,22 @@ val True         = atomic0  (True                  );
 val False        = atomic0  (False                 );
 
 (* MIKKEL: CHANGE ARITY *)
-val Ass          = passive  (Ass         -:       2);
-val Copy         = passive0 (Copy                  );
+
+val Ass          = passive  (Ass         -:       6);
+(* val Copy         = passive0 (Copy                  ); *)
 (* The first free port of a To or From node should be connected to a
  * variable name, and the second should be connected to the scope port of
  * the node delimiting its scope. *)
-val To           = atomic   (To          -:       2);
-val From         = atomic   (From        -:       2);
+(* val To           = atomic   (To          -:       2); *)
+(* val From         = atomic   (From        -:       2); *)
 
 (* The free ports of a ToPLink or FromPLink node should be connected
  *
  *   #1 to a partner link name.
  *   #2 to the scope port of the node delimiting the partner link's scope.
  *)
-val ToPLink      = atomic   (ToPLink     -:       2);
-val FromPLink    = atomic   (FromPLink   -:       2);
+(* val ToPLink      = atomic   (ToPLink     -:       2); *)
+(* val FromPLink    = atomic   (FromPLink   -:       2); *)
 
 (* The free ports of an Invoke node should be connected:
  * 
@@ -100,7 +101,8 @@ val FromPLink    = atomic   (FromPLink   -:       2);
  *   #7 to the same scope port as the output variable
  *   #8 to the instance identifier
  *)
-val Invoke       = atomic   (Invoke      -:       9);
+(* ARITY CHANGED *)
+val Inv          = atomic   (Inv         -:       7);
 
 (*val PartnerLinks = active0  (PartnerLinks          );*)
 (* The free ports of a PartnerLink node should be connected:
@@ -108,12 +110,12 @@ val Invoke       = atomic   (Invoke      -:       9);
  *   #1 to the name of the partner link
  *   #2 to the scope port of the node delimiting its scope
  *)
-val PartnerLink  = passive  (PartnerLink -:       2);
+(* val PartnerLink  = passive  (PartnerLink -:       2); *)
 (* The free port of a Message should be connected:
  *
  *   #1 to the name of the operation the message pertains to
  *)
-val Message      = passive  (Message     -:       1);
+val Mess         = passive  (Mess        -:       1);
 (* The free port of a Link should be connected:
  *
  *   #1 to the instance identifier of a partner instance
@@ -124,7 +126,7 @@ val Link         = atomic   (Link        -:       1);
  *   #1 to the name of the operation which can create instances
  *        of the enclosing process
  *)
-val CreateInstance = atomic (CreateInstance -:    1);
+val CrInst       = atomic (CrInst        -:    1);
 (* The free ports of a Receive node should be connected:
  * 
  *   #1 to the name of the partner link
@@ -134,7 +136,7 @@ val CreateInstance = atomic (CreateInstance -:    1);
  *   #5 to the same scope port as the variable
  *   #6 to the instance identifier
  *)
-val Receive      = atomic   (Receive     -:       7);
+val Rec          = atomic   (Rec         -:       7);
 (* The free ports of a Reply node should be connected:
  * 
  *   #1 to the name of the partner link
@@ -144,7 +146,7 @@ val Receive      = atomic   (Receive     -:       7);
  *   #5 to the same scope port as the variable
  *   #6 to the instance identifier of its enclosing instance
  *)
-val Reply        = atomic   (Reply       -:       7);
+val Rep          = atomic   (Rep         -:       7);
 
 (* Since it is possible to copy partner-links, an instance can be
  * invoked by previously unknown partners. When invoked, it therefor
@@ -156,7 +158,7 @@ val Reply        = atomic   (Reply       -:       7);
  *   #1 to the name of the operation
  *   #2 to the instance identifier of the instance to reply to.
  *)
-val ReplyTo      = atomic   (ReplyTo     -:       2);
+val Reply        = atomic   (Reply       -:       2);
 
 (* The free ports of a GetReply node should be connected:
  * 
@@ -167,7 +169,7 @@ val ReplyTo      = atomic   (ReplyTo     -:       2);
  *   #5 to the same scope port as the output variable
  *   #6 to the instance identifier of its enclosing instance
  *)
-val GetReply     = atomic   (GetReply    -:       7);
+val GetRep     = atomic   (GetRep         -:       7);
 
 (* The free port should be connected to the instance identifier of the
  * enclosing instance. *)

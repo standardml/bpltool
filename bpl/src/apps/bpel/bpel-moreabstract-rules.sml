@@ -134,18 +134,18 @@ val rule_exit_stop_inst = "exit stop inst" :::
 
 val rule_invoke = "invoke" :::
 
-    Inv[l1, lsc, op, v, vsc, id1, s] 
+    Inv[l1, lsc, oper, v, vsc, id1, s] 
 `|` Var[l1, lsc] o <-> `|` Var[v, vsc] o `[(*0*)]` `|` Run[id1]
 `|` Process[n][[sc]] o
-    (Var[l2, sc] o (CrInst[op] `|` `[(*1*)]`) `|` `[(*2*) sc]`)
+    (Var[l2, sc] o (CrInst[oper] `|` `[(*1*)]`) `|` `[(*2*) sc]`)
 
   --[0 |-> 0, 1 |-> 1, 2 |-> 2, 3 |-> 0, 4&[id2] |--> 2&[sc]]--|>
 
- -//[id2] o ( <->
+ -//[id2] o ( s//[] 
 `|` Var[l1, lsc] o Link[id2] `|` Var[v, vsc] o `[(*0*)]` `|` Run[id1]
 `|` (Process[n][[sc]] o
-    (Var[l2, sc] o (CrInst[op] `|` `[(*1*)]`) `|` `[(*2*) sc]`)
-`|` Var[l2, id2] o ( Link[id1] `|` Mes[op] o `[(*3*)]` `|` Reply[op, id1])
+    (Var[l2, sc] o (CrInst[oper] `|` `[(*1*)]`) `|` `[(*2*) sc]`)
+`|` Var[l2, id2] o ( Link[id1] `|` Mess[oper] o `[(*3*)]` `|` Reply[oper, id1])
    `|` `[(*4*)id2]` `|` Invoked[id2]));
 
 
@@ -157,12 +157,12 @@ val rule_invoke = "invoke" :::
  *)
 val rule_receive = "receive" :::
 
-    Rec[l, lsc, op, v, vsc, id, s] `|` Var[l, lsc] o (`[]` `|` Mess[op] o `[]`)
+    Rec[l, lsc, oper, v, vsc, id, s] `|` Var[l, lsc] o (`[]` `|` Mess[oper] o `[]`)
 `|` Var[v, vsc] o `[]` `|` Invoked[id]
 
   --[0 |-> 0, 1 |-> 1]--|>
 
-    <-> `|` op//[] `|` s//[] `|` Var[l, lsc] o `[]`
+    <-> `|` oper//[] `|` s//[] `|` Var[l, lsc] o `[]`
 `|` Var[v, vsc] o `[]` `|` Run[id];
 
 
@@ -175,17 +175,17 @@ val rule_receive = "receive" :::
  *)
 val rule_invoke_instance = "invoke_instance" :::
 
-    Inv[l1, l1sc, op, v1 , v1sc, id1, s1]
+    Inv[l1, l1sc, oper, v1 , v1sc, id1, s1]
 `|` Var[l1, l1sc] o (Link[id2] `|` `[]`) `|` Var[v1, v1sc] o `[]` `|` Run[id1]
-`|` Rec[l2, l2sc, op, v2, v2sc, id2, s2] 
+`|` Rec[l2, l2sc, oper, v2, v2sc, id2, s2] 
 `|` Var[l2, l2sc] o `[]` `|` Var[v2, v2sc] o `[]` `|` Run[id2]
 
   --[0 |-> 0, 1 |-> 1, 2 |-> 2, 3 |-> 1]--|>
 
-   <->
+   s1//[]
 `|` Var[l1, l1sc] o (Link[id2] `|` `[]`) `|` Var[v1, v1sc] o `[]` `|` Run[id1]
 `|` <-> `|` s2//[]
-`|` Var[l2, l2sc] o (`[]` `|` Reply[op, id1]) `|` Var[v2, v2sc] o `[]` `|` Run[id2];
+`|` Var[l2, l2sc] o (`[]` `|` Reply[oper, id1]) `|` Var[v2, v2sc] o `[]` `|` Run[id2];
 
 
 (* The Rep activity inside one instance can synchronize together with
@@ -194,14 +194,14 @@ val rule_invoke_instance = "invoke_instance" :::
  *)
 val rule_reply = "reply" :::
 
-    Rep[l1, l1sc, op, v1, v1sc, id1, s1]
-`|` Var[l1, l1sc] o (Reply[op, id2] `|` `[]`) `|` Var[v1, v1sc] o `[]` `|` Run[id1]
-`|` GetRep[l2, l2sc, op, v2, v2sc, id2, s2]
+    Rep[l1, l1sc, oper, v1, v1sc, id1, s1]
+`|` Var[l1, l1sc] o (Reply[oper, id2] `|` `[]`) `|` Var[v1, v1sc] o `[]` `|` Run[id1]
+`|` GetRep[l2, l2sc, oper, v2, v2sc, id2, s2]
 `|` Var[v2, v2sc] o `[]` `|` Run[id2]
 
   --[0 |-> 0, 1 |-> 1, 2 |-> 1]--|>
 
-    <-> `|` op//[] `|` s1//[]
+    <-> `|` oper//[] `|` s1//[]
 `|` Var[l1, l1sc] o `[]` `|` Var[v1, v1sc] o `[]` `|` Run[id1]
 `|` <-> `|` l2//[] 
 `|` l2sc//[] `|` s2//[] `|` Var[v2, v2sc] o `[]` `|` Run[id2];
