@@ -7,7 +7,7 @@
 val rule_sequence_completed = "sequence completed" :::
 
     -//[p] o Next[p, id] o `[]` `|` Run[id] 
---[0 |-> 0]--|>
+  --[0 |-> 0]--|>
     `[]` `|` Run[id];
 
 (* The rules for evaluating an if-then-else statement is as expected. If
@@ -51,9 +51,7 @@ val rule_while_unfold = "while unfold" :::
 val rule_variable_reference = "variable reference" :::
 
     Ref[n, sc, id]  `|` Var[n, sc] o `[]` `|` Run[id]
-
   --[0 |-> 0, 1 |-> 0]--|>
-
     `[]` `|` Var[n, sc] o `[]` `|` Run[id];
 
 
