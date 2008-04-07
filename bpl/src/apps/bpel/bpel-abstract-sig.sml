@@ -43,7 +43,7 @@ val Stopped      = atomic   (Stopped     -:       1);
  *   #1 to its name
  *   #2 to the scope port of the node delimiting its scope
  *)
-val Variable     = passive  (Variable    -:       2);
+val Var          = passive  (Var         -:       2);
 (* The free ports of a variable reference should be connected
  *
  *   #1 to the variable name
@@ -72,7 +72,8 @@ val Else         = passive0 (Else                  );
 val True         = atomic0  (True                  );
 val False        = atomic0  (False                 );
 
-val Assign       = passive  (Assign      -:       2);
+(* MIKKEL: CHANGE ARITY *)
+val Ass          = passive  (Ass         -:       2);
 val Copy         = passive0 (Copy                  );
 (* The first free port of a To or From node should be connected to a
  * variable name, and the second should be connected to the scope port of
