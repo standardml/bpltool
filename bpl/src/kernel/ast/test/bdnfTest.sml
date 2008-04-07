@@ -176,12 +176,12 @@ nameOfException
                                    ; 
 				   raise Assert.Fail
 				     (GeneralFailure 
-					  ("testfile is invalid - the input is not parsable as /\
+					  ("testfile is invalid - the input is not parsable as \
                                                \a bgterm")))
 (*
                           		      raise InvalidTestFile
                                              (test_file,
-                                              "the input is not parsable as /\
+                                              "the input is not parsable as \
                                                \a bgterm"))
 *)
 
@@ -191,12 +191,12 @@ nameOfException
                                    ; 
 				   raise Assert.Fail
 				     (GeneralFailure 
-					  ("testfile is invalid - the input is not parsable as /\
+					  ("testfile is invalid - the input is not parsable as \
                                                \a wellformed bgterm")))
 (*
 				   raise InvalidTestFile
                                              (test_file,
-                                              "the input is not a /\
+                                              "the input is not a \
                                                \well-formed bgterm"))
 *)
                   val result_bgval
@@ -205,12 +205,12 @@ nameOfException
                                    ; 
 				   raise Assert.Fail
 				     (GeneralFailure 
-					  ("testfile is invalid - the result is not parsable as /\
+					  ("testfile is invalid - the result is not parsable as \
                                                \a wellformed bgterm")))
 (*
                                              raise InvalidTestFile
                                              (test_file,
-                                              "the result is not a /\
+                                              "the result is not a \
                                               \well-formed bgterm"))
 *)
 		       

@@ -118,7 +118,7 @@ Bigraph:
       OpBigraph                        ( OpBigraph )
     | SLASH EdgeList DOT Bigraph       ( T.Clo(EdgeList, Bigraph) )
     | QUOT  EdgeList QUOT Bigraph      ( T.Con(EdgeList, Bigraph) )
-    | LBRC  EdgeList RBRC Bigraph      ( T.Abs(EdgeList, Bigraph) )
+    | LANG  EdgeList RANG Bigraph      ( T.Abs(EdgeList, Bigraph) )
 
       (* I was thinking that a wiring should be an AtBigraph, but
          that gives loads of shift/reduce conflicts *)
@@ -177,6 +177,7 @@ Wire:
     | ID SLASH                         ( T.GInt(ID) )
     | LBRC ID RBRC SLASH LBRC ID RBRC  ( T.LRen(ID1,ID2) )
     | LBRC ID RBRC SLASH               ( T.LInt(ID) )
+
 Rule:
       Bigraph ARROW Bigraph            ( (Bigraph1,Bigraph2) )
 

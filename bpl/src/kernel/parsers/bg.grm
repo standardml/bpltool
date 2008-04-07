@@ -116,7 +116,7 @@ fun nset2idlinkset nset =
 	 | MERGEn of int
 	 | LPAREN | RPAREN | LBRACK | RBRACK | LBRACE | RBRACE | GT | LT
 	 | SLASH | OO | XX | PRI | PAR | QUOTE | BQUOTE | COMMA
-         | IDX0 | IDBB0 | ONE | IDW | IDW0 | IDPn of int
+         | IDX0 | IDBB0 | ONE | IDW | IDW0 | IDPn of int | AT | ATAT
 
 %nonterm
   prog of bgterm

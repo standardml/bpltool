@@ -76,7 +76,8 @@ val () =
       ("||", Tokens.PAR ),
       ("|", Tokens.PRI ),
       ("*", Tokens.XX ),
-      ("o", Tokens.OO )
+      ("o", Tokens.OO ),
+      ("@@", Tokens.ATAT )
       ]
 
 val () =
@@ -93,7 +94,8 @@ val () =
       ("/", Tokens.SLASH),
       (",", Tokens.COMMA),
       ("'", Tokens.QUOTE),
-      ("`", Tokens.BQUOTE)
+      ("`", Tokens.BQUOTE),
+      ("@", Tokens.AT)
       ]
 
 local
@@ -118,7 +120,7 @@ val comlevel = ref 0;
 
 %%
 %header (functor BgTermLex(structure Tokens : BgTerm_TOKENS));
-KW_ID   = \* | [|]{1,2} | [a-z][A-Za-z0-9_]* | 1;
+KW_ID   = \* | [|]{1,2} | [a-z][A-Za-z0-9_]* | 1 | @@;
 CTRLID  = [A-Z?!][A-Za-z0-9_]*;
 INT     = (0 | [1-9][0-9]*);
 WHITESPACE = [\ \t\013];
