@@ -16,13 +16,13 @@ val rule_sequence_completed = "sequence completed" :::
  *)
 val rule_if_true = "if true" :::
 
-    If[id, s] o ( Cond o True `|` Then o `[]` `|` Else o `[]`) `|` Run[id]
+    If[id, s] o (Cond o True `|` Then o `[]` `|` Else o `[]`) `|` Run[id]
   --[0 |-> 0]--|>
     `[]` `|` s//[] `|` Run[id];
 
 val rule_if_false = "if false" :::
 
-    If[id, s] o (    Cond o False `|` Then o `[]` `|` Else o `[]`) `|` Run[id]
+    If[id, s] o (Cond o False `|` Then o `[]` `|` Else o `[]`) `|` Run[id]
   --[0 |-> 1]--|>
    `[]` `|` s//[] `|` Run[id];
 
@@ -68,8 +68,7 @@ val rule_assign = "assign copy" :::
 
   --[0 |-> 0, 1 |-> 0]--|>
 
-    <->
-`|` s//[] `|` Var[f, scf] o `[]` `|` Var[t, sct] o `[]` `|` Run[id];
+    s//[] `|` Var[f, scf] o `[]` `|` Var[t, sct] o `[]` `|` Run[id];
 
 (* Scope *)
 (* Removing the scope control and inserting a fresh closed sc link instead 
@@ -97,7 +96,7 @@ val rule_exit_stop_inst = "exit stop inst" :::
 
     Exit[id, s] `|` Run[id]
   ----|>
-    <-> `|` s//[] `|` Stop[id];
+    s//[] `|` Stop[id];
 
 (* we could garbage collect elements connected to Stop as Espen suggests
  * but let us leave it out for now
@@ -160,7 +159,7 @@ val rule_receive = "receive" :::
 
   --[0 |-> 0, 1 |-> 1]--|>
 
-    <-> `|` oper//[] `|` s//[] `|` Var[l, lsc] o `[]`
+    oper//[] `|` s//[] `|` Var[l, lsc] o `[]`
 `|` Var[v, vsc] o `[]` `|` Run[id];
 
 
@@ -182,7 +181,7 @@ val rule_invoke_instance = "invoke_instance" :::
 
    s1//[]
 `|` Var[l1, l1sc] o (Link[id2] `|` `[]`) `|` Var[v1, v1sc] o `[]` `|` Run[id1]
-`|` <-> `|` s2//[]
+`|` s2//[]
 `|` Var[l2, l2sc] o (`[]` `|` Reply[oper, id1]) `|` Var[v2, v2sc] o `[]` `|` Run[id2];
 
 
@@ -199,9 +198,9 @@ val rule_reply = "reply" :::
 
   --[0 |-> 0, 1 |-> 1, 2 |-> 1]--|>
 
-    <-> `|` oper//[] `|` s1//[]
+    oper//[] `|` s1//[]
 `|` Var[l1, l1sc] o `[]` `|` Var[v1, v1sc] o `[]` `|` Run[id1]
-`|` <-> `|` l2//[] 
+`|` l2//[] 
 `|` l2sc//[] `|` s2//[] `|` Var[v2, v2sc] o `[]` `|` Run[id2];
 
 
