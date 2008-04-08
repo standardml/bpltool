@@ -153,6 +153,10 @@ namespace CosmoBiz.EngineLibrary
     {      
       foreach (KeyValuePair<string, object> o in taskletState)
       {
+        if (globals.ContainsKey(o.Key))
+        {
+          globals.Remove(o.Key);
+        }
         globals.Add(o.Key, o.Value);
       }
     }

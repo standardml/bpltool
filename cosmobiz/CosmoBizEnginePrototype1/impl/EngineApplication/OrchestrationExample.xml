@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <orchestration>
-  <tasklet assembly ="HelloWorldTasklet" name="Tasklet1" type="MD">
+  <tasklet assembly ="HWTasklet" name="HWTasklet" type="MD">
     <!--Tasklet1View-->
   </tasklet>
 
@@ -22,7 +22,7 @@
   </tasklet>
 
 
-  <tasklet assembly ="HelloWorldTasklet" name="Tasklet1" type="MD">
+  <tasklet assembly ="HWTasklet" name="HWTasklet" type="MD">
     <!--Tasklet1View-->
   </tasklet>
 
@@ -31,7 +31,7 @@
     <input type="constant" name="test" value="Hello Tasklet"/>
   </tasklet>
 
-  <tasklet assembly ="HelloWorldTasklet" name="Tasklet1" type="MD">
+  <tasklet assembly ="HWTasklet" name="HWTasklet" type="MD">
     <!--Tasklet1View-->
   </tasklet>
   
