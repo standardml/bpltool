@@ -27,7 +27,7 @@
  *   a set of rules of bgvals with instantiations.
  *
  * @author: Ebbe Elsborg (elsborg@itu.dk) et al.
- * @version $LastChangedRevision: 923 $
+ * @version $LastChangedRevision$
  *)
 signature BPL2BGVAL =
 sig

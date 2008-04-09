@@ -22,7 +22,7 @@
  * Scalable Vector Graphics (SVG) using a naïve, but simple to implement
  * algorithm.  It passes over the tree twice: first to calculate widths
  * and heights from the inside out, then to draw the actual elements.
- * @version $LastChangedRevision: 922 $
+ * @version $LastChangedRevision$
  *)
 functor PPSVG (
   structure Name        : NAME

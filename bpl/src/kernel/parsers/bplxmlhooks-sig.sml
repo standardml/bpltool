@@ -19,7 +19,7 @@
  *)
 
 (** Callback functions for SAX parsing a BPL brs expressed in XML.
- * @version $LastChangedRevision: 442 $
+ * @version $LastChangedRevision$
  * Modified: $Date: 2006/09/04 21:48:46 $ by: $Author: hniss $
  *)
 

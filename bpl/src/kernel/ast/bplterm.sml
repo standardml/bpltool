@@ -24,7 +24,7 @@
  *
  * Henning Niss, Ebbe Elsborg et al.
  *
- * @version $LastChangedRevision: 923 $
+ * @version $LastChangedRevision$
  *)
 structure BPLTerm :> BPLTERM =
 struct

@@ -42,7 +42,7 @@
  * information (e.g., source file location for the term).
  *
  * @author Henning Niss, Ebbe Elsborg et al.
- * @version $LastChangedRevision: 930 $
+ * @version $LastChangedRevision$
  *)
 signature BPLTERM = sig
 	(** General identifier type. *)

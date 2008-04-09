@@ -19,7 +19,7 @@
  *)
 
 (** Testing module for bdnf stuff.
- * @version $LastChangedRevision: 953 $
+ * @version $LastChangedRevision$
  *)
 
 functor ReactionTest (

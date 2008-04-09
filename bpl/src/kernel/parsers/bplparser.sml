@@ -20,7 +20,7 @@
 
 (** Glue to combine BPL lexer and parser.
  *  Lexes and parses a .bpl file, outputs (pp) a bplterm ast.
- * @version $LastChangedRevision: 442 $
+ * @version $LastChangedRevision$
  * Modified: $Date: 2006/09/04 21:48:46 $ by: $Author: hniss $
  * Modified by Ebbe Elsborg on December 12 2007.
  *)

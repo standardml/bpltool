@@ -43,7 +43,7 @@
     C113,26 86,33 86,13' />
   <text class='name' x='86' y='10' text-anchor='middle'>y</text>
 </svg>
- * @version $LastChangedRevision: 922 $
+ * @version $LastChangedRevision$
  *)
 signature PPSVG =
 sig
