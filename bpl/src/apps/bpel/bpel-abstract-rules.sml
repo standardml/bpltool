@@ -203,9 +203,7 @@ val rule_reply = "reply" :::
 `|` l2//[] 
 `|` l2sc//[] `|` s2//[] `|` Var[v2, v2sc] o `[]` `|` Run[id2];
 
-
-val rules =
-    mkrules [rule_scope_activation, rule_sequence_completed,
+val rulelist = [rule_scope_activation, rule_sequence_completed,
              rule_if_true, rule_if_false, rule_while_unfold,
              rule_variable_reference,
              rule_assign,
@@ -213,3 +211,4 @@ val rules =
              rule_receive,
              rule_invoke_instance, rule_reply,
              rule_exit_stop_inst];
+val rules = mkrules rulelist;

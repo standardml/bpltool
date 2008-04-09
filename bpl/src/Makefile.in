@@ -350,7 +350,7 @@ update-dist:
 	  echo "</td></tr>" >> $(DISTWEBDIR)/srclinks.html || exit 1; \
 	  head -n 4 $(DISTWEBDIR)/srclinks.old.html >> $(DISTWEBDIR)/srclinks.html || exit 1; \
 	  rm  $(DISTWEBDIR)/srclinks.old.html; \
-	  echo rm `ls -r $(DISTWEBDIR)/$(TOOLNAME)-$(VERSION)-*.tar.gz | tail -n +6`; \
+	  rm `ls -r $(DISTWEBDIR)/$(TOOLNAME)-$(VERSION)-*.tar.gz | tail -n +6`; \
 	done; else true; fi
 	rm -f $(TARBUILDFLAG)
 # Make a Fedora RPM for SMLNJ

@@ -166,8 +166,7 @@ sig
   (** Convert some svg data into a TikZ string representation,
    * prepending it to a string.
    * @params unitsize svg s
-   * @param unitsize  Size, in cms, of the TikZ unit vector
-   *                  (NONE = default 0.01).
+   * @param unitsize  Size, in cms, of the TikZ unit vector.
    * @param svg     The SVG data to print.
    * @param s       The string onto which output is prepended.
    *)
@@ -202,7 +201,7 @@ sig
   (** Prettyprint a bgbdnf, producing TikZ.
    * @params unitsize config b
    * @param unitsize  Size, in cms, of the TikZ unit vector
-   *                  (NONE = default 0.01).
+   *                  (NONE = default 0.02).
    * @param config    Config to use when prettyprinting.
    * @param b         Bigraph to prettyprint.
    *)

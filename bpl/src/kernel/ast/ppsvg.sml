@@ -425,16 +425,16 @@ struct
       end
       | pathToTikZ (ds, _) = raise MoveToExpected ds
     fun svgToTikZ' (Svg svgs) s
-      = "\\tikzstyle nametext=[font=\\footnotesize\\itshape,inner sep=0pt]\n\
-        \\\tikzstyle root=[dashed,rounded corners]\n\
-        \\\tikzstyle binder=[draw,fill=white]\n\
-        \\\tikzstyle node=[draw]\n\
-        \\\tikzstyle nodetext=[font=\\sffamily\\bfseries,text=blue,inner sep=0pt]\n\
-        \\\tikzstyle site=[fill=gray!25,rounded corners]\n\
-        \\\tikzstyle sitetext=[font=\\sffamily,inner sep=0pt]\n\
-        \\\tikzstyle link=[draw]\n\
+      = "\\tikzstyle nametext=[font=\\footnotesize\\itshape,inner sep=0pt]%\n\
+        \\\tikzstyle root=[dashed,rounded corners]%\n\
+        \\\tikzstyle binder=[draw,fill=white]%\n\
+        \\\tikzstyle node=[draw]%\n\
+        \\\tikzstyle nodetext=[font=\\sffamily\\bfseries,text=blue,inner sep=0pt]%\n\
+        \\\tikzstyle site=[fill=gray!25,rounded corners]%\n\
+        \\\tikzstyle sitetext=[font=\\sffamily,inner sep=0pt]%\n\
+        \\\tikzstyle link=[draw]%\n\
         \\\begin{tikzpicture}[x={(" ^ Real.toString unitsize ^
-        "cm,0cm)},y=-" ^ Real.toString unitsize ^ "cm]\n" ^
+        "cm,0cm)},y=-" ^ Real.toString unitsize ^ "cm,baseline=-1cm]\n" ^
         foldr (fn (svg, s) => svgToTikZ' svg s) 
         ("\\end{tikzpicture}\n" ^ s)
         svgs
