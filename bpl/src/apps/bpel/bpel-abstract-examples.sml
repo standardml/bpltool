@@ -2,9 +2,9 @@
 val echo_process = 
 Process[echo_process][[echo_id]]
 o ( -//[s,s'] o (
-       Var[echo_client, echo_id] o CrInst[echo] | Var[x, echo_id] o <->
-     | Rec[echo_client, echo_id, echo, x, echo_id, echo_id,s]
-     | Next[s, echo_id] o (
+         Var[echo_client, echo_id] o CrInst[echo] `|` Var[x, echo_id] o <->
+     `|` Rec[echo_client, echo_id, echo, x, echo_id, echo_id,s]
+     `|` Next[s, echo_id] o (
            Rep[echo_client, echo_id, echo, x, echo_id, echo_id, s'])));
 
 
