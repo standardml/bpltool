@@ -32,12 +32,12 @@ val rule_if_false = "if false" :::
  *)
 val rule_while_unfold = "while unfold" :::
 
-    While[id, s][[p]] o (Cond o `[]` `|` `[p]`) `|` Run[id]
+    While[id, s1][[s2]] o (Cond o `[]` `|` `[s2]`) `|` Run[id]
 
-  --[0 |-> 0, 1&[p1] |--> 1&[p], 2 |-> 0, 3&[p2] |--> 1&[p]]--|>
+  --[0 |-> 0, 1&[s3] |--> 1&[s2], 2 |-> 0, 3&[s2] |--> 1&[s2]]--|>
 
-    If[id, s] o (Cond o `[]` `|` Then o (-//[p1] o ( `[p1]` `|` Next[p1, id] o
-    While[id, s][[p2]]o (Cond o `[]` `|` `[p2]`)))`|` Else o <->) `|` Run[id];
+    If[id, s1] o (Cond o `[]` `|` Then o (-//[s3] o (`[s3]` `|` Next[s3, id] o
+    While[id, s1][[s2]] o (Cond o `[]` `|` `[s2]`))) `|` Else o <->) `|` Run[id];
 
 
 (* Expression evaluation *)
