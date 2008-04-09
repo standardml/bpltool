@@ -457,6 +457,8 @@ val rule_reply = "reply" :::
 || TopRunning[inst_id_top_invoked]
 || GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
             outvar, outvar_scope, inst_id_invoker]
+|| PartnerLink[partner_link_invoker, partner_link_scope_invoker]
+   o (Link[inst_id_invoked] `|` `[]`)
 || Variable[outvar, outvar_scope] o `[]`
 || Running[inst_id_invoker, active_scopes_invoker, inst_id_top_invoker]
 || TopRunning[inst_id_top_invoker]
@@ -468,7 +470,9 @@ val rule_reply = "reply" :::
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_invoked, active_scopes_invoked, inst_id_top_invoked]
 || TopRunning[inst_id_top_invoked]
-|| <-> || partner_link_invoker//[] || partner_link_scope_invoker//[]
+|| <->
+|| PartnerLink[partner_link_invoker, partner_link_scope_invoker]
+   o (Link[inst_id_invoked] `|` `[]`)
 || Variable[outvar, outvar_scope] o `[]`
 || Running[inst_id_invoker, active_scopes_invoker, inst_id_top_invoker]
 || TopRunning[inst_id_top_invoker];

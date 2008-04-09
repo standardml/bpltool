@@ -389,16 +389,20 @@ val rule_reply = "reply" :::
 || Running[inst_id_invoked]
 || GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
             outvar, outvar_scope, inst_id_invoker]
+|| PartnerLink[partner_link_invoker, partner_link_scope_invoker]
+   o (Link[inst_id_invoked] `|` `[]`)
 || Variable[outvar, outvar_scope] o `[]`
 || Running[inst_id_invoker]
 
-  --[0 |-> 0, 1 |-> 1, 2 |-> 1]--|>
+  --[0 |-> 0, 1 |-> 1, 2 |-> 2, 3 |-> 1]--|>
 
    <-> || oper//[]
 || PartnerLink[partner_link_invoked, partner_link_scope_invoked] o `[]`
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_invoked]
-|| <-> || partner_link_invoker//[] || partner_link_scope_invoker//[]
+|| <->
+|| PartnerLink[partner_link_invoker, partner_link_scope_invoker]
+   o (Link[inst_id_invoked] `|` `[]`)
 || Variable[outvar, outvar_scope] o `[]`
 || Running[inst_id_invoker];
 

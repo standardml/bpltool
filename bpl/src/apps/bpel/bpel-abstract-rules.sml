@@ -18,13 +18,13 @@ val rule_if_true = "if true" :::
 
     If[id, s] o (Cond o True `|` Then o `[]` `|` Else o `[]`) `|` Run[id]
   --[0 |-> 0]--|>
-    `[]` `|` s//[] `|` Run[id];
+    s//[] `|` `[]` `|` Run[id];
 
 val rule_if_false = "if false" :::
 
     If[id, s] o (Cond o False `|` Then o `[]` `|` Else o `[]`) `|` Run[id]
   --[0 |-> 1]--|>
-   `[]` `|` s//[] `|` Run[id];
+    s//[] `|` `[]` `|` Run[id];
 
 (* We give semantics to a while-loop in the traditional manner, by
  * unfolding the loop once and using an if-then-else construct with the
@@ -68,7 +68,8 @@ val rule_assign = "assign copy" :::
 
   --[0 |-> 0, 1 |-> 0]--|>
 
-    s//[] `|` Var[f, scf] o `[]` `|` Var[t, sct] o `[]` `|` Run[id];
+    s//[]
+`|` Var[f, scf] o `[]` `|` Var[t, sct] o `[]` `|` Run[id];
 
 (* Scope *)
 (* Removing the scope control and inserting a fresh closed sc link instead 
@@ -131,19 +132,19 @@ val rule_exit_stop_inst = "exit stop inst" :::
 
 val rule_invoke = "invoke" :::
 
-    Inv[l1, lsc, oper, v, vsc, id1, s] 
-`|` Var[l1, lsc] o <-> `|` Var[v, vsc] o `[(*0*)]` `|` Run[id1]
+    Inv[l1, l1sc, oper, v, vsc, id1, s] 
+`|` Var[l1, l1sc] o <-> `|` Var[v, vsc] o `[(*0*)]` `|` Run[id1]
 `|` Process[n][[sc]] o
     (Var[l2, sc] o (CrInst[oper] `|` `[(*1*)]`) `|` `[(*2*) sc]`)
 
   --[0 |-> 0, 1 |-> 1, 2 |-> 2, 3 |-> 0, 4&[id2] |--> 2&[sc]]--|>
 
- -//[id2] o ( s//[] 
-`|` Var[l1, lsc] o Link[id2] `|` Var[v, vsc] o `[(*0*)]` `|` Run[id1]
-`|` (Process[n][[sc]] o
+    s//[] `|` -//[id2] o (
+    Var[l1, l1sc] o Link[id2] `|` Var[v, vsc] o `[(*0*)]` `|` Run[id1]
+`|` Process[n][[sc]] o
     (Var[l2, sc] o (CrInst[oper] `|` `[(*1*)]`) `|` `[(*2*) sc]`)
-`|` Var[l2, id2] o ( Link[id1] `|` Mess[oper] o `[(*3*)]` `|` Reply[oper, id1])
-   `|` `[(*4*)id2]` `|` Invoked[id2]));
+`|` Var[l2, id2] o (Link[id1] `|` Mess[oper] o `[(*3*)]` `|` Reply[oper, id1])
+`|` `[(*4*)id2]` `|` Invoked[id2]);
 
 
 (* The receive rule takes care of activating the instance, by removing a
@@ -154,13 +155,14 @@ val rule_invoke = "invoke" :::
  *)
 val rule_receive = "receive" :::
 
-    Rec[l, lsc, oper, v, vsc, id, s] `|` Var[l, lsc] o (`[]` `|` Mess[oper] o `[]`)
-`|` Var[v, vsc] o `[]` `|` Invoked[id]
+    Rec[l, lsc, oper, v, vsc, id, s]
+`|` Var[l, lsc] o (`[(*0*)]` `|` Mess[oper] o `[(*1*)]`)
+`|` Var[v, vsc] o `[(*2*)]` `|` Invoked[id]
 
   --[0 |-> 0, 1 |-> 1]--|>
 
-    oper//[] `|` s//[] `|` Var[l, lsc] o `[]`
-`|` Var[v, vsc] o `[]` `|` Run[id];
+    oper//[] `|` s//[] `|` Var[l, lsc] o `[(*0*)]`
+`|` Var[v, vsc] o `[(*1*)]` `|` Run[id];
 
 
 (* The invoke instance rule executes an Invoke activity in one instance
@@ -172,14 +174,14 @@ val rule_receive = "receive" :::
  *)
 val rule_invoke_instance = "invoke_instance" :::
 
-    Inv[l1, l1sc, oper, v1 , v1sc, id1, s1]
+    Inv[l1, l1sc, oper, v1, v1sc, id1, s1]
 `|` Var[l1, l1sc] o (Link[id2] `|` `[]`) `|` Var[v1, v1sc] o `[]` `|` Run[id1]
 `|` Rec[l2, l2sc, oper, v2, v2sc, id2, s2] 
 `|` Var[l2, l2sc] o `[]` `|` Var[v2, v2sc] o `[]` `|` Run[id2]
 
   --[0 |-> 0, 1 |-> 1, 2 |-> 2, 3 |-> 1]--|>
 
-   s1//[]
+    s1//[]
 `|` Var[l1, l1sc] o (Link[id2] `|` `[]`) `|` Var[v1, v1sc] o `[]` `|` Run[id1]
 `|` s2//[]
 `|` Var[l2, l2sc] o (`[]` `|` Reply[oper, id1]) `|` Var[v2, v2sc] o `[]` `|` Run[id2];
@@ -194,14 +196,14 @@ val rule_reply = "reply" :::
     Rep[l1, l1sc, oper, v1, v1sc, id1, s1]
 `|` Var[l1, l1sc] o (Reply[oper, id2] `|` `[]`) `|` Var[v1, v1sc] o `[]` `|` Run[id1]
 `|` GetRep[l2, l2sc, oper, v2, v2sc, id2, s2]
-`|` Var[v2, v2sc] o `[]` `|` Run[id2]
+`|` Var[l2, l2sc] o (Link[id1] `|` `[]`) `|` Var[v2, v2sc] o `[]` `|` Run[id2]
 
   --[0 |-> 0, 1 |-> 1, 2 |-> 1]--|>
 
     oper//[] `|` s1//[]
 `|` Var[l1, l1sc] o `[]` `|` Var[v1, v1sc] o `[]` `|` Run[id1]
-`|` l2//[] 
-`|` l2sc//[] `|` s2//[] `|` Var[v2, v2sc] o `[]` `|` Run[id2];
+`|` s2//[]
+`|` Var[l2, l2sc] o (Link[id1] `|` `[]`) `|` Var[v2, v2sc] o `[]` `|` Run[id2];
 
 val rulelist = [rule_scope_activation, rule_sequence_completed,
              rule_if_true, rule_if_false, rule_while_unfold,
