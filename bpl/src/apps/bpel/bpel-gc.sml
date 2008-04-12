@@ -12,13 +12,13 @@ val _ = OS.FileSys.chDir bpel_dir;
 use "figinfo.sml";
 
 Flags.setBoolFlag "/kernel/ast/bgval/pp-simplify" true;
-(* Does not work right now!
 Flags.setBoolFlag "/kernel/ast/bgval/pp-tensor2parallel" true;
-Flags.setBoolFlag "/kernel/ast/bgval/pp-merge2prime" true;*)
+Flags.setBoolFlag "/kernel/ast/bgval/pp-merge2prime" true;
 val _ = use_shorthands true;
 
 
-use "bpel-abstract-strings-gc.sml";
-use "bpel-abstract-sig-gc.sml";
-use "bpel-abstract-rules-gc.sml";
-(* use "bpel-abstract-examples-gc.sml"; *)
+use "bpel-strings-gc.sml";
+use "bpel-sig-gc.sml";
+use "bpel-rules-gc.sml";
+use "bpel-examples-gc.sml";
+
