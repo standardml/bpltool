@@ -1,3 +1,7 @@
+(* !!!!!!!!!!!!! *)
+(* Either we need wide rules for invoke_instance + reply   *)
+(* or we need to mention both Instance-nodes               *)
+
 (*******************************)
 (*        Reaction rules       *)
 (*******************************)
@@ -6,9 +10,9 @@
 
 val rule_sequence_completed = "sequence completed" :::
 
-    -//[p] o Next[p, id] o `[]` `|` Run[id] 
+    -//[p] o Next[p, id] o `[]`
   --[0 |-> 0]--|>
-    `[]` `|` Run[id];
+    id//[] `|` `[]`;
 
 (* The rules for evaluating an if-then-else statement is as expected. If
  * the condition is True we execute the then-branch, otherwise we execute
@@ -16,15 +20,15 @@ val rule_sequence_completed = "sequence completed" :::
  *)
 val rule_if_true = "if true" :::
 
-    If[id, s] o (Cond o True `|` Then o `[]` `|` Else o `[]`) `|` Run[id]
+    If[id, s] o (Cond o True `|` Then o `[]` `|` Else o `[]`)
   --[0 |-> 0]--|>
-    s//[] `|` `[]` `|` Run[id];
+    s//[] `|` id//[] `|` `[]`;
 
 val rule_if_false = "if false" :::
 
-    If[id, s] o (Cond o False `|` Then o `[]` `|` Else o `[]`) `|` Run[id]
+    If[id, s] o (Cond o False `|` Then o `[]` `|` Else o `[]`)
   --[0 |-> 1]--|>
-    s//[] `|` `[]` `|` Run[id];
+    s//[] `|` id//[] `|` `[]`;
 
 (* We give semantics to a while-loop in the traditional manner, by
  * unfolding the loop once and using an if-then-else construct with the
@@ -32,12 +36,12 @@ val rule_if_false = "if false" :::
  *)
 val rule_while_unfold = "while unfold" :::
 
-    While[id, s1][[s2]] o (Cond o `[]` `|` `[s2]`) `|` Run[id]
+    While[id, s1][[s2]] o (Cond o `[]` `|` `[s2]`)
 
   --[0 |-> 0, 1&[s3] |--> 1&[s2], 2 |-> 0, 3&[s2] |--> 1&[s2]]--|>
 
     If[id, s1] o (Cond o `[]` `|` Then o (-//[s3] o (`[s3]` `|` Next[s3, id] o
-    While[id, s1][[s2]] o (Cond o `[]` `|` `[s2]`))) `|` Else o <->) `|` Run[id];
+    While[id, s1][[s2]] o (Cond o `[]` `|` `[s2]`))) `|` Else o <->)
 
 
 (* Expression evaluation *)
@@ -50,9 +54,9 @@ val rule_while_unfold = "while unfold" :::
 
 val rule_variable_reference = "variable reference" :::
 
-    Ref[n, sc, id]  `|` Var[n, sc] o `[]` `|` Run[id]
+    Ref[n, sc, id]  `|` Var[n, sc] o `[]`
   --[0 |-> 0, 1 |-> 0]--|>
-    `[]` `|` Var[n, sc] o `[]` `|` Run[id];
+    id//[] `|` `[]` `|` Var[n, sc] o `[]`;
 
 
 (* Assignment *)
@@ -64,12 +68,12 @@ val rule_variable_reference = "variable reference" :::
 val rule_assign = "assign copy" :::
 
     Ass[id, s, f, scf, t, sct] 
-`|` Var[f, scf] o `[]` `|` Var[t, sct] o `[]` `|` Run[id]
+`|` Var[f, scf] o `[]` `|` Var[t, sct] o `[]`
 
   --[0 |-> 0, 1 |-> 0]--|>
 
-    s//[]
-`|` Var[f, scf] o `[]` `|` Var[t, sct] o `[]` `|` Run[id];
+    s//[] `|` id//[]
+`|` Var[f, scf] o `[]` `|` Var[t, sct] o `[]`;
 
 (* Scope *)
 (* Removing the scope control and inserting a fresh closed sc link instead 
@@ -78,9 +82,9 @@ val rule_assign = "assign copy" :::
 
 val rule_scope_activation = "scope activation" :::
 
-    Scope[id][[sc]] o `[sc]` `|` Run[id]
+    Scope[id][[sc]] o `[sc]`
   --[0 |-> 0]--|>
-    -//[sc] o `[sc]` `|` Run[id];
+    id//[] `|` -//[sc] o `[sc]`;
 
 (* Process termination *)
 (* Processes can terminate in two ways:
@@ -93,11 +97,15 @@ val rule_scope_activation = "scope activation" :::
  * from running to stopped by replacing the Run node 
  * with a Stop node. This prevents other rules from being used
  *)
+
+(* Mikkel: !!!!!!!!!!!!!!!!!!! *)
+(* Do we need to put id as a local name ? *)
 val rule_exit_stop_inst = "exit stop inst" :::
 
-    Exit[id, s] `|` Run[id]
-  ----|>
-    s//[] `|` Stop[id];
+    Instance[n, id] o ( Exit[id, s] `|` `[id]` )
+  --[0 |-> 0]--|>
+    Stopped[n, id] o ( `[id]` ) `|` s//[];
+
 
 (* we could garbage collect elements connected to Stop as Espen suggests
  * but let us leave it out for now
@@ -133,18 +141,19 @@ val rule_exit_stop_inst = "exit stop inst" :::
 val rule_invoke = "invoke" :::
 
     Inv[l1, l1sc, oper, v, vsc, id1, s] 
-`|` Var[l1, l1sc] o <-> `|` Var[v, vsc] o `[(*0*)]` `|` Run[id1]
+`|` Var[l1, l1sc] o <-> `|` Var[v, vsc] o `[(*0*)]`
 `|` Process[n][[sc]] o
     (Var[l2, sc] o (CrInst[oper] `|` `[(*1*)]`) `|` `[(*2*) sc]`)
 
   --[0 |-> 0, 1 |-> 1, 2 |-> 2, 3 |-> 0, 4&[id2] |--> 2&[sc]]--|>
 
     s//[] `|` -//[id2] o (
-    Var[l1, l1sc] o Link[id2] `|` Var[v, vsc] o `[(*0*)]` `|` Run[id1]
+    Var[l1, l1sc] o Link[id2] `|` Var[v, vsc] o `[(*0*)]`
 `|` Process[n][[sc]] o
     (Var[l2, sc] o (CrInst[oper] `|` `[(*1*)]`) `|` `[(*2*) sc]`)
-`|` Var[l2, id2] o (Link[id1] `|` Mess[oper] o `[(*3*)]` `|` Reply[oper, id1])
-`|` `[(*4*)id2]` `|` Invoked[id2]);
+`|` Invoked[n, id2] o (
+        Var[l2, id2] o (Link[id1] `|` Mess[oper] o `[(*3*)]` `|` 
+        Reply[oper, id1]) `|` `[(*4*)id2]`));
 
 
 (* The receive rule takes care of activating the instance, by removing a
@@ -153,16 +162,20 @@ val rule_invoke = "invoke" :::
  * Message in the PartnerLink to the proper input variable, and changing
  * the Invoked node to a Run node.
  *)
+
+(* !!!! Remember Invoked is passive *)
 val rule_receive = "receive" :::
 
-    Rec[l, lsc, oper, v, vsc, id, s]
-`|` Var[l, lsc] o (`[(*0*)]` `|` Mess[oper] o `[(*1*)]`)
-`|` Var[v, vsc] o `[(*2*)]` `|` Invoked[id]
+    Invoked[n, id] o (
+        Rec[l, lsc, oper, v, vsc, id, s]
+    `|` Var[l, lsc] o (`[(*0*)]` `|` Mess[oper] o `[(*1*)]`)
+    `|` Var[v, vsc] o `[(*2*)]` `|` `[]` )
 
-  --[0 |-> 0, 1 |-> 1]--|>
+  --[0 |-> 0, 1 |-> 1, 2 |-> 3]--|>
 
-    oper//[] `|` s//[] `|` Var[l, lsc] o `[(*0*)]`
-`|` Var[v, vsc] o `[(*1*)]` `|` Run[id];
+    Instance[n, id] o (
+        oper//[] `|` s//[] `|` Var[l, lsc] o `[(*0*)]`
+    `|` Var[v, vsc] o `[(*1*)]` `|` `[]`);
 
 
 (* The invoke instance rule executes an Invoke activity in one instance
@@ -172,19 +185,31 @@ val rule_receive = "receive" :::
  * the receiving instance. The content of the output variable is copied
  * to the appropriate variable of the receiving instance.
  *)
+
+(* !!!!!!!!! Need the surrounding Instances or wide rule, the same for rule_reply *) 
 val rule_invoke_instance = "invoke_instance" :::
 
-    Inv[l1, l1sc, oper, v1, v1sc, id1, s1]
-`|` Var[l1, l1sc] o (Link[id2] `|` `[]`) `|` Var[v1, v1sc] o `[]` `|` Run[id1]
-`|` Rec[l2, l2sc, oper, v2, v2sc, id2, s2] 
-`|` Var[l2, l2sc] o `[]` `|` Var[v2, v2sc] o `[]` `|` Run[id2]
+    Instance[n, id1] o (
+        Inv[l1, l1sc, oper, v1, v1sc, id1, s1]
+    `|` Var[l1, l1sc] o (Link[id2] `|` `[]`) `|` Var[v1, v1sc] o `[]`
+    `|` `[]`)
+    `|`
+    Instance[m, id2] o (
+        Rec[l2, l2sc, oper, v2, v2sc, id2, s2] 
+    `|` Var[l2, l2sc] o `[]` `|` Var[v2, v2sc] o `[]` 
+    `|` `[]`)
 
-  --[0 |-> 0, 1 |-> 1, 2 |-> 2, 3 |-> 1]--|>
+  --[0 |-> 0, 1 |-> 1, 2 |-> 2, 3 |-> 3, 4 |-> 1, 5 |-> 5]--|>
 
-    s1//[]
-`|` Var[l1, l1sc] o (Link[id2] `|` `[]`) `|` Var[v1, v1sc] o `[]` `|` Run[id1]
-`|` s2//[]
-`|` Var[l2, l2sc] o (`[]` `|` Reply[oper, id1]) `|` Var[v2, v2sc] o `[]` `|` Run[id2];
+    Instance[n, id1] o (
+        s1//[]
+    `|` Var[l1, l1sc] o (Link[id2] `|` `[]`) `|` Var[v1, v1sc] o `[]` 
+    `|` `[]`)
+    `|`
+    Instance[m, id2] o (
+        s2//[]
+    `|` Var[l2, l2sc] o (`[]` `|` Reply[oper, id1]) `|` Var[v2, v2sc] o `[]`
+    `|` `[]`);
 
 
 (* The Rep activity inside one instance can synchronize together with
@@ -193,17 +218,27 @@ val rule_invoke_instance = "invoke_instance" :::
  *)
 val rule_reply = "reply" :::
 
-    Rep[l1, l1sc, oper, v1, v1sc, id1, s1]
-`|` Var[l1, l1sc] o (Reply[oper, id2] `|` `[]`) `|` Var[v1, v1sc] o `[]` `|` Run[id1]
-`|` GetRep[l2, l2sc, oper, v2, v2sc, id2, s2]
-`|` Var[l2, l2sc] o (Link[id1] `|` `[]`) `|` Var[v2, v2sc] o `[]` `|` Run[id2]
+    Instance[m, id1] o (
+        Rep[l1, l1sc, oper, v1, v1sc, id1, s1]
+    `|` Var[l1, l1sc] o (Reply[oper, id2] `|` `[]`) `|` Var[v1, v1sc] o `[]`
+    `|` `[]`)
+    `|`
+    Instance[m, id2] o (
+        GetRep[l2, l2sc, oper, v2, v2sc, id2, s2]
+    `|` Var[l2, l2sc] o (Link[id1] `|` `[]`) `|` Var[v2, v2sc] o `[]`
+    `|` `[]`)
 
-  --[0 |-> 0, 1 |-> 1, 2 |-> 1]--|>
+  --[0 |-> 0, 1 |-> 1, 2 |-> 2, 3 |-> 3, 4 |-> 1, 5 |-> 5]--|>
 
-    oper//[] `|` s1//[]
-`|` Var[l1, l1sc] o `[]` `|` Var[v1, v1sc] o `[]` `|` Run[id1]
-`|` s2//[]
-`|` Var[l2, l2sc] o (Link[id1] `|` `[]`) `|` Var[v2, v2sc] o `[]` `|` Run[id2];
+    Instance[m, id1] o (
+        oper//[] `|` s1//[] `|` id1//[]
+    `|` Var[l1, l1sc] o `[]` `|` Var[v1, v1sc] o `[]`
+    `|` `[]`)
+    `|`
+    Instance[m, id2] o (
+        s2//[] `|` id2//[]
+    `|` Var[l2, l2sc] o (Link[id1] `|` `[]`) `|` Var[v2, v2sc] o `[]`
+    `|` `[]`);
 
 val rulelist = [rule_scope_activation, rule_sequence_completed,
              rule_if_true, rule_if_false, rule_while_unfold,

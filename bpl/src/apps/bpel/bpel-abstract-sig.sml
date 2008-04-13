@@ -3,6 +3,7 @@
 (* Exit, GetReply, Reply, Receive, Invoke, Assign, If, While *)
 (* have been assigned an additional port, but documentation  *)
 (* have not been updated *)
+(* Mikkel: for assign it is the second port apparently *)
 
 (*******************************)
 (*          Signature          *)
@@ -16,7 +17,7 @@ val Process      = passive  (Process     =: 1 --> 1);
  * The second free port of an instance is the instance identifier
  * which (among other things) is used to determine the scope of
  * variables within the instance to the instance itself. *)
-(*val Instance     = active   (Instance    -:       2);*)
+val Instance     = active   (Instance    -:       2);
 
 (* The binding port of a Scope is used to delimit the scope of
  * variables within the scope to the scope itself.
@@ -33,9 +34,9 @@ val Scope        = passive  (Scope       =: 1 --> 1);
 (* The free port of a 'running', 'invoked', or 'stopped' node should
  * be connected to the scope port of the parent process/instance.
  *)
-val Run          = atomic   (Run         -:       1);
-val Invoked      = atomic   (Invoked     -:       1);
-val Stop         = atomic   (Stop        -:       1);
+(* val Run          = atomic   (Run         -:       1); *)
+val Invoked      = passive   (Invoked     -:       2);
+val Stopped       = passive   (Stopped        -:       2);
 
 (*val Variables    = active0  (Variables             );*)
 (* The free ports of a variable should be connected
