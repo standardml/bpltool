@@ -4,6 +4,10 @@
 (* have been assigned an additional port, but documentation  *)
 (* have not been updated *)
 
+(* !!!!!! *)
+(* And now we add yet another port to the activities *)
+(* Do we need to add a port to Next ? *)
+
 (*******************************)
 (*          Signature          *)
 (*******************************)
@@ -28,7 +32,9 @@ val Scope        = passive  (Scope       =: 1 --> 1);
  * The second free port of an ActiveScope is used to delimit the scope of
  * variables within the scope to the scope itself.
  *)
-(*val ActiveScope  = active   (ActiveScope -:       2);*)
+(* Ports to: Variables, actions, and parent *)
+(* !!!!!!!! Is the link to parent needed ? *)
+val ActScope  = atomic      (ActScope    -:       3);
 
 (* The free port of a 'running', 'invoked', or 'stopped' node should
  * be connected to the scope port of the parent process/instance.
@@ -42,8 +48,9 @@ val Stop         = atomic   (Stop        -:       1);
  *
  *   #1 to its name
  *   #2 to the scope port of the node delimiting its scope
+ *   #3 to GC 
  *)
-val Var          = passive  (Var         -:       2);
+val Var          = passive  (Var         -:       3);
 (* The free ports of a variable reference should be connected
  *
  *   #1 to the variable name
@@ -63,9 +70,9 @@ val Next         = passive  (Next        -:       2);
 
 (*val Flow         = active   (Flow        -:       1);*)
 
-val While        = passive  (While       =: 1 --> 2);
+val While        = passive  (While       =: 1 --> 3);
 
-val If           = active   (If          -:       2);
+val If           = active   (If          -:       3);
 val Cond         = active0  (Cond                  );
 val Then         = passive0 (Then                  );
 val Else         = passive0 (Else                  );
@@ -74,7 +81,7 @@ val False        = atomic0  (False                 );
 
 (* MIKKEL: CHANGE ARITY *)
 
-val Ass          = passive  (Ass         -:       6);
+val Ass          = passive  (Ass         -:       7);
 (* val Copy         = passive0 (Copy                  ); *)
 (* The first free port of a To or From node should be connected to a
  * variable name, and the second should be connected to the scope port of
@@ -102,7 +109,7 @@ val Ass          = passive  (Ass         -:       6);
  *   #8 to the instance identifier
  *)
 (* ARITY CHANGED *)
-val Inv          = atomic   (Inv         -:       7);
+val Inv          = atomic   (Inv         -:       8);
 
 (*val PartnerLinks = active0  (PartnerLinks          );*)
 (* The free ports of a PartnerLink node should be connected:
@@ -136,7 +143,7 @@ val CrInst       = atomic (CrInst        -:    1);
  *   #5 to the same scope port as the variable
  *   #6 to the instance identifier
  *)
-val Rec          = atomic   (Rec         -:       7);
+val Rec          = atomic   (Rec         -:       8);
 (* The free ports of a Reply node should be connected:
  * 
  *   #1 to the name of the partner link
@@ -146,7 +153,7 @@ val Rec          = atomic   (Rec         -:       7);
  *   #5 to the same scope port as the variable
  *   #6 to the instance identifier of its enclosing instance
  *)
-val Rep          = atomic   (Rep         -:       7);
+val Rep          = atomic   (Rep         -:       8);
 
 (* Since it is possible to copy partner-links, an instance can be
  * invoked by previously unknown partners. When invoked, it therefor
@@ -158,7 +165,7 @@ val Rep          = atomic   (Rep         -:       7);
  *   #1 to the name of the operation
  *   #2 to the instance identifier of the instance to reply to.
  *)
-val Reply        = atomic   (Reply       -:       2);
+val Reply        = atomic   (Reply       -:       3);
 
 (* The free ports of a GetReply node should be connected:
  * 
@@ -169,8 +176,8 @@ val Reply        = atomic   (Reply       -:       2);
  *   #5 to the same scope port as the output variable
  *   #6 to the instance identifier of its enclosing instance
  *)
-val GetRep     = atomic   (GetRep         -:       7);
+val GetRep     = atomic   (GetRep         -:       8);
 
 (* The free port should be connected to the instance identifier of the
  * enclosing instance. *)
-val Exit         = atomic   (Exit        -:       2);
+val Exit         = atomic   (Exit        -:       3);

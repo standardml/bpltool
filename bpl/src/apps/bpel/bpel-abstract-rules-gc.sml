@@ -16,15 +16,15 @@ val rule_sequence_completed = "sequence completed" :::
  *)
 val rule_if_true = "if true" :::
 
-    If[id, s] o (Cond o True `|` Then o `[]` `|` Else o `[]`) `|` Run[id]
+    If[id, s, g] o (Cond o True `|` Then o `[]` `|` Else o `[]`) `|` Run[id]
   --[0 |-> 0]--|>
-    s//[] `|` `[]` `|` Run[id];
+    s//[] `|` g//[] `|` `[]` `|` Run[id];
 
 val rule_if_false = "if false" :::
 
-    If[id, s] o (Cond o False `|` Then o `[]` `|` Else o `[]`) `|` Run[id]
+    If[id, s, g] o (Cond o False `|` Then o `[]` `|` Else o `[]`) `|` Run[id]
   --[0 |-> 1]--|>
-    s//[] `|` `[]` `|` Run[id];
+    s//[] `|` g//[] `|` `[]` `|` Run[id];
 
 (* We give semantics to a while-loop in the traditional manner, by
  * unfolding the loop once and using an if-then-else construct with the
@@ -32,12 +32,12 @@ val rule_if_false = "if false" :::
  *)
 val rule_while_unfold = "while unfold" :::
 
-    While[id, s1][[s2]] o (Cond o `[]` `|` `[s2]`) `|` Run[id]
+    While[id, s1, g][[s2]] o (Cond o `[]` `|` `[s2]`) `|` Run[id]
 
   --[0 |-> 0, 1&[s3] |--> 1&[s2], 2 |-> 0, 3&[s2] |--> 1&[s2]]--|>
 
-    If[id, s1] o (Cond o `[]` `|` Then o (-//[s3] o (`[s3]` `|` Next[s3, id] o
-    While[id, s1][[s2]] o (Cond o `[]` `|` `[s2]`))) `|` Else o <->) `|` Run[id];
+    If[id, s1, g] o (Cond o `[]` `|` Then o (-//[s3] o (`[s3]` `|` Next[s3, id] o
+    While[id, s1, g][[s2]] o (Cond o `[]` `|` `[s2]`))) `|` Else o <->) `|` Run[id];
 
 
 (* Expression evaluation *)
@@ -50,9 +50,9 @@ val rule_while_unfold = "while unfold" :::
 
 val rule_variable_reference = "variable reference" :::
 
-    Ref[n, sc, id]  `|` Var[n, sc] o `[]` `|` Run[id]
+    Ref[n, sc, id]  `|` Var[n, sc, g] o `[]` `|` Run[id]
   --[0 |-> 0, 1 |-> 0]--|>
-    `[]` `|` Var[n, sc] o `[]` `|` Run[id];
+    `[]` `|` Var[n, sc, g] o `[]` `|` Run[id];
 
 
 (* Assignment *)
@@ -63,13 +63,13 @@ val rule_variable_reference = "variable reference" :::
 
 val rule_assign = "assign copy" :::
 
-    Ass[id, s, f, scf, t, sct] 
-`|` Var[f, scf] o `[]` `|` Var[t, sct] o `[]` `|` Run[id]
+    Ass[id, s, f, scf, t, sct, g] 
+`|` Var[f, scf, g1] o `[]` `|` Var[t, sct, g2] o `[]` `|` Run[id]
 
   --[0 |-> 0, 1 |-> 0]--|>
 
-    s//[]
-`|` Var[f, scf] o `[]` `|` Var[t, sct] o `[]` `|` Run[id];
+    s//[] `|` g//[]
+`|` Var[f, scf, g1] o `[]` `|` Var[t, sct, g2] o `[]` `|` Run[id];
 
 (* Scope *)
 (* Removing the scope control and inserting a fresh closed sc link instead 
@@ -191,6 +191,7 @@ val rule_invoke_instance = "invoke_instance" :::
  * a GetRep activity inside another instance, thereby copying the
  * content from variable var to variable outvar.
  *)
+(* !!!!!! There seeems to be something wrong with instantiation *)
 val rule_reply = "reply" :::
 
     Rep[l1, l1sc, oper, v1, v1sc, id1, s1]

@@ -4,7 +4,8 @@
 val Process        = "Process"
 val Instance       = "Instance"
 val Scope          = "Scope"
-val ActiveScope    = "ActiveScope"
+(* val ActiveScope    = "ActiveScope" *)
+val ActScope       = "ActScope" 
 val Run            = "Run"
 (* val Running        = "Running" *)
 val Invoked        = "Invoked"
@@ -131,3 +132,6 @@ val v2sc                       = "v2sc"
 val v1                         = "v1"
 val v1sc                       = "v1sc"
 
+val g                          = "g"
+val g1                          = "g1"
+val g2                          = "g2"
