@@ -73,8 +73,6 @@ val Else         = passive0 (Else                  );
 val True         = atomic0  (True                  );
 val False        = atomic0  (False                 );
 
-(* MIKKEL: CHANGE ARITY *)
-
 val Ass          = passive  (Ass         -:       6);
 (* val Copy         = passive0 (Copy                  ); *)
 (* The first free port of a To or From node should be connected to a
@@ -102,7 +100,7 @@ val Ass          = passive  (Ass         -:       6);
  *   #7 to the same scope port as the output variable
  *   #8 to the instance identifier
  *)
-(* ARITY CHANGED *)
+(* ARITY CHANGED BY THOMAS*)
 val Inv          = atomic   (Inv         -:       7);
 
 (*val PartnerLinks = active0  (PartnerLinks          );*)
