@@ -78,3 +78,10 @@ val z                          = "z"
 val v                          = "v"
 val caller                     = "caller"
 val caller_id                  = "caller_id"
+
+val s                          = "s"
+val p                          = "p"
+val s1                         = "s1"
+val s2                         = "s2"
+val s3                         = "s3"
+

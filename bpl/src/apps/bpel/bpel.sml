@@ -20,5 +20,5 @@ val _ = use_shorthands true;
 use "bpel-strings.sml";
 use "bpel-sig.sml";
 use "bpel-rules.sml";
-use "bpel-examples.sml";
+(* use "bpel-examples.sml"; *)
 
