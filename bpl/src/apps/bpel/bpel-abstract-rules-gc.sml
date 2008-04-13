@@ -75,7 +75,8 @@ val rule_assign = "assign copy" :::
 (* Removing the scope control and inserting a fresh closed sc link instead 
  *of the bound link
  *)
-
+(* !!!!!!!!!!! HERTIL *)
+(* Scope skal have 2 bindende porte mere: variables + activites, + 1 free til parent *)
 val rule_scope_activation = "scope activation" :::
 
     Scope[id][[sc]] o `[sc]` `|` Run[id]
