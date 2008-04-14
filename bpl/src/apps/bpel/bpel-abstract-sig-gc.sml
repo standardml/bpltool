@@ -25,16 +25,16 @@ val Process      = passive  (Process     =: 1 --> 1);
 (* The binding port of a Scope is used to delimit the scope of
  * variables within the scope to the scope itself.
  * The free port should be connected to the instance identifier. *)
-val Scope        = passive  (Scope       =: 1 --> 1);
+val Scope        = passive  (Scope       =: 3 --> 2);
 (* Scopes have to be initialized before they can be used. An ActiveScope
  * is a scope that has has been initialized.
  * The first free port should be connected to the instance identifier.
  * The second free port of an ActiveScope is used to delimit the scope of
  * variables within the scope to the scope itself.
  *)
-(* Ports to: Variables, actions, and parent *)
+(* Ports to: Variables, actions, and parent, id *)
 (* !!!!!!!! Is the link to parent needed ? *)
-val ActScope  = atomic      (ActScope    -:       3);
+val ActScope  = atomic      (ActScope    -:       4);
 
 (* The free port of a 'running', 'invoked', or 'stopped' node should
  * be connected to the scope port of the parent process/instance.
@@ -49,8 +49,9 @@ val Stop         = atomic   (Stop        -:       1);
  *   #1 to its name
  *   #2 to the scope port of the node delimiting its scope
  *   #3 to GC 
+ *   #4 to instance id
  *)
-val Var          = passive  (Var         -:       3);
+val Var          = passive  (Var         -:       4);
 (* The free ports of a variable reference should be connected
  *
  *   #1 to the variable name
@@ -165,7 +166,7 @@ val Rep          = atomic   (Rep         -:       8);
  *   #1 to the name of the operation
  *   #2 to the instance identifier of the instance to reply to.
  *)
-val Reply        = atomic   (Reply       -:       3);
+val Reply        = atomic   (Reply       -:       2);
 
 (* The free ports of a GetReply node should be connected:
  * 

@@ -133,5 +133,14 @@ val v1                         = "v1"
 val v1sc                       = "v1sc"
 
 val g                          = "g"
-val g1                          = "g1"
-val g2                          = "g2"
+val g1                         = "g1"
+val g2                         = "g2"
+val g3                         = "g3"
+val g3                         = "g3"
+val g4                         = "g4"
+val g5                         = "g5"
+val g6                         = "g6"
+
+
+val vars                       = "vars"
+val acts                       = "acts"
