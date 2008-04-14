@@ -9,7 +9,8 @@
  * we garbage collect a Sequence if the current instruction is completed.
  * We then make the following instruction the next to be executed.
  *)
-(* !!!!! *)
+(* !!!! For now we just keep the flow *)
+(*
 val rule_flow_completed = "flow completed" :::
 
    -//[s] o Flow[inst_id, s] o `[]`
@@ -17,6 +18,7 @@ val rule_flow_completed = "flow completed" :::
   --[0 |-> 0]--|>
    `[]`
 || Running[inst_id];
+*)
 
 (* Need parentheses in reactum, otherwise all roots are merged into one *)
 val rule_sequence_completed = "sequence completed" :::
@@ -415,7 +417,7 @@ val rule_reply = "reply" :::
 
 
 val rulelist = [rule_scope_activation, (* rule_scope_completed, *)
-                rule_flow_completed, rule_sequence_completed,
+                (* rule_flow_completed, *) rule_sequence_completed,
                 rule_if_true, rule_if_false, rule_while_unfold,
                 rule_variable_reference,
                 rule_assign_copy_var2var,

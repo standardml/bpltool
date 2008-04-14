@@ -1,4 +1,4 @@
-(* Added port(s) to: Next, FLOW, While, If, Assign, *)
+(* Added port(s) to: Next, While, If, Assign, *)
 (* Invoke, Receive, Reply, GetReply, Exit to  *)
 (* encode predecessor/sucessor relationship   *)
 (* FIXE, but documentatio not updated yet     *)
@@ -56,7 +56,7 @@ val Sequence     = active   (Sequence    -:       1);
 (* The free port of a Next node should be connected to the predecessor edge *)
 val Next         = passive  (Next        -:       1);
 
-val Flow         = active   (Flow        -:       2);
+val Flow         = active   (Flow        -:       1);
 
 val While        = passive  (While       =: 1 --> 2 );
 
