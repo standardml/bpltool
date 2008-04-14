@@ -98,13 +98,11 @@ val rule_scope_activation = "scope activation" :::
  * with a Stop node. This prevents other rules from being used
  *)
 
-(* Mikkel: !!!!!!!!!!!!!!!!!!! *)
-(* Do we need to put id as a local name ? *)
 val rule_exit_stop_inst = "exit stop inst" :::
 
-    Instance[n, id] o ( Exit[id, s] `|` `[id]` )
+    Instance[n, id] o ( Exit[id, s] `|` `[]` )
   --[0 |-> 0]--|>
-    Stopped[n, id] o ( `[id]` ) `|` s//[];
+    Stopped[n, id] o ( `[]` ) `|` s//[];
 
 
 (* we could garbage collect elements connected to Stop as Espen suggests
@@ -140,20 +138,27 @@ val rule_exit_stop_inst = "exit stop inst" :::
 
 val rule_invoke = "invoke" :::
 
-    Inv[l1, l1sc, oper, v, vsc, id1, s] 
-`|` Var[l1, l1sc] o <-> `|` Var[v, vsc] o `[(*0*)]`
-`|` Process[n][[sc]] o
-    (Var[l2, sc] o (CrInst[oper] `|` `[(*1*)]`) `|` `[(*2*) sc]`)
+    Instance[n1, id1] o (
+        Inv[l1, l1sc, oper, v, vsc, id1, s] 
+    `|` Var[l1, l1sc] o <-> `|` Var[v, vsc] o `[(*0*)]`
+    `|` `[(*1*)]`)
+    `|`
+    Process[n2][[sc]] o
+        (Var[l2, sc] o (CrInst[oper] `|` `[(*2*)]`) `|` `[(*3*) sc]`)
 
-  --[0 |-> 0, 1 |-> 1, 2 |-> 2, 3 |-> 0, 4&[id2] |--> 2&[sc]]--|>
+  --[0 |-> 0, 1 |-> 1, 2 |-> 2, 3 |-> 3, 4 |-> 0, 5&[id2] |--> 3&[sc]]--|>
 
     s//[] `|` -//[id2] o (
-    Var[l1, l1sc] o Link[id2] `|` Var[v, vsc] o `[(*0*)]`
-`|` Process[n][[sc]] o
-    (Var[l2, sc] o (CrInst[oper] `|` `[(*1*)]`) `|` `[(*2*) sc]`)
-`|` Invoked[n, id2] o (
-        Var[l2, id2] o (Link[id1] `|` Mess[oper] o `[(*3*)]` `|` 
-        Reply[oper, id1]) `|` `[(*4*)id2]`));
+    Instance[n1, id1] o (
+        Var[l1, l1sc] o Link[id2] `|` Var[v, vsc] o `[(*0*)]`
+    `|` `[(*1*)]`)
+    `|`
+    Process[n2][[sc]] o
+        (Var[l2, sc] o (CrInst[oper] `|` `[(*2*)]`) `|` `[(*3*) sc]`)
+    `|`
+    Invoked[n2, id2] o (
+        Var[l2, id2] o (Link[id1] `|` Mess[oper] o `[(*4*)]`
+    `|` Reply[oper, id1]) `|` `[(*5*)id2]`));
 
 
 (* The receive rule takes care of activating the instance, by removing a
@@ -169,13 +174,16 @@ val rule_receive = "receive" :::
     Invoked[n, id] o (
         Rec[l, lsc, oper, v, vsc, id, s]
     `|` Var[l, lsc] o (`[(*0*)]` `|` Mess[oper] o `[(*1*)]`)
-    `|` Var[v, vsc] o `[(*2*)]` `|` `[]` )
+    `|` Var[v, vsc] o `[(*2*)]`
+    `|` `[(*3*)]` )
 
   --[0 |-> 0, 1 |-> 1, 2 |-> 3]--|>
 
     Instance[n, id] o (
-        oper//[] `|` s//[] `|` Var[l, lsc] o `[(*0*)]`
-    `|` Var[v, vsc] o `[(*1*)]` `|` `[]`);
+        oper//[] `|` s//[]
+    `|` Var[l, lsc] o `[(*0*)]`
+    `|` Var[v, vsc] o `[(*1*)]`
+    `|` `[(*2*)]`);
 
 
 (* The invoke instance rule executes an Invoke activity in one instance
