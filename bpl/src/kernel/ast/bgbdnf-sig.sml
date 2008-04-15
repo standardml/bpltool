@@ -72,6 +72,12 @@ sig
    * @exception IrregularBDNF  if b is irregular.
    *)
   val regularize : B bgbdnf -> BR bgbdnf
+  (** Add identity permutations to a BR bgbdnf thus putting it on B bgbdnf form.
+   * (more efficient than <code>make o unmk</code>).
+   * @params b
+   * @param  b the RBDNF to unregularize
+   *)
+  val unregularize : BR bgbdnf -> B bgbdnf
 
   (** Test two BDNFs for equality modulo structural congruence
    *  and internal names.
@@ -197,11 +203,20 @@ sig
    * @return (wirxid, D) representing (a wiring x id_(Xs)) and a DRBDNF.
    *)
   val unmkBR : BR bgbdnf -> {wirxid : bgval, D : DR bgbdnf}
-  (** Deconstruct a D bgbdnf. 
+  (** Deconstruct a BR bgbdnf. 
+   * @return (wir, Xs, D) representing a wiring, nameset list, and a DRBDNF.
+   *)
+  val unmkBR' : BR bgbdnf -> {wir : wiring, Xs : nameset list, D : DR bgbdnf}
+  (** Deconstruct a DR bgbdnf. 
    * @return (ren, Ps) representing a renaming and a tensor product
    * of PBDNF primes.
    *)
   val unmkDR : DR bgbdnf -> {ren : bgval, Ps : P bgbdnf list}
+  (** Deconstruct a DR bgbdnf. 
+   * @return (wir, Ps) representing a wiring and a tensor product
+   * of PBDNF primes.
+   *)
+  val unmkDR' : DR bgbdnf -> {wir : wiring, Ps : P bgbdnf list}
 
   (** Return the contextual information of a bgbdnf. *)
   val info : 'class bgbdnf -> info

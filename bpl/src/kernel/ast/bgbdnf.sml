@@ -417,6 +417,14 @@ struct
           raise MalformedRBDNF 
                   (info B, wrongterm, "matching B in unmkBR")
 
+  fun unmkBR' B = 
+      case match (PCom (PTen [PWir, PPer], PVar)) B of
+        MCom (MTen [MWir w, MPer pi], MVal D) =>
+             {wir = w, Xs = Interface.loc (Permutation.outerface pi), D = D}
+      | wrongterm => 
+          raise MalformedRBDNF 
+                  (info B, wrongterm, "matching B in unmkBR'")
+
   fun unmkDR D =
       case match (PTen [PVar, PTns]) D of
         MTen [MVal ren, MTns Ps] =>
@@ -424,6 +432,14 @@ struct
       | wrongterm => 
           raise MalformedRBDNF 
                   (info D, wrongterm, "matching D in unmkDR")
+
+  fun unmkDR' D =
+      case match (PTen [PWir, PTns]) D of
+        MTen [MWir wir, MTns Ps] =>
+             {wir = wir, Ps = Ps}
+      | wrongterm => 
+          raise MalformedRBDNF 
+                  (info D, wrongterm, "matching D in unmkDR'")
 
   fun innerface (b : 'class bgbdnf) = BgVal.innerface b
 
@@ -1100,6 +1116,14 @@ struct
             
       in
         Com (wirxid, regD D)
+      end
+
+  fun unregularize b =
+      let
+        val {wir = w, Xs, D} = unmkBR' b
+        val {wir = w', Ps}   = unmkDR' D
+      in
+        makeB w Xs (makeD w' Ps (Permutation.id (List.concat (map (Interface.loc o innerface) Ps))))
       end
 
   fun unmk bdnf = bdnf : bgval
