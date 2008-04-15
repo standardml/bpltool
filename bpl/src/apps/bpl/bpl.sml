@@ -205,9 +205,10 @@ end
 open BG.Sugar
 infix 3 oo
 val op oo = General.o
-infix 7 /  infix 7 //
-infixr 6 o
-infixr 5 *  infixr 5 ||  infixr 5 `|`
+infix 8 /  infix 8 //
+infixr 7 o
+infixr 6 `|`
+infixr 5 *  infixr 5 || 
 infix 4 >
 infix 3 &  infix 3 -->  infix 3 ---> infix 3 --   infix 3 --|>  infix 3----|>
 infix 2 =: infix 2 ==:  infix 2 ==  infix 2 -:  infix 2 --:  infix 2 |->  infix 2 |-->  infix 2 :::
