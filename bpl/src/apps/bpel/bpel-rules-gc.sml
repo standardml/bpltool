@@ -297,23 +297,23 @@ o (   GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
       o Link[inst_id_invoked]
    || Variable[invar, invar_scope] o `[]`
    || Running[inst_id_invoker]
-   || (Process[proc_name][[scope]]
-       o (    PartnerLinks
-              o (    PartnerLink[partner_link, scope]
-                     o (CreateInstance[oper] `|` `[]`)
-                 `|` scope//[scope1] o `[scope1]`)
-          `|` scope//[scope2] o `[scope2]`)
-       `|` Instance[proc_name, inst_id_invoked]
-           o (    PartnerLinks
-                  o (    PartnerLink[partner_link, inst_id_invoked]
-                         o (    Link[inst_id_invoker]
-                            `|` Message[oper] o `[]`
-                            `|` ReplyTo[oper, inst_id_invoker])
-                     `|` inst_id_invoked//[inst_id_invoked1]
-                         o `[inst_id_invoked1]`)
-              `|` Invoked[inst_id_invoked]
-              `|` inst_id_invoked//[inst_id_invoked2]
-                  o `[inst_id_invoked2]`)));
+   || Process[proc_name][[scope]]
+      o (    PartnerLinks
+             o (    PartnerLink[partner_link, scope]
+                    o (CreateInstance[oper] `|` `[]`)
+                `|` scope//[scope1] o `[scope1]`)
+         `|` scope//[scope2] o `[scope2]`)
+  `|` Instance[proc_name, inst_id_invoked]
+      o (    PartnerLinks
+             o (    PartnerLink[partner_link, inst_id_invoked]
+                    o (    Link[inst_id_invoker]
+                       `|` Message[oper] o `[]`
+                       `|` ReplyTo[oper, inst_id_invoker])
+                `|` inst_id_invoked//[inst_id_invoked1]
+                    o `[inst_id_invoked1]`)
+         `|` Invoked[inst_id_invoked]
+         `|` inst_id_invoked//[inst_id_invoked2]
+             o `[inst_id_invoked2]`));
 
 
 (* The receive rule takes care of activating the instance, by removing a

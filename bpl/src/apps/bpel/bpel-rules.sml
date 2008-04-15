@@ -321,7 +321,7 @@ o (   GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
                     o `[inst_id_invoked1]`)
          `|` Invoked[inst_id_invoked]
          `|` inst_id_invoked//[inst_id_invoked2]
-             o `[inst_id_invoked2]`)));
+             o `[inst_id_invoked2]`));
 
 
 (* The receive rule takes care of activating the instance, by removing a
