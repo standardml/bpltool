@@ -14,7 +14,7 @@
 (* The binding port of a Process is used to delimit the scope of
  * variables within the process to the process itself.
  * The free port should be connected to name of the process. *)
-val Process      = passive  (Process     =: 1 --> 1);
+val Process      = passive  (Process     =: 3 --> 2);
 
 (* The first free port should be connected to name of the process.
  * The second free port of an instance is the instance identifier

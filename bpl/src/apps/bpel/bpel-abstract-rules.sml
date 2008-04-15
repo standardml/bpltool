@@ -1,7 +1,3 @@
-(* !!!!!!!!!!!!! *)
-(* Either we need wide rules for invoke_instance + reply   *)
-(* or we need to mention both Instance-nodes               *)
-
 (*******************************)
 (*        Reaction rules       *)
 (*******************************)

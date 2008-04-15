@@ -1,6 +1,20 @@
 (* Formalization of a subset of BPEL using Binding Bigraphical Reactive
  * Systems in BPLtool.
  *
+ * This variant
+ * - is a flattened (more abstract) version of the one in bpel-gc.sml.
+ * - has garbage collection.
+ * - has a status node just beneath each Instance node.
+ * - encodes part of the place graph in the concrete semantics as links
+ *   to enable garbage collection:
+ *   there is an ActScope node for each active scope (including instances)
+ *   which has four free ports which are connected as follows:
+ *     1. to the variables of that scope
+ *     2. to the child activities (including scopes) of the scope
+ *     3. to the parent scope's ActScope child-port
+ *     4. to the instance id
+ *   This allows us to garbage collect an instance step-wise and depth first.
+ *
  * NB! Uses the SML/NJ version of the BPLtool command line.
  *)
 

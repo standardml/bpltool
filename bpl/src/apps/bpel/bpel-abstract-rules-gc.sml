@@ -79,17 +79,19 @@ val rule_assign = "assign copy" :::
 (* Scope skal have 2 bindende porte mere: variables + activites, + 1 free til parent *)
 val rule_scope_activation = "scope activation" :::
 
-    Scope[id, g][[sc], [vars], [acts]] o (`[vars]` `|` `[sc, acts]`) `|` Run[id]
+    Scope[id, g][[sc], [vars], [acts]] o (`[sc, vars]` `|` `[sc, acts]`) `|` Run[id]
   --[0 |-> 0, 1 |-> 1]--|>
     -//[sc,vars,acts] o (
-        ActScope[vars, acts, g, id] `|` `[vars]` `|` `[sc, acts]`) `|` Run[id];
+        ActScope[vars, acts, g, id] `|` `[sc, vars]` `|` `[sc, acts]`) `|` Run[id];
 
+(* Scopes can also be activated when an instance has just been created, since
+ * the initial receive might be nested within scopes. *)
 val rule_scope_activation2 = "scope activation2" :::
 
-    Scope[id, g][[sc], [vars], [acts]] o (`[vars]` `|` `[sc, acts]`) `|` Invoked[id]
+    Scope[id, g][[sc], [vars], [acts]] o (`[sc, vars]` `|` `[sc, acts]`) `|` Invoked[id]
   --[0 |-> 0, 1 |-> 1]--|>
     -//[sc,vars,acts] o (
-        ActScope[vars, acts, g, id] `|` `[vars]` `|` `[sc, acts]`) `|` Invoked[id];
+        ActScope[vars, acts, g, id] `|` `[sc, vars]` `|` `[sc, acts]`) `|` Invoked[id];
 
 (* Remove one variable (no more actions) *)
 val rule_scope_completed = "scope completed" :::
@@ -123,11 +125,6 @@ val rule_exit_stop_inst = "exit stop inst" :::
   ----|>
     s//[] `|` g//[] `|` Stop[id];
 
-(* we could garbage collect elements connected to Stop as Espen suggests
- * but let us leave it out for now
- * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-*)
-
 
 val rule_gc_scope = "gc scope" :::
 
@@ -135,18 +132,17 @@ val rule_gc_scope = "gc scope" :::
   ----|>
     g//[] `|` Stop[id];
 
-
 val rule_gc_actscope = "gc ActScope" :::
 
     ActScope[vars, acts, g, id] `|` Stop[id]
   ----|>
     vars//[] `|` acts//[] `|` g//[] `|` Stop[id];
 
-(* !!! GC of Run and Invoked nodes cannot happen ? *)
+(* GC of Run and Invoked nodes cannot happen *)
 
 val rule_gc_var = "gc var" :::
 
-    Var[n, sc, g, id] `|`Stop[id]
+    Var[n, sc, g, id] `|` Stop[id]
   ----|>
     n//[] `|` sc//[] `|` g//[] `|` Stop[id];
 
@@ -177,36 +173,34 @@ val rule_gc_ass = "gc ass" :::
   ----|>
     s//[] `|` f//[] `|` scf//[] `|` t//[] `|` sct//[] `|` g//[] `|` Stop[id];
 
-(* !!!!! MISSING GC Invoke 
 val rule_gc_inv = "gc inv" :::
-*)
+    Inv[l, lsc, oper, v, vsc, id, s, g] `|` Stop[id]
+  ----|>
+    l//[] `|` lsc//[] `|` oper//[] `|` v//[] `|` vsc//[] `|` s//[] `|` g//[] `|` Stop[id];
 
 val rule_gc_rec = "gc rec" :::
     Rec[l, lsc, oper, v, vsc, id, s, g] `|` Stop[id]
   ----|>
     l//[] `|` lsc//[] `|` oper//[] `|` v//[] `|` vsc//[] `|` s//[] `|` g//[] `|` Stop[id];
 
-
 val rule_gc_rep = "gc rep" :::
     Rep[l1, l1sc, oper, v1, v1sc, id, s1, g1] `|` Stop[id]
   ----|>
     l1//[] `|` l1sc//[] `|` oper//[] `|` v1//[] `|` v1sc//[] `|` s1//[] `|` g1//[] `|` Stop[id];
-
 
 val rule_gc_getrep = "gc getrep" :::
     GetRep[l2, l2sc, oper, v2, v2sc, id, s2, g4] `|` Stop[id]
   ----|>
     l2//[] `|` l2sc//[] `|` oper//[] `|` v2//[] `|` v2sc//[] `|` s2//[] `|` g4//[] `|` Stop[id];
 
-
 val rule_gc_exit = "gc exit" :::
     Exit[id, s, g] `|` Stop[id]
   ----|>
     s//[] `|`  g//[] `|` Stop[id];
 
-
+(* FIXME this will not work as the id might be connected to the partnerlink of
+ * another instance*)
 val rule_gc_stop = "gc stop" :::
-
     -//[id] o Stop[id]
   ----|>
     <->;
@@ -239,7 +233,6 @@ val rule_gc_stop = "gc stop" :::
  *)
 
 (* !!!!!! UPDATE PROCESS WITH MORE PORTS SIMILAR TO A SCOPE !!!! *)
-(*
 val rule_invoke = "invoke" :::
 
     Inv[l1, l1sc, oper, v, vsc, id1, s, g] 
@@ -255,7 +248,7 @@ val rule_invoke = "invoke" :::
     (Var[l2, sc] o (CrInst[oper] `|` `[(*1*)]`) `|` `[(*2*) sc]`)
 `|` Var[l2, id2] o (Link[id1] `|` Mess[oper] o `[(*3*)]` `|` Reply[oper, id1])
 `|` `[(*4*)id2]` `|` Invoked[id2]);
-*)
+
 
 
 (* The receive rule takes care of activating the instance, by removing a
