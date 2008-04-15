@@ -26,7 +26,7 @@ val rule_sequence_completed = "sequence completed" :::
    Sequence[inst_id] o (`[]` `|` -//[p] o Next[p] o `[]`)
 || Running[inst_id]
   --[0 |-> 0, 1 |-> 1]--|>
-   (`[]` `|` `[]`)
+   `[]` `|` `[]`
 || Running[inst_id];
 
 (* The rules for evaluating an if-then-else statement is as expected. If
@@ -40,7 +40,7 @@ val rule_if_true = "if true" :::
                      `|` Else o `[]`)
 || Running[inst_id]
   --[0 |-> 0]--|>
-   (s//[] `|` `[]`)
+   s//[] `|` `[]`
 || Running[inst_id];
 
 
@@ -51,7 +51,7 @@ val rule_if_false = "if false" :::
                   `|` Else o `[]`)
 || Running[inst_id]
   --[0 |-> 1]--|>
-   (s//[] `|` `[]`)
+   s//[] `|` `[]`
 || Running[inst_id];
 
 (* We give semantics to a while-loop in the traditional manner, by
@@ -119,7 +119,7 @@ val rule_assign_copy_var2var = "assign copy var2var" :::
 
   --[0 |-> 0, 1 |-> 0]--|>
 
-   (s//[] `|` <->)
+   s//[] `|` <->
 || Variable[f, scope1] o `[]`
 || Variable[t, scope2] o `[]`
 || Running[inst_id];
@@ -134,7 +134,7 @@ val rule_assign_copy_var2plink = "assign copy var2plink" :::
 
   --[0 |-> 0, 1 |-> 0]--|>
 
-   (s//[] `|` <->)
+   s//[] `|` <->
 || Variable[f, scope1] o `[]`
 || PartnerLink[t, scope2] o `[]`
 || Running[inst_id];
@@ -149,7 +149,7 @@ val rule_assign_copy_plink2var = "assign copy plink2var" :::
 
   --[0 |-> 0, 1 |-> 0]--|>
 
-   (s//[] `|` <->)
+   s//[] `|` <->
 || PartnerLink[f, scope1] o `[]`
 || Variable[t, scope2] o `[]`
 || Running[inst_id];
@@ -164,7 +164,7 @@ val rule_assign_copy_plink2plink = "assign copy plink2plink" :::
 
   --[0 |-> 0, 1 |-> 0]--|>
 
-   (s//[] `|` <->)
+   s//[] `|` <->
 || PartnerLink[f, scope1] o `[]`
 || PartnerLink[t, scope2] o `[]`
 || Running[inst_id];
@@ -239,7 +239,7 @@ val rule_exit_stop_inst = "exit stop inst" :::
    Exit[inst_id, s]
 || Running[inst_id]
   ----|>
-   (s//[] `|` <->)
+   s//[] `|` <->
 || Stopped[inst_id];
 
 (* Once an Instance node contains a Stopped node we garbage collect the
@@ -305,23 +305,23 @@ o (   GetReply[partner_link_invoker, partner_link_scope_invoker, oper,
       o Link[inst_id_invoked]
    || Variable[invar, invar_scope] o `[]`
    || Running[inst_id_invoker]
-   || (Process[proc_name][[scope]]
-       o (    PartnerLinks
-              o (    PartnerLink[partner_link, scope]
-                     o (CreateInstance[oper] `|` `[]`)
-                 `|` scope//[scope1] o `[scope1]`)
-          `|` scope//[scope2] o `[scope2]`)
-       `|` Instance[proc_name, inst_id_invoked]
-           o (    PartnerLinks
-                  o (    PartnerLink[partner_link, inst_id_invoked]
-                         o (    Link[inst_id_invoker]
-                            `|` Message[oper] o `[]`
-                            `|` ReplyTo[oper, inst_id_invoker])
-                     `|` inst_id_invoked//[inst_id_invoked1]
-                         o `[inst_id_invoked1]`)
-              `|` Invoked[inst_id_invoked]
-              `|` inst_id_invoked//[inst_id_invoked2]
-                  o `[inst_id_invoked2]`)));
+   || Process[proc_name][[scope]]
+      o (    PartnerLinks
+             o (    PartnerLink[partner_link, scope]
+                    o (CreateInstance[oper] `|` `[]`)
+                `|` scope//[scope1] o `[scope1]`)
+         `|` scope//[scope2] o `[scope2]`)
+  `|` Instance[proc_name, inst_id_invoked]
+      o (    PartnerLinks
+             o (    PartnerLink[partner_link, inst_id_invoked]
+                    o (    Link[inst_id_invoker]
+                       `|` Message[oper] o `[]`
+                       `|` ReplyTo[oper, inst_id_invoker])
+                `|` inst_id_invoked//[inst_id_invoked1]
+                    o `[inst_id_invoked1]`)
+         `|` Invoked[inst_id_invoked]
+         `|` inst_id_invoked//[inst_id_invoked2]
+             o `[inst_id_invoked2]`)));
 
 
 (* The receive rule takes care of activating the instance, by removing a
@@ -340,7 +340,7 @@ val rule_receive = "receive" :::
 
   --[0 |-> 0, 1 |-> 1]--|>
 
-   (s//[] `|` <->) || oper//[] 
+   oper//[] `|` s//[] `|` <->
 || PartnerLink[partner_link, partner_link_scope]
    o `[]`
 || Variable[var, var_scope] o `[]`
@@ -376,7 +376,7 @@ val rule_invoke_instance = "invoke_instance" :::
    o (Link[inst_id_invoked] `|` `[]`)
 || Variable[invar, invar_scope] o `[]`
 || Running[inst_id_invoker]
-|| (s2//[] `|` <->)
+|| s2//[] `|` <->
 || PartnerLink[partner_link_invoked, partner_link_scope_invoked]
    o (`[]` `|` ReplyTo[oper, inst_id_invoker])
 || Variable[var, var_scope] o `[]`
@@ -408,7 +408,7 @@ val rule_reply = "reply" :::
 || PartnerLink[partner_link_invoked, partner_link_scope_invoked] o `[]`
 || Variable[var, var_scope] o `[]`
 || Running[inst_id_invoked]
-|| (s2//[] `|` <->)
+|| s2//[] `|` <->
 || PartnerLink[partner_link_invoker, partner_link_scope_invoker]
    o (Link[inst_id_invoked] `|` `[]`)
 || Variable[outvar, outvar_scope] o `[]`
