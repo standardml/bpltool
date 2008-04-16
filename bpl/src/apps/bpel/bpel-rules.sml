@@ -4,23 +4,10 @@
 
 (* Structural activities *)
 
-(* When a Flow is completed (i.e. there are no more instructions in the
- * flow to be executed) we garbage collect the flow.  In the same manner,
- * we garbage collect a Sequence if the current instruction is completed.
- * We then make the following instruction the next to be executed.
+(* We garbage collect a Sequence when the current instruction is
+ * completed.  We then make the following instruction the next to
+ * be executed.
  *)
-(* !!!! For now we just keep the flow *)
-(*
-val rule_flow_completed = "flow completed" :::
-
-   -//[s] o Flow[inst_id, s] o `[]`
-|| Running[inst_id]
-  --[0 |-> 0]--|>
-   `[]`
-|| Running[inst_id];
-*)
-
-(* Need parentheses in reactum, otherwise all roots are merged into one *)
 val rule_sequence_completed = "sequence completed" :::
 
    Sequence[inst_id] o (`[]` `|` -//[p] o Next[p] o `[]`)
@@ -193,40 +180,12 @@ val rule_scope_activation2 = "scope activation 2" :::
    -//[scope] o (ActiveScope[inst_id, scope] o `[scope]`)
 || Invoked[inst_id];
 
-(* When we are finished executing the body of the scope we remove the
- * scope, including its variables, partner links, and its associated
- * "scope"-edge. *)
-(*
-val rule_scope_completed = "scope completed" :::
-
-   ActiveScope[inst_id, scope]
-   o (Variables o `[]`  `|`  PartnerLinks o `[]`)
-|| Running[inst_id]
-  ----|>
-   <-> || scope//[]
-|| Running[inst_id];
-*)
-
-
 
 (* Process termination *)
 (* Processes can terminate in two ways:
  * 1) normally, i.e. when no more activities remain, or 2) abnormally by
  * executing an Exit activity.
  *)
-
-(* In the first case, we simply remove the instance in the same way as
- * for scopes.
- *)
-(*
-val rule_inst_completed = "inst completed" :::
-
-Instance[proc_name, inst_id]
-o (Variables o `[]`  `|`  PartnerLinks o `[]`  `|`  Running[inst_id])
-  ----|>
-<-> || proc_name//[] || inst_id//[];
-*)
-
 
 (* In the case of an Exit activity we change the status of the instance
  * from running to stopped by replacing the Running node inside the
@@ -241,19 +200,6 @@ val rule_exit_stop_inst = "exit stop inst" :::
   ----|>
    s//[] `|` <->
 || Stopped[inst_id];
-
-(* Once an Instance node contains a Stopped node we garbage collect the
- * instance together with all its remaining content.
- *)
-(*
-val rule_exit_remove_inst = "exit remove inst" :::
-
-Instance[proc_name, inst_id]
-o (Stopped[inst_id] `|` `[]`)
-  ----|>
-<-> || proc_name//[] || inst_id//[];
-*)
-
 
 (* Process communication *)
 (* Our formalization includes synchronous request-response communication,
@@ -416,8 +362,7 @@ val rule_reply = "reply" :::
 
 
 
-val rulelist = [rule_scope_activation, (* rule_scope_completed, *)
-                (* rule_flow_completed, *) rule_sequence_completed,
+val rulelist = [rule_scope_activation, rule_sequence_completed,
                 rule_if_true, rule_if_false, rule_while_unfold,
                 rule_variable_reference,
                 rule_assign_copy_var2var,
@@ -427,6 +372,5 @@ val rulelist = [rule_scope_activation, (* rule_scope_completed, *)
                 rule_invoke,
                 rule_receive,
                 rule_invoke_instance, rule_reply,
-                rule_exit_stop_inst (*, rule_exit_remove_inst, *)
-                (* rule_inst_completed *)]
+                rule_exit_stop_inst]
 val rules = mkrules rulelist; 

@@ -190,7 +190,9 @@ val rule_receive = "receive" :::
  * to the appropriate variable of the receiving instance.
  *)
 
-(* !!!!!!!!! Need the surrounding Instances or wide rule, the same for rule_reply *) 
+(* !!!!!!!!! Need the surrounding Instances or wide rule, the same for 
+ * rule_reply 
+ *) 
 val rule_invoke_instance = "invoke_instance" :::
 
     Instance[n, id1] o (
