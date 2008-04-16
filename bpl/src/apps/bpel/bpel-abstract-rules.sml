@@ -37,7 +37,7 @@ val rule_while_unfold = "while unfold" :::
   --[0 |-> 0, 1&[s3] |--> 1&[s2], 2 |-> 0, 3&[s2] |--> 1&[s2]]--|>
 
     If[id, s1] o (Cond o `[]` `|` Then o (-//[s3] o (`[s3]` `|` Next[s3, id] o
-    While[id, s1][[s2]] o (Cond o `[]` `|` `[s2]`))) `|` Else o <->)
+    While[id, s1][[s2]] o (Cond o `[]` `|` `[s2]`))) `|` Else o <->);
 
 
 (* Expression evaluation *)
@@ -75,12 +75,17 @@ val rule_assign = "assign copy" :::
 (* Removing the scope control and inserting a fresh closed sc link instead 
  *of the bound link
  *)
-
 val rule_scope_activation = "scope activation" :::
 
     Scope[id][[sc]] o `[sc]`
   --[0 |-> 0]--|>
     id//[] `|` -//[sc] o `[sc]`;
+(* Scopes in newly created instances are also allowed to be activated. *)
+val rule_scope_activation2 = "scope activation 2" :::
+
+    Invoked[n, id] o Scope[id][[sc]] o `[sc]`
+  --[0 |-> 0]--|>
+    Invoked[n, id] o -//[sc] o `[sc]`;
 
 (* Process termination *)
 (* Processes can terminate in two ways:
@@ -101,9 +106,6 @@ val rule_exit_stop_inst = "exit stop inst" :::
     Stopped[n, id] o ( `[]` ) `|` s//[];
 
 
-(* we could garbage collect elements connected to Stop as Espen suggests
- * but let us leave it out for now
-*)
 
 (* Process communication *)
 (* Our formalization includes synchronous request-response communication,
@@ -163,8 +165,7 @@ val rule_invoke = "invoke" :::
  * Message in the PartnerLink to the proper input variable, and changing
  * the Invoked node to a Run node.
  *)
-
-(* !!!! Remember Invoked is passive *)
+(* NB: Remember Invoked is passive *)
 val rule_receive = "receive" :::
 
     Invoked[n, id] o (
@@ -189,10 +190,6 @@ val rule_receive = "receive" :::
  * the receiving instance. The content of the output variable is copied
  * to the appropriate variable of the receiving instance.
  *)
-
-(* !!!!!!!!! Need the surrounding Instances or wide rule, the same for 
- * rule_reply 
- *) 
 val rule_invoke_instance = "invoke_instance" :::
 
     Instance[n, id1] o (
@@ -246,12 +243,13 @@ val rule_reply = "reply" :::
     `|` Var[l2, l2sc] o (Link[id1] `|` `[]`) `|` Var[v2, v2sc] o `[]`
     `|` `[]`);
 
-val rulelist = [rule_scope_activation, rule_sequence_completed,
-             rule_if_true, rule_if_false, rule_while_unfold,
-             rule_variable_reference,
-             rule_assign,
-             rule_invoke,
-             rule_receive,
-             rule_invoke_instance, rule_reply,
-             rule_exit_stop_inst];
+val rulelist = [rule_scope_activation, rule_scope_activation2,
+                rule_sequence_completed,
+                rule_if_true, rule_if_false, rule_while_unfold,
+                rule_variable_reference,
+                rule_assign,
+                rule_invoke,
+                rule_receive,
+                rule_invoke_instance, rule_reply,
+                rule_exit_stop_inst];
 val rules = mkrules rulelist;

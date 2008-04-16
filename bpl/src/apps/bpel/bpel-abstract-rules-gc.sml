@@ -75,30 +75,27 @@ val rule_assign = "assign copy" :::
 (* Removing the scope control and inserting a fresh closed sc link instead 
  *of the bound link
  *)
-(* !!!!!!!!!!! *)
-(* Scope skal have 2 bindende porte mere: variables + activites, + 1 free til parent *)
 val rule_scope_activation = "scope activation" :::
 
-    Scope[id, g][[sc], [vars], [acts]] o (`[sc, vars]` `|` `[sc, acts]`) `|` Run[id]
+    Scope[id, g][[sc], [acts]] o (`[sc]` `|` `[sc, acts]`) `|` Run[id]
   --[0 |-> 0, 1 |-> 1]--|>
-    -//[sc,vars,acts] o (
-        ActScope[vars, acts, g, id] `|` `[sc, vars]` `|` `[sc, acts]`) `|` Run[id];
-
+    -//[sc,acts] o (
+        ActScope[sc, acts, g, id] `|` `[sc]` `|` `[sc, acts]`) `|` Run[id];
 (* Scopes can also be activated when an instance has just been created, since
  * the initial receive might be nested within scopes. *)
 val rule_scope_activation2 = "scope activation2" :::
 
-    Scope[id, g][[sc], [vars], [acts]] o (`[sc, vars]` `|` `[sc, acts]`) `|` Invoked[id]
+    Scope[id, g][[sc], [acts]] o (`[sc]` `|` `[sc, acts]`) `|` Invoked[id]
   --[0 |-> 0, 1 |-> 1]--|>
-    -//[sc,vars,acts] o (
-        ActScope[vars, acts, g, id] `|` `[sc, vars]` `|` `[sc, acts]`) `|` Invoked[id];
+    -//[sc,acts] o (
+        ActScope[sc, acts, g, id] `|` `[sc]` `|` `[sc, acts]`) `|` Invoked[id];
 
 (* Remove one variable (no more actions) *)
 val rule_scope_completed = "scope completed" :::
 
-    (-//[acts] o ActScope[vars, acts, g, id]) `|` Var[f, sc, vars, id]
+    -//[sc] o (ActScope[sc, acts, g, id] `|` Var[f, sc, vars, id])
   ----|>
-    (-//[acts] o ActScope[vars, acts, g, id]) `|` f//[] `|` sc//[];
+    -//[sc] o ActScope[sc, acts, g, id] `|` f//[];
 
 (* Remove ActScope (no more actions and variables *) 
 val rule_scope_completed2 = "scope completed2" :::
@@ -125,7 +122,6 @@ val rule_exit_stop_inst = "exit stop inst" :::
   ----|>
     s//[] `|` g//[] `|` Stop[id];
 
-
 val rule_gc_scope = "gc scope" :::
 
     Scope[id, g][[sc], [vars], [acts]] o `[vars, sc, acts]` `|` Stop[id]
@@ -145,7 +141,6 @@ val rule_gc_var = "gc var" :::
     Var[n, sc, g, id] `|` Stop[id]
   ----|>
     n//[] `|` sc//[] `|` g//[] `|` Stop[id];
-
 
 val rule_gc_ref = "gc ref" :::
 
@@ -204,6 +199,11 @@ val rule_gc_stop = "gc stop" :::
     -//[id] o Stop[id]
   ----|>
     <->;
+
+    -//[id] o (ActScope[vars, id, id, id] `|` Stop[id])
+  ----|>
+    <->;
+
 
 (* Process communication *)
 (* Our formalization includes synchronous request-response communication,

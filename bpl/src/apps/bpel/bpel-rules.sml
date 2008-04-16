@@ -362,7 +362,8 @@ val rule_reply = "reply" :::
 
 
 
-val rulelist = [rule_scope_activation, rule_sequence_completed,
+val rulelist = [rule_scope_activation, rule_scope_activation2,
+                rule_sequence_completed,
                 rule_if_true, rule_if_false, rule_while_unfold,
                 rule_variable_reference,
                 rule_assign_copy_var2var,
@@ -372,5 +373,5 @@ val rulelist = [rule_scope_activation, rule_sequence_completed,
                 rule_invoke,
                 rule_receive,
                 rule_invoke_instance, rule_reply,
-                rule_exit_stop_inst]
+                rule_exit_stop_inst];
 val rules = mkrules rulelist; 
