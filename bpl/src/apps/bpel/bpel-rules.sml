@@ -16,6 +16,16 @@ val rule_sequence_completed = "sequence completed" :::
    `[]` `|` `[]`
 || Running[inst_id];
 
+(* Alternatively, we could let Next have a port connected to inst_id
+ * and simplify the rule to
+   -//[p] o Next[p, inst_id] o `[]`
+|| Running[inst_id]
+  --[0 |-> 0]--|>
+   `[]`
+|| Running[inst_id];
+*)
+
+
 (* The rules for evaluating an if-then-else statement is as expected. If
  * the condition is True we execute the then-branch, otherwise we execute
  * the else-branch.
