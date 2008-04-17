@@ -83,9 +83,9 @@ val rule_scope_activation = "scope activation" :::
 (* Scopes in newly created instances are also allowed to be activated. *)
 val rule_scope_activation2 = "scope activation 2" :::
 
-    Invoked[n, id] o Scope[id][[sc]] o `[sc]`
-  --[0 |-> 0]--|>
-    Invoked[n, id] o -//[sc] o `[sc]`;
+    Invoked[n, id] o (Scope[id][[sc]] o `[sc]` `|` `[]`)
+  --[0 |-> 0, 1 |-> 1]--|>
+    Invoked[n, id] o (-//[sc] o `[sc]` `|` `[]`);
 
 (* Process termination *)
 (* Processes can terminate in two ways:
