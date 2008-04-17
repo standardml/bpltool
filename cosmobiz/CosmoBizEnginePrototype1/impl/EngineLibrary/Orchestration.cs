@@ -24,16 +24,17 @@ namespace CosmoBiz.EngineLibrary {
     [System.Xml.Serialization.XmlRootAttribute(Namespace="", IsNullable=false)]
     public partial class orchestration {
         
-        private orchestrationTasklet[] taskletField;
+        private object itemField;
         
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute("tasklet")]
-        public orchestrationTasklet[] tasklet {
+        [System.Xml.Serialization.XmlElementAttribute("sequence", typeof(sequenceType), Order=0)]
+        [System.Xml.Serialization.XmlElementAttribute("tasklet", typeof(taskletType), Order=0)]
+        public object Item {
             get {
-                return this.taskletField;
+                return this.itemField;
             }
             set {
-                this.taskletField = value;
+                this.itemField = value;
             }
         }
     }
@@ -43,12 +44,48 @@ namespace CosmoBiz.EngineLibrary {
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true)]
-    public partial class orchestrationTasklet {
+    public partial class sequenceType {
         
-        private orchestrationTaskletInput[] inputField;
+        private object[] itemsField;
         
-        private orchestrationTaskletOutput[] outputsField;
+        private string[] textField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute("sequence", typeof(sequenceType), Order=0)]
+        [System.Xml.Serialization.XmlElementAttribute("tasklet", typeof(taskletType), Order=0)]
+        public object[] Items {
+            get {
+                return this.itemsField;
+            }
+            set {
+                this.itemsField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlTextAttribute()]
+        public string[] Text {
+            get {
+                return this.textField;
+            }
+            set {
+                this.textField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.42")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    public partial class taskletType {
+        
+        private inputType[] inputField;
+        
+        private outputType[] outputField;
+        
+        private string[] textField;
         
         private string assemblyField;
         
@@ -57,8 +94,8 @@ namespace CosmoBiz.EngineLibrary {
         private string typeField;
         
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute("input")]
-        public orchestrationTaskletInput[] input {
+        [System.Xml.Serialization.XmlElementAttribute("input", Order=0)]
+        public inputType[] input {
             get {
                 return this.inputField;
             }
@@ -68,13 +105,24 @@ namespace CosmoBiz.EngineLibrary {
         }
         
         /// <remarks/>
-        [System.Xml.Serialization.XmlArrayItemAttribute("output", IsNullable=false)]
-        public orchestrationTaskletOutput[] outputs {
+        [System.Xml.Serialization.XmlElementAttribute("output", Order=1)]
+        public outputType[] output {
             get {
-                return this.outputsField;
+                return this.outputField;
             }
             set {
-                this.outputsField = value;
+                this.outputField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlTextAttribute()]
+        public string[] Text {
+            get {
+                return this.textField;
+            }
+            set {
+                this.textField = value;
             }
         }
         
@@ -117,14 +165,15 @@ namespace CosmoBiz.EngineLibrary {
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true)]
-    public partial class orchestrationTaskletInput {
+    public partial class inputType {
         
         private string typeField;
         
         private string nameField;
         
         private string valueField;
+        
+        private string[] textField;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -158,6 +207,17 @@ namespace CosmoBiz.EngineLibrary {
                 this.valueField = value;
             }
         }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlTextAttribute()]
+        public string[] Text {
+            get {
+                return this.textField;
+            }
+            set {
+                this.textField = value;
+            }
+        }
     }
     
     /// <remarks/>
@@ -165,14 +225,13 @@ namespace CosmoBiz.EngineLibrary {
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true)]
-    public partial class orchestrationTaskletOutput {
+    public partial class outputType {
         
         private string nameField;
         
         private string typeField;
         
-        private string valueField;
+        private string[] textField;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -198,12 +257,12 @@ namespace CosmoBiz.EngineLibrary {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlTextAttribute()]
-        public string Value {
+        public string[] Text {
             get {
-                return this.valueField;
+                return this.textField;
             }
             set {
-                this.valueField = value;
+                this.textField = value;
             }
         }
     }

@@ -1,41 +1,47 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  
   <xs:element name="orchestration">
     <xs:complexType>
-      <xs:sequence>
-        <xs:element maxOccurs="unbounded" name="tasklet">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element maxOccurs="unbounded" name="input">
-                <xs:complexType>
-                  <xs:attribute name="type" type="xs:string" use="required" />
-                  <xs:attribute name="name" type="xs:string" use="required" />
-                  <xs:attribute name="value" type="xs:string" use="required" />
-                </xs:complexType>
-              </xs:element>
-              <xs:element minOccurs="0" maxOccurs="1" name="outputs">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element maxOccurs="unbounded" name="output">
-                      <xs:complexType>
-                        <xs:simpleContent>
-                          <xs:extension base="xs:string">
-                            <xs:attribute name="name" type="xs:string" use="required" />
-                            <xs:attribute name="type" type="xs:string" use="required" />
-                          </xs:extension>
-                        </xs:simpleContent>
-                      </xs:complexType>
-                    </xs:element>
-                  </xs:sequence>
-                </xs:complexType>
-              </xs:element>
-            </xs:sequence>
-            <xs:attribute name="assembly" type="xs:string" use="required" />
-            <xs:attribute name="name" type="xs:string" use="required" />
-            <xs:attribute name="type" type="xs:string" use="required" />
-          </xs:complexType>
-        </xs:element>
-      </xs:sequence>
+  	  <xs:group ref="groupStructured" minOccurs="0" />
     </xs:complexType>
   </xs:element>
+     
+  <xs:complexType name="sequenceType" mixed="true">
+    <xs:sequence minOccurs="0">
+      <xs:group ref="groupStructured" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>     
+  
+  <xs:complexType name="taskletType" mixed="true">
+    <xs:sequence minOccurs="0">
+    	<xs:element name="input" type="inputType" minOccurs="0" maxOccurs="unbounded" />
+    	<xs:element name="output" type="outputType" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>    	
+    <xs:attribute name="assembly" type="xs:string" use="required" />
+    <xs:attribute name="name" type="xs:string" use="required" />
+    <xs:attribute name="type" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="inputType" mixed="true">
+	  <xs:attribute name="type" type="xs:string" use="required" />
+	  <xs:attribute name="name" type="xs:string" use="required" />
+	  <xs:attribute name="value" type="xs:string" use="required" />  
+  </xs:complexType>
+  
+  <xs:complexType name="outputType" mixed="true">
+	  <xs:simpleContent>
+	    <xs:extension base="xs:string">
+	      <xs:attribute name="name" type="xs:string" use="required" />
+	      <xs:attribute name="type" type="xs:string" use="required" />
+	    </xs:extension>
+	  </xs:simpleContent>
+  </xs:complexType>  
+    
+  <xs:group name="groupStructured">
+    <xs:choice>
+      <xs:element name="sequence" type="sequenceType" />
+      <xs:element name="tasklet" type="taskletType" />
+    </xs:choice>
+  </xs:group>
 </xs:schema>

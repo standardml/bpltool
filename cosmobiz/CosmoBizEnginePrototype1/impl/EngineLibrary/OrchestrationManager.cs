@@ -19,9 +19,10 @@ namespace CosmoBiz.EngineLibrary
     // The current orchestration:
     private orchestration currentOrchestration;
     // The current tasklet:
-    private orchestrationTasklet currentTasklet; 
+    private taskletType currentTasklet; 
     // An enumerator that goes over the tasklets in the orchestration.
-    private System.Collections.IEnumerator taskletEnum;    
+    private System.Collections.IEnumerator taskletEnum;
+    private Stack<System.Collections.IEnumerator> enumStack;
     // Dictionary containing "Global" variables.
     private Dictionary<string, object> globals; 
 
@@ -37,6 +38,7 @@ namespace CosmoBiz.EngineLibrary
      */
     public OrchestrationManager()
     {
+      enumStack = new Stack<System.Collections.IEnumerator>();
       globals = new Dictionary<string, object>();
       LoadOrchestration();
       atEnd = false;
@@ -65,8 +67,24 @@ namespace CosmoBiz.EngineLibrary
 
       // Starting an enumerator to go through the tasklets
       // in the order that they are listed in the XML file
-      taskletEnum = currentOrchestration.tasklet.GetEnumerator();
-      taskletEnum.MoveNext();
+      //taskletEnum = currentOrchestration.tasklet.GetEnumerator();
+      
+      //taskletEnum = currentOrchestration.sequence.GetEnumerator();
+      //  .tasklet.GetEnumerator();
+      //taskletEnum = currentOrchestration.sequence.GetEnumerator();
+      if (currentOrchestration.Item.GetType() == typeof(sequenceType))
+      {
+        //sequenceType seq = new sequenceType();
+
+        taskletEnum = ((sequenceType)currentOrchestration.Item).Items.GetEnumerator();
+      }
+      else
+      {
+        currentTasklet = (taskletType)currentOrchestration.Item;
+        // do something really smart
+      }
+
+      MoveNext();
     }
 
     /*
@@ -82,6 +100,44 @@ namespace CosmoBiz.EngineLibrary
       w.Close();
     }
 
+
+    /*
+     * Function for moving to the next task in the orchestration 
+     * and determining if we're at end.     
+     * 
+     * can we do this inductivly? -> yes we can!
+     */
+    public void MoveNext()
+    {
+      bool hasNext = taskletEnum.MoveNext();
+
+      if ((!hasNext) && (enumStack.Count == 0))
+      {
+        atEnd = true;
+      }
+      else if (!hasNext)
+      {
+        taskletEnum = enumStack.Pop();
+        MoveNext();
+      } 
+      else if ((taskletEnum.Current.GetType() == typeof(sequenceType)) && (((sequenceType)taskletEnum.Current).Items == null))
+      {
+        // special case where the sequence is just empty...
+        MoveNext();
+      }
+      else if (taskletEnum.Current.GetType() == typeof(sequenceType))
+      {
+        enumStack.Push(taskletEnum);
+        taskletEnum = ((sequenceType)taskletEnum.Current).Items.GetEnumerator();
+        MoveNext();
+      }
+      else if (taskletEnum.Current.GetType() == typeof(taskletType))
+      {
+        currentTasklet = (taskletType)taskletEnum.Current;
+      }      
+    }
+
+
     /*
      * Function for retreiving the next task (a simplified representation of a tasklet)
      */
@@ -89,18 +145,17 @@ namespace CosmoBiz.EngineLibrary
     {
       // To be extended: make a specialized Exception type.
       if (atEnd) throw new Exception("Orchestration is at end.");
-      currentTasklet = (orchestrationTasklet)taskletEnum.Current;
-      
+
       // Get the location details from the tasklet 
       // (to find out how it should be loaded)
       Task t = new Task(
-        ((orchestrationTasklet)taskletEnum.Current).assembly,
-        ((orchestrationTasklet)taskletEnum.Current).name,
-        ((orchestrationTasklet)taskletEnum.Current).type); // when using load
-    
+        currentTasklet.assembly,
+        currentTasklet.name,
+        currentTasklet.type); // when using load
+
       // Load the inputs of the tasklet.
-      if (((orchestrationTasklet)taskletEnum.Current).input != null)
-        foreach (orchestrationTaskletInput i in ((orchestrationTasklet)taskletEnum.Current).input)
+      if (currentTasklet.input != null)
+        foreach (inputType i in currentTasklet.input)
         {
           // Code for debugging:
           if ((i.type == "global"))
@@ -113,13 +168,12 @@ namespace CosmoBiz.EngineLibrary
 
           if (i.type == "constant") t.AddInput(i.name, i.value);
           else if ((i.type == "global") && globals.ContainsKey(i.value)) t.AddInput(i.name, globals[i.value]);
-          else t.AddInput(i.name, i.value);      
+          else t.AddInput(i.name, i.value);
         }
 
-      atEnd = !taskletEnum.MoveNext();
 
+      MoveNext();
       return t;
-
     }
 
     /*
@@ -128,13 +182,14 @@ namespace CosmoBiz.EngineLibrary
      * name of an output, and the value is the value of an output.
      */
     public void InsertOutput(Dictionary<string, object> taskletState)
-    {
-      orchestrationTaskletOutput[] op = new orchestrationTaskletOutput[taskletState.Count];
+    {      
+      /*
+      taskletTypeOutputsOutput[] op = new taskletTypeOutputsOutput[taskletState.Count];
       int i = 0;
 
       foreach (KeyValuePair<string, object> o in taskletState)
       {
-        orchestrationTaskletOutput oto = new orchestrationTaskletOutput();
+        taskletTypeOutputsOutput oto = new taskletTypeOutputsOutput();
         oto.name = o.Key;
         oto.Value = o.Value.ToString();
         oto.type = o.Value.GetType().Name;
@@ -142,7 +197,24 @@ namespace CosmoBiz.EngineLibrary
         i++;
       }
 
-      currentTasklet.outputs = op;
+      currentTasklet.outputs = op;     
+      */
+
+      outputType[] outputs = new outputType[taskletState.Count];
+      int i = 0;
+
+      foreach (KeyValuePair<string, object> o in taskletState)
+      {
+        outputType output = new outputType();
+        output.name = o.Key;
+        output.Text = new String[1];
+        output.Text[0] = o.Value.ToString();
+        output.type = o.Value.GetType().Name;
+        outputs[i] = output;
+        i++;
+      }
+
+      currentTasklet.output = outputs;
     }
 
     /*
