@@ -23,7 +23,7 @@
  * Cambridge University Press, 1999.
  *)
 
-use "pi.bpl.sml";
+use "polyadic-pi.bpl.sml";
 Flags.setIntFlag "/debug/level" 10;
 SMLofNJ.Internals.GC.messages false;
 use_shorthands true;
@@ -100,10 +100,3 @@ val System1 = simplify (
    `|` Idtrans[gain2,lose2]
    `|` Control[lose1,talk2,switch2,gain2,
                lose2,talk1,switch1,gain1])
-
-val K0  = active0("K0")
-val K1  = active("K1" -: 1)
-val K10 = active("K10" =: 1 --> 0)
-val M0  = atomic0("M0")
-val M1  = atomic("M1" -: 1)
-val (x,y,z,u,v,w)=("x","y","z","u","v","w")
