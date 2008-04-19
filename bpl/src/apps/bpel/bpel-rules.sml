@@ -200,8 +200,7 @@ val rule_scope_activation2 = "scope activation 2" :::
 (* In the case of an Exit activity we change the status of the instance
  * from running to stopped by replacing the Running node inside the
  * instance with a Stopped node. This prevents other rules from being
- * used, except for the rule "exit remove instance" below, effectively
- * stopping any other activity from proceeding.
+ * used, effectively stopping any other activity from proceeding.
  *)
 val rule_exit_stop_inst = "exit stop inst" :::
 
