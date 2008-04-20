@@ -73,7 +73,7 @@ val Else         = passive0 (Else                  );
 val True         = atomic0  (True                  );
 val False        = atomic0  (False                 );
 
-val Ass          = passive  (Ass         -:       6);
+val Ass          = atomic   (Ass         -:       6);
 (* val Copy         = passive0 (Copy                  ); *)
 (* The first free port of a To or From node should be connected to a
  * variable name, and the second should be connected to the scope port of
