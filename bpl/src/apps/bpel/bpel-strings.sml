@@ -84,4 +84,7 @@ val p                          = "p"
 val s1                         = "s1"
 val s2                         = "s2"
 val s3                         = "s3"
+val s4                         = "s4"
+val s5                         = "s5"
+val s6                         = "s6"
 

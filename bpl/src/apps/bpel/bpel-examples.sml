@@ -24,12 +24,13 @@ val echo_process1 =
 Process[echo_process][[echo_id]]
 o (    PartnerLinks o PartnerLink[echo_client, echo_id] o CreateInstance[echo]
    `|` Variables o Variable[x, echo_id] o <->
-   `|` Sequence[echo_id] o (
-         Receive[echo_client, echo_id, echo, x, echo_id, echo_id]
-   `|` Next o Sequence[echo_id] o (
-         Reply[echo_client, echo_id, echo, x, echo_id, echo_id]
-   `|` Next o
-         Exit[echo_id])));
+   `|` -//[s1] o (
+       Sequence[echo_id] o -//[s2] o (
+         Receive[echo_client, echo_id, echo, x, echo_id, echo_id, s2]
+   `|` Next[s2] o Sequence[echo_id] o -//[s3] o (
+         Reply[echo_client, echo_id, echo, x, echo_id, echo_id, s3]
+   `|` Next[s3] o
+         Exit[echo_id, s1]))));
 
 (* An instance which is about to invoke the echo process:
  * 
@@ -53,8 +54,8 @@ o (Instance[caller, caller_id]
       `|` Variables
            o (    Variable[y, caller_id] o True
               `|` Variable[z, caller_id] o False)
-          `|` Invoke[echo_service, caller_id, echo,
-                     y, caller_id, z, caller_id, caller_id]));
+      `|` -//[s] o Invoke[echo_service, caller_id, echo,
+                          y, caller_id, z, caller_id, caller_id, s]));
 
 
 (* A slightly more advanced echo process: 
@@ -96,30 +97,31 @@ o (Instance[caller, caller_id]
  * </process>
  *)
 val while_loop =
-While[echo_id]
+While[echo_id, s1][[s4]]
 o (    Condition o VariableRef[x, echo_id, echo_id]
    `|` Scope[echo_id][[scope]]
        o (    PartnerLinks o <->
           `|` Variables    o Variable[y, scope] o <->
-          `|` Sequence[echo_id] o (
-                Receive[echo_client, echo_id, echo_value, y, scope, echo_id]
-          `|` Next o Sequence[echo_id] o (
-                Reply[echo_client, echo_id, echo_value, y, scope, echo_id]
-          `|` Next o
-                Assign[echo_id] o Copy o (    From[y, scope]
-                                          `|` To[x, echo_id])))));
+          `|` Sequence[echo_id] o -//[s5] o (
+                Receive[echo_client, echo_id, echo_value, y, scope, echo_id, s5]
+          `|` Next[s5] o Sequence[echo_id] o -//[s6] o (
+                Reply[echo_client, echo_id, echo_value, y, scope, echo_id, s6]
+          `|` Next[s6] o
+                Assign[echo_id, s4] o Copy o (    From[y, scope]
+                                              `|` To[x, echo_id])))));
 val echo_process2_context = 
 Process[echo_process][[echo_id]]
 o (    PartnerLinks o PartnerLink[echo_client, echo_id] o CreateInstance[echo]
    `|` Variables    o Variable[x, echo_id] o <->
-   `|` Sequence[echo_id] o (
-         Receive[echo_client, echo_id, echo, x, echo_id, echo_id]
-   `|` Next o Sequence[echo_id] o (
-         Reply[echo_client, echo_id, echo, x, echo_id, echo_id]
-   `|` Next o `[]`)));
+   `|` -//[s1] o (
+       Sequence[echo_id] o -//[s2] o (
+         Receive[echo_client, echo_id, echo, x, echo_id, echo_id, s2]
+   `|` Next[s2] o Sequence[echo_id] o -//[s3] o (
+         Reply[echo_client, echo_id, echo, x, echo_id, echo_id, s3]
+   `|` Next[s3] o `[s1]`))));
 
 val echo_process2 = echo_process2_context o while_loop;
-val echo_process2_emptyloop = echo_process2_context o While[echo_id] o <->;
+val echo_process2_emptyloop = echo_process2_context o While[echo_id, s1][[]] o <->;
 
 (* An instance which is about to invoke the advanced echo process:
  * 
@@ -150,14 +152,15 @@ o (Instance[caller, caller_id]
       `|` Variables
           o (    Variable[z, caller_id] o True
              `|` Variable[v, caller_id] o False)
-      `|` Flow[caller_id]
-          o (    Sequence[caller_id] o (
+      `|` -//[s1] o (
+          Flow[caller_id]
+          o (    Sequence[caller_id] o -//[s2] o (
                    Invoke[echo_service, caller_id, echo,
-                          z, caller_id, v, caller_id, caller_id]
-             `|` Next o
+                          z, caller_id, v, caller_id, caller_id, s2]
+             `|` Next[s2] o
                    Invoke[echo_service, caller_id, echo_value,
-                          v, caller_id, v, caller_id, caller_id])
-             `|` Exit[caller_id])));
+                          v, caller_id, v, caller_id, caller_id, s1])
+             `|` Exit[caller_id, s1]))));
 
 (*
 val mz1 = matches (mkrules [rule_reply]) (caller_inst1 `|` echo_process1);

@@ -12,13 +12,15 @@ val _ = OS.FileSys.chDir bpel_dir;
 use "figinfo.sml";
 
 Flags.setBoolFlag "/kernel/ast/bgval/pp-simplify" true;
+(* Out of Order
 Flags.setBoolFlag "/kernel/ast/bgval/pp-tensor2parallel" true;
 Flags.setBoolFlag "/kernel/ast/bgval/pp-merge2prime" true;
+*)
 val _ = use_shorthands true;
 
 
 use "bpel-strings.sml";
 use "bpel-sig.sml";
 use "bpel-rules.sml";
-(* use "bpel-examples.sml"; *)
+use "bpel-examples.sml";
 
