@@ -1,11 +1,11 @@
 (* FROM PAPER *)
-val echo_process = 
+val echo_process' = 
 Process[echo_process][[echo_id]]
-o ( -//[s,s'] o (
-         Var[echo_client, echo_id] o CrInst[echo] `|` Var[x, echo_id] o <->
-     `|` Rec[echo_client, echo_id, echo, x, echo_id, echo_id,s]
-     `|` Next[s, echo_id] o (
-           Rep[echo_client, echo_id, echo, x, echo_id, echo_id, s'])));
+o (    Var[echo_client, echo_id] o CrInst[echo] `|` Var[x, echo_id] o <->
+   `|` -//[s1] o -//[s2] o (
+         Rec[echo_client, echo_id, echo, x, echo_id, echo_id, s2]
+   `|` Next[s2, echo_id] o (
+         Rep[echo_client, echo_id, echo, x, echo_id, echo_id, s1])));
 
 
 
@@ -32,15 +32,15 @@ o ( -//[s,s'] o (
  * </process>
  *)
 val echo_process1 =
-Process[echo_process][[echo_id]] o
-(    PartnerLink[echo_client, echo_id] o CreateInstance[echo]
- `|` Variable[x, echo_id] o <->
- `|` -//[pred1] o (    Receive[echo_client, echo_id, echo, x, echo_id, echo_id, pred1]
-                   `|` Next[echo_id, pred1]
-                     o -//[pred2] o 
-                       (    Reply[echo_client, echo_id, echo, x, echo_id, echo_id, pred2]
-                        `|` Next[echo_id, pred2]
-                           o -//[pred3] o Exit[echo_id, pred3])));
+Process[echo_process][[echo_id]]
+o (    Var[echo_client, echo_id] o CrInst[echo]
+   `|` Var[x, echo_id] o <->
+   `|` -//[s1] o -//[s2] o (
+         Rec[echo_client, echo_id, echo, x, echo_id, echo_id, s2]
+   `|` Next[s2, echo_id] o -//[s3] o (
+         Rep[echo_client, echo_id, echo, x, echo_id, echo_id, s3]
+   `|` Next[s3, echo_id] o
+         Exit[s1, echo_id])));
 
 
 (* An instance which is about to invoke the echo process:
@@ -58,13 +58,17 @@ Process[echo_process][[echo_id]] o
  * </instance>
  *)
 val caller_inst1 =
--//[caller_id,pred1]
-o (    Running[caller_id]
-   `|` PartnerLink[echo_service, caller_id] o <->
-   `|` Variable[y, caller_id] o True
-   `|` Variable[z, caller_id] o False
-   `|` Invoke[echo_service, caller_id, echo, 
-              y, caller_id, z, caller_id, caller_id, pred1]);
+-//[caller_id]
+o (Instance[caller, caller_id]
+   o (    Var[echo_service, caller_id] o <->
+      `|` Var[y, caller_id] o True
+      `|` Var[z, caller_id] o False
+      `|` -//[s1] o -//[s2] o (
+            Inv[echo_service, caller_id, echo, 
+                y, caller_id, caller_id, s2]
+      `|` Next[s2, echo_id] o
+            GetRep[echo_service, caller_id, echo, 
+                   z, caller_id, caller_id, s1])));
 
 
 (* A slightly more advanced echo process: 
@@ -106,34 +110,30 @@ o (    Running[caller_id]
  * </process>
  *)
 
+val while_loop =
+While[echo_id, s1][[s4]]
+o (    Cond o Ref[x, echo_id, echo_id]
+   `|` Scope[echo_id][[scope]]
+       o (    Var[y, scope] o <->
+          `|` -//[s5] o (
+                Rec[echo_client, echo_id, echo_value, y, scope, echo_id, s5]
+          `|` Next[s5, echo_id] o -//[s6] o (
+                Rep[echo_client, echo_id, echo_value, y, scope, echo_id, s6]
+          `|` Next[s6, echo_id] o
+                Ass[echo_id, s4, y, scope, x, echo_id]))));
 val echo_process2_context = 
 Process[echo_process][[echo_id]]
-o (    PartnerLink[echo_client, echo_id] o CreateInstance[echo]
-   `|` Variable[x, echo_id] o <->
-   `|` -//[pred1] o (
-         Receive[echo_client, echo_id, echo, x, echo_id, echo_id, pred1]
-         `|` Next[pred1, echo_id] o (
-               -//[pred2] o (
-                 Reply[echo_client, echo_id, echo, x, echo_id, echo_id, pred2]
-                 `|` Next[pred2, echo_id] o `[]`))));
+o (    Var[echo_client, echo_id] o CrInst[echo]
+   `|` Var[x, echo_id] o <->
+   `|` -//[s1] o -//[s2] o (
+         Rec[echo_client, echo_id, echo, x, echo_id, echo_id, s2]
+   `|` Next[s2, echo_id] o -//[s3] o (
+         Rep[echo_client, echo_id, echo, x, echo_id, echo_id, s3]
+   `|` Next[s3, echo_id] o `[s1]`)));
 
-(* Should a scope create a new predesssor link ?? *)
-(* Ie. should we create a new predessor inside a while-loop *)
-val while_loop =
--//[pred3] o While[echo_id, pred3][[pred5]]
-o (    Condition o VariableRef[x, echo_id, echo_id]
-   `|` Scope[echo_id][[scope]]
-       o (    Variable[y, scope] o <->
-          `|` Receive[echo_client, echo_id, echo_value, y, scope, echo_id, pred3]
-          `|` Next[pred3, echo_id] o (
-                -//[pred4] o (
-                   Reply[echo_client, echo_id, echo_value, y, scope, echo_id, pred4]
-               `|` Next[pred4, echo_id] o
-                     Assign[echo_id, pred5] o Copy o (    From[y, scope]
-                                                      `|` To[x, echo_id])))));
 
 val echo_process2 = echo_process2_context o while_loop;
-val echo_process2_emptyloop = echo_process2_context o While[echo_id, pred3][[pred5]] o <->;
+val echo_process2_emptyloop = echo_process2_context o While[echo_id, s1][[]] o <->;
 
 
 
@@ -160,19 +160,24 @@ val echo_process2_emptyloop = echo_process2_context o While[echo_id, pred3][[pre
  *)
 
 val caller_inst2 =
--//[caller_id] o (
-       Running[caller_id]
-   `|` PartnerLink[echo_service, caller_id] o <->
-   `|` Variable[z, caller_id] o True
-   `|` Variable[v, caller_id] o False
-   `|` -//[pred1] o (
-          Invoke[echo_service, caller_id, echo,
-                 z, caller_id, v, caller_id, caller_id, pred1]
-   `|` Next[pred1, caller_id] o
-          -//[pred2] o (
-             Invoke[echo_service, caller_id, echo_value,
-                    v, caller_id, v, caller_id, caller_id, pred2]))
-   `|` -//[pred3] o Exit[caller_id, pred3]);
+-//[caller_id]
+o (Instance[caller, caller_id]
+   o (    Var[echo_service, caller_id] o <->
+      `|` Var[z, caller_id] o True
+      `|` Var[v, caller_id] o False
+      `|` -//[s1] o -//[s2] o (-//[s3] o (
+              Inv[echo_service, caller_id, echo,
+                  z, caller_id, caller_id, s3]
+        `|` Next[s3, caller_id] o
+              GetRep[echo_service, caller_id, echo,
+                     v, caller_id, caller_id, s2])
+      `|` Next[s2, caller_id] o -//[s3] o (
+              Inv[echo_service, caller_id, echo_value,
+                  v, caller_id, caller_id, s3]
+        `|` Next[s3, caller_id] o
+              GetRep[echo_service, caller_id, echo_value,
+                     v, caller_id, caller_id, s1]))
+      `|` Exit[caller_id, s1]));
 
 
 (*
