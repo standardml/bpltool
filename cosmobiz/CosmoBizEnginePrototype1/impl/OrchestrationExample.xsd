@@ -8,10 +8,51 @@
   </xs:element>
      
   <xs:complexType name="sequenceType" mixed="true">
-    <xs:sequence minOccurs="0">
-      <xs:group ref="groupStructured" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="sequence" type="sequenceType" />
+      <xs:element name="if" type="ifType" />      
+      <xs:element name="tasklet" type="taskletType" />
+    </xs:choice>    
   </xs:complexType>     
+    
+  <xs:complexType name="conditionType" mixed="true">
+	  <xs:simpleContent>
+	    <xs:extension base="xs:string">
+	    </xs:extension>
+	  </xs:simpleContent>
+  </xs:complexType>         
+  
+  <xs:complexType name="elseType" mixed="true">
+    <xs:choice minOccurs="1" maxOccurs="1">
+      <xs:element name="sequence" type="sequenceType" />
+      <xs:element name="if" type="ifType" />      
+      <xs:element name="tasklet" type="taskletType" />
+    </xs:choice>
+  </xs:complexType>              
+  
+  <xs:complexType name="elseifType" mixed="true">
+    <xs:sequence minOccurs="1" maxOccurs="1">
+    	<xs:element name="condition" type="conditionType" minOccurs="1" maxOccurs="1" />
+	    <xs:choice minOccurs="1" maxOccurs="1">
+	      <xs:element name="sequence" type="sequenceType" />
+	      <xs:element name="if" type="ifType" />      
+	      <xs:element name="tasklet" type="taskletType" />
+	    </xs:choice>    
+    </xs:sequence>
+  </xs:complexType>   
+  
+  
+  <xs:complexType name="ifType" mixed="true">
+    <xs:sequence minOccurs="1" maxOccurs="1">
+    	<xs:element name="condition" type="conditionType" minOccurs="1" maxOccurs="1" />
+	    <xs:choice minOccurs="1" maxOccurs="1">
+	      <xs:element name="sequence" type="sequenceType" />
+	      <xs:element name="if" type="ifType" />      
+	      <xs:element name="tasklet" type="taskletType" />
+	    </xs:choice>    
+		<xs:element name="else" type="elseType" minOccurs="0" maxOccurs="1"/>	    
+    </xs:sequence>
+  </xs:complexType>   
   
   <xs:complexType name="taskletType" mixed="true">
     <xs:sequence minOccurs="0">
@@ -41,6 +82,7 @@
   <xs:group name="groupStructured">
     <xs:choice>
       <xs:element name="sequence" type="sequenceType" />
+      <xs:element name="if" type="ifType" />      
       <xs:element name="tasklet" type="taskletType" />
     </xs:choice>
   </xs:group>

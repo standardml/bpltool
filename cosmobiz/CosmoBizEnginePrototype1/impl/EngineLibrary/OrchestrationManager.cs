@@ -119,24 +119,51 @@ namespace CosmoBiz.EngineLibrary
       {
         taskletEnum = enumStack.Pop();
         MoveNext();
-      } 
-      else if ((taskletEnum.Current.GetType() == typeof(sequenceType)) && (((sequenceType)taskletEnum.Current).Items == null))
+      }
+      else
+      {
+        DoElement(taskletEnum.Current);
+      }
+    }
+
+    void DoElement(Object o)
+    {
+      if ((o.GetType() == typeof(sequenceType)) && (((sequenceType)o).Items == null))
       {
         // special case where the sequence is just empty...
         MoveNext();
       }
-      else if (taskletEnum.Current.GetType() == typeof(sequenceType))
+      else if (o.GetType() == typeof(sequenceType))
       {
         enumStack.Push(taskletEnum);
-        taskletEnum = ((sequenceType)taskletEnum.Current).Items.GetEnumerator();
+        taskletEnum = ((sequenceType)o).Items.GetEnumerator();
         MoveNext();
       }
-      else if (taskletEnum.Current.GetType() == typeof(taskletType))
+      else if (o.GetType() == typeof(taskletType))
       {
-        currentTasklet = (taskletType)taskletEnum.Current;
+        // note that enum.current gets a different value then currentTasklet here!
+        currentTasklet = (taskletType)o;
       }      
+      else if (o.GetType() == typeof(ifType))
+      {
+        // start in the if.
+        // we can... evaluate the condition.
+        if (EvaluateCondition(((ifType)o).condition))
+        {
+          DoElement(((ifType)o).Item);          
+        }
+        else
+        {
+          DoElement(((ifType)o).@else.Item);
+        }
+      }
     }
 
+    private bool EvaluateCondition(conditionType c)
+    {
+      Debug.WriteLine("Condition : [" + c.Text[0] + "]");
+      if (c.Text[0].Equals("true")) return true; else return false;
+    }
 
     /*
      * Function for retreiving the next task (a simplified representation of a tasklet)

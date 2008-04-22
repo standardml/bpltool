@@ -27,6 +27,7 @@ namespace CosmoBiz.EngineLibrary {
         private object itemField;
         
         /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute("if", typeof(ifType), Order=0)]
         [System.Xml.Serialization.XmlElementAttribute("sequence", typeof(sequenceType), Order=0)]
         [System.Xml.Serialization.XmlElementAttribute("tasklet", typeof(taskletType), Order=0)]
         public object Item {
@@ -44,6 +45,125 @@ namespace CosmoBiz.EngineLibrary {
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
+    public partial class ifType {
+        
+        private conditionType conditionField;
+        
+        private object itemField;
+        
+        private elseType elseField;
+        
+        private string[] textField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute(Order=0)]
+        public conditionType condition {
+            get {
+                return this.conditionField;
+            }
+            set {
+                this.conditionField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute("if", typeof(ifType), Order=1)]
+        [System.Xml.Serialization.XmlElementAttribute("sequence", typeof(sequenceType), Order=1)]
+        [System.Xml.Serialization.XmlElementAttribute("tasklet", typeof(taskletType), Order=1)]
+        public object Item {
+            get {
+                return this.itemField;
+            }
+            set {
+                this.itemField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute(Order=2)]
+        public elseType @else {
+            get {
+                return this.elseField;
+            }
+            set {
+                this.elseField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlTextAttribute()]
+        public string[] Text {
+            get {
+                return this.textField;
+            }
+            set {
+                this.textField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.42")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    public partial class conditionType {
+        
+        private string[] textField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlTextAttribute()]
+        public string[] Text {
+            get {
+                return this.textField;
+            }
+            set {
+                this.textField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.42")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    public partial class elseType {
+        
+        private object itemField;
+        
+        private string[] textField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute("if", typeof(ifType), Order=0)]
+        [System.Xml.Serialization.XmlElementAttribute("sequence", typeof(sequenceType), Order=0)]
+        [System.Xml.Serialization.XmlElementAttribute("tasklet", typeof(taskletType), Order=0)]
+        public object Item {
+            get {
+                return this.itemField;
+            }
+            set {
+                this.itemField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlTextAttribute()]
+        public string[] Text {
+            get {
+                return this.textField;
+            }
+            set {
+                this.textField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.42")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
     public partial class sequenceType {
         
         private object[] itemsField;
@@ -51,6 +171,7 @@ namespace CosmoBiz.EngineLibrary {
         private string[] textField;
         
         /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute("if", typeof(ifType), Order=0)]
         [System.Xml.Serialization.XmlElementAttribute("sequence", typeof(sequenceType), Order=0)]
         [System.Xml.Serialization.XmlElementAttribute("tasklet", typeof(taskletType), Order=0)]
         public object[] Items {
