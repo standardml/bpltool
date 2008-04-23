@@ -113,7 +113,7 @@ val Message      = passive  (Message     -:       1);
  *   #1 to the instance identifier of a partner instance
  *)
 val Link         = atomic   (Link        -:       1);
-(* The free port of a Link should be connected:
+(* The free port of a CreateInstance should be connected:
  *
  *   #1 to the name of the operation which can create instances
  *        of the enclosing process

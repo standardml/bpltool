@@ -23,55 +23,9 @@ val Process      = passive  (Process     =: 1 --> 1);
  *)
 val Instance     = active   (Instance    -:       3);
 
-(*(* SubProcesses is just a container node for SubProcess nodes.
- *)
-val SubProcesses = active0  (SubProcesses          );*)
-
-(*(* We use a different control for sub processes than processes to
- * prevent the invokation of sub processes using the Invoke activity -
- * in particular it prevents a process from invoking sub processes of
- * other processes.
- * 
- * The binding ports of a SubProcess
- *
- *   #1 should be used to delimit the scope of variables within the
- *        process to the process itself.
- *
- * The free ports should be connected
- *
- *   #1 to the name of the process.
- *   (#2 to the scope port of the node delimiting its scope.)
- *)
-val SubProcess   = passive  (SubProcess  =: 1 --> 1);*)
-
 (* Instances is just a container node for Instance nodes.
  *)
 val Instances    = active0  (Instances             );
-
-(*(* SubInstances is just a container node for SubInstance nodes.
- *)
-val SubInstances = active0  (SubInstances          );*)
-
-(*(* The free ports of a SubInstance
- * 
- *   #1 should be connected to the name of the process.
- *   #2 is the sub-instance identifier analogous to the instance
- *        identifier for instances.
- *   #3 should be connected to the state node of the immediately
- *        enclosing instance (like active scopes).
- *)
-val SubInstance  = active   (SubInstance -:       3);*)
-
-(*(* The binding ports of a FrozenSub
- *
- *   #1 should be used to delimit the scope of variables within the
- *        process to the process itself.
- *
- * The free ports should be connected
- *
- *   #1 to the name of the process.
- *)
-val FrozenSub    = passive  (FrozenSub   =: 1 --> 1);*)
 
 (* The following controls are used to control the execution of an
  * instance and all its subinstances as a whole. They are used to make
