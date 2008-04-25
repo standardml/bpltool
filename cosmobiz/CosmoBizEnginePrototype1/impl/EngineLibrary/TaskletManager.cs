@@ -188,6 +188,7 @@ namespace CosmoBiz.EngineLibrary
         Dictionary<string, object> taskletState = tasklet.ExtractOutput();
 
         om.UpdateGlobals(taskletState);
+        om.MoveNext();
       }
     }
 

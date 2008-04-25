@@ -51,6 +51,8 @@ namespace CosmoBiz.EngineLibrary {
         
         private object itemField;
         
+        private elseIfType[] elseifField;
+        
         private elseType elseField;
         
         private string[] textField;
@@ -80,7 +82,18 @@ namespace CosmoBiz.EngineLibrary {
         }
         
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute(Order=2)]
+        [System.Xml.Serialization.XmlElementAttribute("elseif", Order=2)]
+        public elseIfType[] elseif {
+            get {
+                return this.elseifField;
+            }
+            set {
+                this.elseifField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute(Order=3)]
         public elseType @else {
             get {
                 return this.elseField;
@@ -373,6 +386,55 @@ namespace CosmoBiz.EngineLibrary {
             }
             set {
                 this.typeField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlTextAttribute()]
+        public string[] Text {
+            get {
+                return this.textField;
+            }
+            set {
+                this.textField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.42")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    public partial class elseIfType {
+        
+        private conditionType conditionField;
+        
+        private object itemField;
+        
+        private string[] textField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute(Order=0)]
+        public conditionType condition {
+            get {
+                return this.conditionField;
+            }
+            set {
+                this.conditionField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute("if", typeof(ifType), Order=1)]
+        [System.Xml.Serialization.XmlElementAttribute("sequence", typeof(sequenceType), Order=1)]
+        [System.Xml.Serialization.XmlElementAttribute("tasklet", typeof(taskletType), Order=1)]
+        public object Item {
+            get {
+                return this.itemField;
+            }
+            set {
+                this.itemField = value;
             }
         }
         

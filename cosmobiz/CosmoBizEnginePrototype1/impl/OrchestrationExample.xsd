@@ -30,7 +30,7 @@
     </xs:choice>
   </xs:complexType>              
   
-  <xs:complexType name="elseifType" mixed="true">
+  <xs:complexType name="elseIfType" mixed="true">
     <xs:sequence minOccurs="1" maxOccurs="1">
     	<xs:element name="condition" type="conditionType" minOccurs="1" maxOccurs="1" />
 	    <xs:choice minOccurs="1" maxOccurs="1">
@@ -50,6 +50,7 @@
 	      <xs:element name="if" type="ifType" />      
 	      <xs:element name="tasklet" type="taskletType" />
 	    </xs:choice>    
+	  <xs:element name="elseif" type="elseIfType" minOccurs="0" maxOccurs="unbounded"/>	    
 		<xs:element name="else" type="elseType" minOccurs="0" maxOccurs="1"/>	    
     </xs:sequence>
   </xs:complexType>   

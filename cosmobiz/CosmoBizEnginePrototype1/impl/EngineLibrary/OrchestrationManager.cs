@@ -4,6 +4,8 @@ using System.Text;
 using System.Xml.Serialization;
 using System.IO;
 using System.Diagnostics;
+//using System.Xml.XPath;
+//using System.Xml;
 
 namespace CosmoBiz.EngineLibrary
 {
@@ -24,7 +26,8 @@ namespace CosmoBiz.EngineLibrary
     private System.Collections.IEnumerator taskletEnum;
     private Stack<System.Collections.IEnumerator> enumStack;
     // Dictionary containing "Global" variables.
-    private Dictionary<string, object> globals; 
+    private Dictionary<string, object> globals;
+    //private XPathNavigator xpathNav;
 
     // Public property to get the value of atEnd:
     public Boolean AtEnd
@@ -63,6 +66,10 @@ namespace CosmoBiz.EngineLibrary
       TextReader r = new StreamReader("\\Program Files\\engineapplication\\OrchestrationExample.xml");
 
       currentOrchestration = (orchestration)s.Deserialize(r);
+
+//      XPathDocument document = new XPathDocument(r);
+//      xpathNav = document.CreateNavigator();
+
       r.Close();
 
       // Starting an enumerator to go through the tasklets
@@ -154,7 +161,20 @@ namespace CosmoBiz.EngineLibrary
         }
         else
         {
-          DoElement(((ifType)o).@else.Item);
+          bool doElse = true;
+
+          if (((ifType)o).elseif != null) 
+            foreach (elseIfType elseIf in ((ifType)o).elseif)
+            {
+              if (EvaluateCondition(elseIf.condition))
+              {
+                DoElement(elseIf.Item);
+                doElse = false;
+                break;
+              }
+            }
+
+          if (doElse) DoElement(((ifType)o).@else.Item);          
         }
       }
     }
@@ -197,9 +217,6 @@ namespace CosmoBiz.EngineLibrary
           else if ((i.type == "global") && globals.ContainsKey(i.value)) t.AddInput(i.name, globals[i.value]);
           else t.AddInput(i.name, i.value);
         }
-
-
-      MoveNext();
       return t;
     }
 
