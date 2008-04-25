@@ -4,6 +4,7 @@ using System.Text;
 using System.Xml.Serialization;
 using System.IO;
 using System.Diagnostics;
+using System.Data;
 //using System.Xml.XPath;
 //using System.Xml;
 
@@ -182,7 +183,31 @@ namespace CosmoBiz.EngineLibrary
     private bool EvaluateCondition(conditionType c)
     {
       Debug.WriteLine("Condition : [" + c.Text[0] + "]");
+      /*
+      Debug.WriteLine("Condition : [" + c.Text[0] + "]");
       if (c.Text[0].Equals("true")) return true; else return false;
+      */
+
+      String exp = c.Text[0];
+
+      // replace variables in the string?
+      // luckily this won't be nessecairy when we do rewriting!
+      foreach (KeyValuePair<String, Object> kvp in globals)
+      {
+        exp = exp.Replace("[" + kvp.Key + "]", kvp.Value.ToString());
+      }
+
+      Debug.WriteLine("Condition : [" + exp + "]");
+      DataTable t = new DataTable();
+
+      if (t.Compute(exp, "").GetType() == typeof(Boolean))
+      {
+        return ((Boolean)t.Compute(exp, ""));
+      }
+      else
+      {
+        return false;
+      }
     }
 
     /*

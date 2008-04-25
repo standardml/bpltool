@@ -157,7 +157,7 @@ namespace CosmoBiz.EngineLibrary
 
       // Save the orchestration (for testing - rather slow right now!)
       Debug.WriteLine("|Saving the orchestration");
-      om.SaveOrchestration("output_" +t.Assembly + "_" + t.Tasklet);
+      //om.SaveOrchestration("output_" +t.Assembly + "_" + t.Tasklet);
 
       // Close the tasklet.
       tasklet.Close();      
