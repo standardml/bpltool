@@ -47,6 +47,6 @@ do
   ruby script/server -p 8080 >> log/webserver.log 2>&1 &
   pid=$!
   read dummy < restart
-  kill $pid
+  kill $pid; sleep 3; kill -KILL $pid || true
   wait $pid # Make sure zombie process is completely garbage collected
 done
