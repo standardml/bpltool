@@ -7,8 +7,9 @@
  * - has a status node just beneath each Instance node.
  * - encodes part of the place graph in the concrete semantics as links
  *   to enable garbage collection:
- *   there is an ActScope node for each active scope (including instances)
- *   which has four free ports which are connected as follows:
+ *   there is an atomic ActScope node for each active scope (including 
+ *   instances) which has four free ports which are connected as 
+ *   follows:
  *     1. to the variables of that scope
  *     2. to the child activities (including scopes) of the scope
  *     3. to the parent scope's ActScope child-port
