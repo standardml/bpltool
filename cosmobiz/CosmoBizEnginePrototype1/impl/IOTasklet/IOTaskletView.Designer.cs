@@ -43,17 +43,17 @@ namespace IOTasklet
       // 
       // tbOutput
       // 
-      this.tbOutput.Location = new System.Drawing.Point(68, 181);
+      this.tbOutput.Location = new System.Drawing.Point(3, 181);
       this.tbOutput.Name = "tbOutput";
-      this.tbOutput.Size = new System.Drawing.Size(100, 21);
+      this.tbOutput.Size = new System.Drawing.Size(234, 21);
       this.tbOutput.TabIndex = 1;
       this.tbOutput.TextChanged += new System.EventHandler(this.tbOutput_TextChanged);
       // 
       // tbInput
       // 
-      this.tbInput.Location = new System.Drawing.Point(67, 71);
+      this.tbInput.Location = new System.Drawing.Point(3, 71);
       this.tbInput.Name = "tbInput";
-      this.tbInput.Size = new System.Drawing.Size(100, 21);
+      this.tbInput.Size = new System.Drawing.Size(234, 21);
       this.tbInput.TabIndex = 3;
       // 
       // label2
@@ -63,7 +63,7 @@ namespace IOTasklet
       this.label2.Size = new System.Drawing.Size(114, 16);
       this.label2.Text = "This is my input:";
       // 
-      // Tasklet1View
+      // IOTaskletView
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
@@ -71,7 +71,7 @@ namespace IOTasklet
       this.Controls.Add(this.label2);
       this.Controls.Add(this.tbOutput);
       this.Controls.Add(this.label1);
-      this.Name = "Tasklet1View";
+      this.Name = "IOTaskletView";
       this.Size = new System.Drawing.Size(240, 268);
       this.ResumeLayout(false);
 
