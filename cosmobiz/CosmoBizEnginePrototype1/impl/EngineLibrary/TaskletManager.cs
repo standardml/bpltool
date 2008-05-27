@@ -31,6 +31,8 @@ namespace CosmoBiz.EngineLibrary
     private CosmoBizContextMenuManager cmm;
     private StyleService ss;
     private MainMenuManager mm;
+    private Boolean exitOrchestration = false;
+    private Tasklet currentTasklet = null;
 
     /*
      * Constructor
@@ -47,7 +49,7 @@ namespace CosmoBiz.EngineLibrary
       cmm = new CosmoBizContextMenuManager();
       cmm.mainMenu = uif.MainMenu;
 
-      mm = new MainMenuManager(uif.MainMenu);
+      mm = new MainMenuManager(this, uif.MainMenu);
       ss = new StyleService();
     }
 
@@ -62,6 +64,18 @@ namespace CosmoBiz.EngineLibrary
       while (!(om.AtEnd))
       {
         RunTask(om.NextTask());
+        if (exitOrchestration) break;
+      }
+    }
+
+    public void ExitOrchestration()
+    {
+      exitOrchestration = true;
+      if (currentTasklet != null)
+      {        
+        uif.Close();
+        uif.Close(uif.ActiveControl);
+        currentTasklet.Close();
       }
     }
 
@@ -148,7 +162,7 @@ namespace CosmoBiz.EngineLibrary
         }
         //Debug.WriteLine(type.FullName); //Test_Tasklet.TestForm -> if we want to use GetType... probably also to use direct instantiation.
       }
-
+      currentTasklet = tasklet;
 
       IServiceFactory serviceFactory;
       TaskletWorkItem item = new TaskletWorkItem();
@@ -249,7 +263,8 @@ namespace CosmoBiz.EngineLibrary
       //om.SaveOrchestration("output_" +t.Assembly + "_" + t.Tasklet);
 
       // Close the tasklet.
-      tasklet.Close();      
+      tasklet.Close();
+      currentTasklet = null;
     }
 
     /*

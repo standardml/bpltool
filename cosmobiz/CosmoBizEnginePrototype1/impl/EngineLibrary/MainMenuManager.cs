@@ -9,14 +9,16 @@ namespace CosmoBiz.EngineLibrary
   {
     private MainMenu mainMenu;
     private MenuItem mainItem;
+    private TaskletManager owner;
 
-    public MainMenuManager(MainMenu mm)
+    public MainMenuManager(TaskletManager o, MainMenu mm)
     {
+      owner = o;
+
       mainMenu = mm;      
       mainItem = new MenuItem();
       mainItem.Text = "Menu";
       mainMenu.MenuItems.Add(mainItem);
-
     }
 
     public void AddTasklet(Task t)
@@ -101,6 +103,7 @@ namespace CosmoBiz.EngineLibrary
 
     void ExitOrchestrationClicked(object sender, EventArgs e)
     {
+      owner.ExitOrchestration();
       //throw new Exception("The method or operation is not implemented.");
     }
 
