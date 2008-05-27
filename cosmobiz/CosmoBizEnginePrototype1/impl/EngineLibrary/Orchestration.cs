@@ -219,6 +219,8 @@ namespace CosmoBiz.EngineLibrary {
         
         private outputType[] outputField;
         
+        private actionsType actionsField;
+        
         private string[] textField;
         
         private string assemblyField;
@@ -246,6 +248,17 @@ namespace CosmoBiz.EngineLibrary {
             }
             set {
                 this.outputField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute(Order=2)]
+        public actionsType actions {
+            get {
+                return this.actionsField;
+            }
+            set {
+                this.actionsField = value;
             }
         }
         
@@ -397,6 +410,209 @@ namespace CosmoBiz.EngineLibrary {
             }
             set {
                 this.textField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.42")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    public partial class actionsType {
+        
+        private actionType[] itemsField;
+        
+        private string[] textField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute("exitOrchestration", typeof(exitOrchestrationType), Order=0)]
+        [System.Xml.Serialization.XmlElementAttribute("group", typeof(groupType), Order=0)]
+        [System.Xml.Serialization.XmlElementAttribute("open", typeof(openType), Order=0)]
+        public actionType[] Items {
+            get {
+                return this.itemsField;
+            }
+            set {
+                this.itemsField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlTextAttribute()]
+        public string[] Text {
+            get {
+                return this.textField;
+            }
+            set {
+                this.textField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.42")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    public partial class exitOrchestrationType : actionType {
+    }
+    
+    /// <remarks/>
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(exitOrchestrationType))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(groupType))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(openType))]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.42")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    public partial class actionType {
+        
+        private string textField;
+        
+        private string[] textField1;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string text {
+            get {
+                return this.textField;
+            }
+            set {
+                this.textField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlTextAttribute()]
+        public string[] Text {
+            get {
+                return this.textField1;
+            }
+            set {
+                this.textField1 = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.42")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    public partial class groupType : actionType {
+        
+        private actionType[] itemsField;
+        
+        private string nameField;
+        
+        private string typeField;
+        
+        private string priorityField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute("exitOrchestration", typeof(exitOrchestrationType), Order=0)]
+        [System.Xml.Serialization.XmlElementAttribute("group", typeof(groupType), Order=0)]
+        [System.Xml.Serialization.XmlElementAttribute("open", typeof(openType), Order=0)]
+        public actionType[] Items {
+            get {
+                return this.itemsField;
+            }
+            set {
+                this.itemsField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string name {
+            get {
+                return this.nameField;
+            }
+            set {
+                this.nameField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string type {
+            get {
+                return this.typeField;
+            }
+            set {
+                this.typeField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute(DataType="integer")]
+        public string priority {
+            get {
+                return this.priorityField;
+            }
+            set {
+                this.priorityField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.42")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    public partial class openType : actionType {
+        
+        private inputType[] inputField;
+        
+        private string orchestrationField;
+        
+        private string taskletField;
+        
+        private string priorityField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute("input", Order=0)]
+        public inputType[] input {
+            get {
+                return this.inputField;
+            }
+            set {
+                this.inputField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string orchestration {
+            get {
+                return this.orchestrationField;
+            }
+            set {
+                this.orchestrationField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string tasklet {
+            get {
+                return this.taskletField;
+            }
+            set {
+                this.taskletField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute(DataType="integer")]
+        public string priority {
+            get {
+                return this.priorityField;
+            }
+            set {
+                this.priorityField = value;
             }
         }
     }
