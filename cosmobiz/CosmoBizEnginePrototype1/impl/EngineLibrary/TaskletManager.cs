@@ -9,6 +9,10 @@ using Microsoft.Dynamics.Mobile.Framework.Controls;
 using Microsoft.Dynamics.Mobile.Framework;
 using System.Drawing;
 using Microsoft.Dynamics.Mobile.Framework.Entities;
+using Microsoft.Dynamics.Mobile.Framework.Runtime;
+using Microsoft.Dynamics.Mobile.Framework.CompositeUI;
+using Microsoft.Dynamics.Mobile.Framework.Services;
+using Services.StyleService;
 
 namespace CosmoBiz.EngineLibrary
 {
@@ -22,6 +26,11 @@ namespace CosmoBiz.EngineLibrary
     private OrchestrationManager om;
     // the UI Form that the taskletmanager uses.
     private UIForm uif;
+    private LoggingService ls;
+    private DatabaseCatalog dbc;
+    private CosmoBizContextMenuManager cmm;
+    private StyleService ss;
+    private MainMenuManager mm;
 
     /*
      * Constructor
@@ -31,6 +40,15 @@ namespace CosmoBiz.EngineLibrary
     {
       om = new OrchestrationManager();
       uif = new UIForm();
+      ls = new LoggingService("\\Storage Card\\logs\\");
+      dbc = new DatabaseCatalog("databaseCatalog");
+      dbc.Initialize();
+
+      cmm = new CosmoBizContextMenuManager();
+      cmm.mainMenu = uif.MainMenu;
+
+      mm = new MainMenuManager(uif.MainMenu);
+      ss = new StyleService();
     }
 
     /*
@@ -70,11 +88,25 @@ namespace CosmoBiz.EngineLibrary
       // Note: This can be changed to be more effective by using GetType!
       // Get an instance of the tasklet type:
       TaskletForm tf = null;
+      Type myType = null;
       foreach (Type type in assembly.GetTypes())
       {
         if (type.Name == t.Tasklet)
-          tf = (TaskletForm)System.Activator.CreateInstance(type);     
+        {
+          tf = (TaskletForm)System.Activator.CreateInstance(type);
+          myType = type;
+        }
       }
+
+      Debug.WriteLine(myType.Name);
+      Debug.WriteLine("--");
+      foreach (FieldInfo f in myType.GetFields())
+      {
+        Debug.WriteLine(f.Name.ToString());
+        Debug.WriteLine(f.Attributes.ToString());
+        Debug.WriteLine(f.GetCustomAttributes(false).ToString());
+      }
+      Debug.WriteLine("--");
 
       // If there are inputs, add them to the tasklet.
       if (t.Input.Count > 0)
@@ -111,9 +143,64 @@ namespace CosmoBiz.EngineLibrary
       foreach (Type type in assembly.GetTypes())
       {
         if (type.Name == t.Tasklet)
-          tasklet = (Tasklet)System.Activator.CreateInstance(type);
+        {
+          tasklet = (Tasklet)System.Activator.CreateInstance(type);                   
+        }
         //Debug.WriteLine(type.FullName); //Test_Tasklet.TestForm -> if we want to use GetType... probably also to use direct instantiation.
       }
+
+
+      IServiceFactory serviceFactory;
+      TaskletWorkItem item = new TaskletWorkItem();
+
+      serviceFactory = new ServiceFactory(item, ServiceScope.Tasklet);
+
+      foreach (PropertyInfo info in tasklet.GetType().GetProperties())
+      {
+        if (info.IsDefined(typeof(RolePadServiceAttribute), true))
+        {
+          //info.SetValue(tasklet, serviceFactory.GetService(info.PropertyType), null);
+          if (info.PropertyType.Name == "ILoggingService")
+            info.SetValue(tasklet, ls, null);
+
+
+          if (info.PropertyType.Name == "DatabaseCatalog")
+            info.SetValue(tasklet, dbc, null);
+
+          if (info.PropertyType.Name == "StyleService")
+            info.SetValue(tasklet, ss, null);          
+          
+        }
+      }
+
+      tasklet.Definition = new TaskletDefinition("a", "b");
+      //tasklet.Definition.
+
+      mm.AddTasklet(t);
+
+      foreach (openType o in t.openActions)
+      {
+        //OpenTaskletActionDefinition d = new OpenTaskletActionDefinition(o.text, o.orchestration);
+        //OpenTaskletAction a = new OpenTaskletAction();
+
+        OpenOrchestrationActionDefinition d = new OpenOrchestrationActionDefinition(o.text, o.orchestration);
+        d.Priority = Int32.Parse(o.priority);
+        OpenOrchestrationAction a = new OpenOrchestrationAction(d);
+        //a.
+        tasklet.Actions.Add(a);
+
+
+        //ActionFactory af = new ActionFactory();
+        //Microsoft.Dynamics.Mobile.Framework.Entities.Action a = new Microsoft.Dynamics.Mobile.Framework.Entities.Action(ActionFactory)
+        //Action a = new
+        //tasklet.Actions.Add(
+      }
+
+      cmm.Actions = tasklet.Actions;
+      tasklet.ContextMenuManager = cmm;
+
+
+      //tasklet.
 
       // set the tasklets container to be the UIForm.
       Debug.WriteLine("|Adding to the container form");
@@ -133,6 +220,8 @@ namespace CosmoBiz.EngineLibrary
       // Add listeners to the tasklet
       tasklet.OutputChanged += new EventHandler(TaskletOutputChanged);
       tasklet.Closing += new EventHandler<Microsoft.Dynamics.Mobile.Framework.Entities.ExitResultEventArgs>(this.TaskletClosing);
+
+      //tasklet.
 
       // Activate the tasklet
       Debug.WriteLine("|trying to activate the tasklet");
@@ -204,7 +293,7 @@ namespace CosmoBiz.EngineLibrary
 
         foreach (Object o in taskletState.Values)
         {
-          Debug.WriteLine(o.ToString());
+          if (o != null) Debug.WriteLine(o.ToString());
         }
         om.InsertOutput(taskletState);
       }

@@ -8,6 +8,8 @@ using System.Data;
 //using System.Xml.XPath;
 //using System.Xml;
 
+using Microsoft.Dynamics.Mobile.Framework.Entities;
+
 namespace CosmoBiz.EngineLibrary
 {
   // Only handles the logic of orchestrations:
@@ -194,7 +196,8 @@ namespace CosmoBiz.EngineLibrary
       // luckily this won't be nessecairy when we do rewriting!
       foreach (KeyValuePair<String, Object> kvp in globals)
       {
-        exp = exp.Replace("[" + kvp.Key + "]", kvp.Value.ToString());
+        if (kvp.Value != null)
+          exp = exp.Replace("[" + kvp.Key + "]", kvp.Value.ToString());
       }
 
       Debug.WriteLine("Condition : [" + exp + "]");
@@ -242,6 +245,21 @@ namespace CosmoBiz.EngineLibrary
           else if ((i.type == "global") && globals.ContainsKey(i.value)) t.AddInput(i.name, globals[i.value]);
           else t.AddInput(i.name, i.value);
         }
+
+      // load actions for the tasklet.
+      //currentTasklet.actions.open.
+
+      //currentTasklet.actions.
+      if (currentTasklet.actions != null && currentTasklet.actions.Items != null)
+        foreach (actionType a in currentTasklet.actions.Items)
+        {
+          // ActionCollection ac = new ActionCollection();
+          // ac.
+          // o.
+          // t.actions = new Acto
+          //t.openActions.Add(o);
+          t.Actions.Add(a);
+        }
       return t;
     }
 
@@ -277,8 +295,16 @@ namespace CosmoBiz.EngineLibrary
         outputType output = new outputType();
         output.name = o.Key;
         output.Text = new String[1];
-        output.Text[0] = o.Value.ToString();
-        output.type = o.Value.GetType().Name;
+        if (o.Value == null)
+        {
+          output.Text[0] = "";
+          output.type = "";
+        }
+        else
+        {
+          output.Text[0] = o.Value.ToString();
+          output.type = o.Value.GetType().Name;
+        }
         outputs[i] = output;
         i++;
       }

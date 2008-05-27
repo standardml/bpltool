@@ -8,6 +8,7 @@ namespace CosmoBiz.EngineLibrary
    * A simplified representation of tasklets, containing:
    * - Their physical location
    * - Input values
+   * - Actions
    */
   class Task
   {
@@ -24,6 +25,11 @@ namespace CosmoBiz.EngineLibrary
     // CB: CosmoBiz           - Our own format for tasklets, currently outdated (was initially used for testing)
     private String type;
 
+    //public Collection actions;
+    public List<openType> openActions;
+
+    public List<actionType> Actions;
+
     // public properties to access these values.
     public String Assembly { get { return assembly; } }
     public String Tasklet { get { return tasklet; } }
@@ -34,6 +40,10 @@ namespace CosmoBiz.EngineLibrary
     public Task(String assembly, String tasklet, String type)
     {
       input = new Dictionary<String, Object>();
+      openActions = new List<openType>();
+
+      Actions = new List<actionType>();
+
 
       this.assembly = assembly;
       this.tasklet = tasklet;

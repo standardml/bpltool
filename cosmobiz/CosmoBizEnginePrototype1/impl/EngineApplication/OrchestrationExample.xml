@@ -2,6 +2,32 @@
 <orchestration>
   <sequence>
 
+    <tasklet assembly ="CustomerListTasklet" name="CustomerListTasklet" type="MD">
+      <actions>
+        <open text="Details" orchestration="CustomerDetailReadOnly" priority="40">
+        </open>
+
+        <open text="New" orchestration="NewCustomerWizard" priority="31"/>
+        <open text="Edit" orchestration="CustomerDetailEdit" priority="30">
+        </open>
+
+
+        <group name="MenuGroup" text="MenuGroup" type="Flat" priority="10">
+          <open text="About" tasklet="ShowAbout" priority="20"/>
+        </group>
+
+        <group name="Tools" text="Tools" type="Node" priority="11">
+          <open text="Synchronize" tasklet="Synchronization"/>
+          <open text="Credentials" tasklet="Credentials" />
+          <open text="Document Status" tasklet="History" />
+        </group>
+
+        <exitOrchestration text="Close" />
+
+      </actions>      
+    </tasklet>    
+    
+    
     <!--
     <sequence>
       <tasklet assembly ="IOTasklet" name="IOTasklet" type="MD">

@@ -6,7 +6,7 @@ namespace CosmoBiz.EngineLibrary
     /// Required designer variable.
     /// </summary>
     private System.ComponentModel.IContainer components = null;
-    private System.Windows.Forms.MainMenu mainMenu1;
+    private System.Windows.Forms.MainMenu mainMenu;
 
     /// <summary>
     /// Clean up any resources being used.
@@ -29,12 +29,20 @@ namespace CosmoBiz.EngineLibrary
     /// </summary>
     private void InitializeComponent()
     {
-      this.components = new System.ComponentModel.Container();
-      this.mainMenu1 = new System.Windows.Forms.MainMenu();
-      this.Menu = this.mainMenu1;
+      this.mainMenu = new System.Windows.Forms.MainMenu();
+      this.SuspendLayout();
+      // 
+      // UIForm
+      // 
+      this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-      this.Text = "UIForm";
       this.AutoScroll = true;
+      this.ClientSize = new System.Drawing.Size(240, 268);
+      this.Menu = this.mainMenu;
+      this.Name = "UIForm";
+      this.Text = "UIForm";
+      this.ResumeLayout(false);
+
     }
 
     #endregion

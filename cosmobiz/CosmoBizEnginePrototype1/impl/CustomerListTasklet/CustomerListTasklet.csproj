@@ -4,25 +4,33 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{B3ABEF09-C8CB-4532-B147-8A5D039132C1}</ProjectGuid>
+    <ProjectGuid>{6F0533A3-1501-47B8-BFBF-A7B1D662A745}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CosmoBiz.EngineLibrary</RootNamespace>
-    <AssemblyName>EngineLibrary</AssemblyName>
+    <RootNamespace>CustomerListTasklet</RootNamespace>
+    <AssemblyName>CustomerListTasklet</AssemblyName>
     <ProjectTypeGuids>{4D628B5B-2FBC-4AA6-8C16-197242AEB884};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <PlatformFamilyName>PocketPC</PlatformFamilyName>
     <PlatformID>4118C335-430C-497f-BE48-11C3316B135E</PlatformID>
     <OSVersion>5.01</OSVersion>
-    <DeployDirSuffix>EngineLibrary</DeployDirSuffix>
+    <DeployDirSuffix>EngineApplication</DeployDirSuffix>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FormFactorID>
     </FormFactorID>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\Output\</OutputPath>
     <DefineConstants>DEBUG;TRACE;$(PlatformFamilyName)</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
@@ -34,7 +42,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\Output\</OutputPath>
     <DefineConstants>TRACE;$(PlatformFamilyName)</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
@@ -44,25 +52,21 @@
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Dynamics.Mobile.Framework, Version=1.0.28.145, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Dynamics.Mobile.Framework, Version=1.0.17.0, Culture=neutral, PublicKeyToken=9eed26e552cb1655, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\..\..\..\Program Files\Microsoft Dynamics Mobile\Mobile Framework\Runtime\Microsoft.Dynamics.Mobile.Framework.dll</HintPath>
+      <HintPath>c:\Program Files\Microsoft Dynamics Mobile\Mobile Framework\Bin\Microsoft.Dynamics.Mobile.Framework.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Dynamics.Mobile.Framework.CompositeUI, Version=1.0.28.145, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Dynamics.Mobile.Framework.Controls, Version=1.0.17.0, Culture=neutral, PublicKeyToken=9eed26e552cb1655, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\..\..\..\Program Files\Microsoft Dynamics Mobile\Mobile Framework\Runtime\Microsoft.Dynamics.Mobile.Framework.CompositeUI.dll</HintPath>
+      <HintPath>c:\Program Files\Microsoft Dynamics Mobile\Mobile Framework\Bin\Microsoft.Dynamics.Mobile.Framework.Controls.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Dynamics.Mobile.Framework.Controls, Version=1.0.28.145, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Dynamics.Mobile.Framework.DataAccess, Version=1.0.17.0, Culture=neutral, PublicKeyToken=9eed26e552cb1655, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\..\..\..\Program Files\Microsoft Dynamics Mobile\Mobile Framework\Runtime\Microsoft.Dynamics.Mobile.Framework.Controls.dll</HintPath>
+      <HintPath>c:\Program Files\Microsoft Dynamics Mobile\Mobile Framework\Bin\Microsoft.Dynamics.Mobile.Framework.DataAccess.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Dynamics.Mobile.Framework.ObjectBuilder, Version=1.0.28.145, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Dynamics.Mobile.Framework.Runtime, Version=1.0.17.0, Culture=neutral, PublicKeyToken=9eed26e552cb1655, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\..\..\..\Program Files\Microsoft Dynamics Mobile\Mobile Framework\Runtime\Microsoft.Dynamics.Mobile.Framework.ObjectBuilder.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Dynamics.Mobile.Framework.Runtime, Version=1.0.28.145, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\..\..\..\Program Files\Microsoft Dynamics Mobile\Mobile Framework\Runtime\Microsoft.Dynamics.Mobile.Framework.Runtime.dll</HintPath>
+      <HintPath>c:\Program Files\Microsoft Dynamics Mobile\Mobile Framework\Bin\Microsoft.Dynamics.Mobile.Framework.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
@@ -72,35 +76,37 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CosmoBizContextMenuManager.cs" />
-    <Compile Include="MainMenuManager.cs" />
-    <Compile Include="Orchestration.cs" />
-    <Compile Include="OrchestrationManager.cs" />
-    <Compile Include="Task.cs" />
-    <Compile Include="TaskletManager.cs" />
+    <Compile Include="ICustomerListView.cs" />
+    <Compile Include="CustomerListTasklet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UIForm.cs">
-      <SubType>Form</SubType>
+    <Compile Include="CustomerListTaskletView.cs">
+      <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UIForm.Designer.cs">
-      <DependentUpon>UIForm.cs</DependentUpon>
+    <Compile Include="CustomerListTaskletView.Designer.cs">
+      <DependentUpon>CustomerListTaskletView.cs</DependentUpon>
     </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="CustomerListTaskletView.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>CustomerListTaskletView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <SubType>Designer</SubType>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\StyleService\StyleService.csproj">
       <Project>{27CCB793-4BAA-4A7E-8734-88F17298B05D}</Project>
       <Name>StyleService</Name>
     </ProjectReference>
-    <ProjectReference Include="..\TaskletLibrary\TaskletLibrary.csproj">
-      <Project>{02AFC0F7-9F1E-4FA8-BDE8-B2867552DEB6}</Project>
-      <Name>TaskletLibrary</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="UIForm.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>UIForm.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <Import Condition="'$(TargetFrameworkVersion)' == 'v1.0'" Project="$(MSBuildBinPath)\Microsoft.CompactFramework.CSharp.v1.targets" />
   <Import Condition="'$(TargetFrameworkVersion)' == 'v2.0'" Project="$(MSBuildBinPath)\Microsoft.CompactFramework.CSharp.targets" />

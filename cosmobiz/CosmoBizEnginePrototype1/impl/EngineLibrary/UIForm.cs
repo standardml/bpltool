@@ -18,6 +18,11 @@ namespace CosmoBiz.EngineLibrary
     // The active Control.
     private Control ac;
 
+    public MainMenu MainMenu
+    {
+      get { return this.mainMenu; }
+    }
+
     /*
      * Constructor
      */

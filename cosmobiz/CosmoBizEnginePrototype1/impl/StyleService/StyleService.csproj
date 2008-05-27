@@ -4,17 +4,21 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{64BA6649-7A0C-4F69-80A4-38DEAF60EC5A}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <ProjectGuid>{27CCB793-4BAA-4A7E-8734-88F17298B05D}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CosmoBiz.EngineApplication</RootNamespace>
-    <AssemblyName>EngineApplication</AssemblyName>
+    <RootNamespace>StyleService</RootNamespace>
+    <AssemblyName>StyleService</AssemblyName>
     <ProjectTypeGuids>{4D628B5B-2FBC-4AA6-8C16-197242AEB884};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <PlatformFamilyName>PocketPC</PlatformFamilyName>
     <PlatformID>4118C335-430C-497f-BE48-11C3316B135E</PlatformID>
     <OSVersion>5.01</OSVersion>
-    <DeployDirSuffix>EngineApplication</DeployDirSuffix>
+    <DeployDirSuffix>\sampleapp</DeployDirSuffix>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <SccProjectName></SccProjectName>
+    <SccLocalPath></SccLocalPath>
+    <SccAuxPath></SccAuxPath>
+    <SccProvider></SccProvider>
     <FormFactorID>
     </FormFactorID>
   </PropertyGroup>
@@ -22,7 +26,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\Output\</OutputPath>
     <DefineConstants>DEBUG;TRACE;$(PlatformFamilyName)</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
@@ -34,7 +38,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\Output\</OutputPath>
     <DefineConstants>TRACE;$(PlatformFamilyName)</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
@@ -44,6 +48,18 @@
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Dynamics.Mobile.Framework, Version=1.0.17.0, Culture=neutral, PublicKeyToken=9eed26e552cb1655, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>c:\Program Files\Microsoft Dynamics Mobile\Mobile Framework\Bin\Microsoft.Dynamics.Mobile.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Dynamics.Mobile.Framework.Configuration, Version=1.0.17.0, Culture=neutral, PublicKeyToken=9eed26e552cb1655, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>c:\Program Files\Microsoft Dynamics Mobile\Mobile Framework\Bin\Microsoft.Dynamics.Mobile.Framework.Configuration.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Dynamics.Mobile.Framework.Runtime, Version=1.0.17.0, Culture=neutral, PublicKeyToken=9eed26e552cb1655, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>c:\Program Files\Microsoft Dynamics Mobile\Mobile Framework\Bin\Microsoft.Dynamics.Mobile.Framework.Runtime.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -52,39 +68,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <Compile Include="Configuration\StyleServiceFactory.cs" />
+    <Compile Include="StyleService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\EngineLibrary\EngineLibrary.csproj">
-      <Project>{B3ABEF09-C8CB-4532-B147-8A5D039132C1}</Project>
-      <Name>EngineLibrary</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="OrchestrationExample.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="App.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="AppDatabase.sdf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <Import Condition="'$(TargetFrameworkVersion)' == 'v1.0'" Project="$(MSBuildBinPath)\Microsoft.CompactFramework.CSharp.v1.targets" />
   <Import Condition="'$(TargetFrameworkVersion)' == 'v2.0'" Project="$(MSBuildBinPath)\Microsoft.CompactFramework.CSharp.targets" />
