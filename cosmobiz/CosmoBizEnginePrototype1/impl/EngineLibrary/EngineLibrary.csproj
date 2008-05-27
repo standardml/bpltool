@@ -72,6 +72,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ActionSorter.cs" />
     <Compile Include="CosmoBizContextMenuManager.cs" />
     <Compile Include="MainMenuManager.cs" />
     <Compile Include="Orchestration.cs" />

@@ -470,6 +470,8 @@ namespace CosmoBiz.EngineLibrary {
         
         private string textField;
         
+        private string priorityField;
+        
         private string[] textField1;
         
         /// <remarks/>
@@ -480,6 +482,17 @@ namespace CosmoBiz.EngineLibrary {
             }
             set {
                 this.textField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute(DataType="integer")]
+        public string priority {
+            get {
+                return this.priorityField;
+            }
+            set {
+                this.priorityField = value;
             }
         }
         
@@ -507,8 +520,6 @@ namespace CosmoBiz.EngineLibrary {
         private string nameField;
         
         private string typeField;
-        
-        private string priorityField;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("exitOrchestration", typeof(exitOrchestrationType), Order=0)]
@@ -544,17 +555,6 @@ namespace CosmoBiz.EngineLibrary {
                 this.typeField = value;
             }
         }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute(DataType="integer")]
-        public string priority {
-            get {
-                return this.priorityField;
-            }
-            set {
-                this.priorityField = value;
-            }
-        }
     }
     
     /// <remarks/>
@@ -569,8 +569,6 @@ namespace CosmoBiz.EngineLibrary {
         private string orchestrationField;
         
         private string taskletField;
-        
-        private string priorityField;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("input", Order=0)]
@@ -602,17 +600,6 @@ namespace CosmoBiz.EngineLibrary {
             }
             set {
                 this.taskletField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute(DataType="integer")]
-        public string priority {
-            get {
-                return this.priorityField;
-            }
-            set {
-                this.priorityField = value;
             }
         }
     }

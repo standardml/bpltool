@@ -10,10 +10,13 @@ namespace CosmoBiz.EngineLibrary
     private MainMenu mainMenu;
     private MenuItem mainItem;
     private TaskletManager owner;
+    private ActionSorter sort;
 
     public MainMenuManager(TaskletManager o, MainMenu mm)
     {
       owner = o;
+
+      sort = new ActionSorter();
 
       mainMenu = mm;      
       mainItem = new MenuItem();
@@ -26,7 +29,10 @@ namespace CosmoBiz.EngineLibrary
 
       // Still have to do sorting here:
       //t.openActions.Sort(      
-
+      //t.Actions.Sor
+      //t.Actions.Sort(
+      sort.Sort(t.Actions);
+      //t.Actions.Sort(sort);
       foreach (actionType a in t.Actions)
       {
         foreach (MenuItem i in AddAction(a))
@@ -65,11 +71,15 @@ namespace CosmoBiz.EngineLibrary
         MenuItem m = new MenuItem();
         m.Text = g.text;
         if (g.Items != null)
-          foreach (actionType a in g.Items)
+        {
+          List<actionType> actionList = new List<actionType>(g.Items);          
+          sort.Sort(actionList);
+          foreach (actionType a in actionList)
           {
             foreach (MenuItem i in AddAction(a))
               m.MenuItems.Add(i);
           }
+        }
         l.Add(m);
       }
       else
