@@ -23,9 +23,9 @@ namespace CosmoBiz.EngineLibrary
 
     public void AddTasklet(Task t)
     {
-      //mainMenu.MenuItems.Add
-      //t.openActions.Sort(
-      
+
+      // Still have to do sorting here:
+      //t.openActions.Sort(      
 
       foreach (actionType a in t.Actions)
       {
@@ -98,13 +98,12 @@ namespace CosmoBiz.EngineLibrary
 
     void MenuClicked(object sender, EventArgs e)
     {
-      //throw new Exception("The method or operation is not implemented.");
+      // To be imlemented
     }
 
     void ExitOrchestrationClicked(object sender, EventArgs e)
     {
-      owner.ExitOrchestration();
-      //throw new Exception("The method or operation is not implemented.");
+      owner.ExitOrchestration();     
     }
 
     private static MenuItem CreateLine()

@@ -24,10 +24,6 @@ namespace CosmoBiz.EngineLibrary
     // MD: MicroSoft Dynamics - MicroSoft's Format for tasklets
     // CB: CosmoBiz           - Our own format for tasklets, currently outdated (was initially used for testing)
     private String type;
-
-    //public Collection actions;
-    public List<openType> openActions;
-
     public List<actionType> Actions;
 
     // public properties to access these values.
@@ -40,10 +36,7 @@ namespace CosmoBiz.EngineLibrary
     public Task(String assembly, String tasklet, String type)
     {
       input = new Dictionary<String, Object>();
-      openActions = new List<openType>();
-
       Actions = new List<actionType>();
-
 
       this.assembly = assembly;
       this.tasklet = tasklet;

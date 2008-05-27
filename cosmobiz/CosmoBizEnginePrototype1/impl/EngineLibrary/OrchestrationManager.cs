@@ -5,8 +5,6 @@ using System.Xml.Serialization;
 using System.IO;
 using System.Diagnostics;
 using System.Data;
-//using System.Xml.XPath;
-//using System.Xml;
 
 using Microsoft.Dynamics.Mobile.Framework.Entities;
 
@@ -70,28 +68,17 @@ namespace CosmoBiz.EngineLibrary
 
       currentOrchestration = (orchestration)s.Deserialize(r);
 
-//      XPathDocument document = new XPathDocument(r);
-//      xpathNav = document.CreateNavigator();
-
       r.Close();
 
-      // Starting an enumerator to go through the tasklets
-      // in the order that they are listed in the XML file
-      //taskletEnum = currentOrchestration.tasklet.GetEnumerator();
-      
-      //taskletEnum = currentOrchestration.sequence.GetEnumerator();
-      //  .tasklet.GetEnumerator();
-      //taskletEnum = currentOrchestration.sequence.GetEnumerator();
+
+      // !!! This has to be extended! !!!
       if (currentOrchestration.Item.GetType() == typeof(sequenceType))
       {
-        //sequenceType seq = new sequenceType();
-
         taskletEnum = ((sequenceType)currentOrchestration.Item).Items.GetEnumerator();
       }
       else
       {
         currentTasklet = (taskletType)currentOrchestration.Item;
-        // do something really smart
       }
 
       MoveNext();
@@ -114,8 +101,6 @@ namespace CosmoBiz.EngineLibrary
     /*
      * Function for moving to the next task in the orchestration 
      * and determining if we're at end.     
-     * 
-     * can we do this inductivly? -> yes we can!
      */
     public void MoveNext()
     {
@@ -182,13 +167,14 @@ namespace CosmoBiz.EngineLibrary
       }
     }
 
+    /*
+     * Evaluates a condition
+     * Uses ADO.NET for now, we would much rather use XPath, but this isn't supported
+     * by the .NET Compact Framework.
+     * */
     private bool EvaluateCondition(conditionType c)
     {
       Debug.WriteLine("Condition : [" + c.Text[0] + "]");
-      /*
-      Debug.WriteLine("Condition : [" + c.Text[0] + "]");
-      if (c.Text[0].Equals("true")) return true; else return false;
-      */
 
       String exp = c.Text[0];
 
@@ -247,17 +233,9 @@ namespace CosmoBiz.EngineLibrary
         }
 
       // load actions for the tasklet.
-      //currentTasklet.actions.open.
-
-      //currentTasklet.actions.
       if (currentTasklet.actions != null && currentTasklet.actions.Items != null)
         foreach (actionType a in currentTasklet.actions.Items)
         {
-          // ActionCollection ac = new ActionCollection();
-          // ac.
-          // o.
-          // t.actions = new Acto
-          //t.openActions.Add(o);
           t.Actions.Add(a);
         }
       return t;
@@ -270,23 +248,6 @@ namespace CosmoBiz.EngineLibrary
      */
     public void InsertOutput(Dictionary<string, object> taskletState)
     {      
-      /*
-      taskletTypeOutputsOutput[] op = new taskletTypeOutputsOutput[taskletState.Count];
-      int i = 0;
-
-      foreach (KeyValuePair<string, object> o in taskletState)
-      {
-        taskletTypeOutputsOutput oto = new taskletTypeOutputsOutput();
-        oto.name = o.Key;
-        oto.Value = o.Value.ToString();
-        oto.type = o.Value.GetType().Name;
-        op[i] = oto;
-        i++;
-      }
-
-      currentTasklet.outputs = op;     
-      */
-
       outputType[] outputs = new outputType[taskletState.Count];
       int i = 0;
 

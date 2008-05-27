@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
 using System.Windows.Forms;
-using CosmoBiz.TaskletLibrary;
 using System.Diagnostics;
+using System.Drawing;
 using Microsoft.Dynamics.Mobile.Framework.Controls;
 using Microsoft.Dynamics.Mobile.Framework;
-using System.Drawing;
 using Microsoft.Dynamics.Mobile.Framework.Entities;
 using Microsoft.Dynamics.Mobile.Framework.Runtime;
 using Microsoft.Dynamics.Mobile.Framework.CompositeUI;
 using Microsoft.Dynamics.Mobile.Framework.Services;
+using CosmoBiz.TaskletLibrary;
 using Services.StyleService;
 
 namespace CosmoBiz.EngineLibrary
@@ -173,48 +173,24 @@ namespace CosmoBiz.EngineLibrary
       {
         if (info.IsDefined(typeof(RolePadServiceAttribute), true))
         {
-          //info.SetValue(tasklet, serviceFactory.GetService(info.PropertyType), null);
           if (info.PropertyType.Name == "ILoggingService")
             info.SetValue(tasklet, ls, null);
-
 
           if (info.PropertyType.Name == "DatabaseCatalog")
             info.SetValue(tasklet, dbc, null);
 
           if (info.PropertyType.Name == "StyleService")
-            info.SetValue(tasklet, ss, null);          
-          
+            info.SetValue(tasklet, ss, null);                    
         }
       }
 
+      // is this still nessecairy?
       tasklet.Definition = new TaskletDefinition("a", "b");
-      //tasklet.Definition.
 
       mm.AddTasklet(t);
 
-      foreach (openType o in t.openActions)
-      {
-        //OpenTaskletActionDefinition d = new OpenTaskletActionDefinition(o.text, o.orchestration);
-        //OpenTaskletAction a = new OpenTaskletAction();
-
-        OpenOrchestrationActionDefinition d = new OpenOrchestrationActionDefinition(o.text, o.orchestration);
-        d.Priority = Int32.Parse(o.priority);
-        OpenOrchestrationAction a = new OpenOrchestrationAction(d);
-        //a.
-        tasklet.Actions.Add(a);
-
-
-        //ActionFactory af = new ActionFactory();
-        //Microsoft.Dynamics.Mobile.Framework.Entities.Action a = new Microsoft.Dynamics.Mobile.Framework.Entities.Action(ActionFactory)
-        //Action a = new
-        //tasklet.Actions.Add(
-      }
-
       cmm.Actions = tasklet.Actions;
       tasklet.ContextMenuManager = cmm;
-
-
-      //tasklet.
 
       // set the tasklets container to be the UIForm.
       Debug.WriteLine("|Adding to the container form");
@@ -234,8 +210,6 @@ namespace CosmoBiz.EngineLibrary
       // Add listeners to the tasklet
       tasklet.OutputChanged += new EventHandler(TaskletOutputChanged);
       tasklet.Closing += new EventHandler<Microsoft.Dynamics.Mobile.Framework.Entities.ExitResultEventArgs>(this.TaskletClosing);
-
-      //tasklet.
 
       // Activate the tasklet
       Debug.WriteLine("|trying to activate the tasklet");
