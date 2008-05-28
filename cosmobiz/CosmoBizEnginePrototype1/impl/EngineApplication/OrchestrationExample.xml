@@ -1,85 +1,87 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<orchestration>
-  <sequence>
-
-    <tasklet assembly ="CustomerListTasklet" name="CustomerListTasklet" type="MD">
-      <actions>
-        <open text="Details" orchestration="CustomerDetailReadOnly" priority="40">
-        </open>
-
-        <open text="New" orchestration="NewCustomerWizard" priority="31"/>
-        <open text="Edit" orchestration="CustomerDetailEdit" priority="30">
-        </open>
-
-
-        <group name="MenuGroup" text="MenuGroup" type="Flat" priority="10">
-          <open text="About" tasklet="ShowAbout" priority="20"/>
-        </group>
-
-        <group name="Tools" text="Tools" type="Node" priority="11">
-          <open text="Synchronize" tasklet="Synchronization"/>
-          <open text="Credentials" tasklet="Credentials" />
-          <open text="Document Status" tasklet="History" />
-        </group>
-
-        <exitOrchestration text="Close" />
-
-      </actions>      
-    </tasklet>    
-    
-    
-    <!--
+<processes>
+  <process>
     <sequence>
-      <tasklet assembly ="IOTasklet" name="IOTasklet" type="MD">
-        <input type="constant" name="ToShow" value="Hello icecream man!"/>
-        <output name="result" type="String">sdsdsdsdsdsdsdsdsdsdsd</output>
-        <output name="test" type="Int">12</output>
-      </tasklet>
-    </sequence>
-    
-    <tasklet assembly ="IOTasklet" name="IOTasklet" type="MD">
-      <input type="global" name="ToShow" value="Result"/>
-    </tasklet>
-    -->
 
-    <tasklet assembly ="IOTasklet" name="IOTasklet" type="MD">
-      <input type="constant" name="ToShow" value="How much is 19*16"/>
-    </tasklet>
+      <tasklet assembly ="CustomerListTasklet" name="CustomerListTasklet" type="MD">
+        <actions>
+          <open text="Details" orchestration="CustomerDetailReadOnly" priority="40">
+          </open>
 
-    <if>
-      <condition>19*16 &lt; [Result]</condition>
-      <tasklet assembly ="IOTasklet" name="IOTasklet" type="MD">
-        <input type="constant" name="ToShow" value="Isn't that a bit much?"/>
-      </tasklet>
-      <elseif>
-        <condition>19*16 > [Result]</condition>
+          <open text="New" orchestration="NewCustomerWizard" priority="31"/>
+          <open text="Edit" orchestration="CustomerDetailEdit" priority="30">
+          </open>
+
+
+          <group name="MenuGroup" text="MenuGroup" type="Flat" priority="10">
+            <open text="About" tasklet="ShowAbout" priority="20"/>
+          </group>
+
+          <group name="Tools" text="Tools" type="Node" priority="11">
+            <open text="Synchronize" tasklet="Synchronization"/>
+            <open text="Credentials" tasklet="Credentials" />
+            <open text="Document Status" tasklet="History" />
+          </group>
+
+          <exitOrchestration text="Close" />
+
+        </actions>      
+      </tasklet>    
+      
+      
+      <!--
+      <sequence>
         <tasklet assembly ="IOTasklet" name="IOTasklet" type="MD">
-          <input type="constant" name="ToShow" value="That's a bit low!"/>
+          <input type="constant" name="ToShow" value="Hello icecream man!"/>
+          <output name="result" type="String">sdsdsdsdsdsdsdsdsdsdsd</output>
+          <output name="test" type="Int">12</output>
         </tasklet>
-      </elseif>
-      <else>
+      </sequence>
+      
+      <tasklet assembly ="IOTasklet" name="IOTasklet" type="MD">
+        <input type="global" name="ToShow" value="Result"/>
+      </tasklet>
+      -->
+
+      <tasklet assembly ="IOTasklet" name="IOTasklet" type="MD">
+        <input type="constant" name="ToShow" value="How much is 19*16"/>
+      </tasklet>
+
+      <if>
+        <condition>19*16 &lt; [Result]</condition>
+        <tasklet assembly ="IOTasklet" name="IOTasklet" type="MD">
+          <input type="constant" name="ToShow" value="Isn't that a bit much?"/>
+        </tasklet>
+        <elseif>
+          <condition>19*16 > [Result]</condition>
+          <tasklet assembly ="IOTasklet" name="IOTasklet" type="MD">
+            <input type="constant" name="ToShow" value="That's a bit low!"/>
+          </tasklet>
+        </elseif>
+        <else>
+          <sequence>
+            <sequence>
+              <tasklet assembly ="IOTasklet" name="IOTasklet" type="MD">
+                <!--Tasklet1View-->
+                <input type="constant" name="ToShow" value="Correct!"/>
+              </tasklet>
+            </sequence>
+            <sequence>
+            </sequence>
+          </sequence>
+        </else>
+      </if>
+
+      <tasklet assembly ="HWTasklet" name="HWTasklet" type="MD">
+        <!--Tasklet1View-->
+      </tasklet>
+
+      <sequence>
         <sequence>
-          <sequence>
-            <tasklet assembly ="IOTasklet" name="IOTasklet" type="MD">
-              <!--Tasklet1View-->
-              <input type="constant" name="ToShow" value="Correct!"/>
-            </tasklet>
-          </sequence>
-          <sequence>
-          </sequence>
         </sequence>
-      </else>
-    </if>
-
-    <tasklet assembly ="HWTasklet" name="HWTasklet" type="MD">
-      <!--Tasklet1View-->
-    </tasklet>
-
-    <sequence>
+      </sequence>
       <sequence>
       </sequence>
     </sequence>
-    <sequence>
-    </sequence>
-  </sequence>
-</orchestration>
+  </process>
+</processes>

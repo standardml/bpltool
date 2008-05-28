@@ -20,7 +20,8 @@ namespace CosmoBiz.EngineLibrary
     // Boolean that represents if the orchestration is at end or not:
     private Boolean atEnd;
     // The current orchestration:
-    private orchestration currentOrchestration;
+    private processType currentOrchestration;
+    private processes source;
     // The current tasklet:
     private taskletType currentTasklet; 
     // An enumerator that goes over the tasklets in the orchestration.
@@ -63,13 +64,14 @@ namespace CosmoBiz.EngineLibrary
     private void LoadOrchestration()
     {
       // Read an orchestration using the xmlSerializer and a generated class "orchestration"
-      XmlSerializer s = new XmlSerializer(typeof(orchestration));
+      XmlSerializer s = new XmlSerializer(typeof(processes));
       TextReader r = new StreamReader("\\Program Files\\engineapplication\\OrchestrationExample.xml");
 
-      currentOrchestration = (orchestration)s.Deserialize(r);
+      source = (processes)s.Deserialize(r);
 
       r.Close();
 
+      currentOrchestration = source.Items[0];
 
       // !!! This has to be extended! !!!
       if (currentOrchestration.Item.GetType() == typeof(sequenceType))
@@ -91,9 +93,9 @@ namespace CosmoBiz.EngineLibrary
      */
     public void SaveOrchestration(String name)
     {      
-      XmlSerializer s = new XmlSerializer(typeof(orchestration));
+      XmlSerializer s = new XmlSerializer(typeof(processes));
       TextWriter w = new StreamWriter("\\Storage Card\\" + name + ".xml");
-      s.Serialize(w, currentOrchestration);
+      s.Serialize(w, source);
       w.Close();
     }
 

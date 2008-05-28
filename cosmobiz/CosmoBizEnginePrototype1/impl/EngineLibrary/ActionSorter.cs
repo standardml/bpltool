@@ -53,6 +53,7 @@ namespace CosmoBiz.EngineLibrary
     public void Sort(List<actionType> l)
     {
       l.Sort(this);
+      l.Sort(this);
     }
   }
 }
