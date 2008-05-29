@@ -58,6 +58,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomerDetailTasklet", "Cu
 		Release.AspNetCompiler.Debug = "False"
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomerContactDetailTasklet", "CustomerContactDetailTasklet\CustomerContactDetailTasklet.csproj", "{2B0E7DF4-8DE5-49FA-9A2D-272EC2706AAB}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomerCreditLimitDetailTasklet", "CustomerCreditLimitDetailTasklet\CustomerCreditLimitDetailTasklet.csproj", "{FBE540C9-483F-41A2-97F0-3CB16D829CE1}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -98,6 +110,14 @@ Global
 		{ADE3E479-1958-4DDB-A471-4DB548B9ACF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ADE3E479-1958-4DDB-A471-4DB548B9ACF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ADE3E479-1958-4DDB-A471-4DB548B9ACF9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B0E7DF4-8DE5-49FA-9A2D-272EC2706AAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B0E7DF4-8DE5-49FA-9A2D-272EC2706AAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B0E7DF4-8DE5-49FA-9A2D-272EC2706AAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B0E7DF4-8DE5-49FA-9A2D-272EC2706AAB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FBE540C9-483F-41A2-97F0-3CB16D829CE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBE540C9-483F-41A2-97F0-3CB16D829CE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBE540C9-483F-41A2-97F0-3CB16D829CE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBE540C9-483F-41A2-97F0-3CB16D829CE1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

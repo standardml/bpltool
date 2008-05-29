@@ -89,15 +89,26 @@
     <tasklet name="CustomerDetailTasklet" assembly ="CustomerDetailTasklet" text="Customer Details" type="CustomerDetailTasklet.CustomerDetailTasklet, CustomerDetailTasklet">
       <input type="setting" name="TaskletMode" value="View"/>
       
-      <input type="global" name="CustomerId" value="SelectedCustomer"/>
-      
+      <input type="global" name="CustomerId" value="SelectedCustomer"/>      
       <actions>
-        <open text="Contact" priority="40" tasklet="CustomerContactDetailTasklet">
+        <open text="Contact" priority="40" orchestration="CustomerContactDetailTasklet">
         </open>
-        <open text="Credit Limit" priority="40" tasklet="CustomerCreditLimitDetailTasklet">
+        <open text="Credit Limit" priority="40" orchestration="CustomerCreditLimitDetailTasklet">
         </open>
       </actions>
     </tasklet>    
+    </sequence>
+  </process>
+  <process text="CustomerContactDetailTasklet" name="CustomerContactDetailTasklet">
+    <sequence>
+      <tasklet name="CustomerContactDetailTasklet" assembly ="CustomerContactDetailTasklet" text="Contact Details" type="CustomerContactDetailTasklet.CustomerContactDetailTasklet, CustomerContactDetailTasklet">
+      </tasklet>
+    </sequence>
+  </process>
+  <process text="CustomerContactDetailTasklet" name="CustomerContactDetailTasklet">
+    <sequence>
+      <tasklet name="CustomerCreditLimitDetailTasklet" assembly ="CustomerCreditLimitDetailTasklet" text="Credit Limit" type="CustomerCreditLimitDetailTasklet.CustomerCreditLimitDetailTasklet, CustomerCreditLimitDetailTasklet">
+      </tasklet>
     </sequence>
   </process>
 </processes>
