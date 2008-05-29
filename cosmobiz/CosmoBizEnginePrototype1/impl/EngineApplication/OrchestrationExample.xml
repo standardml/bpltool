@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <processes>
-  <process>
+  <process text="RolePad" name="Reference Implementation">
     <sequence>
 
       <tasklet assembly ="CustomerListTasklet" name="CustomerListTasklet" type="MD">
@@ -82,6 +82,22 @@
       </sequence>
       <sequence>
       </sequence>
+    </sequence>
+  </process>
+  <process text="Customer detail" name="CustomerDetailReadOnly">
+    <sequence>
+    <tasklet name="CustomerDetailTasklet" assembly ="CustomerDetailTasklet" text="Customer Details" type="CustomerDetailTasklet.CustomerDetailTasklet, CustomerDetailTasklet">
+      <input type="setting" name="TaskletMode" value="View"/>
+      
+      <input type="global" name="CustomerId" value="SelectedCustomer"/>
+      
+      <actions>
+        <open text="Contact" priority="40" tasklet="CustomerContactDetailTasklet">
+        </open>
+        <open text="Credit Limit" priority="40" tasklet="CustomerCreditLimitDetailTasklet">
+        </open>
+      </actions>
+    </tasklet>    
     </sequence>
   </process>
 </processes>

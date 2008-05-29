@@ -52,6 +52,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StyleService", "StyleServic
 		Release.AspNetCompiler.Debug = "False"
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomerDetailTasklet", "CustomerDetailTasklet\CustomerDetailTasklet.csproj", "{ADE3E479-1958-4DDB-A471-4DB548B9ACF9}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -88,6 +94,10 @@ Global
 		{27CCB793-4BAA-4A7E-8734-88F17298B05D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{27CCB793-4BAA-4A7E-8734-88F17298B05D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{27CCB793-4BAA-4A7E-8734-88F17298B05D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADE3E479-1958-4DDB-A471-4DB548B9ACF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADE3E479-1958-4DDB-A471-4DB548B9ACF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADE3E479-1958-4DDB-A471-4DB548B9ACF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADE3E479-1958-4DDB-A471-4DB548B9ACF9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -5,11 +5,12 @@ using System.Reflection;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Drawing;
-using Microsoft.Dynamics.Mobile.Framework.Controls;
 using Microsoft.Dynamics.Mobile.Framework;
+using Microsoft.Dynamics.Mobile.Framework.Configuration;
+using Microsoft.Dynamics.Mobile.Framework.CompositeUI;
+using Microsoft.Dynamics.Mobile.Framework.Controls;
 using Microsoft.Dynamics.Mobile.Framework.Entities;
 using Microsoft.Dynamics.Mobile.Framework.Runtime;
-using Microsoft.Dynamics.Mobile.Framework.CompositeUI;
 using Microsoft.Dynamics.Mobile.Framework.Services;
 using CosmoBiz.TaskletLibrary;
 using Services.StyleService;
@@ -65,17 +66,6 @@ namespace CosmoBiz.EngineLibrary
       {
         RunTask(om.NextTask());
         if (exitOrchestration) break;
-      }
-    }
-
-    public void ExitOrchestration()
-    {
-      exitOrchestration = true;
-      if (currentTasklet != null)
-      {        
-        uif.Close();
-        uif.Close(uif.ActiveControl);
-        currentTasklet.Close();
       }
     }
 
@@ -184,6 +174,16 @@ namespace CosmoBiz.EngineLibrary
         }
       }
 
+
+      //tasklet.Configuration = new EmbeddedConfiguration("<appSettings><add key = \"TaskletMode\" value = \"View\"/></appSettings>");
+
+      tasklet.Configuration = new EmbeddedConfiguration();
+      //tasklet.Configuration.AppSettings.Add("TaskletMode", "View");
+
+      foreach (KeyValuePair<String, Object> p in t.Settings)
+        tasklet.Configuration.AppSettings.Add(p.Key, p.Value.ToString());
+
+
       // is this still nessecairy?
       tasklet.Definition = new TaskletDefinition("a", "b");
 
@@ -287,6 +287,38 @@ namespace CosmoBiz.EngineLibrary
         om.InsertOutput(taskletState);
       }
     }
+
+
+    internal void ExitOrchestration()
+    {
+      exitOrchestration = true;
+      if (currentTasklet != null)
+      {
+        uif.Close();
+        uif.Close(uif.ActiveControl);
+        currentTasklet.Close();
+      }
+    }
+
+
+
+    internal void LoadOrchestration(string name)
+    {
+      //throw new Exception("The method or operation is not implemented.");
+      // foreach processType in 
+      om.LoadOrchestration(name);
+      /*
+      if (currentTasklet != null)
+      {
+        uif.Close();
+        uif.Close(uif.ActiveControl);
+        currentTasklet.Close();
+      }
+       * */
+      //this.Run();
+      uif.Close();
+    }
+
 
   }
 }

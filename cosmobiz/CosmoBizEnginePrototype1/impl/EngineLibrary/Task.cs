@@ -20,6 +20,7 @@ namespace CosmoBiz.EngineLibrary
     // Key(String): The name of the inpit
     // Value(Object): The value of the inpit
     private Dictionary<String, Object> input;
+    private Dictionary<String, Object> settings;
     // The type of the tasklet, currently:
     // MD: MicroSoft Dynamics - MicroSoft's Format for tasklets
     // CB: CosmoBiz           - Our own format for tasklets, currently outdated (was initially used for testing)
@@ -30,12 +31,14 @@ namespace CosmoBiz.EngineLibrary
     public String Assembly { get { return assembly; } }
     public String Tasklet { get { return tasklet; } }
     public Dictionary<String, Object> Input { get { return input; } }
+    public Dictionary<String, Object> Settings { get { return settings; } }
     public String Type { get { return type; } }
 
     // constructor
     public Task(String assembly, String tasklet, String type)
     {
       input = new Dictionary<String, Object>();
+      settings = new Dictionary<String, Object>();
       Actions = new List<actionType>();
 
       this.assembly = assembly;
@@ -48,5 +51,11 @@ namespace CosmoBiz.EngineLibrary
     {
       input.Add(name, value);
     }
+
+    public void AddSetting(String name, Object value)
+    {
+      settings.Add(name, value);
+    }
+
   }
 }

@@ -191,11 +191,18 @@ namespace CosmoBiz.EngineLibrary
       Debug.WriteLine("Condition : [" + exp + "]");
       DataTable t = new DataTable();
 
-      if (t.Compute(exp, "").GetType() == typeof(Boolean))
+      try
       {
-        return ((Boolean)t.Compute(exp, ""));
+        if (t.Compute(exp, "").GetType() == typeof(Boolean))
+        {
+          return ((Boolean)t.Compute(exp, ""));
+        }
+        else
+        {
+          return false;
+        }
       }
-      else
+      catch (Exception)
       {
         return false;
       }
@@ -231,6 +238,7 @@ namespace CosmoBiz.EngineLibrary
 
           if (i.type == "constant") t.AddInput(i.name, i.value);
           else if ((i.type == "global") && globals.ContainsKey(i.value)) t.AddInput(i.name, globals[i.value]);
+          else if (i.type == "setting") t.AddSetting(i.name, i.value);
           else t.AddInput(i.name, i.value);
         }
 
@@ -291,6 +299,33 @@ namespace CosmoBiz.EngineLibrary
       }
     }
 
+
+    internal void LoadOrchestration(string name)
+    {
+      // source.Items.
+      // source.process.
+
+      foreach (processType p in source.Items)
+      {
+        if (p.name == name)
+        {
+          currentOrchestration = p;
+
+          if (currentOrchestration.Item.GetType() == typeof(sequenceType))
+          {
+            taskletEnum = ((sequenceType)currentOrchestration.Item).Items.GetEnumerator();
+            //MoveNext();
+          }
+          else
+          {
+            currentTasklet = (taskletType)currentOrchestration.Item;
+          }
+
+          
+        }
+      }
+
+    }
   }
 }
 

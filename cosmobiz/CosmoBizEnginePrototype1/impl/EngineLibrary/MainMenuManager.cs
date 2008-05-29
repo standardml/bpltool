@@ -26,7 +26,7 @@ namespace CosmoBiz.EngineLibrary
 
     public void AddTasklet(Task t)
     {
-
+      mainItem.MenuItems.Clear();
       // Still have to do sorting here:
       //t.openActions.Sort(      
       //t.Actions.Sor
@@ -53,7 +53,8 @@ namespace CosmoBiz.EngineLibrary
 
     private List<MenuItem> AddOpenAction(openType o)
     {
-      MenuItem m = new MenuItem();
+      OpenActionMenuItem m = new OpenActionMenuItem();
+      m.Action = o;
       m.Text = o.text;
       m.Click += new EventHandler(MenuClicked);
 
@@ -109,6 +110,11 @@ namespace CosmoBiz.EngineLibrary
     void MenuClicked(object sender, EventArgs e)
     {
       // To be imlemented
+      OpenActionMenuItem m = (OpenActionMenuItem)sender;
+      if (m.Action.orchestration != null && m.Action.orchestration != "")
+      {
+        owner.LoadOrchestration(m.Action.orchestration);     
+      }
     }
 
     void ExitOrchestrationClicked(object sender, EventArgs e)
