@@ -87,9 +87,11 @@
   <process text="Customer detail" name="CustomerDetailReadOnly">
     <sequence>
     <tasklet name="CustomerDetailTasklet" assembly ="CustomerDetailTasklet" text="Customer Details" type="CustomerDetailTasklet.CustomerDetailTasklet, CustomerDetailTasklet">
-      <input type="setting" name="TaskletMode" value="View"/>
-      
-      <input type="global" name="CustomerId" value="SelectedCustomer"/>      
+      <input type="setting" name="TaskletMode" value="View"/>      
+      <input type="global" name="CustomerId" value="SelectedCustomer"/>
+      <!--
+      <input type="constant" name="CustomerId" value="3"/>
+      -->
       <actions>
         <open text="Contact" priority="40" orchestration="CustomerContactDetailTasklet">
         </open>

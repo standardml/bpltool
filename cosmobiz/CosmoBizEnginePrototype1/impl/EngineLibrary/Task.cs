@@ -10,7 +10,7 @@ namespace CosmoBiz.EngineLibrary
    * - Input values
    * - Actions
    */
-  class Task
+  public class Task
   {
     // The name of the assembly that the tasklet is a part of.
     private String assembly;

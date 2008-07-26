@@ -37,6 +37,16 @@ namespace CosmoBiz.EngineLibrary
       get { return (atEnd); }
     }
 
+    public Dictionary<string, object> CopyGlobals()
+    {
+      return new Dictionary<string, object>(globals);
+    }
+
+    public void SetGlobals(Dictionary<string, object> g)
+    {
+      globals = g;
+    }
+
     /*
      * Constructor:
      * Initializes fields and loads an orchestration.
@@ -314,7 +324,7 @@ namespace CosmoBiz.EngineLibrary
           if (currentOrchestration.Item.GetType() == typeof(sequenceType))
           {
             taskletEnum = ((sequenceType)currentOrchestration.Item).Items.GetEnumerator();
-            //MoveNext();
+            MoveNext();
           }
           else
           {

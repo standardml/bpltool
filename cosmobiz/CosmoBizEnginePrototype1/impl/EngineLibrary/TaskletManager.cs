@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 using System.Reflection;
 using System.Windows.Forms;
@@ -14,6 +15,7 @@ using Microsoft.Dynamics.Mobile.Framework.Runtime;
 using Microsoft.Dynamics.Mobile.Framework.Services;
 using CosmoBiz.TaskletLibrary;
 using Services.StyleService;
+using System.Threading;
 
 namespace CosmoBiz.EngineLibrary
 {
@@ -34,6 +36,7 @@ namespace CosmoBiz.EngineLibrary
     private MainMenuManager mm;
     private Boolean exitOrchestration = false;
     private Tasklet currentTasklet = null;
+    private Queue<Tasklet> taskletQueue;
 
     /*
      * Constructor
@@ -46,12 +49,37 @@ namespace CosmoBiz.EngineLibrary
       ls = new LoggingService("\\Storage Card\\logs\\");
       dbc = new DatabaseCatalog("databaseCatalog");
       dbc.Initialize();
+      cmm = uif.cmm;
 
-      cmm = new CosmoBizContextMenuManager();
-      cmm.mainMenu = uif.MainMenu;
+      //cmm = new CosmoBizContextMenuManager();
+      //cmm.mainMenu = uif.MainMenu;
 
-      mm = new MainMenuManager(this, uif.MainMenu);
+      //mm = new MainMenuManager(this, uif.MainMenu);
+      mm = uif.mm;
+      mm.SetOwner(this);
+
       ss = new StyleService();
+
+      uif.Closing += this.UIForm_Closing;
+    }
+
+    public TaskletManager Clone()
+    {
+      TaskletManager tm = new TaskletManager();
+      //tm.om = this.om;
+      tm.om.SetGlobals(this.om.CopyGlobals());
+      //tm.uif = this.uif;
+      tm.ls = this.ls;
+      tm.dbc = this.dbc;
+
+      //tm.cmm = this.cmm;
+
+      //tm.mm = this.mm;
+      tm.ss = this.ss;
+
+      //uif.Closing += this.UIForm_Closing;
+
+      return tm;
     }
 
     /*
@@ -222,7 +250,7 @@ namespace CosmoBiz.EngineLibrary
       // Show the UIForm and wait until it is closed.
       Debug.WriteLine("|Giving control to the UIForm");
       uif.ShowDialog();
-
+      //uif.Show();
       Debug.WriteLine("|UIForm has exited");
 
       // Remove the taslet from the UIForm
@@ -301,12 +329,32 @@ namespace CosmoBiz.EngineLibrary
     }
 
 
+    internal void RealLoadOrchestration(string name)
+    {
+      om.LoadOrchestration(name);
+    }
 
     internal void LoadOrchestration(string name)
     {
       //throw new Exception("The method or operation is not implemented.");
       // foreach processType in 
-      om.LoadOrchestration(name);
+
+      //om.LoadOrchestration(name);
+
+      //TaskletManager tm = new TaskletManager();
+      //tm.Clone(this);
+
+      // make sure that globals is updated.
+      Dictionary<string, object> taskletState = currentTasklet.ExtractOutput();
+      om.UpdateGlobals(taskletState);
+
+      TaskletManager tm = this.Clone();
+      tm.RealLoadOrchestration(name);
+      tm.Run();
+      //tm.Close();
+      //Thread MyThread = new Thread(new ThreadStart(tm.Run));
+      //MyThread.Join();
+
       /*
       if (currentTasklet != null)
       {
@@ -316,7 +364,28 @@ namespace CosmoBiz.EngineLibrary
       }
        * */
       //this.Run();
+      // uif.Close();
+    }
+
+    /*
+    private void Close()
+    {
       uif.Close();
+      uif.Dispose();
+    }
+    */
+
+    private void UIForm_Closing(object sender, CancelEventArgs e)
+    {
+      // this messes up the show dialog...
+      UIForm f = (UIForm)sender;
+      if (f.ActiveControl != null)
+      {
+        f.Close(f.ActiveControl);
+        if (f.Controls.Count > 0) e.Cancel = true;
+      }
+      //f.
+        
     }
 
 

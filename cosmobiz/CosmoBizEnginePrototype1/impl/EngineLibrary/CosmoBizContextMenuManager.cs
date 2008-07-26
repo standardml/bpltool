@@ -9,7 +9,7 @@ using System.Windows.Forms;
 
 namespace CosmoBiz.EngineLibrary
 {
-  class CosmoBizContextMenuManager : IContextMenuManager
+  public class CosmoBizContextMenuManager : IContextMenuManager
   {
     // Fields
     private ActionCollection actions;

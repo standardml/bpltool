@@ -17,6 +17,8 @@ namespace CosmoBiz.EngineLibrary
   {
     // The active Control.
     private Control ac;
+    public MainMenuManager mm;
+    public CosmoBizContextMenuManager cmm;
 
     public MainMenu MainMenu
     {
@@ -29,6 +31,12 @@ namespace CosmoBiz.EngineLibrary
     public UIForm()
     {
       InitializeComponent();
+
+      cmm = new CosmoBizContextMenuManager();
+      cmm.mainMenu = this.MainMenu;
+
+      mm = new MainMenuManager(this.MainMenu);
+
     }
 
     // Public property to get the active control.
@@ -52,7 +60,14 @@ namespace CosmoBiz.EngineLibrary
      */
     public void Close(Control c)
     {
-      this.Controls.Remove(c);      
+      this.Controls.Remove(c);
+      if (this.Controls.Count > 0)
+      {
+        ac = this.Controls[this.Controls.Count - 1];
+        ac.BringToFront();
+      }
+      else
+        ac = null;
     }
 
     /*

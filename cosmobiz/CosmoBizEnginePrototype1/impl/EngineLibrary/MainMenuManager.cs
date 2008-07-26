@@ -5,12 +5,21 @@ using System.Windows.Forms;
 
 namespace CosmoBiz.EngineLibrary
 {
-  class MainMenuManager
+  public class MainMenuManager
   {
     private MainMenu mainMenu;
     private MenuItem mainItem;
     private TaskletManager owner;
     private ActionSorter sort;
+
+    public MainMenuManager(MainMenu mm) : this(null, mm)
+    {     
+    }
+
+    public void SetOwner (TaskletManager o)
+    {
+      owner = o;
+    }
 
     public MainMenuManager(TaskletManager o, MainMenu mm)
     {
