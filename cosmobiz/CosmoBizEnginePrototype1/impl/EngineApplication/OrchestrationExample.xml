@@ -104,12 +104,14 @@
   <process text="CustomerContactDetailTasklet" name="CustomerContactDetailTasklet">
     <sequence>
       <tasklet name="CustomerContactDetailTasklet" assembly ="CustomerContactDetailTasklet" text="Contact Details" type="CustomerContactDetailTasklet.CustomerContactDetailTasklet, CustomerContactDetailTasklet">
+        <input type="global" name="CustomerId" value="SelectedCustomer"/>
       </tasklet>
     </sequence>
   </process>
-  <process text="CustomerContactDetailTasklet" name="CustomerContactDetailTasklet">
+  <process text="CustomerCreditLimitDetailTasklet" name="CustomerCreditLimitDetailTasklet">
     <sequence>
       <tasklet name="CustomerCreditLimitDetailTasklet" assembly ="CustomerCreditLimitDetailTasklet" text="Credit Limit" type="CustomerCreditLimitDetailTasklet.CustomerCreditLimitDetailTasklet, CustomerCreditLimitDetailTasklet">
+        <input type="global" name="CustomerId" value="SelectedCustomer"/>
       </tasklet>
     </sequence>
   </process>

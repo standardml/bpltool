@@ -242,7 +242,7 @@ namespace CosmoBiz.EngineLibrary
           {
             Debug.WriteLine("Contents of globals:");
             foreach (KeyValuePair<String, Object> kvp in globals)
-              Debug.WriteLine(kvp.Key + ":" + kvp.Value.ToString());
+              try { Debug.WriteLine(kvp.Key + ":" + kvp.Value.ToString()); } catch { }
             Debug.WriteLine("-----");
           }
 
