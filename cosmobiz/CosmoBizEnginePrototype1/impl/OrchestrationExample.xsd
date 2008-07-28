@@ -1,11 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
   
-  <xs:element name="orchestration">
-    <xs:complexType>
-  	  <xs:group ref="groupStructured" minOccurs="0" />
+	<xs:element name="processes">
+		<xs:complexType>
+	    <xs:choice minOccurs="0" maxOccurs="unbounded">
+	      <xs:element name="process" type="processType" />
+	    </xs:choice>    		
     </xs:complexType>
   </xs:element>
+
+
+  <xs:complexType name="processType" mixed="true">
+	  <xs:group ref="groupStructured" minOccurs="0" />
+    <xs:attribute name="name" type="xs:string" use="required" />
+    <xs:attribute name="text" type="xs:string" use="required" />	  
+  </xs:complexType>
      
   <xs:complexType name="sequenceType" mixed="true">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -59,7 +68,8 @@
     <xs:sequence minOccurs="0">
     	<xs:element name="input" type="inputType" minOccurs="0" maxOccurs="unbounded" />
     	<xs:element name="output" type="outputType" minOccurs="0" maxOccurs="unbounded" />
-    </xs:sequence>    	
+    	<xs:element name="actions" type="actionsType" minOccurs="0" maxOccurs="1" />
+    </xs:sequence>    
     <xs:attribute name="assembly" type="xs:string" use="required" />
     <xs:attribute name="name" type="xs:string" use="required" />
     <xs:attribute name="type" type="xs:string" use="required" />
@@ -79,7 +89,63 @@
 	    </xs:extension>
 	  </xs:simpleContent>
   </xs:complexType>  
+ 
     
+  <xs:complexType name="actionsType" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+    	<xs:element name="open" type="openType"/>
+    	<xs:element name="group" type="groupType"/>
+    	<xs:element name="exitOrchestration" type="exitOrchestrationType"/>
+    </xs:choice>    	
+  </xs:complexType>  
+  
+  
+  
+  <xs:complexType name="actionType" mixed="true">
+  	<xs:attribute name="text" type="xs:string" use="required" />
+  	<xs:attribute name="priority" type="xs:integer"/>
+  </xs:complexType>  
+  
+
+
+  
+  <xs:complexType name="openType" mixed="true">
+	  <xs:complexContent>
+	    <xs:extension base="actionType">
+		    <xs:sequence minOccurs="0">
+		    	<xs:element name="input" type="inputType" minOccurs="0" maxOccurs="unbounded" />
+		    </xs:sequence>    	    
+		    <xs:attribute name="orchestration" type="xs:string" use="required" />
+		    <xs:attribute name="tasklet" type="xs:string" use="required" />   		    
+		  </xs:extension>
+		</xs:complexContent>
+  </xs:complexType>  
+  
+  
+  <xs:complexType name="groupType" mixed="true">
+  	<xs:complexContent>
+	  	<xs:extension base="actionType">
+		    <xs:choice minOccurs="0" maxOccurs="unbounded">
+		    	<xs:element name="open" type="openType"/>
+		    	<xs:element name="group" type="groupType"/>
+		    	<xs:element name="exitOrchestration" type="exitOrchestrationType"/>
+		    </xs:choice>    		
+		    <xs:attribute name="name" type="xs:string" use="required" />
+		    <xs:attribute name="type" type="xs:string" use="required" />		    
+		  </xs:extension>
+		</xs:complexContent>
+  </xs:complexType>  
+  
+      
+  
+  <xs:complexType name="exitOrchestrationType" mixed="true">
+  	<xs:complexContent>
+	    <xs:extension base="actionType">
+	    </xs:extension>
+	  </xs:complexContent>
+  </xs:complexType>
+    
+      
   <xs:group name="groupStructured">
     <xs:choice>
       <xs:element name="sequence" type="sequenceType" />
