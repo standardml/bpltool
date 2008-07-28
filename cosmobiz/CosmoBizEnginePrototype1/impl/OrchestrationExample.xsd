@@ -95,7 +95,7 @@
     <xs:choice minOccurs="0" maxOccurs="unbounded">
     	<xs:element name="open" type="openType"/>
     	<xs:element name="group" type="groupType"/>
-    	<xs:element name="exitOrchestration" type="exitOrchestrationType"/>
+    	<xs:element name="exitProcess" type="exitProcessType"/>
     </xs:choice>    	
   </xs:complexType>  
   
@@ -115,7 +115,7 @@
 		    <xs:sequence minOccurs="0">
 		    	<xs:element name="input" type="inputType" minOccurs="0" maxOccurs="unbounded" />
 		    </xs:sequence>    	    
-		    <xs:attribute name="orchestration" type="xs:string" use="required" />
+		    <xs:attribute name="process" type="xs:string" use="required" />
 		    <xs:attribute name="tasklet" type="xs:string" use="required" />   		    
 		  </xs:extension>
 		</xs:complexContent>
@@ -128,7 +128,7 @@
 		    <xs:choice minOccurs="0" maxOccurs="unbounded">
 		    	<xs:element name="open" type="openType"/>
 		    	<xs:element name="group" type="groupType"/>
-		    	<xs:element name="exitOrchestration" type="exitOrchestrationType"/>
+		    	<xs:element name="exitProcess" type="exitProcessType"/>
 		    </xs:choice>    		
 		    <xs:attribute name="name" type="xs:string" use="required" />
 		    <xs:attribute name="type" type="xs:string" use="required" />		    
@@ -138,7 +138,7 @@
   
       
   
-  <xs:complexType name="exitOrchestrationType" mixed="true">
+  <xs:complexType name="exitProcessType" mixed="true">
   	<xs:complexContent>
 	    <xs:extension base="actionType">
 	    </xs:extension>

@@ -486,7 +486,7 @@ namespace CosmoBiz.EngineLibrary {
         private string[] textField;
         
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute("exitOrchestration", typeof(exitOrchestrationType), Order=0)]
+        [System.Xml.Serialization.XmlElementAttribute("exitProcess", typeof(exitProcessType), Order=0)]
         [System.Xml.Serialization.XmlElementAttribute("group", typeof(groupType), Order=0)]
         [System.Xml.Serialization.XmlElementAttribute("open", typeof(openType), Order=0)]
         public actionType[] Items {
@@ -515,11 +515,11 @@ namespace CosmoBiz.EngineLibrary {
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
-    public partial class exitOrchestrationType : actionType {
+    public partial class exitProcessType : actionType {
     }
     
     /// <remarks/>
-    [System.Xml.Serialization.XmlIncludeAttribute(typeof(exitOrchestrationType))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(exitProcessType))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(groupType))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(openType))]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "2.0.50727.42")]
@@ -582,7 +582,7 @@ namespace CosmoBiz.EngineLibrary {
         private string typeField;
         
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute("exitOrchestration", typeof(exitOrchestrationType), Order=0)]
+        [System.Xml.Serialization.XmlElementAttribute("exitProcess", typeof(exitProcessType), Order=0)]
         [System.Xml.Serialization.XmlElementAttribute("group", typeof(groupType), Order=0)]
         [System.Xml.Serialization.XmlElementAttribute("open", typeof(openType), Order=0)]
         public actionType[] Items {
@@ -626,7 +626,7 @@ namespace CosmoBiz.EngineLibrary {
         
         private inputType[] inputField;
         
-        private string orchestrationField;
+        private string processField;
         
         private string taskletField;
         
@@ -643,12 +643,12 @@ namespace CosmoBiz.EngineLibrary {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string orchestration {
+        public string process {
             get {
-                return this.orchestrationField;
+                return this.processField;
             }
             set {
-                this.orchestrationField = value;
+                this.processField = value;
             }
         }
         

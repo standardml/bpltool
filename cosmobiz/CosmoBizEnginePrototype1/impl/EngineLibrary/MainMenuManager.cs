@@ -55,8 +55,8 @@ namespace CosmoBiz.EngineLibrary
         return AddOpenAction((openType)a);
       else if (a.GetType() == typeof(groupType))
         return AddGroupAction((groupType)a);
-      else if (a.GetType() == typeof(exitOrchestrationType))
-        return AddExitOrchestrationAction((exitOrchestrationType)a);
+      else if (a.GetType() == typeof(exitProcessType))
+        return AddExitOrchestrationAction((exitProcessType)a);
       return null;
     }
 
@@ -105,7 +105,7 @@ namespace CosmoBiz.EngineLibrary
       return l;
     }
 
-    private List<MenuItem> AddExitOrchestrationAction(exitOrchestrationType e)
+    private List<MenuItem> AddExitOrchestrationAction(exitProcessType e)
     {
       MenuItem m = new MenuItem();
       m.Text = e.text;
@@ -120,9 +120,9 @@ namespace CosmoBiz.EngineLibrary
     {
       // To be imlemented
       OpenActionMenuItem m = (OpenActionMenuItem)sender;
-      if (m.Action.orchestration != null && m.Action.orchestration != "")
+      if (m.Action.process != null && m.Action.process != "")
       {
-        owner.LoadOrchestration(m.Action.orchestration);     
+        owner.LoadOrchestration(m.Action.process);     
       }
     }
 

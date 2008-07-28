@@ -5,11 +5,11 @@
 
       <tasklet assembly ="CustomerListTasklet" name="CustomerListTasklet" type="MD">
         <actions>
-          <open text="Details" orchestration="CustomerDetailReadOnly" priority="40">
+          <open text="Details" process="CustomerDetailReadOnly" priority="40">
           </open>
 
-          <open text="New" orchestration="NewCustomerWizard" priority="31"/>
-          <open text="Edit" orchestration="CustomerDetailEdit" priority="30">
+          <open text="New" process="NewCustomerWizard" priority="31"/>
+          <open text="Edit" process="CustomerDetailEdit" priority="30">
           </open>
 
 
@@ -18,17 +18,17 @@
           </group>
 
           <group name="Tools" text="Tools" type="Node" priority="11">
-            <open text="Synchronize" tasklet="Synchronization"/>
-            <open text="Credentials" tasklet="Credentials" />
-            <open text="Document Status" tasklet="History" />
+            <open text="Synchronize" process="Synchronization"/>
+            <open text="Credentials" process="Credentials" />
+            <open text="Document Status" process="History" />
           </group>
 
-          <exitOrchestration text="Close" />
+          <exitProcess text="Close" />
 
-        </actions>      
-      </tasklet>    
-      
-      
+        </actions>
+      </tasklet>
+
+
       <!--
       <sequence>
         <tasklet assembly ="IOTasklet" name="IOTasklet" type="MD">
@@ -86,16 +86,16 @@
   </process>
   <process text="Customer detail" name="CustomerDetailReadOnly">
     <sequence>
-    <tasklet name="CustomerDetailTasklet" assembly ="CustomerDetailTasklet" text="Customer Details" type="CustomerDetailTasklet.CustomerDetailTasklet, CustomerDetailTasklet">
-      <input type="setting" name="TaskletMode" value="View"/>      
-      <input type="global" name="CustomerId" value="SelectedCustomer"/>
-      <!--
+      <tasklet name="CustomerDetailTasklet" assembly ="CustomerDetailTasklet" text="Customer Details" type="CustomerDetailTasklet.CustomerDetailTasklet, CustomerDetailTasklet">
+        <input type="setting" name="TaskletMode" value="View"/>
+        <input type="global" name="CustomerId" value="SelectedCustomer"/>
+        <!--
       <input type="constant" name="CustomerId" value="3"/>
       -->
-      <actions>
-        <open text="Contact" priority="40" orchestration="CustomerContactDetailTasklet">
+        <actions>
+          <open text="Contact" priority="40" process="CustomerContactDetailTasklet">
         </open>
-        <open text="Credit Limit" priority="40" orchestration="CustomerCreditLimitDetailTasklet">
+        <open text="Credit Limit" priority="40" process="CustomerCreditLimitDetailTasklet">
         </open>
       </actions>
     </tasklet>    
