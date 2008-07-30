@@ -328,6 +328,15 @@ namespace CosmoBiz.EngineLibrary
       }
     }
 
+    internal void ExitTasklet(ExitResult Result)
+    {
+      if (currentTasklet != null)
+      {
+        uif.Close();
+        uif.Close(uif.ActiveControl);
+        currentTasklet.Close(Result);
+      }
+    }
 
     internal void RealLoadOrchestration(string name)
     {
@@ -387,7 +396,5 @@ namespace CosmoBiz.EngineLibrary
       //f.
         
     }
-
-
   }
 }

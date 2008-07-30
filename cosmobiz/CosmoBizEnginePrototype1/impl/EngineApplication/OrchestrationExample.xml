@@ -115,4 +115,91 @@
       </tasklet>
     </sequence>
   </process>
+
+
+  <process name="NewCustomerWizard" text="New Customer">
+    <sequence>
+      <!-- Customer Details -->
+      <tasklet name="CustomerDetailTasklet" assembly ="CustomerDetailTasklet" text="Customer Details" type="CustomerDetailTasklet.CustomerDetailTasklet, CustomerDetailTasklet">
+        <input type="setting" name="TaskletMode" value="Create"/>
+        <actions>
+          <exitTasklet text="Next" result="NONE"/>
+        </actions>        
+      </tasklet>
+
+      <!-- Credit Limit -->
+      <tasklet name="CustomerCreditLimitDetailTasklet" assembly ="CustomerCreditLimitDetailTasklet" text="Credit Limit" type="CustomerCreditLimitDetailTasklet.CustomerCreditLimitDetailTasklet, CustomerCreditLimitDetailTasklet">
+          <input type="setting" name="TaskletMode" value="Create"/>
+          <input type="global" name="CustomerType" value="CustomerType"/>
+          <input type="global" name="CustomerName" value="CustomerName"/>
+          <actions>
+            <exitTasklet text="Next" result="NONE"/>
+          </actions>
+      </tasklet>
+
+      <!-- Contact Details -->
+      <tasklet name="CustomerContactDetailTasklet" assembly ="CustomerContactDetailTasklet" text="Contact Details" type="CustomerContactDetailTasklet.CustomerContactDetailTasklet, CustomerContactDetailTasklet">
+        <input type="setting" name="TaskletMode" value="Create"/>
+        <input type="global" name="CustomerName" value="CustomerName"/>     
+        <actions>
+          <exitProcess priority="2" text="Finish" submitRequestDocument="true"  result="OK"/>
+        </actions>
+      </tasklet>
+
+    </sequence>
+  </process>
+
+
+  <process name="CustomerDetailEdit" text="Edit Customer">
+    <sequence>
+      <!-- Customer Details -->
+      <tasklet name="CustomerDetailTasklet" assembly ="CustomerDetailTasklet" text="Customer Details" type="CustomerDetailTasklet.CustomerDetailTasklet, CustomerDetailTasklet">
+        <input type="setting" name="TaskletMode" value="Edit"/>
+        <input type="global" name="CustomerId" value="SelectedCustomer"/>
+        <actions>
+          <open text="Contact" priority="40" process="CustomerDetailContactEdit">
+          </open>
+          <open text="Credit Limit" priority="40" process="CustomerDetailCreditEdit">
+          </open>
+          <exitTasklet text="Save"  result="OK"/>
+        </actions>
+      </tasklet>
+    </sequence>
+  </process>
+
+
+  <process name="CustomerDetailContactEdit" text="Edit Customer">
+    <sequence>
+      <!-- Contact Details -->
+      <tasklet name="CustomerContactDetailTasklet" assembly ="CustomerContactDetailTasklet" text="Contact Details" type="CustomerContactDetailTasklet.CustomerContactDetailTasklet, CustomerContactDetailTasklet">
+        <input type="setting" name="TaskletMode" value="Edit"/>
+        <input type="global" name="CustomerId" value="SelectedCustomer"/>
+      </tasklet>
+    </sequence>
+  </process>
+
+
+  <process name="CustomerDetailCreditEdit" text="Edit Customer">
+    <sequence>
+      <!-- Credit Limit -->
+      <tasklet name="CustomerCreditLimitDetailTasklet" assembly ="CustomerCreditLimitDetailTasklet" text="Credit Limit" type="CustomerCreditLimitDetailTasklet.CustomerCreditLimitDetailTasklet, CustomerCreditLimitDetailTasklet">
+        <input type="setting" name="TaskletMode" value="Edit"/>
+        <input type="global" name="CustomerId" value="SelectedCustomer"/>
+      </tasklet>
+    </sequence>
+  </process>
+
+
+  <!--
+  Not used: The tasklets build-in into the framework are pretty much impossible to debug.
+  -->
+  <!--
+  <process name="Synchronization" text="Synchronization">
+    <tasklet name="SynchronizationTasklet" assembly="Microsoft.Dynamics.Mobile.Framework.Runtime">
+      <actions>
+        <open text="Credentials" tasklet="Credentials"/>
+      </actions>
+    </tasklet>
+  </process>
+  -->
 </processes>

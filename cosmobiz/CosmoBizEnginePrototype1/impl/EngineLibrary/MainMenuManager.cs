@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
+using Microsoft.Dynamics.Mobile.Framework.Entities;
 
 namespace CosmoBiz.EngineLibrary
 {
@@ -57,6 +58,8 @@ namespace CosmoBiz.EngineLibrary
         return AddGroupAction((groupType)a);
       else if (a.GetType() == typeof(exitProcessType))
         return AddExitOrchestrationAction((exitProcessType)a);
+      else if (a.GetType() == typeof(exitTaskletType))
+        return AddExitTaskletAction((exitTaskletType)a);
       return null;
     }
 
@@ -66,6 +69,21 @@ namespace CosmoBiz.EngineLibrary
       m.Action = o;
       m.Text = o.text;
       m.Click += new EventHandler(MenuClicked);
+
+      List<MenuItem> l = new List<MenuItem>();
+      l.Add(m);
+      return l;
+    }
+
+    private List<MenuItem> AddExitTaskletAction(exitTaskletType e)
+    {
+      ExitTaskletActionMenuItem m = new ExitTaskletActionMenuItem();
+      if (e.result == "OK") 
+         m.Result = ExitResult.Ok;
+      else
+         m.Result = ExitResult.None;
+      m.Text = e.text;
+      m.Click += new EventHandler(ExitTaskletClicked);
 
       List<MenuItem> l = new List<MenuItem>();
       l.Add(m);
@@ -129,6 +147,13 @@ namespace CosmoBiz.EngineLibrary
     void ExitOrchestrationClicked(object sender, EventArgs e)
     {
       owner.ExitOrchestration();     
+    }
+
+    void ExitTaskletClicked(object sender, EventArgs e)
+    {
+      ExitTaskletActionMenuItem m = (ExitTaskletActionMenuItem)sender;
+      //if (m.Result != null)
+      owner.ExitTasklet(m.Result);
     }
 
     private static MenuItem CreateLine()

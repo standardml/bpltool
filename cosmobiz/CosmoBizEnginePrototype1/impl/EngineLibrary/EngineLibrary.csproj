@@ -78,6 +78,9 @@
   <ItemGroup>
     <Compile Include="ActionSorter.cs" />
     <Compile Include="CosmoBizContextMenuManager.cs" />
+    <Compile Include="ExitTaskletActionMenuItem.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="MainMenuManager.cs" />
     <Compile Include="OpenActionMenuItem.cs">
       <SubType>Component</SubType>
