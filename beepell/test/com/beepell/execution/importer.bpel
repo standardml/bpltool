@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<process
+  name="importer"
+  targetNamespace="http://beepell.com/tests/exchange/bpel"
+  xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+  xmlns:sref="http://docs.oasis-open.org/wsbpel/2.0/serviceref"
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:srv="http://beepell.com/samples/correlation/trade"
+  xmlns:typ="http://beepell.com/samples/correlation/trade/schema">
+
+  <import importType="http://schemas.xmlsoap.org/wsdl/" namespace="http://beepell.com/samples/correlation/trade" location="importer.wsdl" />   
+
+  <partnerLinks>
+    <partnerLink
+      name="producerPartnerLink"
+      partnerLinkType="srv:trade"
+      myRole="vendee"
+      partnerRole="vendor"
+      initializePartnerRole="no" />
+    <partnerLink
+      name="consumerPartnerLink"
+      partnerLinkType="srv:trade"
+      myRole="vendor"
+      partnerRole="vendee"
+      initializePartnerRole="no" />
+  </partnerLinks>
+  
+  <variables>
+    <variable name="order" messageType="srv:orderMessage" />
+    <variable name="invoice" messageType="srv:invoiceMessage" />
+    <variable name="backOrder" messageType="srv:orderMessage" />
+    <variable name="backInvoice" messageType="srv:invoiceMessage" />
+  </variables>
+
+  <correlationSets>
+    <correlationSet name="orderMatch" properties="srv:orderId" />
+    <correlationSet name="orderinvoice" properties="srv:orderId" />
+  </correlationSets>
+      
+  <sequence>
+    <receive
+      partnerLink="consumerPartnerLink"
+      operation="order"
+      variable="order"
+      createInstance="yes">
+      <correlations>
+        <correlation set="orderMatch" initiate="yes" />
+      </correlations>
+    </receive>
+
+    <assign>
+      <copy>
+        <from variable="order" />
+        <to variable="backOrder" />
+      </copy>
+      <copy>
+        <from>
+          <literal>
+            <sref:service-ref>
+              <wsdl:port name="producerPort" binding="srv:vendorBinding">
+                <soap:address location="http://localhost:9021/samples/correlation/trade/test"/>
+              </wsdl:port>
+            </sref:service-ref>
+          </literal>
+        </from>
+        <to partnerLink="producerPartnerLink" />
+      </copy>
+    </assign>
+
+    <invoke
+      partnerLink="producerPartnerLink"
+      operation="order"
+      inputVariable="backOrder">
+      <correlations>
+        <correlation set="orderinvoice" initiate="yes" pattern="request" />
+      </correlations>
+    </invoke>      
+      
+    <receive
+      partnerLink="producerPartnerLink"
+      operation="invoice"
+      variable="backInvoice">
+      <correlations>
+        <correlation set="orderinvoice" initiate="no" />
+      </correlations>
+    </receive>
+
+    <assign>
+      <copy>
+        <from variable="backInvoice" />
+        <to variable="invoice" />
+      </copy>
+    </assign>
+    <assign>
+      <copy>
+        <from>
+          <literal>
+          <sref:service-ref>
+            <wsdl:port name="consumerPort" binding="srv:vendeeBinding">
+              <soap:address location="http://localhost:9021/samples/correlation/trade/test"/>
+            </wsdl:port>
+          </sref:service-ref>
+          </literal>
+        </from>
+        <to partnerLink="consumerPartnerLink" />
+      </copy>
+    </assign>
+    
+    <invoke
+      partnerLink="consumerPartnerLink"
+      operation="invoice"
+      inputVariable="invoice">
+      <correlations>
+        <correlation set="orderMatch" initiate="no" />
+      </correlations>
+    </invoke>
+      
+      
+  </sequence>
+</process>

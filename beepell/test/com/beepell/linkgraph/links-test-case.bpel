@@ -1,0 +1,77 @@
+<process
+   name="pingPong"
+   targetNamespace="http://com.beepell/sampels/pingPong"
+   xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+   xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+   xmlns:png="http://beepell.com/wsdl/ping"
+   xmlns:ext="http://com.beepell/samples/extesion">
+
+   <flow>
+     <links>
+       <link name="HtoE"/>
+       <link name="BtoI"/>
+     </links>
+
+    <scope>
+      <terminationHandler>
+        <empty name="H">
+          <sources>
+            <source linkName="HtoE" />
+          </sources>
+        </empty>
+      </terminationHandler>
+      <sequence>
+        <empty name="I">
+          <targets>
+            <target linkName="BtoI" />
+          </targets>
+        </empty>
+        <empty name="J"/>
+        <empty name="K"/>
+      </sequence>
+    </scope>
+       
+     <if>
+       <condition>true()</condition>
+       <flow>
+         <links>
+           <link name="CtoF"/>
+         </links> 
+         <sequence>
+           <empty name="A"/>
+           <if>
+             <condition>true()</condition>
+             
+             <empty name="B">
+               <sources>
+                 <source linkName="BtoI" />
+               </sources>
+             </empty>
+             
+             <else>
+               <empty name="C">
+                 <sources>
+                   <source linkName="CtoF" />
+                 </sources>
+               </empty>
+             </else>
+           </if>
+         </sequence>
+         <sequence>
+           <empty name="D"/>
+           <empty name="E">
+             <targets>
+               <target linkName="HtoE" />
+             </targets>
+           </empty>
+           <empty name="F">
+             <targets>
+               <target linkName="CtoF" />
+             </targets>
+           </empty>
+         </sequence>    
+       </flow>
+    </if>
+
+   </flow>
+</process>

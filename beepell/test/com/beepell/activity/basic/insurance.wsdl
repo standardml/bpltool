@@ -1,0 +1,99 @@
+<wsdl:definitions
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype"
+  xmlns:vprop="http://docs.oasis-open.org/wsbpel/2.0/varprop"
+  xmlns:tns="http://tim.hallwyl.dk/"
+  xmlns:ins="http://tim.hallwyl.dk/insurance"
+  targetNamespace="http://tim.hallwyl.dk/">
+  
+  <plnk:partnerLinkType name="insurancePartnerLinkType">
+    <plnk:role name="insuranceProviderRole" portType="tns:InsurancePortType" />
+  </plnk:partnerLinkType>
+  
+  <vprop:property name="firstname" type="xsd:token" />
+  
+  <vprop:propertyAlias propertyName="tns:firstname"
+      messageType="tns:InsuranceRequest" part="driver">
+      <vprop:query>//ins:firstname[1]</vprop:query>
+  </vprop:propertyAlias>
+  
+  
+  <wsdl:types>
+    <xsd:schema elementFormDefault="qualified" xmlns:ins="http://tim.hallwyl.dk/insurance" targetNamespace="http://tim.hallwyl.dk/insurance">
+
+      <xsd:complexType name="person">
+        <xsd:sequence>
+          <xsd:element name="firstname" type="xsd:token"/>
+          <xsd:element name="lastname" type="xsd:token"/>
+        </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:element name="car">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="manufacturer" type="xsd:token" />
+            <xsd:element name="model" type="xsd:token" />
+            <xsd:element name="year" type="xsd:gYear" />
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+      <xsd:complexType name="carpark">
+        <xsd:sequence>
+          <xsd:element ref="ins:car" maxOccurs="unbounded" />
+        </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:complexType name="premium">
+        <xsd:sequence>
+          <xsd:element name="monthly" type="xsd:decimal" />
+          <xsd:element name="bonus" type="xsd:decimal" />
+        </xsd:sequence>
+      </xsd:complexType>
+
+    </xsd:schema>
+  </wsdl:types>
+
+
+
+  <wsdl:message name="InsuranceRequest">
+    <wsdl:part name="driver" type="ins:person" />
+    <wsdl:part name="cars" type="ins:carpark" />
+  </wsdl:message>
+
+  <wsdl:message name="InsuranceResponse">
+    <wsdl:part name="premium" type="ins:premium" />
+  </wsdl:message>
+
+  <wsdl:portType name="InsurancePortType">
+    <wsdl:operation name="InsuranceOperation">
+      <wsdl:input message="tns:InsuranceRequest" />
+      <wsdl:output message="tns:InsuranceResponse" />
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="InsuranceBinding" type="tns:InsurancePortType">
+
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="rpc" />
+
+    <wsdl:operation name="InsuranceOperation">
+      <soap:operation soapAction="http://tim.hallwyl.dk/InsuranceOperation" />
+      <wsdl:input>
+        <soap:body namespace="http://tim.hallwyl.dk/request" use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body namespace="http://tim.hallwyl.dk/response" use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+
+  </wsdl:binding>
+
+  <wsdl:service name="InsuranceService">
+    <wsdl:port name="InsurancePort" binding="tns:InsuranceBinding">
+      <soap:address location="http://localhost:9010/samples/services/Insurance" />
+    </wsdl:port>
+  </wsdl:service>
+
+</wsdl:definitions>

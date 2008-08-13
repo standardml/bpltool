@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<wsdl:definitions 
+  targetNamespace="http://beepell.com/samples/correlation/service"
+  xmlns:srv="http://beepell.com/samples/correlation/service"
+  xmlns:sch="http://beepell.com/samples/correlation/schema" 
+  xmlns:vprop="http://docs.oasis-open.org/wsbpel/2.0/varprop"
+  xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype" 
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+   <wsdl:types>
+     <xsd:schema
+       targetNamespace="http://beepell.com/samples/correlation/schema"
+       elementFormDefault="qualified">
+  
+       <xsd:element name="order">
+         <xsd:complexType>
+           <xsd:sequence>
+             <xsd:any minOccurs="0"/>
+           </xsd:sequence>
+         </xsd:complexType>
+       </xsd:element>
+
+       <xsd:element name="confirmation">
+         <xsd:complexType>
+           <xsd:sequence>
+             <xsd:element name="orderId" type="xsd:integer" />
+             <xsd:any minOccurs="0"/>
+           </xsd:sequence>
+         </xsd:complexType>
+       </xsd:element>
+
+       <xsd:element name="invoice">
+         <xsd:complexType>
+           <xsd:sequence>
+             <xsd:element name="invoiceId" type="xsd:integer" />
+             <xsd:element name="orderId" type="xsd:integer" />
+             <xsd:any minOccurs="0"/>
+           </xsd:sequence>
+         </xsd:complexType>
+       </xsd:element>
+          
+     </xsd:schema>
+   </wsdl:types>
+  
+  <plnk:partnerLinkType name="tradePartnerLinkType">
+    <plnk:role name="BuyerRole"  portType="srv:buyerPortType" />
+    <plnk:role name="SellerRole" portType="srv:sellerPortType" />
+  </plnk:partnerLinkType>
+
+  <vprop:property name="orderId" type="xsd:integer" />
+  <vprop:property name="invoiceId" type="xsd:integer" />
+
+  <vprop:propertyAlias
+     propertyName="srv:orderId"
+     messageType="srv:confirmMessage" part="confirmation">
+     <vprop:query>sch:orderId</vprop:query>
+  </vprop:propertyAlias>
+
+  <vprop:propertyAlias
+     propertyName="srv:orderId"
+     messageType="srv:invoiceMessage" part="invoice">
+     <vprop:query>sch:orderId</vprop:query>
+  </vprop:propertyAlias>
+
+  <vprop:propertyAlias
+     propertyName="srv:invoiceId"
+     messageType="srv:invoiceMessage" part="invoice">
+     <vprop:query>sch:invoiceId</vprop:query>
+  </vprop:propertyAlias>
+    
+  <wsdl:message name="orderMessage">
+    <wsdl:part name="order" type="sch:order" />
+  </wsdl:message>
+  
+  <wsdl:message name="confirmMessage">
+    <wsdl:part name="confirmation" type="sch:confirmation" />
+  </wsdl:message>
+
+  <wsdl:message name="invoiceMessage">
+    <wsdl:part name="invoice" type="sch:invoice" />
+  </wsdl:message>
+  
+  <wsdl:portType name="buyerPortType">
+    <wsdl:operation name="claimOperation">
+      <wsdl:input message="srv:invoiceMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:portType name="sellerPortType">
+    <wsdl:operation name="orderOperation">
+      <wsdl:input message="srv:orderMessage" />
+      <wsdl:output message="srv:confirmMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  
+</wsdl:definitions>

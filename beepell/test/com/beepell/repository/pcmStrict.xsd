@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited by Bryan Rasmussen -->
+<xsd:schema version="1.0" targetNamespace="http://rep.oio.dk/ubl/xml/schemas/0p71/pcm/" 
+xmlns:main="http://rep.oio.dk/ubl/xml/schemas/0p71/maindoc/" 
+xmlns:com="http://rep.oio.dk/ubl/xml/schemas/0p71/common/" 
+xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+xmlns:pcm="http://rep.oio.dk/ubl/xml/schemas/0p71/pcm/"
+xmlns:pie="http://rep.oio.dk/ubl/xml/schemas/0p71/pie/"
+elementFormDefault="qualified">
+	<xsd:import namespace="http://rep.oio.dk/ubl/xml/schemas/0p71/pie/" schemaLocation="pieStrict.xsd"/>
+
+
+
+	<xsd:element name="Invoice" type="pie:InvoiceType" />
+	
+</xsd:schema>

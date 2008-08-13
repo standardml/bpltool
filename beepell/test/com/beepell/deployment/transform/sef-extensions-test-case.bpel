@@ -1,0 +1,123 @@
+<process
+   name="pingPong"
+   targetNamespace="http://com.beepell/sampels/pingPong"
+   xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+   xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+   xmlns:png="http://beepell.com/wsdl/ping"
+   xmlns:ext="http://com.beepell/samples/extesion">
+
+   <extensions>
+      <extension namespace="http://com.beepell/samples/extesion" mustUnderstand="no" />
+   </extensions>
+   
+   <partnerLinks>
+      <partnerLink 
+        name="ping" 
+        partnerLinkType="png:ping"
+        myRole="pinged" 
+        partnerRole="ponged" />
+   </partnerLinks>
+
+   <variables>
+      <variable name="in" messageType="png:PingMessage" />
+      <variable name="out" messageType="png:PongMessage" />
+   </variables>
+
+   <sequence ext:x="1" ext:y="5">
+
+      <receive xmlns:one="urn:one" xmlns:two="urn:two" ext:x="2" ext:y="5"
+        partnerLink="ping" 
+        portType="png:pingPortType"
+        operation="pingOperation"
+        variable="in"
+        createInstance="yes">
+      </receive>
+
+      <assign ext:x="3" ext:y="5">
+        <copy>
+          <from>$in.value</from>
+          <to>$out.value</to>
+        </copy>        
+        <copy>
+          <from>$in.text</from>
+          <to>$out.text</to>
+        </copy>        
+      </assign>
+
+      <assign ext:x="4" ext:y="5">
+        <copy>
+          <from>$in.value</from>
+          <to>$out.value</to>
+        </copy>        
+        <extensionAssignOperation>
+          <ext:copy>$out.value += 1</ext:copy>          
+        </extensionAssignOperation>       
+      </assign>
+
+      <flow xmlns:one="urn:foo" xmlns:two="urn:bar">
+        <links>
+          <link name="someone"/>
+          <link name="someother"/>
+        </links>
+        
+        <assign ext:x="5" ext:y="5" name="AssignWithoutCopy" suppressJoinFailure="yes" validate="yes">
+          <targets>
+            <joinCondition xmlns:one="urn:one" xmlns:two="urn:two" expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">
+              fn:true()
+            </joinCondition>
+            <target linkName="someother"/>
+          </targets>
+	      <sources>
+            <source linkName="someone">
+              <transitionCondition expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">
+                fn:true()
+              </transitionCondition>
+            </source>
+          </sources>
+     
+          <extensionAssignOperation>
+            <ext:copy>$out.text += " (extension assign operation performed) "</ext:copy>          
+          </extensionAssignOperation>
+          <extensionAssignOperation>
+            <ext:copy>$out.value += 1</ext:copy>          
+          </extensionAssignOperation>
+        </assign>
+
+        <extensionActivity>
+          <ext:myActivity ext:x="" ext:y="" name="MyExtensionActivity" suppressJoinFailure="yes">
+            <targets>
+              <joinCondition expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">
+                fn:true()
+              </joinCondition>
+              <target linkName="someone"/>
+            </targets>
+	        <sources>
+              <source linkName="someother">
+                <transitionCondition expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">
+                  fn:true()
+                </transitionCondition>
+              </source>
+            </sources>
+          </ext:myActivity>
+        </extensionActivity>
+
+      </flow>
+
+      <assign validate="yes" name="literal">
+        <ext:text>This extension has a textual content</ext:text>
+        <copy>
+          <from><literal><driver xmlns:ins="http://tim.hallwyl.dk/insurance"><ins:firstname>Peter</ins:firstname><ins:lastname>Ulrich</ins:lastname></driver></literal></from>
+          <to variable="driver"/>
+        </copy>
+      </assign>
+
+      <reply xmlns:one="urn:one" xmlns:two="urn:two" ext:x="6" ext:y="5"
+        partnerLink="ping"
+        portType="png:ping"
+        operation="pingOperation"
+        variable="out">
+        <documentation>Reply ping request (pong)</documentation>
+      </reply>
+
+   </sequence>
+</process>

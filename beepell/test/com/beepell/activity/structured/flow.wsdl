@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<wsdl:definitions 
+  targetNamespace="http://beepell.com/samples/proxy/definitions" 
+  xmlns:srv="http://beepell.com/samples/proxy/definitions" 
+  xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype" 
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  
+  <plnk:partnerLinkType name="echoPartnerLinkType">
+    <plnk:role name="echoProviderRole" portType="srv:echoPortType" />
+  </plnk:partnerLinkType>
+  
+  <wsdl:message name="echoMessage">
+    <wsdl:part name="text" type="xsd:string" />
+  </wsdl:message>
+  
+  <wsdl:portType name="echoPortType">
+    <wsdl:operation name="echoOperation">
+      <wsdl:input message="srv:echoMessage" />
+      <wsdl:output message="srv:echoMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  
+  <wsdl:binding name="echoBinding" type="srv:echoPortType">
+      <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+      
+      <wsdl:operation name="echoOperation">
+          <soap:operation soapAction="http://beepell.com/samples/proxy/definitions/echo"/>
+          <wsdl:input>
+              <soap:body use="literal" namespace="http://beepell.com/samples/proxy/definitions" />
+          </wsdl:input>
+          <wsdl:output>
+              <soap:body use="literal" namespace="http://beepell.com/samples/proxy/definitions" />
+          </wsdl:output>
+      </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="echoService">
+      <wsdl:port name="echoPort" binding="srv:echoBinding">
+          <soap:address location="http://localhost:9095/samples/proxy/definitions/echo"/>
+      </wsdl:port>
+  </wsdl:service>
+  
+</wsdl:definitions>

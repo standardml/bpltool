@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<wsdl:definitions 
+  targetNamespace="http://beepell.com/samples/invokable/definitions"
+  xmlns:inv="http://beepell.com/samples/invokable/definitions"
+  xmlns:flt="http://beepell.com/samples/invokable/schema"
+  xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype" 
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  
+  <plnk:partnerLinkType name="invokablePartnerLinkType">
+    <plnk:role name="invokableProviderRole" portType="inv:invokablePortType" />
+  </plnk:partnerLinkType>
+
+  <wsdl:types>
+    <xsd:schema elementFormDefault="qualified"
+      xmlns:flt="http://beepell.com/samples/invokable/schema"
+      targetNamespace="http://beepell.com/samples/invokable/schema">
+
+      <xsd:complexType name="fault">
+        <xsd:sequence>
+            <xsd:element name="number" type="xsd:unsignedShort" />
+            <xsd:element name="title" type="xsd:token" />
+            <xsd:element name="cause" type="xsd:string" />
+        </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:element name="faultA" type="flt:fault" />
+      <xsd:element name="faultB" type="flt:fault" />
+      <xsd:element name="faultC" type="flt:fault" />
+      <xsd:element name="faultD" type="flt:fault" />
+      <xsd:element name="faultE" type="flt:fault" />
+
+    </xsd:schema>
+  </wsdl:types>
+  
+  <wsdl:message name="invokeMessage">
+    <wsdl:part name="number" type="xsd:unsignedShort" />
+  </wsdl:message>
+
+  <wsdl:message name="faultMessageA">
+    <wsdl:part name="faultPart" element="flt:faultA" />
+  </wsdl:message>
+
+  <wsdl:message name="faultMessageB">
+    <wsdl:part name="faultPart" element="flt:faultB" />
+  </wsdl:message>
+  
+  <wsdl:message name="faultMessageC">
+    <wsdl:part name="faultPart" element="flt:faultC" />
+  </wsdl:message>
+  
+  <wsdl:message name="faultMessageD">
+    <wsdl:part name="faultPart" element="flt:faultD" />
+  </wsdl:message>
+  
+  <wsdl:message name="faultMessageE">
+    <wsdl:part name="faultPart" element="flt:faultE" />
+  </wsdl:message>
+  
+  <wsdl:portType name="invokablePortType">
+    <wsdl:operation name="faultOperation">
+      <wsdl:input message="inv:invokeMessage" />
+      <wsdl:output message="inv:invokeMessage" />
+      <wsdl:fault name="firstFault"  message="inv:faultMessageA"/>
+      <wsdl:fault name="secondFault" message="inv:faultMessageB"/>
+      <wsdl:fault name="thirdFault"  message="inv:faultMessageC"/>
+      <wsdl:fault name="fourthFault" message="inv:faultMessageD"/>
+      <wsdl:fault name="fifthFault"  message="inv:faultMessageE"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  
+  <wsdl:binding name="invokableBinding" type="inv:invokablePortType">
+      <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>      
+      <wsdl:operation name="faultOperation">
+          <soap:operation soapAction="http://beepell.com/samples/invokable/definitions/faultOperation"/>
+          <wsdl:input>
+              <soap:body use="literal" namespace="http://beepell.com/samples/invokable/definitions/faultOperation" />
+          </wsdl:input>
+          <wsdl:output>
+              <soap:body use="literal" namespace="http://beepell.com/samples/invokable/definitions/faultOperation" />
+          </wsdl:output>
+      </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="invokableService">
+      <wsdl:port name="invokablePort" binding="inv:invokableBinding">
+          <soap:address location="http://localhost:9047/samples/invokable/endpoint"/>
+      </wsdl:port>
+  </wsdl:service>
+  
+</wsdl:definitions>

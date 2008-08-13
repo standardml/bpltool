@@ -1,0 +1,48 @@
+<wsdl:definitions
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:tns="http://tim.hallwyl.dk/"
+  targetNamespace="http://tim.hallwyl.dk/">
+
+  <wsdl:message name="ConversionRateRequest">
+    <wsdl:part name="from" type="xsd:token" />
+    <wsdl:part name="to" type="xsd:token" />
+  </wsdl:message>
+
+  <wsdl:message name="ConversionRateResponse">
+    <wsdl:part name="rate" type="xsd:decimal" />
+  </wsdl:message>
+
+  <wsdl:portType name="CurrencyConvertorPortType">
+    <wsdl:operation name="ConversionRateOperation">
+      <wsdl:input message="tns:ConversionRateRequest" />
+      <wsdl:output message="tns:ConversionRateResponse" />
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="CurrencyConvertorBinding" type="tns:CurrencyConvertorPortType">
+
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="rpc" />
+
+    <wsdl:operation name="ConversionRateOperation">
+      <soap:operation soapAction="http://tim.hallwyl.dk/ConversionRateOperation" />
+      <wsdl:input>
+        <soap:body namespace="http://tim.hallwyl.dk/request" use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body namespace="http://tim.hallwyl.dk/response" use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+
+  </wsdl:binding>
+
+  <wsdl:service name="CurrencyConvertorService">
+    <wsdl:port name="CurrencyConvertorPort" binding="tns:CurrencyConvertorBinding">
+      <soap:address location="http://localhost:9000/samples/services/CurrencyConvertor" />
+    </wsdl:port>
+  </wsdl:service>
+
+</wsdl:definitions>
+
+

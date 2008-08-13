@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<process
+  name="proxy"
+  targetNamespace="http://beepell.com/samples/proxy"
+  xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+  xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+  xmlns:srv="http://beepell.com/samples/proxy/definitions"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:tim="http://tim.hallwyl.dk/"
+  xmlns:ins="http://tim.hallwyl.dk/insurance"
+  xmlns:sref="http://docs.oasis-open.org/wsbpel/2.0/serviceref">
+
+  <import importType="http://schemas.xmlsoap.org/wsdl/" namespace="http://beepell.com/samples/proxy/definitions" location="loop.wsdl" />   
+
+  <partnerLinks>
+    <partnerLink
+      name="echoPartnerLink"
+      partnerLinkType="srv:echoPartnerLinkType"
+      myRole="echoProviderRole" />
+  </partnerLinks>
+  
+  <variables>
+    <variable name="request" messageType="srv:echoMessage" />
+    <variable name="index" type="xsd:int"><from><literal>0</literal></from></variable>
+  </variables>
+  
+  <sequence>
+      <receive
+      partnerLink="echoPartnerLink"
+      operation="echoOperation"
+      variable="request"
+      createInstance="yes"/>
+      
+    <while>
+      <condition>$index &lt; 100</condition>
+      <assign validate="no">
+        <copy>
+          <from>$index + 1</from>
+          <to variable="index" />
+        </copy>
+      </assign>
+    </while>
+   
+    <if>
+      <condition>$index != 100</condition>
+      <assign>
+        <copy>
+          <from><literal>FAILED</literal></from>
+          <to variable="request" part="text" />
+        </copy>
+      </assign>
+    </if>
+    
+    <repeatUntil>
+      <assign validate="no">
+        <copy>
+          <from>$index - 1</from>
+          <to variable="index" />
+        </copy>
+      </assign>
+      <condition>$index = 0</condition>
+    </repeatUntil>
+
+    <if>
+      <condition>$index != 0</condition>
+      <assign>
+        <copy>
+          <from><literal>FAILED</literal></from>
+          <to variable="request" part="text" />
+        </copy>
+      </assign>
+    </if>
+
+  
+      <reply
+      partnerLink="echoPartnerLink"
+      operation="echoOperation"
+      variable="request"/>
+  
+  </sequence>  
+  
+</process>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<process
+  name="proxy"
+  targetNamespace="http://beepell.com/samples/proxy"
+  xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+  xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+  xmlns:srv="http://beepell.com/samples/proxy/definitions"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:tim="http://tim.hallwyl.dk/"
+  xmlns:ins="http://tim.hallwyl.dk/insurance"
+  xmlns:sref="http://docs.oasis-open.org/wsbpel/2.0/serviceref">
+
+  <import importType="http://schemas.xmlsoap.org/wsdl/" namespace="http://beepell.com/samples/proxy/definitions" location="invoke.wsdl" />   
+  <import importType="http://schemas.xmlsoap.org/wsdl/" namespace="http://tim.hallwyl.dk/" location="insurance.wsdl" />   
+  <import importType="http://www.w3.org/2001/XMLSchema" namespace="http://docs.oasis-open.org/wsbpel/2.0/serviceref" location="../../../../../schemas/sref.xsd" />   
+
+  <partnerLinks>
+    <partnerLink
+      name="echoPartnerLink"
+      partnerLinkType="srv:echoPartnerLinkType"
+      myRole="echoProviderRole" />
+    <partnerLink
+      name="insurancePartnerLink"
+      partnerLinkType="tim:insurancePartnerLinkType"
+      partnerRole="insuranceProviderRole"
+      initializePartnerRole="yes" />    
+  </partnerLinks>
+  
+  <variables>
+    <variable name="request" messageType="srv:echoMessage" />
+    <variable name="insuranceRequest" messageType="tim:InsuranceRequest" />
+    <variable name="insuranceResponse" messageType="tim:InsuranceResponse" />
+  </variables>
+  
+  <sequence suppressJoinFailure="yes">
+    
+    <receive
+      partnerLink="echoPartnerLink"
+      operation="echoOperation"
+      variable="request"
+      createInstance="yes"/>
+
+
+    <assign validate="yes">
+      <copy>
+        <from>
+          <literal>
+            <driver xmlns:ins="http://tim.hallwyl.dk/insurance">
+              <ins:firstname>Peter</ins:firstname>
+              <ins:lastname>Ulrich</ins:lastname>
+            </driver>
+          </literal>
+        </from>
+        <to variable="insuranceRequest" part="driver" />
+      </copy>
+      <copy>
+        <from>
+          <literal>
+            <carpark>
+              <ins:car>
+                <ins:manufacturer>Mercedes</ins:manufacturer>
+                <ins:model>A</ins:model>
+                <ins:year>1989</ins:year>
+              </ins:car>
+              <ins:car>
+                <ins:manufacturer>Audi</ins:manufacturer>
+                <ins:model>A6</ins:model>
+                <ins:year>1992</ins:year>
+              </ins:car>
+              <ins:car>
+                <ins:manufacturer>BMW</ins:manufacturer>
+                <ins:model>Z4</ins:model>
+                <ins:year>2007</ins:year>
+              </ins:car>
+            </carpark>
+          </literal>
+        </from>
+        <to variable="insuranceRequest" part="cars" />
+      </copy>
+    </assign>
+
+    <invoke
+      partnerLink="insurancePartnerLink"
+      operation="InsuranceOperation"
+      inputVariable="insuranceRequest"
+      outputVariable="insuranceResponse"/>
+
+    <assign>
+      <copy>
+        <from>concat('Monthly prime is ', $insuranceResponse.premium/ins:monthly, ' EUR, with a ', $insuranceResponse.premium/ins:bonus, ' EUR bonus pay-back for a damage free year')</from>
+        <to variable="request" part="text" />
+      </copy>
+    </assign>
+    
+    <reply
+      partnerLink="echoPartnerLink"
+      operation="echoOperation"
+      variable="request"/>
+    
+  </sequence>  
+  
+</process>

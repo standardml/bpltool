@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<wsdl:definitions targetNamespace="http://beepell.com/samples/proxy/definitions" xmlns:srv="http://beepell.com/samples/proxy/definitions" xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <plnk:partnerLinkType name="serviceProviderPartnerLinkType">
+    <plnk:role name="serviceProviderRole" portType="srv:servicePortType" />
+  </plnk:partnerLinkType>
+
+  <wsdl:types>
+
+    <xsd:schema>
+
+      <xsd:complexType name="addressType">
+        <xsd:sequence>
+          <xsd:element name="name" type="xsd:string" />
+          <xsd:element name="street" type="xsd:string" />
+          <xsd:element name="zip" type="xsd:string" />
+          <xsd:element name="city" type="xsd:string" />
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:schema>
+
+  </wsdl:types>
+
+
+  <wsdl:message name="requestMessage">
+    <wsdl:part name="id" type="xsd:integer" />
+    <wsdl:part name="description" type="xsd:string" />
+  </wsdl:message>
+
+  <wsdl:message name="responseMessage">
+    <wsdl:part name="approved" type="xsd:boolean" />
+    <wsdl:part name="note" type="xsd:string" />
+  </wsdl:message>
+
+  <wsdl:message name="simpleRequestMessage">
+    <wsdl:part name="addressIn" type="addressType" />
+  </wsdl:message>
+  <wsdl:message name="simpleResponseMessage">
+    <wsdl:part name="addressOut" type="addressType" />
+  </wsdl:message>
+
+  <wsdl:portType name="servicePortType">
+    <wsdl:operation name="requestService">
+      <wsdl:input message="srv:requestMessage" />
+      <wsdl:output message="srv:responseMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="simpleService">
+      <wsdl:input message="srv:simpleRequestMessage" />
+      <wsdl:output message="srv:simpleResponseMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+
+</wsdl:definitions>

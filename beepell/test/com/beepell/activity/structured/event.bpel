@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<process
+  name="proxy"
+  targetNamespace="http://beepell.com/samples/proxy"
+  xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+  xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+  xmlns:srv="http://beepell.com/samples/proxy/definitions"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:tim="http://tim.hallwyl.dk/"
+  xmlns:ins="http://tim.hallwyl.dk/insurance"
+  xmlns:sref="http://docs.oasis-open.org/wsbpel/2.0/serviceref">
+
+  <import importType="http://schemas.xmlsoap.org/wsdl/" namespace="http://beepell.com/samples/proxy/definitions" location="event.wsdl" />   
+
+  <partnerLinks>
+    <partnerLink
+      name="echoPartnerLink"
+      partnerLinkType="srv:echoPartnerLinkType"
+      myRole="echoProviderRole" />
+  </partnerLinks>
+  
+  <variables>
+    <variable name="request" messageType="srv:echoMessage" />
+  </variables>
+  
+  
+  <scope>
+  
+    <eventHandlers>
+      <onEvent
+        partnerLink="echoPartnerLink"
+        operation="eventOperation"
+        messageType="srv:echoMessage"
+        variable="eventRequest">
+        <scope>
+          <sequence>
+            <assign>
+              <copy>
+                <from variable="eventRequest" part="text" />
+                <to variable="request" part="text" />
+              </copy>
+            </assign>
+            <reply
+              partnerLink="echoPartnerLink"
+              operation="eventOperation"
+              variable="eventRequest"/>
+          </sequence>
+        </scope>
+      </onEvent>
+    </eventHandlers>
+    
+    <sequence>
+      <receive
+        partnerLink="echoPartnerLink"
+        operation="echoOperation"
+        variable="request"
+        createInstance="yes"/>
+      
+      <assign>
+        <copy>
+          <from><literal>failure</literal></from>
+          <to variable="request" part="text" />
+        </copy>
+      </assign>
+      
+      <wait><for>'PT3S'</for></wait>
+  
+      <reply
+        partnerLink="echoPartnerLink"
+        operation="echoOperation"
+        variable="request"/>
+        
+    </sequence>  
+  </scope>
+</process>

@@ -1,0 +1,67 @@
+<wsdl:definitions
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:tns="http://tim.hallwyl.dk/"
+  xmlns:dir="http://tim.hallwyl.dk/directory"
+  targetNamespace="http://tim.hallwyl.dk/">
+
+  <wsdl:types>
+    <xsd:schema elementFormDefault="qualified" targetNamespace="http://tim.hallwyl.dk/directory">
+      <xsd:element name="person">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="firstname" type="xsd:token" />
+            <xsd:element name="lastname" type="xsd:token" />
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      
+      <xsd:element name="phone">
+        <xsd:simpleType>
+            <xsd:restriction base="xsd:token" />
+        </xsd:simpleType>
+      </xsd:element>
+      
+    </xsd:schema>
+  </wsdl:types>
+
+  <wsdl:message name="PhoneNumberRequest">
+    <wsdl:part name="name" element="dir:person" />
+  </wsdl:message>
+
+  <wsdl:message name="PhoneNumberResponse">
+    <wsdl:part name="phone" element="dir:phone" />
+  </wsdl:message>
+
+  <wsdl:portType name="DirectoryPortType">
+    <wsdl:operation name="PhoneNumberOperation">
+      <wsdl:input message="tns:PhoneNumberRequest" />
+      <wsdl:output message="tns:PhoneNumberResponse" />
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="DirectoryBinding" type="tns:DirectoryPortType">
+
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document" />
+
+    <wsdl:operation name="PhoneNumberOperation">
+      <soap:operation soapAction="http://tim.hallwyl.dk/PhoneNumberOperation" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+
+  </wsdl:binding>
+
+  <wsdl:service name="DirectoryService">
+    <wsdl:port name="DirectoryPort" binding="tns:DirectoryBinding">
+      <soap:address location="http://localhost:9000/samples/services/Directory" />
+    </wsdl:port>
+  </wsdl:service>
+
+</wsdl:definitions>
+

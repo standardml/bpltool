@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<process xmlns:three="urn:three"
+  name="proxy"
+  targetNamespace="http://beepell.com/samples/proxy"
+  xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+  xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+  xmlns:srv="http://beepell.com/samples/proxy/definitions"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  
+  <import namespace="http://beepell.com/samples/proxy/definitions" location="test/com/beepell/deployment/transform/sef-scope-test-case.wsdl" importType="http://schemas.xmlsoap.org/wsdl/"  />   
+
+  <sequence>
+    <empty/>
+    
+    <scope name="simple">
+      <partnerLinks>
+        <partnerLink
+          name="clientPartnerLink"
+          partnerLinkType="srv:serviceProviderPartnerLinkType"
+          myRole="serviceProviderRole" />
+
+        <partnerLink
+          name="serverPartnerLink"
+          partnerLinkType="srv:serviceProviderPartnerLinkType"
+          partnerRole="serviceProviderRole" />
+      </partnerLinks>
+        
+      <variables>
+        <variable name="request"  messageType="srv:requestMessage" />
+        <variable name="id" type="xsd:integer" />
+        <variable name="description" type="xsd:string" />
+        <variable name="response" messageType="srv:responseMessage" />
+      </variables>
+          
+      <sequence>
+        <empty/>
+        <receive
+          partnerLink="proxyPartnerLink"
+          operation="requestService"
+          variable="request"
+          createInstance="yes"/>
+
+        <invoke
+          name="core"
+          suppressJoinFailure="yes"
+          partnerLink="serverPartnerLink"
+          operation="requestService"
+          outputVariable="response">
+          <toParts>
+            <toPart part="id" fromVariable="id" />
+            <toPart part="description" fromVariable="description" />
+          </toParts>
+        </invoke>
+        
+        <reply
+          partnerLink="proxyPartnerLink"
+          operation="requestService"
+          variable="response"/>
+      </sequence>
+    </scope>
+    
+    <scope name="empty">
+      <empty/>
+    </scope>
+    
+    <scope name="termination">
+      <terminationHandler>
+         <empty/>
+      </terminationHandler>
+      <empty/>
+    </scope>
+    
+    
+    <empty/>
+  </sequence>  
+  
+</process>

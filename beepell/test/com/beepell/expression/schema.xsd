@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema xmlns:dmy="http://beepell.com/samples/dummy/schema" xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://beepell.com/samples/dummy/schema">
+
+  <xsd:element name="tBln" type="xsd:boolean"/>
+  <xsd:element name="fBln" type="xsd:boolean"/>
+  <xsd:element name="flt" type="xsd:float"/>
+  <xsd:element name="ntgr" type="xsd:int"/>
+  <xsd:element name="untgr" type="xsd:unsignedInt"/>
+  <xsd:element name="dt" type="xsd:date"/> 
+  
+  
+  <xsd:element name="foo">
+    <xsd:complexType>
+      <xsd:sequence>    
+         <xsd:element maxOccurs="unbounded" ref="dmy:person"/>
+         <xsd:element maxOccurs="unbounded" ref="dmy:employee"/>
+         <xsd:element ref="dmy:tBln"/>
+         <xsd:element ref="dmy:fBln"/>
+         <xsd:element ref="dmy:flt"/>
+         <xsd:element ref="dmy:ntgr"/>
+         <xsd:element ref="dmy:untgr"/>
+         <xsd:element ref="dmy:dt"/> 
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+ 
+  
+  <xsd:element name="employee" type="dmy:personinfo"/>
+
+  <xsd:complexType name="personinfo">
+    <xsd:sequence>
+      <xsd:element name="firstname" type="xsd:string"/>
+      <xsd:element name="lastname" type="xsd:string"/>
+    </xsd:sequence>
+    <xsd:attribute name="sex" type="xsd:token" use="optional"/>
+  </xsd:complexType>
+
+
+  <xsd:element name="person">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="firstname" type="xsd:string"/>
+        <xsd:element name="lastname" type="xsd:string"/>
+        <xsd:element name="age" type="xsd:integer"/>
+        <xsd:element name="dateborn" type="xsd:date"/>
+        <xsd:element name="lease" type="xsd:duration"/>
+      </xsd:sequence>
+      <xsd:attribute name="sex" type="xsd:token" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  
+
+</xsd:schema>
