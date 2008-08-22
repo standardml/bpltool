@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<process bpl:state="running"
+  name="exchange-instance"
+  targetNamespace="http://beepell.com/tests/exchange/bpel"
+  xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+  xmlns:exc="http://beepell.com/tests/exchange/wsdl"
+  xmlns:bpl="http://www.itu.dk/research/pls/bpl">
+
+  <import importType="http://schemas.xmlsoap.org/wsdl/" namespace="http://beepell.com/tests/exchange/wsdl" location="simple.wsdl" />   
+
+  <partnerLinks>
+    <partnerLink
+      name="exchangePartnerLink"
+      partnerLinkType="exc:exchangePartnerLinkType"
+      myRole="exchangeProviderRole" />
+  </partnerLinks>
+  
+  <variables>
+    <variable name="request" messageType="exc:exchangeMessage" />
+    <variable name="response" messageType="exc:exchangeMessage" />
+  </variables>
+    
+  <sequence bpl:state="running">
+    <receive bpl:state="completed"
+      partnerLink="exchangePartnerLink"
+      operation="exchangeOperation"
+      variable="request"
+      createInstance="yes"/>
+ 
+    <if bpl:state="running">
+      <condition>$request.currency = 'USD'</condition>
+      <assign bpl:state="skipped">
+        <copy>
+          <from>$request.amount * 4.7850</from>
+          <to variable="response" part="amount" />
+        </copy>
+      </assign>
+      <elseif bpl:state="running">
+        <condition>$request.currency = 'EUR'</condition>
+        <assign bpl:state="ready">
+          <copy>
+            <from>$request.amount * 7.4627</from>
+            <to variable="response" part="amount" />
+          </copy>
+        </assign>
+      </elseif>
+    </if>
+
+    <assign>
+      <copy>
+        <from><literal>DKK</literal></from>
+        <to variable="response" part="currency" />
+      </copy>
+    </assign>
+      
+    <reply
+      partnerLink="exchangePartnerLink"
+      operation="exchangeOperation"
+      variable="response"/>
+
+  </sequence>
+</process>
