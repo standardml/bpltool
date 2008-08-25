@@ -5,6 +5,8 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
 /**
+ * Dummy Step List implementation.
+ * 
  * @author Tim Hallwyl
  *
  */
@@ -73,7 +75,8 @@ public class StepList extends JTable {
 
         this.setShowGrid(false);
         
-
+        this.getColumnModel().getColumn(0).setCellRenderer(new StepCellRenderer());
+        this.setRowHeight(36);
         
     }
 
