@@ -6,6 +6,7 @@ import java.awt.Font;
 import java.io.File;
 
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
@@ -31,6 +32,7 @@ import com.beepell.ui.dom.xml.DocumentTextArea;
 import com.beepell.ui.dom.xml.DocumentTreeCellRenderer;
 import com.beepell.ui.dom.xml.DocumentTreeModel;
 import com.beepell.ui.dom.xml.actions.DocumentTextAreaToolBar;
+import com.beepell.ui.dom.xpath.XPathPanel;
 import com.beepell.ui.icon.IconRepository;
 
 /**
@@ -53,6 +55,8 @@ public class InstanceFrame extends JFrame implements ChangeListener {
 
     private final JTree documentTree;
 
+    private final DocumentTreeModel documentTreeModel;
+
     private final TreeSelectionModel documentTreeSelectionModel;
 
     private final JScrollPane documentTreePane;
@@ -60,6 +64,8 @@ public class InstanceFrame extends JFrame implements ChangeListener {
     private final DocumentTextArea documentTextArea;
 
     private final JScrollPane documentTextAreaPane;
+
+    private final JPanel xPathAndTextPanel = new JPanel();
 
     private final JSplitPane splitPane2;
 
@@ -74,6 +80,8 @@ public class InstanceFrame extends JFrame implements ChangeListener {
     private final JToolBar documentTextAreaToolBar;
 
     private final JToolBar stateToolBar;
+
+    private final XPathPanel xPathPanel;
 
     private boolean stepListVisible = true;
 
@@ -117,11 +125,12 @@ public class InstanceFrame extends JFrame implements ChangeListener {
         }
 
         // Setup document tree
-        this.documentTree = new JTree(new DocumentTreeModel(document));
+        this.documentTreeModel = new DocumentTreeModel(document);
+        this.documentTree = new JTree(this.documentTreeModel);
         this.documentTreeSelectionModel = new DefaultTreeSelectionModel();
         this.documentTree.setSelectionModel(this.documentTreeSelectionModel);
         this.documentTree.setCellRenderer(new DocumentTreeCellRenderer());
-        this.documentTree.setRootVisible(true);
+        this.documentTree.setRootVisible(false);
         this.documentTreePane = new JScrollPane(this.documentTree);
 
         // Setup document text area
@@ -148,7 +157,12 @@ public class InstanceFrame extends JFrame implements ChangeListener {
             this.splitPane2.setLeftComponent(this.documentTreePane);
         }
 
-        this.splitPane2.setRightComponent(this.documentTextAreaPane);
+        this.xPathPanel = new XPathPanel(this.documentTreeModel, this.documentTreeSelectionModel);
+        this.xPathAndTextPanel.setLayout(new BorderLayout());
+        this.xPathAndTextPanel.add(this.xPathPanel, BorderLayout.NORTH);
+        this.xPathAndTextPanel.add(this.documentTextAreaPane, BorderLayout.CENTER);
+
+        this.splitPane2.setRightComponent(this.xPathAndTextPanel);
         this.tabbedPane.add("XML", this.splitPane2);
 
         // Setup tool-bars
@@ -201,7 +215,7 @@ public class InstanceFrame extends JFrame implements ChangeListener {
 
                     int selectedTab = InstanceFrame.this.tabbedPane.getSelectedIndex();
 
-                    if (InstanceFrame.this.stepListVisible) { 
+                    if (InstanceFrame.this.stepListVisible) {
                         // turn on step list
 
                         InstanceFrame.this.split2divider = InstanceFrame.this.splitPane2.getDividerLocation();
@@ -263,7 +277,7 @@ public class InstanceFrame extends JFrame implements ChangeListener {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
-                    new InstanceFrame(InstanceFrame.load(new File("samples/simple.bpel"))).setVisible(true);
+                    new InstanceFrame(InstanceFrame.load(new File("samples/advanced.bpel"))).setVisible(true);
                 } catch (Exception exception) {
                     exception.printStackTrace();
                     System.exit(ERROR);
