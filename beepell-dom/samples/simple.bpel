@@ -4,6 +4,7 @@
   name="exchange-instance"
   targetNamespace="http://beepell.com/tests/exchange/bpel"
   xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+  xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
   xmlns:exc="http://beepell.com/tests/exchange/wsdl"
   xmlns:bpl="http://www.itu.dk/research/pls/bpl">
 
