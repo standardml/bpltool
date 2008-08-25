@@ -147,8 +147,6 @@ public class DocumentNamespaceContext implements javax.xml.namespace.NamespaceCo
     }
 
     /**
-     * TODO: This should return an Interator<String>
-     * 
      * @see javax.xml.namespace.NamespaceContext#getPrefixes(java.lang.String)
      */
     public Iterator<String> getPrefixes(final String namespaceURI) {
