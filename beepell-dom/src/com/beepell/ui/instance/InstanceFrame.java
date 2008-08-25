@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.io.File;
 
+import javax.swing.DefaultListSelectionModel;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -12,6 +13,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
@@ -83,6 +85,12 @@ public class InstanceFrame extends JFrame implements ChangeListener {
 
     private final XPathPanel xPathPanel;
 
+    private final ListSelectionModel stepSelectionModel;
+
+    private final StepList stepList1;
+
+    private final StepList stepList2;
+
     private boolean stepListVisible = true;
 
     private int split1divider = 200;
@@ -104,18 +112,22 @@ public class InstanceFrame extends JFrame implements ChangeListener {
         // Setup tabbed pane
         this.tabbedPane = new JTabbedPane(SwingConstants.BOTTOM);
 
+        // Setup step lists
+        this.stepSelectionModel = new DefaultListSelectionModel();
+        this.stepSelectionModel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        this.stepList1 = new StepList();
+        this.stepList1.setSelectionModel(this.stepSelectionModel);
+        this.stepList2 = new StepList();
+        this.stepList2.setSelectionModel(this.stepSelectionModel);
+
         // Setup document graph
         this.documentGraph = new DocumentGraph(document.getDocumentElement(), BPELConfiguration.getInstance());
         this.documentGraphPane = new JScrollPane(this.documentGraph);
 
-        // Setup step list
-        // TODO this.stepList = new StepList();
-
         // Setup split pane one
         this.splitPane1 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         this.splitPane1.setDividerLocation(this.split1divider);
-        // TODO setup step list
-        this.splitPane1.setLeftComponent(new JScrollPane(new StepList()));
+        this.splitPane1.setLeftComponent(new JScrollPane(this.stepList1));
         this.splitPane1.setRightComponent(this.documentGraphPane);
 
         if (this.stepListVisible) {
@@ -148,8 +160,7 @@ public class InstanceFrame extends JFrame implements ChangeListener {
         this.splitPane3.setBorder(null);
         this.splitPane3.setDividerLocation(this.split3divider);
         this.splitPane3.setTopComponent(this.documentTreePane);
-        // TODO setup step list
-        this.splitPane3.setBottomComponent(new JScrollPane(new StepList()));
+        this.splitPane3.setBottomComponent(new JScrollPane(this.stepList2));
 
         if (this.stepListVisible) {
             this.splitPane2.setLeftComponent(this.splitPane3);
@@ -187,7 +198,9 @@ public class InstanceFrame extends JFrame implements ChangeListener {
         this.add(this.tabbedPane);
         this.add(this.combinedToolBar, BorderLayout.PAGE_START);
         this.tabbedPane.addChangeListener(this);
-        this.documentTreeSelectionModel.addSelectionPath(new TreePath(document.getDocumentElement()));
+        TreePath path = this.documentTreeModel.getPath(document.getDocumentElement());
+        this.documentTreeSelectionModel.addSelectionPath(path);
+        this.documentTree.expandPath(path);
 
     }
 
@@ -221,16 +234,14 @@ public class InstanceFrame extends JFrame implements ChangeListener {
                         InstanceFrame.this.split2divider = InstanceFrame.this.splitPane2.getDividerLocation();
 
                         // GRAPH TAB
-                        // TODO setup step list
-                        InstanceFrame.this.splitPane1.setLeftComponent(new JScrollPane(new StepList()));
+                        InstanceFrame.this.splitPane1.setLeftComponent(new JScrollPane(InstanceFrame.this.stepList1));
                         InstanceFrame.this.splitPane1.setRightComponent(InstanceFrame.this.documentGraphPane);
                         InstanceFrame.this.tabbedPane.insertTab("Graph", null, InstanceFrame.this.splitPane1, null, 0);
 
                         // XML TAB
                         InstanceFrame.this.splitPane3.setBorder(null);
                         InstanceFrame.this.splitPane3.setTopComponent(InstanceFrame.this.documentTreePane);
-                        // TODO setup step list
-                        InstanceFrame.this.splitPane3.setBottomComponent(new JScrollPane(new StepList()));
+                        InstanceFrame.this.splitPane3.setBottomComponent(new JScrollPane(InstanceFrame.this.stepList2));
                         InstanceFrame.this.splitPane2.setLeftComponent(InstanceFrame.this.splitPane3);
 
                         // Reset divider locations
