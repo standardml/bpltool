@@ -84,8 +84,8 @@ public class DocumentTreeModel implements TreeModel {
         return getChildren((Element) parent).indexOf(child);
     }
 
-    public Object getRoot() {
-        return this.document.getDocumentElement();
+    public Document getRoot() {
+        return this.document;
     }
 
     public boolean isLeaf(Object node) {
@@ -158,8 +158,8 @@ public class DocumentTreeModel implements TreeModel {
         int j = 0;
         for (int i = path.size() - 1; i >= 0; i--) {
             array[j++] = path.get(i);
-
         }
+
         return array;
 
     }
