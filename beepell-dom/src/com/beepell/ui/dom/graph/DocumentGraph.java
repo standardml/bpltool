@@ -19,11 +19,13 @@ import java.util.Map;
 
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.xml.namespace.QName;
 
 import org.w3c.dom.Element;
 
+import com.beepell.ui.PopupListener;
 import com.beepell.ui.dom.graph.conf.Configuration;
 import com.beepell.ui.dom.graph.conf.NullConfiguration;
 
@@ -98,6 +100,18 @@ public class DocumentGraph extends JPanel {
     private Element focusElement = null;
 
     /**
+     * Set a JPopupMenu to be displayed on platform dependent mouse event.
+     * 
+     * @param menu
+     */
+    public void set(JPopupMenu menu) {
+
+        this.addMouseListener(new PopupListener(menu));
+        
+    }
+
+    
+    /**
      * Create a DOM Graph with visualization configuration.
      * 
      * @param rootElement the element to use as root element in the graph
@@ -111,6 +125,7 @@ public class DocumentGraph extends JPanel {
         this.elementIcons = configuration.getElementIcons();
         this.stateEmblems = configuration.getStateEmblems();
         this.borderElements = configuration.getBorderElements();
+        
     }
 
     /**
