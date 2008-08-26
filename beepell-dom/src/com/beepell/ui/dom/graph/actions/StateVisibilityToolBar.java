@@ -1,4 +1,4 @@
-package com.beepell.ui.instance;
+package com.beepell.ui.dom.graph.actions;
 
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -15,7 +15,7 @@ import com.beepell.ui.dom.graph.DocumentGraph;
  * @author Tim Hallwyl
  *
  */
-public class StateToolBar extends JToolBar  implements ActionListener {
+public class StateVisibilityToolBar extends JToolBar  implements ActionListener {
 
     private static final long serialVersionUID = 1L;
 
@@ -27,7 +27,7 @@ public class StateToolBar extends JToolBar  implements ActionListener {
      * Create a toggle state visibility tool bar.
      * @param documentGraph
      */
-    public StateToolBar(DocumentGraph documentGraph) {
+    public StateVisibilityToolBar(DocumentGraph documentGraph) {
         this.documentGraph = documentGraph;
         this.setName("Toggle State Visibility");
         

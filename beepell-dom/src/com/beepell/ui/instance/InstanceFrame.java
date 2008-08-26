@@ -5,9 +5,12 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.io.File;
 
+import javax.swing.Action;
 import javax.swing.DefaultListSelectionModel;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
@@ -17,8 +20,6 @@ import javax.swing.JTree;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.tree.DefaultTreeSelectionModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
@@ -28,13 +29,19 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 
 import com.beepell.ui.dom.graph.DocumentGraph;
-import com.beepell.ui.dom.graph.actions.DocumentGraphlToolBar;
+import com.beepell.ui.dom.graph.actions.ExportImageAction;
+import com.beepell.ui.dom.graph.actions.StateVisibilityMenu;
+import com.beepell.ui.dom.graph.actions.ToggleBordersAction;
+import com.beepell.ui.dom.graph.actions.ToggleColorsAction;
+import com.beepell.ui.dom.graph.actions.ToggleElementNameAction;
+import com.beepell.ui.dom.graph.actions.ToggleIconsAction;
+import com.beepell.ui.dom.graph.actions.ToggleStateLabelsAction;
 import com.beepell.ui.dom.graph.conf.BPELConfiguration;
 import com.beepell.ui.dom.step.StepList;
 import com.beepell.ui.dom.xml.DocumentTextArea;
 import com.beepell.ui.dom.xml.DocumentTreeCellRenderer;
 import com.beepell.ui.dom.xml.DocumentTreeModel;
-import com.beepell.ui.dom.xml.actions.DocumentTextAreaToolBar;
+import com.beepell.ui.dom.xml.actions.SaveAction;
 import com.beepell.ui.dom.xpath.XPathPanel;
 import com.beepell.ui.icon.IconRepository;
 
@@ -44,7 +51,7 @@ import com.beepell.ui.icon.IconRepository;
  * @author Tim Hallwyl
  * 
  */
-public class InstanceFrame extends JFrame implements ChangeListener {
+public class InstanceFrame extends JFrame {
 
     private static final long serialVersionUID = 1L;
 
@@ -74,15 +81,7 @@ public class InstanceFrame extends JFrame implements ChangeListener {
 
     private final JSplitPane splitPane3;
 
-    private final JToolBar combinedToolBar;
-
-    private final JToolBar frameToolBar;
-
-    private final JToolBar documentGraphToolBar;
-
-    private final JToolBar documentTextAreaToolBar;
-
-    private final JToolBar stateToolBar;
+    private final JToolBar toolBar;
 
     private final XPathPanel xPathPanel;
 
@@ -98,6 +97,16 @@ public class InstanceFrame extends JFrame implements ChangeListener {
     private int split2divider = 200;
     private int split3divider = 400;
 
+    // Actions    
+    private final Action stateLabelsAction;
+    private final Action elementNameAction;
+    private final Action colorsAction;
+    private final Action iconsAction;
+    private final Action bordersAction;    
+    private final Action saveAsXMLAction;
+    private final Action stepListAction;
+    private final Action exportImageAction;
+    
     /**
      * 
      * @param document
@@ -176,32 +185,30 @@ public class InstanceFrame extends JFrame implements ChangeListener {
 
         this.splitPane2.setRightComponent(this.xPathAndTextPanel);
         this.tabbedPane.add("XML", this.splitPane2);
+       
 
-        // Setup tool-bars
-        this.combinedToolBar = new JToolBar();
-        this.combinedToolBar.setFloatable(false);
+        // Setup actions
+        this.stateLabelsAction = new ToggleStateLabelsAction(this.documentGraph);
+        this.elementNameAction = new ToggleElementNameAction(this.documentGraph);
+        this.colorsAction = new ToggleColorsAction(this.documentGraph);
+        this.iconsAction = new ToggleIconsAction(this.documentGraph);
+        this.bordersAction = new ToggleBordersAction(this.documentGraph);    
+        this.saveAsXMLAction = new SaveAction(this.documentTextArea);
+        this.stepListAction = new ToggleStepListAction(this);
+        this.exportImageAction = new ExportImageAction(this.documentGraph);
+        this.documentGraph.set(this.getPopupMenu());
 
-        this.documentGraphToolBar = new DocumentGraphlToolBar(this.documentGraph);
-        this.combinedToolBar.add(this.documentGraphToolBar);
+        // Setup toolbar
+        this.toolBar = new JToolBar();
+        this.toolBar.add(this.saveAsXMLAction);
 
-        this.documentTextAreaToolBar = new DocumentTextAreaToolBar(this.documentTextArea);
-        this.documentTextAreaToolBar.setVisible(false);
-        this.combinedToolBar.add(this.documentTextAreaToolBar);
-
-        this.frameToolBar = new JToolBar("View Options Toolbar");
-        
-        JToggleButton stepListButton = new JToggleButton(new ToggleStepListAction(this));
+        JToggleButton stepListButton = new JToggleButton(this.stepListAction);
         stepListButton.setHideActionText(true);
-        this.frameToolBar.add(stepListButton);
-        this.combinedToolBar.add(this.frameToolBar);
-
-        this.stateToolBar = new StateToolBar(this.documentGraph);
-        this.documentGraphToolBar.add(this.stateToolBar);
-
+        this.toolBar.add(stepListButton);
+        
         // Setup frame layout
         this.add(this.tabbedPane);
-        this.add(this.combinedToolBar, BorderLayout.PAGE_START);
-        this.tabbedPane.addChangeListener(this);
+        this.add(this.toolBar, BorderLayout.PAGE_START);
         TreePath path = this.documentTreeModel.getPath(document.getDocumentElement());
         this.documentTreeSelectionModel.addSelectionPath(path);
         this.documentTree.expandPath(path);
@@ -326,23 +333,22 @@ public class InstanceFrame extends JFrame implements ChangeListener {
             return null;
         }
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent)
-     */
-    @Override
-    public void stateChanged(ChangeEvent event) {
-        JTabbedPane tabbedPane = (JTabbedPane) event.getSource();
-        if (tabbedPane.getSelectedIndex() == 0) {
-            this.documentGraphToolBar.setVisible(true);
-            this.documentTextAreaToolBar.setVisible(false);
-        } else {
-            this.documentGraphToolBar.setVisible(false);
-            this.documentTextAreaToolBar.setVisible(true);
-        }
-
+    
+    private JPopupMenu getPopupMenu() {
+        
+        JPopupMenu menu = new JPopupMenu("Graph Panel");
+        
+        menu.add(new JCheckBoxMenuItem(this.elementNameAction));
+        menu.add(new JCheckBoxMenuItem(this.stateLabelsAction));
+        menu.add(new JCheckBoxMenuItem(this.colorsAction));
+        menu.add(new JCheckBoxMenuItem(this.bordersAction));
+        menu.add(new JCheckBoxMenuItem(this.iconsAction));
+        menu.addSeparator();
+        menu.add(new StateVisibilityMenu(this.documentGraph));        
+        menu.addSeparator();
+        menu.add(new JCheckBoxMenuItem(this.exportImageAction));
+        return menu;
+        
     }
-
+    
 }
