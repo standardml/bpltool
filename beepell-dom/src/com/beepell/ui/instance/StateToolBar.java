@@ -21,7 +21,7 @@ public class StateToolBar extends JToolBar  implements ActionListener {
 
     private final DocumentGraph documentGraph;
     
-    private static final Dimension size = new Dimension(48, 48);
+    private static final Dimension size = new Dimension(39, 39);
     
     /**
      * Create a toggle state visibility tool bar.
