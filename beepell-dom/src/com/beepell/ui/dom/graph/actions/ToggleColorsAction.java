@@ -27,7 +27,7 @@ public class ToggleColorsAction extends AbstractAction {
         this.panel = panel;
         
         ImageIcon large = IconRepository.getIcon(IconRepository.ACTIONS, "color_line", IconRepository.MEDIUM);
-        ImageIcon small = IconRepository.getIcon(IconRepository.ACTIONS, "color-line", IconRepository.TINY);
+        ImageIcon small = IconRepository.getIcon(IconRepository.ACTIONS, "color_line", IconRepository.TINY);
 
         this.putValue(LARGE_ICON_KEY, large);
         this.putValue(SMALL_ICON, small);
