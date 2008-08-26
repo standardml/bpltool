@@ -43,7 +43,7 @@ public class ToggleStepListAction extends AbstractAction {
      * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
      */
     @Override
-    public void actionPerformed(ActionEvent arg0) {
+    public void actionPerformed(ActionEvent event) {
         this.frame.setStepListVisible(!this.frame.isStepListVisible());
     }
 
