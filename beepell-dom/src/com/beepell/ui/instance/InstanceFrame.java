@@ -11,6 +11,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.ListSelectionModel;
@@ -188,7 +189,10 @@ public class InstanceFrame extends JFrame implements ChangeListener {
         this.combinedToolBar.add(this.documentTextAreaToolBar);
 
         this.frameToolBar = new JToolBar("View Options Toolbar");
-        this.frameToolBar.add(new ToggleStepListAction(this));
+        
+        JToggleButton stepListButton = new JToggleButton(new ToggleStepListAction(this));
+        stepListButton.setHideActionText(true);
+        this.frameToolBar.add(stepListButton);
         this.combinedToolBar.add(this.frameToolBar);
 
         this.stateToolBar = new StateToolBar(this.documentGraph);

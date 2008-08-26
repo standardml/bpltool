@@ -32,7 +32,8 @@ public class ToggleStepListAction extends AbstractAction {
         this.putValue(NAME, "Toggle borders");
         this.putValue(SHORT_DESCRIPTION, "Toggle step list");
         this.putValue(LONG_DESCRIPTION, "Toggle step list");
-
+        this.putValue(SELECTED_KEY, Boolean.valueOf(frame.isStepListVisible()));
+        
         this.setEnabled(true);
     }
 
