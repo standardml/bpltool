@@ -14,6 +14,10 @@ import com.beepell.ui.icon.IconRepository;
  */
 public class ToggleStateLabelsAction extends AbstractAction {
 
+    /**
+     * 
+     */
+
     private static final long serialVersionUID = 1L;
 
     private final DocumentGraph panel;
@@ -33,8 +37,10 @@ public class ToggleStateLabelsAction extends AbstractAction {
         this.putValue(NAME, "Toggle states lables");
         this.putValue(SHORT_DESCRIPTION, "Toggle state labels");
         this.putValue(LONG_DESCRIPTION, "Toggle state lables");
+        this.putValue(SELECTED_KEY, Boolean.valueOf(panel.isStateLabelsVisible()));
 
         this.setEnabled(true);
+        
     }
 
     /*

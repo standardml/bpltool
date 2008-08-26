@@ -34,7 +34,8 @@ public class ToggleColorsAction extends AbstractAction {
         this.putValue(NAME, "Toggle colors");
         this.putValue(SHORT_DESCRIPTION, "Toggle state colors");
         this.putValue(LONG_DESCRIPTION, "Toggle state dependent coloring of nodes");
-
+        this.putValue(SELECTED_KEY, Boolean.valueOf(panel.isDrawColors()));
+        
         this.setEnabled(true);
     }
     

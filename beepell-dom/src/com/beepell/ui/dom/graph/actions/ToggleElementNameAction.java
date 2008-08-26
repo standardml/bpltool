@@ -33,6 +33,7 @@ public class ToggleElementNameAction extends AbstractAction {
         this.putValue(NAME, "Toggle names");
         this.putValue(SHORT_DESCRIPTION, "Toggle element names");
         this.putValue(LONG_DESCRIPTION, "Toggle element names");
+        this.putValue(SELECTED_KEY, Boolean.valueOf(panel.isDrawElementNames()));
 
         this.setEnabled(true);
     }

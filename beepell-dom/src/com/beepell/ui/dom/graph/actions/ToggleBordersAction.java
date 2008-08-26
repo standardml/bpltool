@@ -33,6 +33,7 @@ public class ToggleBordersAction extends AbstractAction {
         this.putValue(NAME, "Toggle borders");
         this.putValue(SHORT_DESCRIPTION, "Toggle borders");
         this.putValue(LONG_DESCRIPTION, "Toggle borders");
+        this.putValue(SELECTED_KEY, Boolean.valueOf(panel.isDrawBorders()));
 
         this.setEnabled(true);
     }

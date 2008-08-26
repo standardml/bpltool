@@ -33,6 +33,7 @@ public class ToggleIconsAction extends AbstractAction {
         this.putValue(NAME, "Toggle icons");
         this.putValue(SHORT_DESCRIPTION, "Toggle icons");
         this.putValue(LONG_DESCRIPTION, "Toggle icons");
+        this.putValue(SELECTED_KEY, Boolean.valueOf(panel.isDrawIcons()));
 
         this.setEnabled(true);
     }
