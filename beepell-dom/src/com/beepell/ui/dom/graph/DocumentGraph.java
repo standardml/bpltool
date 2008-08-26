@@ -274,8 +274,9 @@ public class DocumentGraph extends JPanel {
         if (this.hiddenStates.contains(node.getElement().getAttributeNS(stateAttribute.getNamespaceURI(), stateAttribute.getLocalPart())))
             return;
 
+        // Draw borders
         if (this.drawBorders && this.borderElements != null && this.borderElements.contains(qname)) {
-            Rectangle border = new Rectangle(node.x - (node.getWidth() / 2), node.y, node.getWidth(), node.getHeight());
+            Rectangle border = new Rectangle(node.x - (node.getWidth() / 2) - 14, node.y, node.getWidth() + 28, node.getHeight() - 16);
             g2d.setStroke(this.borderStroke);
             if (this.scopeLevel % 2 == 0)
                 g2d.setColor(new Color(197, 219, 246));
