@@ -110,7 +110,7 @@ public class ExportImageAction extends AbstractAction {
 
         this.putValue(LARGE_ICON_KEY, large);
         this.putValue(SMALL_ICON, small);
-        this.putValue(NAME, "Save Graph as Image");
+        this.putValue(NAME, "Save Image");
         this.putValue(SHORT_DESCRIPTION, "Save the graph to image file");
         this.putValue(LONG_DESCRIPTION, "Save the graph tree as an image file, such as PNG, JPEG ect.");
 
