@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<wsdl:definitions 
+  targetNamespace="http://www.beepell.com/samples/"
+  xmlns:tns="http://www.beepell.com/samples/"
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  
+  <wsdl:message name="myMessage">
+    <wsdl:part name="text" type="xsd:string" />
+  </wsdl:message>
+
+  <wsdl:message name="myFaultMessage">
+    <wsdl:part name="message" type="xsd:string" />
+  </wsdl:message>
+  
+  <wsdl:portType name="myPortType">
+    <wsdl:operation name="echoOperation">
+      <wsdl:input message="tns:myMessage" />
+      <wsdl:output message="tns:myMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="notifyOperation">
+      <wsdl:input message="tns:myMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="failingOperation">
+      <wsdl:input message="tns:myMessage" />
+      <wsdl:output message="tns:myMessage" />
+      <wsdl:fault message="tns:myFaultMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  
+  <wsdl:binding name="myBinding" type="tns:myPortType">
+      <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+      
+      <wsdl:operation name="echoOperation">
+          <soap:operation soapAction="http://beepell.com/samples/echo"/>
+          <wsdl:input>
+              <soap:body use="literal" namespace="http://beepell.com/samples/" />
+          </wsdl:input>
+          <wsdl:output>
+              <soap:body use="literal" namespace="http://beepell.com/samples/" />
+          </wsdl:output>
+      </wsdl:operation>
+
+      <wsdl:operation name="notifyOperation">
+          <soap:operation soapAction="http://beepell.com/samples/notify"/>
+          <wsdl:input>
+              <soap:body use="literal" namespace="http://beepell.com/samples/" />
+          </wsdl:input>
+      </wsdl:operation>
+
+      <wsdl:operation name="failingOperation">
+          <soap:operation soapAction="http://beepell.com/samples/failing"/>
+          <wsdl:input>
+              <soap:body use="literal" namespace="http://beepell.com/samples/" />
+          </wsdl:input>
+          <wsdl:output>
+              <soap:body use="literal" namespace="http://beepell.com/samples/" />
+          </wsdl:output>
+          <wsdl:fault>
+              <soap:fault name="myFirstFault" use="literal" namespace="http://beepell.com/samples/" />
+              <soap:fault name="mySecondFault" use="literal" namespace="http://beepell.com/samples/" />
+          </wsdl:fault>          
+      </wsdl:operation>
+
+  </wsdl:binding>
+
+  <wsdl:service name="myService">
+      <wsdl:port name="myPort" binding="tns:myBinding">
+          <soap:address location="http://localhost:1000/samples/"/>
+      </wsdl:port>
+  </wsdl:service>
+  
+</wsdl:definitions>
