@@ -165,8 +165,8 @@ public class SOAPProvider implements javax.xml.ws.Provider<SOAPMessage> {
 
     /**
      * 
-     * @param source
-     * @return
+     * @param response The message to be converted.
+     * @return A SOAP Message.
      * @throws SOAPException 
      */
     private SOAPMessage convert(Message response) throws SOAPException {

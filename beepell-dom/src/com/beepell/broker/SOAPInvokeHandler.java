@@ -91,8 +91,7 @@ public class SOAPInvokeHandler implements Future<Message> {
      * Returns true if the operation binding is one-way. If the operation
      * binding is a request-response pattern, this method returns false.
      * 
-     * @param bindingName
-     * @return
+     * @return true if this is a one-way operation. Otherwise false.
      */
     private boolean isOneWay() {
         BindingOperation bindingOperation = this.services.getBindingOperation(this.request.getBindingName(), this.request.getOperationName());
@@ -200,7 +199,7 @@ public class SOAPInvokeHandler implements Future<Message> {
      * Converts a SOAP response message into a Message.
      * 
      * @param response
-     * @return
+     * @return An abstract message.
      * @throws SOAPException
      */
     @SuppressWarnings("unchecked")
@@ -271,7 +270,7 @@ public class SOAPInvokeHandler implements Future<Message> {
      * Converts a request Message into a SOAPMessage.
      * 
      * @param request
-     * @return
+     * @return A SOAP message.
      */
     private SOAPMessage convert(Message request) throws SOAPException {
         Binding binding = this.services.getBinding(this.request.getBindingName());
@@ -354,6 +353,7 @@ public class SOAPInvokeHandler implements Future<Message> {
      * section 3.5), only style="document" is assumed since faults do not
      * contain parameters. [WSDL 3.6]
      * 
+     * @return An Message representing the fault.
      * @throws SOAPException If anything went wrong.
      */
     @SuppressWarnings("unchecked")
@@ -392,7 +392,7 @@ public class SOAPInvokeHandler implements Future<Message> {
 
             return faultMessage;
         }
-        
+
         throw new SOAPException("A undefined fault message was returned.");
 
     }
@@ -403,10 +403,10 @@ public class SOAPInvokeHandler implements Future<Message> {
      * 
      * @param faultElement The QName of the first child element of the fault
      *            details.
-     * @param portType The port type definition the fault message was sent to.
+     * @param portTypeName The port type definition the fault message was sent to.
      * @param operationName The name of the operation the fault message was sent
      *            to.
-     * @return
+     * @return The WSDL fault definition.
      */
     @SuppressWarnings("unchecked")
     private Fault getFault(QName faultElement, QName portTypeName, String operationName) {
