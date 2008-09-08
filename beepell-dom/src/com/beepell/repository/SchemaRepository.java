@@ -114,6 +114,7 @@ public class SchemaRepository {
              */
 
             /* WORKING CODE: USES BYTE ARRAY STREAMS */
+            // TODO: Do not use XMLSerializer, as it may be removed in future releases of Java.
             XMLSerializer serializer = new XMLSerializer();
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             serializer.setOutputByteStream(bos);
