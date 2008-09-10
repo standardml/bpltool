@@ -9,6 +9,7 @@ import javax.swing.Action;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -346,7 +347,7 @@ public class InstanceFrame extends JFrame {
         menu.addSeparator();
         menu.add(new StateVisibilityMenu(this.documentGraph));        
         menu.addSeparator();
-        menu.add(new JCheckBoxMenuItem(this.exportImageAction));
+        menu.add(new JMenuItem(this.exportImageAction));
         return menu;
         
     }
