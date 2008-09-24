@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<wsdl:definitions 
+  targetNamespace="http://beepell.com/samples/dummy/service"
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:dmy="http://beepell.com/samples/dummy/schema">
+  
+  <wsdl:types>
+    <xsd:schema 
+     xmlns:dmy="http://beepell.com/samples/dummy/schema" 
+     elementFormDefault="qualified"
+     targetNamespace="http://beepell.com/samples/dummy/schema">
+
+      <xsd:complexType name="personinfo">
+        <xsd:sequence>
+          <xsd:element name="firstname" type="xsd:string"/>
+          <xsd:element name="lastname" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:complexType>
+  
+      <xsd:element name="person">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="firstname" type="xsd:string"/>
+            <xsd:element name="lastname" type="xsd:string"/>
+            <xsd:element name="age" type="xsd:integer"/>
+            <xsd:element name="dateborn" type="xsd:date"/>
+            <xsd:element name="lease" type="xsd:duration"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+    </xsd:schema>
+  </wsdl:types>
+
+  <wsdl:message name="aMessage">
+    <wsdl:part name="name" type="dmy:personinfo" />
+    <wsdl:part name="manager" element="dmy:person" />
+    <wsdl:part name="isUseful" type="xsd:boolean" />
+  </wsdl:message>
+
+
+</wsdl:definitions>

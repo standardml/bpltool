@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<instance 
+  bpi:state="running"
+  name="exchange-instance"
+  targetNamespace="http://beepell.com/tests/context/links"  
+  xmlns:exc="http://beepell.com/tests/exchange/wsdl"
+  xmlns="http://www.itu.dk/research/pls/bpl/bpel/instance"
+  xmlns:bpi="http://www.itu.dk/research/pls/bpl/bpel/instance"
+  xmlns:hr="http://beepell.com/samples/dummy/schema"
+  xmlns:ws="http://beepell.com/samples/dummy/service"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <import importType="http://schemas.xmlsoap.org/wsdl/" namespace="http://beepell.com/tests/exchange/wsdl" location="variableAccessTest.wsdl" />
+
+  <variables>
+    <variable name="foo" type="xsd:int" />
+    <variable name="bar" type="xsd:int">42</variable>
+  </variables>
+
+  <sequence>
+    <scope name="A">
+      <variables>
+        <variable name="kung" type="hr:personinfo">
+          <value>
+            <hr:firstname>James</hr:firstname>
+            <hr:lastname>Headfield</hr:lastname>
+          </value>
+        </variable>
+        <variable name="foo" type="xsd:string">A</variable>
+      </variables>
+      <empty />
+    </scope>
+    
+    <scope name="B">
+      <variables>
+        <variable name="kung" element="hr:person">
+          <hr:person>
+            <hr:firstname>Lars</hr:firstname>
+            <hr:lastname>Ulrich</hr:lastname>
+            <hr:age>45</hr:age>
+            <hr:dateborn>1963-12-26T09:30:10Z</hr:dateborn>
+            <hr:lease>P5Y2M10D</hr:lease>
+          </hr:person>
+        </variable>
+        <variable name="foo" type="xsd:string">B</variable>
+      </variables>
+      <empty />
+    </scope>
+    
+    <scope name="C">
+      <variables>
+        <variable name="kung" messageType="ws:aMessage">
+          <name type="hr:personinfo">
+            <value>
+              <hr:firstname>James</hr:firstname>
+              <hr:lastname>Headfield</hr:lastname>
+            </value>
+          </name>
+          <manager element="hr:person">
+            <hr:person>
+              <hr:firstname>Lars</hr:firstname>
+              <hr:lastname>Ulrich</hr:lastname>
+              <hr:age>45</hr:age>
+              <hr:dateborn>1963-12-26T09:30:10Z</hr:dateborn>
+              <hr:lease>P5Y2M10D</hr:lease>
+            </hr:person>          
+          </manager>
+          <isUseful type="xsd:boolean">false</isUseful>
+        </variable>
+        <variable name="foo" type="xsd:string">C</variable>
+      </variables>
+
+      <scope name="D">
+        <variables>
+          <variable name="kung" type="xsd:int">12</variable>
+          <variable name="foo" type="xsd:string">D</variable>
+        </variables>
+        <empty />
+      </scope>  
+
+    </scope>  
+  </sequence>
+
+  
+</instance>
