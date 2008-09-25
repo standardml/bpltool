@@ -287,5 +287,47 @@ public class Context {
         return new QName(uri, split[1], split[0]);
 
     }
+    private Element getPartnerLinkElement(String name) {
+        try {
+            final String expression = "(ancestor::bpi:*/bpi:partnerLinks/bpi:partnerLink[@name='" + name + "'])[last()]";
+            Element partnerLinkElement = (Element) this.xPath.evaluate(expression, this.node, XPathConstants.NODE);
+            if (partnerLinkElement == null)
+                throw new IllegalStateException("Partner Link '" + name + "' is not declared in the ancestor path.");
 
+            return partnerLinkElement;
+
+        } catch (XPathExpressionException exception) {
+            exception.printStackTrace();
+            return null;
+        }
+        
+    }
+
+    /**
+     * Gets the endpoint (wsdl:port) Element for the specified partner link and
+     * role.
+     * 
+     * @param partnerLinkName
+     * @param role myRole or parnterRole
+     * @return The WSDL Port Element or null if the endpoint has not been
+     *         initialized.
+     */
+    public Element getEndpoint(final String partnerLinkName, final Role role) {
+        Element partnerLinkElement = getPartnerLinkElement(partnerLinkName);
+        String endpoint;
+        if (role.equals(Role.MY))
+            endpoint = "myRoleEndpoint";
+        else
+            endpoint = "partnerRoleEndpoint";
+        
+        Node node = partnerLinkElement.getFirstChild();
+        while(node != null) {
+            if (node instanceof Element && endpoint.equals(node.getLocalName())) {
+                return Utils.getFirstChildElement((Element) node);
+            }
+            node = node.getNextSibling();
+        }
+        
+        return null;
+    }
 }
