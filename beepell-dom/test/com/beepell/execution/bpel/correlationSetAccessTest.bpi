@@ -1,0 +1,67 @@
+<instance 
+  bpi:state="running"
+  name="exchange-instance"
+  targetNamespace="http://beepell.com/tests/context/links"  
+  xmlns:exc="http://beepell.com/tests/exchange/wsdl"
+  xmlns="http://www.itu.dk/research/pls/bpl/bpel/instance"
+  xmlns:bpi="http://www.itu.dk/research/pls/bpl/bpel/instance"
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:hr="http://beepell.com/samples/dummy/schema"
+  xmlns:ws="http://beepell.com/samples/dummy/service"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <correlationSets>
+    <correlationSet name="order" properties="ws:pa" />
+    <correlationSet name="invoice" properties="ws:pa ws:pb ws:pc">
+      <property name="ws:pa" type="xsd:int">42</property>
+      <property name="ws:pb" type="hr:personinfo">
+        <value>
+          <hr:firstname>James</hr:firstname>
+          <hr:lastname>Headfield</hr:lastname>
+        </value>
+      </property>
+      <property name="ws:pc" element="hr:person">
+        <hr:person>
+          <hr:firstname>Lars</hr:firstname>
+          <hr:lastname>Ulrich</hr:lastname>
+          <hr:age>45</hr:age>
+          <hr:dateborn>1963-12-26T09:30:10Z</hr:dateborn>
+          <hr:lease>P5Y2M10D</hr:lease>
+        </hr:person>
+      </property>      
+    </correlationSet>
+  </correlationSets>
+  
+  <sequence>
+  
+    <empty name="A" />
+    
+    <scope name="S">
+      <correlationSets>
+        <correlationSet name="invoice" properties="ws:pa ws:pb ws:pc">
+          <property name="ws:pa" type="xsd:int">12</property>
+          <property name="ws:pb" type="hr:personinfo">
+            <value>
+              <hr:firstname>James</hr:firstname>
+              <hr:lastname>Headfield</hr:lastname>
+            </value>
+          </property>
+          <property name="ws:pc" element="hr:person">
+            <hr:person>
+              <hr:firstname>Kirk</hr:firstname>
+              <hr:lastname>Hammett</hr:lastname>
+              <hr:age>46</hr:age>
+              <hr:dateborn>1962-11-18T07:23:10Z</hr:dateborn>
+              <hr:lease>P5Y2M10D</hr:lease>
+            </hr:person>
+          </property>      
+        </correlationSet>
+      </correlationSets>
+      
+      <empty name="B" />
+    </scope>
+  
+  </sequence>
+  
+</instance>

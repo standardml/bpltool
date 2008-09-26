@@ -28,7 +28,14 @@ import com.sun.xml.xsom.XSType;
  */
 public class Context {
 
+    /**
+     *  The repository with all XML Schema definitions.
+     */
     private final SchemaRepository schemas;
+    
+    /**
+     * The repository with all service definitions.
+     */
     private final ServiceRepository services;
 
     /**
@@ -165,7 +172,7 @@ public class Context {
         }
     }
 
-    private Node getVariableValue(Element variableElement) {
+    private Node getContainedValue(Element variableElement) {
         try {
             // TODO Throw WS-BPEL uninitialized variable if not initialized
             if (variableElement.getFirstChild() == null)
@@ -177,6 +184,9 @@ public class Context {
 
                 XSType xsType = this.schemas.getType(qualify(type));
 
+                if (xsType == null)
+                    throw new IllegalStateException("Type " + type + " is not declared.");
+                
                 if (xsType.isSimpleType()) {
                     // TODO Normalize document to ensure that there is only one
                     // text node.
@@ -223,7 +233,7 @@ public class Context {
      */
     public Node getVariableValue(String name) {
         Element variableElement = getVariableElement(name);
-        return getVariableValue(variableElement);
+        return getContainedValue(variableElement);
     }
 
     /**
@@ -247,7 +257,7 @@ public class Context {
             Node node = variableElement.getFirstChild();
             while (node != null) {
                 if (node instanceof Element && node.getLocalName().equals(part))
-                    return getVariableValue((Element) node);
+                    return getContainedValue((Element) node);
                 node = node.getNextSibling();
             }
             return null;
@@ -287,6 +297,7 @@ public class Context {
         return new QName(uri, split[1], split[0]);
 
     }
+
     private Element getPartnerLinkElement(String name) {
         try {
             final String expression = "(ancestor::bpi:*/bpi:partnerLinks/bpi:partnerLink[@name='" + name + "'])[last()]";
@@ -300,7 +311,7 @@ public class Context {
             exception.printStackTrace();
             return null;
         }
-        
+
     }
 
     /**
@@ -319,15 +330,71 @@ public class Context {
             endpoint = "myRoleEndpoint";
         else
             endpoint = "partnerRoleEndpoint";
-        
+
         Node node = partnerLinkElement.getFirstChild();
-        while(node != null) {
+        while (node != null) {
             if (node instanceof Element && endpoint.equals(node.getLocalName())) {
                 return Utils.getFirstChildElement((Element) node);
             }
             node = node.getNextSibling();
         }
-        
+
         return null;
     }
+
+    /**
+     * Get the named correlation set in context.
+     * 
+     * @param name The name of the correlation set to get.
+     * @return The CorrelationSet Element node.
+     */
+    public Element getCorrelationSet(String name) {
+        try {
+            final String expression = "(ancestor::bpi:*/bpi:correlationSets/bpi:correlationSet[@name='" + name + "'])[last()]";
+            Element partnerLinkElement = (Element) this.xPath.evaluate(expression, this.node, XPathConstants.NODE);
+
+            if (partnerLinkElement == null)
+                throw new IllegalStateException("Correlation set '" + name + "' is not declared in the ancestor path.");
+
+            return partnerLinkElement;
+
+        } catch (XPathExpressionException exception) {
+            exception.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Get the initialized correlation value form the named correlation set in
+     * context.
+     * <p>
+     * This method returns null if the correlation value has not been
+     * initialized.
+     * 
+     * @param set The name of the correlation set.
+     * @param property The qualified name of the property.
+     * @return The correlation property value or null if it is not initialized.
+     */
+    public Node getCorrelationValue(String set, QName property) {
+        if (property == null)
+            throw new IllegalArgumentException("A null value is not allowed for parameter 'property'");
+
+        Element correlationSetElement = this.getCorrelationSet(set);
+
+        Node child = correlationSetElement.getFirstChild();
+        while (child != null) {
+
+            if ("property".equals(child.getLocalName())) {
+                QName propertyName = this.qualify(((Element) child).getAttribute("name"));
+                if (property.equals(propertyName)) {
+                    return this.getContainedValue((Element) child);
+                }
+            }
+            
+            child = child.getNextSibling();
+        }
+
+        return null;
+    }
+
 }
