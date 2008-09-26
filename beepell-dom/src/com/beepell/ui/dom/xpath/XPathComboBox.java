@@ -9,6 +9,7 @@ import javax.swing.JTextField;
 import javax.swing.tree.TreeSelectionModel;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Document;
@@ -71,8 +72,18 @@ public class XPathComboBox extends JComboBox implements KeyListener {
                     setSelectedItem(path);
                 }
 
-                this.xpath.setNamespaceContext(new DocumentNamespaceContext(document));
-                NodeList result = (NodeList) this.xpath.evaluate((String) getSelectedItem(), document, XPathConstants.NODESET);
+                NodeList result = null;
+                try {
+                    this.xpath.setNamespaceContext(new DocumentNamespaceContext(document));
+                    result = (NodeList) this.xpath.evaluate((String) getSelectedItem(), document, XPathConstants.NODESET);
+                    
+                } catch (XPathExpressionException exception) {
+                    // Attempt to validate into a String
+                    this.xpath.setNamespaceContext(new DocumentNamespaceContext(document));
+                    String string = this.xpath.evaluate((String) getSelectedItem(), document);
+                    JOptionPane.showMessageDialog(this, string, "String Result", JOptionPane.INFORMATION_MESSAGE, IconRepository.getInfoIcon());
+                    return;
+                }
 
                 if (result.getLength() == 0) {
                     JOptionPane.showMessageDialog(this, "The expression did not select any nodes.", "XPath", JOptionPane.WARNING_MESSAGE, IconRepository
@@ -84,13 +95,13 @@ public class XPathComboBox extends JComboBox implements KeyListener {
 
                 for (int i = 0; i < result.getLength(); i++) {
                     if (!(result.item(i) instanceof Element)) {
-                        String title ="Expression Result " + (i+1) + " of " + result.getLength();
+                        String title = "Expression Result " + (i + 1) + " of " + result.getLength();
                         JOptionPane.showMessageDialog(this, result.item(i), title, JOptionPane.INFORMATION_MESSAGE, IconRepository.getInfoIcon());
                     } else {
                         this.selectionModel.addSelectionPath(this.treeModel.getPath(result.item(i)));
                     }
                 }
-
+// ('<value name="myName">myValue</value>')/text()
                 addItem(getSelectedItem());
 
             } catch (Exception exception) {
