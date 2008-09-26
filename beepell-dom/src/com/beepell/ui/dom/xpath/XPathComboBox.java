@@ -101,7 +101,7 @@ public class XPathComboBox extends JComboBox implements KeyListener {
                         this.selectionModel.addSelectionPath(this.treeModel.getPath(result.item(i)));
                     }
                 }
-// ('<value name="myName">myValue</value>')/text()
+
                 addItem(getSelectedItem());
 
             } catch (Exception exception) {
