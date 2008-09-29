@@ -14,13 +14,14 @@ import org.xml.sax.SAXException;
 import com.beepell.repository.SchemaRepository;
 import com.beepell.repository.ServiceRepository;
 import com.beepell.xml.namespace.NodeNamespaceContext;
+import com.beepell.xml.xpath.LinkStateResolver;
 import com.sun.xml.xsom.XSType;
 
 /**
  * A class to get an set instance state values in the context of a node.
  * <p>
- * The context node is typically a WS-BPEL activity Element node, but it cloud
- * be any node within the instance tree; for example the from-node of a
+ * The context node is typically a WS-BPEL activity Element node, but it may be
+ * any node within the instance tree; for example the from-node of a
  * copy-element within an Assign-activity.
  * 
  * @author Tim Hallwyl
@@ -29,10 +30,10 @@ import com.sun.xml.xsom.XSType;
 public class Context {
 
     /**
-     *  The repository with all XML Schema definitions.
+     * The repository with all XML Schema definitions.
      */
     private final SchemaRepository schemas;
-    
+
     /**
      * The repository with all service definitions.
      */
@@ -42,6 +43,8 @@ public class Context {
      * The context node.
      */
     private final Node node;
+
+    private final XPathFactory factory;
 
     private final XPath xPath;
 
@@ -64,8 +67,8 @@ public class Context {
 
         this.namespaceContext = new NodeNamespaceContext(node);
 
-        XPathFactory factory = XPathFactory.newInstance();
-        this.xPath = factory.newXPath();
+        this.factory = XPathFactory.newInstance();
+        this.xPath = this.factory.newXPath();
         this.xPath.setNamespaceContext(this.namespaceContext);
 
         if (schemas == null) {
@@ -186,7 +189,7 @@ public class Context {
 
                 if (xsType == null)
                     throw new IllegalStateException("Type " + type + " is not declared.");
-                
+
                 if (xsType.isSimpleType()) {
                     // TODO Normalize document to ensure that there is only one
                     // text node.
@@ -390,11 +393,42 @@ public class Context {
                     return this.getContainedValue((Element) child);
                 }
             }
-            
+
             child = child.getNextSibling();
         }
 
         return null;
+    }
+
+    /**
+     * Evaluates the join condition.
+     * <p>
+     * If the evaluation fails of some reason, this method returns false. If the
+     * element does not have any targets this methods returns true.
+     * <p>
+     * Note: This method returns true if there is no incoming links (targets).
+     * 
+     * @return true if the join condition evaluated true, otherwise false.
+     * @throws IllegalStateException If the context node is not an activity
+     *             element;
+     */
+    public boolean evaluateJoinCondition() {
+
+        if (!(this.node instanceof Element) || !Utils.isActivity((Element) this.node))
+            throw new IllegalStateException("Cannot evaluate the join condition: The context node is not an activity.");
+
+        if (!Utils.hasTargets((Element) this.node))
+            return true;
+
+        XPath xPath = this.factory.newXPath();
+        xPath.setNamespaceContext(this.namespaceContext);
+        xPath.setXPathVariableResolver(new LinkStateResolver(this));
+        try {
+            Boolean result = (Boolean) xPath.evaluate(Utils.getJoinCondition((Element) this.node), this.node, XPathConstants.BOOLEAN);
+            return result.booleanValue();
+        } catch (XPathExpressionException exception) {
+            return false;
+        }
     }
 
 }

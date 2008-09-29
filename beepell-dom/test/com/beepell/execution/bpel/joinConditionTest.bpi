@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<instance 
+  bpi:state="running"
+  name="exchange-instance"
+  targetNamespace="http://beepell.com/tests/context/links"  
+  xmlns:exc="http://beepell.com/tests/exchange/wsdl"
+  xmlns="http://www.itu.dk/research/pls/bpl/bpel/instance"
+  xmlns:bpi="http://www.itu.dk/research/pls/bpl/bpel/instance">
+
+  <sequence>
+  <flow>  
+    <links>
+      <link name="a1b3" state="true" />
+      <link name="a2b3" state="true" />
+      <link name="a3b3" state="false" />
+    </links>
+
+    <sequence>
+      <empty>
+        <sources><source linkName="a1b3" /></sources>
+      </empty>    
+      <empty>
+        <sources><source linkName="a2b3" /></sources>
+      </empty>    
+      <empty>
+        <sources><source linkName="a3b3" /></sources>
+      </empty>    
+    </sequence>
+
+    <sequence>
+      <empty />
+      <empty />
+      <empty name="A">
+        <targets>
+          <joinCondition>$a1b3 or $a2b3 or $a3b3</joinCondition>
+          <target linkName="a1b3" />
+          <target linkName="a2b3" />
+          <target linkName="a3b3" />
+        </targets>
+      </empty>
+    </sequence>
+
+  </flow>
+
+
+  <flow>  
+    <links>
+      <link name="a1b3" state="true" />
+      <link name="a2b3" state="true" />
+      <link name="a3b3" state="false" />
+    </links>
+
+    <sequence>
+      <empty>
+        <sources><source linkName="a1b3" /></sources>
+      </empty>    
+      <empty>
+        <sources><source linkName="a2b3" /></sources>
+      </empty>    
+      <empty>
+        <sources><source linkName="a3b3" /></sources>
+      </empty>    
+    </sequence>
+
+    <sequence>
+      <empty />
+      <empty />
+      <empty name="B">
+        <targets>
+          <joinCondition>$a1b3 and $a2b3 and $a3b3</joinCondition>
+          <target linkName="a1b3" />
+          <target linkName="a2b3" />
+          <target linkName="a3b3" />
+        </targets>
+      </empty>
+    </sequence>
+
+  </flow>
+  </sequence>
+</instance>
