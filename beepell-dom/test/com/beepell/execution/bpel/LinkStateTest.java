@@ -13,6 +13,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Element;
 
+import com.beepell.repository.SchemaRepository;
+import com.beepell.repository.ServiceRepository;
 import com.beepell.xml.namespace.DocumentNamespaceContext;
 
 /**
@@ -29,9 +31,16 @@ public class LinkStateTest {
      */
     @Before
     public void setUp() throws Exception {
+        
         File file = new File(LinkStateTest.class.getResource("linkStateTest.bpi").toURI());
         this.instance = Utils.load(file);
 
+        SchemaRepository schemas = new SchemaRepository();
+        ServiceRepository services = new ServiceRepository();
+        this.instance.getOwnerDocument().setUserData("com.beepell.repository.SchemaRepository", schemas, null);
+        this.instance.getOwnerDocument().setUserData("com.beepell.repository.ServiceRepository", services, null);
+
+        
         XPathFactory factory = XPathFactory.newInstance();
         this.xPath = factory.newXPath();
         this.xPath.setNamespaceContext(new DocumentNamespaceContext(this.instance.getOwnerDocument()));
