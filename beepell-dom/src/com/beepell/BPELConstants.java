@@ -36,4 +36,8 @@ public class BPELConstants {
 
     /** SOAP */
     public final static String SOAP = "http://schemas.xmlsoap.org/wsdl/soap/";
+
+    /** Business Process Instance */
+    public final static String BPI = "http://www.itu.dk/research/pls/bpl/bpel/instance";
+
 }
