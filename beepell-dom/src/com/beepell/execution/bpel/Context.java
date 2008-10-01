@@ -1,5 +1,7 @@
 package com.beepell.execution.bpel;
 
+import java.util.List;
+
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import javax.xml.xpath.XPath;
@@ -429,6 +431,38 @@ public class Context {
         } catch (XPathExpressionException exception) {
             return false;
         }
+    }
+
+    /**
+     * Checks if the activity is synchronizing; that is, if it is waiting for
+     * some incoming link to be determined.
+     * <p>
+     * Note: If this returns true, then the next step is to evaluate the join
+     * condition.
+     * 
+     * @return true if the activity is waiting for one or incoming links, false
+     *         if all incoming links are determined.
+     */
+    public boolean isSynchronizing() {
+        if (!(this.node instanceof Element) || !Utils.isActivity((Element) this.node))
+            throw new IllegalStateException("Cannot check links: The context node is not an activity.");
+
+        Element element = (Element) this.node;
+        if (!Utils.hasTargets(element))
+            return false;
+
+        List<String> targets = Utils.getTargetsNames(element);
+        if (targets == null)
+            return false;
+
+        Context context = new Context(element);
+        for (String linkName : targets) {
+            if (context.getLinkState(linkName) == null)
+                return true;
+        }
+
+        return false;
+
     }
 
 }
