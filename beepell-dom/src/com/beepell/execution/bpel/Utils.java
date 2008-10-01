@@ -262,4 +262,17 @@ public class Utils {
         }
         return null;
     }
+    
+    /**
+     * Removes an Element node from its parent.
+     * 
+     * @param element The Element node to be removed.
+     * @return The Element node removed.
+     */
+    public static Element remove(Element element) {
+
+        Node parent = element.getParentNode();
+        return (Element) parent.removeChild(element);
+
+    }
 }
