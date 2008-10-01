@@ -465,4 +465,36 @@ public class Context {
 
     }
 
+    /**
+     * Removes all incoming links from the context node (provided that is is an
+     * activity Element) and from the Flow activities where they are declared.
+     * <p>
+     * Note: This method does not check if the links are determined. This method
+     * is to be called only when the activity is no longer synchronizing and the
+     * join condition has been evaluated (disregarding the outcome).
+     */
+    public void removeIncomingLinks() {
+        if (!(this.node instanceof Element) || !Utils.isActivity((Element) this.node))
+            throw new IllegalStateException("Cannot remove incoming links: The context node is not an activity.");
+       
+        List<String> linkNames = Utils.getTargetsNames((Element) this.node);
+        if (linkNames == null)
+            return;
+        
+        Element link;
+        for (String linkName : linkNames) {
+            link = this.getLinkElement(linkName);
+            Utils.remove(link);
+        }
+        
+        try {
+          Element targets = (Element) this.xPath.evaluate("bpi:targets", this.node, XPathConstants.NODE);
+          Utils.remove(targets);
+        } catch (XPathExpressionException exception) {
+            /* Should not happen since linkNames != null there must be a targets element */
+            exception.printStackTrace();
+            throw new IllegalStateException("Failed to remove targets element.");
+        }
+    }
+
 }
