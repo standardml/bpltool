@@ -6,8 +6,6 @@ import java.io.File;
 import java.net.URI;
 
 import javax.xml.namespace.QName;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
@@ -26,12 +24,8 @@ import com.beepell.xml.namespace.DocumentNamespaceContext;
  * @author Tim Hallwyl
  *
  */
-public class CorrelationSetAccessTest {
+public class CorrelationSetAccessTest extends AbstractContextTest {
 
-    private Element instance;
-    
-    private XPath xPath;
-    
     /**
      * @throws java.lang.Exception
      */
@@ -45,7 +39,7 @@ public class CorrelationSetAccessTest {
         ServiceRepository services = new ServiceRepository();
         
         File file = new File(VariableAccessTest.class.getResource("correlationSetAccessTest.bpi").toURI());    
-        this.instance = Utils.load(file);
+        this.instance = load(file);
         Document document = this.instance.getOwnerDocument();
         document.setUserData("com.beepell.repository.SchemaRepository", schemas, null);
         document.setUserData("com.beepell.repository.ServiceRepository", services, null);
@@ -55,9 +49,6 @@ public class CorrelationSetAccessTest {
         this.xPath.setNamespaceContext(new DocumentNamespaceContext(this.instance.getOwnerDocument()));
     }
 
-    private Node evaluate(final String expression, final Node contextNode) throws XPathExpressionException {
-        return (Node) this.xPath.evaluate(expression, contextNode, XPathConstants.NODE);
-    }
     
     /**
      * Test method for {@link com.beepell.execution.bpel.Context#getCorrelationSet(java.lang.String)}.

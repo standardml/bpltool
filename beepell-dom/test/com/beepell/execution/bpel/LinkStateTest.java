@@ -4,7 +4,6 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 
-import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
@@ -21,10 +20,7 @@ import com.beepell.xml.namespace.DocumentNamespaceContext;
  * @author Tim Hallwyl
  * 
  */
-public class LinkStateTest {
-
-    private Element instance;
-    private XPath xPath;
+public class LinkStateTest extends AbstractContextTest {
 
     /**
      * @throws java.lang.Exception
@@ -33,7 +29,7 @@ public class LinkStateTest {
     public void setUp() throws Exception {
         
         File file = new File(LinkStateTest.class.getResource("linkStateTest.bpi").toURI());
-        this.instance = Utils.load(file);
+        this.instance = load(file);
 
         SchemaRepository schemas = new SchemaRepository();
         ServiceRepository services = new ServiceRepository();

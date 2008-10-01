@@ -7,15 +7,12 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import com.beepell.BPELConstants;
@@ -27,11 +24,8 @@ import com.beepell.xml.namespace.DocumentNamespaceContext;
  * @author Tim Hallwyl
  *
  */
-public class EndpointAccessTest {
+public class EndpointAccessTest extends AbstractContextTest {
 
-    private Element instance;
-    private XPath xPath;
-    
     /**
      * @throws java.lang.Exception
      */
@@ -41,7 +35,7 @@ public class EndpointAccessTest {
         ServiceRepository services = new ServiceRepository();
 
         File file = new File(EndpointAccessTest.class.getResource("endpointAccessTest.bpi").toURI());    
-        this.instance = Utils.load(file);
+        this.instance = load(file);
         Document document = this.instance.getOwnerDocument();
         document.setUserData("com.beepell.repository.SchemaRepository", schemas, null);
         document.setUserData("com.beepell.repository.ServiceRepository", services, null);
@@ -51,10 +45,6 @@ public class EndpointAccessTest {
         this.xPath.setNamespaceContext(new DocumentNamespaceContext(this.instance.getOwnerDocument()));
     }
     
-    private Node evaluate(final String expression, final Node contextNode) throws XPathExpressionException {
-        return (Node) this.xPath.evaluate(expression, contextNode, XPathConstants.NODE);
-    }
-
     /**
      * Test method for {@link com.beepell.execution.bpel.Context#getEndpoint(java.lang.String, Role)}.
      */

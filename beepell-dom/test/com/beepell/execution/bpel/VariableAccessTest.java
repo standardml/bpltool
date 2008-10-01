@@ -8,8 +8,6 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.net.URI;
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
@@ -28,11 +26,8 @@ import com.beepell.xml.namespace.DocumentNamespaceContext;
  * @author Tim Hallwyl
  *
  */
-public class VariableAccessTest {
+public class VariableAccessTest extends AbstractContextTest{
 
-    private Element instance;
-    private XPath xPath;
-    
     /**
      * @throws java.lang.Exception
      */
@@ -47,7 +42,7 @@ public class VariableAccessTest {
         services.add(wsdl);
         
         File file = new File(VariableAccessTest.class.getResource("variableAccessTest.bpi").toURI());    
-        this.instance = Utils.load(file);
+        this.instance = load(file);
         Document document = this.instance.getOwnerDocument();
         document.setUserData("com.beepell.repository.SchemaRepository", schemas, null);
         document.setUserData("com.beepell.repository.ServiceRepository", services, null);
@@ -55,10 +50,6 @@ public class VariableAccessTest {
         XPathFactory factory = XPathFactory.newInstance();
         this.xPath = factory.newXPath();
         this.xPath.setNamespaceContext(new DocumentNamespaceContext(this.instance.getOwnerDocument()));
-    }
-    
-    private Node evaluate(final String expression, final Node contextNode) throws XPathExpressionException {
-        return (Node) this.xPath.evaluate(expression, contextNode, XPathConstants.NODE);
     }
 
     /**
