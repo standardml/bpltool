@@ -135,11 +135,12 @@ public class Utils {
         while (node != null) {
             if ((node instanceof Element) && ("targets".equals(node.getLocalName()))) {
 
-                node = node.getFirstChild();
-                while (node != null) {
-                    if ((node instanceof Element) && ("target".equals(node.getLocalName()))) {
-                        targets.add(((Element) node).getAttribute("linkName"));
+                Node target = node.getFirstChild();
+                while (target != null) {
+                    if ((target instanceof Element) && ("target".equals(target.getLocalName()))) {
+                        targets.add(((Element) target).getAttribute("linkName"));
                     }
+                    target = target.getNextSibling();
                 }
 
                 return targets;
