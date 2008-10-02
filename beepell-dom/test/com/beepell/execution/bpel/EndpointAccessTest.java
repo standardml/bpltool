@@ -8,7 +8,6 @@ import static org.junit.Assert.fail;
 import java.io.File;
 
 import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -18,7 +17,6 @@ import org.w3c.dom.Node;
 import com.beepell.BPELConstants;
 import com.beepell.repository.SchemaRepository;
 import com.beepell.repository.ServiceRepository;
-import com.beepell.xml.namespace.DocumentNamespaceContext;
 
 /**
  * @author Tim Hallwyl
@@ -34,15 +32,10 @@ public class EndpointAccessTest extends AbstractContextTest {
         SchemaRepository schemas = new SchemaRepository();
         ServiceRepository services = new ServiceRepository();
 
-        File file = new File(EndpointAccessTest.class.getResource("endpointAccessTest.bpi").toURI());    
-        this.instance = load(file);
-        Document document = this.instance.getOwnerDocument();
+        load(new File(EndpointAccessTest.class.getResource("endpointAccessTest.bpi").toURI()));    
+        Document document = this.getInstance().getOwnerDocument();
         document.setUserData("com.beepell.repository.SchemaRepository", schemas, null);
         document.setUserData("com.beepell.repository.ServiceRepository", services, null);
-    
-        XPathFactory factory = XPathFactory.newInstance();
-        this.xPath = factory.newXPath();
-        this.xPath.setNamespaceContext(new DocumentNamespaceContext(this.instance.getOwnerDocument()));
     }
     
     /**
@@ -54,7 +47,7 @@ public class EndpointAccessTest extends AbstractContextTest {
             Node node, endpoint;
             Context context;
             
-            node = evaluate("//bpi:empty[@name='A']", this.instance);
+            node = evaluate("//bpi:empty[@name='A']", this.getInstance());
             context = new Context(node);
             
             endpoint = context.getEndpoint("echoPartnerLink", Role.MY);            
@@ -70,7 +63,7 @@ public class EndpointAccessTest extends AbstractContextTest {
             assertNull(context.getEndpoint("insurancePartnerLink", Role.MY));
             assertNull(context.getEndpoint("insurancePartnerLink", Role.PARTNER));
             
-            node = evaluate("//bpi:empty[@name='B']", this.instance);
+            node = evaluate("//bpi:empty[@name='B']", this.getInstance());
             context = new Context(node);
             
             endpoint = context.getEndpoint("echoPartnerLink", Role.MY);            

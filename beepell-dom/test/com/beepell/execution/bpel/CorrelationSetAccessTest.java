@@ -1,13 +1,16 @@
 package com.beepell.execution.bpel;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.net.URI;
 
 import javax.xml.namespace.QName;
 import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -18,7 +21,6 @@ import org.w3c.dom.Text;
 
 import com.beepell.repository.SchemaRepository;
 import com.beepell.repository.ServiceRepository;
-import com.beepell.xml.namespace.DocumentNamespaceContext;
 
 /**
  * @author Tim Hallwyl
@@ -38,15 +40,11 @@ public class CorrelationSetAccessTest extends AbstractContextTest {
         
         ServiceRepository services = new ServiceRepository();
         
-        File file = new File(VariableAccessTest.class.getResource("correlationSetAccessTest.bpi").toURI());    
-        this.instance = load(file);
-        Document document = this.instance.getOwnerDocument();
+        load(new File(VariableAccessTest.class.getResource("correlationSetAccessTest.bpi").toURI()));    
+        Document document = this.getInstance().getOwnerDocument();
         document.setUserData("com.beepell.repository.SchemaRepository", schemas, null);
         document.setUserData("com.beepell.repository.ServiceRepository", services, null);
     
-        XPathFactory factory = XPathFactory.newInstance();
-        this.xPath = factory.newXPath();
-        this.xPath.setNamespaceContext(new DocumentNamespaceContext(this.instance.getOwnerDocument()));
     }
 
     
@@ -59,7 +57,7 @@ public class CorrelationSetAccessTest extends AbstractContextTest {
             Node node, value;
             Context context;
             
-            node = evaluate("//bpi:empty[@name='A']", this.instance);
+            node = evaluate("//bpi:empty[@name='A']", this.getInstance());
             context = new Context(node);
             
             value = context.getCorrelationSet("order");
@@ -72,7 +70,7 @@ public class CorrelationSetAccessTest extends AbstractContextTest {
             assertEquals("Headfield", evaluate("bpi:property[@name='ws:pb']/bpi:value/hr:lastname/text()", value).getNodeValue().trim());
             assertEquals("Ulrich", evaluate("bpi:property[@name='ws:pc']/hr:person/hr:lastname/text()", value).getNodeValue().trim());
             
-            node = evaluate("//bpi:empty[@name='B']", this.instance);
+            node = evaluate("//bpi:empty[@name='B']", this.getInstance());
             context = new Context(node);
             
             value = context.getCorrelationSet("order");
@@ -102,7 +100,7 @@ public class CorrelationSetAccessTest extends AbstractContextTest {
             Node node, value;
             Context context;
             
-            node = evaluate("//bpi:empty[@name='A']", this.instance);
+            node = evaluate("//bpi:empty[@name='A']", this.getInstance());
             context = new Context(node);
             
             value = context.getCorrelationValue("invoice", new QName(ws, "pa"));

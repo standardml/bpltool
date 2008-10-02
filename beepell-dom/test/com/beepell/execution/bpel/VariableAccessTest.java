@@ -9,7 +9,6 @@ import java.io.File;
 import java.net.URI;
 
 import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -20,7 +19,6 @@ import org.w3c.dom.Text;
 
 import com.beepell.repository.SchemaRepository;
 import com.beepell.repository.ServiceRepository;
-import com.beepell.xml.namespace.DocumentNamespaceContext;
 
 /**
  * @author Tim Hallwyl
@@ -41,15 +39,10 @@ public class VariableAccessTest extends AbstractContextTest{
         ServiceRepository services = new ServiceRepository();
         services.add(wsdl);
         
-        File file = new File(VariableAccessTest.class.getResource("variableAccessTest.bpi").toURI());    
-        this.instance = load(file);
-        Document document = this.instance.getOwnerDocument();
+        load(new File(VariableAccessTest.class.getResource("variableAccessTest.bpi").toURI()));    
+        Document document = this.getInstance().getOwnerDocument();
         document.setUserData("com.beepell.repository.SchemaRepository", schemas, null);
         document.setUserData("com.beepell.repository.ServiceRepository", services, null);
-    
-        XPathFactory factory = XPathFactory.newInstance();
-        this.xPath = factory.newXPath();
-        this.xPath.setNamespaceContext(new DocumentNamespaceContext(this.instance.getOwnerDocument()));
     }
 
     /**
@@ -61,7 +54,7 @@ public class VariableAccessTest extends AbstractContextTest{
             Node node, value;
             Context context;
             
-            node = evaluate("//bpi:instance/bpi:sequence", this.instance);
+            node = evaluate("//bpi:instance/bpi:sequence", this.getInstance());
             context = new Context(node);
             
             value = context.getVariableValue("foo");
@@ -83,7 +76,7 @@ public class VariableAccessTest extends AbstractContextTest{
             Node node, value;
             Context context;
             
-            node = evaluate("//bpi:scope[@name='A']/bpi:empty", this.instance);
+            node = evaluate("//bpi:scope[@name='A']/bpi:empty", this.getInstance());
             context = new Context(node);
             
             value = context.getVariableValue("bar");
@@ -95,7 +88,7 @@ public class VariableAccessTest extends AbstractContextTest{
             assertEquals("A", value.getNodeValue().trim());
 
             
-            node = evaluate("//bpi:scope[@name='B']/bpi:empty", this.instance);
+            node = evaluate("//bpi:scope[@name='B']/bpi:empty", this.getInstance());
             context = new Context(node);
             
             value = context.getVariableValue("bar");
@@ -107,7 +100,7 @@ public class VariableAccessTest extends AbstractContextTest{
             assertEquals("B", value.getNodeValue().trim());
 
 
-            node = evaluate("//bpi:scope[@name='C']/bpi:scope", this.instance);
+            node = evaluate("//bpi:scope[@name='C']/bpi:scope", this.getInstance());
             context = new Context(node);
             
             value = context.getVariableValue("bar");
@@ -119,7 +112,7 @@ public class VariableAccessTest extends AbstractContextTest{
             assertEquals("C", value.getNodeValue().trim());
 
             
-            node = evaluate("//bpi:scope[@name='D']/bpi:empty", this.instance);
+            node = evaluate("//bpi:scope[@name='D']/bpi:empty", this.getInstance());
             context = new Context(node);
             
             value = context.getVariableValue("bar");
@@ -150,7 +143,7 @@ public class VariableAccessTest extends AbstractContextTest{
             Node node, value;
             Context context;
             
-            node = evaluate("//bpi:scope[@name='A']/bpi:empty", this.instance);
+            node = evaluate("//bpi:scope[@name='A']/bpi:empty", this.getInstance());
             context = new Context(node);
             
             value = context.getVariableValue("kung");
@@ -177,7 +170,7 @@ public class VariableAccessTest extends AbstractContextTest{
             Node node, value;
             Context context;
             
-            node = evaluate("//bpi:scope[@name='B']/bpi:empty", this.instance);
+            node = evaluate("//bpi:scope[@name='B']/bpi:empty", this.getInstance());
             context = new Context(node);
             
             value = context.getVariableValue("kung");
@@ -206,7 +199,7 @@ public class VariableAccessTest extends AbstractContextTest{
             Node node, value;
             Context context;
             
-            node = evaluate("//bpi:scope[@name='D']", this.instance);
+            node = evaluate("//bpi:scope[@name='D']", this.getInstance());
             context = new Context(node);
             
             value = context.getVariableValue("kung", "manager");
