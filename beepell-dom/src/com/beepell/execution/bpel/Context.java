@@ -11,8 +11,10 @@ import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import com.beepell.BPELConstants;
 import com.beepell.repository.SchemaRepository;
 import com.beepell.repository.ServiceRepository;
 import com.beepell.xml.namespace.NodeNamespaceContext;
@@ -25,6 +27,10 @@ import com.sun.xml.xsom.XSType;
  * The context node is typically a WS-BPEL activity Element node, but it may be
  * any node within the instance tree; for example the from-node of a
  * copy-element within an Assign-activity.
+ * <p>
+ * However, some methods are only to be used in the context of an activity
+ * Element node, such as isSyncronizing(), and will throw an unchecked
+ * IllegalStateException if used with a node other that an activity.
  * 
  * @author Tim Hallwyl
  * 
@@ -46,17 +52,27 @@ public class Context {
      */
     private final Node node;
 
+    /**
+     * Factory to create XPath objects. Most methods use the default xPath
+     * object below, but some needs special variable and/or function resolvers.
+     */
     private final XPathFactory factory;
 
+    /**
+     * The default XPath object used by most methods.
+     */
     private final XPath xPath;
 
+    /**
+     * The namespace context used by XPath to lookup a namespace from a prefix.
+     */
     private final NamespaceContext namespaceContext;
 
     /**
-     * Create a context for the specified node.
+     * Create a Context object for the specified node.
      * <p>
      * The schemas and services parameters may be null if the repository is
-     * stored in the owner documents user data-.
+     * stored in the owner document's user data.
      * 
      * @param node The context node (must not be null).
      * @param schemas Repository of imported XML Schema definitions.
@@ -103,6 +119,12 @@ public class Context {
         this(node, null, null);
     }
 
+    /**
+     * Gets the Link declaration Element node.
+     * 
+     * @param linkName Name of the link to get.
+     * @return The 'link' Element node, declared in an ancestor Flow activity.
+     */
     private Element getLinkElement(final String linkName) {
 
         try {
@@ -122,9 +144,9 @@ public class Context {
     }
 
     /**
-     * Gets the state of the link.
+     * Gets the state of the link: null, true or false.
      * 
-     * @param linkName
+     * @param linkName The name of the link.
      * @return null if the link is not set yet, otherwise the link state.
      */
     public Boolean getLinkState(final String linkName) {
@@ -142,6 +164,7 @@ public class Context {
      * 
      * @param linkName The name of the link to be determined.
      * @param value The determined state value to set.
+     * @throws IllegalStateException If the link has already been determined.
      */
     public void setLinkState(final String linkName, final boolean value) {
 
@@ -177,6 +200,13 @@ public class Context {
         }
     }
 
+    /**
+     * Extracts the value node from a variable Element node.
+     * 
+     * @param variableElement The variable Element node.
+     * @return The value node of a variable or null if the variable has no
+     *         value.
+     */
     private Node getContainedValue(Element variableElement) {
         try {
             // TODO Throw WS-BPEL uninitialized variable if not initialized
@@ -303,6 +333,14 @@ public class Context {
 
     }
 
+    /**
+     * Gets the partner link Element node from an ancestor Scope node.
+     * 
+     * @param name The partner link name to lookup.
+     * @return The partner link Element node.
+     * @throws IllegalStateException If the partner link is not found in the
+     *             context.
+     */
     private Element getPartnerLinkElement(String name) {
         try {
             final String expression = "(ancestor::bpi:*/bpi:partnerLinks/bpi:partnerLink[@name='" + name + "'])[last()]";
@@ -476,25 +514,77 @@ public class Context {
     public void removeIncomingLinks() {
         if (!(this.node instanceof Element) || !Utils.isActivity((Element) this.node))
             throw new IllegalStateException("Cannot remove incoming links: The context node is not an activity.");
-       
+
         List<String> linkNames = Utils.getTargetsNames((Element) this.node);
         if (linkNames == null)
             return;
-        
+
         Element link;
         for (String linkName : linkNames) {
             link = this.getLinkElement(linkName);
             Utils.remove(link);
         }
-        
+
         try {
-          Element targets = (Element) this.xPath.evaluate("bpi:targets", this.node, XPathConstants.NODE);
-          Utils.remove(targets);
+            
+            Element targets = (Element) this.xPath.evaluate("bpi:targets", this.node, XPathConstants.NODE);
+            Utils.remove(targets);
+            
         } catch (XPathExpressionException exception) {
-            /* Should not happen since linkNames != null there must be a targets element */
+            /*
+             * Should not happen since linkNames != null there must be a targets
+             * element
+             */
             exception.printStackTrace();
             throw new IllegalStateException("Failed to remove targets element.");
         }
+    }
+
+    /**
+     * Move the links from the context node (provided that is is an activity
+     * Element node) to the 'to' node.
+     * <p>
+     * The links moved will be added to the end of the end of the 'to' node's
+     * sources. Each link Element moved will have a'inherit' attribute added.
+     * <p>
+     * If the 'to' Element node does not have a 'sources' element, one is
+     * created.
+     * 
+     * @param to The activity Element node that will inherit the context node's
+     *            outgoing links.
+     * @throws IllegalStateException If the context node and the 'to' Element is
+     *             not activity Element nodes or if the method fails.
+     */
+    public void inheritOutgoingLinks(Element to) {
+        if (!(this.node instanceof Element) || !Utils.isActivity((Element) this.node))
+            throw new IllegalStateException("Cannot remove incoming links: The context node is not an activity.");
+
+        if (!Utils.isActivity(to))
+            throw new IllegalStateException("Cannot remove incoming links: The 'to' node is not an activity.");
+        
+        try {
+            Element childSourceList = (Element) this.xPath.evaluate("bpi:sources", to, XPathConstants.NODE);
+            if (childSourceList == null) {
+                childSourceList = (Element) to.appendChild(to.getOwnerDocument().createElementNS(BPELConstants.BPI, "sources"));
+            }
+
+            NodeList sources = (NodeList) this.xPath.evaluate("bpi:sources/bpi:source", this.node, XPathConstants.NODESET);
+            Node parentNode = sources.item(0).getParentNode(); 
+            
+            Element source;
+            for (int i = 0; i < sources.getLength(); i++) {
+                source = (Element) sources.item(i);
+                source.setAttribute("inherited", "true");
+                source = (Element) parentNode.removeChild(source);
+                childSourceList.appendChild(source);
+            }
+            
+            parentNode.getParentNode().removeChild(parentNode);
+
+        } catch (XPathExpressionException exception) {
+            throw new IllegalStateException("Failed to inherit links from " + this.node.getLocalName() + " to " + to.getLocalName(), exception);
+        }
+
     }
 
 }
