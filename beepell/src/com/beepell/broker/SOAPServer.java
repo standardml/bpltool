@@ -2,11 +2,13 @@ package com.beepell.broker;
 
 import java.util.Hashtable;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.wsdl.PortType;
 import javax.xml.namespace.QName;
 import javax.xml.ws.Endpoint;
 
+import com.beepell.Settings;
 import com.beepell.deployment.ProcessContext;
 import com.beepell.model.OnEvent;
 import com.beepell.model.OnMessage;
@@ -20,6 +22,8 @@ import com.beepell.repository.ServiceRepository;
  */
 public class SOAPServer {
 
+    private static final Logger log = Settings.getLogger();
+    
     private static Hashtable<String, Endpoint> endpoints = new Hashtable<String, Endpoint>();
 
     private static Hashtable<QName, InboundMessageHandler> handlers = new Hashtable<QName, InboundMessageHandler>();
@@ -103,7 +107,7 @@ public class SOAPServer {
         Endpoint endpoint = Endpoint.create(provider);
         endpoint.publish(address);
 
-        System.out.println("INFO: Published '" + partnerLinkTypeName.getLocalPart() + "' (" + partnerLink.getMyRole() + ") at " + address);
+        log.info("Published '" + partnerLinkTypeName.getLocalPart() + "' (" + partnerLink.getMyRole() + ") at " + address);
         endpoints.put(getKey(partnerLinkTypeName, partnerLink.getMyRole()), endpoint);
     }
 

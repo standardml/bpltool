@@ -3,6 +3,7 @@ package com.beepell.broker;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Logger;
 
 import javax.wsdl.Fault;
 import javax.wsdl.Operation;
@@ -17,6 +18,7 @@ import javax.xml.ws.AsyncHandler;
 import javax.xml.ws.Response;
 import javax.xml.ws.soap.SOAPFaultException;
 
+import com.beepell.Settings;
 import com.beepell.activity.basic.Invoke;
 import com.beepell.exceptions.BPELFault;
 import com.beepell.execution.ExecutionContext;
@@ -29,6 +31,8 @@ import com.beepell.variable.MessageVariable;
  */
 public class InvokeResponseHandler implements AsyncHandler<SOAPMessage> {
 
+    private final Logger log = Settings.getLogger();
+    
     private final MessageVariable variable;
 
     private final Invoke invoke;
@@ -175,9 +179,9 @@ public class InvokeResponseHandler implements AsyncHandler<SOAPMessage> {
                     invoke.failed(new FaultMessage(faultName, variable));
                     return;
                 } else {
-                    System.out.println("WARNING: Invoke response was a fault without fault details.");
-                    System.out.println("WARNING: - Code '" + soapFault.getFaultCode() + "'");
-                    System.out.println("WARNING: - Reason '" + soapFault.getFaultString() + "'");
+                    log.warning("Invoke response was a fault without fault details.");
+                    log.warning(" - Code '" + soapFault.getFaultCode() + "'");
+                    log.warning(" - Reason '" + soapFault.getFaultString() + "'");
                     invoke.failed(new MessagingFault("Invoke response was a fault without fault details."));
                 }
             }

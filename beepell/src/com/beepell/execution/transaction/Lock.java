@@ -1,6 +1,9 @@
 package com.beepell.execution.transaction;
 
 import java.util.Vector;
+import java.util.logging.Logger;
+
+import com.beepell.Settings;
 
 /**
  * The lock for an object.
@@ -8,7 +11,8 @@ import java.util.Vector;
  * @author Tim Hallwyl
  */
 public class Lock {
-
+    private static final Logger log = Settings.getLogger();
+    
     private final Object object;
 
     /*
@@ -90,7 +94,7 @@ public class Lock {
 
         while (inConflict(transaction, requested)) {
             /* another transaction holds the lock in a conflicting mode */
-            System.out.println("INFO: Waiting for " + this.lockType + " on " + this.object.getClass().getSimpleName() + " to be released.");
+            log.info("Waiting for " + this.lockType + " on " + this.object.getClass().getSimpleName() + " to be released.");
             try {
                 wait();
             } catch (InterruptedException exception) {

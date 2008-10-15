@@ -2,6 +2,7 @@ package com.beepell.execution;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -9,6 +10,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Node;
 
+import com.beepell.Settings;
 import com.beepell.activity.structured.Flow;
 import com.beepell.activity.structured.Scope;
 import com.beepell.exceptions.InvalidVariables;
@@ -23,6 +25,7 @@ import com.beepell.variable.Variable;
  * @author Tim Hallwyl
  */
 public class TransactionalExecutionContext extends ExecutionContextImpl implements Transaction {
+    private static final Logger log = Settings.getLogger();
 
     private LockManager lockManager = LockManager.getInstance();
 
@@ -99,7 +102,7 @@ public class TransactionalExecutionContext extends ExecutionContextImpl implemen
             variable = super.getVariable(copy.getName());           
             
             if (lockManager.getLockType(variable) == LockType.WRITE) {
-                try {System.out.println("INFO: Committing variable '" + copy.getName() + "'.");} catch (Exception a) {};
+                try {log.info("Committing variable '" + copy.getName() + "'.");} catch (Exception a) {};
                 variable.copyOf(copy);
             }
         }

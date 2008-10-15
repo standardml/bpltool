@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.wsdl.Binding;
 import javax.wsdl.Operation;
@@ -56,6 +57,8 @@ import com.beepell.variable.MessageVariable;
 @ServiceMode(value = Service.Mode.MESSAGE)
 public class InboundMessageHandler implements Provider<SOAPMessage> {
 
+    private static final Logger log = Settings.getLogger(); 
+    
     private final SchemaRepository schemas;
 
     private final ServiceRepository services;
@@ -106,7 +109,7 @@ public class InboundMessageHandler implements Provider<SOAPMessage> {
         if (operation == null)
             throw new IllegalArgumentException("Operation not supported.");
         
-        System.out.println("INFO: Received a message at Partner Link Type '" + partnerLinkType.getName().getLocalPart() + "' role '" + role + "' on operation '" + operation.getLocalPart() + "'.");
+        log.info("Received a message at Partner Link Type '" + partnerLinkType.getName().getLocalPart() + "' role '" + role + "' on operation '" + operation.getLocalPart() + "'.");
 
         InboundMessageActivity ima = findMatchingActivity(request);       
         if (ima != null) {
@@ -169,7 +172,7 @@ public class InboundMessageHandler implements Provider<SOAPMessage> {
 
             } else {
                 // TODO: return SOAPFault
-                System.out.println("INFO: No starting activities matching message.");
+                log.info("No starting activities matching message.");
                 return null;
             }
 
@@ -219,7 +222,8 @@ public class InboundMessageHandler implements Provider<SOAPMessage> {
             if (startingActivity instanceof ReceiveActivity) {
                 receive = (ReceiveActivity) startingActivity;
                 if (operation.getLocalPart().equals(receive.getOperation())) {
-                    System.out.println("INFO: Message target is Receive activity '" + receive.getName() + "' in variable '" + receive.getVariable() + "'.");
+                    log.info("Message target is Receive activity '" + receive.getName() + "' in variable '" + receive.getVariable() + "'.");
+                    
                     return receive;
                 }
             }

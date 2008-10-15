@@ -46,6 +46,8 @@ public class ProcessInstance implements StateChangeListener {
 
     private OnMessage initialOnMessage;
 
+    private static final ArrayList<ProcessInstanceListener> globalListeners = new ArrayList<ProcessInstanceListener>();
+    
     protected final ArrayList<ProcessInstanceListener> listeners = new ArrayList<ProcessInstanceListener>();
 
     protected final ArrayList<StateChangeListener> activityListeners = new ArrayList<StateChangeListener>();
@@ -185,6 +187,9 @@ public class ProcessInstance implements StateChangeListener {
         for (ProcessInstanceListener listener : listeners) {
             listener.stateChange(this, oldState, newState);
         }
+        for (ProcessInstanceListener listener : globalListeners) {
+            listener.stateChange(this, oldState, newState);
+        }
     }
 
     /**
@@ -283,6 +288,25 @@ public class ProcessInstance implements StateChangeListener {
         listeners.remove(listener);
     }
 
+    /**
+     * Add Global Process Instance Listener
+     * 
+     * @param listener
+     */
+    public static final void addGlobalListener(ProcessInstanceListener listener) {
+        globalListeners.add(listener);
+    }
+
+    /**
+     * Remove Global Process Instance Listener
+     * 
+     * @param listener
+     */
+    public static final void removeGlobalListner(ProcessInstanceListener listener) {
+        globalListeners.remove(listener);
+    }
+
+    
     /**
      * Makes the only one process thread take a step in the execution.
      */

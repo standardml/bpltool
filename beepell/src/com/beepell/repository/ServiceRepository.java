@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.wsdl.Binding;
 import javax.wsdl.Definition;
@@ -27,6 +28,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import com.beepell.BPELConstants;
+import com.beepell.Settings;
 import com.beepell.util.XML;
 import com.beepell.xml.namespace.NodeNamespaceContext;
 
@@ -44,6 +46,7 @@ import com.beepell.xml.namespace.NodeNamespaceContext;
  * @author Tim Hallwyl
  */
 public class ServiceRepository {
+    private static final Logger log = Settings.getLogger();
 
     private final Hashtable<String, Definition> definitions = new Hashtable<String, Definition>();
 
@@ -112,22 +115,23 @@ public class ServiceRepository {
         Role role1, role2;
 
         UnknownExtensibilityElement uee;
+        String info;
         for (Object object : list) {
             if (object instanceof UnknownExtensibilityElement) {
                 uee = (UnknownExtensibilityElement) object;
 
                 if (uee.getElementType().equals(new QName(BPELConstants.PLNK, "partnerLinkType"))) {
-                    System.out.println("INFO: " + uee.getElementType().getLocalPart() + " '" + uee.getElement().getAttributes().getNamedItem("name").getNodeValue() + "':");
+                    info = ("" + uee.getElementType().getLocalPart() + " '" + uee.getElement().getAttributes().getNamedItem("name").getNodeValue() + "':");
                     partnerLinkTypeName = new QName(targetNamespace, uee.getElement().getAttribute("name"));
 
                     NodeList roles = uee.getElement().getElementsByTagNameNS(BPELConstants.PLNK, "role");
-                    System.out.print("      - Found " + roles.getLength() + " role(s): ");
+                    info += ("      - Found " + roles.getLength() + " role(s): ");
 
                     element = (Element) roles.item(0);
                     name = element.getAttribute("name");
                     portType = element.getAttribute("portType");
                     role1 = new Role(name, definition.getPortType(XML.qualify(element, portType)));
-                    System.out.print(name + " -> " + portType);
+                    info += (name + " -> " + portType);
 
                     if (roles.getLength() == 1) {
                         partnerLinkType = new PartnerLinkType(partnerLinkTypeName, role1);
@@ -138,10 +142,11 @@ public class ServiceRepository {
                         portType = element.getAttribute("portType");
                         role2 = new Role(name, definition.getPortType(XML.qualify(element, portType)));
                         partnerLinkType = new PartnerLinkType(partnerLinkTypeName, role1, role2);
-                        System.out.print(", " + name + " -> " + portType);
+                        info += (", " + name + " -> " + portType);
                     }
 
-                    System.out.println("\n      - Saved as " + partnerLinkType.getName());
+                    info += ("\n      - Saved as " + partnerLinkType.getName());
+                    log.info(info);
                     this.partnerLinkTypes.put(partnerLinkType.getName(), partnerLinkType);
 
                 }
@@ -277,7 +282,7 @@ public class ServiceRepository {
         while (iterator.hasNext()) {
             binding = (Binding) iterator.next();
             if (binding.getPortType().getQName().equals(portType)) {
-                System.out.println("INFO: Found a binding for portType '" + portType + "'.");
+                log.info("Found a binding for portType '" + portType + "'.");
                 // Found a binding matching the port type, check if it has a
                 // SOAP binding.
                 if (getExtension(binding.getExtensibilityElements(), SOAPBinding.class) != null)

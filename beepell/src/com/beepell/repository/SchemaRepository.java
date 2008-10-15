@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
@@ -23,6 +24,7 @@ import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import com.beepell.Settings;
 import com.beepell.util.ErrorHandler;
 import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 import com.sun.xml.xsom.XSComplexType;
@@ -42,6 +44,7 @@ import com.sun.xml.xsom.parser.XSOMParser;
  * @author Tim Hallwyl
  */
 public class SchemaRepository {
+    private static final Logger log = Settings.getLogger();
 
     private final XSOMParser parser;
 
@@ -105,7 +108,7 @@ public class SchemaRepository {
             Document schema = (Document) result.getNode();
 
             if (schema == null || schema.getDocumentElement() == null) {
-                System.out.println("INFO: No schema was found in WSDL document at '" + uri + "'.");
+                log.info("No schema was found in WSDL document at '" + uri + "'.");
                 return;
             }
 
@@ -232,28 +235,28 @@ public class SchemaRepository {
     private void status() throws SAXException {
         initialize();
 
-        System.out.println("INFO: SchemaSize: " + schemaSet.getSchemaSize());
-        System.out.println("INFO: Schemas: ");
+        log.info("SchemaSize: " + schemaSet.getSchemaSize());
+        log.info("Schemas: ");
 
         Collection<XSSchema> schemata = schemaSet.getSchemas();
         for (XSSchema schema : schemata) {
-            System.out.println("INFO: - " + schema.getTargetNamespace());
+            log.info(" - " + schema.getTargetNamespace());
         }
 
         Iterator iterator = schemaSet.iterateElementDecls();
         XSElementDecl element;
         while (iterator.hasNext()) {
             element = (XSElementDecl) iterator.next();
-            System.out.println("INFO:  " + element.getName());
+            log.info("  " + element.getName());
         }
 
         //element = (XSElementDecl) schemaSet.getType("http://rep.oio.dk/ubl/xml/schemas/0p71/common/", "ACC");
         //                                           http://beepell.com/samples/dummy/schema    person
         element = (XSElementDecl) schemaSet.getElementDecl("http://beepell.com/samples/dummy/schema", "person");
         if (element != null)
-            System.out.println("INFO: Found element {" + element.getTargetNamespace() + "}" + element.getName());
+            log.info(" Found element {" + element.getTargetNamespace() + "}" + element.getName());
         else
-            System.out.println("INFO: Element not found");
+            log.info(" Element not found");
 
     }
 }

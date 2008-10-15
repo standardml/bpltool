@@ -3,6 +3,7 @@ package com.beepell.deployment.transform;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.logging.Logger;
 
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
@@ -15,6 +16,8 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.w3c.dom.Document;
 
+import com.beepell.Settings;
+
 /**
  * Utility class to transform a BPEL process description document into a BPEL
  * SEF document.
@@ -22,6 +25,7 @@ import org.w3c.dom.Document;
  * @author Tim Hallwyl
  */
 public class SourceTransformer {
+    private static final Logger log = Settings.getLogger();
 
     private static TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
@@ -43,9 +47,9 @@ public class SourceTransformer {
 
         for (int index = 0; index < sheets.length; index++) {
             
-            System.out.println("INFO: Applying transformation '" + sheets[index] + "'.");
+            log.info("Applying transformation '" + sheets[index] + "'.");
             transformer = getTransformer(sheets[index]);
-            
+            transformer.setErrorListener(new ErrorListener());
             result = new DOMResult();
             transformer.transform(source, result);
             source = new DOMSource(result.getNode());

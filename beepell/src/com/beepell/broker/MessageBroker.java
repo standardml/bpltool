@@ -3,6 +3,7 @@ package com.beepell.broker;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.logging.Logger;
 
 import javax.wsdl.Binding;
 import javax.wsdl.BindingInput;
@@ -20,6 +21,7 @@ import javax.xml.ws.Service;
 
 import org.w3c.dom.DOMException;
 
+import com.beepell.Settings;
 import com.beepell.activity.basic.InboundMessageActivity;
 import com.beepell.activity.basic.Invoke;
 import com.beepell.deployment.ProcessContext;
@@ -45,7 +47,9 @@ import com.beepell.variable.MessageVariable;
  * @author Tim Hallwyl
  */
 public class MessageBroker {
-
+     
+    private static final Logger log = Settings.getLogger();
+    
     /**
      * Used by invoke-activities to call Web Services offered by service
      * providers. Operations can be request-response or one-way operations,
@@ -336,7 +340,7 @@ public class MessageBroker {
     public static void receive(InboundMessageActivity ima) {
         InboundMessageHandler imh = getIMH(ima);
         imh.add(ima);
-        System.out.println("INFO: Added IMA to partner link '" + ima.getPartnerLink() + "' (myRole) handler.");
+        log.info("Added IMA to partner link '" + ima.getPartnerLink() + "' (myRole) handler.");
     }
 
     /**
@@ -347,7 +351,7 @@ public class MessageBroker {
     public static void cancel(InboundMessageActivity ima) {
         InboundMessageHandler imh = getIMH(ima);
         imh.remove(ima);
-        System.out.print("INFO: Cancelled IMA at partner link '" + ima.getPartnerLink() + "' myRole.");
+        log.info("Cancelled IMA at partner link '" + ima.getPartnerLink() + "' myRole.");
     }
 
     /**

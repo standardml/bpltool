@@ -16,7 +16,7 @@ public class Settings {
 
     private final Properties properties;
 
-    private Logger log = Logger.getLogger("com.beepell.execution");
+    private static final Logger log = Logger.getLogger("com.beepell.execution");
     
     /**
      * Get the singelton instance.
@@ -65,5 +65,9 @@ public class Settings {
      */
     public void setSetting(String name, String value) {
         properties.setProperty(name, value);
+    }
+    
+    public static Logger getLogger() {
+        return log;
     }
 }
