@@ -151,7 +151,7 @@ public class DeploymentManager {
      * 
      * @return the list of deployed processes.
      */
-    public List<ProcessContext> getDeployedProcesses() {
+    public static List<ProcessContext> getDeployedProcesses() {
         return deployed;
     }
 
