@@ -50,6 +50,10 @@ public class XPathExplorer extends JFrame {
 
     private static final JScrollPane logScrollPane = new JScrollPane(logTextArea);
 
+    private static File xsltDirectory;
+    
+    private static File openDirectory;
+    
     /**
      * 
      */
@@ -59,10 +63,12 @@ public class XPathExplorer extends JFrame {
         Action open = new AbstractAction("Open...") {
 
             public void actionPerformed(ActionEvent e) {
-                final JFileChooser fc = new JFileChooser();
+                final JFileChooser fc = new JFileChooser(openDirectory);
                 int returnVal = fc.showOpenDialog(XPathExplorer.this);
-                if (returnVal == JFileChooser.APPROVE_OPTION)
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    openDirectory = fc.getSelectedFile().getParentFile();
                     open(fc.getSelectedFile());
+                }
             }
 
         };
@@ -94,10 +100,10 @@ public class XPathExplorer extends JFrame {
         Action applyStyle = new AbstractAction("Apply style sheet...") {
 
             public void actionPerformed(ActionEvent e) {
-                final JFileChooser fc = new JFileChooser(new File("/home/hallwyl/.workspace/beepell/schemas"));
+                final JFileChooser fc = new JFileChooser(xsltDirectory);
                 int returnVal = fc.showOpenDialog(XPathExplorer.this);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    // open(fc.getSelectedFile());
+                    xsltDirectory = fc.getSelectedFile().getParentFile();
                     try {
                         if (returnVal == JFileChooser.APPROVE_OPTION) {
 
@@ -109,6 +115,7 @@ public class XPathExplorer extends JFrame {
                                 DOMResult result = new DOMResult();
                                 transformer.transform(new DOMSource(selected), result);
                                 Document transformed = (Document) result.getNode();
+                                transformed.normalizeDocument();
                                 DocumentPane pane = new DocumentPane(transformed);
                                 tabbedPane.add("Result", pane);
                                 tabbedPane.setSelectedComponent(pane);
@@ -217,11 +224,7 @@ public class XPathExplorer extends JFrame {
 
         this.add(BorderLayout.CENTER, splitPane);
         // this.pack();
-
-        // open(new
-        // File("/home/hallwyl/.workspace/beepell/test/com/beepell/deployment/sef-invoke-test-case-result.xml"));
-        open(new File("/home/hallwyl/.workspace/beepell/schemas/bpel.xsd"));
-
+        
     }
 
     @SuppressWarnings("unused")
