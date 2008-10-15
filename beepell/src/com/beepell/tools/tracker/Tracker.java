@@ -3,6 +3,8 @@ package com.beepell.tools.tracker;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -16,6 +18,7 @@ import javax.swing.event.TableModelListener;
 
 import com.beepell.Settings;
 import com.beepell.execution.ProcessInstance;
+import com.beepell.tools.application.ServerTreeModel;
 import com.beepell.tools.tracker.graph.InstanceTreePanel;
 import com.beepell.tools.tracker.graph.TreePanelToolBar;
 
@@ -24,15 +27,20 @@ import com.beepell.tools.tracker.graph.TreePanelToolBar;
  */
 public class Tracker extends JFrame implements TableModelListener {
 
+    private static final List<Tracker> trackers = new ArrayList<Tracker>();
     private static final long serialVersionUID = 1L;
     private final JTable logTable;
     private final JScrollPane logScrollPane;
+    private final ProcessInstance instance;
     /**
      * Create a Process Instance Tracker Frame (window)
      * 
      * @param instance
      */
-    public Tracker(ProcessInstance instance) { 
+    public Tracker(ProcessInstance instance) {
+        Tracker.trackers.add(this);
+        this.instance = instance;
+        
         Settings settings = Settings.getInstance();
         if (settings.getSetting("tools.tracker.maximized", "false").equals("true"))
             setSize(java.awt.Toolkit.getDefaultToolkit().getScreenSize());
@@ -41,7 +49,7 @@ public class Tracker extends JFrame implements TableModelListener {
 
         
         setLocationByPlatform(true);
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.HIDE_ON_CLOSE);
         setTitle("Process Instance Tracker");
         
         if (instance.getProcessScope().getName() != null)
@@ -91,8 +99,6 @@ public class Tracker extends JFrame implements TableModelListener {
         splitPane.setDoubleBuffered(true);
         splitPane.setResizeWeight(1D);
         add(splitPane, BorderLayout.CENTER);
-        
-        
 
     }
     
@@ -118,14 +124,30 @@ public class Tracker extends JFrame implements TableModelListener {
         }
     }
 
-
-
     public void tableChanged(TableModelEvent e) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 logTable.scrollRectToVisible(logTable.getCellRect(logTable.getRowCount()-1,0,true));
             }
         });
+    }
+
+
+
+    /**
+     * @return the trackers
+     */
+    public static List<Tracker> getTrackers() {
+        return trackers;
+    }
+
+
+
+    /**
+     * @return the instance
+     */
+    public ProcessInstance getProcessInstance() {
+        return this.instance;
     }
 
 }
