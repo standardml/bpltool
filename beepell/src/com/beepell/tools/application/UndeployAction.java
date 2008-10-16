@@ -49,8 +49,19 @@ public class UndeployAction extends AbstractAction {
             }
             
             if (selection instanceof ProcessInstance) {
-                ((ProcessInstance) selection).exit();
+                Thread thread = new Thread() {
+                    public synchronized void run() {
+                        try {
+                            Object selection = application.getSelection();
+                            ((ProcessInstance) selection).exit();
+                        } catch (Exception exception) {
+                            JOptionPane.showMessageDialog(application, exception.getLocalizedMessage(), "Exit Failed", JOptionPane.WARNING_MESSAGE);
+                        }
+                    }
+                };
+                thread.start();
             }
+                    
 
         } catch (Exception exception) {
             JOptionPane.showMessageDialog(this.application, exception.getLocalizedMessage(), "Undeployment Failed", JOptionPane.WARNING_MESSAGE);
