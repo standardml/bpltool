@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<wsdl:definitions 
+  targetNamespace="http://www.itu.dk/research/pls/bpl/bpel/samples/wsdl" 
+  xmlns:ws="http://www.itu.dk/research/pls/bpl/bpel/samples/wsdl" 
+  xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype" 
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  
+  <plnk:partnerLinkType name="plannerPartnerLinkType">
+    <plnk:role name="plannerProviderRole" portType="ws:plannerPortType" />
+  </plnk:partnerLinkType>
+
+  <plnk:partnerLinkType name="flightPartnerLinkType">
+    <plnk:role name="flightProviderRole" portType="ws:bookingPortType" />
+  </plnk:partnerLinkType>
+
+  <plnk:partnerLinkType name="hotelPartnerLinkType">
+    <plnk:role name="hotelProviderRole" portType="ws:bookingPortType" />
+  </plnk:partnerLinkType>
+
+  <plnk:partnerLinkType name="carPartnerLinkType">
+    <plnk:role name="carProviderRole" portType="ws:bookingPortType" />
+  </plnk:partnerLinkType>
+  
+  <wsdl:message name="requestMessage">
+    <wsdl:part name="begins" type="xsd:date" />  
+    <wsdl:part name="ends" type="xsd:date" />
+    <wsdl:part name="flight" type="xsd:token" />
+    <wsdl:part name="hotel" type="xsd:token" />
+    <wsdl:part name="car" type="xsd:token" />
+  </wsdl:message>
+
+  <wsdl:message name="responseMessage">
+    <wsdl:part name="ok" type="xsd:boolean" />
+  </wsdl:message>
+
+  <wsdl:message name="bookingMessage">
+    <wsdl:part name="begins" type="xsd:date" />  
+    <wsdl:part name="ends" type="xsd:date" />
+    <wsdl:part name="class" type="xsd:token" />
+  </wsdl:message>
+  
+  <wsdl:portType name="plannerPortType">
+    <wsdl:operation name="planOperation">
+      <wsdl:input message="ws:requestMessage" />
+      <wsdl:output message="ws:responseMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:portType name="bookingPortType">
+    <wsdl:operation name="checkOperation">
+      <wsdl:input message="ws:bookingMessage" />
+      <wsdl:output message="ws:responseMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="bookOperation">
+      <wsdl:input message="ws:bookingMessage" />
+      <wsdl:output message="ws:responseMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  
+  <wsdl:binding name="plannerBinding" type="ws:plannerPortType">
+      <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+      
+      <wsdl:operation name="planOperation">
+          <soap:operation soapAction="http://www.itu.dk/research/pls/bpl/bpel/samples/wsdl/plan"/>
+          <wsdl:input>
+              <soap:body use="literal" namespace="http://www.itu.dk/research/pls/bpl/bpel/samples/wsdl" />
+          </wsdl:input>
+          <wsdl:output>
+              <soap:body use="literal" namespace="http://www.itu.dk/research/pls/bpl/bpel/samples/wsdl" />
+          </wsdl:output>
+      </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:binding name="bookingBinding" type="ws:bookingPortType">
+      <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+      <wsdl:operation name="checkOperation">
+          <soap:operation soapAction="http://www.itu.dk/research/pls/bpl/bpel/samples/wsdl/book"/>
+          <wsdl:input>
+              <soap:body use="literal" namespace="http://www.itu.dk/research/pls/bpl/bpel/samples/wsdl" />
+          </wsdl:input>
+          <wsdl:output>
+              <soap:body use="literal" namespace="http://www.itu.dk/research/pls/bpl/bpel/samples/wsdl" />
+          </wsdl:output>
+      </wsdl:operation>
+
+      
+      <wsdl:operation name="bookOperation">
+          <soap:operation soapAction="http://www.itu.dk/research/pls/bpl/bpel/samples/wsdl/book"/>
+          <wsdl:input>
+              <soap:body use="literal" namespace="http://www.itu.dk/research/pls/bpl/bpel/samples/wsdl" />
+          </wsdl:input>
+          <wsdl:output>
+              <soap:body use="literal" namespace="http://www.itu.dk/research/pls/bpl/bpel/samples/wsdl" />
+          </wsdl:output>
+      </wsdl:operation>
+  </wsdl:binding>
+
+
+  <wsdl:service name="plannerService">
+      <wsdl:port name="plannerPort" binding="ws:plannerBinding">
+          <soap:address location="http://localhost:8080/samples/travelplanner"/>
+      </wsdl:port>
+  </wsdl:service>
+
+  <wsdl:service name="bookingService">
+      <wsdl:port name="bookingPort" binding="ws:bookingBinding">
+          <soap:address location="http://localhost:8008/samples/booking"/>
+      </wsdl:port>
+  </wsdl:service>
+
+  
+</wsdl:definitions>

@@ -1,0 +1,153 @@
+<process name="planner"
+  targetNamespace="http://www.itu.dk/research/pls/bpl/bpel/samples/bpel"
+  xmlns:ws="http://www.itu.dk/research/pls/bpl/bpel/samples/wsdl"
+  xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+  xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  
+  <import 
+    importType="http://schemas.xmlsoap.org/wsdl/" 
+    namespace="http://www.itu.dk/research/pls/bpl/bpel/samples/wsdl" 
+    location="planner.wsdl" />   
+
+  <partnerLinks>
+    <partnerLink
+      name="plannerPartnerLink"
+      partnerLinkType="ws:plannerPartnerLinkType"
+      myRole="plannerProviderRole" />
+    <partnerLink
+      name="flightPartnerLink"
+      partnerLinkType="ws:flightPartnerLinkType"
+      partnerRole="flightProviderRole"
+      initializePartnerRole="yes" />
+    <partnerLink
+      name="hotelPartnerLink"
+      partnerLinkType="ws:hotelPartnerLinkType"
+      partnerRole="hotelProviderRole"
+      initializePartnerRole="yes" />
+    <partnerLink
+      name="carPartnerLink"
+      partnerLinkType="ws:carPartnerLinkType"
+      partnerRole="carProviderRole"
+      initializePartnerRole="yes" />
+  </partnerLinks>
+  
+  <variables>
+    <variable name="request" messageType="ws:requestMessage" />
+    <variable name="response" messageType="ws:responseMessage" />
+    <variable name="flight" messageType="ws:bookingMessage" />
+    <variable name="available" type="xsd:boolean" />
+    <variable name="hotel" messageType="ws:bookingMessage" />
+    <variable name="car" messageType="ws:bookingMessage" />
+  </variables>
+
+  <sequence>
+
+    <receive
+      name="initial-request"
+      createInstance="yes"
+      partnerLink="plannerPartnerLink"
+      operation="planOperation"
+      variable="request" />
+
+    <assign>
+      <copy>
+        <from variable="request" part="begins" />
+        <to variable="flight" part="begins" />
+      </copy>
+      <copy>
+        <from variable="request" part="ends" />
+        <to variable="flight" part="ends" />
+      </copy>
+      <copy>
+        <from variable="request" part="flight" />
+        <to variable="flight" part="class" />
+      </copy>
+      <copy>
+        <from variable="request" part="begins" />
+        <to variable="hotel" part="begins" />
+      </copy>
+      <copy>
+        <from variable="request" part="ends" />
+        <to variable="hotel" part="ends" />
+      </copy>
+      <copy>
+        <from variable="request" part="hotel" />
+        <to variable="hotel" part="class" />
+      </copy>
+      <copy>
+        <from variable="request" part="begins" />
+        <to variable="car" part="begins" />
+      </copy>
+      <copy>
+        <from variable="request" part="ends" />
+        <to variable="car" part="ends" />
+      </copy>
+      <copy>
+        <from variable="request" part="car" />
+        <to variable="car" part="class" />
+      </copy>
+    </assign>
+
+    <flow>
+      <links>
+        <link name="checkFlight-To-BookFlight" />
+      </links>
+
+      <invoke name="checkFlight"
+        partnerLink="flightPartnerLink"
+        operation="checkOperation"
+        inputVariable="flight">
+        <sources>
+          <source linkName="checkFlight-To-BookFlight" />
+        </sources>
+        <fromParts>
+          <fromPart part="ok" toVariable="available"/>
+        </fromParts>
+      </invoke>
+
+      <invoke
+        name="checkHotel"
+        partnerLink="hotelPartnerLink"
+        operation="checkOperation"
+        inputVariable="hotel">
+        <fromParts>
+          <fromPart part="ok" toVariable="available"/>
+        </fromParts>
+      </invoke>
+
+      <invoke
+        name="checkRentalCar"
+        partnerLink="carPartnerLink"
+        operation="checkOperation"
+        inputVariable="car">
+        <fromParts>
+          <fromPart part="ok" toVariable="available"/>
+        </fromParts>
+      </invoke>
+
+      <invoke
+        name="bookFlight" 
+        partnerLink="flightPartnerLink" 
+        operation="bookOperation" 
+        inputVariable="flight">
+        <targets>
+          <target linkName="checkFlight-To-BookFlight" />
+        </targets>
+        <fromParts>
+          <fromPart part="ok" toVariable="available"/>
+        </fromParts>
+      </invoke>
+    </flow>
+
+    <reply
+      name="ending-reply"
+      partnerLink="plannerPartnerLink"
+      operation="planOperation"
+      variable="response">
+      <toParts>
+        <toPart part="ok" fromVariable="available"/>
+      </toParts>
+    </reply>
+  </sequence>
+</process>

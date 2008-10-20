@@ -1,0 +1,221 @@
+<process xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable" xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable" xmlns:ws="http://www.itu.dk/research/pls/bpl/bpel/samples/wsdl" xmlns:xsd="http://www.w3.org/2001/XMLSchema" exitOnStandardFault="no" name="planner" suppressJoinFailure="no" targetNamespace="http://www.itu.dk/research/pls/bpl/bpel/samples/bpel">
+  
+  <import importType="http://schemas.xmlsoap.org/wsdl/" location="planner.wsdl" namespace="http://www.itu.dk/research/pls/bpl/bpel/samples/wsdl"/>   
+
+  <partnerLinks>
+    <partnerLink myRole="plannerProviderRole" name="plannerPartnerLink" partnerLinkType="ws:plannerPartnerLinkType"/>
+    <partnerLink initializePartnerRole="yes" name="flightPartnerLink" partnerLinkType="ws:flightPartnerLinkType" partnerRole="flightProviderRole"/>
+    <partnerLink initializePartnerRole="yes" name="hotelPartnerLink" partnerLinkType="ws:hotelPartnerLinkType" partnerRole="hotelProviderRole"/>
+    <partnerLink initializePartnerRole="yes" name="carPartnerLink" partnerLinkType="ws:carPartnerLinkType" partnerRole="carProviderRole"/>
+  </partnerLinks>
+  
+  <variables>
+    <variable messageType="ws:requestMessage" name="request"/>
+    <variable messageType="ws:responseMessage" name="response"/>
+    <variable messageType="ws:bookingMessage" name="flight"/>
+    <variable name="available" type="xsd:boolean"/>
+    <variable messageType="ws:bookingMessage" name="hotel"/>
+    <variable messageType="ws:bookingMessage" name="car"/>
+  </variables>
+
+  <sequence suppressJoinFailure="no">
+
+    <receive createInstance="yes" name="initial-request" operation="planOperation" partnerLink="plannerPartnerLink" suppressJoinFailure="no" variable="request"/>
+
+    <assign suppressJoinFailure="no" validate="no">
+      <copy ignoreMissingFromData="no" keepSrcElementName="no">
+        <from part="begins" variable="request"/>
+        <to part="begins" variable="flight"/>
+      </copy>
+      <copy ignoreMissingFromData="no" keepSrcElementName="no">
+        <from part="ends" variable="request"/>
+        <to part="ends" variable="flight"/>
+      </copy>
+      <copy ignoreMissingFromData="no" keepSrcElementName="no">
+        <from part="flight" variable="request"/>
+        <to part="class" variable="flight"/>
+      </copy>
+      <copy ignoreMissingFromData="no" keepSrcElementName="no">
+        <from part="begins" variable="request"/>
+        <to part="begins" variable="hotel"/>
+      </copy>
+      <copy ignoreMissingFromData="no" keepSrcElementName="no">
+        <from part="ends" variable="request"/>
+        <to part="ends" variable="hotel"/>
+      </copy>
+      <copy ignoreMissingFromData="no" keepSrcElementName="no">
+        <from part="hotel" variable="request"/>
+        <to part="class" variable="hotel"/>
+      </copy>
+      <copy ignoreMissingFromData="no" keepSrcElementName="no">
+        <from part="begins" variable="request"/>
+        <to part="begins" variable="car"/>
+      </copy>
+      <copy ignoreMissingFromData="no" keepSrcElementName="no">
+        <from part="ends" variable="request"/>
+        <to part="ends" variable="car"/>
+      </copy>
+      <copy ignoreMissingFromData="no" keepSrcElementName="no">
+        <from part="car" variable="request"/>
+        <to part="class" variable="car"/>
+      </copy>
+    </assign>
+
+    <flow suppressJoinFailure="no">
+      <links>
+        <link name="checkFlight-To-BookFlight"/>
+      </links>
+
+      <scope xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" exitOnStandardFault="no" name="checkFlight" suppressJoinFailure="no">
+        <sources>
+          <source linkName="checkFlight-To-BookFlight"/>
+        </sources>
+        <variables>
+          <variable messageType="ws:responseMessage" name="temporaryOutputMessage"/>
+        </variables>
+        <bpel:faultHandlers>
+          <bpel:catchAll>
+            <bpel:sequence suppressJoinFailure="no">
+              <bpel:compensate suppressJoinFailure="no"/>
+              <bpel:rethrow suppressJoinFailure="no"/>
+            </bpel:sequence>
+          </bpel:catchAll>
+        </bpel:faultHandlers>
+        <bpel:compensationHandler>
+          <bpel:compensate suppressJoinFailure="no"/>
+        </bpel:compensationHandler>
+        <bpel:terminationHandler>
+          <bpel:compensate suppressJoinFailure="no"/>
+        </bpel:terminationHandler>
+        <sequence suppressJoinFailure="no">
+          <invoke inputVariable="flight" name="checkFlight" operation="checkOperation" outputVariable="temporaryOutputMessage" partnerLink="flightPartnerLink" suppressJoinFailure="no"/>
+          <assign suppressJoinFailure="no">
+            <copy>
+              <from part="ok" variable="temporaryOutputMessage"/>
+              <to variable="available"/>
+            </copy>
+          </assign>
+        </sequence>
+      </scope>
+
+      <scope xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" exitOnStandardFault="no" name="checkHotel" suppressJoinFailure="no">
+        <variables>
+          <variable messageType="ws:responseMessage" name="temporaryOutputMessage"/>
+        </variables>
+        <bpel:faultHandlers>
+          <bpel:catchAll>
+            <bpel:sequence suppressJoinFailure="no">
+              <bpel:compensate suppressJoinFailure="no"/>
+              <bpel:rethrow suppressJoinFailure="no"/>
+            </bpel:sequence>
+          </bpel:catchAll>
+        </bpel:faultHandlers>
+        <bpel:compensationHandler>
+          <bpel:compensate suppressJoinFailure="no"/>
+        </bpel:compensationHandler>
+        <bpel:terminationHandler>
+          <bpel:compensate suppressJoinFailure="no"/>
+        </bpel:terminationHandler>
+        <sequence suppressJoinFailure="no">
+          <invoke inputVariable="hotel" name="checkHotel" operation="checkOperation" outputVariable="temporaryOutputMessage" partnerLink="hotelPartnerLink" suppressJoinFailure="no"/>
+          <assign suppressJoinFailure="no">
+            <copy>
+              <from part="ok" variable="temporaryOutputMessage"/>
+              <to variable="available"/>
+            </copy>
+          </assign>
+        </sequence>
+      </scope>
+
+      <scope xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" exitOnStandardFault="no" name="checkRentalCar" suppressJoinFailure="no">
+        <variables>
+          <variable messageType="ws:responseMessage" name="temporaryOutputMessage"/>
+        </variables>
+        <bpel:faultHandlers>
+          <bpel:catchAll>
+            <bpel:sequence suppressJoinFailure="no">
+              <bpel:compensate suppressJoinFailure="no"/>
+              <bpel:rethrow suppressJoinFailure="no"/>
+            </bpel:sequence>
+          </bpel:catchAll>
+        </bpel:faultHandlers>
+        <bpel:compensationHandler>
+          <bpel:compensate suppressJoinFailure="no"/>
+        </bpel:compensationHandler>
+        <bpel:terminationHandler>
+          <bpel:compensate suppressJoinFailure="no"/>
+        </bpel:terminationHandler>
+        <sequence suppressJoinFailure="no">
+          <invoke inputVariable="car" name="checkRentalCar" operation="checkOperation" outputVariable="temporaryOutputMessage" partnerLink="carPartnerLink" suppressJoinFailure="no"/>
+          <assign suppressJoinFailure="no">
+            <copy>
+              <from part="ok" variable="temporaryOutputMessage"/>
+              <to variable="available"/>
+            </copy>
+          </assign>
+        </sequence>
+      </scope>
+
+      <scope xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" exitOnStandardFault="no" name="bookFlight" suppressJoinFailure="no">
+        <targets>
+          <target linkName="checkFlight-To-BookFlight"/>
+        </targets>
+        <variables>
+          <variable messageType="ws:responseMessage" name="temporaryOutputMessage"/>
+        </variables>
+        <bpel:faultHandlers>
+          <bpel:catchAll>
+            <bpel:sequence suppressJoinFailure="no">
+              <bpel:compensate suppressJoinFailure="no"/>
+              <bpel:rethrow suppressJoinFailure="no"/>
+            </bpel:sequence>
+          </bpel:catchAll>
+        </bpel:faultHandlers>
+        <bpel:compensationHandler>
+          <bpel:compensate suppressJoinFailure="no"/>
+        </bpel:compensationHandler>
+        <bpel:terminationHandler>
+          <bpel:compensate suppressJoinFailure="no"/>
+        </bpel:terminationHandler>
+        <sequence suppressJoinFailure="no">
+          <invoke inputVariable="flight" name="bookFlight" operation="bookOperation" outputVariable="temporaryOutputMessage" partnerLink="flightPartnerLink" suppressJoinFailure="no"/>
+          <assign suppressJoinFailure="no">
+            <copy>
+              <from part="ok" variable="temporaryOutputMessage"/>
+              <to variable="available"/>
+            </copy>
+          </assign>
+        </sequence>
+      </scope>
+    </flow>
+
+    <scope xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" exitOnStandardFault="no" name="ending-reply" suppressJoinFailure="no">
+      <variables>
+        <variable messageType="ws:responseMessage" name="temporaryInputMessage"/>
+      </variables>
+      <bpel:faultHandlers>
+        <bpel:catchAll>
+          <bpel:sequence suppressJoinFailure="no">
+            <bpel:compensate suppressJoinFailure="no"/>
+            <bpel:rethrow suppressJoinFailure="no"/>
+          </bpel:sequence>
+        </bpel:catchAll>
+      </bpel:faultHandlers>
+      <bpel:compensationHandler>
+        <bpel:compensate suppressJoinFailure="no"/>
+      </bpel:compensationHandler>
+      <bpel:terminationHandler>
+        <bpel:compensate suppressJoinFailure="no"/>
+      </bpel:terminationHandler>
+      <sequence suppressJoinFailure="no">
+        <assign suppressJoinFailure="no">
+          <copy>
+            <from variable="available"/>
+            <to part="ok" variable="temporaryInputMessage"/>
+          </copy>
+        </assign>
+        <reply name="ending-reply" operation="planOperation" partnerLink="plannerPartnerLink" suppressJoinFailure="no" variable="temporaryInputMessage"/>
+      </sequence>
+    </scope>
+  </sequence>
+</process>
