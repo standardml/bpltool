@@ -39,10 +39,11 @@ public class SourceTransformer {
      * @throws IOException
      */
     public static Document transform(Document document) throws TransformerFactoryConfigurationError, TransformerException, IOException {
-
+        String systemId = document.getBaseURI().toString();
+        
         String[] sheets = { "extensions.xsl", "language.xsl", "irra.xsl", "handlers.xsl", "attributes.xsl"};
         Transformer transformer;
-        DOMSource source = new DOMSource(document);
+        DOMSource source = new DOMSource(document, systemId);
         DOMResult result = null;
 
         for (int index = 0; index < sheets.length; index++) {
@@ -52,7 +53,7 @@ public class SourceTransformer {
             transformer.setErrorListener(new ErrorListener());
             result = new DOMResult();
             transformer.transform(source, result);
-            source = new DOMSource(result.getNode());
+            source = new DOMSource(result.getNode(), systemId);
 
         }
        
