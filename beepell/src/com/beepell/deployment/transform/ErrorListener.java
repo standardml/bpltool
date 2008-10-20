@@ -37,7 +37,7 @@ public class ErrorListener implements javax.xml.transform.ErrorListener {
      */
     @Override
     public void warning(TransformerException exception) throws TransformerException {
-        log.warning(exception.getLocalizedMessage());
+        log.info(exception.getLocalizedMessage());
         //throw exception;
     }
 
