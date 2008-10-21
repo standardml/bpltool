@@ -54,6 +54,8 @@ public class XPathExplorer extends JFrame {
     
     private static File openDirectory;
     
+    private static File xsdDirectory;
+    
     /**
      * 
      */
@@ -135,9 +137,10 @@ public class XPathExplorer extends JFrame {
         Action validate = new AbstractAction("Apply schema...") {
 
             public void actionPerformed(ActionEvent e) {
-                final JFileChooser fc = new JFileChooser(new File("/home/hallwyl/.workspace/beepell/schemas"));
+                final JFileChooser fc = new JFileChooser(xsdDirectory);
                 int returnVal = fc.showOpenDialog(XPathExplorer.this);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    xsdDirectory = fc.getSelectedFile().getParentFile();
                     try {
                         if (returnVal == JFileChooser.APPROVE_OPTION) {
 
