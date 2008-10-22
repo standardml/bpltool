@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<xsl:stylesheet version="1.0"
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+  xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable">
+
+  <xsl:output indent="yes" method="xml" />
+
+  <xsl:template match="*">
+    <xsl:copy>
+      <xsl:copy-of select="@*" />
+      <xsl:apply-templates />
+    </xsl:copy>
+  </xsl:template>
+  
+  <xsl:template match="bpel:source[not(bpel:transitionCondition)]">
+    <xsl:copy>
+      <xsl:copy-of select="@*" />
+      <bpel:transitionCondition>true()</bpel:transitionCondition>
+    </xsl:copy>
+  </xsl:template>
+
+  <xsl:template match="bpel:targets[not(bpel:joinCondition)]">
+    <xsl:copy>
+      <xsl:copy-of select="@*" />
+      <bpel:joinCondition>
+        <xsl:for-each select="bpel:target">
+          <xsl:value-of select="concat('$', string(@linkName))"/>
+          <xsl:if test="following-sibling::bpel:target">
+            <xsl:value-of select="string(' or ')"/>
+          </xsl:if>
+        </xsl:for-each>        
+      </bpel:joinCondition>
+      <xsl:apply-templates />
+    </xsl:copy>
+  </xsl:template>
+
+  
+</xsl:stylesheet>
