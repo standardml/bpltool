@@ -49,7 +49,9 @@ public class Transform {
             bpel = parse(source, this.bpelSchema);
             ebpel = transform(bpel);
             this.validate(ebpel, this.bpelSchema);
+            System.out.println("Transformed process description is valid WS-BPEL.");
             this.validate(ebpel, this.ebpelSchema);
+            System.out.println("Transformed process description is valid E-BPEL.");
 
             serialize(ebpel, target);
 
@@ -160,7 +162,6 @@ public class Transform {
 
         } catch (Exception exception) {
             System.err.println("Transformation failed: " + exception.getLocalizedMessage());
-            exception.printStackTrace();
             System.exit(-1);
         }
 
