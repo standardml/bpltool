@@ -2,6 +2,7 @@ package com.beepell.execution.bpel;
 
 import java.util.List;
 
+import javax.wsdl.Message;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import javax.xml.xpath.XPath;
@@ -15,10 +16,13 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import com.beepell.BPELConstants;
+import com.beepell.exceptions.SubLanguageExecutionFault;
 import com.beepell.repository.SchemaRepository;
 import com.beepell.repository.ServiceRepository;
 import com.beepell.xml.namespace.NodeNamespaceContext;
+import com.beepell.xml.xpath.FunctionResolver;
 import com.beepell.xml.xpath.LinkStateResolver;
+import com.beepell.xml.xpath.VariableResolver;
 import com.sun.xml.xsom.XSType;
 
 /**
@@ -254,6 +258,36 @@ public class Context {
             throw new IllegalStateException(exception);
         }
 
+    }
+
+    /**
+     * Gets the variable type.
+     * 
+     * @param name The variable name.
+     * @return The qualified name of the type.
+     */
+    public QName getVariableType(String name) {
+        Element variableElement = getVariableElement(name);
+        String type = variableElement.getAttribute("type");
+        if (type.isEmpty())
+            type = variableElement.getAttribute("element");
+        if (type.isEmpty())
+            type = variableElement.getAttribute("messageType");
+        return this.qualify(type);
+    }
+
+    /**
+     * Gets the variable type.
+     * 
+     * @param name The message variable name.
+     * @param part The message part name.
+     * @return The qualified name of the type.
+     */
+    public QName getVariableType(String name, String part) {
+        Element variableElement = getVariableElement(name);
+        String type = variableElement.getAttribute("messageType");
+        Message message = this.services.getMessage(this.qualify(type));
+        return message.getPart(part).getTypeName();
     }
 
     /**
@@ -526,10 +560,10 @@ public class Context {
         }
 
         try {
-            
+
             Element targets = (Element) this.xPath.evaluate("bpi:targets", this.node, XPathConstants.NODE);
             Utils.remove(targets);
-            
+
         } catch (XPathExpressionException exception) {
             /*
              * Should not happen since linkNames != null there must be a targets
@@ -541,8 +575,8 @@ public class Context {
     }
 
     /**
-     * Move the links from the context node (provided that is is an activity
-     * Element node) to the 'to' node.
+     * Move the outgoing links from the context node (provided that is is an
+     * activity Element node) to the 'to' node.
      * <p>
      * The links moved will be added to the end of the end of the 'to' node's
      * sources. Each link Element moved will have a'inherit' attribute added.
@@ -552,8 +586,8 @@ public class Context {
      * 
      * @param to The activity Element node that will inherit the context node's
      *            outgoing links.
-     * @throws IllegalStateException If the context node and the 'to' Element is
-     *             not activity Element nodes or if the method fails.
+     * @throws IllegalStateException If the context node or the 'to' Element are
+     *             not an activity Elements or if the method fails.
      */
     public void inheritOutgoingLinks(Element to) {
         if (!(this.node instanceof Element) || !Utils.isActivity((Element) this.node))
@@ -561,7 +595,7 @@ public class Context {
 
         if (!Utils.isActivity(to))
             throw new IllegalStateException("Cannot remove incoming links: The 'to' node is not an activity.");
-        
+
         try {
             Element childSourceList = (Element) this.xPath.evaluate("bpi:sources", to, XPathConstants.NODE);
             if (childSourceList == null) {
@@ -569,22 +603,86 @@ public class Context {
             }
 
             NodeList sources = (NodeList) this.xPath.evaluate("bpi:sources/bpi:source", this.node, XPathConstants.NODESET);
-            Node parentNode = sources.item(0).getParentNode(); 
-            
+            Node parentNode = sources.item(0).getParentNode();
+
             Element source;
             for (int i = 0; i < sources.getLength(); i++) {
                 source = (Element) sources.item(i);
-                source.setAttribute("inherited", "true");
                 source = (Element) parentNode.removeChild(source);
                 childSourceList.appendChild(source);
             }
-            
+
             parentNode.getParentNode().removeChild(parentNode);
 
         } catch (XPathExpressionException exception) {
             throw new IllegalStateException("Failed to inherit links from " + this.node.getLocalName() + " to " + to.getLocalName(), exception);
         }
 
+    }
+
+    /**
+     * @param expression The boolean expression to evaulate.
+     * @return The boolean result of the evaluation.
+     * @throws SubLanguageExecutionFault
+     */
+    public boolean evaluateBoolean(final String expression) throws SubLanguageExecutionFault {
+        try {
+            this.xPath.setXPathFunctionResolver(new FunctionResolver(this, this.namespaceContext));
+            this.xPath.setXPathVariableResolver(new VariableResolver(this));
+            Boolean result = (Boolean) this.xPath.evaluate(expression, this.node, XPathConstants.BOOLEAN);
+            return result.booleanValue();
+        } catch (Exception exception) {
+            throw new SubLanguageExecutionFault(exception);
+        }
+    }
+
+    /**
+     * @return the schemas
+     */
+    public SchemaRepository getSchemas() {
+        return this.schemas;
+    }
+
+    /**
+     * @return the services
+     */
+    public ServiceRepository getServices() {
+        return this.services;
+    }
+
+    /**
+     * Gets the variable property value.
+     * 
+     * @param variable The variable name.
+     * @param property The qualified name of the variable property.
+     * @return The variable property value.
+     */
+    public Node getVariablePropertyValue(String variable, QName property) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * Gets the qualified name of the schema type of the variable property.
+     * 
+     * @param property qualified name of the variable property
+     * @return the variable property type
+     */
+    public QName getVariablePropertyType(QName property) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * Returns true if the source and target of the link are in different
+     * scopes.
+     * 
+     * @param linkName The name of the link.
+     * @return true if the link is inter-scope, otherwise false.
+     */
+    public boolean isInterScope(String linkName) {
+        // TODO Auto-generated method stub
+        return false;
     }
 
 }
