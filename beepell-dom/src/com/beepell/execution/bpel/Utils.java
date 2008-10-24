@@ -236,4 +236,35 @@ public class Utils {
         return (Element) parent.removeChild(element);
 
     }
+
+    /**
+     * Gets the first child element with the specified name.
+     *  
+     * @param name The name of the element to look for.
+     * @param element The parent element.
+     * @return The child element, if found, otherwise null.
+     */
+    public static Element getChildElement(final QName name, final Element element) {
+        Node child = element.getFirstChild();
+        while (child != null) {
+            if ((child instanceof Element) 
+                && name.getLocalPart().equals(child.getLocalName())
+                && name.getNamespaceURI().equals(child.getNamespaceURI())) {
+                return (Element) child;
+            }
+            child = child.getNextSibling();
+        }
+        return null;
+    }
+    
+    /**
+     * Gets the first child element with the specified local name in the BPI namespace.
+     *  
+     * @param localName The local name of the element to look for.
+     * @param element The parent element.
+     * @return The child element, if found, otherwise null.
+     */
+    public static Element getChildElement(final String localName, final Element element) {
+        return getChildElement(new QName(BPELConstants.BPI, localName), element);
+    }
 }
