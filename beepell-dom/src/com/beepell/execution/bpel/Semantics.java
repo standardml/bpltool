@@ -23,7 +23,7 @@ public class Semantics {
      */
     public static void rewrite(final Element activity, final Context context) {
         activity.setAttributeNS(BPELConstants.BPI, "state", "running");
-        
+
         try {
 
             if (activity.getLocalName().equals("if")) {
@@ -79,7 +79,7 @@ public class Semantics {
 
     private static void complete(Element activity, Context context) {
         activity.setAttributeNS(BPELConstants.BPI, "state", "completed");
-        
+
         // Set outgoing links (sources), if any.
         Element sources = Utils.getChildElement(new QName(BPELConstants.BPI, "sources"), activity);
         if (sources != null) {
@@ -129,9 +129,8 @@ public class Semantics {
     private static void skip(Element activity, Context context) {
 
         activity.setAttributeNS(BPELConstants.BPI, "state", "skipped");
-        
-        // TODO implement skip link semantics
-        
+
+        Links.setLinkDependencies(activity, context);
 
     }
 }
