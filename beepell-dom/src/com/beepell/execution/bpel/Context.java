@@ -1,5 +1,6 @@
 package com.beepell.execution.bpel;
 
+import java.util.Iterator;
 import java.util.List;
 
 import javax.wsdl.Message;
@@ -16,9 +17,17 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import com.beepell.BPELConstants;
+import com.beepell.exceptions.InvalidExpressionValue;
 import com.beepell.exceptions.SubLanguageExecutionFault;
 import com.beepell.repository.SchemaRepository;
 import com.beepell.repository.ServiceRepository;
+import com.beepell.repository.bpel.ElementProperty;
+import com.beepell.repository.bpel.ElementPropertyAlias;
+import com.beepell.repository.bpel.MessagePropertyAlias;
+import com.beepell.repository.bpel.Property;
+import com.beepell.repository.bpel.PropertyAlias;
+import com.beepell.repository.bpel.TypeProperty;
+import com.beepell.repository.bpel.TypePropertyAlias;
 import com.beepell.xml.namespace.NodeNamespaceContext;
 import com.beepell.xml.xpath.FunctionResolver;
 import com.beepell.xml.xpath.LinkStateResolver;
@@ -654,22 +663,107 @@ public class Context {
      * Gets the variable property value.
      * 
      * @param variable The variable name.
-     * @param property The qualified name of the variable property.
+     * @param propertyName The qualified name of the variable property.
      * @return The variable property value.
+     * @throws InvalidExpressionValue 
+     * @throws SubLanguageExecutionFault 
      */
-    public Node getVariablePropertyValue(String variable, QName property) {
-        // TODO Auto-generated method stub
-        return null;
+    public Node getVariablePropertyValue(String variable, QName propertyName) throws InvalidExpressionValue, SubLanguageExecutionFault {
+        PropertyAlias alias = getPropertyAlias(variable, propertyName);
+        
+        // No variables and no functions
+        XPathFactory factory = XPathFactory.newInstance();
+        XPath xpath = factory.newXPath();
+        xpath.setNamespaceContext(this.namespaceContext);
+        
+        Node contextNode;
+        if (alias instanceof MessagePropertyAlias)
+            contextNode = this.getVariableValue(variable, ((MessagePropertyAlias) alias).getPart());
+        else
+            contextNode = this.getVariableValue(variable);
+
+        if (alias.getQuery() == null)
+            return contextNode;
+
+        try {
+
+            return (Node) xpath.evaluate(alias.getQuery(), contextNode, XPathConstants.NODE);
+
+        } catch (XPathExpressionException exception) {
+            throw new SubLanguageExecutionFault("Property Alias Query '" + alias.getQuery() + "' failed.", exception);
+        }
+        
+
+    }
+
+    private PropertyAlias getPropertyAlias(String variable, QName propertyName) throws InvalidExpressionValue {
+        QName variableType = this.getVariableType(variable);
+        PropertyAlias propertyAlias = null;
+
+        try {
+
+            if (this.services.getMessage(variableType) != null) {
+
+                List<MessagePropertyAlias> aliases = this.services.getMessagePropertyAliases(propertyName);
+                for (MessagePropertyAlias alias : aliases) {
+
+                    if (variableType.equals(alias.getMessageType())) {
+                        propertyAlias = alias;
+                        break;
+                    }
+
+                }
+
+            }
+
+            else if (this.schemas.getElement(variableType) != null) {
+                List<ElementPropertyAlias> aliases = this.services.getElementPropertyAliases(propertyName);
+                for (ElementPropertyAlias alias : aliases) {
+
+                    if (variableType.equals(alias.getElement())) {
+                        propertyAlias = alias;
+                        break;
+                    }
+
+                }
+            }
+
+            else if (this.schemas.getSimpleType(variableType) != null || this.schemas.getComplexType(variableType) != null) {
+                List<TypePropertyAlias> aliases = this.services.getTypePropertyAliases(propertyName);
+                for (TypePropertyAlias alias : aliases) {
+
+                    if (variableType.equals(alias.getType())) {
+                        propertyAlias = alias;
+                        break;
+                    }
+
+                }
+            }
+
+        } catch (SAXException exception) {
+            throw new InvalidExpressionValue("FATAL: Failed while looking for property '" + propertyName + "' for variable '" + variable + "'.");
+        }
+
+        if (propertyAlias == null)
+            throw new InvalidExpressionValue("Property '" + propertyName + "' was not found for variable '" + variable + "'.");
+
+        return propertyAlias;
     }
 
     /**
      * Gets the qualified name of the schema type of the variable property.
      * 
-     * @param property qualified name of the variable property
+     * @param propertyName qualified name of the variable property
      * @return the variable property type
      */
-    public QName getVariablePropertyType(QName property) {
-        // TODO Auto-generated method stub
+    public QName getVariablePropertyType(QName propertyName) {
+        Property property = this.services.getProperty(propertyName);
+        if (property instanceof TypeProperty)
+            return ((TypeProperty) property).getType();
+
+        if (property instanceof ElementProperty)
+            return ((ElementProperty) property).getElement();
+
         return null;
     }
 
@@ -677,12 +771,43 @@ public class Context {
      * Returns true if the source and target of the link are in different
      * scopes.
      * 
-     * @param linkName The name of the link.
+     * @param linkName The name of the link that is sourced at the context.
      * @return true if the link is inter-scope, otherwise false.
      */
     public boolean isInterScope(String linkName) {
-        // TODO Auto-generated method stub
-        return false;
+        return Links.isInterScope(linkName, (Element) this.node);
+    }
+
+    /**
+     * @param linkName
+     * @param dependencies
+     */
+    public void setDependencies(String linkName, List<String> dependencies) {
+
+        // Remove dependencies that are already determined
+        Iterator<String> iterator = dependencies.iterator();
+        String dependency;
+        while (iterator.hasNext()) {
+            dependency = iterator.next();
+            if (this.getLinkState(dependency) != null)
+                iterator.remove();
+        }
+
+        // If no dependencies are left, set to false
+        if (dependencies.size() == 0) {
+            this.setLinkState(linkName, false);
+            return;
+        }
+
+        // Otherwise, add a list of dependencies
+        String list = "";
+        for (String link : dependencies) {
+            list += link + ", ";
+        }
+
+        Element link = getLinkElement(linkName);
+        link.setAttribute("dependencies", list);
+
     }
 
 }
