@@ -18,8 +18,6 @@ public class Utils {
 
     private static QName instanceQName = new QName(BPELConstants.BPI, "instance");
 
-
-
     /**
      * Returns true if the Element is an PBL instance Element.
      * 
@@ -105,6 +103,36 @@ public class Utils {
                 }
 
                 return targets;
+            }
+            node = node.getNextSibling();
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets a list of linkNames that source from this activity (Element).
+     * 
+     * @param element The Element to retrieve source linkNames from.
+     * @return null if the Element has no targets, otherwise a List of
+     *         linkNames.
+     */
+    public static List<String> getSourceNames(Element element) {
+        List<String> sources = new ArrayList<String>();
+
+        Node node = element.getFirstChild();
+        while (node != null) {
+            if ((node instanceof Element) && ("sources".equals(node.getLocalName()))) {
+
+                Node source = node.getFirstChild();
+                while (source != null) {
+                    if ((source instanceof Element) && ("source".equals(source.getLocalName()))) {
+                        sources.add(((Element) source).getAttribute("linkName"));
+                    }
+                    source = source.getNextSibling();
+                }
+
+                return sources;
             }
             node = node.getNextSibling();
         }
@@ -223,7 +251,7 @@ public class Utils {
         }
         return null;
     }
-    
+
     /**
      * Removes an Element node from its parent.
      * 
@@ -239,7 +267,7 @@ public class Utils {
 
     /**
      * Gets the first child element with the specified name.
-     *  
+     * 
      * @param name The name of the element to look for.
      * @param element The parent element.
      * @return The child element, if found, otherwise null.
@@ -247,24 +275,64 @@ public class Utils {
     public static Element getChildElement(final QName name, final Element element) {
         Node child = element.getFirstChild();
         while (child != null) {
-            if ((child instanceof Element) 
-                && name.getLocalPart().equals(child.getLocalName())
-                && name.getNamespaceURI().equals(child.getNamespaceURI())) {
+            if ((child instanceof Element) && name.getLocalPart().equals(child.getLocalName()) && name.getNamespaceURI().equals(child.getNamespaceURI())) {
                 return (Element) child;
             }
             child = child.getNextSibling();
         }
         return null;
     }
-    
+
     /**
-     * Gets the first child element with the specified local name in the BPI namespace.
-     *  
+     * Gets the first child element with the specified local name in the BPI
+     * namespace.
+     * 
      * @param localName The local name of the element to look for.
      * @param element The parent element.
      * @return The child element, if found, otherwise null.
      */
     public static Element getChildElement(final String localName, final Element element) {
         return getChildElement(new QName(BPELConstants.BPI, localName), element);
+    }
+
+    /**
+     * Gets a list of all child activities.
+     * 
+     * @param element Parent activity.
+     * @return A list of child activity elements.
+     */
+    public static List<Element> getChlidActivities(Element element) {
+        List<Element> children = new ArrayList<Element>();
+        Node child = element.getFirstChild();
+        while (child != null) {
+            if (child instanceof Element && Utils.isActivity((Element) child)) {
+                children.add((Element) child);
+            }
+            child = child.getNextSibling();
+        }
+        return children;
+    }
+
+    /**
+     * Gets a list of child Element nodes with the specified name.
+     * 
+     * @param name The qualified name of the children.
+     * @param element The parent node.
+     * @return A list of Element nodes.
+     */
+    public static List<Element> getChildElements(QName name, Element element) {
+        List<Element> list = new ArrayList<Element>();
+        
+        Node node = element.getFirstChild();
+        while (node != null) {
+            if (node instanceof Element) {
+                
+                if (node.getLocalName().equals(name.getLocalPart()) && node.getNamespaceURI().equals(name.getNamespaceURI()))
+                    list.add((Element) node);
+                
+            }
+        }
+        
+        return list;
     }
 }
