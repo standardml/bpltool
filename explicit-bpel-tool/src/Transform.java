@@ -77,15 +77,17 @@ public class Transform {
 
             String[] sheets = {  
                     "globalscope.xsl",
+                    "elseif.xsl",
                     "repeatuntil.xsl", 
                     "variables.xsl", 
                     "documentation.xsl",
                     "extensions.xsl", 
-                    "language.xsl", 
+                    "language.xsl",
                     "irra.xsl", 
                     "handlers.xsl",
                     "jointransition.xsl",
-                    "attributes.xsl"
+                    "attributes.xsl",
+                    "defaults.xsl"
             };
             Transformer transformer;
             DOMSource source = new DOMSource(document, systemId);
