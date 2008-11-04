@@ -3,7 +3,7 @@
     <xsd:documentation>
         This is the schema for Explicit BPEL a subset of WS-BPEL. 
         This Schema is a modified version of the original WS-BPEL 
-        XML Schema, excluding most implicit activities, extensions 
+        XML Schema, excluding implicit activities, extensions 
         and making default values mandatory.  
       </xsd:documentation>
   </xsd:annotation>
@@ -19,7 +19,6 @@
   </xsd:element>
   <xsd:complexType name="tProcess">
     <xsd:sequence>
-      <xsd:element minOccurs="0" ref="extensions"/>
       <xsd:element maxOccurs="unbounded" minOccurs="0" ref="import"/>
       <xsd:element minOccurs="1" ref="scope"/>
     </xsd:sequence>
@@ -72,10 +71,6 @@
       <xsd:element ref="while"/>
     </xsd:choice>
   </xsd:group>
-  <xsd:element name="extensions" type="tExtensions"/>
-  <xsd:complexType name="tExtensions">
-    <xsd:sequence/>
-  </xsd:complexType>
   <xsd:element name="import" type="tImport"/>
   <xsd:complexType name="tImport">
     <xsd:attribute name="namespace" type="xsd:anyURI" use="optional"/>
@@ -339,7 +334,7 @@
       <xsd:element ref="from"/>
       <xsd:element ref="to"/>
     </xsd:sequence>
-    <xsd:attribute default="no" name="keepSrcElementName" type="tBoolean" use="optional"/>
+    <xsd:attribute name="keepSrcElementName" type="tBoolean" use="optional"/>
     <xsd:attribute default="no" name="ignoreMissingFromData" type="tBoolean" use="optional"/>
   </xsd:complexType>
   <xsd:element name="from" type="tFrom"/>
@@ -367,6 +362,7 @@
   <xsd:complexType name="tQuery">
     <xsd:simpleContent>
       <xsd:extension base="xpath"/>
+      <xsd:attribute fixed="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0" name="queryLanguage" type="xsd:anyURI"/>
     </xsd:simpleContent>
   </xsd:complexType>
   <xsd:simpleType name="tRoles">
@@ -764,6 +760,7 @@
   <xsd:complexType name="tExpression">
     <xsd:simpleContent>
       <xsd:extension base="xpath"/>
+      <xsd:attribute fixed="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0" name="expressionLanguage" type="xsd:anyURI"/>
     </xsd:simpleContent>
   </xsd:complexType>
   <xsd:complexType name="tCondition">
