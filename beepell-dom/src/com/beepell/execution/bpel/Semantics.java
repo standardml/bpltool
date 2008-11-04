@@ -4,6 +4,7 @@ import javax.xml.namespace.QName;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.beepell.BPELConstants;
@@ -31,11 +32,88 @@ public class Semantics {
                 return;
             }
 
+            if (activity.getLocalName().equals("sequence")) {
+                rewriteSequence(activity, context);
+                return;
+            }
+
+            if (activity.getLocalName().equals("flow")) {
+                rewriteFlow(activity, context);
+                return;
+            }
+            
+            if (activity.getLocalName().equals("while")) {
+                rewriteWhile(activity, context);
+                return;
+            }
+            
+            
+            if (activity.getLocalName().equals("empty")) {
+                rewriteEmpty(activity, context);
+                return;
+            }
+            
+            
+            
         } catch (BPELFault fault) {
+            throw new UnsupportedOperationException("Fault handling is not implemented yet.");
             // TODO: Start fault handlling
         }
 
         throw new IllegalArgumentException("Activity " + activity.getLocalName() + " is not supported.");
+    }
+    
+
+    private static void rewriteEmpty(final Element activity, final Context context) {
+        
+        complete(activity, context);
+        
+    }
+    
+    
+    
+    private static void rewriteWhile(final Element activity, final Context context) {
+        String BPI = BPELConstants.BPI;
+        
+        Document document = activity.getOwnerDocument();
+        Element ifElement = document.createElementNS(BPI, "if");
+        Node condition = Utils.getChildElement("condition", ifElement).cloneNode(true);
+        ifElement.appendChild(condition);
+        
+        Element sequenceElement = document.createElementNS(BPI, "sequence");
+        Node childActivityClone = Utils.getFirstChildActivity(activity).cloneNode(true);
+        sequenceElement.appendChild(childActivityClone);
+        
+        Element whileElement = (Element) activity.getParentNode().replaceChild(ifElement, activity);
+        sequenceElement.appendChild(whileElement);
+        
+        context.inheritOutgoingLinks(sequenceElement);
+    }
+    
+    
+    private static void rewriteFlow(final Element activity, final Context context) {
+        
+        Element next = Utils.getFirstChildActivity(activity);
+        
+        if (next != null) {
+            throw new IllegalArgumentException("A non-empty flow must not be selected for rewriting.");
+        } else {
+            complete(activity, context);
+        }
+        
+    }
+    
+    
+    private static void rewriteSequence(final Element activity, final Context context) {
+        
+        Element next = Utils.getFirstChildActivity(activity);
+        
+        if (next != null) {
+            throw new IllegalArgumentException("A non-empty sequence must not be selected for rewriting.");
+        } else {
+            complete(activity, context);
+        }
+        
     }
 
     private static void rewriteIf(final Element activity, final Context context) throws BPELFault {
@@ -126,7 +204,7 @@ public class Semantics {
      * @param activity The skipped activity.
      * @param context The skipped activity's context.
      */
-    private static void skip(Element activity, Context context) {
+    public static void skip(Element activity, Context context) {
 
         activity.setAttributeNS(BPELConstants.BPI, "state", "skipped");
 
