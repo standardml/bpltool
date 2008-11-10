@@ -1328,14 +1328,14 @@ struct
                       SOME CP =>
                    (case eqP CP P1 pi1 P2 pi2 of
                       SOME CP' => eqPs Ps1 pis1 Ps2 pis2
-                                       (Constraints.plus (CPs', CP') handle e => raise e)
+                                       (Constraints.plus (CPs', CP'))
                     | NONE => NONE)
                     | NONE => NONE
                   end
                 | eqPs _ _ _ _ _ = NONE
             in
               case eqPs Ps1 minor_pis1 Ps2 minor_pis2 Constraints.empty of
-                SOME CPs' => SOME (Constraints.plus (Ca', CPs') handle e => raise e)
+                SOME CPs' => SOME (Constraints.plus (Ca', CPs'))
               | NONE => NONE
             end
           | NONE => NONE)
@@ -1346,7 +1346,7 @@ struct
       | wrongterm => NONE) (* b2 is not on D BDNF form *)
       | wrongterm =>
         raise MalformedBDNF
-                (info b1, wrongterm, "matching D in eqD")) handle e => raise e
+                (info b1, wrongterm, "matching D in eqD"))
   fun eqB C b1 b2 =(print' "eqB ";
       case match (PCom (PTen [PWir, PPer], PVar)) b1 of
         MCom (MTen [MWir w1, MPer id_X1], MVal D1) =>
@@ -1369,7 +1369,7 @@ struct
             (case Constraints.restrict (C', (id_X1_inner_ns, id_X2_inner_ns)) of
                SOME Cid_X =>
             (case Permutation.eq' Cid_X id_X1 id_X2 of
-               SOME Cid_X' => SOME (Constraints.plus (Cw', Cid_X') handle e => raise e)
+               SOME Cid_X' => SOME (Constraints.plus (Cw', Cid_X'))
              | NONE => NONE)
              | NONE => NONE)
              | NONE => NONE)
@@ -1379,7 +1379,7 @@ struct
       | wrongterm => NONE) (* b2 is not on B BDNF form *)
       | wrongterm =>
         raise MalformedBDNF
-                (info b1, wrongterm, "matching B in eqB")) handle e => raise e
+                (info b1, wrongterm, "matching B in eqB"))
   fun eqDR C b1 b2 =
       (* convert to, and compare on, D form *)
       case match (PTen [PWir, PTns]) b1 of
@@ -1425,7 +1425,7 @@ struct
             (case Constraints.restrict (C', (id_X1_inner_ns, id_X2_inner_ns)) of
                SOME Cid_X =>
             (case Permutation.eq' Cid_X id_X1 id_X2 of
-               SOME Cid_X' => SOME (Constraints.plus (Cw', Cid_X') handle e => raise e)
+               SOME Cid_X' => SOME (Constraints.plus (Cw', Cid_X'))
              | NONE => NONE)
              | NONE => NONE)
              | NONE => NONE)
@@ -1495,9 +1495,14 @@ struct
         val oface1 = outerface b1
         val oface2 = outerface b2
         val X1     = Interface.names iface1
+        val X1_vec = Interface.loc   iface1
         val Y1     = Interface.names oface1
+        val Y1_vec = Interface.loc   oface1
         val X2     = Interface.names iface2
+        val X2_vec = Interface.loc   iface2
         val Y2     = Interface.names oface2
+        val Y2_vec = Interface.loc   oface2
+
         fun insert lt =
           let
             fun ins x [] = [x]
@@ -1525,10 +1530,10 @@ struct
           | mkConstraints (x :: xs) (x' :: xs')
           = if Name.ekam x = Name.ekam x' then
               let
-                val X = NameSet.singleton x
+                val X  = NameSet.singleton x
                 val X' = NameSet.singleton x'
                 (*val _ = print' ("[" ^ Name.unmk x ^ "=" ^ Name.unmk x' ^ "] ")*)
-                val C = mkConstraints xs xs'
+                val C  = mkConstraints xs xs'
               in
                 Constraints.add ((X,X'), C)
               end
@@ -1537,15 +1542,35 @@ struct
 
         val Ci = mkConstraints xs1 xs2
         val Co = mkConstraints ys1 ys2
+
+        fun checkLocalNames [] [] = true
+          | checkLocalNames [] (_ :: _) = raise InterfacesDiffer
+          | checkLocalNames (_ :: _) [] = raise InterfacesDiffer
+          | checkLocalNames (X :: XS) (X' :: XS') =
+            let
+              fun listEq [] [] = true
+                | listEq [] (_ :: _) = raise InterfacesDiffer
+                | listEq (_ :: _) [] = raise InterfacesDiffer
+                | listEq (x :: xs) (x' :: xs') =
+                  Name.ekam x = Name.ekam x' andalso listEq xs xs'
+
+              val xs  = NameSet.fold (insert lt) [] X
+              val xs' = NameSet.fold (insert lt) [] X'
+            in
+              listEq xs xs' andalso checkLocalNames XS XS'
+            end
       in
         (* This doesn't work because internal representations, not original
            names, are compared:
         if Interface.eq (iface1, iface2)
           andalso Interface.eq (oface1, oface2)
         then *)
-          case eq'' Ci b1 b2 of
-            SOME Co' => Constraints.are_combineable (Co, Co')
-          | NONE     => false
+
+          (  checkLocalNames X1_vec X2_vec
+           ; checkLocalNames Y1_vec Y2_vec
+           ; case eq'' Ci b1 b2 of
+               SOME Co' => Constraints.are_combineable (Co, Co')
+             | NONE     => false)
         (*else 
           false*)
       end handle InterfacesDiffer => false
