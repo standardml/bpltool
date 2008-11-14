@@ -546,18 +546,24 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
    * Note: Take care - I am using a global wiring (substition) s as a
    * general namemap, that may apply to both global and local wiring.
    * 
+   * FIXME the bgvals produced are not necessarilly "legal" bgvals - e.g. an ion
+   *       can have the same name connected to more than one port.
+   *       This is not a problem as long as we don't let these bgvals leave the
+   *       module - e.g. by converting to bgterm where the terms would be legal.
+   *
    * TODO: NOT FULLY TESTED. *)
   fun t2p'' (v as (VMer (n, i)), s) =
       ((v, false), s) (* s = id_e*)
-    | t2p'' (VCon (X, i), s) =
+     | t2p'' (VCon (X, i), s) =
       (* FIXME this is unsound!
-       * E.g. x//[y, z] o (`[y]` * `[z]`)   =>   `[x]` || `[x]` *)
-      (((VCon (Wiring.app s X, i), false), s) handle e => raise e)
+       * E.g. x//[y, z] o (`[y]` * `[z]`)   =>   `[x]` || `[x]`
+       *)
+       (((VCon (Wiring.app s X, i), false), s) handle e => raise e)
     | t2p'' (VWir (w, i), s) =
       (* w = y_1/X_1 * ... * y_n/X_n * /Z_1 * ... * /Z_m
          s = z_1/y_1 || ... || z_n/y_n
 
-         cases:  X_i = ï¿½  =>  l_i = z_i/       l'_i = id0
+         cases:  X_i = Ø  =>  l_i = z_i/       l'_i = id0
                | _        =>  l_i = z_i/z_i    l'_i = z_i/X_i
 
          w' = ... || l_i  || ... * /Z_1 * ... * /Z_m
@@ -584,13 +590,24 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
                          (Wiring.id_0, Wiring.id_0)
                          (Wiring.unmk w)
       in
-        (* FIXME check for identity *)
-        ((VWir (w', i), false), s')
+        (* Only new identities should be removed - FIXME right?*)
+        if Wiring.is_id w' andalso not (Wiring.is_id w) then
+          ((VWir (w', i), true), s')
+        else
+          ((VWir (w', i), false), s')
       end
     | t2p'' (VIon (KyX, i), s) =
       let
         val {ctrl, free, bound} = Ion.unmk KyX
+        (* FIXME note that we are allowing the same name to occur more than once:
+         *       E.g. x//[x,y] o K[x,y]  =>  K[x,x]
+         *       Should this be allowed? *)
         val free'      = (List.map (fn y => getOpt (Wiring.app_x s y, y)) free) handle e => raise e
+        (* FIXME one name pr binding port should be enough?
+         *       I.e. instead of letting s' be an identity, we could choose a
+         *       representative name for each binding port and let s' be a
+         *       substitution of the names of that binding port to the
+         *       representative. *)
         val innernames = Ion.innernames KyX handle e => raise e
       in
         ((VIon (Ion.make {ctrl = ctrl, free= free', bound = bound}, i), false),
@@ -642,10 +659,10 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
         if GisNewId then ((H', HisNewId), s'')
         (* Hmmm - check the next two lines... *)
         else if HisNewId then ((G', GisNewId), s'')
-        else ((VCom(G', H', (Hinf', Goutf', i)), GisNewId orelse HisNewId), s'')
+        else ((VCom(G', H', (Hinf', Goutf', i)), false), s'')
       end
     | t2p'' _ = raise NotImplemented
-                        "rename_internally' for parallel and prime product"
+                        "t2p'' for parallel and prime product"
 
 
 
@@ -1461,9 +1478,9 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
   fun Pri i vs =
       let
         (* Prime product is only defined when there are no
-           global inner names and the local inner names are
-           disjoint. *)
-	val _ = foldl
+         * global inner names and the local inner names are
+         * disjoint. *)
+	      val _ = foldl
                   (fn (inner, allloc) =>
                       if NameSet.isEmpty (Interface.glob inner) then
                         foldl
@@ -1476,19 +1493,19 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
                             (vs, "while computing prime product in Pri"))
                   NameSet.empty 
                   (map innerface vs)
-	        handle DuplicatesRemoved
-	        => raise 
+	          handle DuplicatesRemoved
+	                 => raise 
                      NotPrimeable
                        (vs, "while computing prime product in Pri")
-	(* Ys is a list of pairs of (outer, outer local) name sets. *)
-	val Ys = map (locglobnames o outerface) vs
-	(* clashnames are names in 2 or more interfaces, allnames
-	 * contains the names of all interfaces, alllocnames contains
-	 * the local names of all interfaces, allglobnames contains
-	 * the global names of all interfaces.
-	 *)
-	val (clashnames, allnames, alllocnames, allglobnames)
-	  = foldl 
+	      (* Ys is a list of pairs of (outer, outer local) name sets. *)
+	      val Ys = map (locglobnames o outerface) vs
+	      (* clashnames are names in 2 or more interfaces, allnames
+	       * contains the names of all interfaces, alllocnames contains
+	       * the local names of all interfaces, allglobnames contains
+	       * the global names of all interfaces.
+	       *)
+	      val (clashnames, allnames, alllocnames, allglobnames)
+	        = foldl 
               (fn ((Y, Yloc, Yglob), (clns, alns, allocns, alglobns))
                   => (NameSet.union' clns (NameSet.intersect Y alns),
                       NameSet.union' Y alns,
@@ -1497,64 +1514,71 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
               (NameSet.empty, NameSet.empty, NameSet.empty, NameSet.empty)
               Ys
               handle DuplicatesRemoved
-              => raise 
-	           NotPrimeable
-                     (vs, "while computing prime product in Pri")
+                     => raise 
+	                     NotPrimeable
+                         (vs, "while computing prime product in Pri")
         val _ = if not (NameSet.isEmpty
                           (NameSet.intersect alllocnames allglobnames))
                 then
-                    raise NotPrimeable
-                            (vs, "while computing prime product in Pri")
+                  raise NotPrimeable
+                          (vs, "while computing prime product in Pri")
                 else ()
-
-	(* Given a bgval, used names set, a list of local link sets,
-	 * a global link list, a list of tuples of
-	 * bgvals, (B_i, v_i), 
-	 * B_i = (w_i * id)(id_Z * 'X^i_0' * ... * 'X^i_{k_i-1}') 
-	 * and v_i a bgval, and an integer K,
-	 * mksubs returns an updated set of used names, an updated
-	 * local link set list, an updated global link set,
-	 * conses a tuple onto the list of tuples, and adds the width
-	 * of v to K.  The renamings
-	 * rename clashing names apart, while the link set links them
-	 * up again.
-	 *)
-	fun mksubs (v, (usednames, loclss, globls, Bvs, K)) =
-	    let
-	      val {loc, glob, width} = Interface.unmk (outerface v)
-	      val (usednames, ls, globls) 
-		= NameSet.fold (addlink clashnames) 
-			       (usednames, LinkSet.empty, globls)
-			       (foldl (fn (X, Y) => NameSet.union X Y) 
-				      glob
-				      loc)
-	      val w = Wir i (Wiring.make ls)
-	      val idw = Wir i (Wiring.id_X glob)
-	      val idwxXs = if is_id0' idw then
-			     Ten i (map (Con i) loc)
-			   else 
-			     Ten i (idw :: map (Con i) loc)
-	      val wxidp = Ten i [w, Per i (Permutation.id_n width)]
-	      val B = if is_id' wxidp then
-			idwxXs
-		      else
-			Com i (wxidp, idwxXs)
-	    in
-	      (usednames, loclss, globls, Com i (B, v) :: Bvs, K + width)
-	    end
-	val (_, _, globls, Bvs, K)
-	  = foldr mksubs (allnames, LinkSet.empty, [], [], 0) vs
-	val w_inv = Wir i (Wiring.make' globls)
-	val A = if is_id0' w_inv then
-		  Mer i K
-		else 
-		  Ten i [w_inv, Mer i K]
-	val ABvs = if null Bvs then A else Com i (A, Ten i Bvs)
+               
+	      (* Given a bgval, used names set, a list of local link sets,
+	       * a global link list, a list of bgvals, Bv_i,
+         * where  Bv_i = v_i
+         *    or  Bv_i = B_i o v_i
+         *    where  B_i = (w_i * id) o (id_Z * 'X^i_0' * ... * 'X^i_{k_i-1}') 
+         *       or  B_i = (w_i * id) o ('X^i_0' * ... * 'X^i_{k_i-1}') 
+         *       or  B_i = id_Z * 'X^i_0' * ... * 'X^i_{k_i-1}'
+         *       or  B_i = 'X^i_0' * ... * 'X^i_{k_i-1}'
+	       * and v_i a bgval and an integer K, mksubs returns an updated
+	       * set of used names, an updated local link set list, an
+	       * updated global link set, conses a bgval onto the list of
+	       * bgvals, and adds the width of v to K.  The renamings rename
+	       * clashing names apart, while the link set links them up
+	       * again.
+	       *)
+	      fun mksubs (v, (usednames, loclss, globls, Bvs, K)) =
+	        let
+	          val {loc, glob, width} = Interface.unmk (outerface v)
+	          val (usednames, ls, globls) 
+		          = NameSet.fold (addlink clashnames) 
+			                       (usednames, LinkSet.empty, globls)
+			                       (foldl (fn (X, Y) => NameSet.union X Y) 
+				                            glob
+				                            loc)
+	          val w = Wir i (Wiring.make ls)
+	          val idw = Wir i (Wiring.id_X glob)
+	          val idwxXs = if is_id0' idw then
+			                     Ten i (map (Con i) loc)
+			                   else 
+			                     Ten i (idw :: map (Con i) loc)
+	          val wxidp = Ten i [w, Per i (Permutation.id_n width)]
+	        in
+            case (is_id' w, List.all (fn X => NameSet.isEmpty X) loc) of
+              (false, false) => 
+	            (usednames, loclss, globls, Com i (Com i (wxidp, idwxXs), v) :: Bvs, K + width)
+            | (true, false)  =>
+	            (usednames, loclss, globls, Com i (idwxXs, v) :: Bvs, K + width)
+            | (false, true)  => 
+	            (usednames, loclss, globls, Com i (wxidp, v) :: Bvs, K + width)
+            | (true, true)   => 
+	            (usednames, loclss, globls, v :: Bvs, K + width)
+	        end
+	      val (_, _, globls, Bvs, K)
+	        = foldr mksubs (allnames, LinkSet.empty, [], [], 0) vs
+	      val w_inv = Wir i (Wiring.make' globls)
+	      val A = if is_id0' w_inv then
+		              Mer i K
+		            else 
+		              Ten i [w_inv, Mer i K]
+	      val ABvs = if null Bvs then A else Com i (A, Ten i Bvs)
       in
-	if NameSet.isEmpty alllocnames then
-	  ABvs
-	else 
-	  Abs i (alllocnames, ABvs)
+	      if NameSet.isEmpty alllocnames then
+	        ABvs
+	      else 
+	        Abs i (alllocnames, ABvs)
       end
 
   fun Ion' i KyX =
