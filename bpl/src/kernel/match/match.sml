@@ -2691,7 +2691,11 @@ struct
 
   in
     (* Check conservatively and fast whether there can be no matches
-     * of Ps in g based on the top-level nodes in each. *)
+     * of Ps in g based on the top-level nodes in each.
+     *
+     * FIXME couldn't we maintain the non-active property and the set
+     *       of controls as part of BgVals?
+     *)
     fun no_possible_matches (g : G bgbdnf) (Ps : P bgbdnf list) =
       let
         val (g_non_active, g_ctrls) = only_non_active_top_level_nodes g
