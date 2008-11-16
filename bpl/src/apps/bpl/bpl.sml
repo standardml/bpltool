@@ -346,5 +346,6 @@ infixr 1 ELSE
 fun use_shorthands flag =
  (Flags.setBoolFlag "/kernel/ast/bgterm/ppids" (not flag);
   Flags.setBoolFlag "/kernel/ast/bgterm/ppabs" (not flag);
-  Flags.setBoolFlag "/kernel/ast/bgterm/pp0abs" (not flag))
+  Flags.setBoolFlag "/kernel/ast/bgterm/pp0abs" (not flag);
+  Flags.setBoolFlag "/kernel/ast/bgterm/ppmeraspri" flag)
 val (on, off) = (true, false) 

@@ -321,6 +321,14 @@ struct
 	Link'Set.foldUntil is_not_id0_link true ls
       end
 
+  fun is_function (ls, ht) =
+      Link'Set.all
+        (fn {outer, inner} =>
+           case outer of
+             Name _    => not (NameSet.isEmpty inner)
+           | Closure _ => false)
+        ls
+
 	fun ppwire {outer, inner} pps =
 	    (case outer of
 	       SOME y => Name.pp 2 pps y

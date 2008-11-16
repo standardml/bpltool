@@ -29,23 +29,26 @@
  * @version $LastChangedRevision$
  *)
 functor BgTerm'(structure Info : INFO
-		structure Ion : ION
-		structure Control : CONTROL
-		structure Wiring : WIRING
-		structure Permutation : PERMUTATION
-		structure NameSet : MONO_SET
-		structure NameSetPP : COLLECTIONPRETTYPRINT
-                  where type ppstream    = PrettyPrint.ppstream
-    structure ErrorHandler : ERRORHANDLER
-        where type ppstream    = PrettyPrint.ppstream
-          and type break_style = PrettyPrint.break_style
-          and type origin      = Origin.origin
-		sharing type NameSet.Set =
-                             Wiring.nameset =
-                             NameSetPP.collection
-    sharing type Ion.control = Control.control)
+                 structure Ion : ION
+                 structure Control : CONTROL
+                 structure Wiring : WIRING
+                 structure Permutation : PERMUTATION
+                 structure NameSet : MONO_SET
+                 structure NameSetPP : COLLECTIONPRETTYPRINT
+                   where type ppstream    = PrettyPrint.ppstream
+                 structure ErrorHandler : ERRORHANDLER
+                   where type ppstream    = PrettyPrint.ppstream
+                     and type break_style = PrettyPrint.break_style
+                     and type origin      = Origin.origin
+                 sharing type NameSet.elt =
+                              Ion.name =
+                              Wiring.name
+                 sharing type NameSet.Set =
+                              Wiring.nameset =
+                              NameSetPP.collection
+                 sharing type Ion.control = Control.control)
       : BGTERM
-    where type control = Control.control =
+          where type control = Control.control =
 struct
   open Debug
   open ErrorHandler
@@ -79,6 +82,13 @@ struct
     long = "--pp0abs",
     arg = "",
     default = true}
+  val _ = Flags.makeBoolFlag {
+    name = "/kernel/ast/bgterm/ppmeraspri",
+    desc = "Replace merge with prime product (best effort)",
+    short = "",
+    long = "--ppmeraspri",
+    arg = "",
+    default = false}
   type info = Info.info
   type nameset = NameSet.Set
   type control = Control.control
@@ -388,11 +398,104 @@ struct
       = 1
     | is_atomic_ion (Com (_, t, _)) = is_atomic_ion t
 
+
+  (* Try heuristically to transform a term into a prime product.  *)
+  local
+    (* Push a global name substitution without introductions and
+     * closed links down onto a prime.
+     * We try to remove created identities.
+     * NB! It's probably possible to push the wiring further down. *)
+    fun apply_sigma s (b as (Mer _)) = (b, false)
+      | apply_sigma s (b as (Con (X, i))) =
+        let
+          val s' = Wiring.restrict s X
+        in
+          if Wiring.is_id s' then
+            (b, false)
+          else
+            (Com (Ten ([Wir (s', i),
+                        Per (Permutation.id_n 1, i)], i), b, i), false)
+        end
+      | apply_sigma s (Wir (w, i)) =
+        let
+          val w' = Wiring.o (Wiring.restrict s (Wiring.outernames w), w)
+        in
+          (Wir (w', i), Wiring.is_id w')
+        end
+      | apply_sigma s (Ion (KyX, i)) =
+        let
+          val {ctrl, free, bound} = Ion.unmk KyX
+          (* note that we are allowing the same name to occur more than once:
+           *       E.g. x//[x,y]  and  K[x,y]  =>  K[x,x]   *)
+          val free' = (List.map (fn y => getOpt (Wiring.app_x s y, y)) free)
+        in
+          (Ion (Ion.make {ctrl = ctrl, free = free', bound = bound}, i), false)
+        end
+      | apply_sigma s (Hop (b, i)) = (Hop (#1 (apply_sigma s b), i), false)
+      | apply_sigma s (b as (Per (pi, _))) = (b, Permutation.is_id pi)
+      | apply_sigma s (Abs (X, b, i)) = (Abs (X, #1 (apply_sigma s b), i), false)
+      | apply_sigma s (Ten (bs, i)) =
+        let
+          val (bs', id) = foldr
+                            (fn (b, (bs', id)) =>
+                                let
+                                  val (b', id') = apply_sigma s b
+                                in
+                                  (b'::bs', id andalso id')
+                                end)
+                            ([], true)
+                            bs
+        in
+          (Ten (bs', i), id)
+        end
+      | apply_sigma s (Pri (bs, i)) =
+        let
+          val bs' = map (#1 o (apply_sigma s)) bs
+        in
+          (Pri (bs', i), is_id1_x_idw_list bs')
+        end
+      | apply_sigma s (Par (bs, i)) =
+        let
+          val (bs', id) = foldr
+                            (fn (b, (bs', id)) =>
+                                let
+                                  val (b', id') = apply_sigma s b
+                                in
+                                  (b'::bs', id andalso id')
+                                end)
+                            ([], true)
+                            bs
+        in
+          (Par (bs', i), id)
+        end
+      | apply_sigma s (Com (b1, b2, i)) =
+        let
+          val (b1', id) = apply_sigma s b1
+        in
+          if id then
+            (b2, is_id' b2)
+          else
+            (Com (b1', b2, i), false)
+        end
+  in
+        (* (sigma * merge(n)) o (P_1 * ... * P_n)
+         * ->  sigma(P_1) `|` ... `|` sigma(P_n)   
+         *)
+    fun to_prime_product (Com (Ten ([Wir (w, _), Mer (n, _)], _), Ten (bs, _), i)) =
+      if Wiring.is_function w
+        andalso length bs = n andalso List.all (fn b => width b = 1) bs then
+        (SOME (Pri (map (#1 o (apply_sigma w)) bs, i)))
+      else
+        NONE
+      | to_prime_product _ = NONE
+  end
+
   fun pp indent pps =
     let
-      val ppids  = Flags.getBoolFlag "/kernel/ast/bgterm/ppids"
-      val ppabs  = Flags.getBoolFlag "/kernel/ast/bgterm/ppabs"
-      val pp0abs = Flags.getBoolFlag "/kernel/ast/bgterm/pp0abs"
+      val ppids      = Flags.getBoolFlag "/kernel/ast/bgterm/ppids"
+      val ppabs      = Flags.getBoolFlag "/kernel/ast/bgterm/ppabs"
+      val pp0abs     = Flags.getBoolFlag "/kernel/ast/bgterm/pp0abs"
+      val ppmeraspri = Flags.getBoolFlag "/kernel/ast/bgterm/ppmeraspri"
       open PrettyPrint
       val PrMax = 9
       val PrCom = 6
@@ -579,10 +682,15 @@ struct
                    >>()
                  end
                end handle e => raise e)
-            | pp' outermost innermost (Com (b1, b2, _)) =
+            | pp' outermost innermost (b as (Com (b1, b2, _))) =
               let
                 val (showlpar, pal', par', prr', showrpar)
                   = checkprec PrCom
+                (* Is this too expensive? *)
+                val (b1isid, b2isid) = if not ppids then
+                                         (is_id' b1, is_id' b2)
+                                       else
+                                         (false, false)
               in
                 if is_atomic_ion b1 then
                   if is_barren_root b2 then
@@ -598,15 +706,30 @@ struct
                      ppp PrCom par' prr' false false innermost b2;
                      showrpar();
                      >>())
+                else if not ppids andalso (b1isid orelse b2isid) then
+                  if b1isid then
+                    pp' outermost innermost b2
+                  else
+                    pp' outermost innermost b1
                 else
-                  (showlpar();
-                   <<();
-                   ppp pal' PrCom PrCom false outermost false b1;
-                   show " o";
-                   brk();
-                   ppp PrCom par' prr' aih false innermost b2;
-                   showrpar();
-                   >>())
+                  let
+                    val b' = if ppmeraspri then
+                               to_prime_product b
+                             else
+                               NONE
+                  in
+                    case b' of
+                      SOME b' => pp' outermost innermost b'
+                    | NONE =>
+                      (showlpar();
+                       <<();
+                       ppp pal' PrCom PrCom false outermost false b1;
+                       show " o";
+                       brk();
+                       ppp PrCom par' prr' aih false innermost b2;
+                       showrpar();
+                       >>())
+                  end
               end handle e => raise e
           in
             pp'
@@ -812,20 +935,23 @@ struct
 end
 
 functor BgTerm (structure Info : INFO
-		structure Ion : ION
-		structure Control : CONTROL
-		structure Wiring : WIRING
-		structure Permutation : PERMUTATION
-		structure NameSet : MONO_SET
-		structure NameSetPP : COLLECTIONPRETTYPRINT
-                  where type ppstream    = PrettyPrint.ppstream
-    structure ErrorHandler : ERRORHANDLER
-        where type ppstream    = PrettyPrint.ppstream
-          and type break_style = PrettyPrint.break_style
-          and type origin      = Origin.origin
-		sharing type NameSet.Set =
-                             Wiring.nameset =
-                             NameSetPP.collection
+                 structure Ion : ION
+                 structure Control : CONTROL
+                 structure Wiring : WIRING
+                 structure Permutation : PERMUTATION
+                 structure NameSet : MONO_SET
+                 structure NameSetPP : COLLECTIONPRETTYPRINT
+                   where type ppstream    = PrettyPrint.ppstream
+                 structure ErrorHandler : ERRORHANDLER
+                   where type ppstream     = PrettyPrint.ppstream
+                     and type break_style = PrettyPrint.break_style
+                     and type origin       = Origin.origin
+                 sharing type NameSet.elt =
+                              Ion.name =
+                              Wiring.name
+                 sharing type NameSet.Set =
+                              Wiring.nameset =
+                              NameSetPP.collection
     sharing type Ion.control = Control.control)
       :> BGTERM where type info = Info.info
                   and type wiring = Wiring.wiring

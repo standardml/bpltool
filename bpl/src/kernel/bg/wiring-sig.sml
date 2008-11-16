@@ -334,6 +334,8 @@ sig
    * @params Y w
    *)
   val is_id_x_sigma : nameset -> wiring -> bool
+  (** Determine whether some wiring has no edges and no name introductions. *)
+  val is_function : wiring -> bool
   (** Determine whether some wiring can be written w = id_Y' x sigma,
    * where Y' &sube Y and sigma is a substitution (i.e., no closed
    * links), returning SOME sigma.
