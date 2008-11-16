@@ -41,9 +41,10 @@ datatype 'a expected = HAS of 'a | JUST of 'a
 
 local
   open Sugar
-  infix 7 /   infix 7 //
-  infix 6 o
-  infix 5 *   infix 5 ||   infix 5 `|`
+  infix 8 /   infix 8 //
+  infixr 7 o
+  infixr 6 `|`
+  infixr 5 *   infixr 5 ||
   infix 4 >
   infix 3 &   infix 3 -->
   infix 2 =:  infix 2 -:   infix 2 |->   infix 2 |-->
@@ -73,7 +74,7 @@ local
   val M11 = atomic   ("M11" =: 1 --> 1)
   val M20 = atomic   ("M20" =: 2 --> 0)
 
-  val (x, y, z, u, v, w) = ("x", "y", "z", "u", "v", "w")
+  val (x, y, z, t, u, v, w) = ("x", "y", "z", "t", "u", "v", "w")
   val (x1, x2, x3) = ("x1", "x2", "x3")
   val (y1, y2, y3) = ("y1", "y2", "y3")
   val (y_4,y_5,x_6,x_7) = ("y_4","y_5","x_6","x_7")
@@ -209,6 +210,11 @@ in
            `|` (x/x * K0) o (L1[x]  `|` idp(1))},
      HAS [{context   = y/x * z/z * idp(1),
            parameter = M1[z] * M0 * K0 o <-> * L0 o <->}]),
+    ("One match in the place graph, plenty in the link graph",
+     {agent = -/y o K0 o (M2[x,y] `|` M1[y]),
+      redex = -/t o t//[v,w] o K0 o `[u,v,w]`},
+     HAS [{context   = x//[u] * idp(1),
+           parameter = <[u,v,w]> M2[u,v] `|` M1[w]}]),
     ("Local links must not be matched by global links, part 1",
      {agent = K10[][[x]] o (<[x]> M1[x]),
       redex = K10[][[x]] o (`[]` `|` (<["x"]> "x"//[]  * <->))},
