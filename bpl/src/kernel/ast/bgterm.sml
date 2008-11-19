@@ -608,14 +608,34 @@ struct
                              | _             => false
              val {intro, closures, function} = Wiring.partition w
              val Z = Wiring.outernames function
+             val (ys, yYs, yYs_is_not_id)
+               = LinkSet.fold
+                   (fn l => fn (ys, yYs, yYs_is_not_id) =>
+                      let
+                        val Y_i = Link.innernames l
+                        val y_i = NameSet.someElement Y_i
+                      in
+                        (NameSet.insert y_i ys,
+                         LinkSet.insert
+                           (Link.make {outer = SOME y_i, inner = Y_i})
+                           yYs,
+                         yYs_is_not_id orelse NameSet.size Y_i > 1)
+                      end)
+                   (NameSet.empty, LinkSet.empty, false)
+                   (Wiring.unmk closures)
            in
              if bs_is_idp
                 andalso Wiring.is_id0 intro andalso Wiring.is_id0 closures then
                (*    (sigma * idp(m)) o b
-                * -> sigma(b)             *)
+                * -> sigma(b)
+                *
+                * where sigma = z_1/V_1 * ... * z_l/V_l
+                *   and V_i =/= Ø
+                *)
                SOME (#1 (apply_sigma w b))
-             else if not (Wiring.is_id function)
-                     andalso not_in_innerface Z (Ten (bs, i')) then
+             else if (not (Wiring.is_id function)
+                      andalso not_in_innerface Z (Ten (bs, i')))
+                     orelse yYs_is_not_id then
                (*    (X * (/Y_1 * ... * /Y_k) * (z_1/V_1 * ... * z_l/V_l)
                 *     * b_1 * ... * b_m)
                 *    o b
@@ -630,20 +650,6 @@ struct
                 *   and Z = {z_1, ..., z_n}               
                 *)
                let
-                 val (ys, yYs)
-                   = LinkSet.fold
-                       (fn l => fn (ys, yYs) =>
-                          let
-                            val Y_i = Link.innernames l
-                            val y_i = NameSet.someElement Y_i
-                          in
-                            (NameSet.insert y_i ys,
-                             LinkSet.insert
-                               (Link.make {outer = SOME y_i, inner = Y_i})
-                               yYs)
-                          end)
-                       (NameSet.empty, LinkSet.empty)
-                       (Wiring.unmk closures)
                  val sigma = Wiring.* (Wiring.make yYs, function)
                  val id_Z  = Wiring.id_X Z
                in
