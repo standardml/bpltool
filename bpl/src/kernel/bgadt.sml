@@ -107,6 +107,8 @@ structure Permutation
 structure BgTerm
   = BgTerm'
       (structure Info        = Info
+       structure Link         = Link
+       structure LinkSet      = LinkSet
        structure Ion         = Ion
        structure Control     = Control
        structure Wiring      = Wiring

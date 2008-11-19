@@ -29,6 +29,8 @@
  * @version $LastChangedRevision$
  *)
 functor BgTerm'(structure Info : INFO
+                 structure Link : LINK
+                 structure LinkSet : MONO_SET
                  structure Ion : ION
                  structure Control : CONTROL
                  structure Wiring : WIRING
@@ -42,9 +44,13 @@ functor BgTerm'(structure Info : INFO
                      and type origin      = Origin.origin
                  sharing type NameSet.elt =
                               Ion.name =
+                              Link.name =
                               Wiring.name
+                 sharing type Link.link = LinkSet.elt
+                 sharing type LinkSet.Set = Wiring.linkset
                  sharing type NameSet.Set =
                               Ion.nameset =
+                              Link.nameset =
                               Permutation.nameset =
                               Wiring.nameset =
                               NameSetPP.collection
@@ -502,20 +508,14 @@ struct
      *)
         (*     (X * (/Y_1 * ... * /Y_k) * (z_1/V_1 * ... * z_l/V_l) * merge(m))
          *     o (P_1 * ... * P_n)
-         * ->  (X * (/Y_1 * ... * /Y_k) * id_{z_1, ...,z_l} * idp(1))
+         * ->  (X * (/y_1 * ... * /y_k) * id_{z_1, ...,z_l} * idp(1))
          *     o (sigma(P_1) `|` ... `|` sigma(P_n))
          *
-         * where  sigma = id_Y_1 * ... * id_Y_k * z_1/V_1 * ... * z_l/V_l
-         *   and  width(P_i) <= 1 for 1 <= i <= n
+         * where  sigma = y_1/Y_1 * ... * y_k/Y_k * z_1/V_1 * ... * z_l/V_l
+         *   and  y_i \in Y_i
+         *   and  width(P_i) <= 1
          *   and  sum_{1 <= i <= n}(width(P_i)) = m
-         *
-         * NB: we could simplify wiring further by choosing a representative
-         *       y_i \in Y_i  for  1 <= i <= k
-         *     and then changing sigma to
-         *       sigma = y_1/Y_1 * ... * y_k/Y_k * z_1/V_1 * ... * z_l/V_l
-         *     and the result of the rewrite to
-         *       (X * (/{y_1} * ... * /{y_k}) * id_{z_1, ...,z_l})
-         *       o (sigma(P_1) `|` ... `|` sigma(P_n)) *)
+         *)
     fun to_prime_product (Com (Ten ([Wir (w, i), Mer (m, i')], i''),
                                Ten (bs, i'''), i'''')) =
         let
@@ -528,18 +528,29 @@ struct
           if n' = m then
             let
               val {intro, closures, function} = Wiring.partition w
-              val Y     = Wiring.innernames closures
-              val id_Y  = Wiring.id_X Y
-              val sigma = Wiring.* (id_Y, function)
+              val (ys, yYs) = LinkSet.fold
+                                (fn l => fn (ys, yYs) =>
+                                   let
+                                     val Y_i = Link.innernames l
+                                     val y_i = NameSet.someElement Y_i
+                                   in
+                                     (NameSet.insert y_i ys,
+                                      LinkSet.insert
+                                        (Link.make {outer = SOME y_i, inner = Y_i})
+                                        yYs)
+                                   end)
+                                (NameSet.empty, LinkSet.empty)
+                                (Wiring.unmk closures)
+              val sigma = Wiring.* (Wiring.make yYs, function)
             in
-              (* If (X * (/Y_1 * ... * /Y_k) * id_{z_1, ...,z_l} * idp(1)) is
+              (* If (X * (/y_1 * ... * /y_k) * id_{z_1, ..., z_l} * idp(1)) is
                * an identity we can leave it out. *)
               if Wiring.is_id0 intro andalso Wiring.is_id0 closures then
                 SOME (Pri (map (#1 o (apply_sigma sigma)) bs, i'''))
               else
                 SOME
                   (Com (Ten ([Wir (Wiring.**
-                                     [intro, closures,
+                                     [intro, Wiring.close ys,
                                       Wiring.id_X (Wiring.outernames function)], i),
                               Per (Permutation.id_n 1, i')], i''),
                         Pri (map (#1 o (apply_sigma sigma)) bs, i'''), i''''))
@@ -608,28 +619,37 @@ struct
                (*    (X * (/Y_1 * ... * /Y_k) * (z_1/V_1 * ... * z_l/V_l)
                 *     * b_1 * ... * b_m)
                 *    o b
-                * -> (X * (/Y_1 * ... * /Y_k) * id_Z
+                * -> (X * (/y_1 * ... * /y_k) * id_Z
                 *     * b_1 * ... * b_m)
                 *    o sigma(b)
-                * where sigma = id_Y_1 * ... * id_Y_k * z_1/V_1 * ... * z_l/V_l =/= id
+                *
+                * where sigma = y_1/Y_1 * ... * y_k/Y_k * z_1/V_1 * ... * z_l/V_l
+                *   and sigma =/= id
+                *   and y_i \in Y_i
                 *   and V_i =/= Ø
                 *   and Z = {z_1, ..., z_n}               
-                *
-                * NB: we could simplify wiring further by choosing a representative
-                *       y_i \in Y_i  for  1 <= i <= k
-                *     and then changing sigma to
-                *       sigma = y_1/Y_1 * ... * y_k/Y_k * z_1/V_1 * ... * z_l/V_l
-                *     and the result of the rewrite to
-                *       (X * (/{y_1} * ... * /{y_k}) * id_{z_1, ...,z_l})
-                *       o (sigma(P_1) `|` ... `|` sigma(P_n))                *)
+                *)
                let
-                 val Y     = Wiring.innernames closures
-                 val id_Y  = Wiring.id_X Y
-                 val sigma = Wiring.* (id_Y, function)
+                 val (ys, yYs)
+                   = LinkSet.fold
+                       (fn l => fn (ys, yYs) =>
+                          let
+                            val Y_i = Link.innernames l
+                            val y_i = NameSet.someElement Y_i
+                          in
+                            (NameSet.insert y_i ys,
+                             LinkSet.insert
+                               (Link.make {outer = SOME y_i, inner = Y_i})
+                               yYs)
+                          end)
+                       (NameSet.empty, LinkSet.empty)
+                       (Wiring.unmk closures)
+                 val sigma = Wiring.* (Wiring.make yYs, function)
                  val id_Z  = Wiring.id_X Z
                in
                  SOME
-                   (Com (Par (Wir (Wiring.** [intro, closures, id_Z], i) :: bs, i'),
+                   (Com (Par (Wir (Wiring.** [intro, Wiring.close ys, id_Z], i)
+                              :: bs, i'),
                          #1 (apply_sigma sigma b), i''))
                end
              else
@@ -1100,6 +1120,8 @@ struct
 end
 
 functor BgTerm (structure Info : INFO
+                 structure Link : LINK
+                 structure LinkSet : MONO_SET
                  structure Ion : ION
                  structure Control : CONTROL
                  structure Wiring : WIRING
@@ -1113,9 +1135,13 @@ functor BgTerm (structure Info : INFO
                      and type origin       = Origin.origin
                  sharing type NameSet.elt =
                               Ion.name =
+                              Link.name =
                               Wiring.name
+                 sharing type Link.link = LinkSet.elt
+                 sharing type LinkSet.Set = Wiring.linkset
                  sharing type NameSet.Set =
                               Ion.nameset =
+                              Link.nameset =
                               Permutation.nameset =
                               Wiring.nameset =
                               NameSetPP.collection
@@ -1130,12 +1156,14 @@ functor BgTerm (structure Info : INFO
  =
 struct
   structure BgTerm = BgTerm'(structure Info = Info
-                             structure Ion = Ion
-                             structure Control = Control
-                             structure Wiring = Wiring
-                             structure Permutation = Permutation
-                             structure NameSet = NameSet
-                             structure NameSetPP = NameSetPP
-                             structure ErrorHandler = ErrorHandler)
+                              structure Link = Link
+                              structure LinkSet = LinkSet
+                              structure Ion = Ion
+                              structure Control = Control
+                              structure Wiring = Wiring
+                              structure Permutation = Permutation
+                              structure NameSet = NameSet
+                              structure NameSetPP = NameSetPP
+                              structure ErrorHandler = ErrorHandler)
   open BgTerm
 end
