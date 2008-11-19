@@ -336,6 +336,9 @@ struct
             | _           => empty end  
 
 
+  fun disjoint (s1:Set) (s2:Set) : bool =
+      isEmpty (intersect s1 s2)
+
   fun difference (s1 as (t1, n1)) (s2 as (t2, n2)) =
       let fun loop x y stack1 stack2 res =
               case compare(x, y) of

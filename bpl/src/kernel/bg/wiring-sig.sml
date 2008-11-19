@@ -317,8 +317,21 @@ sig
    *                   the set of new names added, and any fresh
    *                   names.  We have w = (id * /newnames) o opened.
    *)
-  val openup : wiring -> {opened: wiring,
+  val openup : wiring -> {opened : wiring,
                           newnames : nameset}
+  (** Partition a wiring into the set of names that are introduced,
+   * the edges, and the function part:
+   * w = X * (/Y_1 * ... * /Y_m) * (z_1/V_1 * ... * z_n/V_n).
+   * @params w
+   * @param w          Wiring to partition.
+   * @return {intro, closures, function}
+   *                   The introduction, closures, and function parts of the
+   *                   wiring w.  We have
+   *                   w = X * (/Y_1 * ... * /Y_m) * (z_1/V_1 * ... * z_n/V_n).
+   *)
+  val partition : wiring -> {intro    : wiring,
+                             closures : wiring,
+                             function : wiring}
   (** Close some open links. *)
   val closelinks : nameset -> wiring -> wiring
   (** Remove idle edges, i.e., edges with no inner names. *)

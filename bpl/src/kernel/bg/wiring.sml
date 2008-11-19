@@ -1109,7 +1109,7 @@ struct
 
   fun restrict_outer (ls, ht) Y =
       let
-	val (new_ls, new_ht_size)
+        val (new_ls, new_ht_size)
             = Link'Set.fold (fn (l as {outer = Name n, inner}) =>
                                (fn (new_ls, new_ht_size) =>
                                   if NameSet.member n Y then
@@ -1199,6 +1199,34 @@ struct
       {opened    = (ls_opened, ht_opened),
        rest      = (ls_open, ht_open),
        newnames  = newnames}
+    end
+
+  fun partition (w as (ls, ht)) =
+    let
+      val ht_intro    = createNameHashMap  0
+      val ht_closures = createNameHashMap' ()
+      val ht_function = createNameHashMap' ()
+
+      fun addlink (l as {outer, inner})
+                  (ls_intro, ls_closures, ls_function) =
+        case outer of
+          Name y => if NameSet.isEmpty inner then
+                      (Link'Set.insert l ls_intro, ls_closures, ls_function)
+                    else
+                      (  addto ht_function inner outer
+                       ; (ls_intro, ls_closures, Link'Set.insert l ls_function))
+        | Closure i => (  addto ht_closures inner outer
+                        ; (ls_intro, Link'Set.insert l ls_closures, ls_function))
+
+      val (ls_intro, ls_closures, ls_function)
+        = Link'Set.fold
+            addlink
+            (Link'Set.empty, Link'Set.empty, Link'Set.empty)
+            ls
+    in
+      {intro    = (ls_intro,    ht_intro   ),
+       closures = (ls_closures, ht_closures),
+       function = (ls_function, ht_function)}
     end
 
   fun openup (w as (ls, ht)) =

@@ -44,6 +44,8 @@ functor BgTerm'(structure Info : INFO
                               Ion.name =
                               Wiring.name
                  sharing type NameSet.Set =
+                              Ion.nameset =
+                              Permutation.nameset =
                               Wiring.nameset =
                               NameSetPP.collection
                  sharing type Ion.control = Control.control)
@@ -82,6 +84,13 @@ struct
     long = "--pp0abs",
     arg = "",
     default = true}
+  val _ = Flags.makeBoolFlag {
+    name = "/kernel/ast/bgterm/pptenaspar",
+    desc = "Replace tensor product with parallel product",
+    short = "",
+    long = "--pptenaspar",
+    arg = "",
+    default = false}
   val _ = Flags.makeBoolFlag {
     name = "/kernel/ast/bgterm/ppmeraspri",
     desc = "Replace merge with prime product (best effort)",
@@ -399,7 +408,6 @@ struct
     | is_atomic_ion (Com (_, t, _)) = is_atomic_ion t
 
 
-  (* Try heuristically to transform a term into a prime product.  *)
   local
     (* Push a global name substitution without introductions and
      * closed links down onto a prime.
@@ -411,7 +419,7 @@ struct
           val s' = Wiring.restrict s X
         in
           if Wiring.is_id s' then
-            (b, false)
+            (b, NameSet.isEmpty X)
           else
             (Com (Ten ([Wir (s', i),
                         Per (Permutation.id_n 1, i)], i), b, i), false)
@@ -425,36 +433,22 @@ struct
       | apply_sigma s (Ion (KyX, i)) =
         let
           val {ctrl, free, bound} = Ion.unmk KyX
-          (* note that we are allowing the same name to occur more than once:
-           *       E.g. x//[x,y]  and  K[x,y]  =>  K[x,x]   *)
+          (* NB! we are allowing the same name to occur more than once:
+           *     E.g. x//[x,y]  and  K[x,y]  =>  K[x,x]   *)
           val free' = (List.map (fn y => getOpt (Wiring.app_x s y, y)) free)
         in
           (Ion (Ion.make {ctrl = ctrl, free = free', bound = bound}, i), false)
         end
       | apply_sigma s (Hop (b, i)) = (Hop (#1 (apply_sigma s b), i), false)
       | apply_sigma s (b as (Per (pi, _))) = (b, Permutation.is_id pi)
-      | apply_sigma s (Abs (X, b, i)) = (Abs (X, #1 (apply_sigma s b), i), false)
+      | apply_sigma s (Abs (X, b, i)) =
+        let
+          val (b', id') = apply_sigma (Wiring.* (s, Wiring.id_X X)) b
+        in
+          (* NB! The substitution is only on global names. *)
+          (Abs (X, b', i), id' andalso NameSet.isEmpty X)
+        end
       | apply_sigma s (Ten (bs, i)) =
-        let
-          val (bs', id) = foldr
-                            (fn (b, (bs', id)) =>
-                                let
-                                  val (b', id') = apply_sigma s b
-                                in
-                                  (b'::bs', id andalso id')
-                                end)
-                            ([], true)
-                            bs
-        in
-          (Ten (bs', i), id)
-        end
-      | apply_sigma s (Pri (bs, i)) =
-        let
-          val bs' = map (#1 o (apply_sigma s)) bs
-        in
-          (Pri (bs', i), is_id1_x_idw_list bs')
-        end
-      | apply_sigma s (Par (bs, i)) =
         let
           val (bs', id) = foldr
                             (fn (b, (bs', id)) =>
@@ -468,6 +462,13 @@ struct
         in
           (Par (bs', i), id)
         end
+      | apply_sigma s (Par p) = apply_sigma s (Ten p)
+      | apply_sigma s (Pri (bs, i)) =
+        let
+          val bs' = map (#1 o (apply_sigma s)) bs
+        in
+          (Pri (bs', i), is_id1_x_idw_list bs')
+        end
       | apply_sigma s (Com (b1, b2, i)) =
         let
           val (b1', id) = apply_sigma s b1
@@ -477,17 +478,168 @@ struct
           else
             (Com (b1', b2, i), false)
         end
+
+    (* Check whether any name in X is in the innerface of b *)
+    fun not_in_innerface X (Mer _)         = true
+      | not_in_innerface X (Con (Y, _))    = NameSet.disjoint X Y
+      | not_in_innerface X (Wir (w, _))    = NameSet.disjoint X (Wiring.innernames w)
+      | not_in_innerface X (Ion (i, _))    = NameSet.disjoint X (Ion.innernames i)
+      | not_in_innerface X (Hop (b, _))    = not_in_innerface X b
+      | not_in_innerface X (Per (p, _))    = NameSet.disjoint X (Permutation.innernames p)
+      | not_in_innerface X (Abs (_, b, _)) = not_in_innerface X b
+      | not_in_innerface X (Ten (bs, _))   = List.all (not_in_innerface X) bs
+      | not_in_innerface X (Pri (bs, _))   = List.all (not_in_innerface X) bs
+      | not_in_innerface X (Par (bs, _))   = List.all (not_in_innerface X) bs
+      | not_in_innerface X (Com (_, b, _)) = not_in_innerface X b
   in
-        (* (sigma * merge(n)) o (P_1 * ... * P_n)
-         * ->  sigma(P_1) `|` ... `|` sigma(P_n)   
-         *)
-    fun to_prime_product (Com (Ten ([Wir (w, _), Mer (n, _)], _), Ten (bs, _), i)) =
-      if Wiring.is_function w
-        andalso length bs = n andalso List.all (fn b => width b = 1) bs then
-        (SOME (Pri (map (#1 o (apply_sigma w)) bs, i)))
-      else
-        NONE
+    (* Try heuristically to replace a merge with prime product(s),
+     * eliminating as much wiring as possible.
+     *
+     * The function can only return SOME b' when called with some b if
+     * size(b') < size(b) for some appropriate size-measure. This is
+     * necessary to prevent divergence, as the function may be called
+     * on its result.
+     *)
+        (*     (X * (/Y_1 * ... * /Y_k) * (z_1/V_1 * ... * z_l/V_l) * merge(m))
+         *     o (P_1 * ... * P_n)
+         * ->  (X * (/Y_1 * ... * /Y_k) * id_{z_1, ...,z_l} * idp(1))
+         *     o (sigma(P_1) `|` ... `|` sigma(P_n))
+         *
+         * where  sigma = id_Y_1 * ... * id_Y_k * z_1/V_1 * ... * z_l/V_l
+         *   and  width(P_i) <= 1 for 1 <= i <= n
+         *   and  sum_{1 <= i <= n}(width(P_i)) = m
+         *
+         * NB: we could simplify wiring further by choosing a representative
+         *       y_i \in Y_i  for  1 <= i <= k
+         *     and then changing sigma to
+         *       sigma = y_1/Y_1 * ... * y_k/Y_k * z_1/V_1 * ... * z_l/V_l
+         *     and the result of the rewrite to
+         *       (X * (/{y_1} * ... * /{y_k}) * id_{z_1, ...,z_l})
+         *       o (sigma(P_1) `|` ... `|` sigma(P_n)) *)
+    fun to_prime_product (Com (Ten ([Wir (w, i), Mer (m, i')], i''),
+                               Ten (bs, i'''), i'''')) =
+        let
+          val n'
+            = foldr (fn (_, ~1) => ~1
+                      | (b, n') => let val n'' = width b
+                                   in if n'' <= 1 then n' + n'' else ~1 end)
+                    0 bs
+        in
+          if n' = m then
+            let
+              val {intro, closures, function} = Wiring.partition w
+              val Y     = Wiring.innernames closures
+              val id_Y  = Wiring.id_X Y
+              val sigma = Wiring.* (id_Y, function)
+            in
+              (* If (X * (/Y_1 * ... * /Y_k) * id_{z_1, ...,z_l} * idp(1)) is
+               * an identity we can leave it out. *)
+              if Wiring.is_id0 intro andalso Wiring.is_id0 closures then
+                SOME (Pri (map (#1 o (apply_sigma sigma)) bs, i'''))
+              else
+                SOME
+                  (Com (Ten ([Wir (Wiring.**
+                                     [intro, closures,
+                                      Wiring.id_X (Wiring.outernames function)], i),
+                              Per (Permutation.id_n 1, i')], i''),
+                        Pri (map (#1 o (apply_sigma sigma)) bs, i'''), i''''))
+            end
+          else
+            NONE
+        end
+        (* Catch the symmetric case of the above *)
+      | to_prime_product (Com (Ten ([m as (Mer _), w as (Wir _)], i),
+                               t as (Ten _), i')) =
+        to_prime_product (Com (Ten ([w, m], i), t, i'))
+        (*     merge(m) o (P_1 * ... * P_n)
+         * ->  P_1 `|` ... `|` P_n
+         * where  width(P_i) <= 1 for 1 <= i <= n
+         *   and  sum_{1 <= i <= n}(width(P_i)) = m  *)
+      | to_prime_product (Com (Mer (m, _), Ten (bs, _), i)) =
+        let
+          val n' 
+            = foldr (fn (_, ~1) => ~1
+                      | (b, n') => let val n'' = width b
+                                   in if n'' <= 1 then n' + n'' else ~1 end)
+                    0 bs
+        in
+          if n' = m then
+            SOME (Pri (bs, i))
+          else
+            NONE
+        end
+        (* All transformations valid for tensor product are valid for
+         * parallel product. *)
+      | to_prime_product (Com (Par p, b, i)) =
+        to_prime_product (Com (Ten p, b, i))
+      | to_prime_product (Com (b, Par p, i)) =
+        to_prime_product (Com (b, Ten p, i))
       | to_prime_product _ = NONE
+
+    (* Try heuristically to replace a tensor product with a parallel
+     * product, eliminating as much wiring as possible, and push
+     * substitutions downwards.
+     *
+     * The function can only return SOME b' when called with some b if
+     * size(b') < size(b) for some appropriate size-measure. This is
+     * necessary to prevent divergence, as the function may be called
+     * on its result.
+     *)
+    fun to_parallel_product (Com (Ten (Wir (w, i) :: bs, i'), b, i'')) =
+        (case b of
+           Con _ => NONE (* We currently can't push w through a concretion,
+                          * thus apply_sigma would not decrease the size-measure
+                          * in this case *)
+         | _     =>
+           let
+             val bs_is_idp = case bs of
+                               [Per (pi, _)] => Permutation.is_id pi
+                             | _             => false
+             val {intro, closures, function} = Wiring.partition w
+             val Z = Wiring.outernames function
+           in
+             if bs_is_idp
+                andalso Wiring.is_id0 intro andalso Wiring.is_id0 closures then
+               (*    (sigma * idp(m)) o b
+                * -> sigma(b)             *)
+               SOME (#1 (apply_sigma w b))
+             else if not (Wiring.is_id function)
+                     andalso not_in_innerface Z (Ten (bs, i')) then
+               (*    (X * (/Y_1 * ... * /Y_k) * (z_1/V_1 * ... * z_l/V_l)
+                *     * b_1 * ... * b_m)
+                *    o b
+                * -> (X * (/Y_1 * ... * /Y_k) * id_Z
+                *     * b_1 * ... * b_m)
+                *    o sigma(b)
+                * where sigma = id_Y_1 * ... * id_Y_k * z_1/V_1 * ... * z_l/V_l =/= id
+                *   and V_i =/= Ø
+                *   and Z = {z_1, ..., z_n}               
+                *
+                * NB: we could simplify wiring further by choosing a representative
+                *       y_i \in Y_i  for  1 <= i <= k
+                *     and then changing sigma to
+                *       sigma = y_1/Y_1 * ... * y_k/Y_k * z_1/V_1 * ... * z_l/V_l
+                *     and the result of the rewrite to
+                *       (X * (/{y_1} * ... * /{y_k}) * id_{z_1, ...,z_l})
+                *       o (sigma(P_1) `|` ... `|` sigma(P_n))                *)
+               let
+                 val Y     = Wiring.innernames closures
+                 val id_Y  = Wiring.id_X Y
+                 val sigma = Wiring.* (id_Y, function)
+                 val id_Z  = Wiring.id_X Z
+               in
+                 SOME
+                   (Com (Par (Wir (Wiring.** [intro, closures, id_Z], i) :: bs, i'),
+                         #1 (apply_sigma sigma b), i''))
+               end
+             else
+               NONE
+           end)
+        (* All transformations valid for tensor product are valid for
+         * parallel product. *)
+      | to_parallel_product (Com (Par p, b, i)) =
+        to_parallel_product (Com (Ten p, b, i))
+      | to_parallel_product _ = NONE
   end
 
   fun pp indent pps =
@@ -495,12 +647,13 @@ struct
       val ppids      = Flags.getBoolFlag "/kernel/ast/bgterm/ppids"
       val ppabs      = Flags.getBoolFlag "/kernel/ast/bgterm/ppabs"
       val pp0abs     = Flags.getBoolFlag "/kernel/ast/bgterm/pp0abs"
+      val pptenaspar = Flags.getBoolFlag "/kernel/ast/bgterm/pptenaspar"
       val ppmeraspri = Flags.getBoolFlag "/kernel/ast/bgterm/ppmeraspri"
       open PrettyPrint
       val PrMax = 9
-      val PrCom = 6
+      val PrCom = 7
+      val PrPri = 6
       val PrTen = 5
-      val PrPri = 5
       val PrPar = 5
       val PrAbs = 4
       val PrMin = 0
@@ -582,43 +735,46 @@ struct
                   ppp pal par prr aih outermost innermost b)
                handle e => raise e)
             | pp' outermost innermost (Ten (bs, i)) =
-              (let
-                val bs' =
-                  if ppids then
-                    bs
-                  else if innermost then
-                    List.filter (not o is_id0') bs
-                  else
-                    List.filter (not o is_id') bs
-              in
-                case bs' of
-                 []
-               => (case bs of
-                     [] => show "idx0"
-                   | bs => pp' outermost innermost (widest bs))
-               | [b] => pp' outermost innermost b
-               | (b :: bs) => 
-                 let
-                   val (showlpar, pal', par', prr', showrpar) 
-                     = checkprec PrTen
-                   fun mappp [] = ()
-                     | mappp [b]
-                     = (show " *"; brk();
-                        ppp PrTen par' prr' aih outermost innermost b)
-                     | mappp (b :: b' :: bs)
-                     = (show " *";
-                        brk();
-                        ppp PrTen PrTen PrTen aih outermost innermost b;
-                        mappp (b' :: bs))
+              if pptenaspar then
+                pp' outermost innermost (Par (bs, i))
+              else
+                (let
+                   val bs' =
+                     if ppids then
+                       bs
+                     else if innermost then
+                       List.filter (not o is_id0') bs
+                     else
+                       List.filter (not o is_id') bs
                  in
-                     showlpar();
-                     <<();
-                     ppp pal' PrTen PrTen aih outermost innermost b;
-                     mappp bs;
-                     showrpar();
-                     >>()
-                 end
-               end handle e => raise e)
+                   case bs' of
+                     []
+                     => (case bs of
+                           [] => show "idx0"
+                         | bs => pp' outermost innermost (widest bs))
+                   | [b] => pp' outermost innermost b
+                   | (b :: bs) => 
+                     let
+                       val (showlpar, pal', par', prr', showrpar) 
+                         = checkprec PrTen
+                       fun mappp [] = ()
+                         | mappp [b]
+                           = (show " *"; brk();
+                              ppp PrTen par' prr' aih outermost innermost b)
+                         | mappp (b :: b' :: bs)
+                           = (show " *";
+                              brk();
+                              ppp PrTen PrTen PrTen aih outermost innermost b;
+                              mappp (b' :: bs))
+                     in
+                       showlpar();
+                       <<();
+                       ppp pal' PrTen PrTen aih outermost innermost b;
+                       mappp bs;
+                       showrpar();
+                       >>()
+                     end
+                 end handle e => raise e)
             | pp' outermost innermost (Pri (bs, _)) =
               ((case bs of
                  [] => show "<->"
@@ -686,11 +842,6 @@ struct
               let
                 val (showlpar, pal', par', prr', showrpar)
                   = checkprec PrCom
-                (* Is this too expensive? *)
-                val (b1isid, b2isid) = if not ppids then
-                                         (is_id' b1, is_id' b2)
-                                       else
-                                         (false, false)
               in
                 if is_atomic_ion b1 then
                   if is_barren_root b2 then
@@ -706,29 +857,43 @@ struct
                      ppp PrCom par' prr' false false innermost b2;
                      showrpar();
                      >>())
-                else if not ppids andalso (b1isid orelse b2isid) then
-                  if b1isid then
-                    pp' outermost innermost b2
-                  else
-                    pp' outermost innermost b1
                 else
                   let
-                    val b' = if ppmeraspri then
-                               to_prime_product b
-                             else
-                               NONE
+                    val b'  = if ppmeraspri then
+                                to_prime_product b
+                              else
+                                NONE
+                    val b'' = case b' of
+                                SOME _ => b'
+                              | NONE => if pptenaspar then
+                                          to_parallel_product b
+                                        else
+                                          NONE
                   in
-                    case b' of
-                      SOME b' => pp' outermost innermost b'
+                    case b'' of
+                      SOME b => pp' outermost innermost b
                     | NONE =>
-                      (showlpar();
-                       <<();
-                       ppp pal' PrCom PrCom false outermost false b1;
-                       show " o";
-                       brk();
-                       ppp PrCom par' prr' aih false innermost b2;
-                       showrpar();
-                       >>())
+                      let
+                        (* Is this too expensive? *)
+                        val (b1isid, b2isid) = if not ppids then
+                                                 (is_id' b1, is_id' b2)
+                                               else
+                                                 (false, false)
+                      in
+                        if b1isid then
+                          pp' outermost innermost b2
+                        else if b2isid then
+                          pp' outermost innermost b1
+                        else
+                          (showlpar();
+                           <<();
+                           ppp pal' PrCom PrCom false outermost false b1;
+                           show " o";
+                           brk();
+                           ppp PrCom par' prr' aih false innermost b2;
+                           showrpar();
+                           >>())
+                      end
                   end
               end handle e => raise e
           in
@@ -950,6 +1115,8 @@ functor BgTerm (structure Info : INFO
                               Ion.name =
                               Wiring.name
                  sharing type NameSet.Set =
+                              Ion.nameset =
+                              Permutation.nameset =
                               Wiring.nameset =
                               NameSetPP.collection
     sharing type Ion.control = Control.control)

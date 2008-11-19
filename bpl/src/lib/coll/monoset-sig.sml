@@ -58,6 +58,7 @@ signature MONO_SET =
     val remove : elt -> Set -> Set
     val difference : Set -> Set -> Set
     val intersect : Set -> Set -> Set
+    val disjoint : Set -> Set -> bool
       (** union (s,t) : returns s \cup t
        * raises DuplicatesRemoved if s \cap t \ne \empty
        *)

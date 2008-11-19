@@ -351,6 +351,9 @@ functor OrderSet(Order : ORDERING): MONO_SET =
 	inters s1 empty
       end
 
+    fun disjoint (s1:Set) (s2:Set) : bool =
+        isEmpty (intersect s1 s2)
+
     fun partition (f:elt -> bool) (s:Set) : Set * Set =
       let
 	fun g E p = p

@@ -231,6 +231,9 @@ struct
       Interface.make {loc = Array.foldr
 			      (fn ((i, Y), Ys) => Y :: Ys) [] pi_inv, 
 		      glob = NameSet.empty}
+  fun innernames {width, pi, pi_inv} =
+      Array.foldr (fn ((_, X'), X) => NameSet.union X' X) NameSet.empty pi
+  val outernames = innernames
   (** Return an identity permutation in time O(n),
    * where n = length Xs. 
    *)

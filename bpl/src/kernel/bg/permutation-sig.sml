@@ -80,6 +80,10 @@ sig
   val innerface : 'kind permutation -> interface
   (** Return the outer face of a permutation *)
   val outerface : 'kind permutation -> interface
+  (** Return the inner names of the permutation. *)
+  val innernames : 'kind permutation -> nameset
+  (** Return the outer names of the permutation. *)
+  val outernames : 'kind permutation -> nameset
 
   (** Return an identity permutation. 
    * The width of the permutation is given by the length of Xs.
