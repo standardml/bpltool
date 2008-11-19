@@ -147,6 +147,9 @@ struct
       val matches : (int * match lazylist * match list) array ref
         = ref (Array.fromList [])
 
+      (* Replace merges and tensor products with prime and parallel product. *)
+      val _ = Flags.setBoolFlag "/kernel/ast/bgterm/pptenaspar" true;
+      val _ = Flags.setBoolFlag "/kernel/ast/bgterm/ppmeraspri" true;
       (* DISABLED! Print terms as simplified as possible. *)
       val _ = Flags.setBoolFlag "/kernel/ast/bgval/pp-simplify" false;
       val _ = Flags.setBoolFlag "/kernel/ast/bgval/pp-tensor2parallel" false;
