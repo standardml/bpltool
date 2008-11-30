@@ -187,6 +187,9 @@ sig
    *<p>
    * &pi; = \bigox(&pi;<sub>i</sub><sup>Xss</sup>) o &pi;<sup>Xss</sup>
    *</p>
+   * Note that the width of &pi;<sub>i</sub><sup>Xss</sup> is equal to the
+   * length of the i<sup>th</sup> list of Xss.
+   *
    * @params pi Xss
    * @param pi   the permutation to split
    * @param Xss  list of local outer name lists.
