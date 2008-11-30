@@ -114,7 +114,7 @@ val Mer = BgVal.Mer Info.noinfo
 val Wir = BgVal.Wir Info.noinfo
 fun Per x = BgVal.Per Info.noinfo x
 val Con = BgVal.Con Info.noinfo
-val Abs = BgVal.Abs Info.noinfo
+val Abs = BgVal.Abs' Info.noinfo
 val Ten = BgVal.Ten Info.noinfo
 val Par = BgVal.Par Info.noinfo
 val Pri = BgVal.Pri Info.noinfo
@@ -368,6 +368,8 @@ fun (redex, mapinfos) --|> react =
     val I = BgVal.innerface redex
     val J = BgVal.innerface react
     val redex = BgBDNF.regularize (BgBDNF.make redex)
+    (* FIXME check that the innerfaces are local and if not then give a
+     *       reasonable error message *)
     val inst = Instantiation.make
      {I = I,
       J = J,
