@@ -247,7 +247,12 @@ struct
    *)
   fun invmap2link'set invmap =
       NameEdgeMap.foldi
-      (fn (ne, X, ls) => Link'Set.insert {outer = ne, inner = X} ls)
+      (fn (ne as (Name _), X, ls) => Link'Set.insert {outer = ne, inner = X} ls
+        | (ne as (Closure _), X, ls) =>
+          if NameSet.isEmpty X then
+            ls
+          else
+            Link'Set.insert {outer = ne, inner = X} ls)
       Link'Set.empty invmap 
 
   (* Convert a map, mapping names to nameedges, into a link'set. *)
@@ -618,6 +623,7 @@ struct
    *   2a If u = SOME Name v, then consider e = w1(v):
    *      2a.I   If e = SOME Name y, then add X to w_inv(y)
    *      2a.II  If e = SOME Closure i, then add X to w_inv(i)
+   *      FIXME shouldn't the following result in an error? (e.g. idw0 o x/x)
    *      2a.III If e = NONE, then add a new closure i |-> X to w_inv
    *   2b If u = SOME Closure i, then add a new closure i' |-> X to
    *      w_inv.
