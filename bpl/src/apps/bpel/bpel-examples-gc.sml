@@ -116,7 +116,7 @@ o (    PartnerLinks o PartnerLink[echo_client, echo_id] o CreateInstance[echo]
          Receive[echo_client, echo_id, echo, x, echo_id, echo_id]
    `|` Next o Sequence[echo_id] o (
          Reply[echo_client, echo_id, echo, x, echo_id, echo_id]
-   `|` Next o `[]`)));
+   `|` Next o `[echo_id]`)));
 
 val echo_process2 = echo_process2_context o while_loop;
 val echo_process2_emptyloop = echo_process2_context o While[echo_id] o <->;
