@@ -163,8 +163,24 @@ in
     ("Matching redex inner and outer name with idle agent edge",
      {agent = (-//[x,y] * idp(1)) o (y/y * K1[x]) o M1[y],
       redex = (x//[x1,x2] * idp(1)) o (x2/x2 * K1[x1]) o `[x2]`},
-     JUST 
+     JUST
        [{context   = -//[x,y] * idp(1), parameter = <[x2]> x2//[] * M1[y]}]),
+    ("Matching redex inner and outer names with idle agent edge",
+     {agent = <->,
+      redex = `[x, y]`},
+     JUST
+       [{context   = -/x * -/y * idp(1),
+         parameter = <[x, y]> (x//[] * y//[]) o <->},
+        {context   = -/z o z//[x, y] * idp(1),
+         parameter = <[x, y]> (x//[] * y//[]) o <->}]),
+    ("Matching wide redex inner and outer names with idle agent edge",
+     {agent = <->,
+      redex = `[x]` * `[y]`},
+     JUST
+       [{context   = -/x * -/y * merge(2),
+         parameter = (<[x]> x//[] o <->) * (<[y]> y//[] o <->)},
+        {context   = -/z o z//[x, y] * merge(2),
+         parameter = (<[x]> x//[] o <->) * (<[y]> y//[] o <->)}]),
     ("Matching redex link with agent edge",
      {agent = (-/x o x//[x1,x2] * idp(1)) o (x2/x2 * K1[x1]) o M1[x2],
       redex =                                        M1[y]},
