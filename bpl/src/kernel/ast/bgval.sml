@@ -1399,12 +1399,15 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 
   fun Abs' i (X, v) =
     let
-      val Y = NameSet.difference X (Interface.names (outerface v))
+      val Y     = NameSet.difference X (Interface.names (outerface v))
+      val width = Interface.width (outerface v)
     in
-      if NameSet.isEmpty Y then
-        Abs i (X, v)
-      else
-        Abs i (X, Ten i [v, Wir i (Wiring.introduce Y)])
+      case (NameSet.isEmpty Y, width = 0) of
+        (true, false)  => Abs i (X, v)
+      | (true, true)   => Abs i (X, Ten i [v, Per i (Permutation.id_n 1)])
+      | (false, false) => Abs i (X, Ten i [v, Wir i (Wiring.introduce Y)])
+      | (false, true)  => Abs i (X, Ten i [v, Wir i (Wiring.introduce Y),
+                                           Per i (Permutation.id_n 1)])
     end
 
   fun Com' i (v1, v2) =
@@ -1614,24 +1617,25 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 
   fun make t2i =
       let
-	fun make' (t as (BgTerm.Mer (n, _)))      = VMer (n, (t2i t))
-	  | make' (t as (BgTerm.Con (X, _)))      = VCon (X, (t2i t))
-	  | make' (t as (BgTerm.Wir (w, _)))      = VWir (w, (t2i t))
-	  | make' (t as (BgTerm.Ion (KyX, _)))    = Ion' (t2i t) KyX
-    | make' (t as (BgTerm.Hop (t', _)))     = raise Fail "FIXME BgTerm.Hop not supported in BgVal.make"
-	  | make' (t as (BgTerm.Per (pi, _)))     = Per (t2i t) pi
-	  | make' (t as (BgTerm.Abs (X, t', _)))
-	    = Abs (t2i t) (X, make' t')
-	  | make' (t as (BgTerm.Ten (ts, _)))
+        fun make' (t as (BgTerm.Mer (n, _)))      = VMer (n, (t2i t))
+          | make' (t as (BgTerm.Con (X, _)))      = VCon (X, (t2i t))
+          | make' (t as (BgTerm.Wir (w, _)))      = VWir (w, (t2i t))
+          | make' (t as (BgTerm.Ion (KyX, _)))    = Ion' (t2i t) KyX
+          | make' (t as (BgTerm.Hop (t', _)))
+            = raise Fail "FIXME BgTerm.Hop not supported in BgVal.make"
+          | make' (t as (BgTerm.Per (pi, _)))     = Per (t2i t) pi
+          | make' (t as (BgTerm.Abs (X, t', _)))
+            = Abs' (t2i t) (X, make' t')
+          | make' (t as (BgTerm.Ten (ts, _)))
             = Ten (t2i t) (List.map make' ts)
-	  | make' (t as (BgTerm.Pri (ts, _)))
+          | make' (t as (BgTerm.Pri (ts, _)))
             = Pri (t2i t) (List.map make' ts)
-	  | make' (t as (BgTerm.Par (ts, _)))
+          | make' (t as (BgTerm.Par (ts, _)))
             = Par (t2i t) (List.map make' ts)
-	  | make' (t as (BgTerm.Com (t1, t2, _))) 
-	    = Com' (t2i t) (make' t1, make' t2)
+          | make' (t as (BgTerm.Com (t1, t2, _))) 
+            = Com' (t2i t) (make' t1, make' t2)
       in
-	make'
+        make'
       end
 
 

@@ -121,9 +121,11 @@ sig
    *                          names.
    *)
   val Abs : info -> nameset * bgval -> bgval
-  (** Construct a bigraph equivalent to (X)(P * Y) where Y are the names
-   * of X which are not in the outer face of P.
-   * @exception NotPrime     i P is not prime.
+  (** Construct a bigraph equivalent to (X)(P * Y * id) where Y are
+   * the names of X which are not in the outer face of P and id is
+   * either idp(1) if width(P) = 0 and idp(0) otherwise.
+   *
+   * @exception NotPrime i P is not prime (except when P : Z).
    *)
   val Abs' : info -> nameset * bgval -> bgval
   (** Signal that the inner or outer name sets of a list of bigraphs

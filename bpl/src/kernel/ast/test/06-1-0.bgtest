@@ -1,7 +1,12 @@
-Testing abstraction of >0 of 0 names
+Testing abstraction of >0 of 0 names (syntactic sugar makes it valid)
 
 ({x,y})merge_1
 
-exception:
-NameMissing
+result:
 
+(idw_0 * [0{x, y}])
+ o (idw_0
+    * `**[(idw_0 * ({x, y})(///[x/{}, y/{}] * idp_1) o '{}')
+         o (({})(idw_0 * merge_1)
+                  o `**[(idw_0 * idp_1) o '{}'])]
+       o idp_1)
