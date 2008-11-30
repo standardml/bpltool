@@ -1140,6 +1140,8 @@ struct
         (Constraints.list C)
 
 
+  (* the eq* functions assume that the terms to be compared have interfaces
+   * that are bijective under the given constraints. *)
   fun eqM C b1 pi1 b2 pi2 =(print' "eqM ";
       case match (PCom (PTen [PWir, PIon], PVar)) b1 of
         MCom (MTen [MWir idZ1, MIon KyX1], MVal N1) =>
@@ -1193,14 +1195,21 @@ struct
                 val S1_inner_ns = Interface.names (innerface S1)
                 val S2_inner_ns = Interface.names (innerface S2)
               in
-                case Constraints.restrict
-                       (Cpi, (S1_inner_ns, S2_inner_ns)) of
-                  SOME CS =>
-               (case eqS CS S1 pi1 S2 pi2 of
-                  SOME CS' => eqSs Cpi Ss1 pis1 Ss2 pis2
-                                   (Constraints.plus (CSs', CS') handle e => raise e)
-                | NONE => NONE)
-                | NONE => NONE
+                (* It might be the case that pi1 and pi2 have different sizes,
+                 * namely in the case where one of them is idp(0). In that case,
+                 * the local names might differ, and thus Constraints.restrict
+                 * would raise an exception. *)
+                if Permutation.width pi1 = Permutation.width pi2 then
+                  case Constraints.restrict
+                         (Cpi, (S1_inner_ns, S2_inner_ns)) handle e => raise e of
+                    SOME CS =>
+                 (case eqS CS S1 pi1 S2 pi2 of
+                    SOME CS' => eqSs Cpi Ss1 pis1 Ss2 pis2
+                                     (Constraints.plus (CSs', CS') handle e => raise e)
+                  | NONE => NONE)
+                  | NONE => NONE
+                else
+                  NONE
               end
             | eqSs _ _ _ _ _ _ = NONE
 
@@ -1221,9 +1230,9 @@ struct
                 val {group = grouping_pi1', minors = minor_pis1'}
                   = Permutation.general_split pi1' Xss1'
               in
-                case Permutation.eq' C grouping_pi1' grouping_pi2 of
-                  SOME C' => 
-               (case eqSs C' Ss1' minor_pis1' Ss2 minor_pis2 Constraints.empty of
+                case Permutation.eq' C grouping_pi1' grouping_pi2 handle e => raise e of
+                  SOME C' =>
+               (case eqSs C' Ss1' minor_pis1' Ss2 minor_pis2 Constraints.empty handle e => raise e of
                   SOME C'' => SOME C''
                 | NONE => try_perm (Permutation.nextperm perm))
                 | NONE => try_perm (Permutation.nextperm perm)
@@ -1565,7 +1574,9 @@ struct
         if Interface.eq (iface1, iface2)
           andalso Interface.eq (oface1, oface2)
         then *)
-
+        (* Instead, we base the initial constraint set on the original names.
+         * We must still check that the local names are equal (modulo
+         * internal representation). *)
           (  checkLocalNames X1_vec X2_vec
            ; checkLocalNames Y1_vec Y2_vec
            ; case eq'' Ci b1 b2 of
@@ -1575,8 +1586,6 @@ struct
           false*)
       end handle InterfacesDiffer => false
     end
-
-  val replacectrls = BgVal.replacectrls
     
   fun eq b1 b2 =
       let
@@ -1606,6 +1615,8 @@ struct
         else 
           false
       end
+
+  val replacectrls = BgVal.replacectrls
 
   fun pp indent pps
     = BgVal.pp indent pps o unmk
