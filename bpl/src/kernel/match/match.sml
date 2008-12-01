@@ -57,12 +57,13 @@ functor Match'(
                              = BgBDNF.wiring
   sharing type Control.control = Ion.control
   sharing type Ion.ion = BgVal.ion = BgBDNF.ion
-  sharing type NameSet.Set = Link.nameset
-                           = Wiring.nameset
-                           = Interface.nameset
-                           = BgBDNF.nameset
-                           = BgVal.nameset
-                           = Ion.nameset
+  sharing type NameSet.Set = Name.NameSet.Set
+                            = Link.nameset
+                            = Wiring.nameset
+                            = Interface.nameset
+                            = BgBDNF.nameset
+                            = BgVal.nameset
+                            = Ion.nameset
   sharing type Name.name = Ion.name
                          = Link.name
                          = Wiring.name
@@ -3112,7 +3113,12 @@ val _ = print' (fn () => "matchCLO: s'_C = " ^ Wiring.toString s'_C ^
       fun << () = begin_block pps CONSISTENT 0
       fun >> () = end_block pps
       fun brk () = add_break pps (1, 1)
-      val rulename = #name (Rule.unmk rule)
+      val {name = rulename, redex, ...} = Rule.unmk rule
+      val redex_ns
+        = NameSet.union' (Interface.names (BgBDNF.outerface redex))
+                         (Interface.names (BgBDNF.innerface redex))
+      val context_ns = Interface.names (BgBDNF.outerface context)
+      val pp_unchanged_ns = NameSet.union' context_ns redex_ns
     in
       <<();
       show "{";
@@ -3122,6 +3128,9 @@ val _ = print' (fn () => "matchCLO: s'_C = " ^ Wiring.toString s'_C ^
           show ","; >>(); brk())
        else
          ());
+      Name.pp_unchanged pp_unchanged_ns
+      handle Name.PPUnchangedNameClash _ =>
+             Name.pp_unchanged_add pp_unchanged_ns;
       <<(); show "context"; brk(); show "= ";
       ppBBDNF indent pps context;
       show ","; >>(); brk();
@@ -3137,11 +3146,11 @@ val _ = print' (fn () => "matchCLO: s'_C = " ^ Wiring.toString s'_C ^
       >>()
     end
 
-  fun pp' indent = pp0 false indent
+  fun pp' ppBBDNF ppDRBDNF = pp0 false ppBBDNF ppDRBDNF
 
-  val pp = pp' BgBDNF.pp BgBDNF.pp
+  val pp = pp' BgBDNF.pp' BgBDNF.pp'
 
-  val ppWithTree = pp0 true BgBDNF.pp BgBDNF.pp
+  val ppWithTree = pp0 true BgBDNF.pp' BgBDNF.pp'
 
   val _ = Flags.makeIntFlag
             {name = "/misc/linewidth",
@@ -3205,7 +3214,8 @@ functor Match (
                              = BgBDNF.wiring
   sharing type Ion.control = Control.control
   sharing type Ion.ion = BgVal.ion = BgBDNF.ion
-  sharing type NameSet.Set = Link.nameset
+  sharing type NameSet.Set = Name.NameSet.Set
+                           = Link.nameset
                            = Wiring.nameset
                            = Interface.nameset
                            = BgBDNF.nameset

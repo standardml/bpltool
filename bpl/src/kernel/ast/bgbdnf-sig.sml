@@ -255,7 +255,9 @@ sig
   exception LogicalError of string
   
 
-  (** Prettyprint a bgbdnf without parentheses around it.
+  (** Prettyprint a bgbdnf without parentheses around it. Will try to avoid
+   * the long version of link names with internal numbers by using
+   * Name.pp_unchanged, Name.pp_unchanged_add, and Name.pp_unchanged_remove.
    * @params indent pps t
    * @param indent  Indentation at each block level.
    * @param pps     Prettyprint stream on which to output.
@@ -263,6 +265,17 @@ sig
    *)
   val pp : int -> PrettyPrint.ppstream -> 'class bgbdnf -> unit
   val oldpp : int -> PrettyPrint.ppstream -> 'class bgbdnf -> unit
+  (** Prettyprint a bgbdnf without parentheses around it. Will try to avoid
+   * the long version of link names with internal numbers by using
+   * Name.pp_unchanged_add and Name.pp_unchanged_remove but will not call
+   * Name.pp_unchanged.
+   * @params indent pps t
+   * @param indent  Indentation at each block level.
+   * @param pps     Prettyprint stream on which to output.
+   * @param t       The bgbdnf to print.
+   *)
+  val pp' : int -> PrettyPrint.ppstream -> 'class bgbdnf -> unit
+
 
   (** Prettyprint a bgbdnf with interfaces, without parentheses around it.
    * @params indent pps t

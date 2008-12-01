@@ -1620,6 +1620,8 @@ struct
 
   fun pp indent pps
     = BgVal.pp indent pps o unmk
+  fun pp' indent pps
+    = BgVal.pp' indent pps o unmk
   fun oldpp indent pps
     = BgVal.oldpp indent pps o unmk
 

@@ -143,6 +143,21 @@ struct
       foldr (fn (b, Y) => NameSet.union' Y (innernames b)) NameSet.empty bs
 	  | innernames (Com (_, b2, _)) = innernames b2
 
+  fun outernames (Mer (_, _))    = NameSet.empty
+	  | outernames (Con (X, _))    = X
+	  | outernames (Wir (w, _))    = Wiring.outernames w
+	  | outernames (Ion (i, _))    = Ion.outernames i
+	  | outernames (Hop (b, _))    = outernames b
+	  | outernames (Per (p, _))    = Permutation.outernames p
+	  | outernames (Abs (_, b, _)) = outernames b
+	  | outernames (Ten (bs, _)) =
+      foldr (fn (b, Y) => NameSet.union' Y (outernames b)) NameSet.empty bs
+	  | outernames (Pri (bs, _)) =
+      foldr (fn (b, Y) => NameSet.union' Y (outernames b)) NameSet.empty bs
+	  | outernames (Par (bs, _)) =
+      foldr (fn (b, Y) => NameSet.union' Y (outernames b)) NameSet.empty bs
+	  | outernames (Com (b1, _, _)) = outernames b1
+
   fun WLS i ws = 
       Ten (map
 	   (fn w =>
@@ -731,13 +746,18 @@ struct
       | to_parallel_product _ = NONE
   end
 
-  fun pp indent pps t =
+  fun pp'' pp_unchanged indent pps t =
     let
       val ppids      = Flags.getBoolFlag "/kernel/ast/bgterm/ppids"
       val ppabs      = Flags.getBoolFlag "/kernel/ast/bgterm/ppabs"
       val pp0abs     = Flags.getBoolFlag "/kernel/ast/bgterm/pp0abs"
       val pptenaspar = Flags.getBoolFlag "/kernel/ast/bgterm/pptenaspar"
       val ppmeraspri = Flags.getBoolFlag "/kernel/ast/bgterm/ppmeraspri"
+      val (pp_unchanged_add, pp_unchanged_remove)
+        = if pp_unchanged then
+            (fn _ => (), fn _ => ())
+          else
+            (Name.pp_unchanged_add, Name.pp_unchanged_remove)
       open PrettyPrint
       val PrMax = 9
       val PrCom = 7
@@ -810,11 +830,11 @@ struct
                => (case bs of
                      [] => (show empty;
                             (NameSet.empty, NameSet.empty))
-                   | bs => (pp' outermost innermost (widest bs);
+                   | bs => (pp''' outermost innermost (widest bs);
                             (inner_ns, NameSet.empty)))
                | [b] =>
                  let
-                   val (inner_ns', new_ns') = pp' outermost innermost b
+                   val (inner_ns', new_ns') = pp''' outermost innermost b
                  in
                    (NameSet.union' inner_ns inner_ns', new_ns')
                  end
@@ -862,26 +882,26 @@ struct
            * @param t          The term to print.
            * @return  The set of inner names and the set innernames \ outernames.
            *)
-          and pp' _ _ (Mer (0, _)) = (  show "<->"
+          and pp''' _ _ (Mer (0, _)) = (  show "<->"
                                       ; (NameSet.empty, NameSet.empty))
-            | pp' _ _ (Mer (n, _)) = (  show ("merge(" ^ Int.toString n ^ ")")
+            | pp''' _ _ (Mer (n, _)) = (  show ("merge(" ^ Int.toString n ^ ")")
                                       ; (NameSet.empty, NameSet.empty))
-            | pp' _ _ (Con (X, _))
+            | pp''' _ _ (Con (X, _))
             = (  (show "`"; NameSetPP.ppbr indent "[" "]" pps X; show "`"
                ; (X, NameSet.empty))
                handle e => raise e)
-            | pp' _ _ (Wir (w, _)) = 
+            | pp''' _ _ (Wir (w, _)) = 
               (let
                  val w'       = if ppids then w else Wiring.removeids w
                  val inner_ns = Wiring.innernames w
                  val new_ns   = NameSet.difference
                                   inner_ns (Wiring.outernames w)
                in 
-                 (  Name.pp_unchanged_add new_ns
+                 (  pp_unchanged_add new_ns
                   ; Wiring.pp indent pps w'
                   ; (inner_ns, new_ns))
                end handle e => raise e)
-            | pp' _ _ (Ion (KyX, _)) =
+            | pp''' _ _ (Ion (KyX, _)) =
               (let
                  val ctrl     = #ctrl (Ion.unmk KyX)
                  val inner_ns = Ion.innernames KyX
@@ -889,25 +909,25 @@ struct
                                   inner_ns (Ion.outernames KyX)
                in
                  if aih andalso Control.kind ctrl = Control.Atomic then
-                   (  Name.pp_unchanged_add new_ns
+                   (  pp_unchanged_add new_ns
                     ; show "<<("
                     ; Ion.pp indent pps KyX handle e => raise e
                     ; show ")>>"
                     ; (inner_ns, new_ns))
                  else
-                   (  Name.pp_unchanged_add new_ns
+                   (  pp_unchanged_add new_ns
                     ; Ion.pp indent pps KyX handle e => raise e
                     ; (inner_ns, new_ns))
                end handle e => raise e)
-            | pp' outermost innermost (Hop (t, _)) =
+            | pp''' outermost innermost (Hop (t, _)) =
               (  show "<<("
-               ; pp' outermost innermost t
+               ; pp''' outermost innermost t
                  before
                  show ")>>")
-            | pp' _ _ (Per (pi, _)) =
+            | pp''' _ _ (Per (pi, _)) =
               (  Permutation.pp indent pps pi handle e => raise e
                ; (Permutation.innernames pi, NameSet.empty))
-            | pp' outermost innermost (Abs (X, b, _))
+            | pp''' outermost innermost (Abs (X, b, _))
             = ((if (outermost andalso not (NameSet.isEmpty X)) orelse
                    ppabs andalso
                    (pp0abs orelse not (NameSet.isEmpty X)) then
@@ -934,16 +954,16 @@ struct
                 else
                   ppp pal par prr aih outermost innermost b)
                handle e => raise e)
-            | pp' outermost innermost (Ten (bs, i)) =
+            | pp''' outermost innermost (Ten (bs, i)) =
               if pptenaspar then
-                pp' outermost innermost (Par (bs, i))
+                pp''' outermost innermost (Par (bs, i))
               else
                 pplist outermost innermost " *" "idx0" PrTen ppids bs
-            | pp' outermost innermost (Par (bs, _)) =
+            | pp''' outermost innermost (Par (bs, _)) =
               pplist outermost innermost " ||" "idx0" PrPar ppids bs
-            | pp' outermost innermost (Pri (bs, _)) =
+            | pp''' outermost innermost (Pri (bs, _)) =
               pplist outermost innermost " `|`" "<->" PrPri false bs
-            | pp' outermost innermost (b as (Com (b1, b2, _))) =
+            | pp''' outermost innermost (b as (Com (b1, b2, _))) =
               (let
                  val (showlpar, pal', par', prr', showrpar)
                    = checkprec PrCom
@@ -966,7 +986,7 @@ struct
                      in
                        showrpar();
                        >>();
-                       Name.pp_unchanged_remove
+                       pp_unchanged_remove
                          (NameSet.difference new_ns1 inner_ns2);
                        (inner_ns2,
                         NameSet.union'
@@ -987,7 +1007,7 @@ struct
                                            NONE
                    in
                      case b'' of
-                       SOME b => pp' outermost innermost b
+                       SOME b => pp''' outermost innermost b
                      | NONE =>
                        let
                          (* Is this too expensive? *)
@@ -997,9 +1017,9 @@ struct
                                                   (false, false)
                        in
                          if b1isid then
-                           pp' outermost innermost b2
+                           pp''' outermost innermost b2
                          else if b2isid then
-                           pp' outermost innermost b1
+                           pp''' outermost innermost b1
                          else
                            let
                              val (inner_ns1, new_ns1)
@@ -1013,7 +1033,7 @@ struct
                            in
                              showrpar();
                              >>();
-                             Name.pp_unchanged_remove
+                             pp_unchanged_remove
                                (NameSet.difference new_ns1 inner_ns2);
                              (inner_ns2, NameSet.union'
                                            new_ns2
@@ -1022,12 +1042,34 @@ struct
                        end
                    end
                end handle e => raise e)
-          in
-            pp'
-          end
         in
-          (ppp PrMin PrMin PrMax true true true t; ())
-        end handle e => raise e
+          pp'''
+        end
+    in
+      (ppp PrMin PrMin PrMax true true true t; ())
+    end handle e => raise e
+                          
+  fun pp indent pps t =
+      let
+        val ns = NameSet.union' (outernames t) (innernames t)
+      in
+        (  Name.pp_unchanged ns
+           handle Name.PPUnchangedNameClash _ =>
+                  Name.pp_unchanged_add ns
+         ; pp'' false indent pps t)
+      end
+
+  fun pp' indent pps t =
+      let
+        val ns = NameSet.union' (outernames t) (innernames t)
+      in
+        (  Name.pp_unchanged_add ns
+         ; pp'' false indent pps t)
+      end
+
+  fun pp_unchanged indent pps t =
+      (  Name.pp_unchanged NameSet.empty
+       ; pp'' true indent pps t)
 
       fun oldpp indent pps =
         let

@@ -342,13 +342,25 @@ sig
   val simplify : bgval -> bgval
   (** Replace ion controls by looking their names up in the list. *)
   val replacectrls : control list -> bgval -> bgval
-  (** Prettyprint a bgval without parentheses around it.
+  (** Prettyprint a bgval without parentheses around it. Will try to avoid
+   * the long version of link names with internal numbers by using
+   * Name.pp_unchanged, Name.pp_unchanged_add, and Name.pp_unchanged_remove.
    * @params indent pps t
    * @param indent  Indentation at each block level.
    * @param pps     Prettyprint stream on which to output.
    * @param t       The bgval to print.
    *)
   val pp : int -> PrettyPrint.ppstream -> bgval -> unit
+  (** Prettyprint a bgval without parentheses around it. Will try to avoid
+   * the long version of link names with internal numbers by using
+   * Name.pp_unchanged_add and Name.pp_unchanged_remove but will not call
+   * Name.pp_unchanged.
+   * @params indent pps t
+   * @param indent  Indentation at each block level.
+   * @param pps     Prettyprint stream on which to output.
+   * @param t       The bgval to print.
+   *)
+  val pp' : int -> PrettyPrint.ppstream -> bgval -> unit
   (** Prettyprint a bgval without parentheses around it,
    * using the old syntax.
    * @params indent pps t

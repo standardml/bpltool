@@ -87,13 +87,25 @@ sig
   val replacectrls : control list -> bgterm -> bgterm
   (** Replace all atomic ions K with a composition K o <-> *)
   val add1s : bgterm -> bgterm
-  (** Prettyprint a bgterm without parentheses around it.
+  (** Prettyprint a bgterm without parentheses around it. Will try to avoid
+   * the long version of link names with internal numbers by using
+   * Name.pp_unchanged, Name.pp_unchanged_add, and Name.pp_unchanged_remove.
    * @params indent pps t
    * @param indent  Indentation at each block level.
    * @param pps     Prettyprint stream on which to output.
    * @param t       The bgterm to print.
    *)
   val pp : int -> PrettyPrint.ppstream -> bgterm -> unit
+  (** Prettyprint a bgterm without parentheses around it. Will try to avoid
+   * the long version of link names with internal numbers by using
+   * Name.pp_unchanged_add and Name.pp_unchanged_remove but will not call
+   * Name.pp_unchanged.
+   * @params indent pps t
+   * @param indent  Indentation at each block level.
+   * @param pps     Prettyprint stream on which to output.
+   * @param t       The bgterm to print.
+   *)
+  val pp' : int -> PrettyPrint.ppstream -> bgterm -> unit
   (** Prettyprint a bgterm without parentheses around it, using 
    * the old syntax.
    * @params indent pps t
@@ -102,7 +114,10 @@ sig
    * @param t       The bgterm to print.
    *)
   val oldpp : int -> PrettyPrint.ppstream -> bgterm -> unit
-  
+  (** Prettyprint a bgterm without parentheses around it, using the
+   * long version of link names that include the internal number. *)
+  val pp_unchanged : int -> PrettyPrint.ppstream -> bgterm -> unit
+
   val size : bgterm -> int
 
 end

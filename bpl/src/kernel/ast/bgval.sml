@@ -813,7 +813,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
              arg = "",
              desc = "Substitute | for || by removal of merges before prettyprinting."}
 
-  fun pp' BgTerm_pp withIface (indent:int) pps v =
+  fun pp'' BgTerm_pp withIface pp_unchanged (indent:int) pps v =
     let
       val sppflag = Flags.getBoolFlag "/kernel/ast/bgval/pp-simplify"
       val t2pflag = Flags.getBoolFlag "/kernel/ast/bgval/pp-tensor2parallel"
@@ -826,8 +826,8 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
       val v = (m2pp o simplify o t2p o simplify) v
       val (t, iface, oface) = unmk v handle e => raise e
       (* try to print the interfaces using the names given in the input *)
-      val () = (Name.pp_unchanged (NameSet.union' (Interface.names iface)
-                                                  (Interface.names oface)))
+      val () = (pp_unchanged (NameSet.union' (Interface.names iface)
+                                             (Interface.names oface)))
                handle Name.PPUnchangedNameClash _ => ()
     in
       if withIface then PrettyPrint.begin_block pps PrettyPrint.CONSISTENT 0 else ();
@@ -846,8 +846,8 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
       else ()
     end
 
-(* OLD pp' - now refactored into ppWithIface.
-  fun pp' BgTerm_pp indent pps v =
+(* OLD pp'' - now refactored into ppWithIface.
+  fun pp'' BgTerm_pp indent pps v =
       let
 	val t2pflag = Flags.getBoolFlag "/kernel/ast/bgval/tensor2parallel"
 	val bgval2bgterm = if t2pflag then t2p else unmk
@@ -861,15 +861,15 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
         BgTerm_pp indent pps t handle e => raise e
       end handle e => raise e
 *)
-  val ppWithIface = pp' BgTerm.pp true
+  val ppWithIface = pp'' BgTerm.pp' true Name.pp_unchanged
 
-  val oldpp = pp' BgTerm.oldpp false
+  val oldpp = pp'' BgTerm.oldpp false Name.pp_unchanged
   
-  val pp = pp' BgTerm.pp false
+  val pp = pp'' BgTerm.pp' false Name.pp_unchanged
 
-  fun pp_unchanged indent pps v =
-    (Name.pp_unchanged NameSet.empty;
-     BgTerm.pp indent pps (#1 (unmk v)))
+  val pp' = pp'' BgTerm.pp' false Name.pp_unchanged_add
+
+  fun pp_unchanged indent pps v = BgTerm.pp_unchanged indent pps (#1 (unmk v))
 
 
   val _ = Flags.makeIntFlag
