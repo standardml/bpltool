@@ -848,7 +848,7 @@ struct
                         <<();
                         ppp pal' pr pr aih outermost innermost b)
                  in
-                   mappp bs (NameSet.union inner_ns inner_ns',
+                   mappp bs (NameSet.union' inner_ns inner_ns',
                              new_ns')
                    before
                   (showrpar();
@@ -969,7 +969,7 @@ struct
                        Name.pp_unchanged_remove
                          (NameSet.difference new_ns1 inner_ns2);
                        (inner_ns2,
-                        NameSet.union
+                        NameSet.union'
                           new_ns2
                           (NameSet.intersect new_ns1 inner_ns2))
                      end
@@ -1015,7 +1015,7 @@ struct
                              >>();
                              Name.pp_unchanged_remove
                                (NameSet.difference new_ns1 inner_ns2);
-                             (inner_ns2, NameSet.union
+                             (inner_ns2, NameSet.union'
                                            new_ns2
                                            (NameSet.intersect new_ns1 inner_ns2))
                            end
