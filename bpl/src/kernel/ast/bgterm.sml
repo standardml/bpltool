@@ -35,6 +35,7 @@ functor BgTerm'(structure Info : INFO
                  structure Control : CONTROL
                  structure Wiring : WIRING
                  structure Permutation : PERMUTATION
+                 structure Name : NAME
                  structure NameSet : MONO_SET
                  structure NameSetPP : COLLECTIONPRETTYPRINT
                    where type ppstream    = PrettyPrint.ppstream
@@ -42,13 +43,15 @@ functor BgTerm'(structure Info : INFO
                    where type ppstream    = PrettyPrint.ppstream
                      and type break_style = PrettyPrint.break_style
                      and type origin      = Origin.origin
-                 sharing type NameSet.elt =
+                 sharing type Name.name =
+                              NameSet.elt =
                               Ion.name =
                               Link.name =
                               Wiring.name
                  sharing type Link.link = LinkSet.elt
                  sharing type LinkSet.Set = Wiring.linkset
                  sharing type NameSet.Set =
+                              Name.NameSet.Set =
                               Ion.nameset =
                               Link.nameset =
                               Permutation.nameset =
@@ -124,6 +127,21 @@ struct
 	 | Pri of bgterm list * info
 	 | Par of bgterm list * info
 	 | Com of bgterm * bgterm * info
+
+  fun innernames (Mer (_, _))    = NameSet.empty
+	  | innernames (Con (X, _))    = X
+	  | innernames (Wir (w, _))    = Wiring.innernames w
+	  | innernames (Ion (i, _))    = Ion.innernames i
+	  | innernames (Hop (b, _))    = innernames b
+	  | innernames (Per (p, _))    = Permutation.innernames p
+	  | innernames (Abs (_, b, _)) = innernames b
+	  | innernames (Ten (bs, _)) =
+      foldr (fn (b, Y) => NameSet.union' Y (innernames b)) NameSet.empty bs
+	  | innernames (Pri (bs, _)) =
+      foldr (fn (b, Y) => NameSet.union' Y (innernames b)) NameSet.empty bs
+	  | innernames (Par (bs, _)) =
+      foldr (fn (b, Y) => NameSet.union' Y (innernames b)) NameSet.empty bs
+	  | innernames (Com (_, b2, _)) = innernames b2
 
   fun WLS i ws = 
       Ten (map
@@ -602,10 +620,15 @@ struct
                           * thus apply_sigma would not decrease the size-measure
                           * in this case *)
          | _     =>
+           (* FIXME should be refactored *)
            let
-             val bs_is_idp = case bs of
-                               [Per (pi, _)] => Permutation.is_id pi
-                             | _             => false
+             val (bs_is_idp, bs_is_ion_with_multiple_names_for_binding_port)
+               = case bs of
+                   [Per (pi, _)]  => (Permutation.is_id pi, false)
+(*                 | [Ion (KyX, _)] => (false, List.exists
+                                               (fn X => NameSet.size X > 1)
+                                               (#bound (Ion.unmk KyX)))
+*)                 | _              => (false, false)
              val {intro, closures, function} = Wiring.partition w
              val Z = Wiring.outernames function
              val (ys, yYs, yYs_is_not_id)
@@ -633,6 +656,46 @@ struct
                 *   and V_i =/= Ø
                 *)
                SOME (#1 (apply_sigma w b))
+(* FIXME this case requires that apply_sigma also works on local names.
+             else if bs_is_ion_with_multiple_names_for_binding_port then
+               (*    (w * K[y_1, ..., y_m][[X_1, ..., X_n]]) o b
+                * -> (w * K[y_1, ..., y_m][[{x_1}, ..., {x_n}]]) o sigma(b)
+                *
+                * FIXME when X_i is empty we don't change that port.
+                *
+                * where sigma = id_Z * x_1/X_1 * ... * x_n/X_n
+                *   and sigma =/= id
+                *   and w : Z ->
+                *)
+               let
+                 val Z = Wiring.innernames w
+                 val id_Z = Wiring.id_X Z
+                 val (KyX, i''') = case bs of
+                                     [Ion i] => i
+                                   | _ => raise ThisCannotHappen
+                 val {ctrl, free, bound} = Ion.unmk KyX
+                 val (bound', xXs)
+                   = foldr (fn (X_i, (bound', xXs)) =>
+                               if NameSet.isEmpty X_i then
+                                 (X_i :: bound', xXs)
+                               else
+                                 let
+                                   val x_i = NameSet.someElement X_i
+                                 in
+                                   (NameSet.singleton x_i :: bound',
+                                    LinkSet.insert
+                                      (Link.make {outer = SOME x_i, inner = X_i})
+                                      xXs)
+                                 end)
+                           ([], LinkSet.empty)
+                           bound
+                 val KyX'  = Ion.make {ctrl = ctrl, free = free, bound = bound'}
+                 val sigma = Wiring.* (id_Z, Wiring.make xXs)
+               in
+                 SOME (Com (Ten ([Wir (w, i), Ion (KyX', i''')], i'),
+                            #1 (apply_sigma sigma b), i''))
+               end
+*)
              else if (not (Wiring.is_id function)
                       andalso not_in_innerface Z (Ten (bs, i')))
                      orelse yYs_is_not_id then
@@ -668,7 +731,7 @@ struct
       | to_parallel_product _ = NONE
   end
 
-  fun pp indent pps =
+  fun pp indent pps t =
     let
       val ppids      = Flags.getBoolFlag "/kernel/ast/bgterm/ppids"
       val ppabs      = Flags.getBoolFlag "/kernel/ast/bgterm/ppabs"
@@ -693,9 +756,9 @@ struct
        * Operator precedences (highest binds tightest):
        *  8 (X) abstraction (only affects expressions to the right)
        *  7  o  composition
-       *  6  *  tensor product
        *  6  |  prime product
-       *  6  || parallel product
+       *  5  *  tensor product
+       *  5  || parallel product
        * Abstraction reaches as far right as possible.
        * @params pps prf prr t
        * @param pps  PrettyPrint stream
@@ -714,26 +777,136 @@ struct
                fn () => show ")")
       	    else
       	      (fn () => (), pal, par, prr, fn () => ())
-          fun pp' _ _ (Mer (0, _)) = show "<->"
-            | pp' _ _ (Mer (n, _)) = show ("merge(" ^ Int.toString n ^ ")")
+          (* Pretty print the product of a list of terms.
+           *
+           * @param outermost  Is this list the outermost term?
+           * @param innermost  Is this list the innermost term?
+           * @param sep        Separator between list elements.
+           * @param empty      Symbol to print if the list is empty.
+           * @param pr         Precedence of sep.
+           * @param ppids      Whether to print identities.
+           * @param bs         The terms to print.
+           * @return  The set of inner names and the set innernames \ outernames.
+           *)
+          fun pplist outermost innermost sep empty pr ppids bs =
+              (let
+                 (* Remove ids if the option is set - but keep track of the
+                  * inner names that we don't print. *)
+                 fun remove_id is_id (b, (bs', inner_ns)) =
+                     if is_id b then
+                       (bs', NameSet.union' inner_ns (innernames b))
+                     else
+                       (b :: bs', inner_ns)
+                 val (bs', inner_ns) =
+                     if ppids then
+                       (bs, NameSet.empty)
+                     else if innermost then
+                       foldr (remove_id is_id0') ([], NameSet.empty) bs
+                     else
+                       foldr (remove_id is_id') ([], NameSet.empty) bs
+              in
+                case bs' of
+                 []
+               => (case bs of
+                     [] => (show empty;
+                            (NameSet.empty, NameSet.empty))
+                   | bs => (pp' outermost innermost (widest bs);
+                            (inner_ns, NameSet.empty)))
+               | [b] =>
+                 let
+                   val (inner_ns', new_ns') = pp' outermost innermost b
+                 in
+                   (NameSet.union' inner_ns inner_ns', new_ns')
+                 end
+               | (b :: bs) => 
+                 let
+                   val (showlpar, pal', par', prr', showrpar) 
+                     = checkprec pr
+                   fun mappp [] ns = ns
+                     | mappp [b] (inner_ns, new_ns) =
+                       let
+                         val (inner_ns', new_ns')
+                           = (show sep; brk();
+                              ppp pr par' prr' aih outermost innermost b)
+                       in
+                         (NameSet.union' inner_ns inner_ns',
+                          NameSet.union' new_ns new_ns')
+                       end
+                     | mappp (b :: b' :: bs) (inner_ns, new_ns) =
+                       let
+                         val (inner_ns', new_ns')
+                           = (show sep; brk();
+                              ppp pr pr pr aih outermost innermost b)
+                       in
+                         mappp
+                           (b' :: bs)
+                           (NameSet.union' inner_ns inner_ns',
+                            NameSet.union' new_ns new_ns')
+                       end
+                   val (inner_ns', new_ns')
+                     = (showlpar();
+                        <<();
+                        ppp pal' pr pr aih outermost innermost b)
+                 in
+                   mappp bs (NameSet.union inner_ns inner_ns',
+                             new_ns')
+                   before
+                  (showrpar();
+                   >>())
+                 end
+               end handle e => raise e)
+          (* Pretty print a term.
+           *
+           * @param outermost  Is this list the outermost term?
+           * @param innermost  Is this list the innermost term?
+           * @param t          The term to print.
+           * @return  The set of inner names and the set innernames \ outernames.
+           *)
+          and pp' _ _ (Mer (0, _)) = (  show "<->"
+                                      ; (NameSet.empty, NameSet.empty))
+            | pp' _ _ (Mer (n, _)) = (  show ("merge(" ^ Int.toString n ^ ")")
+                                      ; (NameSet.empty, NameSet.empty))
             | pp' _ _ (Con (X, _))
-            = ((show "`"; NameSetPP.ppbr indent "[" "]" pps X; show "`")
+            = (  (show "`"; NameSetPP.ppbr indent "[" "]" pps X; show "`"
+               ; (X, NameSet.empty))
                handle e => raise e)
             | pp' _ _ (Wir (w, _)) = 
               (let
-                 val w' = if ppids then w else Wiring.removeids w
+                 val w'       = if ppids then w else Wiring.removeids w
+                 val inner_ns = Wiring.innernames w
+                 val new_ns   = NameSet.difference
+                                  inner_ns (Wiring.outernames w)
                in 
-                 Wiring.pp indent pps w'
+                 (  Name.pp_unchanged_add new_ns
+                  ; Wiring.pp indent pps w'
+                  ; (inner_ns, new_ns))
                end handle e => raise e)
-            | pp' _ _ (Ion (KyX, _))
-            = if aih andalso
-                 Control.kind (#ctrl (Ion.unmk KyX)) = Control.Atomic
-              then
-                (show "<<("; Ion.pp indent pps KyX handle e => raise e; show ")>>")
-              else
-                (Ion.pp indent pps KyX handle e => raise e)
-            | pp' outermost innermost (Hop (t, _)) = (show "<<("; pp' outermost innermost t; show ")>>")
-            | pp' _ _ (Per (pi, _)) = (Permutation.pp indent pps pi handle e => raise e)
+            | pp' _ _ (Ion (KyX, _)) =
+              (let
+                 val ctrl     = #ctrl (Ion.unmk KyX)
+                 val inner_ns = Ion.innernames KyX
+                 val new_ns   = NameSet.difference
+                                  inner_ns (Ion.outernames KyX)
+               in
+                 if aih andalso Control.kind ctrl = Control.Atomic then
+                   (  Name.pp_unchanged_add new_ns
+                    ; show "<<("
+                    ; Ion.pp indent pps KyX handle e => raise e
+                    ; show ")>>"
+                    ; (inner_ns, new_ns))
+                 else
+                   (  Name.pp_unchanged_add new_ns
+                    ; Ion.pp indent pps KyX handle e => raise e
+                    ; (inner_ns, new_ns))
+               end handle e => raise e)
+            | pp' outermost innermost (Hop (t, _)) =
+              (  show "<<("
+               ; pp' outermost innermost t
+                 before
+                 show ")>>")
+            | pp' _ _ (Per (pi, _)) =
+              (  Permutation.pp indent pps pi handle e => raise e
+               ; (Permutation.innernames pi, NameSet.empty))
             | pp' outermost innermost (Abs (X, b, _))
             = ((if (outermost andalso not (NameSet.isEmpty X)) orelse
                    ppabs andalso
@@ -753,9 +926,10 @@ struct
                     showlpar();
                     show "<"; NameSetPP.ppbr indent "[" "]" pps X; show ">";
                     brkindent();
-                    ppp pal' par' prr' aih outermost innermost b;
-                    showrpar();
-                    >>()
+                    ppp pal' par' prr' aih outermost innermost b
+                    before
+                   (showrpar();
+                    >>())
                   end
                 else
                   ppp pal par prr aih outermost innermost b)
@@ -764,169 +938,95 @@ struct
               if pptenaspar then
                 pp' outermost innermost (Par (bs, i))
               else
-                (let
-                   val bs' =
-                     if ppids then
-                       bs
-                     else if innermost then
-                       List.filter (not o is_id0') bs
-                     else
-                       List.filter (not o is_id') bs
-                 in
-                   case bs' of
-                     []
-                     => (case bs of
-                           [] => show "idx0"
-                         | bs => pp' outermost innermost (widest bs))
-                   | [b] => pp' outermost innermost b
-                   | (b :: bs) => 
-                     let
-                       val (showlpar, pal', par', prr', showrpar) 
-                         = checkprec PrTen
-                       fun mappp [] = ()
-                         | mappp [b]
-                           = (show " *"; brk();
-                              ppp PrTen par' prr' aih outermost innermost b)
-                         | mappp (b :: b' :: bs)
-                           = (show " *";
-                              brk();
-                              ppp PrTen PrTen PrTen aih outermost innermost b;
-                              mappp (b' :: bs))
-                     in
-                       showlpar();
-                       <<();
-                       ppp pal' PrTen PrTen aih outermost innermost b;
-                       mappp bs;
-                       showrpar();
-                       >>()
-                     end
-                 end handle e => raise e)
-            | pp' outermost innermost (Pri (bs, _)) =
-              ((case bs of
-                 [] => show "<->"
-               | [b] => pp' outermost innermost b
-               | (b :: bs) => 
-                 let
-                   val (showlpar, pal', par', prr', showrpar) 
-                     = checkprec PrPri
-                   fun mappp [] = ()
-                     | mappp [b]
-                     = (show " `|`"; brk();
-                        ppp PrPri par' prr' aih outermost innermost b)
-                     | mappp (b :: b' :: bs) 
-                     = (show " `|`";
-                        brk();
-                        ppp PrPri PrPri PrPri aih outermost innermost b;
-                        mappp (b' :: bs))
-                 in
-                   showlpar();
-                   <<();
-                   ppp pal' PrPri PrPri aih outermost innermost b;
-                   mappp bs;
-                   showrpar();
-                   >>()
-                 end) handle e => raise e)
+                pplist outermost innermost " *" "idx0" PrTen ppids bs
             | pp' outermost innermost (Par (bs, _)) =
-              (let
-                val bs' =
-                  if ppids then
-                    bs
-                  else if innermost then
-                    List.filter (not o is_id0') bs
-                  else
-                    List.filter (not o is_id') bs
-              in
-                case bs' of
-                 []
-               => (case bs of
-                     [] => show "idx0"
-                   | bs => pp' outermost innermost (widest bs))
-               | [b] => pp' outermost innermost b
-               | (b :: bs) => 
-                 let
-                   val (showlpar, pal', par', prr', showrpar) 
-                     = checkprec PrPar
-                   fun mappp [] = ()
-                     | mappp [b]
-                     = (show " ||"; brk();
-                        ppp PrPar par' prr' aih outermost innermost b)
-                     | mappp (b :: b' :: bs) 
-                     = (show " ||";
-                        brk();
-                        ppp PrPar PrPar PrPar aih outermost innermost b;
-                        mappp (b' :: bs))
-                 in
-                   showlpar();
-                   <<();
-                   ppp pal' PrPar PrPar aih outermost innermost b;
-                   mappp bs;
-                   showrpar();
-                   >>()
-                 end
-               end handle e => raise e)
+              pplist outermost innermost " ||" "idx0" PrPar ppids bs
+            | pp' outermost innermost (Pri (bs, _)) =
+              pplist outermost innermost " `|`" "<->" PrPri false bs
             | pp' outermost innermost (b as (Com (b1, b2, _))) =
-              let
-                val (showlpar, pal', par', prr', showrpar)
-                  = checkprec PrCom
-              in
-                if is_atomic_ion b1 then
-                  if is_barren_root b2 then
-                    ppp pal par prr false outermost innermost b1
-                  else
-                    (* Print the atomic ion b1 in a special way which
-                     * indicates that it has a hole *)
-                    (showlpar();
-                     <<();
-                     ppp pal' PrCom PrCom true outermost false b1;
-                     show " o";
-                     brk();
-                     ppp PrCom par' prr' false false innermost b2;
-                     showrpar();
-                     >>())
-                else
-                  let
-                    val b'  = if ppmeraspri then
-                                to_prime_product b
-                              else
-                                NONE
-                    val b'' = case b' of
-                                SOME _ => b'
-                              | NONE => if pptenaspar then
-                                          to_parallel_product b
-                                        else
-                                          NONE
-                  in
-                    case b'' of
-                      SOME b => pp' outermost innermost b
-                    | NONE =>
-                      let
-                        (* Is this too expensive? *)
-                        val (b1isid, b2isid) = if not ppids then
-                                                 (is_id' b1, is_id' b2)
-                                               else
-                                                 (false, false)
-                      in
-                        if b1isid then
-                          pp' outermost innermost b2
-                        else if b2isid then
-                          pp' outermost innermost b1
-                        else
-                          (showlpar();
-                           <<();
-                           ppp pal' PrCom PrCom false outermost false b1;
-                           show " o";
-                           brk();
-                           ppp PrCom par' prr' aih false innermost b2;
-                           showrpar();
-                           >>())
-                      end
-                  end
-              end handle e => raise e
+              (let
+                 val (showlpar, pal', par', prr', showrpar)
+                   = checkprec PrCom
+               in
+                 if is_atomic_ion b1 then
+                   if is_barren_root b2 then
+                     ppp pal par prr false outermost innermost b1
+                   else
+                     (* Print the atomic ion b1 in a special way which
+                      * indicates that it has a hole *)
+                     let
+                       val (inner_ns1, new_ns1)
+                         = (showlpar();
+                            <<();
+                            ppp pal' PrCom PrCom true outermost false b1)
+                       val (inner_ns2, new_ns2)
+                         = (show " o";
+                            brk();
+                            ppp PrCom par' prr' false false innermost b2)
+                     in
+                       showrpar();
+                       >>();
+                       Name.pp_unchanged_remove
+                         (NameSet.difference new_ns1 inner_ns2);
+                       (inner_ns2,
+                        NameSet.union
+                          new_ns2
+                          (NameSet.intersect new_ns1 inner_ns2))
+                     end
+                 else
+                   let
+                     val b'  = if ppmeraspri then
+                                 to_prime_product b
+                               else
+                                 NONE
+                     val b'' = case b' of
+                                 SOME _ => b'
+                               | NONE => if pptenaspar then
+                                           to_parallel_product b
+                                         else
+                                           NONE
+                   in
+                     case b'' of
+                       SOME b => pp' outermost innermost b
+                     | NONE =>
+                       let
+                         (* Is this too expensive? *)
+                         val (b1isid, b2isid) = if not ppids then
+                                                  (is_id' b1, is_id' b2)
+                                                else
+                                                  (false, false)
+                       in
+                         if b1isid then
+                           pp' outermost innermost b2
+                         else if b2isid then
+                           pp' outermost innermost b1
+                         else
+                           let
+                             val (inner_ns1, new_ns1)
+                               = (showlpar();
+                                  <<();
+                                  ppp pal' PrCom PrCom false outermost false b1)
+                             val (ns2 as (inner_ns2, new_ns2))
+                               = (show " o";
+                                  brk();
+                                  ppp PrCom par' prr' aih false innermost b2)
+                           in
+                             showrpar();
+                             >>();
+                             Name.pp_unchanged_remove
+                               (NameSet.difference new_ns1 inner_ns2);
+                             (inner_ns2, NameSet.union
+                                           new_ns2
+                                           (NameSet.intersect new_ns1 inner_ns2))
+                           end
+                       end
+                   end
+               end handle e => raise e)
           in
             pp'
           end
         in
-          ppp PrMin PrMin PrMax true true true
+          (ppp PrMin PrMin PrMax true true true t; ())
         end handle e => raise e
 
       fun oldpp indent pps =
@@ -1132,6 +1232,7 @@ functor BgTerm (structure Info : INFO
                  structure Control : CONTROL
                  structure Wiring : WIRING
                  structure Permutation : PERMUTATION
+                 structure Name : NAME
                  structure NameSet : MONO_SET
                  structure NameSetPP : COLLECTIONPRETTYPRINT
                    where type ppstream    = PrettyPrint.ppstream
@@ -1139,13 +1240,15 @@ functor BgTerm (structure Info : INFO
                    where type ppstream     = PrettyPrint.ppstream
                      and type break_style = PrettyPrint.break_style
                      and type origin       = Origin.origin
-                 sharing type NameSet.elt =
+                 sharing type Name.name =
+                              NameSet.elt =
                               Ion.name =
                               Link.name =
                               Wiring.name
                  sharing type Link.link = LinkSet.elt
                  sharing type LinkSet.Set = Wiring.linkset
                  sharing type NameSet.Set =
+                              Name.NameSet.Set =
                               Ion.nameset =
                               Link.nameset =
                               Permutation.nameset =
@@ -1168,6 +1271,7 @@ struct
                               structure Control = Control
                               structure Wiring = Wiring
                               structure Permutation = Permutation
+                              structure Name = Name
                               structure NameSet = NameSet
                               structure NameSetPP = NameSetPP
                               structure ErrorHandler = ErrorHandler)

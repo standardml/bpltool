@@ -64,15 +64,34 @@ sig
    *)
   exception PPUnchangedNameClash of name * name
 
-  (** Tell the name module to print the given sets of inner and outer
+  (** Tell the name module to print the given sets of
    * names as the string given to <code>make</code>.
    * Normal pretty printing (i.e. no names are treated specially) is set
-   * by calling <code>pp_unchanged NameSet.empty NameSet.empty</code>.
-   * @params X Y
-   * @param X  inner names
-   * @param Y  outer names
-   * @exception PPUnchangedNameClash  if two names in either X or Y
-   *                                  will clash if printed unchanged.
+   * by calling <code>pp_unchanged NameSet.empty</code>.
+   *
+   * @params X
+   * @param X   names
+   * @exception PPUnchangedNameClash  if two names in X will clash if
+   *                                  printed unchanged. In that case,
+   *                                  the pretty printing will be as if
+   *                                  <code>pp_unchanged NameSet.empty</code>
+   *                                  had been called.
    *)
-  val pp_unchanged : NameSet.Set -> NameSet.Set -> unit
+  val pp_unchanged : NameSet.Set -> unit
+  (** Add a set  of names from the set of names that should be printed
+   * unchanged. If a name x in X would clash with another name that is
+   * already being printed unchanged, then x is silently ignored.
+   *
+   * @params X
+   * @param X   names
+   *)
+  val pp_unchanged_add    : NameSet.Set -> unit
+  (** Remove a set of names from the set of names that should be printed
+   * unchanged. This doesn't affect the names given to the most recent
+   * invocation of <code>pp_unchanged</code> - these are silently ignored.
+   *
+   * @params X
+   * @param X   names
+   *)
+  val pp_unchanged_remove : NameSet.Set -> unit
 end

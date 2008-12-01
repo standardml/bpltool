@@ -113,6 +113,7 @@ structure BgTerm
        structure Control     = Control
        structure Wiring      = Wiring
        structure Permutation = Permutation
+       structure Name        = Name
        structure NameSet     = NameSet
        structure NameSetPP   = NameSetPP
        structure ErrorHandler = ErrorHandler)

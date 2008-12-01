@@ -87,7 +87,7 @@ struct
   fun reset () =
     (next_id := 0w1;
      StringHash.clear name_map;
-     StringHash.insert name_map ("__fresh", (fresh_name, [])))
+     StringHash.insert name_map (#2 fresh_name, (fresh_name, [])))
 
   val () = reset ()
 
@@ -106,6 +106,30 @@ struct
     | fresh NONE = fresh (SOME fresh_name)
 
 
+    (* Utility function which strips off a trailing "_id" of a string
+     * where id is a hex-digit. If nothing is stripped, NONE is returned.
+     * Otherwise, SOME (s', id) is returned, where s' is the stripped string
+     * and id is the hex-digit.
+     * Note that strings consisting only of "_id" are not stripped.  *)
+  fun strip_id s =
+      let
+        fun strip_id' 0 _    = NONE
+          | strip_id' i last =
+            let
+              val c = String.sub (s, i)
+            in
+              if Char.isHexDigit c then
+                strip_id' (i - 1) false
+              else if c = #"_" andalso not last then
+                SOME (String.substring (s, 0, i),
+                      String.extract (s, i + 1, NONE))
+              else
+                NONE
+            end
+      in
+        strip_id' (String.size s - 1) true
+      end
+
   fun make s =
       case StringHash.find name_map s of
         SOME (n, _) => n
@@ -122,18 +146,9 @@ struct
       s ^ "_" ^ (String.map Char.toLower (Word.toString id))
   fun stripunmk ((id, s) : name) =
     let
-      fun strip' [] = NONE
-        | strip' (#"_" :: (cs as _ :: _))
-        = (case strip' cs of
-             NONE => SOME []
-           | SOME cs => SOME (#"_" :: cs))
-        | strip' (cs as (c :: cs'))
-        = (case strip' cs' of
-             NONE => if Char.isHexDigit c then NONE else SOME cs
-           | SOME cs' => SOME (c :: cs'))
-      fun strip s = case strip' s of NONE => s | SOME s => s
+      fun strip s = case strip_id s of NONE => s | SOME (s, _) => s
     in
-      unmk (id, (implode o strip o strip o explode) s)
+      unmk (id, (strip o strip) s)
     end
     
   structure Order : ORDERING =
@@ -156,93 +171,6 @@ struct
   (*   names which should be printed by using ekam instead of unmk. *)
   val pp_unchanged_names = ref NameSet.empty
 
-  exception PPUnchangedNameClash of name * name
-  (* the explainer uses the prettyprinter, so it is placed further down... *)
-
-  (*   check whether any of the name-strings in the given nameset clashes. *)
-  fun name_string_clashes X =
-      let
-        val map = StringHash.mkTable (NameSet.size X, NOT_FOUND)
-          : name StringHash.hash_table
-        fun insert_name (x as (_, s)) =
-            case StringHash.find map s of
-              SOME y => raise PPUnchangedNameClash (x, y)
-            | NONE   => StringHash.insert map (s, x)
-      in
-        NameSet.apply insert_name X
-      end
-  (*   register a new set of names to be printed without underscores. *)
-  fun pp_unchanged X Y =
-      let
-        val () = NameHash.clear pp_changed_map
-        val ()
-          = (name_string_clashes X; name_string_clashes Y)
-            handle e => (pp_unchanged_names := NameSet.empty; raise e)
-        val () = pp_unchanged_names := NameSet.union' X Y
-
-        (* check potential clashes for the given name. *)
-        fun check_name (w_a, s_a) =
-            let
-              (* Split the name-string at the last "_" *)
-              val (s, i, _, _)
-                = case String.fields (fn c => c = #"_") s_a of
-                    []  => ("", "", false, false)
-                  | [s] => (s,  "", false, false)
-                  | ss 
-                    => foldr (fn (i, (_, _, _, true)) =>
-                                 ("", i, true, false)
-                               | (s, (ss, i, last, false)) =>
-                                 let
-                                   val ss' = if last then s else s^"_"^ss
-                                 in
-                                   (ss', i, false, false)
-                                 end)
-                             ("", "", true, true) ss
-              (* we must check "manually" that the string is a number,
-                 since fromString will happily parse a number-string
-                 with garbage at the end...
-                 Also, numbers with initial zeros are not relevant. *)
-              fun isNumber' s j l =
-                  j >= l orelse (Char.isDigit (String.sub (s, j))
-                                 andalso isNumber' s (j + 1) l)
-              fun isNumber s =
-                  let
-                    val l = String.size s
-                  in
-                    l > 0 andalso String.sub (s, 0) <> #"0"
-                    andalso isNumber' s 0 l
-                  end
-            in
-              (* is the last part a number?
-                 and does the first part clash with another name
-                 which uses that number as id? *)
-              if isNumber i then
-                case StringHash.find name_map s of
-                  NONE => ()
-                | SOME (c as (id', _), id's) =>
-                  let
-                    val id = valOf (Word.fromString i)
-                  in
-                    if id = id'
-                         orelse not (List.all (fn id' => id' <> id) id's) then
-                      (* create a new name to use instead of c *)
-                      NameHash.insert pp_changed_map ((id, s), fresh (SOME c))
-                    else
-                      ()
-                  end
-              else ()
-            end
-      in
-        NameSet.apply check_name (!pp_unchanged_names)
-      end
- 
-  val _ = Flags.makeBoolFlag
-            {name = "/kernel/bg/name/strip",
-             default = false,
-             short = "", long = "strip-names",
-             arg = "",
-             desc = "Strip trailing _xx off original names when printing (xx are hex digits)"}
- 
   fun pp indent pps n =
     let
       val unmk =
@@ -255,10 +183,11 @@ struct
         PrettyPrint.add_string pps (ekam n)
       else
         case NameHash.find pp_changed_map n of
-          NONE => PrettyPrint.add_string pps (unmk n)
+          NONE    => PrettyPrint.add_string pps (unmk n)
         | SOME n' => PrettyPrint.add_string pps (unmk n')
     end
 
+  exception PPUnchangedNameClash of name * name
   fun explain_PPUnchangedNameClash (PPUnchangedNameClash (n1, n2)) =
       Exp (LVL_USER, Origin.unknown_origin, pp_nothing,
            map (fn n => Exp (LVL_USER, Origin.unknown_origin,
@@ -270,6 +199,91 @@ struct
             (mk_explainer
                "names will clash if printed unchanged"
                explain_PPUnchangedNameClash)
+
+  local
+    (* map the original names (strings) of names in pp_unchanged_names
+     * to those names. *)
+    val pp_unchanged_original_names
+      = StringHash.mkTable (37, NOT_FOUND)
+        : name StringHash.hash_table
+    (* names which should not be removed in a 'pp_unchanged' session *)
+    val pp_unchanged_fixed = ref NameSet.empty
+
+    (* add a name to the set of names that should be printed unchanged *)
+    fun insert_pp_unchg_name (x as (id, s)) =
+        (* First, check that it doesn't collide with another name that should
+         * be printed unchanged. *)
+        case StringHash.find pp_unchanged_original_names s of
+          SOME (y as (id', _)) => if id = id' then
+                                    () (* x is already in pp_unchanged*)
+                                  else
+                                    raise PPUnchangedNameClash (x, y)
+        | NONE =>
+          (* Second, record that x should be printed unchanged. *)
+          (  pp_unchanged_names := NameSet.insert x (!pp_unchanged_names)
+           ; StringHash.insert pp_unchanged_original_names (s, x)
+          (* Third, eliminate potential clashes for the given name.
+           * I.e. check whether the printing of the name without appending "_xx"
+           * (where xx is its hex-digit id) clashes with a name n' in name_map
+           * when n' has its hex-digit id appended. If that is the case, record
+           * that n' should be printed with another id. *)
+           ; case strip_id s of
+               NONE => ()
+             | SOME (s', i) =>
+               (case StringHash.find name_map s' of
+                  NONE => ()
+                | SOME (c as (id', _), id's) =>
+                  let
+                    val id = valOf (Word.fromString i)
+                  in
+                    if id = id'
+                       orelse not (List.all (fn id' => id' <> id) id's) then
+                      (* create a new name to use instead of c *)
+                      (* FIXME ensure that the fresh name doesn't clash, i.e.
+                       *       that it doesn't collide with a name in pp_unchanged *)
+                      NameHash.insert pp_changed_map ((id, s), fresh (SOME c))
+                    else
+                      ()
+                  end))
+    (* as the insert_pp_unchg_name, except that clashes are silently ignored *)
+    fun insert_pp_unchg_name' x
+      = (insert_pp_unchg_name x) handle PPUnchangedNameClash_ => ()
+
+    (* remove a name from the set of names that should be printed unchanged *)
+    fun remove_pp_unchg_name (x as (_, s)) =
+        if NameSet.member x (!pp_unchanged_names)
+           andalso not (NameSet.member x (!pp_unchanged_fixed)) then
+          (  StringHash.remove pp_unchanged_original_names s
+           ; pp_unchanged_names := NameSet.remove x (!pp_unchanged_names))
+          handle NOT_FOUND => ()
+        else ()
+
+    fun clear () = (  NameHash.clear pp_changed_map
+                    ; StringHash.clear pp_unchanged_original_names
+                    ; pp_unchanged_names := NameSet.empty)
+  in
+    (*   register a new set of names to be printed without underscores. *)
+    fun pp_unchanged X =
+        (  clear ()
+         ; pp_unchanged_fixed := X
+         ; NameSet.apply insert_pp_unchg_name X)
+        handle e => (clear (); raise e)
+
+    (*   best effort to register an additional set of names to be printed
+     *   without underscores. *)
+    fun pp_unchanged_add X = NameSet.apply insert_pp_unchg_name' X
+    (*   remove a set of names from the set of names that should be printed
+     *   without underscores. *)
+    fun pp_unchanged_remove X = NameSet.apply remove_pp_unchg_name X
+  end
+ 
+  val _ = Flags.makeBoolFlag
+            {name = "/kernel/bg/name/strip",
+             default = false,
+             short = "", long = "strip-names",
+             arg = "",
+             desc = "Strip trailing _xx off original names when printing (xx are hex digits)"}
+ 
 end
 
 

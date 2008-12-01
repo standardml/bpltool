@@ -826,10 +826,9 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
       val v = (m2pp o simplify o t2p o simplify) v
       val (t, iface, oface) = unmk v handle e => raise e
       (* try to print the interfaces using the names given in the input *)
-      val ()
-        = (Name.pp_unchanged (Interface.names iface) (Interface.names oface))
-          handle Name.PPUnchangedNameClash _ =>
-            (Name.pp_unchanged NameSet.empty NameSet.empty handle e => raise e)
+      val () = (Name.pp_unchanged (NameSet.union' (Interface.names iface)
+                                                  (Interface.names oface)))
+               handle Name.PPUnchangedNameClash _ => ()
     in
       if withIface then PrettyPrint.begin_block pps PrettyPrint.CONSISTENT 0 else ();
       BgTerm_pp indent pps t;
@@ -869,7 +868,7 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
   val pp = pp' BgTerm.pp false
 
   fun pp_unchanged indent pps v =
-    (Name.pp_unchanged NameSet.empty NameSet.empty;
+    (Name.pp_unchanged NameSet.empty;
      BgTerm.pp indent pps (#1 (unmk v)))
 
 
