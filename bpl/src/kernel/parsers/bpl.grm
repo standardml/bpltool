@@ -68,7 +68,8 @@ type bigraph = T.bigraph
 %left COMP DOT
 
 %header (functor BplLrValsFun
-		   (structure Token : TOKEN)
+		   (structure Token : TOKEN
+		    structure BPLTerm : BPLTERM)
 	)
 
 %keyword 

@@ -162,11 +162,17 @@ sig
                Sugar.rule =
                BPL2BgVal.rule
 
+  sharing type Control.kind =
+               Sugar.ctrlkind =
+               BPLTerm.kind =
+               BPL2BgVal.kind
+
   sharing type control =
                Control.control =
                BgTerm.control =
                BgVal.control =
-               BgBDNF.control
+               BgBDNF.control =
+               Ion.control
 
   sharing type Match.match =
                Reaction.match
@@ -177,10 +183,8 @@ sig
   sharing type Interface.interface =
                BgVal.interface =
                BgBDNF.interface =
-               Instantiation.interface
-
-  sharing type Control.control =
-               Ion.control
+               Instantiation.interface =
+               BPL2BgVal.interface
 
   sharing type Ion.ion =
                BgTerm.ion =
@@ -197,6 +201,8 @@ sig
                Link.name =
                Ion.name =
                Instantiation.name =
+               BgVal.name =
+               Wiring.name =
                NameSet.elt
 
   sharing type NameSet.Set =

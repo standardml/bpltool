@@ -95,6 +95,9 @@ structure RulesLrVals
        structure Instantiation = Instantiation
        structure Rule          = Rule)
 
+structure BPLParser = BPLParser (
+       structure BPLTerm = BPLTerm)
+
 structure RulesLex 
   = RulesLex (structure Tokens = RulesLrVals.Tokens)
 

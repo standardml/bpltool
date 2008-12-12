@@ -133,7 +133,7 @@ val help_topics = [ (* {topic, text} *)
 	  \  str_r r                                   Return rule as a string\n\
 	  \  print_r r                                 Print rule\n\
 	  \  explain e                                 Explain exception in detail\n\
-	  \  use_shorthands on/off                     hide/show identities when displaying\n"},
+	  \  use_shorthands on/off                     Try to use compact terms when displaying\n"},
   {topic = "figure", text =
 	  "Figures: (c : config; f : string * path -> configinfo)\n\
 	  \  makecfg f                                 Construct a config\n\

@@ -25,7 +25,7 @@
  * Modified by Ebbe Elsborg on December 12 2007.
  *)
 
-structure BPLParser =
+functor BPLParser (structure BPLTerm : BPLTERM) =
 struct
 
     exception ParseError
@@ -34,7 +34,8 @@ struct
 
     (* Create the Lexer and Parser by ML-Yacc magic *)
     structure BplLrVals = 
-	BplLrValsFun(structure Token = LrParser.Token)
+	BplLrValsFun(structure Token = LrParser.Token
+	             structure BPLTerm = BPLTerm)
     structure BplL = 
 	BplLexFun(structure Tokens = BplLrVals.Tokens)
     structure BplP = 

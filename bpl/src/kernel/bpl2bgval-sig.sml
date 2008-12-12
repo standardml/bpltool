@@ -31,16 +31,22 @@
  *)
 signature BPL2BGVAL =
 sig
+  (** Node control kind. *)
+  eqtype kind
   (** Bigraph signature type. *)
-  type sign
+  type sign = (string * kind * int * int) list
   (** BPL Rule or BPL value declaration type. *)
   type dec
   (** Bigraph value type. *)
   type bgval
   (** Bigraph rule type. *)
   type rule
+  (** Inteface type. *)
+  type interface
   (** Main function, converting a BPL program into an agent and
    * a bigraphical reactive system.
    *)
   val prog2bgval : sign * dec list -> bgval * rule list
+  (** Print two interfaces. *)
+  val printIfaces : string -> interface -> interface -> unit
 end

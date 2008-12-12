@@ -99,7 +99,10 @@ signature BPLTERM = sig
   | Bar
 
   (** Control kind type. *)
-  datatype kind = Active | Passive | Atomic
+  eqtype kind
+  val Active  : kind
+  val Passive : kind
+  val Atomic  : kind
 
   (** Signature type. For each control, we record
    * (name, kind, bound arity, free arity).

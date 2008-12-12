@@ -73,6 +73,8 @@ functor BPL2BgVal (
                Wiring.nameset
   sharing type Control.control =
                Ion.control
+  sharing type Control.kind =
+               BPLTerm.kind
   sharing type Ion.ion =
                BgVal.ion
   sharing type Wiring.wiring =
@@ -91,8 +93,9 @@ functor BPL2BgVal (
   ) :> BPL2BGVAL 
   where type rule = Rule.rule
     and type dec  = BPLTerm.dec 
-    and type sign = BPLTerm.sign
-    and type bgval = BgVal.bgval =
+    and type bgval = BgVal.bgval
+    and type kind = Control.kind
+    and type interface = Interface.interface =
 struct
 
  (* Algorithm:
@@ -184,6 +187,7 @@ type sign   = BPLTerm.sign
 type dec    = BPLTerm.dec
 type bgval  = BgVal.bgval
 type rule   = Rule.rule
+type interface = Interface.interface
 
 (* aux. types and vals *)
 type sitemap = int * siteid
@@ -208,9 +212,9 @@ fun (b1:bgval) oo (b2:bgval) = BgVal.Com info (b1,b2)
 
 (* CONVERSION FUNCTIONS *)
 
-fun toControl Active  = Control.Active
-  | toControl Passive = Control.Passive
-  | toControl Atomic  = Control.Atomic
+fun toControl Control.Active  = Control.Active
+  | toControl Control.Passive = Control.Passive
+  | toControl Control.Atomic  = Control.Atomic
 
 (* convert strings and vars into names, and names back into strings *)
 fun s2n s = Name.make s

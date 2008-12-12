@@ -134,7 +134,7 @@ PARSINGFILES := $(patsubst %.grm,%.grm-sig.sml,$(GRMFILES)) $(patsubst %.grm,%.g
 %.lex.sml: %.lex
 	cd $(dir $@) && $(MAKE) $(notdir $@)
 
-%.grm-sig.sml %.grm.sig %.grm.sml: %.grm
+%.grm-sig.sml %.grm.sml: %.grm
 	cd $(dir $@) && $(MAKE) $(notdir $@)
 
 # SVN
@@ -288,6 +288,12 @@ test-webapp-mosml: bplwebback
 test-webapp-mlton: apps/bplweb/backend/mlton
 	apps/bplweb/backend/mlton < apps/bplweb/backend/test/matching1.cmd
 .PHONY: test-webapp test-webapp-smlnj test-webapp-mosml test-webapp-mlton
+
+start-local-webapp:
+	[ -x apps/bplweb/backend/mlton ] || $(MAKE) apps/bplweb/backend/mlton
+	[ -x apps/svg/bg2svg/bg2svg ] || $(MAKE) apps/svg/bg2svg/bg2svg
+	cd apps/bplweb/xmlrpcserver && ruby bplxmlrpcserver.rb > log.txt 2>&1 &
+	cd apps/bplweb/webserver && script/server development > log.txt 2>&1 &
 
 # bpl2bgval
 test-bpl2bgval: test-bpl2bgval-$(MLC)

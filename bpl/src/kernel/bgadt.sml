@@ -152,7 +152,7 @@ structure BgBDNF
        structure NameSetPP        = NameSetPP
        structure ListPP           = ListPP)
 
-structure BPLTerm = BPLTerm
+structure BPLTerm = BPLTerm (structure Control = Control)
 
 type bgterm = BgTerm.bgterm
 

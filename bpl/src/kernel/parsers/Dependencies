@@ -22,10 +22,10 @@ rules.grm: /lib/ml-yacc/.  /lib/coll/monoset-sig rules.grm-sig
 
 bpl.grm-sig: /lib/ml-yacc/.
 bpl.lex: bpl.grm-sig /lib/util/sourceloc /lib/compat/mosml/. /lib/pp/mak/.
-bpl.grm: bpl.grm-sig /kernel/ast/bplterm
+bpl.grm: bpl.grm-sig /kernel/ast/bplterm-sig /kernel/bg/control-sig
    /lib/util/sourceloc /lib/ml-yacc/.
    %NODASHSIG
-bplparser: bpl.grm bpl.lex /kernel/ast/bplterm
+bplparser: bpl.grm bpl.lex /kernel/ast/bplterm-sig
    /lib/ml-yacc/. /lib/pp/mak/. /lib/util/sourceloc
 bigraphdata-sig: /kernel/bg/sigs
 bigraphdata: /kernel/bg/sigs /kernel/ast/sigs bigraphdata-sig %NODASHSIG

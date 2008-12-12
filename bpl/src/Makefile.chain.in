@@ -45,8 +45,8 @@ phony_FORCE:
 %.lex.sml: %.lex
 	   $(MLLEX) $<
 
-%.grm-sig.sml %.grm.sig %.grm.sml: %.grm
-	   $(MLYACC) $< && cp $*.grm.sig $*.grm-sig.sml
+%.grm-sig.sml %.grm.sml: %.grm
+	   $(MLYACC) $< && mv $*.grm.sig $*.grm-sig.sml
 
 sources.cm: Dependencies $(DEP2SOURCES)
 	$(DEP2SOURCES) -r $(UP) -c '/lib/compat/mosml/exception/.=/lib/compat/smlnj/exception/sources.cm' -c '/lib/compat/mosml/hash/.=/lib/compat/smlnj/sources.cm' -c '/lib/compat/mosml/word32/.=/lib/compat/smlnj/sources.cm' -c '/lib/compat/mosml/thread/.=/lib/compat/smlnj/thread/sources.cm' -c '/lib/compat/mosml/.=/lib/compat/smlnj/sources.cm' -x /lib/compat/mlton Dependencies $@

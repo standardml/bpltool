@@ -75,7 +75,8 @@ functor Sugar'(structure Info : INFO
 	       sharing type Instantiation.inst = Rule.inst
 	       ) : SUGAR 
 where type bgval = BgVal.bgval
-  and type rule = Rule.rule =
+  and type rule = Rule.rule
+  and type ctrlkind = Control.kind =
 struct
 type control = Control.control
 type name = string
@@ -509,7 +510,8 @@ functor Sugar (structure Info : INFO
 	       sharing type Instantiation.inst = Rule.inst
 	       ) :> SUGAR 
 where type bgval = BgVal.bgval
-  and type rule = Rule.rule =
+  and type rule = Rule.rule
+  and type ctrlkind = Control.kind =
 struct
   structure Sugar = Sugar'(structure Info = Info
 			   structure Name = Name

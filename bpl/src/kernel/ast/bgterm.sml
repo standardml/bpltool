@@ -74,7 +74,7 @@ struct
     name = "/kernel/ast/bgterm/ppids",
     desc = "Explicitly display identities in tensor and parallel products",
     short = "",
-    long = "--ppids",
+    long = "ppids",
     arg = "",
     default = true}
   val _ = Flags.makeBoolFlag {
@@ -82,7 +82,7 @@ struct
     desc = "Explicitly display abstractions \
            \(abstractions on roots are always displayed)",
     short = "",
-    long = "--ppabs",
+    long = "ppabs",
     arg = "",
     default = true}
   val _ = Flags.makeBoolFlag {
@@ -90,21 +90,21 @@ struct
     desc = "Explicitly display empty-set abstractions \
            \(ignored if ppabs is false)",
     short = "",
-    long = "--pp0abs",
+    long = "pp0abs",
     arg = "",
     default = true}
   val _ = Flags.makeBoolFlag {
     name = "/kernel/ast/bgterm/pptenaspar",
     desc = "Replace tensor product with parallel product",
     short = "",
-    long = "--pptenaspar",
+    long = "pptenaspar",
     arg = "",
     default = false}
   val _ = Flags.makeBoolFlag {
     name = "/kernel/ast/bgterm/ppmeraspri",
     desc = "Replace merge with prime product (best effort)",
     short = "",
-    long = "--ppmeraspri",
+    long = "ppmeraspri",
     arg = "",
     default = false}
   type info = Info.info
@@ -668,7 +668,7 @@ struct
                 * -> sigma(b)
                 *
                 * where sigma = z_1/V_1 * ... * z_l/V_l
-                *   and V_i =/= Ø
+                *   and V_i =/= ï¿½
                 *)
                SOME (#1 (apply_sigma w b))
 (* FIXME this case requires that apply_sigma also works on local names.
@@ -724,7 +724,7 @@ struct
                 * where sigma = y_1/Y_1 * ... * y_k/Y_k * z_1/V_1 * ... * z_l/V_l
                 *   and sigma =/= id
                 *   and y_i \in Y_i
-                *   and V_i =/= Ø
+                *   and V_i =/= ï¿½
                 *   and Z = {z_1, ..., z_n}               
                 *)
                let

@@ -26,7 +26,8 @@
  *
  * @version $LastChangedRevision$
  *)
-structure BPLTerm :> BPLTERM =
+functor BPLTerm (structure Control : CONTROL) :> BPLTERM
+where type kind = Control.kind =
 struct
 
 	type id = string
@@ -52,7 +53,7 @@ struct
   | Ref of id
   | Bar
 
-  datatype kind = Active | Passive | Atomic
+  open Control
 
   type sign = (id * kind * int * int) list
   type sigdef = id * sign

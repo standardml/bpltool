@@ -27,17 +27,40 @@
 
 structure BPL2bgvalTest =
 struct
-structure B2 = Bpl2bgval (structure BPLTerm = BPLTerm)
+structure BG = BG (structure ErrorHandler = PrintErrorHandler);
+structure B2 = BG.BPL2BgVal (*BPL2BgVal (
+  structure Info          = BG.Info
+  structure Origin        = Origin
+  structure Name          = BG.Name
+  structure NameSet       = BG.NameSet
+  structure Interface     = BG.Interface
+  structure Link          = BG.Link
+  structure LinkSet       = BG.LinkSet
+  structure Wiring        = BG.Wiring
+  structure Permutation   = BG.Permutation
+  structure Control       = BG.Control
+  structure Ion           = BG.Ion
+  structure BgTerm        = BG.BgTerm
+  structure BgVal         = BG.BgVal 
+  structure BgBDNF        = BG.BgBDNF
+  structure Instantiation = BG.Instantiation
+  structure Rule          = BG.Rule
+  structure BPLTerm       = BG.BPLTerm
+  )
+*)
 
 fun run _ =
 let
-open TextIO;
+open TextIO
 
-open B2;
+open BG
+open B2
+open BG.BPLTerm
+open BG.Control
 
-(*val Passive = Control.Passive
-val Active = Control.Active
-val Atomic = Control.Atomic
+(*val Passive = BG.Control.Passive
+val Active = BG.Control.Active
+val Atomic = BG.Control.Atomic
 *)
 
 val signat = [(*("k1",Passive,1,2),
@@ -51,7 +74,7 @@ val signat = [(*("k1",Passive,1,2),
 	      ("get",Passive,1,1),
 	      ("sub",Active,1,0),
 	      ("def",Passive,0,1),
-	      ("msg",Atomic,0,1)]
+	      ("msg",Atomic:B2.kind,0,1)]
 
 fun id1 id = Sit(SiteName(id),[])
 
@@ -127,9 +150,9 @@ val decs = [Val("v1",Com(C,a)),
 	    Rul("comm",
 		 (Pri(send_ion,get_ion),
 		 Pri(Ten(site0,idle__a),get_sub)))]
-val prog = (signat,"default", decs)
-val (signa,mainbgval,rules) = prog2bgval prog
-val state = (B.toString o B.simplify) mainbgval
+val prog = (signat,(*"default",*) decs)
+val ((*signa,*)mainbgval,rules) = prog2bgval prog
+val state = (BG.BgVal.toString o BG.BgVal.simplify) mainbgval
 
 (* printing *)
 fun printRule r = print(Rule.toString r)
@@ -152,7 +175,7 @@ val _ = print "\nbpl2bgvalTest.sml called...\n\n"
 val _ = print "state = "
 val _ = print state
 val _ = print "\n"
-val _ = printIfaces "state" (B.innerface mainbgval) (B.outerface mainbgval)
+val _ = printIfaces "state" (BG.BgVal.innerface mainbgval) (BG.BgVal.outerface mainbgval)
 (*
 val h = Rule.toString(List.hd(rules))
 val _ = print "printing rules...\n"
@@ -161,13 +184,13 @@ val _ = print("rule = " ^ h ^ "\n")
 val _ = printRules rules
 val _ = print "printing rule_r1 ifaces...\n"
 val {name,redex,react,inst,info} = Rule.unmk(List.hd(rules))
-val _ = printIfaces "redex" (BgBdnf.innerface redex) (BgBdnf.outerface redex)
-val _ = printIfaces "react" (B.innerface react) (B.outerface react)
+val _ = printIfaces "redex" (BG.BgBDNF.innerface redex) (BG.BgBDNF.outerface redex)
+val _ = printIfaces "react" (BgVal.innerface react) (BgVal.outerface react)
 val _ = print "\n"
 val _ = print "printing rule_comm ifaces...\n"
 val {name,redex,react,inst,info} = Rule.unmk(List.hd(List.tl(rules)))
-val _ = printIfaces "redex'" (BgBdnf.innerface redex) (BgBdnf.outerface redex)
-val _ = printIfaces "react'" (B.innerface react) (B.outerface react)
+val _ = printIfaces "redex'" (BG.BgBDNF.innerface redex) (BG.BgBDNF.outerface redex)
+val _ = printIfaces "react'" (BG.BgVal.innerface react) (BG.BgVal.outerface react)
 val _ = print "\n"
 
 in

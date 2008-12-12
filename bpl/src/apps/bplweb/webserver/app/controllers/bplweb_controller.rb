@@ -7,7 +7,8 @@ class BplwebController < ApplicationController
   end
 
   def index
-    @example_pages, @examples = paginate :examples, {:per_page => 20, :order => "filename"}
+    #@example_pages, @examples = paginate :examples, {:per_page => 20, :order => "filename"}
+    @examples = Example.all [:order => "filename"]
     params = params()
     @filename = ''
     @title = ''
@@ -195,19 +196,20 @@ print "Server call returned to simplifyrequest " + id.to_s + ".\n"
     bigraph = params [:bigraph]
     
     begin
+      @result = ""
       # Call the prettyprinter
       f = IO.popen("../../svg/bg2svg/bg2svg", "r+")
+      f = IO.popen("../../../svg/bg2svg/bg2svg", "r+") if f.eof?
       f.puts "SIGNATURE"
       f.puts signature
       f.puts "ENDSIGNATURE"
       f.puts "BIGRAPH"
       f.puts bigraph
       f.puts "ENDBIGRAPH"
-      @result = ""
       @result += f.gets while !f.eof?
       f.close
     rescue StandardError => txt
-      @result = "<p class='info'>[unable to generate image: " + txt.to_s + "]</p>"
+      @result += "<p class='info'>[unable to generate image: " + txt.to_s + "]</p>"
     end
   end
 
