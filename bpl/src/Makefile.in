@@ -50,6 +50,7 @@ MLTON		= @MLTON@
 MLC		= @MLC@
 KILL	= /usr/bin/kill
 RUBY	= ruby
+RAILS	= rails
 
 MAKEFILE	= Makefile
 EXEEXT		= @EXEEXT@
@@ -288,6 +289,10 @@ test-webapp-mosml: bplwebback
 test-webapp-mlton: apps/bplweb/backend/mlton
 	apps/bplweb/backend/mlton < apps/bplweb/backend/test/matching1.cmd
 .PHONY: test-webapp test-webapp-smlnj test-webapp-mosml test-webapp-mlton
+
+# Install BPLweb on the local machine for development
+install-local-webapp:
+	cd apps/bplweb && $(RAILS) webserver
 
 start-local-webapp:
 	[ -x apps/bplweb/backend/mlton ] || $(MAKE) apps/bplweb/backend/mlton
