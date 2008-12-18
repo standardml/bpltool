@@ -198,14 +198,18 @@ print "Server call returned to simplifyrequest " + id.to_s + ".\n"
     begin
       @result = ""
       # Call the prettyprinter
-      f = IO.popen("../../svg/bg2svg/bg2svg", "r+")
-      f = IO.popen("../../../svg/bg2svg/bg2svg", "r+") if f.eof?
+      if File.exist? "../../svg/bg2svg/bg2svg" then
+        f = IO.popen("../../svg/bg2svg/bg2svg", "r+")
+      else
+        f = IO.popen("../../../svg/bg2svg/bg2svg", "r+")
+      end
       f.puts "SIGNATURE"
       f.puts signature
       f.puts "ENDSIGNATURE"
       f.puts "BIGRAPH"
       f.puts bigraph
       f.puts "ENDBIGRAPH"
+      f.flush
       @result += f.gets while !f.eof?
       f.close
     rescue StandardError => txt
