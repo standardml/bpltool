@@ -323,8 +323,8 @@ val instFindall = Inst.make { I = redex_innerface_Findall,
 			      J = react_innerface_Findall,
 			      maps = [((0,[]), (0,[])),
 				      ((1,[]), (0,[]))] }
-val redexFindall = S.|| (S.o (devs,id_1), findall)
-val reactFindall = S.|| (S.o (devs,id_1), id_1)
+val redexFindall = S.|| (devs, findall)
+val reactFindall = S.|| (devs, id_1)
 
 val Afindall = R.make' { name = "Afindall",
 			 redex = makeBR redexFindall,
