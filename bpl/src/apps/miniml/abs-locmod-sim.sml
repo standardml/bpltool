@@ -274,6 +274,7 @@ val devs_loc_l'd_id1 = S.o (devs, S.`|` (location_l'd, id_1))
 val devs_loc_ld_id1 = S.o (devs, S.`|` (location_ld, id_1))
 val idle_l' = S.// ("l'", [])
 val whereis_d = whereis (s2n "d")
+val idle_d = S.// ("d", [])
 
 (* C *)
 val redexUp = aux1
@@ -323,19 +324,19 @@ val instFindall = Inst.make { I = redex_innerface_Findall,
 			      J = react_innerface_Findall,
 			      maps = [((0,[]), (0,[])),
 				      ((1,[]), (0,[]))] }
-val redexFindall = S.|| (devs, findall)
+val redexFindall = S.|| (devs, findall1)
 val reactFindall = S.|| (devs, id_1)
-
-val Afindall = R.make' { name = "Afindall",
+val Afindall = R.make { name = "Afindall",
 			 redex = makeBR redexFindall,
 			 react = reactFindall,
+			 inst = instFindall,
 			 info = info }
-    handle e => (handler e ;
+(*    handle e => (handler e ;
 		 R.make' { name = "dummy",
 			   redex = makeBR barren,
 			   react = barren,
-			   info = info })
-(*
+			   info = info })*)
+
 val redexWhereis = S.|| (S.o (devs, S.`|` (location_ld, id_1)),
 			 whereis_d)
 val reactWhereis = S.|| (S.o (devs, S.`|` (location_ld, id_1)),
@@ -344,7 +345,20 @@ val Awhereis = R.make' { name = "Awhereis",
 			 redex = makeBR redexWhereis,
 			 react = reactWhereis,
 			 info = info }
-*)
+
+val redexGenFindall = id_1
+val reactGenFindall = S.`|` (id_1, findall1)
+val AgenFindall = R.make' { name = "AgenFindall",
+			    redex = makeBR redexGenFindall,
+			    react = reactGenFindall,
+			    info = info }
+
+val redexGenWhereis = S.* (id_1, idle_d)
+val reactGenWhereis = S.`|` (id_1, whereis_d)
+val AgenWhereis = R.make' { name = "AgenWhereis",
+			    redex = makeBR redexGenWhereis,
+			    react = reactGenWhereis,
+			    info = info }
 
 (* REACTIONS *)
 (* Example:
@@ -374,11 +388,16 @@ fun parts agent matches =
 fun lzlength l = Int.toString(List.length(LazyList.lztolist l))
 
 (* --whereis-> *)
-(*
 val BRsystem = makeBR system
-val mts1 = M.matches { agent = BRsystem , rule = Awhereis }
-
+val mts1 = M.matches { agent = BRsystem , rule = AgenWhereis }
+(*
+val _ = if LazyList.lznull(mts1) then print "No matches!\n"
+	else print "At least one match\n"
 val _ = printMts mts1
+val _ = case mt1 of NONE => print "No matches!\n"
+		  | SOME(m) => ( print(M.toString(m))
+				 handle e => handler e )
+
 val _ = map print (parts system mts1)
 *)
 
@@ -414,18 +433,16 @@ val _ = case mtD of NONE => print "No matches!\n"
 *)
 
 
-(*
 open TextIO;
 
 val os = openOut("matches.out")
 
-fun printmatches [] = "Done\n"
-  | printmatches (x::xs) = ( output(os, (M.toString x) ^ "\n")
-			   ; printmatches xs )
+fun printmatches ms =
+    if LazyList.lznull(ms) then "Done\n"
+    else ( output(os, (M.toString (LazyList.lzhd ms)) ^ "\n")
+	 ; printmatches (LazyList.lztl ms) )
 
-val out_a = printmatches all_a
-val out_b = printmatches all_b
+val out_a = printmatches mts1
 
 val _ = flushOut(os)
 val _ = closeOut(os)
-*)
