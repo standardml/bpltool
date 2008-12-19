@@ -30,7 +30,7 @@ structure Flags :> FLAGS = struct
 	case ft of
 	    IntFlag i => Int.toString i
 	  | RealFlag r => Real.toString r
-	  | StringFlag s => s
+	  | StringFlag s => String.toString s
 	  | BoolFlag b => Bool.toString b
 
     type 'a flag_info 
@@ -174,6 +174,29 @@ structure Flags :> FLAGS = struct
 	      | f _ = true
 	in  List.filter f flags
 	end
+
+    fun cur_value name default =
+        case default of
+          IntFlag _    => Int.toString (getIntFlag name)
+        | RealFlag _   => Real.toString (getRealFlag name)
+        | StringFlag _ => getStringFlag name
+        | BoolFlag _   => Bool.toString (getBoolFlag name)
+
+    fun typeToString default =
+        case default of
+          IntFlag _    => "int"
+        | RealFlag _   => "real"
+        | StringFlag _ => "string"
+        | BoolFlag _   => "bool"
+
+    fun list () =
+        let fun f (_, {name,desc,short,long,arg,default}) =
+                {name = name, desc = desc,
+                 short = short, long = long, arg = arg,
+                 value = cur_value name default, default = toString default,
+                 t = typeToString default}
+        in List.map f (list_flags ())
+        end
 
     fun output outstream flags = 
 	let fun f (_,{name,desc,default,...}: flag_type flag_info) =

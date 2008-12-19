@@ -107,7 +107,7 @@ struct
     name = "/kernel/match/match/nodups",
     desc = "Remove duplicate matches.",
     short = "",
-    long = "--nodups",
+    long = "nodups",
     arg = "",
     default = true}
 

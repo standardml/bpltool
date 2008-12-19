@@ -42,7 +42,7 @@ end
 
 local
 val help_topics = [ (* {topic, text} *)
-  {topic = "control", text =
+  {topic = "control", text = fn () =>
   	"Node controls (K,L,M,p_i,p'_i : string; m,n >= 0):\n\
   	\  active   (K -: n)         Active node of global arity n\n\
   	\  passive  (L =: m --> n)   Passive node of local/global arity m/n\n\
@@ -56,7 +56,7 @@ val help_topics = [ (* {topic, text} *)
   	\  passive0 (M)              Passive node without ports\n\
   	\  atomic0  (M)              Atomic node without ports\n"
   },
-  {topic = "bigraph", text =
+  {topic = "bigraph", text = fn () =>
 	  "Ions (K,L,M : control; x,y,p,p' : string):\n\
 	  \  K[y,...]                  Ion with control of global arity\n\
 	  \  L[y,...][[x,...],...]     Ion with control of global/local arity\n\
@@ -87,14 +87,14 @@ val help_topics = [ (* {topic, text} *)
 	  \  `|``[A,...]               Prime product of n factors\n\
 	  \  A o B                     Composition\n"
   },
-  {topic = "operator", text =
+  {topic = "operator", text = fn () =>
 	  "ML function composition (f : 'b -> c; g : 'a -> 'b):\n\
 	  \  f oo g\n\n\
 	  \Precedence:\n\
 	  \  o                         Composition (strongest)\n\
 	  \  *, ||, `|`                Product, left associative\n\
 	  \  <[x,...]> P               Abstraction (weakest)\n"},
-  {topic = "rule", text =
+  {topic = "rule", text = fn () =>
 	  "Rules: (R, R' : bgval; rho : inst; N,x : string; i,j : int)\n\
 	  \  R ----|> R'               Rule with redex R, reactum R' and default instantiation\n\
 	  \  R --rho--|> R'            Rule with redex R, reactum R' and instantiation rho\n\
@@ -108,7 +108,7 @@ val help_topics = [ (* {topic, text} *)
 	  \  redex   rule              Extract the redex of a rule\n\
 	  \  reactum rule              Extract the reactum of a rule\n\
 	  \  inst    rule              Extract the instantiation of a rule\n"},
-  {topic = "operation", text =
+  {topic = "operation", text = fn () =>
 	  "Bigraph operations (A,B,R : 'a bgbdnf; a,r,v : bgval; e : exn;\n\
 	  \                    u : real; c : config; f : filename):\n\
 	  \  norm_v v             denorm_b B           (De)normalise\n\
@@ -134,12 +134,12 @@ val help_topics = [ (* {topic, text} *)
 	  \  print_r r                                 Print rule\n\
 	  \  explain e                                 Explain exception in detail\n\
 	  \  use_shorthands on/off                     Try to use compact terms when displaying\n"},
-  {topic = "figure", text =
+  {topic = "figure", text = fn () =>
 	  "Figures: (c : config; f : string * path -> configinfo)\n\
 	  \  makecfg f                                 Construct a config\n\
 	  \  unmkcfg c                                 Deconstruct a config\n\
 	  \  defaultcfg                                Default config\n"},
-  {topic = "tactic", text =
+  {topic = "tactic", text = fn () =>
 	  "Tactics: (N : string; t : tactic)\n\
 	  \  react_rule N                              Apply rule N\n\
 	  \  react_rule_any                            Apply any rule\n\
@@ -151,7 +151,7 @@ val help_topics = [ (* {topic, text} *)
 	  \  i TIMES_DO t                              Use t i times\n\
 	  \  finish                                    Finish tactic\n\
 	  \  fail                                      Fail tactic\n"},
-  {topic = "reaction", text =
+  {topic = "reaction", text = fn () =>
 	  "Reaction operations (v : bgval; m : match; r : rule, N : string, rs : rules):\n\
 	  \  react m                                   Perform a single reaction step\n\
 	  \  mkrules [r_0, ..., r_n]                   Construct a rule map\n\
@@ -161,7 +161,22 @@ val help_topics = [ (* {topic, text} *)
 	  \  steps rs t v                              Return agent for each step using a tactic\n\
 	  \  stepz rs t v                              Return lazily agent for each step using a tactic\n\
 	  \  \n"},
-  {topic = "example", text =
+  {topic = "flags", text = fn () =>
+	  "Configuration flags:\n\
+    \  Flags.get[Type]Flag \"name\"            Get the value of flag of the given type\n\
+    \  Flags.set[Type]Flag \"name\" value      Set the value of flag of the given type\n\n\
+    \  name = value (default) : type\n\
+    \    description\n\
+    \  ------------------------------------------------------------------------\n"
+    ^ Util.stringSep "  " "\n" "\n  "
+                     (fn {name, desc, value, default, t, ...} =>
+                         name ^ " = " ^ value ^ " (" ^ default ^ ") : " ^ t ^ "\n    "
+                         ^ desc)
+                     (ListSort.sort
+                        (fn ({name = n1, ...}, {name = n2, ...}) =>
+                            String.compare (n1, n2))
+                        (Flags.list ()))},
+  {topic = "example", text = fn () =>
 	  "Example:\n\
 	  \  let val K = active   (\"K\" =: 2 --> 1)\n\
 	  \      val L = passive0 (\"L\")\n\
@@ -183,7 +198,7 @@ fun eq s1 s2 = s1 = s2
 
 fun help_topic topic =
     case List.find ((eq topic) o #topic) help_topics of
-      SOME {text, ...} => (print text; true)
+      SOME {text, ...} => (print (text ()); true)
     | NONE             => (print ("Sorry, no help on topic \"" ^ topic ^ "\"\n"); false)
 
 fun help' [] = true
@@ -318,7 +333,7 @@ local
 	fun print_m0 mz toStr =
 	  let
 	    fun ppBDNF indent pps B
-	      = BG.BgVal.pp indent pps (simpl_b B)
+	      = BG.BgVal.pp' indent pps (simpl_b B)
 	  in
 	    LazyList.lzprintln (toStr ppBDNF ppBDNF) mz;
 	    print "\n"

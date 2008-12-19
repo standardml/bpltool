@@ -54,14 +54,14 @@ struct
     name = "/kernel/match/rule/ppsimpleredex",
     desc = "Simplify redex when displaying rules",
     short = "",
-    long = "--ppsimpleredex",
+    long = "ppsimpleredex",
     arg = "",
     default = true}
   val _ = Flags.makeBoolFlag {
     name = "/kernel/match/rule/ppsimplereactum",
     desc = "Simplify reactum when displaying rules",
     short = "",
-    long = "--ppsimplereactum",
+    long = "ppsimplereactum",
     arg = "",
     default = true}
   type info = Info.info

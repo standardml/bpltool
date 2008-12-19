@@ -820,7 +820,7 @@ struct
                  val (bs', inner_ns) =
                      if ppids then
                        (bs, NameSet.empty)
-                     (* It is unsound to remove ids with width > 0 even if
+                     (* FIXME It is unsound to remove ids with width > 0 even if
                       * they're not innermost.
                       * Example:
                       *   (`[]` || `[x]`) o (M0 || M1[x])
@@ -936,7 +936,10 @@ struct
                ; (Permutation.innernames pi, NameSet.empty))
             | pp''' outermost innermost (Abs (X, b, _))
             = ((if (outermost andalso not (NameSet.isEmpty X)) orelse
-                   ppabs andalso
+                   (* FIXME We cannot in general reconstruct abstractions in
+                    *       BgVal.Com', so leaving all abstractions out is
+                    *       unsound
+                    * ppabs andalso *)
                    (pp0abs orelse not (NameSet.isEmpty X)) then
                   let
                     val (showlpar, pal', par', prr', showrpar) = 

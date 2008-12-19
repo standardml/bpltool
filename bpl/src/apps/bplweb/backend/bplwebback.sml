@@ -135,6 +135,9 @@ struct
           ~1
         else
           case Int.fromString str of SOME i => i | NONE => ~1
+
+      fun parsebool str =
+          case Bool.fromString (String.map Char.toLower str) of SOME b => b | NONE => false
       
       val signatur : Control.control list ref = ref []
       val agent : BR bgbdnf option ref = ref NONE
@@ -147,17 +150,19 @@ struct
       val matches : (int * match lazylist * match list) array ref
         = ref (Array.fromList [])
 
-      (* Replace merges and tensor products with prime and parallel product. *)
-      val _ = Flags.setBoolFlag "/kernel/ast/bgterm/pptenaspar" true;
-      val _ = Flags.setBoolFlag "/kernel/ast/bgterm/ppmeraspri" true;
-      (* DISABLED! Print terms as simplified as possible. *)
-      val _ = Flags.setBoolFlag "/kernel/ast/bgval/pp-simplify" false;
-      val _ = Flags.setBoolFlag "/kernel/ast/bgval/pp-tensor2parallel" false;
-      val _ = Flags.setBoolFlag "/kernel/ast/bgval/pp-merge2prime" false;
+      fun use_syntactic_sugar flag =
+          (Flags.setBoolFlag "/kernel/ast/bgterm/ppids" (not flag);
+           Flags.setBoolFlag "/kernel/ast/bgterm/ppabs" (not flag);
+           Flags.setBoolFlag "/kernel/ast/bgterm/pp0abs" (not flag);
+           Flags.setBoolFlag "/kernel/ast/bgterm/pptenaspar" flag;
+           Flags.setBoolFlag "/kernel/ast/bgterm/ppmeraspri" flag;
+           Flags.setBoolFlag "/kernel/ast/bgval/pp-simplify" flag)
       
       fun domatch (SOME signaturestr, SOME agentstr, SOME rulesstr,
-                   SOME userulesstr, SOME matchcountstr, simplifymatches) =
+                   SOME userulesstr, SOME matchcountstr, simplifymatches, SOME syntacticsugarstr) =
         let
+          val syntacticsugar = parsebool syntacticsugarstr
+          val _ = use_syntactic_sugar syntacticsugar
           (*val _ = TextIO.output (stdErr, "bplwebback::domatch called.\n")*)
           val _ = Name.reset ()
           val signatur = parseStr SIGNATURE "signature" signaturestr
@@ -194,6 +199,8 @@ struct
           val _ = rules := ctrlfixedrules
           val userules = parsenum userulesstr
           val matchcount = parsenum matchcountstr
+val _ = TextIO.output (stdErr, "syntacticsugarstr = " ^ String.toString syntacticsugarstr ^ "\n")
+val _ = TextIO.output (stdErr, "syntacticsugar = " ^ Bool.toString syntacticsugar ^ "\n")
 val _ = TextIO.output (stdErr, "userules = " ^ Int.toString userules 
 	^ ", matchcount = " ^ Int.toString matchcount ^ "\n")
           fun mkfmz agent rule
@@ -293,11 +300,12 @@ val _ = TextIO.output (stdErr, "rules = "
             (List.drop (rfmzs, (if userules < 0 then 0 else userules)))
             []
         end
-        | domatch (NONE, _, _, _, _, _) = log "Signature not specified!"
-        | domatch (_, NONE, _, _, _, _) = log "Agent not specified!"
-        | domatch (_, _, NONE, _, _, _) = log "Rules not specified!"
-        | domatch (_, _, _, NONE, _, _) = log "Userules not specified!"
-        | domatch (_, _, _, _, NONE, _) = log "Matchcount not specified!"
+        | domatch (NONE, _, _, _, _, _, _) = log "Signature not specified!"
+        | domatch (_, NONE, _, _, _, _, _) = log "Agent not specified!"
+        | domatch (_, _, NONE, _, _, _, _) = log "Rules not specified!"
+        | domatch (_, _, _, NONE, _, _, _) = log "Userules not specified!"
+        | domatch (_, _, _, _, NONE, _, _) = log "Matchcount not specified!"
+        | domatch (_, _, _, _, _, _, NONE) = log "Syntacticsugar not specified!"
         
       fun doreact (SOME ruleno, SOME matchno) =
         let
@@ -328,8 +336,10 @@ val _ = TextIO.output (stdErr, "rules = "
         | doreact (NONE, _) = log "Ruleno not specified!"
         | doreact (_, NONE) = log "Matchno not specified!"
       
-      fun dosimplify (signaturestr, SOME agentstr) =
+      fun dosimplify (signaturestr, SOME agentstr, SOME syntacticsugarstr) =
         let
+          val syntacticsugar = parsebool syntacticsugarstr
+          val _ = use_syntactic_sugar syntacticsugar
           val _ = Name.reset ()
           val signatur =
             case signaturestr of
@@ -354,7 +364,7 @@ val _ = TextIO.output (stdErr, "rules = "
              ^ "\nEND\n");
           Flags.setBoolFlag "/kernel/bg/name/strip" oldval
         end
-        | dosimplify _ = log "Agent or not specified!"
+        | dosimplify _ = log "Agent or syntacticsugar not specified!"
       
       fun getuntil endmarker =
         let
@@ -389,8 +399,11 @@ val _ = TextIO.output (stdErr, "rules = "
         in
           String.extract (line, alnumcol col, NONE)
         end
+
+      fun trim s = (Substring.string o (Substring.dropl Char.isSpace) o (Substring.dropr Char.isSpace))
+                   (Substring.extract (s, 0, NONE))
       
-      fun evalmatch (signatur, agent, rules, userules, matchcount, simplifymatches) =
+      fun evalmatch (signatur, agent, rules, userules, matchcount, simplifymatches, syntacticsugar) =
       	let
       	  val line
       	    = case inputLineNoBuf () of
@@ -398,22 +411,24 @@ val _ = TextIO.output (stdErr, "rules = "
       	  val upline = String.translate (String.str o Char.toUpper) line
         in
         	if String.isPrefix "SIGNATURE" upline then
-        		evalmatch (SOME (getuntil "ENDSIGNATURE"), agent, rules, userules, matchcount, simplifymatches)
+        		evalmatch (SOME (getuntil "ENDSIGNATURE"), agent, rules, userules, matchcount, simplifymatches, syntacticsugar)
         	else if String.isPrefix "AGENT" upline then
-        		evalmatch (signatur, SOME (getuntil "ENDAGENT"), rules, userules, matchcount, simplifymatches)
+        		evalmatch (signatur, SOME (getuntil "ENDAGENT"), rules, userules, matchcount, simplifymatches, syntacticsugar)
         	else if String.isPrefix "RULES" upline then
-        		evalmatch (signatur, agent, SOME (getuntil "ENDRULES"), userules, matchcount, simplifymatches)
+        		evalmatch (signatur, agent, SOME (getuntil "ENDRULES"), userules, matchcount, simplifymatches, syntacticsugar)
         	else if String.isPrefix "USERULES" upline then
-        		evalmatch (signatur, agent, rules, SOME (getrest 8 upline), matchcount, simplifymatches)
+        		evalmatch (signatur, agent, rules, SOME (getrest 8 upline), matchcount, simplifymatches, syntacticsugar)
         	else if String.isPrefix "MATCHCOUNT" upline then
-        		evalmatch (signatur, agent, rules, userules, SOME (getrest 10 upline), simplifymatches)
+        		evalmatch (signatur, agent, rules, userules, SOME (getrest 10 upline), simplifymatches, syntacticsugar)
         	else if String.isPrefix "SIMPLIFYMATCHES" upline then
-        		evalmatch (signatur, agent, rules, userules, matchcount, SOME (getrest 15 upline))
+        		evalmatch (signatur, agent, rules, userules, matchcount, SOME (trim (getrest 15 upline)), syntacticsugar)
+        	else if String.isPrefix "SYNTACTICSUGAR" upline then
+        		evalmatch (signatur, agent, rules, userules, matchcount, simplifymatches, SOME (trim (getrest 14 upline)))
         	else if String.isPrefix "ENDMATCH" upline then
-        		domatch (signatur, agent, rules, userules, matchcount, simplifymatches)
+        		domatch (signatur, agent, rules, userules, matchcount, simplifymatches, syntacticsugar)
             (*before TextIO.output (stdErr, "bplwebback::domatch returned.\n")*)
         	else if null (String.tokens Char.isSpace line) then
-        	  evalmatch (signatur, agent, rules, userules, matchcount, simplifymatches)
+        	  evalmatch (signatur, agent, rules, userules, matchcount, simplifymatches, syntacticsugar)
         	else
         		log ("Unrecognised input line: " ^ line)
         end
@@ -437,7 +452,7 @@ val _ = TextIO.output (stdErr, "rules = "
         		log ("Unrecognised input line: " ^ line)
         end
       
-      fun evalsimplify (signatur, agent) =
+      fun evalsimplify (signatur, agent, syntacticsugar) =
       	let
       	  val line
       	    = case inputLineNoBuf () of
@@ -445,13 +460,15 @@ val _ = TextIO.output (stdErr, "rules = "
       	  val upline = String.translate (String.str o Char.toUpper) line
         in
         	if String.isPrefix "AGENT" upline then
-        		evalsimplify (signatur, SOME (getuntil "ENDAGENT"))
+        		evalsimplify (signatur, SOME (getuntil "ENDAGENT"), syntacticsugar)
         	else if String.isPrefix "SIGNATURE" upline then
-        		evalsimplify (SOME (getuntil "ENDSIGNATURE"), agent)
+        		evalsimplify (SOME (getuntil "ENDSIGNATURE"), agent, syntacticsugar)
+        	else if String.isPrefix "SYNTACTICSUGAR" upline then
+        		evalsimplify (signatur, agent, SOME (trim (getrest 14 upline)))
         	else if String.isPrefix "ENDSIMPLIFY" upline then
-        		dosimplify (signatur, agent)
+        		dosimplify (signatur, agent, syntacticsugar)
         	else if null (String.tokens Char.isSpace line) then
-        	  evalsimplify (signatur, agent)
+        	  evalsimplify (signatur, agent, syntacticsugar)
         	else
         		log ("Unrecognised input line: " ^ line)
         end
@@ -464,7 +481,7 @@ val _ = TextIO.output (stdErr, "rules = "
         		  andalso (size line < 6 orelse
         		           not (Char.isAlpha (String.sub (line, 5)))) then
         		  ((*TextIO.output (stdErr, "bplwebback: calling evalmatch.\n");*)
-        		   (evalmatch (NONE, NONE, NONE, NONE, NONE, NONE)))
+        		   (evalmatch (NONE, NONE, NONE, NONE, NONE, NONE, NONE)))
         		  handle e => BPLwebErrorHandler.explain e
         		  handle _ => ()
         	  else if String.substring (line, 0, 5) = "REACT"
@@ -478,7 +495,7 @@ val _ = TextIO.output (stdErr, "rules = "
         		  handle Subscript => false
         		  andalso (size line < 7 orelse
         		           not (Char.isAlpha (String.sub (line, 8)))) then
-        		  evalsimplify (NONE, NONE)
+        		  evalsimplify (NONE, NONE, NONE)
         		  handle e => BPLwebErrorHandler.explain e
         		  handle _ => ()
         	  else

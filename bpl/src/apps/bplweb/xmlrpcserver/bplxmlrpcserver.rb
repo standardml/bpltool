@@ -90,6 +90,7 @@ print "running matcher worker thread...\n"
             signature       = matching.signature
             agent           = matching.agent
             simplifymatches = matching.simplifymatches
+            syntacticsugar  = matching.syntacticsugar
             rules           = matching.rules
             rulestomatch    = matching.rulestomatch
             matchcount      = matching.matchcount
@@ -129,6 +130,7 @@ print "running matcher worker thread...\n"
                           "USERULES:#{rulestomatch}",
                           "MATCHCOUNT:#{matchcount}",
                           "SIMPLIFYMATCHES:#{simplifymatches}",
+                          "SYNTACTICSUGAR:#{syntacticsugar}",
                           "ENDMATCH"]
               print(line + "\n")
               matcher.puts(line + "\n")
@@ -326,7 +328,7 @@ noresult = { 'ruleno' => -1, 'matchno' => -1, 'match' => emptymatch }
 # The worker must be signaled when a change in the job has
 # occurred.
 class Matching
-  attr_reader :id, :signature, :agent, :simplifymatches, 
+  attr_reader :id, :signature, :agent, :simplifymatches, :syntacticsugar, 
   :rules, :matchcount, :rulestomatch,
   :react, :requestno, :results, :found, :foundall, :errors,
   :mutex, :worker, :resultsflag
@@ -335,6 +337,7 @@ class Matching
     @signature    = ""        # Signature for use in agent
     @agent        = ""        # Agent in which to match...
     @simplifymatches = true   # Simplify context and parameter
+    @syntacticsugar = true    # Use syntactic sugar when pretty printing
     @rules        = ""        # ...one or more rules
     @matchcount   = -1        # Requested matches, -1 means 'all'
     @rulestomatch = -2        # Rules to match, -1 means 'all'
@@ -350,7 +353,7 @@ class Matching
     Worker.new self # Start the worker threads
   end
 
-  def matchrequest1 (id, signature, agent, simplifymatches, rules,
+  def matchrequest1 (id, signature, agent, simplifymatches, syntacticsugar, rules,
                     matchcount, rulestomatch, requestno)
 print "matchrequest1 ([" + id['sessionid'].to_s + ", " +
       id['matchingid'].to_s + "], " + matchcount.to_s + ", " +
@@ -385,6 +388,7 @@ print "agent = '" + agent.to_s + "',  @agent = '" + @agent.to_s + "'\n"
         @signature = signature
         @agent = agent
         @simplifymatches = simplifymatches
+        @syntacticsugar = syntacticsugar
         @rules = rules
         @matchcount = matchcount
         @rulestomatch = rulestomatch
@@ -528,12 +532,12 @@ class Serverobj
     @matchingssessionidflag = ConditionVariable.new
   end
 
-  def matchrequest (id, signature, agent, simplifymatches, rules,
+  def matchrequest (id, signature, agent, simplifymatches, syntacticsugar, rules,
                     matchcount, rulestomatch, requestno)
     print "matchrequest ([" + id['sessionid'].to_s + ", " +
       id['matchingid'].to_s + "], " + requestno.to_s + ")\n"
     print "args: "
-    print  [id, signature, agent, simplifymatches, rules,
+    print  [id, signature, agent, simplifymatches, syntacticsugar, rules,
                     matchcount, rulestomatch, requestno].join(",")
     print "\n"
     sessionid = id['sessionid'].to_i
@@ -553,7 +557,7 @@ class Serverobj
     }
     id = {'sessionid' => sessionid, 'matchingid' => id['matchingid']}
     if matching
-      return matching.matchrequest1(id, signature, agent, simplifymatches,
+      return matching.matchrequest1(id, signature, agent, simplifymatches, syntacticsugar,
                                    rules, matchcount,
                                    rulestomatch, requestno)
     end
@@ -564,7 +568,7 @@ class Serverobj
     matching = Matching.new(id)
     @matchings[sessionid] = matching
     @matchingssessionidflag.broadcast
-    return matching.matchrequest1(id, signature, agent, simplifymatches,
+    return matching.matchrequest1(id, signature, agent, simplifymatches, syntacticsugar,
                                   rules, matchcount, 
                                   rulestomatch, requestno)
   end
@@ -623,8 +627,8 @@ class Serverobj
     }
   end
 
-  def simplifyrequest (signature, agent)
-    print "simplifyrequest (" + signature + ", " + agent + ")\n"
+  def simplifyrequest (signature, agent, syntacticsugar)
+    print "simplifyrequest (" + signature + ", " + agent + ", " + syntacticsugar.to_s() + ")\n"
     matcher = IO.popen("../backend/mlton", "w+")
     matcher.fcntl(4, 0x40000) # Avoid buffering
     matcher.sync = false # Avoid buffering!
@@ -633,7 +637,7 @@ class Serverobj
       print "Error: expected 'READY' from bplwebback, got '#{line}\n'"
     end
     
-    matcher.puts("SIMPLIFY\nSIGNATURE\n#{signature}\nENDSIGNATURE\nAGENT\n#{agent}\nENDAGENT\nENDSIMPLIFY\n")
+    matcher.puts("SIMPLIFY\nSIGNATURE\n#{signature}\nENDSIGNATURE\nAGENT\n#{agent}\nENDAGENT\nSYNTACTICSUGAR:#{syntacticsugar}\nENDSIMPLIFY\n")
     matcher.flush
     line = matcher.gets
     
@@ -737,12 +741,12 @@ server.add_handler("resultrequest", ["struct", "struct", "int", "int"],
 }
 
 server.add_handler("matchrequest", 
-                   ['struct', 'struct', 'string', 'string', 'int', 'array', 'int', 'int', 'int'],
-                   "matchrequest({sessionid, matchingid}, signature, agent, simplifymatches, rules, matchcount, rulestomatch, requestno)
+                   ['struct', 'struct', 'string', 'string', 'int', 'int', 'array', 'int', 'int', 'int'],
+                   "matchrequest({sessionid, matchingid}, signature, agent, simplifymatches, syntacticsugar, rules, matchcount, rulestomatch, requestno)
   returns a {type, {sessionid, matchingid}}
   where type is 'OK' or 'TimeOut'") {
-  |id, signature, agent, simplifymatches, rules, matchcount, rulestomatch, requestno|
-  serverobj.matchrequest(id, signature, agent, simplifymatches, rules,
+  |id, signature, agent, simplifymatches, syntacticsugar, rules, matchcount, rulestomatch, requestno|
+  serverobj.matchrequest(id, signature, agent, simplifymatches, syntacticsugar, rules,
                                 matchcount, rulestomatch, requestno)
 }
 
@@ -756,12 +760,12 @@ server.add_handler("reactrequest",
 }
 
 server.add_handler("simplifyrequest", 
-                   ['string', 'string'],
-                   "simplifyrequest(signature, agent)
+                   ['string', 'string', 'int'],
+                   "simplifyrequest(signature, agent, syntacticsugar)
   returns a {type, {agent}}
   where type is 'OK' or 'TimeOut'") {
-  |signature, agent|
-  serverobj.simplifyrequest(signature, agent)
+  |signature, agent, syntacticsugar|
+  serverobj.simplifyrequest(signature, agent, syntacticsugar)
 }
 
 server.serve

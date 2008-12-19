@@ -795,21 +795,21 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
   val _ = Flags.makeBoolFlag
             {name = "/kernel/ast/bgval/pp-simplify",
              default = false,
-             short = "", long = "--pp-simplified",
+             short = "", long = "pp-simplified",
              arg = "",
              desc = "Simplify BgVal terms before prettyprinting."}
    
   val _ = Flags.makeBoolFlag
             {name = "/kernel/ast/bgval/pp-tensor2parallel",
              default = false,
-             short = "", long = "--pp-t2p",
+             short = "", long = "pp-t2p",
              arg = "",
              desc = "Substitute || for * by removal of y//X's before prettyprinting."}
    
   val _ = Flags.makeBoolFlag
             {name = "/kernel/ast/bgval/pp-merge2prime",
              default = false,
-             short = "", long = "--pp-m2p",
+             short = "", long = "pp-m2p",
              arg = "",
              desc = "Substitute | for || by removal of merges before prettyprinting."}
 

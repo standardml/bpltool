@@ -23,6 +23,8 @@ class BplwebController < ApplicationController
              " L20[][[b1],[b2]] o (<[b1,b2]> L2[b1,b2] o <->)\n" +
              ")"
     @simplifymatches = params[:simplifymatches] == "on"
+    params[:syntacticsugar] = true if !params.has_key? :syntacticsugar
+    @syntacticsugar = params[:syntacticsugar]
     @rules = [Rule.new(:redex => "(<[y1,y2]> L2[y1,y2] o `[x1]`) ||\n" +
                                  "L1[x2] ||\n" +
                                  "K1[x2] o merge(2)",
@@ -66,6 +68,7 @@ class BplwebController < ApplicationController
     signature = params ['signature']
     agent     = params ['agent']
     simplifymatches = params ['simplifymatches'] == "on"
+    syntacticsugar = params ['syntacticsugar'] == "on"
     redex     = params ['redex']
     react     = params ['react']
     inst     = params ['inst']
@@ -95,7 +98,7 @@ print "matchrequest " + requestno.to_s + " calling server...\n"
     begin
       # Call the remote server and get our result
       @result = server.call("matchrequest", id, signature, agent,
-                            simplifymatches, rules,
+                            simplifymatches, syntacticsugar, rules,
                             matchcount, rulestomatch, requestno)
       if @result['type'] == 'OK'
         session[:id] = @result ['id']['sessionid'].to_i 
@@ -173,10 +176,12 @@ print "Server call returned to reactrequest " + id.to_s + ".\n"
 
     signature = "[" + params ['signature'] + "]"
     agent = params ['agent']
+    syntacticsugar = params ['syntacticsugar'] == "on"
+
 
     begin
       # Call the remote server and get our result
-      @result = server.call("simplifyrequest", signature, agent);
+      @result = server.call("simplifyrequest", signature, agent, syntacticsugar);
     rescue StandardError => e
       @result = {'type' => 'XMLRPCERROR',
         'errtxt' => 'Exception in reactrequest from XMLRPC: ' +

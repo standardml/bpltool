@@ -55,6 +55,10 @@ signature FLAGS = sig
     val setStringFlag : string -> string -> unit
     val getStringFlag : string -> string
 
+    (** Return the list of currently registered flags and their values. *)
+    val list : unit -> {name : string, desc : string,
+                        short : string, long : string, arg : string,
+                        value : string, default : string, t : string} list
     (** List the default value for each flag. *)
     val listDefaults : TextIO.outstream -> unit
     (** List the default value for each flag if currently not default. *)

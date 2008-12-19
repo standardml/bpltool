@@ -76,9 +76,22 @@ end
               alt=" ? "
               title="Help for signature syntax" /></a></td>
             <td align="right">
-              Display bigraphs
-              <input id="showimgs" name="showimgs" type="checkbox"
-               onclick="toggleshowimgs (this);" <%= @showimgs ? 'checked="checked"' : '' %> />
+              <!-- Control buttons -->
+              <table>
+                <tr>
+                  <td>
+                    Display bigraphs
+                    <input id="showimgs" name="showimgs" type="checkbox"
+                           onclick="toggleshowimgs (this);"
+                           <%= @showimgs ? 'checked="checked"' : '' %> />
+                  </td>
+                  <td>
+                    Syntactic sugar
+                    <input id="syntacticsugar" name="syntacticsugar" type="checkbox"
+                           <%= @syntacticsugar ? 'checked="checked"' : '' %> />
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
         </table>
