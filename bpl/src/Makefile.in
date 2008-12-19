@@ -51,6 +51,7 @@ MLC		= @MLC@
 KILL	= /usr/bin/kill
 RUBY	= ruby
 RAILS	= rails
+SVN		= svn
 
 MAKEFILE	= Makefile
 EXEEXT		= @EXEEXT@
@@ -63,12 +64,12 @@ RPMSDIR		= @RPMSDIR@
 
 TOOLNAME	= bpltool
 VERSION		:= $(shell cat VERSION)
+REVISION	:= $(shell $(SVN) info . -r head | grep '^Revision:' | tr -c -d 0123456789)
 MOSMLFLAGS 	= -liberal
 DEPENDENCIES    := $(shell find . -name $(TOOLNAME)-\* -prune -o -name Dependencies -print)
 MOSMAKEDIRS 	:= $(subst ./,, $(patsubst %/Dependencies,%,$(DEPENDENCIES)))
 MOSMAKE 	= lib/mosmake
 
-SVN		= svn
 
 DOCSUBDIR	= doc
 SMLDOC		= smldoc
@@ -337,10 +338,8 @@ restart-webapp:
 # DISTRIBUTION ---------------------------------------------
 .PHONY: dist update-dist
 # This will build a distribution file bpltool-MAJOR.MINOR.REV.tar.gz
-dist: $(srcdir)/$(TOOLNAME)-$(VERSION)-$(shell $(SVN) info . -r head | grep '^Revision:' | tr -c -d 0123456789).tar.gz
-$(srcdir)/$(TOOLNAME)-$(VERSION)-%.tar.gz: $(srcdir)/kernel/parsers/bg.grm.sig \
-	$(srcdir)/kernel/parsers/rules.grm.sig $(srcdir)/kernel/parsers/bpl.grm.sig \
-	 $(srcdir)/apps/miniml/miniml.grm.sig $(srcdir)/kernel/parsers/bg.grm-sig.sml \
+dist: $(srcdir)/$(TOOLNAME)-$(VERSION)-$(REVISION).tar.gz
+$(srcdir)/$(TOOLNAME)-$(VERSION)-%.tar.gz: $(srcdir)/kernel/parsers/bg.grm-sig.sml \
 	$(srcdir)/kernel/parsers/rules.grm-sig.sml $(srcdir)/kernel/parsers/bpl.grm-sig.sml \
 	 $(srcdir)/apps/miniml/miniml.grm-sig.sml $(srcdir)/kernel/parsers/bg.lex.sml \
 	$(srcdir)/kernel/parsers/rules.lex.sml $(srcdir)/kernel/parsers/bpl.lex.sml \
@@ -365,7 +364,7 @@ update-dist:
 	done; else true; fi
 	rm -f $(TARBUILDFLAG)
 # Make a Fedora RPM for SMLNJ
-dist-smlnj-rpm: $(TOOLNAME)-smlnj-$(VERSION)-$(shell $(SVN) info . -r head | grep '^Revision:' | tr -c -d 0123456789).i386.rpm
+dist-smlnj-rpm: $(TOOLNAME)-smlnj-$(VERSION)-$(REVISION).i386.rpm
 $(RPMSDIR)/$(TOOLNAME)-smlnj-$(VERSION)-%.i386.rpm: $(TOOLNAME)-smlnj-$(VERSION)-%.spec $(RPMSRCDIR)/$(TOOLNAME)-$(VERSION)-%.tar.gz
 	$(RPMBUILD) -bb $<
 $(TOOLNAME)-smlnj-$(VERSION)-%.spec: $(TOOLNAME)-smlnj.spec.in
@@ -375,7 +374,7 @@ $(TOOLNAME)-smlnj-$(VERSION)-%.spec: $(TOOLNAME)-smlnj.spec.in
 	mv $< $@
 $(RPMSRCDIR)/%: $(srcdir)/%
 	cp $< $@
-upload-dist-smlnj-rpm: $(TOOLNAME)-smlnj-$(VERSION)-$(shell $(SVN) info . -r head | grep '^Revision:' | tr -c -d 0123456789).i386.rpm
+upload-dist-smlnj-rpm: $(TOOLNAME)-smlnj-$(VERSION)-$(REVISION).i386.rpm
 	scp $< ssh.itu.dk:/import/www/research/theory/bpl/dist/bpltool/
 	ssh ssh.itu.dk 'cd /import/www/research/theory/bpl/dist/bpltool/ && make add-rpm-$<'
 # CLEAN UP -------------------------------------------------
