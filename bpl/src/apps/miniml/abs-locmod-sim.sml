@@ -88,6 +88,12 @@
      ->
    devs(location_l,d | [0]) || location_l,d
 
+ rule genFindall =
+   id_1 -> id_1 | findall
+
+ rule genWhereis =
+   id_1 * d/ -> id_1 * whereis_d
+
  --------------------------------------------------------
 
  SCENARIO:
@@ -96,6 +102,7 @@
  3. An answer to the query appears in A.
  4. Another ``whereis'' query is issued, this time for device d'.
  5. S discovers that d' occurs in C but not in L and reacts.
+ 6. An answer to this query appears in A.
 
 ****************************************************************************)
 
@@ -145,6 +152,26 @@ fun getInner b = let val (b,inn,out) = B.unmk b in inn end
 fun getOuter b = let val (b,inn,out) = B.unmk b in out end
 fun isGround b = let val (bgterm,inner,outer) = B.unmk b
 		 in Iface.eq (inner, Iface.zero) end
+
+(* LazyList functions*)
+fun lzSize l c =
+    let fun lzSize' l' c' =
+	    if LazyList.lznull(l') then Int.toString(c')
+	    else lzSize' (LazyList.lztl l') (c'+1)
+    in if c < 0 then "lzSize: Counter is initially less than zero.\n"
+       else lzSize' l c
+    end
+
+fun lzLength l = Int.toString(List.length(LazyList.lztolist l))
+
+(* take apart a match; context and parameter *)
+fun parts agent matches =
+    let val agent' = M.unmk (LazyList.lzhd matches)
+	val agent'_ctx = #context(agent')
+	val agent'_par = #parameter(agent')
+	fun peel x = (B.toString o B.simplify o Bdnf.unmk) x
+    in ["agent_ctx= " ^ (peel agent'_ctx) ^ "\n",
+	"agent_par= " ^ (peel agent'_par) ^ "\n"] end
 
 (* printing *)
 fun printWidth w = print(Int.toString w)
@@ -199,6 +226,12 @@ fun printRes tname agents =
     ; LazyList.lzprint (B.toString o B.simplify) agents
     ; print "\n" )
 
+fun printRes' tname agent =
+    ( print("Agent resulting from reaction on " ^ tname ^ ":\n")
+    ; print((B.toString o B.simplify) agent)
+    ; print "\n" )
+
+
 (* SIGNATURE *)
 
 (* C *)
@@ -234,47 +267,56 @@ fun whereis d =
 			   free = [d], bound = []}),
 	 barren)
 
+fun make_plato (c,p,a) = S.|| (c, S.|| (p, a))
+
+
 (* INITIAL STATE OF THE SYSTEM:
-
-  loc_l'(loc_l(dev_d)) || devs(location_l',d) || whereis_d
-
+   C: loc_l'(loc_l(dev_d | dev_d')) ||
+   L: devs(location_l',d) ||
+   A: 1
 *)
-
 val loc_l' = loc (s2n "l'")
 val loc_l = loc (s2n "l")
 val dev_d = dev (s2n "d")
-val C = S.o (loc_l, S.o (loc_l,dev_d))
+val dev_d' = dev (s2n "d'")
+val C = S.o (loc_l', S.o (loc_l, S.`|` (dev_d, dev_d')))
 val devs1 = devs
 val location_l'd = location (s2n "l'") (s2n "d")
 val L = S.o (devs1, location_l'd)
-val findall1 = findall
-val A = findall1
-val system = S.|| (C, S.|| (L,A))
+val A = barren
+val system0 = make_plato(C,L,A)
 
-val _ = prtSimp "state: " system
-val _ = printIfaces "system" (getInner system) (getOuter system)
+val _ = print "\nsystem0\n"
+val _ = prtSimp "state: " system0
+val _ = printIfaces "system0" (getInner system0) (getOuter system0)
 
 (* aux. function *)
 fun makeBR bgval = Bdnf.regularize (Bdnf.make bgval)
 
+
 (* RULES *)
 
 (* auxiliary definitions *)
-val aux1 = S.o (loc_l, S.`|` (id_1, S.o (loc_l', S.`|` (id_1,dev_d))))
-val aux2 = S.o (loc_l, S.`|` (id_1, S.`|` (S.o (loc_l',id_1), dev_d)))
-val locdev = S.o (loc_l, S.`|` (dev_d,id_1))
-val location_ld = location (s2n "l") (s2n "d")
-val id_l = S.idw ["l"]
-val close_d = S.* (S.-/ "d", id_1)
-val id_l_tt_close_d = S.* (id_l,close_d)
-val id_l_tt_close_d_tt_id_1 = S.* (id_l, S.* (close_d, id_1))
-val id_l' = S.idw ["l'"]
-val id_l'_tt_close_d = S.* (id_l',close_d)
-val devs_loc_l'd_id1 = S.o (devs, S.`|` (location_l'd, id_1))
-val devs_loc_ld_id1 = S.o (devs, S.`|` (location_ld, id_1))
-val idle_l' = S.// ("l'", [])
-val whereis_d = whereis (s2n "d")
-val idle_d = S.// ("d", [])
+val loc_l1 = loc (s2n "l1")
+val loc_l2 = loc (s2n "l2")
+val dev_d3 = dev (s2n "d3")
+val aux1 = S.o (loc_l1, S.`|` (id_1, S.o (loc_l2, S.`|` (id_1, dev_d3))))
+val aux2 = S.o (loc_l1, S.`|` (id_1, S.`|` (S.o (loc_l2, id_1), dev_d3)))
+val locdev = S.o (loc_l1, S.`|` (dev_d3, id_1))
+val location_l1d3 = location (s2n "l1") (s2n "d3")
+val location_l2d3 = location (s2n "l2") (s2n "d3")
+val id_l1 = S.idw ["l1"]
+val close_d3 = S.* (S.-/ "d3", id_1)
+val id_l1_tt_close_d3 = S.* (id_l1, close_d3)
+val id_l1_tt_close_d3_tt_id_1 = S.* (id_l1, S.* (close_d3, id_1))
+val id_l2 = S.idw ["l2"]
+val id_l2_tt_close_d3 = S.* (id_l2, close_d3)
+val devs_loc_l2d3_id1 = S.o (devs, S.`|` (location_l2d3, id_1))
+val devs_loc_l1d3_id1 = S.o (devs, S.`|` (location_l1d3, id_1))
+val idle_l1 = S.// ("l1", [])
+val idle_l2 = S.// ("l2", [])
+val idle_d3 = S.// ("d3", [])
+val whereis_d3 = whereis (s2n "d3")
 
 (* C *)
 val redexUp = aux1
@@ -291,24 +333,24 @@ val Cmovedown = R.make' { name = "Cmovedown",
 			  info = info }
 
 (* S *)
-val redexObsUpd = S.|| (locdev, devs_loc_l'd_id1)
-val reactObsUpd = S.|| (locdev, S.* (devs_loc_ld_id1, idle_l'))
+val redexObsUpd = S.|| (locdev, devs_loc_l2d3_id1)
+val reactObsUpd = S.|| (locdev, S.* (devs_loc_l1d3_id1, idle_l2))
 val Sobsupd = R.make' { name = "Sobsupd",
 			redex = makeBR redexObsUpd,
 			react = reactObsUpd,
 			info = info }
 
-val redexObsNew = S.|| (S.o (id_l_tt_close_d, locdev), devs)
-val reactObsNew = S.o (id_l_tt_close_d_tt_id_1,
-		       S.|| (locdev, S.`|` (location_ld, id_1)))
+val redexObsNew = S.|| (S.o (id_l1_tt_close_d3, locdev), devs)
+val reactObsNew = S.o (id_l1_tt_close_d3_tt_id_1,
+		       S.|| (locdev, S.`|` (location_l1d3, id_1)))
 val Sobsnew = R.make' { name = "Sobsnew",
 			redex = makeBR redexObsNew,
 			react = reactObsNew,
 			info = info }
 
-val redexLose = S.|| (S.o (loc_l,id_1),
-		      S.o (id_l'_tt_close_d, devs_loc_l'd_id1))
-val reactLose = S.|| (S.o (loc_l,id_1), S.* (devs, idle_l'))
+val redexLose = S.|| (S.o (loc_l1, id_1),
+		      S.o (id_l2_tt_close_d3, devs_loc_l2d3_id1))
+val reactLose = S.|| (S.o (loc_l1, id_1), S.* (devs, idle_l2))
 val Slose = R.make' { name = "Slose",
 		      redex = makeBR redexLose,
 		      react = reactLose,
@@ -324,7 +366,7 @@ val instFindall = Inst.make { I = redex_innerface_Findall,
 			      J = react_innerface_Findall,
 			      maps = [((0,[]), (0,[])),
 				      ((1,[]), (0,[]))] }
-val redexFindall = S.|| (devs, findall1)
+val redexFindall = S.|| (devs, findall)
 val reactFindall = S.|| (devs, id_1)
 val Afindall = R.make { name = "Afindall",
 			 redex = makeBR redexFindall,
@@ -337,93 +379,71 @@ val Afindall = R.make { name = "Afindall",
 			   react = barren,
 			   info = info })*)
 
-val redexWhereis = S.|| (S.o (devs, S.`|` (location_ld, id_1)),
-			 whereis_d)
-val reactWhereis = S.|| (S.o (devs, S.`|` (location_ld, id_1)),
-			 location_ld)
+val redexWhereis = S.|| (S.o (devs, S.`|` (location_l1d3, id_1)),
+			 whereis_d3)
+val reactWhereis = S.|| (S.o (devs, S.`|` (location_l1d3, id_1)),
+			 location_l1d3)
 val Awhereis = R.make' { name = "Awhereis",
 			 redex = makeBR redexWhereis,
 			 react = reactWhereis,
 			 info = info }
 
 val redexGenFindall = id_1
-val reactGenFindall = S.`|` (id_1, findall1)
+val reactGenFindall = S.`|` (id_1, findall)
 val AgenFindall = R.make' { name = "AgenFindall",
 			    redex = makeBR redexGenFindall,
 			    react = reactGenFindall,
 			    info = info }
 
-val redexGenWhereis = S.* (id_1, idle_d)
-val reactGenWhereis = S.`|` (id_1, whereis_d)
+val redexGenWhereis = S.* (id_1, idle_d3)
+val reactGenWhereis = S.`|` (id_1, whereis_d3)
 val AgenWhereis = R.make' { name = "AgenWhereis",
 			    redex = makeBR redexGenWhereis,
 			    react = reactGenWhereis,
 			    info = info }
 
+
 (* REACTIONS *)
+
 (* Example:
-    loc_l'(loc_l(dev_d | dev_d')) || devs(location_l',d) || 1
---> loc_l'(loc_l(dev_d | dev_d')) || devs(location_l',d) || whereis_d
---> loc_l'(loc_l(dev_d') | dev_d) || devs(location_l',d) || whereis_d
---> loc_l'(loc_l(dev_d') | dev_d) || devs(location_l',d) || location_l',d
---> loc_l'(loc_l(dev_d') | dev_d) ||
-    devs(location_l',d) ||
-    (location_l',d | whereis_d')
---> loc_l'(loc_l(dev_d') | dev_d) ||
-    devs(location_l',d | location_l,d') ||
-    (location_l',d | whereis_d')
---> loc_l'(loc_l(dev_d') | dev_d) ||
-    devs(location_l',d | location_l,d') ||
-    (location_l',d | location_l,d')
+     loc_l'(loc_l(dev_d | dev_d')) || devs(location_l',d) || 1
+-1-> loc_l'(loc_l(dev_d | dev_d')) || devs(location_l',d) || whereis_d
+-2-> loc_l'(loc_l(dev_d') | dev_d) || devs(location_l',d) || whereis_d
+-3-> loc_l'(loc_l(dev_d') | dev_d) || devs(location_l',d) || location_l',d
+-4-> loc_l'(loc_l(dev_d') | dev_d) ||
+     devs(location_l',d) ||
+     (location_l',d | whereis_d')
+-5-> loc_l'(loc_l(dev_d') | dev_d) ||
+     devs(location_l',d | location_l,d') ||
+     (location_l',d | whereis_d')
+-6-> loc_l'(loc_l(dev_d') | dev_d) ||
+     devs(location_l',d | location_l,d') ||
+     (location_l',d | location_l,d')
 *)
 
-fun parts agent matches =
-    let val agent' = M.unmk (LazyList.lzhd matches)
-	val agent'_ctx = #context(agent')
-	val agent'_par = #parameter(agent')
-	fun peel x = (B.toString o B.simplify o Bdnf.unmk) x
-    in ["agent_ctx= " ^ (peel agent'_ctx) ^ "\n",
-	"agent_par= " ^ (peel agent'_par) ^ "\n"] end
+(* 1: --AgenWhereis-> *)
+val BRsystem0 = makeBR system0
+val mts0 = M.matches { agent = BRsystem0 , rule = AgenWhereis }
+val match0 = LazyList.lznth mts0 3 (* zero-indexed *)
+val system1 = Re.react match0 (* returns agent *)
+val _ = printRes' "system0" system1
 
-fun lzlength l = Int.toString(List.length(LazyList.lztolist l))
-
-(* --whereis-> *)
-val BRsystem = makeBR system
-val mts1 = M.matches { agent = BRsystem , rule = AgenWhereis }
-(*
-val _ = if LazyList.lznull(mts1) then print "No matches!\n"
-	else print "At least one match\n"
+(* 2: --Cmoveup-> *)
+val BRsystem1 = makeBR system1
+val mts1 = M.matches { agent = BRsystem1 , rule = Cmoveup }
+val _ = print("length(mts1) = " ^ (lzLength mts1) ^ "\n")
 val _ = printMts mts1
-val _ = case mt1 of NONE => print "No matches!\n"
-		  | SOME(m) => ( print(M.toString(m))
-				 handle e => handler e )
 
-val _ = map print (parts system mts1)
-*)
+(* 3: --SobsUpd-> *)
+(* 4: --AgenWhereis-> *)
+(* 5: ---> *)
+(* 6: ---> *)
 
 (*
-val terms' = LazyList.lzmap (Re.react (*term*)) mtsA
-val _ = printRes "term" terms'
-*)
-
-(* (x x)<x:=k> --2> (k x)<x:=k> *)
-(*
-val _ = print("\n")
-val term' = LazyList.lzhd terms' (* the resulting agent we want *)
-val mtsC = M.matches { agent = makeBR term' , rule = ruleC }
-*)
-(*
-val _ = printMts mtsC
-val _ = print("length(mtsC) = " ^ (lzlength mtsC) ^ "\n")
-*)
-(*
-val terms'' = LazyList.lzmap (Re.react (*term'*)) mtsC
-*)
-(*
-val _ = print("length(terms'') = " ^ (lzlength terms'') ^ "\n")
-*)
-(*
-val _ = printRes "term'" terms''
+val _ = print(M.toString(match1))
+val match1 = LazyList.lznth mts1 ?
+val system2 = Re.react match1
+val _ = printRes' "system1" system2
 *)
 
 (*
@@ -432,7 +452,27 @@ val _ = case mtD of NONE => print "No matches!\n"
 		    handle e => handler e )
 *)
 
+(* PRINTING FOR TESTING PURPOSES *)
 
+(*
+val _ = case mt1 of NONE => print "No matches!\n"
+		  | SOME(m) => ( print(M.toString(m))
+				 handle e => handler e )
+
+val _ = map print (parts system mts1)
+*)
+
+(* print number of matches to stdout 
+val _ = ( print "Number of matches: "
+        ; print (lzSize mts1 0)
+	; print "\n")
+*)
+
+(* print to stdout 
+val _ = printMts mts1
+*)
+
+(* print to file 
 open TextIO;
 
 val os = openOut("matches.out")
@@ -446,3 +486,4 @@ val out_a = printmatches mts1
 
 val _ = flushOut(os)
 val _ = closeOut(os)
+*)
