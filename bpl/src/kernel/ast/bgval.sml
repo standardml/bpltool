@@ -886,15 +886,17 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
              arg = "N",
              desc = "Set extra indentation at each level when prettyprinting to N"}
              
-  val toString
+  fun toString v
     = PrettyPrint.pp_to_string
         (Flags.getIntFlag "/misc/linewidth") 
         (pp (Flags.getIntFlag "/misc/indent"))
+        v
 
-  val toString_unchanged
+  fun toString_unchanged v
     = PrettyPrint.pp_to_string
         (Flags.getIntFlag "/misc/linewidth") 
         (pp_unchanged (Flags.getIntFlag "/misc/indent"))
+        v
 
   val size = BgTerm.size o #1 o unmk
 

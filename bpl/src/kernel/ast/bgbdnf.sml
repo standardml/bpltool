@@ -1642,10 +1642,11 @@ struct
              arg = "N",
              desc = "Set extra indentation at each level when prettyprinting to N"}
              
-  val toString
+  fun toString b
     = PrettyPrint.pp_to_string
         (Flags.getIntFlag "/misc/linewidth") 
         (pp (Flags.getIntFlag "/misc/indent"))
+        b
 
   val size = BgVal.size o unmk
   val revision

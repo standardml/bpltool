@@ -347,6 +347,8 @@ val _ = TextIO.output (stdErr, "rules = "
               parseStr SIGNATURE "signature" signaturestr
             | NONE => []
           val fixctrl = BgTerm.add1s o BgTerm.replacectrls signatur
+          val oldval = Flags.getBoolFlag "/kernel/bg/name/strip"
+                       before Flags.setBoolFlag "/kernel/bg/name/strip" true;
           val bareagent = parseStr BGTERM "agent" agentstr
           val ctrlfixedagent = fixctrl bareagent
 
@@ -356,9 +358,7 @@ val _ = TextIO.output (stdErr, "rules = "
                   (BgBDNF.make
                     (BgVal.make
                       BgTerm.info ctrlfixedagent)))
-          val oldval = Flags.getBoolFlag "/kernel/bg/name/strip"
         in
-          Flags.setBoolFlag "/kernel/bg/name/strip" true;
           print
             ("SIMPLIFIEDAGENT\n" ^ BgVal.toString simplifiedagent
              ^ "\nEND\n");

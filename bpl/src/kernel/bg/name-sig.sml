@@ -53,6 +53,10 @@ sig
   (** Prettyprint a name. *)
   val pp : int -> PrettyPrint.ppstream -> name -> unit
 
+  (** Return a prettyprinted string representation of a name. *)
+  val toString : name -> string
+
+
   structure Order : ORDERING where type T = name
   structure NameSet : MONO_SET where type elt = name
 
