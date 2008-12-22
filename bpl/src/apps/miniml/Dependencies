@@ -89,4 +89,4 @@ lambda-pure: %PROGRAM /kernel/bg /lib/coll/lzlist /lib/util/printerrorhandler
 abs-locmod-sim: %PROGRAM /kernel/bg /lib/coll/lzlist /lib/util/printerrorhandler
    /kernel/ast/bgval /kernel/match/funs /lib/util/origin 
    /lib/coll/orderfinmap /lib/coll/orderset /lib/util/util 
-   /lib/util/baseerrorhandler /lib/pp/smlnj/prettyprint
+   /lib/util/baseerrorhandler /lib/pp/smlnj/prettyprint /lib/util/flags
