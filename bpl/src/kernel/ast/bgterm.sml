@@ -823,17 +823,32 @@ struct
                      else if innermost then
                        foldr (remove_id is_id0') ([], NameSet.empty) bs
                      else
-                       (* FIXME It is unsound to remove ids with width > 0 even if
-                        * they're not innermost.
+                       (* It is unsound in general to remove ids with width > 0
+                        * even if they're not innermost.
                         * Example:
                         *   (`[]` || `[x]`) o (M0 || M1[x])
                         * becomes
                         *   `[x]` o (M0 || M1[x])
+                        *
+                        * Wiring identities can always be removed, as we can
+                        * always infer them.
+                        *
+                        * Some cases of ids with width > 0 can be handled by
+                        * syntactic sugar, though.
                         *)
-                       (* foldr (remove_id is_id') ([], NameSet.empty) bs *)
-                       foldr
-                         (remove_id (fn b => width b = 0 andalso is_id' b))
-                         ([], NameSet.empty) bs
+                       case bs of
+                         (* (w * id) o b2 -> w o b2 *)
+                         (b as (Wir (w, i))) :: bs' =>
+                         if is_id' (Ten (bs', i)) then
+                           ([b], innernames (Ten (bs', i)))
+                         else
+                           foldr
+                             (remove_id (fn b => width b = 0 andalso is_id' b))
+                             ([], NameSet.empty) bs
+                       | _ => 
+                         foldr
+                           (remove_id (fn b => width b = 0 andalso is_id' b))
+                           ([], NameSet.empty) bs
               in
                 case bs' of
                  []
