@@ -820,17 +820,20 @@ struct
                  val (bs', inner_ns) =
                      if ppids then
                        (bs, NameSet.empty)
-                     (* FIXME It is unsound to remove ids with width > 0 even if
-                      * they're not innermost.
-                      * Example:
-                      *   (`[]` || `[x]`) o (M0 || M1[x])
-                      * becomes
-                      *   `[x]` o (M0 || M1[x])
-                      *)
-                     else (* if innermost then *)
+                     else if innermost then
                        foldr (remove_id is_id0') ([], NameSet.empty) bs
-                     (* else
-                       foldr (remove_id is_id') ([], NameSet.empty) bs *)
+                     else
+                       (* FIXME It is unsound to remove ids with width > 0 even if
+                        * they're not innermost.
+                        * Example:
+                        *   (`[]` || `[x]`) o (M0 || M1[x])
+                        * becomes
+                        *   `[x]` o (M0 || M1[x])
+                        *)
+                       (* foldr (remove_id is_id') ([], NameSet.empty) bs *)
+                       foldr
+                         (remove_id (fn b => width b = 0 andalso is_id' b))
+                         ([], NameSet.empty) bs
               in
                 case bs' of
                  []
@@ -890,9 +893,9 @@ struct
            * @return  The set of inner names and the set innernames \ outernames.
            *)
           and pp''' _ _ (Mer (0, _)) = (  show "<->"
-                                      ; (NameSet.empty, NameSet.empty))
+                                        ; (NameSet.empty, NameSet.empty))
             | pp''' _ _ (Mer (n, _)) = (  show ("merge(" ^ Int.toString n ^ ")")
-                                      ; (NameSet.empty, NameSet.empty))
+                                        ; (NameSet.empty, NameSet.empty))
             | pp''' _ _ (Con (X, _))
             = (  (show "`"; NameSetPP.ppbr indent "[" "]" pps X; show "`"
                ; (X, NameSet.empty))
