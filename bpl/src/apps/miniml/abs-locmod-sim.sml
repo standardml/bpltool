@@ -1,6 +1,9 @@
 (***************************************************************************
  Ebbe Elsborg, 18/12/2008
  ---------------------------------------------------------------------------
+ Work in progress.
+ Abandoned for now due to link matching problems in the BPL tool.
+
  Compile: Do 'make abs-locmod-sim' in 'impl/bpl/src'
  Run: Do './abs-locmod-sim' in 'impl/bpl/src'
  Using the dependencies in impl/bpl/src/apps/miniml/Dependencies
