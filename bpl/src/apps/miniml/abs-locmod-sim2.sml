@@ -185,7 +185,7 @@ val _ = Flags.setBoolFlag "/kernel/ast/bgval/pp-simplify" true
 val info = BG.Info.noinfo
 val barren = S.<->
 val id_1 = B.Per info (P.id_n 1)
-val site = id_1
+val site = id_1 (*`[]`*)
 
 (* exception handler *)
 fun handler exn = (print (BaseErrorHandler.explain' exn) ; print "\n")
@@ -342,21 +342,35 @@ fun makeBR bgval = Bdnf.regularize (Bdnf.make bgval)
 (* RULES *)
 
 (* C *)
-val aux1 = S.o (loc, S.`|` (id, S.`|` (site, locdev)))
-val aux2 = S.o (loc, S.`|` (id, S.`|` (site, S.`|` (loc', dev))))
+
+val aux1 = S.o (loc, S.`|` (id, S.`|`(site, S.o (loc, S.`|`(id, S.`|` (site, S.`|` (dev, dev)))))))
+val aux2 = S.o (loc, S.`|` (id, S.`|`(site, S.`|` (S.o (loc, S.`|`(id, S.`|` (site, dev))), dev))))
+val redex_innerface_move = Iface.m 6
+val react_innerface_move = Iface.m 6
+val instMove = Inst.make { I = redex_innerface_move,
+			   J = react_innerface_move,
+			   maps = [((0,[]), (0,[])),
+				   ((1,[]), (1,[])),
+				   ((2,[]), (2,[])),
+				   ((3,[]), (3,[])),
+				   ((4,[]), (5,[])),
+				   ((5,[]), (4,[]))] }
+
 val redexUp = aux1
 val reactUp = aux2
-val Cmoveup = R.make' { name = "Cmoveup",
-			redex = makeBR redexUp,
-			react = reactUp,
-			info = info }
+val Cmoveup = R.make { name = "Cmoveup",
+		       redex = makeBR redexUp,
+		       react = reactUp,
+		       inst = instMove,
+		       info = info }
 
 val redexDown = aux2
 val reactDown = aux1
-val Cmovedown = R.make' { name = "Cmovedown",
-			  redex = makeBR redexDown,
-			  react = reactDown,
-			  info = info }
+val Cmovedown = R.make { name = "Cmovedown",
+			 redex = makeBR redexDown,
+			 react = reactDown,
+			 inst = instMove,
+			 info = info }
 
 (* S *)
 (* rule schema, one for each n in N *)
@@ -462,13 +476,13 @@ val AgenFindall = R.make' { name = "AgenFindall",
 
 (* rule schema, a rule for each n in N, we need two concrete now *)
 val redexGenWhereis3 = site
-val reactGenWhereis3 = S.`|` (site, whereis'(i("i3")))
+val reactGenWhereis3 = S.`|` (site, whereis'(i("3")))
 val AgenWhereis3 = R.make' { name = "AgenWhereis3",
 			     redex = makeBR redexGenWhereis3,
 			     react = reactGenWhereis3,
 			     info = info }
 val redexGenWhereis4 = site
-val reactGenWhereis4 = S.`|` (site, whereis'(i("i4")))
+val reactGenWhereis4 = S.`|` (site, whereis'(i("4")))
 val AgenWhereis4 = R.make' { name = "AgenWhereis4",
 			     redex = makeBR redexGenWhereis4,
 			     react = reactGenWhereis4,
@@ -476,44 +490,88 @@ val AgenWhereis4 = R.make' { name = "AgenWhereis4",
 
 (* REACTIONS *)
 
-(* Example:
-     loc(id(i1) | loc(id(i2) | dev(i3) | dev(i4))) ||
-     devs(location(l(i2) | d(i3))) ||
-     1
--1-> loc(id(i1) | loc(id(i2) | dev(i3) | dev(i4))) ||
-     devs(location(l(i2) | d(i3))) ||
-     whereis(i3)
--2-> loc(id(i1) | dev(i3) | loc(id(i2) | dev(i4))) ||
-     devs(location(l(i2) | d(i3))) ||
-     whereis(i3)
--3-> loc(id(i1) | dev(i3) | loc(id(i2) | dev(i4))) ||
-     devs(location(l(i2) | d(i3))) ||
-     location(l(i2) | d(i3))
--4-> loc(id(i1) | dev(i3) | loc(id(i2) | dev(i4))) ||
-     devs(location(l(i2) | d(i3))) ||
-     (location(l(i2) | d(i3)) | whereis(i4))
--5-> loc(id(i1) | dev(i3) | loc(id(i2) | dev(i4))) ||
-     devs(location(l(i2) | d(i3)) | location(l(i1) | d(i4))) ||
-     (location(l(i2) | d(i3)) | whereis(i4))
--6-> loc(id(i1) | dev(i3) | loc(id(i2) | dev(i4))) ||
-     devs(location(l(i2) | d(i3)) | location(l(i1) | d(i4))) ||
-     (location(l(i2) | d(i3)) | location(l(i1) | d(i4)))
+(* Scenario:
+ loc(id(i1) | loc(id(i2) | dev(i3) | dev(i4))) ||
+ devs(location(l(i2) | d(i3))) ||
+ 1
+   --1:Agenwhereis3->
+ loc(id(i1) | loc(id(i2) | dev(i3) | dev(i4))) ||
+ devs(location(l(i2) | d(i3))) ||
+ whereis(i3)
+   --2:Cmoveup->
+ loc(id(i1) | dev(i3) | loc(id(i2) | dev(i4))) ||
+ devs(location(l(i2) | d(i3))) ||
+ whereis(i3)
+   --3:Awhereis3->
+ loc(id(i1) | dev(i3) | loc(id(i2) | dev(i4))) ||
+ devs(location(l(i2) | d(i3))) ||
+ location(l(i2) | d(i3))
+   --4:AgenWhereis4->
+ loc(id(i1) | dev(i3) | loc(id(i2) | dev(i4))) ||
+ devs(location(l(i2) | d(i3))) ||
+ (location(l(i2) | d(i3)) | whereis(i4))
+   --5:Sobsnew->
+ loc(id(i1) | dev(i3) | loc(id(i2) | dev(i4))) ||
+ devs(location(l(i2) | d(i3)) | location(l(i1) | d(i4))) ||
+ (location(l(i2) | d(i3)) | whereis(i4))
+   --6:Awhereis4->
+ loc(id(i1) | dev(i3) | loc(id(i2) | dev(i4))) ||
+ devs(location(l(i2) | d(i3)) | location(l(i1) | d(i4))) ||
+ (location(l(i2) | d(i3)) | location(l(i1) | d(i4)))
+
+ (7. A ``findall'' query is issued.)
+ (8. An answer to this query appears in A.)
 *)
 
-(* 1: --AgenWhereis-> 
+(* 1: --AgenWhereis-> *)
 val BRsystem0 = makeBR system0
-val mts0 = M.matches { agent = BRsystem0 , rule = AgenWhereis }
-val match0 = LazyList.lznth mts0 10 (*3*) (* zero-indexed *)
-val system1 = Re.react match0 (* returns agent *)
+val mts0 = M.matches { agent = BRsystem0 , rule = AgenWhereis3 }
+val match0 = LazyList.lznth mts0 4 (* zero-indexed *)
+val system1 = Re.react match0 (* return agent *)
+val _ = print "\n"
 val _ = printRes' "system0" "AgenWhereis" system1
-*)
 
 (* 2: --Cmoveup-> *)
-(* 3: --X-> *)
-(* 4: --X-> *)
-(* 5: --X-> *)
-(* 6: --X-> *)
+val BRsystem1 = makeBR system1
+val mts1 = M.matches { agent = BRsystem1 , rule = Cmoveup }
+val match1 = LazyList.lznth mts1 0
+val system2 = Re.react match1
+val _ = print "\n"
+val _ = printRes' "system1" "Cmoveup" system2
 
+(* 3: --Awhereis-> *)
+val BRsystem2 = makeBR system2
+val mts2 = M.matches { agent = BRsystem2 , rule = Awhereis3 }
+val match2 = LazyList.lznth mts2 0
+val system3 = Re.react match2
+val _ = print "\n"
+val _ = printRes' "system2" "Awhereis" system3
+
+(* 4: --AgenWhereis-> *)
+val BRsystem3 = makeBR system3
+val mts3 = M.matches { agent = BRsystem3 , rule = AgenWhereis4 }
+val match3 = LazyList.lznth mts3 5
+val system4 = Re.react match3
+val _ = print "\n"
+val _ = printRes' "system3" "AgenWhereis" system4
+
+(* 5: --Sobsnew-> *)
+val BRsystem4 = makeBR system4
+val mts4 = M.matches { agent = BRsystem4 , rule = Sobsnew }
+val match4 = LazyList.lznth mts4 0
+val system5 = Re.react match4
+val _ = print "\n"
+val _ = printRes' "system4" "Sobsnew" system4
+
+(* HERE: HMM...INSPECT MATCH AGAIN *)
+
+(* 6: --AWhereis4-> 
+val _ = print "\n"
+val _ = print("length(mts4) = " ^ (lzLength mts4) ^ "\n")
+val _ = printMts mts4
+*)
+(* 7: --AgenFindall-> *)
+(* 8: --AFindall-> *)
 
 (* bgval2svg *)
 (*val _ = outputsvgdoc "system1.svg" system1*)
@@ -521,11 +579,6 @@ val _ = printRes' "system0" "AgenWhereis" system1
 
 (* bgbdnf2svg 
 val _ = outputsvgdoc_b
-*)
-
-(*
-val _ = print("length(mts0) = " ^ (lzLength mts0) ^ "\n")
-val _ = printMts mts0
 *)
 
 (* 3: --Awhereis-> 
