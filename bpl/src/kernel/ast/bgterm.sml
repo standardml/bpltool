@@ -915,9 +915,12 @@ struct
             = (  (show "`"; NameSetPP.ppbr indent "[" "]" pps X; show "`"
                ; (X, NameSet.empty))
                handle e => raise e)
-            | pp''' _ _ (Wir (w, _)) = 
+            | pp''' _ innermost (Wir (w, _)) = 
               (let
-                 val w'       = if ppids then w else Wiring.removeids w
+                 val w'       = if ppids orelse innermost then
+                                  w
+                                else
+                                  Wiring.removeids w
                  val inner_ns = Wiring.innernames w
                  val new_ns   = NameSet.difference
                                   inner_ns (Wiring.outernames w)
