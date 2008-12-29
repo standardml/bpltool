@@ -61,7 +61,7 @@
   signature sensor =
   sig end
 
- (* rule schema, one for each n in N *)
+ (* rule schema, one for each n in i0,01,i2... *)
  rule observe_update = (* sort: C,L *)
    loc(id([0]) | [1] | dev(n)) ||
    devs(location(l([2]) | d(n)) | [3])
@@ -128,9 +128,16 @@
  rule genFindall = (* sort: A *)
    [0] -> [0] | findall
 
- (* rule schema, a rule for each n in N *)
+ (* rule schema, a rule for each n in i0,01,i2... *)
  rule genWhereis = (* sort: A *)
    [0] -> [0] | whereis(n)
+
+ --------------------------------------------------------------------
+
+ INITIAL STATE OF THE SYSTEM:
+   C: loc(id(i1) | loc(id(i2) | dev(i3) | dev(i4))) ||
+   L: devs(location(l(i2) | d(i3))) ||
+   A: 1
 
  --------------------------------------------------------------------
 
@@ -141,8 +148,12 @@
  4. Another ``whereis'' query is issued, this time for device i4.
  5. S discovers that device i4 occurs in C but not in L and reacts.
  6. An answer to this query appears in A.
-(7. A ``findall'' query is issued.)
-(8. An answer to this query appears in A.)
+
+ EXTENDED:
+ 7. A ``findall'' query is issued.
+ 8. An answer to this query appears in A.
+ 9. S updates L with info that device i3 is in location i1.
+10. Device i3 moves back into location l2 in C.
 
 ********************************************************************)
 
@@ -279,7 +290,7 @@ fun printRes' tname rname agent =
 (* C *)
 fun i n = S.atomic0 ("i" ^ n)
 val id = S.passive0 "id"
-val loc = S.passive0 "loc"
+val loc = S.active0 "loc" (* NB! Made active to get sufficient matches *)
 val dev = S.passive0 "dev"
 
 (* S has the empty signature *)
@@ -314,13 +325,7 @@ fun location''' did =
     S.o (location, S.`|` (l, S.o (d, i(did))))
 fun whereis' c = S.o (S.passive0 "whereis", c)
 
-(* 
-   INITIAL STATE OF THE SYSTEM:
-   C: loc(id(i1) | loc(id(i2) | dev(i3) | dev(i4))) ||
-   L: devs(location(l(i2) | d(i3))) ||
-   A: 1
-*)
-
+(* initial state of the system *)
 val loc1 = loc'' "1"
 val loc2 = loc'' "2"
 val dev3 = dev' "3"
@@ -331,8 +336,7 @@ val L = S.o (devs, location_l2d3)
 val A = barren
 val system0 = make_plato(C,L,A)
 
-val _ = print "\nsystem0\n"
-val _ = prtSimp "state: " system0
+val _ = prtSimp "\nsystem0\n" system0
 val _ = printIfaces "system0" (getInner system0) (getOuter system0)
 
 (* aux. function *)
@@ -518,15 +522,21 @@ val AgenWhereis4 = R.make' { name = "AgenWhereis4",
  loc(id(i1) | dev(i3) | loc(id(i2) | dev(i4))) ||
  devs(location(l(i2) | d(i3)) | location(l(i1) | d(i4))) ||
  (location(l(i2) | d(i3)) | location(l(i1) | d(i4)))
-
- (7. A ``findall'' query is issued.)
- (8. An answer to this query appears in A.)
+   --7:AgenFindall->
+ loc(id(i1) | dev(i3) | loc(id(i2) | dev(i4))) ||
+ devs(location(l(i2) | d(i3)) | location(l(i1) | d(i4))) ||
+ (location(l(i2) | d(i3)) | location(l(i1) | d(i4)) | findall)
+   --8:Afindall->
+ loc(id(i1) | dev(i3) | loc(id(i2) | dev(i4))) ||
+ devs(location(l(i2) | d(i3)) | location(l(i1) | d(i4))) ||
+ (location(l(i2) | d(i3)) | location(l(i1) | d(i4)) |
+  location(l(i2) | d(i4)) | location(l(i2) | d(i3)))
 *)
 
 (* 1: --AgenWhereis-> *)
 val BRsystem0 = makeBR system0
 val mts0 = M.matches { agent = BRsystem0 , rule = AgenWhereis3 }
-val match0 = LazyList.lznth mts0 4 (* zero-indexed *)
+val match0 = LazyList.lznth mts0 16 (* zero-indexed *)
 val system1 = Re.react match0 (* return agent *)
 val _ = print "\n"
 val _ = printRes' "system0" "AgenWhereis" system1
@@ -550,7 +560,7 @@ val _ = printRes' "system2" "Awhereis" system3
 (* 4: --AgenWhereis-> *)
 val BRsystem3 = makeBR system3
 val mts3 = M.matches { agent = BRsystem3 , rule = AgenWhereis4 }
-val match3 = LazyList.lznth mts3 5
+val match3 = LazyList.lznth mts3 17
 val system4 = Re.react match3
 val _ = print "\n"
 val _ = printRes' "system3" "AgenWhereis" system4
@@ -558,68 +568,44 @@ val _ = printRes' "system3" "AgenWhereis" system4
 (* 5: --Sobsnew-> *)
 val BRsystem4 = makeBR system4
 val mts4 = M.matches { agent = BRsystem4 , rule = Sobsnew }
-val match4 = LazyList.lznth mts4 0
+val match4 = LazyList.lznth mts4 1
 val system5 = Re.react match4
 val _ = print "\n"
-val _ = printRes' "system4" "Sobsnew" system4
+val _ = printRes' "system4" "Sobsnew" system5
 
-(* HERE: HMM...INSPECT MATCH AGAIN *)
-
-(* 6: --AWhereis4-> 
+(* 6: --Awhereis-> *)
+val BRsystem5 = makeBR system5
+val mts5 = M.matches { agent = BRsystem5 , rule = Awhereis4 }
+val match5 = LazyList.lznth mts5 0
+val system6 = Re.react match5
 val _ = print "\n"
-val _ = print("length(mts4) = " ^ (lzLength mts4) ^ "\n")
-val _ = printMts mts4
-*)
+val _ = printRes' "system5" "Awhereis" system6
+
 (* 7: --AgenFindall-> *)
+val BRsystem6 = makeBR system6
+val mts6 = M.matches { agent = BRsystem6 , rule = AgenFindall }
+val match6 = LazyList.lznth mts6 19
+val system7 = Re.react match6
+val _ = print "\n"
+val _ = printRes' "system6" "AgenFindall" system7
+
 (* 8: --AFindall-> *)
+val BRsystem7 = makeBR system7
+val mts7 = M.matches { agent = BRsystem7 , rule = Afindall }
+val match7 = LazyList.lznth mts7 0
+val system8 = Re.react match7
+val _ = print "\n"
+val _ = printRes' "system7" "Afindall" system8
+val _ = print "\n"
 
-(* bgval2svg *)
-(*val _ = outputsvgdoc "system1.svg" system1*)
-(*val _ = outputsvgdoc_v*)
 
+(* output in the graphical SVG format *)
+(* bgval2svg 
+val _ = outputsvgdoc "system1.svg" system1
+val _ = outputsvgdoc_v
+*)
 (* bgbdnf2svg 
 val _ = outputsvgdoc_b
-*)
-
-(* 3: --Awhereis-> 
-val BRsystem2 = makeBR system2
-val mts2 = M.matches { agent = BRsystem2 , rule = Awhereis }
-val _ = print("length(mts2) = " ^ (lzLength mts2) ^ "\n")
-val _ = printMts mts2
-*)
-(*
-val match2 = LazyList.lzhd mts2
-val system3 = Re.react match2
-val _ = printRes' "system2" "Awhereis" system3
-*)
-
-(* 4: --AgenWhereis-> *)
-(* 5: --Sobsupd-> *)
-
-(*
-val _ = case mtD of NONE => print "No matches!\n"
-		  | SOME(m) => ( print(M.toString(m))
-		    handle e => handler e )
-*)
-
-(* PRINTING FOR TESTING PURPOSES *)
-
-(*
-val _ = case mt1 of NONE => print "No matches!\n"
-		  | SOME(m) => ( print(M.toString(m))
-				 handle e => handler e )
-
-val _ = map print (parts system mts1)
-*)
-
-(* print number of matches to stdout 
-val _ = ( print "Number of matches: "
-        ; print (lzLength mts1)
-	; print "\n")
-*)
-
-(* print to stdout 
-val _ = printMts mts1
 *)
 
 (* print to file 
