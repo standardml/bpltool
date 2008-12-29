@@ -36,7 +36,7 @@
    sig %
      loc : passive (0)
      dev : passive (0)
-     id  : passive (0)
+     id : passive (0)
      i0,i1,i2... : atomic
    end
 
@@ -89,10 +89,10 @@
 
  signature repr =
    sig
-     devs     : passive (0)
+     devs : passive (0)
      location : passive (0)
-     l: passive (0)
-     d: passive(0)
+     l : passive (0)
+     d : passive(0)
    end
 
  state = devs(location(l(n),d(m)) | ...)
@@ -103,13 +103,13 @@
 
  signature agent =
   sig
-    findall  : atomic
-    whereis  : passive (0)
+    findall : atomic
+    whereis : passive (0)
     i0,i1,i2... : atomic
     id : passive (0)
     location : passive (0)
-    l: passive(0)
-    d: passive(0)
+    l : passive(0)
+    d : passive(0)
   end
 
  using agent
