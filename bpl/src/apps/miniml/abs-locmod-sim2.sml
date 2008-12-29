@@ -535,6 +535,8 @@ val AgenWhereis4 = R.make' { name = "AgenWhereis4",
 (* 1: --AgenWhereis-> *)
 val BRsystem0 = makeBR system0
 val mts0 = M.matches { agent = BRsystem0 , rule = AgenWhereis3 }
+(*val _ = print("length(mts0) = " ^ (lzLength mts0) ^ "\n")
+val _ = printMts mts0*)
 val match0 = LazyList.lznth mts0 16 (* zero-indexed *)
 val system1 = Re.react match0 (* return agent *)
 val _ = print "\n"
