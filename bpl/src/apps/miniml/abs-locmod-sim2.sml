@@ -37,7 +37,7 @@
      loc : passive (0)
      dev : passive (0)
      id  : passive (0)
-     i0,i1,... : atomic
+     i0,i1,i2... : atomic
    end
 
  using world
