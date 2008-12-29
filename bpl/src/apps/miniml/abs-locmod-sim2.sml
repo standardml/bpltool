@@ -152,8 +152,6 @@
  EXTENDED:
  7. A ``findall'' query is issued.
  8. An answer to this query appears in A.
- 9. S updates L with info that device i3 is in location i1.
-10. Device i3 moves back into location l2 in C.
 
 ********************************************************************)
 
