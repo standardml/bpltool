@@ -6,6 +6,7 @@
  Using the dependencies in impl/bpl/src/apps/miniml/Dependencies
  --------------------------------------------------------------------
  An abstract Plato-graphical location model.
+ Only pure Bigraphs are needed.
  Simulation of a simple predefined scenario.
 
  INVARIANTS:
@@ -92,7 +93,7 @@
      devs : passive (0)
      location : passive (0)
      l : passive (0)
-     d : passive(0)
+     d : passive (0)
    end
 
  state = devs(location(l(n),d(m)) | ...)
@@ -108,8 +109,8 @@
     i0,i1,i2... : atomic
     id : passive (0)
     location : passive (0)
-    l : passive(0)
-    d : passive(0)
+    l : passive (0)
+    d : passive (0)
   end
 
  using agent
