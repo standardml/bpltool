@@ -90,3 +90,9 @@ abs-locmod-sim2: %PROGRAM /kernel/bg /lib/coll/lzlist
    /lib/util/printerrorhandler /kernel/ast/bgval /kernel/match/funs
    /lib/util/origin /lib/coll/orderfinmap /lib/coll/orderset /lib/util/util 
    /lib/util/baseerrorhandler /lib/pp/smlnj/prettyprint /lib/util/flags
+
+# A dodgy abstract location model in pure Bigraphs, without links.
+abs-locmod-sim3: %PROGRAM /kernel/bg /lib/coll/lzlist
+   /lib/util/printerrorhandler /kernel/ast/bgval /kernel/match/funs
+   /lib/util/origin /lib/coll/orderfinmap /lib/coll/orderset /lib/util/util 
+   /lib/util/baseerrorhandler /lib/pp/smlnj/prettyprint /lib/util/flags
