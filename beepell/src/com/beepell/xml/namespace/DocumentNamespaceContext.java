@@ -139,15 +139,15 @@ public class DocumentNamespaceContext implements javax.xml.namespace.NamespaceCo
     /**
      * @see javax.xml.namespace.NamespaceContext#getPrefixes(java.lang.String)
      */
-    public Iterator getPrefixes(final String namespaceURI) {
+    public Iterator<String> getPrefixes(final String namespaceURI) {
         if (namespaceURI == null)
             throw new IllegalArgumentException("NamespaceContext.getPrefix cannot resolve null");
 
         Set<Map.Entry<String, String>> set = namespaceURIs.entrySet();
-        ArrayList<Map.Entry<String, String>> list = new ArrayList<Map.Entry<String, String>>();
+        ArrayList<String> list = new ArrayList<String>();
         for (Map.Entry<String, String> entry : set) {
             if (entry.getValue().equals(namespaceURI))
-                list.add(entry);
+                list.add(entry.getKey());
         }
 
         return list.iterator();
