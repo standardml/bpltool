@@ -29,6 +29,21 @@ public class SchemaComplianceTest extends TestCase {
 		this.builder = dbf.newDocumentBuilder();
 		
     }
+    
+    public final void testBPELSchema() throws Exception {
+        File file = new File("schemas/bpel.xsd");
+        SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        Schema schema = factory.newSchema(file);
+        this.validator = schema.newValidator();
+    }
+
+    public final void testEBPELSchema() throws Exception {
+        File file = new File("schemas/e-bpel.xsd");
+        SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        Schema schema = factory.newSchema(file);
+        this.validator = schema.newValidator();
+    }
+
 	
 	public final void testAttributes() throws Exception {
 		Document document = builder.parse(new File("xslt/attributes.xsl"));
