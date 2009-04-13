@@ -26,7 +26,7 @@
           <xsl:with-param name="prefix" select="$prefix" />
         </xsl:call-template>
 
-        <xsl:apply-templates select="bpel:*[local-name()!='targets' and local-name()!='sources']">
+        <xsl:apply-templates select="*[not(self::bpel:targets | self::bpel:sources)]">
           <xsl:with-param name="uniquePrefix" select="string($uniquePrefix)" />
         </xsl:apply-templates>
       </xsl:copy>
@@ -103,24 +103,26 @@
     <xsl:param name="prefix" />
     <xsl:param name="isSqChild" />
     
-    <xsl:if test="not(boolean($isSqChild)) or position() = 1">
+    <xsl:if test="not($isSqChild) or position() = 1">
       <xsl:message>Copy targets from '<xsl:value-of select="@name"/>'.</xsl:message>
       <xsl:copy-of select="bpel:targets" />
     </xsl:if>
 
-    <xsl:if test="boolean($isSqChild) and position() &gt; 1">
+    <xsl:if test="$isSqChild and position() &gt; 1">
       <xsl:message>Creating targets in '<xsl:value-of select="@name"/>'.</xsl:message>
       <bpel:targets>
-        <xsl:copy-of select="bpel:targets/bpel:target" />
-        <xsl:call-template name="target" >
-          <xsl:with-param name="prefix" select="$prefix" />
-        </xsl:call-template>
 
         <xsl:call-template name="join-condition">
           <xsl:with-param name="linkName">
             <xsl:value-of select="$prefix" />
             <xsl:value-of select="position() - 1" />
           </xsl:with-param>
+        </xsl:call-template>
+
+        <xsl:copy-of select="bpel:targets/bpel:target" />
+
+        <xsl:call-template name="target" >
+          <xsl:with-param name="prefix" select="$prefix" />
         </xsl:call-template>
 
       </bpel:targets>        
@@ -131,11 +133,11 @@
     <xsl:param name="prefix" />
     <xsl:param name="isSqChild" />
 
-    <xsl:if test="not(boolean($isSqChild)) or not(following-sibling::bpel:*)">
+    <xsl:if test="not($isSqChild) or not(following-sibling::bpel:*)">
       <xsl:copy-of select="bpel:sources" />
     </xsl:if>
 
-    <xsl:if test="boolean($isSqChild) and following-sibling::bpel:*">
+    <xsl:if test="$isSqChild and following-sibling::bpel:*">
       <bpel:sources>
         <xsl:copy-of select="bpel:sources/bpel:source" />
         <xsl:call-template name="source">
