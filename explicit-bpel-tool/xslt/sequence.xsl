@@ -49,7 +49,7 @@
     <xsl:param name="prefix" />
     <xsl:param name="isSqChild" />
     <xsl:param name="uniquePrefix" />
-    <xsl:param name="childCount" select="count(bpel:assign | bpel:compensate | bpel:compensateScope | bpel:empty | bpel:exit | bpel:invoke | bpel:receive | bpel:reply | bpel:rethrow | bpel:throw | bpel:validate | bpel:wait | bpel:flow | bpel:forEach | bpel:if | bpel:pick | bpel:repeatUntil | bpel:sequence | bpel:while)" />
+    <xsl:param name="childCount" select="count(bpel:assign | bpel:compensate | bpel:compensateScope | bpel:empty | bpel:exit | bpel:invoke | bpel:receive | bpel:reply | bpel:rethrow | bpel:throw | bpel:validate | bpel:wait | bpel:flow | bpel:forEach | bpel:if | bpel:pick | bpel:repeatUntil | bpel:sequence | bpel:while | bpel:scope)" />
     <xsl:param name="target" />
     <xsl:param name="source" />
     <xsl:message>Transforming a Sequence activity '<xsl:value-of select="@name" />' with <xsl:value-of select="$childCount" /> child activities into a Flow activity.</xsl:message>
@@ -80,7 +80,7 @@
             <xsl:with-param name="prefix" select="$childPrefix" />
           </xsl:call-template>
 
-          <xsl:apply-templates select="bpel:assign | bpel:compensate | bpel:compensateScope | bpel:empty | bpel:exit | bpel:invoke | bpel:receive | bpel:reply | bpel:rethrow | bpel:throw | bpel:validate | bpel:wait | bpel:flow | bpel:forEach | bpel:if | bpel:pick | bpel:repeatUntil | bpel:sequence | bpel:while">
+          <xsl:apply-templates select="bpel:assign | bpel:compensate | bpel:compensateScope | bpel:empty | bpel:exit | bpel:invoke | bpel:receive | bpel:reply | bpel:rethrow | bpel:throw | bpel:validate | bpel:wait | bpel:flow | bpel:forEach | bpel:if | bpel:pick | bpel:repeatUntil | bpel:sequence | bpel:while | bpel:scope">
             <xsl:with-param name="uniquePrefix" select="string($uniquePrefix)" />
             <xsl:with-param name="prefix" select="$childPrefix" />
             <xsl:with-param name="isSqChild" select="true()" />
