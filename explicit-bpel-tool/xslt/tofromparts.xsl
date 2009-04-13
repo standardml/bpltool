@@ -9,6 +9,7 @@
   <xsl:output indent="yes" method="xml" />
 
   <xsl:template match="bpel:toParts">
+    <xsl:param name="uniquePrefix" select="'v0'" />
     <assign>
       <xsl:for-each select="bpel:toPart">
         <copy>
@@ -21,7 +22,10 @@
               <xsl:value-of select="@fromVariable" />
             </xsl:attribute>
           </from>
-          <to variable="temporaryInputMessage">
+          <to>
+            <xsl:attribute name="variable">
+              <xsl:value-of select="concat($uniquePrefix, 'InputMessage')" />
+            </xsl:attribute>
             <xsl:attribute name="part">
               <xsl:value-of select="@part" />
             </xsl:attribute>
@@ -32,6 +36,7 @@
   </xsl:template>
 
   <xsl:template match="bpel:fromParts">
+    <xsl:param name="uniquePrefix" select="'v0'" />
     <assign>
       <xsl:for-each select="bpel:fromPart">
         <copy>
@@ -39,7 +44,10 @@
           <xsl:if test="(ancestor::*/bpel:variables/bpel:variable[@name=$variableName and @element])[1]">
             <xsl:attribute name="keepSrcElementName">yes</xsl:attribute>
           </xsl:if>
-          <from variable="temporaryOutputMessage">
+          <from>
+            <xsl:attribute name="variable">
+              <xsl:value-of select="concat($uniquePrefix, 'OutputMessage')" />
+            </xsl:attribute>
             <xsl:attribute name="part">
               <xsl:value-of select="@part" />
             </xsl:attribute>

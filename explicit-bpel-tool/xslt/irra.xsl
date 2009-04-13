@@ -7,9 +7,12 @@
   
   <!-- Copy all elements and attributes -->
   <xsl:template match="*">
+    <xsl:param name="uniquePrefix" select="'v0'" />    
     <xsl:copy>
       <xsl:copy-of select="@*" />
-      <xsl:apply-templates />
+      <xsl:apply-templates>
+        <xsl:with-param name="uniquePrefix" select="string($uniquePrefix)" />
+      </xsl:apply-templates>
     </xsl:copy>
   </xsl:template>
   

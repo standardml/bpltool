@@ -8,6 +8,7 @@
 
   <!-- Unfold invoke -->
   <xsl:template match="bpel:invoke">
+    <xsl:param name="uniquePrefix" select="'v0'" />
     <xsl:variable name="inputVariable" select="@inputVariable" />
     <xsl:variable name="outputVariable" select="@outputVariable" />
 
@@ -36,7 +37,10 @@
             <variables>
               <xsl:if test="bpel:toParts or $inputElement">
                 <!-- add temporary input message variable -->
-                <variable name="temporaryInputMessage">
+                <variable>
+                  <xsl:attribute name="name">
+                    <xsl:value-of select="concat($uniquePrefix, 'InputMessage')" />
+                  </xsl:attribute>
                   <xsl:attribute name="messageType">
                     <xsl:variable name="message" select="$definitions/wsdl:portType[@name=$portType]/wsdl:operation[@name=$operation]/wsdl:input" />
                     <xsl:variable name="messageNamespace" select="$message/namespace::*[local-name() = substring-before($message/@message, ':')]" />
@@ -47,7 +51,10 @@
               </xsl:if>
               <xsl:if test="bpel:fromParts or $outputElement">
                 <!-- add temporary output message variable -->
-                <variable name="temporaryOutputMessage">
+                <variable>
+                  <xsl:attribute name="name">
+                    <xsl:value-of select="concat($uniquePrefix, 'OutputMessage')" />
+                  </xsl:attribute>
                   <xsl:attribute name="messageType">
                     <xsl:variable name="message" select="$definitions/wsdl:portType[@name=$portType]/wsdl:operation[@name=$operation]/wsdl:output" />
                     <xsl:variable name="messageNamespace" select="$message/namespace::*[local-name() = substring-before($message/@message, ':')]" />
@@ -87,7 +94,10 @@
                           <xsl:value-of select="@inputVariable" />
                         </xsl:attribute>
                       </from>
-                      <to variable="temporaryInputMessage">
+                      <to>
+                        <xsl:attribute name="variable">
+                          <xsl:value-of select="concat($uniquePrefix, 'InputMessage')" />
+                        </xsl:attribute>
                         <xsl:variable name="message" select="substring-after($definitions/wsdl:portType[@name=$portType]/wsdl:operation[@name=$operation]/wsdl:input/@message, ':')" />
                         <xsl:attribute name="part">
                           <xsl:value-of select="$definitions/wsdl:message[@name=$message]/wsdl:part/@name" />
@@ -104,7 +114,9 @@
 
                   <xsl:choose>
                     <xsl:when test="bpel:toParts or $inputElement">
-                      <xsl:attribute name="inputVariable">temporaryInputMessage</xsl:attribute>
+                      <xsl:attribute name="inputVariable">
+                        <xsl:value-of select="concat($uniquePrefix, 'InputMessage')" />
+                      </xsl:attribute>
                     </xsl:when>
                     <xsl:otherwise>
                       <xsl:copy-of select="@inputVariable" />
@@ -113,7 +125,9 @@
 
                   <xsl:choose>
                     <xsl:when test="bpel:fromParts or $outputElement">
-                      <xsl:attribute name="outputVariable">temporaryOutputMessage</xsl:attribute>
+                      <xsl:attribute name="outputVariable">
+                        <xsl:value-of select="concat($uniquePrefix, 'OutputMessage')" />
+                      </xsl:attribute>
                     </xsl:when>
                     <xsl:otherwise>
                       <xsl:copy-of select="@outputVariable" />
@@ -130,7 +144,10 @@
                 <xsl:if test="$outputElement">
                   <assign>
                     <copy keepSrcElementName="yes">
-                      <from variable="temporaryOutputMessage">
+                      <from>
+                        <xsl:attribute name="variable">
+                          <xsl:value-of select="concat($uniquePrefix, 'OutputMessage')" />
+                        </xsl:attribute>
                         <xsl:variable name="message" select="substring-after($definitions/wsdl:portType[@name=$portType]/wsdl:operation[@name=$operation]/wsdl:output/@message, ':')" />
                         <xsl:attribute name="part">
                           <xsl:value-of select="$definitions/wsdl:message[@name=$message]/wsdl:part/@name" />

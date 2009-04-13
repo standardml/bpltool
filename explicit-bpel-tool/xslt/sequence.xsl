@@ -69,12 +69,12 @@
         
         
         <xsl:if test="$childCount &gt; 1">
-          <xsl:param name="childPrefix">
+          <xsl:variable name="childPrefix">
               <xsl:value-of select="$uniquePrefix" />
               <xsl:value-of select="string('s')" />
               <xsl:number level="multiple" count="bpel:sequence" format="1.1"/>              
               <xsl:value-of select="string('l')" />
-          </xsl:param>
+          </xsl:variable>
         
           <xsl:call-template name="sequence-links">
             <xsl:with-param name="prefix" select="$childPrefix" />
@@ -148,8 +148,8 @@
   </xsl:template>
 
   <xsl:template name="target">
-    <xsl:message>Adding TARGET for activity '<xsl:value-of select="@name"/>' at position <xsl:value-of select="position()"/></xsl:message>
     <xsl:param name="prefix" />
+    <xsl:message>Adding TARGET for activity '<xsl:value-of select="@name"/>' at position <xsl:value-of select="position()"/></xsl:message>
     <xsl:if test="position() &gt; 1">
       <bpel:target>
         <xsl:attribute name="linkName">
@@ -161,8 +161,8 @@
   </xsl:template>
   
   <xsl:template name="source">
-    <xsl:message>Adding SOURCE for activity '<xsl:value-of select="@name"/>' at position <xsl:value-of select="position()"/></xsl:message>
     <xsl:param name="prefix" />
+    <xsl:message>Adding SOURCE for activity '<xsl:value-of select="@name"/>' at position <xsl:value-of select="position()"/></xsl:message>
     <xsl:if test="following-sibling::bpel:*">
       <bpel:source>
         <xsl:attribute name="linkName">

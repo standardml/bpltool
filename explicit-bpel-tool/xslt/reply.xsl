@@ -8,6 +8,7 @@
 
   <!-- Unfold reply -->
   <xsl:template match="bpel:reply">
+    <xsl:param name="uniquePrefix" select="'v0'" />
     <xsl:variable name="variable" select="@variable" />
     <xsl:variable name="inputElement" select="count(ancestor::*/bpel:variables/bpel:variable[@name=$variable][1]/@element) = 1" />
     
@@ -31,7 +32,10 @@
           
           <variables>
             <!-- add temporary output message variable -->
-            <variable name="temporaryInputMessage">
+            <variable>
+              <xsl:attribute name="name">
+                <xsl:value-of select="concat($uniquePrefix, 'InputMessage')" />
+              </xsl:attribute>
               <xsl:attribute name="messageType">
                 <xsl:variable name="message" select="$definitions/wsdl:portType[@name=$portType]/wsdl:operation[@name=$operation]/wsdl:output" />
                 <xsl:variable name="messageNamespace" select="$message/namespace::*[local-name() = substring-before($message/@message, ':')]" />
@@ -56,8 +60,11 @@
                       <xsl:value-of select="@variable" />
                     </xsl:attribute>
                   </from>
-                  <to variable="temporaryInputMessage">
+                  <to>
                     <xsl:variable name="message" select="substring-after($definitions/wsdl:portType[@name=$portType]/wsdl:operation[@name=$operation]/wsdl:output/@message, ':')" />
+                    <xsl:attribute name="variable">
+                      <xsl:value-of select="concat($uniquePrefix, 'InputMessage')" />
+                    </xsl:attribute>
                     <xsl:attribute name="part">
                       <xsl:value-of select="$definitions/wsdl:message[@name=$message]/wsdl:part/@name" />
                     </xsl:attribute>
@@ -72,7 +79,9 @@
               <xsl:copy-of select="@faultName" />
               <xsl:copy-of select="@operation" />
               <xsl:copy-of select="@messageExchange" />
-              <xsl:attribute name="variable">temporaryInputMessage</xsl:attribute>
+              <xsl:attribute name="variable">
+                <xsl:value-of select="concat($uniquePrefix, 'InputMessage')" />
+              </xsl:attribute>
               <xsl:copy-of select="bpel:correlations" />
             </xsl:copy>
             
