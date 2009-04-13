@@ -2,9 +2,9 @@
 
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-  xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
-  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-  xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype">
+  xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable">
+  
+  <xsl:output indent="yes" method="xml" />
 
   <xsl:template match="bpel:process | bpel:scope">
     
