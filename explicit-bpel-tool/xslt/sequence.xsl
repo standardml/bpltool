@@ -8,7 +8,7 @@
   <xsl:output indent="yes" method="xml" />
 
   <xsl:template match="*">
-    <xsl:param name="uniquePrefix" select="string(v42)" />
+    <xsl:param name="uniquePrefix" select="'v0'" />
     <xsl:param name="prefix" />
     <xsl:param name="isSqChild" />
 
