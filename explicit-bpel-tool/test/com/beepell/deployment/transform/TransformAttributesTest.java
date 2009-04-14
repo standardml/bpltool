@@ -11,7 +11,6 @@ import javax.xml.xpath.XPathFactory;
 import junit.framework.TestCase;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
 
 import com.beepell.xml.namespace.DocumentNamespaceContext;
 
@@ -36,15 +35,6 @@ public class TransformAttributesTest extends TestCase {
         transformed = transform.transform(source);
         NamespaceContext namespaceContext = new DocumentNamespaceContext(transformed);
         xPath.setNamespaceContext(namespaceContext);
-    }
-
-    private NodeList getNodes(String path) {
-        try {
-            return (NodeList) xPath.evaluate(path, transformed, XPathConstants.NODESET);
-        } catch (XPathExpressionException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     private String getString(String path) {
