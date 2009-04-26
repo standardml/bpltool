@@ -6,6 +6,8 @@
 
   <xsl:output indent="yes" method="xml" />
 
+  <xsl:param name="uniquePrefix" select="'v0'" />
+
   <xsl:template match="*">
     <xsl:copy>
       <xsl:copy-of select="@*" />
@@ -18,7 +20,7 @@
       <xsl:copy-of select="@*" />
       <xsl:apply-templates select="*[not(self::bpel:condition)]" />
       <bpel:while>
-        <xsl:copy-of select="bpel:condition" />
+        <bpel:condition>not(<xsl:value-of select="bpel:condition/text()" />)</bpel:condition>
         <xsl:apply-templates select="*[not(self::bpel:condition or self::bpel:sources or self::bpel:targets)]" />
       </bpel:while>
     </bpel:sequence>
