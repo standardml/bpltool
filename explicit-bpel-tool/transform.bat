@@ -1,3 +1,3 @@
 echo off
 cls
-"%JAVA_HOME%/bin/java" -classpath bin Transform %1 %2
+"%JAVA_HOME%/bin/java" -classpath bin com.beepell.deployment.transform.Transform %1 %2
