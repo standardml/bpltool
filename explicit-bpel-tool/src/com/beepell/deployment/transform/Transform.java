@@ -112,7 +112,7 @@ public class Transform {
         try {
             String systemId = document.getBaseURI().toString();
 
-            String[] sheets = { "globalscope.xsl", "elseif.xsl", "repeatuntil.xsl", "variables.xsl", "documentation.xsl", "extensions.xsl", "irra.xsl", "sequence.xsl", "handlers.xsl", "jointransition.xsl", "attributes.xsl", "defaults.xsl", "language.xsl" };
+            String[] sheets = { "globalscope.xsl", "elseif.xsl", "while.xsl", "variables.xsl", "documentation.xsl", "extensions.xsl", "irra.xsl", "handlers.xsl", "sequence.xsl", "jointransition.xsl", "attributes.xsl", "defaults.xsl", "language.xsl" };
             Transformer transformer;
             DOMSource source = new DOMSource(document, systemId);
             DOMResult result = null;
