@@ -110,7 +110,7 @@ public class TransformSequenceTest extends TestCase {
         assertEquals("true() or false()", (String) xPath.evaluate(expression, ebpel, XPathConstants.STRING));
         
         // 5. Test the extension of sources
-        expression = "count(//bpel:receive[@name='receive']/bpel:sources/bpel:source[@linkName='v0s1l1'])";
+        expression = "count(//bpel:pick[@name='receive']/bpel:sources/bpel:source[@linkName='v0s1l1'])";
         assertEquals(1, ((Double) xPath.evaluate(expression, ebpel, XPathConstants.NUMBER)).intValue());
 
         expression = "count(//bpel:assign[@name='assign']/bpel:sources/bpel:source[@linkName='v0s1l2'])";

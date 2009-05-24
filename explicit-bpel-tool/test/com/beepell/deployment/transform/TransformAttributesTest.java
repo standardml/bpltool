@@ -62,7 +62,7 @@ public class TransformAttributesTest extends TestCase {
         assertEquals("yes", getString("//bpel:scope[@name='a']/@suppressJoinFailure"));
         assertEquals("no", getString("//bpel:scope[@name='b']/@suppressJoinFailure"));
         assertEquals("no", getString("//bpel:scope[@name='c']/@suppressJoinFailure"));
-        assertEquals("no", getString("//bpel:receive/@suppressJoinFailure"));
+        assertEquals("no", getString("//bpel:pick/@suppressJoinFailure"));
         assertEquals("yes", getString("//bpel:scope[@name='c']/bpel:assign/@suppressJoinFailure"));
         assertEquals("no", getString("//bpel:reply/@suppressJoinFailure"));
         
