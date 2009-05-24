@@ -105,8 +105,8 @@ public class SchemaComplianceTest extends TestCase {
         this.validator.validate(new DOMSource(document));
     }
 
-    public final void testRepeatUntil() throws Exception {
-        Document document = builder.parse(new File("xslt/repeatuntil.xsl"));
+    public final void testWhile() throws Exception {
+        Document document = builder.parse(new File("xslt/while.xsl"));
         this.validator.validate(new DOMSource(document));
     }
 
