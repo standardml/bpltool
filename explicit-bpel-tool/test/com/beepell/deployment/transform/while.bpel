@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
 <process
-  name="repeatUntil"
+  name="while"
   targetNamespace="http://beepell.com/samples/proxy"
   xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
   xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
@@ -10,7 +10,7 @@
 
   <import
     namespace="http://beepell.com/samples/proxy/definitions"
-    location="./repeatUntil.wsdl"
+    location="./while.wsdl"
     importType="http://schemas.xmlsoap.org/wsdl/" />
 
   <partnerLinks>
