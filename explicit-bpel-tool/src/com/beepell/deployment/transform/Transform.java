@@ -50,6 +50,8 @@ public class Transform {
     private final Schema bpelSchema;
     private final Schema ebpelSchema;
     private final boolean verbose;
+    private String[] sheets = { "globalscope.xsl", "elseif.xsl", "while.xsl", "variables.xsl", "documentation.xsl", "extensions.xsl", "irra.xsl", "receive2.xsl", "handlers.xsl", "sequence.xsl", "jointransition.xsl", "attributes.xsl", "defaults.xsl", "language.xsl" };
+    private boolean validate = true;
 
     public Transform() throws SAXException {
         this.bpelSchema = this.schemaFactory.newSchema(new File("schemas/bpel.xsd"));
@@ -65,11 +67,14 @@ public class Transform {
 
             bpel = parse(source, this.bpelSchema);
             ebpel = transform(bpel, uniquePrefix);
-            this.validate(ebpel, this.bpelSchema);
-            System.out.println("Transformed process description is valid WS-BPEL.");
-            this.validate(ebpel, this.ebpelSchema);
-            System.out.println("Transformed process description is valid E-BPEL.");
-
+            
+            if (this.validate) {
+              this.validate(ebpel, this.bpelSchema);
+              System.out.println("Transformed process description is valid WS-BPEL.");
+              this.validate(ebpel, this.ebpelSchema);
+              System.out.println("Transformed process description is valid E-BPEL.");
+            }
+            
             if (this.verbose)
                 System.out.println(toString(ebpel));
 
@@ -112,7 +117,6 @@ public class Transform {
         try {
             String systemId = document.getBaseURI().toString();
 
-            String[] sheets = { "globalscope.xsl", "elseif.xsl", "while.xsl", "variables.xsl", "documentation.xsl", "extensions.xsl", "irra.xsl", "handlers.xsl", "sequence.xsl", "jointransition.xsl", "attributes.xsl", "defaults.xsl", "language.xsl" };
             Transformer transformer;
             DOMSource source = new DOMSource(document, systemId);
             DOMResult result = null;
@@ -343,4 +347,35 @@ public class Transform {
             return "Failed to parse node to String.";
         }
     }
+
+    /**
+     * Set an alternative list of style sheets to be used.
+     * 
+     * @param sheets An ordered String array of style sheet filenames to be
+     *            used.
+     */
+    public void setSheets(String[] sheets) {
+        this.sheets = sheets;
+    }
+
+    /**
+     * Sets if the transformer should validate the result against the E-BPEL
+     * schema. Default is true. Used for testing.
+     * 
+     * @param validate true if the transformer should validate the result.
+     */
+    public void setValidate(boolean validate) {
+        this.validate = validate;
+    }
+
+    /**
+     * Sets if the transformer should validate the result against the E-BPEL
+     * schema. Default is true. Used for testing.
+
+     * @return true if the transformer validates the result.
+     */
+    public boolean getValidate() {
+        return this.validate;
+    }
+
 }
