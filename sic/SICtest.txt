@@ -1,0 +1,30 @@
+name j,k,x,y;
+types {
+      open {  s ::= int;
+      	      	 t,t1 ::= string;
+	}
+
+	context {
+		s1 ::= s,t -> int;
+	}
+}
+processes {
+	  proc ap ::= s1 ::(x.k).0;
+
+	  proc bp ::= t,s :: <k."true">.P;
+
+	  proc cp ::= k<8>.P;
+
+	  proc dp::= k(y).P;
+
+	  proc ep::= (new k) P;
+
+	  proc fp::= P | Q;
+
+	  proc gp::= 0;
+}
+inst {
+ ap | cp
+}
+
+
