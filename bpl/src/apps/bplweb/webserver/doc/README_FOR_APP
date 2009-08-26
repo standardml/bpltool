@@ -1,0 +1,237 @@
+BPLweb application description
+==============================
+
+Overview
+--------
+
+The BPLweb application allows the use of a browser to start and
+control matching in a backend bigraph engine, and to load/save
+bigraph examples in a small database.
+
+It uses a "session" concept, and within a session also a "matching"
+concept.  A session is a conventional sequence of interactions with
+the (presumably same) user.  A matching is a process started in the
+backend for matching a given bigraph with given rules.
+
+Each matching takes as input a signature, an agent (bigraph) and
+a list of rules.  Each rule consists of a redex (bigraph), reactum
+(bigraph) and an instantiation.  Further, the backend engine can
+be instructed to only consider one of the rules, or all of the
+rules, and can be instructed to just find one match, or find all
+matches.
+
+The matching can take a long time, so the results may come gradually
+one by one.  The BPLweb interface uses AJAX to display these results
+as they arrive, and also to send a "stop" signal to the backend to
+stop a long-running matching process.
+
+
+Javascript
+----------
+
+The Javascript run in the user's browser is located in public/javascripts/application.js,
+and uses the libraries also present in that directory.
+
+On the browser side (i.e., the Javascript), the application uses AJAX and
+interacts with the server considering these events:
+
+1) When a user clicks the general "All Matches" button, function
+   matchrequest(-1,-1) is invoked.  When a user clicks the general
+   "1 Match" button, function matchrequest (-1, 1) is invoked.
+   Similarly, clicking these buttons for rule i will call functions
+   matchrequest (i,-1) or matchrequest (i, 1), respectively.
+   
+   Function matchrequest (R, M)  will send an AJAX request to the
+   server, where R is the rule to match (-1 if all rules), and M is
+   the number of requested matches (-1 if all matches).
+   
+   The AJAX request will use the URL 
+   /bplweb/matchrequest?sessionid=SID&matchingid=MID&matchcount=M
+     &rulestomatch=R&requestno=N&WWW
+   
+   where WWW is the serialised content of all the input fields on the
+   page---this is gotten from the form identified by 'agent-rule-form'.
+   
+   SID is a session ID
+   
+   MID is a matching ID
+   
+   N is a unique request number that increases with time (i.e., a logical
+   time stamp for this session).
+   
+   When it gets this request, the web server should stop any running
+   matchings related to this session, start a new match running in
+   the background, and return a status indicating whether the
+   matching was started successfully.
+   
+2) When an AJAX reply is received for a matchrequest (cf. point 1),
+   it is expected to be a JSON object representing an associative
+   array with these fields:
+   
+   'type' : string = 'OK', 'TIMEOUT' or 'ERROR'
+
+   If type = OK, then
+   'id' : associative array = { 'sessionid' : int, 'matchingid' : int }
+   
+   If type = ERROR, then
+   'errtxt' : string containing a text message produced by the backend
+                                matching engine
+   
+   If type = OK, then
+     If R = -1 (i.e., matches requested from all rules), then 
+       function resultrequest (R', 0, R, M) is called once for
+       each rule number R'
+     else,
+       function resultrequest (R, 0, R, M) is called once.
+
+3) Function resultrequest (R', C, R, M) will send an AJAX request to
+   the server, where R' is the rule number, C is the result number
+   requested for this rule, and M is the number of remaining matches
+   requested (-1 if all).
+   
+   The AJAX request will use the URL
+   /bplweb/resultrequest?sessionid=SID&matchingid=MID&rule=R'&match=C
+   
+   (so R and M are not sent to the server).
+   
+4) When an AJAX reply is received for a resultrequest (cf. point 3),
+   it is expected to be a JSON object representing an associative
+   array with these fields:
+   
+   'type' : string = 'OK', 'NOMOREMATCHES', 'TIMEOUT' or 'ERROR'
+   
+   If type = OK, then
+   'id' : associative array = { 'sessionid' : int, 'matchingid' : int }
+   'result' : associative array =
+     { 'context' : string, parameter : string, tree : string }
+   
+   If type = NOMOREMATCHES, then
+   'rule' : int     (rule in question, -1 if no rules have any more matches)
+   'matches' : int  (the number of matches found)
+   
+   If type = ERROR, then
+   'subtype' : string = 'MATCHER' or something else
+   'errtxt' : string
+   (if subtype = MATCHER the errtxt is a tree structure of error messages)
+   
+
+   If type = OK, and M > 1 (or M < 1, indicating all matches),
+   function resultrequest (R', C + 1, R, M - 1) is called again.
+   
+   If type = TIMEOUT, the user can decide to resend the request,
+   in which case resultrequest (R', C, R, M) is called again.
+
+5) When the user checks the "Display bigraphs" checkbox,
+   function drawsvgrequest (B, BID) is called for each bigraph
+   expression B on the page.  BID is an identifier uniquely identifying
+   the corresponding bigraph instance.
+
+6) Function drawsvgrequest (B, BID) will send an AJAX request to
+   the server.
+   
+   The AJAX request will use the URL
+   /bplweb/svgrequest?sessionid=SID&matchingid=MID&signature=S&bigraph=B
+   where S is the contents of the web page form field called 'signature'.
+   
+   The reply is expected to contain plain SVG text produced by the
+   backend engine.
+
+7) When the user clicks the "Save" or "Delete" button, an AJAX request
+   is sent to the server.
+   
+   It uses the URL
+   /example/save?signature=S&agent=A
+     &redex[0]=RX0&react[0]=RT0&inst[0]=IS0&...
+     &redex[n]=RXn&react[n]=RTn&inst[n]=ISn
+     &example[filename]=F&example[title]=T&example[passwd]=P&XXX
+   
+   where XXX are some more fields that can be ignored,
+   A is the contents of the web page form field labelled 'Agent',
+   RXi the content of the web page form field labelled 'Redex' of Rule i, 
+   RTi the content of the web page form field labelled 'Reactum' of Rule i, 
+   ISi the content of the web page form field labelled 'Instantiation' of Rule i,
+   F is the content of the web page form field labelled 'File'
+   T is the content of the web page form field labelled 'Title'
+   P is the content of the web page form field labelled 'Passwd'
+   
+   (URL is /example/delete?... if the "Delete" button is clicked.)
+   
+   When it gets this request, the server should check whether
+   an example is already stored under file name F, if so, the
+   password P should be checked; otherwise a new example is
+   created with file name F and password P.
+
+   The example consists of S, A, RXi, RTi, ISi.
+   
+   The server should return a list of links that constitute the
+   list of examples shown in the Examples box on the web page.  
+   
+   When clicked, one of these links should bring up the corresponding
+   example as a web page, e.g. by this HTML:
+   
+   <div id="examples">
+     <a href="/bplweb/index/10" title="Mobile Ambients">/ambients/example1</a><br />
+     <a href="/bplweb/index/17" title="All core BMS rules">/bms/core</a><br />
+   <div class="msg"></div>
+
+8) When the user clicks a "React" button next to match m of rule R,
+   function reactrequest (R, m) is called.
+   
+   Function reactrequest (R, m) will send an AJAX request to the
+   server.
+   
+   It uses the URL
+   /bplweb/reactrequest?sessionid=SID&matchingid=MID&rule=R&match=m
+     &requestno=Q
+     
+   where Q is a unique request number increasing with time.
+   
+9) When an AJAX reply is received from a reactrequest (cf. point 8),
+   it is expected to be a JSON object representing an associative
+   array with these fields:
+   
+   'type' : string = 'OK', 'TIMEOUT' or 'ERROR'
+   
+   If type = OK, then
+   'id' : associative array = { 'sessionid' : int, 'matchingid' : int }
+   'agent' : string containing result from backend
+   
+   If type = ERROR, then
+   'subtype' : string = 'MATCHER' or something else
+   'errtxt' : string
+   (if subtype = MATCHER the errtxt is a tree structure of error messages)
+
+10) When the user clicks the "Simplify" button, function simplifyrequest ()
+   is called.
+   
+   Function simplifyrequest () will send an AJAX request to the
+   server.
+   
+   It uses the URL
+   /bplweb/simplifyrequest?YYY
+   
+   where YYY is the serialised content of the form fields on the web page.
+   Specifically, it contains "agent=A".  When the server gets this request,
+   it should send it to the backend and return the result.
+   
+11) When an AJAX reply is received from a simplifyrequest (cf. point 10),
+   it is expected to be a JSON object representing an associative
+   array with the following fields:
+   
+   'type' : string = 'OK', 'TIMEOUT' or 'ERROR'
+   
+   If type = OK, then
+   'simplifiedagent' : string containing result from backend
+   
+   If type = ERROR, then
+   'subtype' : string = 'MATCHER' or something else
+   'errtxt' : string
+   (if subtype = MATCHER the errtxt is a tree structure of error messages)
+      
+12) When the user clicks a "Stop" button, function stoprequest () is called.
+
+   Function stoprequest () should send an AJAX request to the server.
+   NOTE: Currently (August 2009), the stoprequest function is not implemented.
+   
+   On receiving the AJAX stoprequest, the server should stop the
+   corresponding matching process.

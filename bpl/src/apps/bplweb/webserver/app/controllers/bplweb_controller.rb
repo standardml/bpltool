@@ -8,7 +8,7 @@ class BplwebController < ApplicationController
 
   def index
     #@example_pages, @examples = paginate :examples, {:per_page => 20, :order => "filename"}
-    @examples = Example.all [:order => "filename"]
+    @examples = Example.all[:order => "filename"]
     params = params()
     @filename = ''
     @title = ''
