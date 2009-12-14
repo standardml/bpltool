@@ -25,7 +25,10 @@ functor BGADT' (structure ErrorHandler : ERRORHANDLER
                   where type ppstream    = PrettyPrint.ppstream
                     and type break_style = PrettyPrint.break_style
                     and type origin      = Origin.origin) 
-  : BG_ADT =
+  : BG_ADT
+      where type ErrorHandler.ppstream    = PrettyPrint.ppstream
+        and type ErrorHandler.break_style = PrettyPrint.break_style
+        and type ErrorHandler.origin      = Origin.origin =
 struct
 
 structure ErrorHandler = ErrorHandler
@@ -285,7 +288,10 @@ functor BGADT (structure ErrorHandler : ERRORHANDLER
                  where type ppstream    = PrettyPrint.ppstream
                    and type break_style = PrettyPrint.break_style
                    and type origin      = Origin.origin) 
-  :> BG_ADT =
+  :> BG_ADT
+      where type ErrorHandler.ppstream    = PrettyPrint.ppstream
+        and type ErrorHandler.break_style = PrettyPrint.break_style
+        and type ErrorHandler.origin      = Origin.origin =
 struct
   structure BGADT = BGADT'(structure ErrorHandler = ErrorHandler)
   open BGADT

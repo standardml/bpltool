@@ -81,6 +81,7 @@ sig
 
   structure Control : CONTROL
   structure NameSet : MONO_SET
+  structure NameMap : MONO_FINMAP
   structure LinkSet : MONO_SET
 
   structure Name : NAME
@@ -188,11 +189,13 @@ sig
 
   sharing type Ion.ion =
                BgTerm.ion =
-               BgVal.ion
+               BgVal.ion =
+               BgBDNF.ion
 
   sharing type Permutation.permutation =
                BgTerm.permutation =
-               BgVal.permutation
+               BgVal.permutation =
+               BgBDNF.permutation
 
   sharing type Permutation.Immutable =
                BgTerm.Immutable
@@ -203,7 +206,8 @@ sig
                Instantiation.name =
                BgVal.name =
                Wiring.name =
-               NameSet.elt
+               NameSet.elt =
+               NameMap.dom
 
   sharing type NameSet.Set =
                Name.NameSet.Set =
@@ -215,15 +219,21 @@ sig
                BgTerm.nameset =
                BgVal.nameset
 
+  sharing type NameMap.map =
+               Wiring.namemap
+
   sharing type Wiring.wiring =
                BgTerm.wiring =
-               BgVal.wiring
+               BgVal.wiring =
+               BgBDNF.wiring
 
   sharing type LinkSet.Set =
                Wiring.linkset
 
   sharing type Link.link =
-               LinkSet.elt
+               LinkSet.elt =
+               Wiring.link
+
   (** Maximum revision number for containing components.*)
   val revision : string
 end
