@@ -357,7 +357,9 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
 	   * (v1 * v2)(v1' * v2') -> v1 v1' * v2 v2', if vi : Ii ->, vi' : -> Ii
 		 * (alpha * id_1) K_y(X) -> K_{alpha(y)}(X)
 		 * (alpha * id_1) (beta * K_y(X)) -> alpha' beta * K_{alpha(y)}(X) [not implemented]
-		 * (w1 * id_n) (w2 * v) -> w1 w2 * v, if v : -> n        [not implemented]
+		 * (w1 * id_n) (w2 * v) -> w1 w2 * v, if v : -> n
+     * (w * id_n) (Y * v) -> (w' * id_n) v,
+     *    where w : Y \uplus Z ->  and w' = w|`Z
 		 * (A o B) o C -> A o (B o C)    (for nicer prettyprinting)
 	   *)
 	    let
@@ -380,6 +382,16 @@ fun is_id0' v = is_id0 v handle NotImplemented _ => false
              if is_id' v1
              andalso NameSet.isEmpty (Interface.names (outerface v2)) then
                VTen ([VWir (Wiring.o (w1, w2), i), v2], ioi)
+             else if is_id' v1
+             andalso NameSet.isEmpty (Wiring.innernames w2) then
+               simplify
+                 (VCom
+                    (VTen
+                       ([VWir (Wiring.restrict'
+                                 w1
+                                 (Interface.names (outerface v2)), i),
+                         v1], ioi),
+                     v2, ioi))
              else
                if NameSet.eq
                     (Wiring.innernames w1) (Wiring.outernames w2) then
