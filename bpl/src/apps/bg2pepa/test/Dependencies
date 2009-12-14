@@ -1,0 +1,8 @@
+# INCLUDE=../
+# INCLUDE=../../../kernel
+# INCLUDE=../../../lib/util
+# INCLUDE=../../../lib/smlunit
+
+bg2pepaTest: /apps/bg2pepa/pcradt /lib/smlunit/. /kernel/bgadt /lib/util/errormsg
+   /lib/util/origin-sig /lib/util/errorhandler-sig /lib/pp/smlnj/.
+   /lib/compat/common/. /lib/util/flags

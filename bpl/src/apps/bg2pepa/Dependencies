@@ -1,0 +1,39 @@
+# MLton: $(SML_LIB)/mlyacc-lib/mlyacc-lib.mlb
+# INCLUDE=../../kernel/bg
+# INCLUDE=../../kernel/ast
+# INCLUDE=../../kernel
+# INCLUDE=../../lib/coll
+# INCLUDE=../../lib/pp/smlnj
+# INCLUDE=../../lib/util
+
+sigs = node-sig edge-sig bgaspects-sig concretebigraph-sig pcrule-sig
+   bgaspectsssgen-sig pcradt-sig
+funs = node edge bgaspects concretebigraph pcrule pcradt
+
+node-sig: 
+node: /kernel/bg/name
+edge-sig: 
+edge: /kernel/bg/name
+bgaspects-sig:
+bgaspects: /kernel/bg/name-sig /kernel/bg/control-sig
+   /kernel/bg/interface-sig /kernel/match/instantiation-sig
+concretebigraph-sig: 
+concretebigraph: node-sig edge-sig bgaspects-sig
+   /kernel/bg/name-sig /kernel/ast/bgval-sig
+pcrule-sig:
+pcrule: /kernel/ast/info-sig bgaspects-sig concretebigraph-sig
+   /kernel/ast/bgval-sig /kernel/ast/bgbdnf-sig /kernel/match/rule-sig
+bgaspectsssgen-sig:
+bgaspectsssgen: bgaspects-sig concretebigraph-sig pcrule-sig
+   /lib/coll/setinjection /lib/coll/listutil
+pcradt-sig: 
+pcradt: /kernel/bgadt-sig bgaspectsssgen pcrule concretebigraph bgaspects edge node
+   /lib/util/origin-sig /lib/util/errorhandler-sig
+
+pepabgparser.grm-sig: /lib/ml-yacc/.
+pepabgparser.lex: /lib/util/errormsg /lib/compat/mosml/. pepabgparser.grm-sig
+pepabgparser.grm: /lib/ml-yacc/. pepabgparser.grm-sig
+   %NODASHSIG
+
+pcr-sig: 
+pcr: /lib/ml-yacc/.

@@ -54,6 +54,12 @@ structure Test = struct
 	     structure Assert = Assert
        structure Test = Test)
 
+    structure Bg2PEPATest
+      = Bg2PEPATest
+          (structure ErrorHandler = PrintErrorHandler
+           structure Assert = Assert
+           structure Test = Test)
+
     structure BGGen
       = BGGen
 	    (structure PrettyPrint = PrettyPrint
@@ -84,6 +90,7 @@ structure Test = struct
 			, ("BDNF", "kernel/ast/test",  BDNFTest.suite ".")
 			, ("Matching", "kernel/match/test",  MatchTest.suite)
 			, ("Reaction (very slow!)", "kernel/match/test",  ReactionTest.suite)
+			, ("Bg2PEPA", "apps/bg2pepa/test",  Bg2PEPATest.suite)
 			, ("MiniML", "apps/miniml/test", MiniMLTest.suite)
 			]
 	    fun say s = TextIO.print(s^"\n")

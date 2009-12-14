@@ -1,0 +1,135 @@
+(* Simple grammar file for ML-Yacc (SML/NJ) defining the parser 
+   for the PEPA representation of concrete bigraphs.
+*)
+
+(* Position info stuff - below *)
+
+open BgAspects
+
+fun warning str v = (print ("Parser warning: "^str^"\n"); v)
+
+fun mk_origin p1 p2
+  = Origin.mk_file_origin
+      (!ErrorMsg.fileName)
+      (Origin.POS (ErrorMsg.toCoords p1 p2))
+
+fun mk_info p1 p2 = Info.make (mk_origin p1 p2)
+
+(* FIXME function definitions *)
+
+%%
+%term
+  EOF
+| INT of int | ID of string
+| COLLABSTAR | UUSCORE
+| NODE | EDGE | NAME | ROOT | CTRL | PRNT | PORT
+| PRESENT | ABSENT
+| LBRACE | RBRACE
+| STATELIST | STATE
+
+%nonterm
+  start of result
+| state of int * value AspectMap.map
+| statelist of (int * value AspectMap.map) list
+| aspectvaluelist of value AspectMap.map
+| aspectvalue of aspect * value
+| entity of entity
+| presence of value
+| place of place
+| link of link
+
+%pos int
+%verbose
+%start start
+%eop EOF
+%noshift EOF
+
+%name PepaBg
+
+%header (functor PepaBgLrVals
+		   (structure Info : INFO
+		    structure Token : TOKEN
+		    structure Name : NAME
+		    structure Control : CONTROL
+        structure Node : NODE
+        structure BgAspects : BGASPECTS
+          where type root = word
+            and type portindex = word
+        val get_ctrl : (string * int * int -> Control.control) ref
+        datatype result
+          = StateResult of int * BgAspects.value BgAspects.AspectMap.map
+          | StateListResult
+            of (int * BgAspects.value BgAspects.AspectMap.map) list
+        sharing type Name.name =
+                     BgAspects.name =
+                     BgAspects.edge
+        sharing type Control.control =
+                     BgAspects.control
+        sharing type Node.node =
+                     BgAspects.node
+		    )
+	)
+
+%keyword 
+
+(* Associativity declarations *)
+
+%%
+start
+  : STATELIST statelist
+      (StateListResult statelist)
+  | STATE state
+      (StateResult state)
+
+statelist
+  : state statelist
+      (state :: statelist)
+  |   ([])
+
+state
+  : INT COLLABSTAR LBRACE aspectvaluelist RBRACE
+      ((INT, aspectvaluelist))
+
+aspectvaluelist
+  : aspectvalue COLLABSTAR aspectvaluelist
+      ((AspectMap.add'
+          (fn _ => false)
+          (#1 aspectvalue, #2 aspectvalue, aspectvaluelist))
+       handle AspectMap.DATACHANGED =>
+              raise Fail "FIXME duplicate aspect")
+  | aspectvalue
+      (AspectMap.singleton aspectvalue)
+  |   (AspectMap.empty)
+
+aspectvalue
+  : NODE UUSCORE ID UUSCORE CTRL UUSCORE ID
+      ((NodeControl (Node.make ID1),
+        Control (!get_ctrl (ID2, IDleft, IDright))))
+  | NODE UUSCORE ID UUSCORE PRNT UUSCORE place
+      ((ChildParent (CNode (Node.make ID)), Place place))
+  | NODE UUSCORE ID UUSCORE PORT UUSCORE INT UUSCORE link
+      ((PointLink (PPort (Node.make ID, Word.fromInt INT)), Link link))
+  | NODE UUSCORE ID UUSCORE presence
+      (Presence (ENode (Node.make ID)), presence)
+  | EDGE UUSCORE ID UUSCORE presence
+      (Presence (EEdge (Name.make ID)), presence)
+  | NAME UUSCORE ID UUSCORE presence
+      (Presence (EName (Name.make ID)), presence)
+  | ROOT UUSCORE INT UUSCORE presence
+      (Presence (ERoot (Word.fromInt INT)), presence)
+
+presence
+  : PRESENT UUSCORE INT (Present (Word.fromInt INT))
+  | ABSENT  (Absent)
+
+place
+  : NODE UUSCORE ID
+      (PNode (Node.make ID))
+  | ROOT UUSCORE INT
+      (PRoot (Word.fromInt INT))
+
+link
+  : EDGE UUSCORE ID
+      (LEdge (Name.make ID))
+  | NAME UUSCORE ID
+      (LName (Name.make ID))

@@ -8,6 +8,8 @@
 # INCLUDE=../kernel/ast/test
 # INCLUDE=../kernel/match
 # INCLUDE=../kernel/match/test
+# INCLUDE=../apps/bg2pepa
+# INCLUDE=../apps/bg2pepa/test
 # INCLUDE=../apps/miniml
 # INCLUDE=../apps/miniml/test
 
@@ -16,6 +18,6 @@ unittest: %PROGRAM
    /lib/util/timings /lib/util/origin /lib/util/printerrorhandler /kernel/bg
    /apps/miniml/bggen /apps/miniml/mml2bg /kernel/bg/test/bgTest
    /kernel/ast/test/bdnfTest /kernel/match/test/matchTest
-   /kernel/match/test/reactionTest
+   /kernel/match/test/reactionTest /apps/bg2pepa/test/bg2pepaTest
    /apps/miniml/test/minimltest
 bpl2bgvalTest: %PROGRAM /kernel/bpl2bgval /kernel/ast/bplterm
