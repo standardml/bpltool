@@ -159,27 +159,52 @@ struct
    *)
   type inst = {I : interface, J : interface, rho : (int * bgval) array}
 
+  (* Extract a renaming wiring from a local substitution. *)
+  fun ls2ren ls =
+    let open BgVal
+    in
+      case match (PAbs (PCom (PTen [PWir, PVar], PVar))) ls of
+        MAbs (_, MCom (MTen [MWir wren, _], _)) => wren
+      | _ => raise
+               LogicalError
+                   ("rho contains an ill-formed local substitution", ls)
+    end
+
+  (* Test two instantiations for equality. *)
+  local
+    fun cod_neq (i1, ls1) (i2, ls2)
+      = i1 <> i2 orelse not (Wiring.eq (ls2ren ls1) (ls2ren ls2))
+    fun rho_eq rho1 rho2 =
+        case Array.findi (fn (i, cod1)
+                             => cod_neq cod1 (rho2 sub i)) rho1 of
+          NONE   => true
+        | SOME _ => false
+  in
+    fun eq {I = I1, J = J1, rho = rho1} {I = I2, J = J2, rho = rho2} =
+                Interface.eq (I1, I2)
+        andalso Interface.eq (J1, J2)
+        andalso rho_eq rho1 rho2
+  end
+      
+
   (* Deconstruct an instantiation. *)
   fun unmk {I, J, rho} =
       let
-        open BgVal
         fun rho2map (reasite, (redsite, ls), maps) = 
-            case match (PAbs (PCom (PTen [PWir, PVar], PVar))) ls of
-              MAbs (_, MCom (MTen [MWir wren, _], _)) =>
-              let
-                val (reans, redns)
-                  = (NameMap.Fold
-                       (fn ((x, y), (reans, redns)) => (y::reans, x::redns))
+            let
+              val (reans, redns)
+                = (NameMap.Fold
+                       (fn ((x, y), (reans, redns))
+                           => (y::reans, x::redns))
                        ([], [])
-                       (Wiring.unmk_ren wren))
+                       (Wiring.unmk_ren (ls2ren ls)))
                     handle Wiring.NotARenaming _ =>
                       raise LogicalError
-                              ("rho contains an invalid local renaming", ls)
-              in
-                ((reasite, reans), (redsite, redns)) :: maps
-              end
-            | _ => raise LogicalError
-                           ("rho contains an ill-formed local substitution", ls)
+                              ("rho contains an invalid local renaming",
+                               ls)
+            in
+              ((reasite, reans), (redsite, redns)) :: maps
+            end
       in
         {I = I, J = J, maps = Array.foldri rho2map [] rho}
       end
