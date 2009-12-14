@@ -784,7 +784,7 @@ struct
                      (lacc as {outer = Name yacc, inner = inneracc}, ls)
         = if Name.== (y, yacc) then
             ({outer = Name yacc, inner = NameSet.union' inner inneracc},
-             Link'Set.remove l ls)
+             Link'Set.remove' l ls)
           else
             (lacc, ls)
         | mergelinks _ laccls = laccls
@@ -796,7 +796,7 @@ struct
 		  fun mergeedges is i1 (l as {outer = Closure i2, inner})
 		                       (inneracc, ls)
 		    = if IntSet.member i2 is then
-		        (NameSet.union' inner inneracc, Link'Set.remove l ls)
+		        (NameSet.union' inner inneracc, Link'Set.remove' l ls)
 		      else
 		        (inneracc, ls)
 		    | mergeedges is i (l as {outer = Name _, inner = _})
@@ -1246,7 +1246,7 @@ struct
             let
               val y = Name.fresh NONE
               val newl = {outer = Name y, inner = inner}
-              val new_ls = Link'Set.remove l new_ls 
+              val new_ls = Link'Set.remove' l new_ls 
             in
               addto new_ht inner (Name y);
               (Link'Set.insert newl new_ls,

@@ -253,7 +253,7 @@ struct
         if NameSet.member x (!pp_unchanged_names)
            andalso not (NameSet.member x (!pp_unchanged_fixed)) then
           (  StringHash.remove pp_unchanged_original_names s
-           ; pp_unchanged_names := NameSet.remove x (!pp_unchanged_names))
+           ; pp_unchanged_names := NameSet.remove' x (!pp_unchanged_names))
           handle NOT_FOUND => ()
         else ()
 
