@@ -513,6 +513,9 @@ struct
               | tree    => tree          
           , n-1) end
 
+  fun remove' x set =
+      (remove x set) handle NotFound => set
+
   fun min (t, _) = 
       let fun h LEAF = NONE
 	    | h (RED  (k, LEAF, t2)) = SOME k

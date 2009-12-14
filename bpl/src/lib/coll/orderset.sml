@@ -204,7 +204,7 @@ functor OrderSet(Order : ORDERING): MONO_SET =
 	| N(i, s3, s4, _) => 
 	  union' (union' (insert' i s1) s3) s4
 
-    exception NOTFOUND
+    exception NotFound
     fun remove k0 t =
       let
 	fun balance1 E = impossible "(balance1 on an empty tree)"
@@ -297,7 +297,7 @@ functor OrderSet(Order : ORDERING): MONO_SET =
 		(N(k,l,r',bal),k',false)
 	    end
 	  
-	fun del E = raise NOTFOUND
+	fun del E = raise NotFound
 	  | del (N(k,l,r,bal)) = 
 	    if k0 < k then 
 	      let 
@@ -326,8 +326,11 @@ functor OrderSet(Order : ORDERING): MONO_SET =
 		      else (N(k',l',r,bal), false)
 		    end
       in
-	#1(del t) handle NOTFOUND => t
+	#1(del t) (*handle NotFound => t*)
       end
+
+  fun remove' x set =
+    (remove x set) handle NotFound => set
 
     (* difference : s1 \ s2 *)
     fun difference (s1:Set) (s2:Set) : Set =
@@ -337,7 +340,7 @@ functor OrderSet(Order : ORDERING): MONO_SET =
       | _ => (case s2 of
 		E => s1
 	      | N(i, l, r, _) => 
-		  difference (difference (remove i s1) l) r)
+		  difference (difference (remove' i s1) l) r)
 
     fun intersect (s1:Set) (s2:Set) : Set =
       (* Build up a new set from elements in s1 which 
@@ -406,7 +409,7 @@ functor OrderSet(Order : ORDERING): MONO_SET =
       fromList (listmap f (list t))
 
     fun subst (i':elt, i:elt) (s:Set) : Set =
-      if member i s then insert i' (remove i s) else s
+      if member i s then insert i' (remove' i s) else s
 
     fun apply (f:elt -> unit) (s:Set) =
       let

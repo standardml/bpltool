@@ -20,6 +20,7 @@ signature MONO_SET =
 
     exception DuplicatesRemoved
     exception Empty
+    exception NotFound
 
     val list : Set -> elt list
       (** Constructs a set containing the elements in l.
@@ -55,7 +56,14 @@ signature MONO_SET =
        * (does not raise DuplicatesRemoved).
        *)
     val insert' : elt -> Set -> Set
+    (** remove a s : Remove the element a from s.
+     * Raises NotFound if a is not in the set.
+     *)
     val remove : elt -> Set -> Set
+    (** remove' a s : Remove the element a from s.
+     * (does not raise NotFound).
+     *)
+    val remove' : elt -> Set -> Set
     val difference : Set -> Set -> Set
     val intersect : Set -> Set -> Set
     val disjoint : Set -> Set -> bool
