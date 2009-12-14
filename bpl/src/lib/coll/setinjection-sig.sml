@@ -18,16 +18,14 @@
  * USA
  *)
 
-(** Signature for structure providing comparison of sets.
- * @version $LastChangedRevision$
+(** Signature for structure generating set-injections.
+ * @version $LastChangedRevision: 442 $
  *)
-signature SETCOMPARE =
+signature SETINJECTION =
 sig
-  type T
-  (** Compare two sets. The primary parameter is the size of
-   * the sets: |T1| < |T2| => compare T1 T2 = LESS . *)
-  val compare : T -> T -> order
-  (** Compare two sets. The primary parameter is the size of
-   * the sets: |T1| < |T2| => lt T1 T2 = true. *)
-  val lt : T -> T -> bool
+  type S
+  type R
+  type inj
+
+  val injections : S -> R -> (inj * R) list
 end

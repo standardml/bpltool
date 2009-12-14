@@ -25,7 +25,16 @@ functor OrderFinMap(Order : ORDERING): MONO_FINMAP =
 
     fun isEmpty E = true
       | isEmpty _ = false
-
+    
+    fun size t =
+      let
+        fun size' acc [] = acc
+          | size' acc (E::ts) = size' acc ts
+          | size' acc ((N (_, _, l, r, _))::ts) =
+            size' (acc + 1) (l::r::ts)
+      in
+        size' 0 [t]
+      end
 
     fun lookup t key =
       let 

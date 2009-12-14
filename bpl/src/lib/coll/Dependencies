@@ -4,22 +4,44 @@ pp  = collectionprettyprint-sig setprettyprint listprettyprint
 set = monoset-sig ordering-sig orderset rbset setcompare-sig setcompare
 map = monofinmap-sig orderfinmap
 lzlist = lazylist-sig lazylist
+
 collectionprettyprint-sig:
+
+lazylist-sig:
+lazylist: + lazylist-sig
+listsort-sig:
+listsort: listsort-sig %NODASHSIG
+listutil-sig:
+listutil: listutil-sig %NODASHSIG
+listprettyprint: collectionprettyprint-sig /lib/pp/smlnj/prettyprint-sig
+orderedperm-sig:
+orderedperm: orderedperm-sig listutil %NODASHSIG
+
 monoset-sig:
 setprettyprint: collectionprettyprint-sig /lib/pp/smlnj/prettyprint-sig
    monoset-sig
-listprettyprint: collectionprettyprint-sig /lib/pp/smlnj/prettyprint-sig
 ordering-sig:
 orderset:   monoset-sig ordering-sig /lib/pp/edlib/edlibprettyprint
+rbset: monoset-sig /lib/pp/edlib/edlibprettyprint %NODASHSIG
 setcompare-sig:
-setcompare: monoset-sig ordering-sig
+setcompare: setcompare-sig monoset-sig ordering-sig %NODASHSIG
+
+subset-sig:
+subset: subset-sig lazylist-sig monoset-sig %NODASHSIG
+disjointunion-sig:
+disjointunion: disjointunion-sig monoset-sig %NODASHSIG
+
 monofinmap-sig: ordering-sig
 orderfinmap: monofinmap-sig ordering-sig
-lazylist-sig:
-lazylist: + lazylist-sig
-rbset: monoset-sig /lib/pp/edlib/edlibprettyprint %NODASHSIG
-listsort-sig:
-listsort: listsort-sig %NODASHSIG
+mapcompare-sig:
+mapcompare: mapcompare-sig monofinmap-sig ordering-sig %NODASHSIG
+
+setinjection-sig:
+setinjection: setinjection-sig monoset-sig monofinmap-sig subset-sig
+   orderedperm %NODASHSIG
+setmap-sig:
+setmap: setmap-sig monoset-sig monofinmap-sig %NODASHSIG
+
 bijectionconstraints-sig:
 bijectionconstraints: bijectionconstraints-sig monoset-sig monofinmap-sig
    %NODASHSIG

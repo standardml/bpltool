@@ -28,40 +28,44 @@ struct
   type T = Set.Set
   fun List_collate R xs ys =
       let
-	fun collate [] [] = EQUAL
-	  | collate (x :: xs) [] = GREATER
-	  | collate [] (y :: ys) = LESS
-	  | collate (x :: xs) (y :: ys) =
-	    case R (x, y) of
-	      EQUAL => collate xs ys
-	    | result => result
+
+  fun collate [] [] = EQUAL
+    | collate (x :: xs) [] = GREATER
+    | collate [] (y :: ys) = LESS
+    | collate (x :: xs) (y :: ys) =
+      case R (x, y) of
+        EQUAL => collate xs ys
+      | result => result
       in
-	collate xs ys
+        collate xs ys
       end
-  fun lt set1 set2 =
+
+  fun compare set1 set2 =
       let
-	val sz1 = Set.size set1
-	val sz2 = Set.size set2
+        val sz1 = Set.size set1
+        val sz2 = Set.size set2
       in
-	if sz1 < sz2 then
-	  true
-	else if sz2 < sz1 then
-	  false
-	else
-	  let
-	    val x1s = Set.list set1
-	    val x2s = Set.list set2
-	  in
-	    (List_collate (fn (x1, x2) => 
-			      if EltOrder.lt x1 x2 then
-				LESS
-			      else if EltOrder.lt x2 x1 then
-				GREATER
-			      else
-				EQUAL)
-			  x1s 
-			  x2s)
-	    = LESS
-	  end
+        if sz1 < sz2 then
+          LESS
+        else if sz2 < sz1 then
+          GREATER
+        else
+          let
+            val x1s = Set.list set1
+            val x2s = Set.list set2
+          in
+            List_collate (fn (x1, x2) => 
+                             if EltOrder.lt x1 x2 then
+                               LESS
+                             else if EltOrder.lt x2 x1 then
+                               GREATER
+                             else
+                               EQUAL)
+                         x1s
+                         x2s
+          end
       end
+      
+  fun lt set1 set2 = (compare set1 set2) = LESS
+
 end

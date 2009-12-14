@@ -18,16 +18,16 @@
  * USA
  *)
 
-(** Signature for structure providing comparison of sets.
- * @version $LastChangedRevision$
+(** Signature for generating ordered permutations of lists.
+ * @version $LastChangedRevision: 2717 $
  *)
-signature SETCOMPARE =
+signature ORDERED_PERMUTATION =
 sig
-  type T
-  (** Compare two sets. The primary parameter is the size of
-   * the sets: |T1| < |T2| => compare T1 T2 = LESS . *)
-  val compare : T -> T -> order
-  (** Compare two sets. The primary parameter is the size of
-   * the sets: |T1| < |T2| => lt T1 T2 = true. *)
-  val lt : T -> T -> bool
+  type 'a ordered_permutation
+
+  val firstperm : 'a list -> 'a ordered_permutation
+
+  val nextperm : 'a ordered_permutation -> ('a ordered_permutation) option
+
+  val list : 'a ordered_permutation -> 'a list
 end

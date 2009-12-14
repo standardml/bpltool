@@ -18,16 +18,12 @@
  * USA
  *)
 
-(** Signature for structure providing comparison of sets.
- * @version $LastChangedRevision$
+(** Signature for structure providing comparison of maps.
+ * @version $LastChangedRevision: 442 $
  *)
-signature SETCOMPARE =
+signature MAPCOMPARE =
 sig
-  type T
-  (** Compare two sets. The primary parameter is the size of
-   * the sets: |T1| < |T2| => compare T1 T2 = LESS . *)
-  val compare : T -> T -> order
-  (** Compare two sets. The primary parameter is the size of
-   * the sets: |T1| < |T2| => lt T1 T2 = true. *)
-  val lt : T -> T -> bool
+  type 'a T
+  val compare : ('a -> 'a -> bool) -> 'a T -> 'a T -> order
+  val lt      : ('a -> 'a -> bool) -> 'a T -> 'a T -> bool
 end

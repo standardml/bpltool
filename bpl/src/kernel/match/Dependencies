@@ -25,7 +25,7 @@ match: match-sig /kernel/bg/sigs /kernel/ast/sigs /lib/compat/mosml/hash/.
   /lib/pp/smlnj/. /lib/coll/pp /lib/coll/lzlist /lib/coll/set /lib/coll/map
   /lib/compat/mosml/hash/. /lib/compat/common/. /lib/util/flags
   /lib/util/origin /lib/util/errorhandler-sig /lib/util/debug
-  /lib/util/partition /lib/util/orderedpartition /lib/util/subset
+  /lib/util/partition /lib/util/orderedpartition /lib/coll/subset
   rule-sig %NODASHSIG
 reaction-sig: /lib/coll/lazylist /lib/pp/smlnj/prettyprint
 reaction: reaction-sig /lib/coll/lazylist /lib/coll/monofinmap-sig

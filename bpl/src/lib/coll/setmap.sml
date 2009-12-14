@@ -18,16 +18,36 @@
  * USA
  *)
 
-(** Signature for structure providing comparison of sets.
- * @version $LastChangedRevision$
+(** Structure generating maps between sets.
+ * @version $LastChangedRevision: 442 $
  *)
-signature SETCOMPARE =
-sig
-  type T
-  (** Compare two sets. The primary parameter is the size of
-   * the sets: |T1| < |T2| => compare T1 T2 = LESS . *)
-  val compare : T -> T -> order
-  (** Compare two sets. The primary parameter is the size of
-   * the sets: |T1| < |T2| => lt T1 T2 = true. *)
-  val lt : T -> T -> bool
+functor SetMap (
+  structure SSet : MONO_SET
+  structure RSet : MONO_SET
+  structure Map : MONO_FINMAP
+  sharing type SSet.elt =
+               Map.dom
+) : SETMAP
+  where type S   = SSet.Set
+    and type R   = RSet.Set
+    and type map = RSet.elt Map.map =
+struct
+
+type S   = SSet.Set
+type R   = RSet.Set
+type map = RSet.elt Map.map
+
+fun maps S R =
+  let
+    fun maps_s2r s map_list r acc =
+      foldr
+        (fn (map, acc) => Map.add (s, r, map) :: acc)
+        acc map_list
+
+    fun maps_s s map_list =
+      RSet.fold (maps_s2r s map_list) [] R
+in
+  SSet.fold maps_s [Map.empty] S
+end
+
 end
