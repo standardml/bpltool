@@ -317,6 +317,14 @@ struct
       | wrongterm => 
           raise MalformedBDNF 
                   (info B, wrongterm, "matching B in unmkB")
+          
+  fun unmkB' B = 
+      case match (PCom (PTen [PWir, PPer], PVar)) B of
+        MCom (MTen [MWir wir, MPer id_X], MVal D) =>
+             {wir = wir, id_X = id_X, D = D}
+      | wrongterm => 
+          raise MalformedBDNF 
+                  (info B, wrongterm, "matching B in unmkB'")
 
   fun unmkD D =
       case match (PTen [PVar, PCom (PTns, PPer)]) D of
@@ -325,6 +333,14 @@ struct
       | wrongterm => 
           raise MalformedBDNF 
                   (info D, wrongterm, "matching D in unmkD")
+
+  fun unmkD' D =
+      case match (PTen [PWir, PCom (PTns, PPer)]) D of
+        MTen [MWir ren, MCom (MTns Ps, MPer pi)] =>
+             {ren = ren, Ps = Ps, perm = pi}
+      | wrongterm => 
+          raise MalformedBDNF 
+                  (info D, wrongterm, "matching D in unmkD'")
 
   fun unmkP' P =
       case match (PCom (PVar, PVar)) P of

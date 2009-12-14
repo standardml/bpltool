@@ -152,12 +152,24 @@ sig
    * @return (wirxid, D) representing (a wiring x id_(Xs)) and a DBDNF.
    *)
   val unmkB : B bgbdnf -> {wirxid : bgval, D : D bgbdnf}
+  (** Deconstruct a B bgbdnf. 
+   * @return (wir, D) representing a wiring, a local identity,
+   * and a DBDNF.
+   *)
+  val unmkB' : B bgbdnf
+    -> {wir : wiring, id_X : Immutable permutation, D : D bgbdnf}
   (** Deconstruct a D bgbdnf. 
    * @return (ren, Ps, perm) representing a renaming, a tensor product
    * of PBDNF primes, and a permutation
    *)
   val unmkD
       : D bgbdnf -> {ren : bgval, Ps : P bgbdnf list, perm : bgval}
+  (** Deconstruct a D bgbdnf. 
+   * @return (ren, Ps, perm) representing a renaming, a tensor product
+   * of PBDNF primes, and a permutation
+   *)
+  val unmkD' : D bgbdnf 
+    -> {ren : wiring, Ps : P bgbdnf list, perm : Immutable permutation}
   (** Deconstruct a P bgbdnf, yielding basic elements and a bgbdnf. 
    * @params P
    * @param P a prime on the form (id_Z * (Y)(s * id_1)"X") N
