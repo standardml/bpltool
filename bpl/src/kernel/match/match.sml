@@ -1739,7 +1739,7 @@ struct
                       val tree = PARn' (tree_i :: trees) 
                     in
                       lzCons (fn () =>
-                        (print' (fn () => Int.toString lvl ^ "<PARn ");
+                        (print' (fn () => Int.toString lvl ^ "<PARn' ");
                          ({ename' = ename', s_C' = s_C', Y = Y, qss = qss, tree = tree},
                           newresults ())))
                     end
