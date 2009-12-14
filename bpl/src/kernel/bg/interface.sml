@@ -32,6 +32,9 @@ struct
   type interface = {width : int, loc : nameset list, glob : nameset}
 
   fun make {loc, glob} = {width = length loc, loc = loc, glob = glob}
+  fun make' {width, glob} =
+      {width = width,
+       loc = List.tabulate (width, (fn _ => NameSet.empty)), glob = glob}
   fun unmk {width, loc, glob} = {width = width, loc = loc, glob = glob}
 
   fun width {width, loc, glob} = width

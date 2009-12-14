@@ -32,10 +32,16 @@ sig
    * length of the loc argument.
    * @params {width, loc, glob}
    * @param loc    list of sets of local names for each location.
-   * @param glob   list of global names. 
+   * @param glob   set of global names. 
    *)
   val make : {loc : nameset list, glob : nameset}
 	     -> interface
+  (** Construct an interface with no local names.
+   * @params {width, glob}
+   * @param width  interface width
+   * @param glob   set of global names. 
+   *)
+  val make' : {width : int, glob : nameset} -> interface
   (** Deconstruct an interface.
    * @see make.
    *)
