@@ -469,7 +469,7 @@ nset    : LBRACK RBRACK       (NameSet.empty)
 			       handle NameSet.DuplicatesRemoved
 				      => raise 
 					DuplicateNames 
-					  ("bg.grm", (LBRACKleft, RBRACKright),
+					  ("rules.grm", (LBRACKleft, RBRACKright),
 					   "while parsing"))
 
 ctrlid	: CTRLID	      (Control.make (CTRLID, Control.Active, 0, 0))
