@@ -108,6 +108,8 @@ functor ConcreteBigraph(
     and type absbg         = BgVal.bgval
     and type node          = Node.node
     and type place         = BgAspects.place
+    and type pointset      = BgAspects.PointSet.Set
+    and type link          = BgAspects.link
     and type aspect        = BgAspects.aspect
     and type value         = BgAspects.value
     and type change        = BgAspects.change
@@ -126,6 +128,7 @@ type nameset       = NameSet.Set
 type controlset    = ControlSet.Set
 type 'a controlmap = 'a ControlMap.map
 type childset      = ChildSet.Set
+type pointset      = PointSet.Set
 type 'a aspectmap  = 'a AspectMap.map
 
 type translation = {rho_V : Node.node NodeMap.map,
@@ -261,6 +264,8 @@ fun ctrl_inv ({ctrl, ...} : conbg) =
     ControlMap.empty ctrl
 
 fun children ({prnt_inv, ...} : conbg) p = get_children prnt_inv p
+
+fun points ({link_inv, ...} : conbg) l = get_points link_inv l
 
 fun idle_names ({outerface, link_inv, ...} : conbg) =
   NameSet.fold

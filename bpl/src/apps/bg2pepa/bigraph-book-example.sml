@@ -1,6 +1,9 @@
 (* Example from Milner's book "The Space and Motion of Communicating
  * Agents" extended with symmetric rules allowing agents to leave rooms
  * etc.
+ * There are some deviations (though I don't think they are necessary...):
+ * - no 'conference call' rules
+ * - computers are not connected to a network
  *
  * NB! Uses the SML/NJ version of the BPLtool command line.
  *)
@@ -14,7 +17,7 @@ use "figinfo.sml";
 
 val _ = use_shorthands true;
 
-val _ = CM_make "../pcr/sources.cm";
+val _ = CM_make "sources.cm";
 
 fun bgbdnf_eq b1 b2 = BG.BgBDNF.eq b1 b2;
 fun bgval_eq b1 b2 = bgbdnf_eq (BG.BgBDNF.make b1) (BG.BgBDNF.make b2);
@@ -106,6 +109,10 @@ val signt = foldr (fn ((id, ctrl), signt) =>
 
 
 val x   = Name.make "x";
+val y   = Name.make "y";
+val z   = Name.make "z";
+val v   = Name.make "v";
+val e   = Name.make "e";
 val y_0 = Name.make "y_0";
 val y_1 = Name.make "y_1";
 val v_0 = Node.make "v_0";
@@ -136,7 +143,7 @@ val connect_to_computer = "connect to computer" :::
  * (v_1,0) -> y_1
  * 
  * Changes:
- * con (v_0,1) -> y_1
+ * con (v_0,1) -> y_1  <-- makes /y_0 idle
  *)
 val conn_P
   = [(Presence (ERoot 0w0),         Present 0w2),
@@ -200,20 +207,20 @@ val disc_PCR = make_PCR disconnect_from_computer disc_P disc_C;
 
 
 (* val enter_room = "enter room" ::: *)
-(*    (-/y o A[x,y]) `|` R o `[(\*0*\)]` *)
+(*    A[x,y] `|` R o `[(\*0*\)]` *)
 (*   ----|> *)
-(*    R o ((-/y o A[x,y]) `|` `[(\*0*\)]`); *)
+(*    R o (A[x,y] `|` `[(\*0*\)]`); *)
 val enter_room = "enter room" :::
-   (-/"y" o A["x","y"] o <->) `|` R o `[(*0*)]`
+   A["x","y"] o <-> `|` R o `[(*0*)]`
   ----|>
-   R o ((-/"y" o A["x","y"] o <->) `|` `[(*0*)]`);
+   R o (A["x","y"] o <-> `|` `[(*0*)]`);
 (* Pre-conditions:
  * x
- * /y_0
+ * y
  * v_0 : A
  * v_0 -> 0
  * (v_0,0) -> x
- * (v_0,1) -> y_0
+ * (v_0,1) -> y
  * v_1 : R
  * v_1 -> 0
  * 0 -> v_1
@@ -224,12 +231,12 @@ val enter_room = "enter room" :::
 val entr_P
   = [(Presence (ERoot 0w0), Present 0w2),
      (Presence (EName x), Present 0w1),
-     (Presence (EEdge y_0), Present 0w1), (* edge! *)
+     (Presence (EName y), Present 0w1),
      (Presence (ENode v_0), Present 0w0), (* empty node! *)
      (NodeControl v_0, Control c_A),
      (ChildParent (CNode v_0), Place (PRoot 0w0)),
      (PointLink (PPort (v_0, 0w0)), Link (LName x)),
-     (PointLink (PPort (v_0, 0w1)), Link (LEdge y_0)),
+     (PointLink (PPort (v_0, 0w1)), Link (LName y)),
      (Presence (ENode v_1), Present 0w1),
      (NodeControl v_1, Control c_R),
      (ChildParent (CNode v_1), Place (PRoot 0w0)),
@@ -240,21 +247,22 @@ val entr_PCR = make_PCR enter_room entr_P entr_C;
 
 
 (* val exit_room = "exit room" ::: *)
-(*    R o ((-/y o A[x,y]) `|` `[(\*0*\)]`) *)
+(*    R o (A[x,y] `|` `[(\*0*\)]`) *)
 (*   ----|> *)
-(*    (-/y o A[x,y]) `|` R o `[(\*0*\)]`; *)
+(*    A[x,y] `|` R o `[(\*0*\)]`; *)
 val exit_room = "exit room" :::
-   R o ((-/"y" o A["x","y"] o <->) `|` `[(*0*)]`)
+   R o (A["x","y"] o <-> `|` `[(*0*)]`)
   ----|>
-   (-/"y" o A["x","y"] o <->) `|` R o `[(*0*)]`;
+   A["x","y"] o <-> `|` R o `[(*0*)]`;
 (* Pre-conditions:
+ * x
+ * y
  * v_0 : R
  * v_0 -> 0
- * /y_0
  * v_1 : A
  * v_1 -> v_0
  * (v_1,0) -> x
- * (v_1,1) -> y_0
+ * (v_1,1) -> y
  * 0 -> v_0
  *
  * Changes:
@@ -263,15 +271,15 @@ val exit_room = "exit room" :::
 val exit_P
   = [(Presence (ERoot 0w0), Present 0w1),
      (Presence (EName x), Present 0w1),
+     (Presence (EName y), Present 0w1),
      (Presence (ENode v_0), Present 0w2),
      (NodeControl v_0, Control c_R),
      (ChildParent (CNode v_0), Place (PRoot 0w0)),
-     (Presence (EEdge y_0), Present 0w1), (* edge! *)
      (Presence (ENode v_1), Present 0w0), (* empty node! *)
      (NodeControl v_1, Control c_A),
      (ChildParent (CNode v_1), Place (PNode v_0)),
      (PointLink (PPort (v_1, 0w0)), Link (LName x)),
-     (PointLink (PPort (v_1, 0w1)), Link (LEdge y_0)),
+     (PointLink (PPort (v_1, 0w1)), Link (LName y)),
      (ChildParent (CSite 0w0), Place (PNode v_0))];
 val exit_C
   = [Mov (CNode v_1, PRoot 0w0)];
@@ -310,8 +318,8 @@ val simple_ss = BgAspectsSSGen.gen_state_space
 (* `|` R o ((-/y o C[y]) `|` (-/y o C[y]) `|` (-/y o C[y])) *)
 (* `|` -/z *)
 (*     o ((-/y o A[z,y]) `|` (-/y o A[z,y]) `|` (-/y o A[z,y])); *)
-val two_rooms =
-    R o ((-/"y" o C["y"] o <->) `|` (-/"y" o C["y"] o <->) `|` (-/"y" o C["y"] o <->))
-`|` R o ((-/"y" o C["y"] o <->) `|` (-/"y" o C["y"] o <->) `|` (-/"y" o C["y"] o <->))
-`|` -/"z"
-    o ((-/"y" o A["z","y"] o <->) `|` (-/"y" o A["z","y"] o <->) `|` (-/"y" o A["z","y"] o <->));
+(* val two_rooms = *)
+(*     R o ((-/"y" o C["y"] o <->) `|` (-/"y" o C["y"] o <->) `|` (-/"y" o C["y"] o <->)) *)
+(* `|` R o ((-/"y" o C["y"] o <->) `|` (-/"y" o C["y"] o <->) `|` (-/"y" o C["y"] o <->)) *)
+(* `|` -/"z" *)
+(*     o ((-/"y" o A["z","y"] o <->) `|` (-/"y" o A["z","y"] o <->) `|` (-/"y" o A["z","y"] o <->)); *)

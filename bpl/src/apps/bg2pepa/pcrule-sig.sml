@@ -34,6 +34,7 @@ sig
   type edgeset
   type controlset
   type conbg
+  type linkset
   type reaction_rule
   type translation
   type instantiation
@@ -63,6 +64,9 @@ sig
   (** Return the redex of a rule. *)
   val redex : pcrule -> conbg
 
+  (** FIXME *)
+  val table : pcrule -> (value * value) aspectmap
+
   (** Convert a PC-rule to an ordinary bigraphical reaction rule. *)
   val reaction_rule : pcrule -> reaction_rule
 
@@ -75,6 +79,9 @@ sig
   (** FIXME *)
   val controls : pcrule -> controlset
 
+  (** FIXME *)
+  val dont_cares : pcrule -> linkset * bool
+
   (** Translate the support according the given translation. *)
   val translate : translation -> pcrule -> pcrule
 
@@ -84,4 +91,10 @@ sig
    * NB: this is _not_ the same as instantiation of parameters. *)
   val instantiate : instantiation -> pcrule
                     -> (value * value) aspectmap * int entitymap
+
+  (** As instantiate, but removes aspects that neither affects
+   * whether the rule can fire, nor changes their value as part
+   * of the reaction. *)
+  val instantiate' : instantiation -> pcrule
+                     -> (value * value) aspectmap * int entitymap
 end

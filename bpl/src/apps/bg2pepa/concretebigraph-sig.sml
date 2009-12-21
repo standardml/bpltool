@@ -38,6 +38,8 @@ sig
 *)
   type node
   type place
+  type pointset
+  type link
   type aspect
   type value
   type change
@@ -115,6 +117,9 @@ sig
 
   (** FIXME *)
   val width : conbg -> int
+
+  (** FIXME *)
+  val points : conbg -> link -> pointset
 
   (** Translate the support according the given translation. *)
   val translate : translation -> conbg -> conbg

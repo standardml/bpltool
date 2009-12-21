@@ -51,6 +51,7 @@ functor BgAspectsSSGen (
   structure PCRule : PCRULE
     where type preconds    = (BgAspects.aspect * BgAspects.value) list
       and type changes     = BgAspects.change list
+      and type linkset     = BgAspects.LinkSet.Set
       and type translation = {rho_V : Node.node NodeMap.map,
                               rho_E : Name.name EdgeMap.map}
       and type instantiation = {rho_V : Node.node NodeMap.map,
@@ -450,7 +451,8 @@ fun add_trns' (trns, aspect_acts)
 
 (* Create a state space with no transitions corresponding to a 
  * concrete bigraph. *)
-fun init_state_space conbg idle_edges =
+fun init_state_space conbg idle_edges
+                     redexes_have_edge redexes_have_siteless_node =
   let
     fun add_state ((aspect, value), trns) =
       let
@@ -467,9 +469,29 @@ fun init_state_space conbg idle_edges =
                                Present 0w0,
                                init_state))
                         init_state idle_edges
+    (* Set all point counts to zero if no redex has an edge *)
+    val init_state''
+      = AspectMap.ComposeMap
+          (fn (Presence e, value) =>
+              (case e of
+                 EEdge _ => if redexes_have_edge then
+                              value
+                            else
+                              Present 0w0
+               | EName _ => if redexes_have_edge then
+                              value
+                            else
+                              Present 0w0
+               | ENode _ => if redexes_have_siteless_node then
+                              value
+                            else
+                              Present 0w0
+               | ERoot _ => Present 0w0)
+            | (_, value) => value)
+          init_state'
   in
-    (init_state',
-     AspectMap.Fold add_state AspectMap.empty init_state')
+    (init_state'',
+     AspectMap.Fold add_state AspectMap.empty init_state'')
   end
 
 structure NodeInjection = SetInjection(structure SSet    = NodeSet
@@ -661,9 +683,24 @@ fun ctrl_resp_instantiations' rule ctrl_components_a E_a Y_a R_a =
           NONE   => NodeSet.empty
         | SOME V => V
 
-    val R_R = WordSetTabulate.tabulate (ConcreteBigraph.width redex)
-                                       Word.fromInt
-    val Y_R = ConcreteBigraph.outernames redex
+    val (dont_care_links, dont_care_root) = PCRule.dont_cares rule
+    val (dont_care_names, dont_care_edges)
+      = LinkSet.fold
+          (fn (LName x) => (fn (ns, es) =>
+              (NameSet.insert x ns, es))
+            | (LEdge e) => (fn (ns, es) =>
+              (ns, EdgeSet.insert e es)))
+          (NameSet.empty, EdgeSet.empty) dont_care_links
+
+    val R_R = if dont_care_root then
+                WordSet.empty
+              else
+                WordSetTabulate.tabulate (ConcreteBigraph.width redex)
+                                         Word.fromInt
+    val Y_R = NameSet.difference
+                (ConcreteBigraph.outernames redex)
+                dont_care_names
+    val E_R = EdgeSet.difference E_R dont_care_edges
 
 (*     val V_injs = NodeInjection.injections V_R V_a *)
     (* Group the nodes of the redex according to their equivalence class
@@ -727,181 +764,217 @@ fun ctrl_resp_instantiations' rule ctrl_components_a E_a Y_a R_a =
                                  (RootNodeUnion.disjoint_union R_a)
     val add_name_maps = add_maps (NameLinkMaps.maps Y_R)
                                  (NameEdgeUnion.disjoint_union Y_a)
-  in
-    ListUtil.cartesian_product (foldr add_root_maps [] V_injs)
+
+val insts =     ListUtil.cartesian_product (foldr add_root_maps [] V_injs)
                                (foldr add_name_maps [] E_injs)
+val _ = print' ("number of instantiations: " ^ (Int.toString (length insts)) ^ "\n")
+  in
+insts
+(*     ListUtil.cartesian_product (foldr add_root_maps [] V_injs) *)
+(*                                (foldr add_name_maps [] E_injs) *)
   end
 
 
-(* Assumptions (FIXME verify that these are met):
- * - agent is ground
- * - rule names are unique
- * - rules are local, i.e. FIXME
- *
- * FIXME: idle eges in R are significant if the changes connect one
- *        or more points to it. We must handle the case where idle
- *        edges in R are mapped to implicit edges in the agent!
- *        It seems that it would be sufficient to add a number of idle
- *        edges to the concrete agent - but how many?
- *        As most as many edges as we have ports can be used at
- *        any point, so maybe we can just add |ports| - |edges| idle
- *        edges to the agent? 
- *        Almost, but not quite: there is one special case that we should
- *        take into account:
- *
- *        a rule R --> R' which can capture idle edges (i.e. R has idle
- *        names Y), e.g:
- *
- *          A[x] || y/  -->  A[y] || x/ ,
- *
- *        cannot fire in contexts C on the form
- *
- *          C' o (id_X * /Y * id_1),
- *
- *        if there are fewer than |Y| idle edges (i.e. no edges to
- *        connect to some of the names of Y). The needed number of edges
- *        can at most be |Y| for a rule, and for a given set of rules
- *        we can simply take the maximum number of idle names over all 
- *        the redexes.
- *
- *        Thus, the number of idle edges we should add is
- *
- *          |ports| - |edges| + max_{R-->R' \in rules}(idle_names(R))
- * 
- *)
-fun gen_state_space {agent, rules} =
-  let
-    val agent_conc = ConcreteBigraph.concretize agent
-    val V_a        = ConcreteBigraph.nodes agent_conc
-    val ctrl_inv_a = ConcreteBigraph.ctrl_inv agent_conc
-    val E_a        = ConcreteBigraph.edges agent_conc
-    val Y_a        = ConcreteBigraph.outernames agent_conc
-    val R_a        = WordSetTabulate.tabulate
-                       (ConcreteBigraph.width agent_conc) Word.fromInt
+functor TransitiveReflexiveClosure (
+  structure Set : MONO_SET
+  structure Map : MONO_FINMAP
+  sharing type Set.elt =
+               Map.dom) =
+struct
 
-    (* We need to know the (potential) number of ports so that we can
-     * - add a sufficient number of idle edges.
-     * - add a sufficient number of states for each edge
-     *)
-    val controls
-      = foldl
-          (fn (rule, controls) =>
-              ControlSet.union' (PCRule.controls rule) controls)
-          (ConcreteBigraph.controls agent_conc) rules
-    val max_node_ports = ControlSet.fold (fn c => fn mp =>
-                                             Int.max (Control.free c, mp))
-                                         0 controls
-    val max_ports = max_node_ports * (NodeSet.size V_a)
-    (* Similarly, we must know the maximum number of nodes so that we can
-     * add a sufficient number of states for each node/root. *)
-    val max_nodes = NodeSet.size V_a
+  type set = Set.Set
+  type rel = set Map.map
 
-    (* As discussed in the function comment, we need the maximum number
-     * of idle names in the redexes. *)
-    val max_idle_names = foldl Int.max 0
-                               (map (NameSet.size
-                                     o ConcreteBigraph.idle_names
-                                     o PCRule.redex) rules)
-    (* Add a sufficient number of idle edges to the concrete agent. *)
-    local
-      fun fresh_edges' edges 0 = edges
-        | fresh_edges' edges n = 
-        fresh_edges' (EdgeSet.insert (Name.fresh NONE) edges) (n - 1)
+  val domain : rel -> set = Set.fromList o Map.dom
+
+  fun lookup R s =
+    (case Map.lookup R s of
+       NONE    => Set.empty
+     | SOME S => S)
+
+  fun transitive_step s (changed, R) =
+    let
+      val S  = lookup R s
+      val S' = Set.fold (fn s' => fn S' => Set.union' S' (lookup R s'))
+                        S S
     in
-      val fresh_edges = fresh_edges' EdgeSet.empty
+      (changed orelse (Set.size S) <> (Set.size S'),
+       Map.add (s, S', R))
     end
-    val E_a_idle
-      = fresh_edges (max_ports - (EdgeSet.size E_a) + max_idle_names)
-val _ = print' ("max ports: " ^ (Int.toString max_ports) ^ "\n")
-val _ = print' ("|E_a|: " ^ (Int.toString (EdgeSet.size E_a)) ^ "\n")
-val _ = print' ("max idle names: " ^ (Int.toString max_idle_names) ^ "\n")
 
-    (* Approximate the "dynamic control relation": given that a node has
-     * control K, which controls might it have after 0 or more reactions.
+  fun transitive_closure' dom R =
+    (case Set.fold transitive_step (false, R) dom of
+       (false, _) => R
+     | (true, R') => transitive_closure' dom R')
+  fun transitive_closure R = transitive_closure' (domain R) R
+
+
+  fun reflexive_closure' dom R =
+    Set.fold (fn s => fn R' =>
+                 Map.add (s, Set.insert' s (lookup R s), R'))
+             R dom
+  fun reflexive_closure R = reflexive_closure' (domain R) R
+
+  (* Find the transitive closure of a relation R \subseteq S x S
+   * represented as a map S -> 2^S  *)
+  fun transitive_reflexive_closure' dom R =
+    reflexive_closure' dom (transitive_closure' dom R)
+  fun transitive_reflexive_closure R =
+    transitive_reflexive_closure' (domain R) R
+  
+end
+
+structure TransReflClosCtrlRel = TransitiveReflexiveClosure (
+                                   structure Set = ControlSet
+                                   structure Map = ControlMap)
+
+
+
+(* Do a variety of analyses on a set of rules
+ * FIXME specify analyses
+ *)
+fun analyze_rules controls_a ctrl_inv_a rules =
+  let
+    (* Utility functions *)
+    fun get_ctrls ctrl_rel K =
+      (case ControlMap.lookup ctrl_rel K of
+         NONE    => ControlSet.empty
+       | SOME Ks => Ks)
+    fun get_ctrls' ctrl_rel_inv Ks =
+      (case ControlSetMap.lookup ctrl_rel_inv Ks of
+         NONE       => (ControlSet.empty, NodeSet.empty)
+       | SOME Ks'_V => Ks'_V)
+    fun get_nodes ctrl_inv K =
+      (case ControlMap.lookup ctrl_inv K of
+         NONE   => NodeSet.empty
+       | SOME V => V)
+
+    (* Extract the following from each rule and aggregate:
+     * - what controls are used in the rule (agg = union)
+     * - how do controls change (e.g. a K can stay a K or become an L)
+     * - how many idle names occur in the redex (aggregate = max)
+     * - does the redex have an edge? (aggregate = exists)
+     * - does the redex have a node which doesn't contain a site?
+     *                                                  (agg = exists)
+     *)
+    fun analyze_rule (rule, {controls, ctrl_rel, max_idle_name_count,
+                             have_edge, have_idle_edge,
+                             have_siteless_node}) =
+      let
+        val redex = PCRule.redex rule
+        val {nodes, edges} = PCRule.support rule
+
+        fun analyze_aspect ((NodeControl _, (Control K, Control K')),
+                            {controls, ctrl_rel, idle_name_count,
+                             has_edge, has_idle_edge, siteless_nodes}) =
+            {controls = ControlSet.insert' K controls,
+             ctrl_rel = ControlMap.add
+                          (K,
+                           ControlSet.insert'
+                               K' (get_ctrls ctrl_rel K),
+                           ctrl_rel),
+             idle_name_count = idle_name_count,
+             has_edge = has_edge,
+             has_idle_edge = has_idle_edge,
+             siteless_nodes = siteless_nodes}
+          | analyze_aspect ((Presence (EName _), (Present 0w0, Present _)),
+                            {controls, ctrl_rel, idle_name_count,
+                             has_edge, has_idle_edge, siteless_nodes}) =
+            {controls = controls,
+             ctrl_rel = ctrl_rel,
+             idle_name_count = idle_name_count + 1,
+             has_edge = has_edge,
+             has_idle_edge = has_idle_edge,
+             siteless_nodes = siteless_nodes}
+          | analyze_aspect ((Presence (EEdge _), (Present c, _)),
+                            {controls, ctrl_rel, idle_name_count,
+                             has_edge, has_idle_edge, siteless_nodes}) =
+            {controls = controls,
+             ctrl_rel = ctrl_rel,
+             idle_name_count = idle_name_count,
+             has_edge = true,
+             has_idle_edge = has_idle_edge orelse c = 0w0,
+             siteless_nodes = siteless_nodes}
+          | analyze_aspect ((ChildParent (CSite _), (Place (PNode v), _)),
+                            {controls, ctrl_rel, idle_name_count,
+                             has_edge, has_idle_edge, siteless_nodes}) =
+            {controls = controls,
+             ctrl_rel = ctrl_rel,
+             idle_name_count = idle_name_count,
+             has_edge = has_edge,
+             has_idle_edge = has_idle_edge,
+             siteless_nodes = NodeSet.remove' v siteless_nodes}
+          | analyze_aspect ((aspect, (value, value')), acc) = acc
+
+        val table = PCRule.table rule
+        val {controls = controls',
+             ctrl_rel = ctrl_rel',
+             idle_name_count,
+             has_edge,
+             has_idle_edge,
+             siteless_nodes}
+          = AspectMap.Fold analyze_aspect
+                           {controls = controls,
+                            ctrl_rel = ctrl_rel,
+                            idle_name_count = 0,
+                            has_edge = false,
+                            has_idle_edge = false,
+                            siteless_nodes = nodes}
+                           table
+      in
+        {controls = controls',
+         ctrl_rel = ctrl_rel',
+         max_idle_name_count = Int.max (max_idle_name_count,
+                                        idle_name_count),
+         have_edge = have_edge orelse has_edge,
+         have_idle_edge = have_idle_edge orelse has_idle_edge,
+         have_siteless_node = have_siteless_node orelse
+                                not (NodeSet.isEmpty siteless_nodes)}
+      end
+    (* ctrl_rel approximates the "dynamic control relation": given that a
+     * node has control K, which controls might it have after 0 or more
+     * reactions.
      *
      * We determine this by finding the reflexive transitive closure of
      * the one step relation which can be readily extracted from the
      * reaction rules.
      *
-     * We also construct the inverse relation: given that a node at some
-     * point has control K, which controls might it have had initially?
+     * We also construct the inverse relation ctrl_rel_inv:
+     * given that a node at some point has control K, which controls
+     * might it have had initially (and what nodes in the agent have
+     * a control in that set)?
      *)
-    local
-      fun get_ctrls ctrl_rel K =
-        (case ControlMap.lookup ctrl_rel K of
-           NONE    => ControlSet.empty
-         | SOME Ks => Ks)
-      fun get_ctrls' ctrl_rel_inv Ks =
-        (case ControlSetMap.lookup ctrl_rel_inv Ks of
-           NONE       => (ControlSet.empty, NodeSet.empty)
-         | SOME Ks'_V => Ks'_V)
-      fun get_nodes ctrl_inv K =
-        (case ControlMap.lookup ctrl_inv K of
-           NONE   => NodeSet.empty
-         | SOME V => V)
-      val ctrl_rel
-        = foldl
-            (fn (rule, ctrl_rel) =>
-                AspectMap.Fold
-                  (fn ((NodeControl _, (Control K, Control K')),
-                       ctrl_rel) =>
-                      ControlMap.add
-                        (K, ControlSet.insert' K' (get_ctrls ctrl_rel K),
-                         ctrl_rel)
-                    | _ => ctrl_rel)
-                  ctrl_rel ((#table o PCRule.unmk'') rule))
-            ControlMap.empty rules
-      fun transitive_step K (changed, ctrl_rel) =
-        let
-          val Ks  = get_ctrls ctrl_rel K
-          val Ks' = ControlSet.fold
-                      (fn K' => fn Ks' =>
-                          if Control.eq K K' then
-                            Ks' (* Avoid adding Ks again *)
-                          else
-                            ControlSet.union' Ks' (get_ctrls ctrl_rel K'))
-                      Ks Ks
-        in
-          (changed orelse (ControlSet.size Ks) <> (ControlSet.size Ks'),
-           ControlMap.add (K, Ks', ctrl_rel))
-        end
-      fun transitive_closure ctrl_rel =
-        (case ControlSet.fold transitive_step
-                              (false, ctrl_rel) controls of
-           (false, _)        => ctrl_rel
-         | (true, ctrl_rel') => transitive_closure ctrl_rel')
-      fun add_reflexivity ctrl_rel_clos =
-        ControlSet.fold
-          (fn K => fn ctrl_rel_clos =>
-              ControlMap.add
-                (K, ControlSet.insert'
-                      K (get_ctrls ctrl_rel_clos K), ctrl_rel_clos))
-          ctrl_rel_clos controls
-    in
-      val ctrl_rel
-        = add_reflexivity (transitive_closure ctrl_rel)
-      (* ctrl_rel([K]) -> ([K], nodes with a control in [K]) *)
-      val ctrl_rel_inv
-        = ControlMap.Fold
-            (fn ((K, Ks), inv) =>
-                let
-                  val (class_K, class_K_nodes) = get_ctrls' inv Ks
-                in
-                  ControlSetMap.add
-                    (Ks,
-                     (ControlSet.insert K class_K,
-                      NodeSet.union class_K_nodes
-                                    (get_nodes ctrl_inv_a K)),
-                     inv)
-                end)
-            ControlSetMap.empty ctrl_rel
-    end
+    val {controls, ctrl_rel, max_idle_name_count,
+         have_edge, have_idle_edge, have_siteless_node}
+      = foldl analyze_rule
+              {controls = ControlSet.empty,
+               ctrl_rel = ControlMap.empty,
+               max_idle_name_count = 0,
+               have_edge = false,
+               have_idle_edge = false,
+               have_siteless_node = false}
+              rules
 
-val _ = print' (map2string' "[" "]\n" ",\n " "" "" " -> " ControlMap.Fold
-                            Control.name
-                            (set2string "{" "}" ", "
-                                        ControlSet.fold Control.name)
-                            ctrl_rel)
+    val ctrl_rel
+      = TransReflClosCtrlRel.transitive_reflexive_closure'
+          (ControlSet.union' controls controls_a)
+          ctrl_rel
+    (* FIXME find 
+     * ctrl_rel([K]) -> ([K], agent nodes with a control in [K]) *)
+    val ctrl_rel_inv
+      = ControlMap.Fold
+          (fn ((K, Ks), inv) =>
+              let
+                val (class_K, class_K_nodes) = get_ctrls' inv Ks
+              in
+                ControlSetMap.add
+                  (Ks,
+                   (ControlSet.insert K class_K,
+                    NodeSet.union class_K_nodes
+                                  (get_nodes ctrl_inv_a K)),
+                   inv)
+              end)
+          ControlSetMap.empty ctrl_rel
 
     (* We wish to find control respecting injections rho of the nodes
      * of a rule R --> R' into the nodes of the agent a. I.e we require
@@ -987,28 +1060,101 @@ val _ = print' (map2string' "[" "]\n" ",\n " "" "" " -> " ControlMap.Fold
                                    map))
         end
     in
-      val components = find_components eq_classes ControlSetMap.empty
+      val ctrl_components = find_components eq_classes ControlSetMap.empty
     end
+  in
+    {controls = controls,
+     ctrl_components = ctrl_components,
+     max_idle_name_count = max_idle_name_count,
+     have_edge = have_edge,
+     have_idle_edge = have_idle_edge,
+     have_siteless_node = have_siteless_node}
+  end
 
-val _ = print' "ctrl_rel components:\n"
-val _ = print' (map2string'
-                  "[" "]\n" ",\n " "" "" " -> "
-                  ControlSetMap.Fold
-                  (set2string "{" "}" ", "
-                              ControlSet.fold Control.name)
-                  (list2string
-                     "[" "]" ", "
-                     (fn (ctrl_rel_K, (class_K, class_K_nodes)) =>
-                         (set2string "{" "}" ", " ControlSet.fold
-                                     Control.name class_K)
-                         ^ " |-> ("
-                         ^ (set2string "{" "}" ", " ControlSet.fold
-                                       Control.name ctrl_rel_K)
-                         ^ ", "
-                         ^ (set2string "{" "}" ", " NodeSet.fold
-                                       Node.unmk class_K_nodes)
-                         ^ ")"))
-                  components)
+
+(* Assumptions (FIXME verify that these are met):
+ * - agent is ground
+ * - rule names are unique
+ * - rules are local, i.e. FIXME
+ *
+ * FIXME: idle eges in a redex R are significant if the changes connect one
+ *        or more points to it. We must handle the case where idle
+ *        edges in R are mapped to implicit edges in the agent!
+ *        It seems that it would be sufficient to add a number of idle
+ *        edges to the concrete agent - but how many?
+ *        As most as many edges as we have ports can be used at
+ *        any point, so maybe we can just add |ports| - |edges| idle
+ *        edges to the agent? 
+ *        Almost, but not quite: there is one special case that we should
+ *        take into account:
+ *
+ *        a rule R --> R' which can capture idle edges (i.e. R has idle
+ *        names Y), e.g:
+ *
+ *          A[x] || y/  -->  A[y] || x/ ,
+ *
+ *        cannot fire in contexts C on the form
+ *
+ *          C' o (id_X * /Y * id_1),
+ *
+ *        if there are fewer than |Y| idle edges (i.e. no edges to
+ *        connect to some of the names of Y). The needed number of edges
+ *        can at most be |Y| for a rule, and for a given set of rules
+ *        we can simply take the maximum number of idle names over all 
+ *        the redexes.
+ *
+ *        Thus, the number of idle edges we should add is
+ *
+ *          |ports| - |edges| + max_{R-->R' \in rules}(idle_names(R))
+ * 
+ *)
+fun gen_state_space {agent, rules} =
+  let
+    val agent_conc = ConcreteBigraph.concretize agent
+    val V_a        = ConcreteBigraph.nodes agent_conc
+    val ctrl_inv_a = ConcreteBigraph.ctrl_inv agent_conc
+    val E_a        = ConcreteBigraph.edges agent_conc
+    val Y_a        = ConcreteBigraph.outernames agent_conc
+    val R_a        = WordSetTabulate.tabulate
+                       (ConcreteBigraph.width agent_conc) Word.fromInt
+    val controls_a =  ConcreteBigraph.controls agent_conc
+    val {controls = controls_R, ctrl_components,
+         max_idle_name_count, have_edge, have_idle_edge,
+         have_siteless_node}
+        = analyze_rules controls_a ctrl_inv_a rules
+
+    (* We need to know the (potential) number of ports so that we can
+     * - add a sufficient number of idle edges.
+     * - add a sufficient number of states for each edge
+     *)
+    val controls
+      = ControlSet.union' controls_R controls_a
+    val max_node_ports = ControlSet.fold (fn c => fn mp =>
+                                             Int.max (Control.free c, mp))
+                                         0 controls
+    val max_ports = max_node_ports * (NodeSet.size V_a)
+    (* Similarly, we must know the maximum number of nodes so that we can
+     * add a sufficient number of states for each node/root. *)
+    val max_nodes = NodeSet.size V_a
+
+    (* Add a sufficient number of idle edges to the concrete agent. *)
+    local
+      fun fresh_edges' edges 0 = edges
+        | fresh_edges' edges n = 
+        fresh_edges' (EdgeSet.insert (Name.fresh NONE) edges) (n - 1)
+    in
+      val fresh_edges = fresh_edges' EdgeSet.empty
+    end
+    val E_a_idle
+      = if max_idle_name_count > 0 orelse have_idle_edge then
+          fresh_edges (max_ports - (EdgeSet.size E_a) + max_idle_name_count)
+        else
+          EdgeSet.empty
+val _ = print' ("max ports: " ^ (Int.toString max_ports) ^ "\n")
+val _ = print' ("|E_a|: " ^ (Int.toString (EdgeSet.size E_a)) ^ "\n")
+val _ = print' ("max idle names: " ^ (Int.toString max_idle_name_count) ^ "\n")
+
+
 
 
     (* FIXME we don't handle rules where sites are moved.
@@ -1059,32 +1205,41 @@ val _ = print' (map2string'
                            (inst, inst_count, inst_ids),
                          inst_count + 1)
         val (aspect_changes, count_changes)
-          = PCRule.instantiate inst rule
+          = PCRule.instantiate' inst rule
         val (trns', aspect_acts')
           = AspectMap.Fold (add_aspect_transition rule inst)
                            (trns, aspect_acts)
                            aspect_changes
+        (* Add transitions for counting aspects (Presence e). *)
         val (trns'', aspect_acts'')
-          = EntityMap.Fold (fn ((e, change), (trns, aspect_acts)) =>
-                               let
-                                 val max_ent = case e of
-                                                 ERoot _ => max_nodes
-                                               | ENode _ => max_nodes - 1
-                                               | _       => max_ports
-                                 val (min, max, j)
-                                   = if change < 0 then
-                                       (~change, max_ent, max_ent + change)
-                                     else
-                                       (0, max_ent - change, max_ent)
-                                 val aspect = Presence e
-                               in
-                                 (add_counting_states
-                                    rule inst aspect
-                                    min max j trns,
-                                  add_aspect_act aspect_acts aspect
-                                                 (rule, inst))
-                               end)
-                           (trns', aspect_acts') count_changes
+          = EntityMap.Fold
+              (fn ((e, change), (trns, aspect_acts)) =>
+                  let
+                    val (max_ent, is_root, is_link, is_node)
+                      = case e of
+                          ERoot _ => (max_nodes, true, false, false)
+                        | ENode _ => (max_nodes - 1, false, false, true)
+                        | _       => (max_ports, false, true, false)
+                    val (min, max, j)
+                      = if is_root
+                           orelse (is_link andalso not have_edge)
+                           orelse (is_node
+                                   andalso not have_siteless_node) then
+                          (* we don't need to be counting *)
+                          (0, 0, 0)
+                        else if change < 0 then
+                          (~change, max_ent, max_ent + change)
+                        else
+                          (0, max_ent - change, max_ent)
+                    val aspect = Presence e
+                  in
+                    (add_counting_states
+                       rule inst aspect
+                       min max j trns,
+                     add_aspect_act aspect_acts aspect
+                                    (rule, inst))
+                  end)
+              (trns', aspect_acts') count_changes
       in
         (trns'',
          aspect_acts'',
@@ -1093,25 +1248,28 @@ val _ = print' (map2string'
       end
 
     fun add_rule (rule, trns) =
-      if PCRule.width rule = 1 then
+(print' ("adding rule: " ^ (PCRule.name rule) ^ "\n")
+ ;     if PCRule.width rule = 1 then
         foldr (add_instantiation rule)
               trns
               (instantiations
                  rule V_a (EdgeSet.union E_a E_a_idle) Y_a R_a)
       else
         raise Fail "FIXME we only support rules of width 1"
-    (* as the previous, but only generates control respecting
+)    (* as the previous, but only generates control respecting
      * instantiations.*)
     fun add_rule' (rule, trns) =
-      if PCRule.width rule = 1 then
+(print' ("adding rule: " ^ (PCRule.name rule) ^ "\n")
+ ;     if PCRule.width rule = 1 then
         foldr (add_instantiation rule)
               trns
               (ctrl_resp_instantiations'
-                 rule components (EdgeSet.union E_a E_a_idle) Y_a R_a)
+                 rule ctrl_components (EdgeSet.union E_a E_a_idle) Y_a R_a)
       else
         raise Fail "FIXME we only support rules of width 1"
-
-    val (init_state, init_trans) = init_state_space agent_conc E_a_idle
+)
+    val (init_state, init_trans)
+      = init_state_space agent_conc E_a_idle have_edge have_siteless_node
 (*     val (transitions, aspect_acts, inst_ids, inst_count) *)
 (*       = foldl add_rule *)
 (*               (init_trans, AspectMap.empty, InstantiationMap.empty, 0) *)
