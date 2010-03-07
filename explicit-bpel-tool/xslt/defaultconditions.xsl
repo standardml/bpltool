@@ -35,5 +35,14 @@
     </xsl:copy>
   </xsl:template>
 
+  <!-- Add empty completion condition where missing -->
+  <xsl:template match="bpel:forEach[not(bpel:completionCondition)]">
+    <xsl:copy>
+      <xsl:copy-of select="@*" />
+      <xsl:apply-templates />
+      <bpel:completionCondition />        
+    </xsl:copy>
+
+  </xsl:template>
   
 </xsl:stylesheet>

@@ -38,9 +38,9 @@ import org.xml.sax.SAXException;
 import com.beepell.xml.namespace.DocumentNamespaceContext;
 
 /**
- * Command-line toolkit to transform WS-BPEL into E-BPEL.
+ * Command-line toolkit to transform WS-BPEL into Core BPEL.
  * 
- * @author Tim Hallwyl, IT-University of Copenhagen, 2008 - 2009
+ * @author Tim Hallwyl, IT-University of Copenhagen, 2008 - 2010
  */
 public class Transform {
 
@@ -48,14 +48,32 @@ public class Transform {
     private final TransformerFactory transformerFactory = TransformerFactory.newInstance();
     private final SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
     private final Schema bpelSchema;
-    private final Schema ebpelSchema;
+    private final Schema cBpelSchema;
     private final boolean verbose;
-    private String[] sheets = { "globalscope.xsl", "elseif.xsl", "while.xsl", "variables.xsl", "documentation.xsl", "extensions.xsl", "irra.xsl", "receive2.xsl", "handlers.xsl", "sequence.xsl", "jointransition.xsl", "attributes.xsl", "defaults.xsl", "language.xsl" };
+    private String[] sheets = { 
+    		"process.xsl",                        // Move process scope to an explicit scope
+    		"if.xsl",                             // Add missing else-clause and turn elseif into nested if
+    		"while.xsl",                          // while to repeatUntil
+    		"scope.xsl",                          // Variable initializations
+    		"documentation.xsl",                  // remove human readable documantation
+    		"extension-activity.xsl",             // remove extension activities
+            "extension-assign.xsl",               // remove extension assignments
+            "extension-attributes-elements.xsl",  // remove extension attributes and elements
+            "extension-declarations.xsl",         // remove extension declarations
+            "irra.xsl",                           // invoke.xsl, receive.xsl, reply.xsl, tofromparts.xsl
+            "receive2.xsl",                       // receive to pick
+            "handlers.xsl", 
+            "sequence.xsl", 
+            "defaultconditions.xsl", 
+            "attributes.xsl", 
+            "defaults.xsl", 
+            "language.xsl" };
+    
     private boolean validate = true;
 
     public Transform() throws SAXException {
         this.bpelSchema = this.schemaFactory.newSchema(new File("schemas/bpel.xsd"));
-        this.ebpelSchema = this.schemaFactory.newSchema(new File("schemas/e-bpel.xsd"));
+        this.cBpelSchema = this.schemaFactory.newSchema(new File("schemas/c-bpel.xsd"));
         this.verbose = true;
     }
 
@@ -71,8 +89,8 @@ public class Transform {
             if (this.validate) {
               this.validate(ebpel, this.bpelSchema);
               System.out.println("Transformed process description is valid WS-BPEL.");
-              this.validate(ebpel, this.ebpelSchema);
-              System.out.println("Transformed process description is valid E-BPEL.");
+              this.validate(ebpel, this.cBpelSchema);
+              System.out.println("Transformed process description is valid Core BPEL.");
             }
             
             if (this.verbose)
@@ -105,7 +123,7 @@ public class Transform {
     }
 
     /**
-     * Transforms a WS-BPEL Document into an E-BPEL Document.
+     * Transforms a WS-BPEL Document into an Core BPEL Document.
      * 
      * @param document The WS-BPEL Document.
      * @param uniquePrefix The prefix used when generating variable and link
@@ -152,12 +170,12 @@ public class Transform {
     }
 
     /**
-     * Command-line tool kit for transformation of WS-BPEL into E-BPEL.
+     * Command-line tool kit for transformation of WS-BPEL into Core BPEL.
      * <p>
      * Usage: Transform bpel [target]
      * <ul>
      * <li>bpel - the WS-BPEL source file</li>
-     * <li>target (optional) - the E-BPEL target file</li>
+     * <li>target (optional) - the Core BPEL target file</li>
      * </ul>
      * <p>
      * When no target file is specified a file with same name and location, but
@@ -359,7 +377,7 @@ public class Transform {
     }
 
     /**
-     * Sets if the transformer should validate the result against the E-BPEL
+     * Sets if the transformer should validate the result against the Core BPEL
      * schema. Default is true. Used for testing.
      * 
      * @param validate true if the transformer should validate the result.
@@ -369,7 +387,7 @@ public class Transform {
     }
 
     /**
-     * Sets if the transformer should validate the result against the E-BPEL
+     * Sets if the transformer should validate the result against the Core BPEL
      * schema. Default is true. Used for testing.
 
      * @return true if the transformer validates the result.

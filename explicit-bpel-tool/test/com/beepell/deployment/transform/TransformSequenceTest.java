@@ -44,8 +44,8 @@ public class TransformSequenceTest extends TestCase {
      * Test that the echo.bpel file is transformable.
      * <p>
      * This test will transform the echo.bpel from WS-BPEL standard syntax into
-     * E-BPEL syntax. This will indirectly validate for WS-BPEL schema
-     * compliance of the source and E-BPEL compliance of the resulting document.
+     * Core BPEL syntax. This will indirectly validate for WS-BPEL schema
+     * compliance of the source and Core BPEL compliance of the resulting document.
      * 
      * @throws Exception if anything goes wrong.
      */

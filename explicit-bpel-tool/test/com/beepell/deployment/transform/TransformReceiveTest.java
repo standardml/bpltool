@@ -16,7 +16,7 @@ import org.w3c.dom.NodeList;
 import com.beepell.xml.namespace.DocumentNamespaceContext;
 
 /**
- * This test is not transforming into true E-BPEL as is is testing the
+ * This test is not transforming into true Core BPEL as is is testing the
  * intermediate core receive before this is transformed into a Pick activity.
  * 
  * @author Tim Hallwyl
@@ -32,7 +32,24 @@ public class TransformReceiveTest extends TestCase {
 
         File source = new File("test/com/beepell/deployment/transform/receive.bpel");
         Transform transform = new Transform();
-        transform.setSheets(new String[] { "globalscope.xsl", "elseif.xsl", "while.xsl", "variables.xsl", "documentation.xsl", "extensions.xsl", "irra.xsl", "handlers.xsl", "sequence.xsl", "jointransition.xsl", "attributes.xsl", "defaults.xsl", "language.xsl" });
+        transform.setSheets(new String[] { 
+        		"process.xsl",                        // Move process scope to an explicit scope
+        		"if.xsl",                             // Add missing else-clause and turn elseif into nested if
+        		"while.xsl",                          // while to repeatUntil
+        		"scope.xsl",                          // Variable initializations
+        		"documentation.xsl",                  // remove human readable documantation
+        		"extension-activity.xsl",             // remove extension activities
+                "extension-assign.xsl",               // remove extension assignments
+                "extension-attributes-elements.xsl",  // remove extension attributes and elements
+                "extension-declarations.xsl",         // remove extension declarations
+                "irra.xsl",                           // invoke.xsl, receive.xsl, reply.xsl, tofromparts.xsl
+                // "receive2.xsl",                    // receive to pick
+                "handlers.xsl", 
+                "sequence.xsl", 
+                "defaultconditions.xsl", 
+                "attributes.xsl", 
+                "defaults.xsl", 
+                "language.xsl" });
         transform.setValidate(false);
         transformed = transform.transform(source);
 
