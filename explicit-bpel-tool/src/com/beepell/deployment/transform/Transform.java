@@ -61,7 +61,6 @@ public class Transform {
             "extension-attributes-elements.xsl",  // remove extension attributes and elements
             "extension-declarations.xsl",         // remove extension declarations
             "irra.xsl",                           // invoke.xsl, receive.xsl, reply.xsl, tofromparts.xsl
-            "receive2.xsl",                       // receive to pick
             "handlers.xsl", 
             "sequence.xsl", 
             "defaultconditions.xsl", 

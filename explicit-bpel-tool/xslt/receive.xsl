@@ -49,17 +49,24 @@
           <xsl:message terminate="no">Implicit assignments in receive made explicit.</xsl:message>
           <sequence>
             
-            <xsl:copy>
-              <xsl:copy-of select="@name" />
-              <xsl:copy-of select="@partnerLink" />
-              <xsl:copy-of select="@operation" />
+            <xsl:message>Transforming a Receive activity '<xsl:value-of select="@name" />' into a Pick activity.</xsl:message>
+            <bpel:pick>
               <xsl:copy-of select="@createInstance" />
-              <xsl:copy-of select="@messageExchange" />
-              <xsl:attribute name="variable">
-                    <xsl:value-of select="concat($uniquePrefix, 'OutputMessage')" />
-              </xsl:attribute>
-              <xsl:copy-of select="bpel:correlations" />
-            </xsl:copy>
+              <xsl:copy-of select="@name" />
+              <xsl:copy-of select="@suppressJoinFailure" />      
+              <xsl:copy-of select="bpel:targets" />
+              <xsl:copy-of select="bpel:sources" />
+              <bpel:onMessage>
+                <xsl:copy-of select="@partnerLink" />
+                <xsl:copy-of select="@operation" />
+                <xsl:attribute name="variable">
+                  <xsl:value-of select="concat($uniquePrefix, 'OutputMessage')" />
+                </xsl:attribute>
+                <xsl:copy-of select="@messageExchange" />
+                <xsl:copy-of select="bpel:correlations" />
+                <bpel:empty/>      
+              </bpel:onMessage>
+            </bpel:pick>
             
             <!-- Transform fromParts into an assignment, if present -->
             <xsl:apply-templates select="bpel:fromParts" />
@@ -90,12 +97,22 @@
       </xsl:when>
       <xsl:otherwise>
         <!-- A core receive activity, leaving out portType, if there -->
-        <xsl:copy>
-          <xsl:copy-of select="@*[namespace-uri()='' and not(@portType)]" />
+        <xsl:message>Transforming a Receive activity '<xsl:value-of select="@name" />' into a Pick activity.</xsl:message>
+        <bpel:pick>
+          <xsl:copy-of select="@createInstance" />
+          <xsl:copy-of select="@name" />
+          <xsl:copy-of select="@suppressJoinFailure" />      
           <xsl:copy-of select="bpel:targets" />
           <xsl:copy-of select="bpel:sources" />
-          <xsl:copy-of select="bpel:correlations" />
-        </xsl:copy>
+          <bpel:onMessage>
+            <xsl:copy-of select="@partnerLink" />
+            <xsl:copy-of select="@operation" />
+            <xsl:copy-of select="@variable" />
+            <xsl:copy-of select="@messageExchange" />
+            <xsl:copy-of select="bpel:correlations" />
+            <bpel:empty/>      
+          </bpel:onMessage>
+        </bpel:pick>        
       </xsl:otherwise>
     </xsl:choose>
     

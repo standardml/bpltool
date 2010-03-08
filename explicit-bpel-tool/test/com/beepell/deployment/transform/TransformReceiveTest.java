@@ -32,6 +32,7 @@ public class TransformReceiveTest extends TestCase {
 
         File source = new File("test/com/beepell/deployment/transform/receive.bpel");
         Transform transform = new Transform();
+        /*
         transform.setSheets(new String[] { 
         		"process.xsl",                        // Move process scope to an explicit scope
         		"if.xsl",                             // Add missing else-clause and turn elseif into nested if
@@ -49,7 +50,7 @@ public class TransformReceiveTest extends TestCase {
                 "defaultconditions.xsl", 
                 "attributes.xsl", 
                 "defaults.xsl", 
-                "language.xsl" });
+                "language.xsl" }); */
         transform.setValidate(false);
         transformed = transform.transform(source);
 
@@ -72,19 +73,19 @@ public class TransformReceiveTest extends TestCase {
      */
     public final void testCoreReceive() {
 
-        assertEquals(1, getNodes("//bpel:receive[@name='core']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='core' and @suppressJoinFailure = 'yes']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='core' and @partnerLink = 'serverPartnerLink']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='core' and @operation = 'requestService']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='core' and @variable = 'request']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='core' and @createInstance = 'no']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='core' and @messageExchange = 'mea']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='core']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='core' and @suppressJoinFailure = 'yes']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='core' and @createInstance = 'no']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='core']/bpel:onMessage[@partnerLink = 'serverPartnerLink']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='core']/bpel:onMessage[@operation = 'requestService']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='core']/bpel:onMessage[@variable = 'request']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='core']/bpel:onMessage[@messageExchange = 'mea']").getLength());
 
-        assertEquals(1, getNodes("//bpel:receive[@name='core']/bpel:targets/bpel:joinCondition").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='core']/bpel:targets/bpel:target").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='core']/bpel:targets/bpel:joinCondition").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='core']/bpel:targets/bpel:target").getLength());
 
-        assertEquals(1, getNodes("//bpel:receive[@name='core']/bpel:sources/bpel:source[@linkName='ship-to-scheduling']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='core']/bpel:sources/bpel:source[@linkName='ship-to-scheduling']/bpel:transitionCondition").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='core']/bpel:sources/bpel:source[@linkName='ship-to-scheduling']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='core']/bpel:sources/bpel:source[@linkName='ship-to-scheduling']/bpel:transitionCondition").getLength());
 
     }
 
@@ -93,13 +94,13 @@ public class TransformReceiveTest extends TestCase {
      */
     public final void testNovariableReceive() {
 
-        assertEquals(1, getNodes("//bpel:receive[@name='novariable']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='novariable' and @suppressJoinFailure = 'yes']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='novariable' and @partnerLink = 'serverPartnerLink']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='novariable' and @operation = 'noticeService']").getLength());
-        assertEquals(0, getNodes("//bpel:receive[@name='novariable' and @variable]").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='novariable' and @createInstance = 'no']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='novariable' and @messageExchange = 'meb']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='novariable']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='novariable' and @suppressJoinFailure = 'yes']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='novariable' and @createInstance = 'no']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='novariable']/bpel:onMessage[@partnerLink = 'serverPartnerLink']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='novariable']/bpel:onMessage[@operation = 'noticeService']").getLength());
+        assertEquals(0, getNodes("//bpel:pick[@name='novariable']/bpel:onMessage[@variable]").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='novariable']/bpel:onMessage[@messageExchange = 'meb']").getLength());
     }
 
     /**
@@ -108,13 +109,13 @@ public class TransformReceiveTest extends TestCase {
     public final void testFromPartsReceive() {
 
         // Check the invoke activity
-        assertEquals(1, getNodes("//bpel:scope[@name='fromparts']/bpel:flow/bpel:receive[@name='fromparts']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='fromparts' and @partnerLink = 'serverPartnerLink']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='fromparts' and @operation = 'requestService']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='fromparts' and @variable = 'v0OutputMessage']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='fromparts' and not(bpel:fromParts)]").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='fromparts' and @createInstance = 'no']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='fromparts' and @messageExchange = 'mec']").getLength());
+        assertEquals(1, getNodes("//bpel:scope[@name='fromparts']/bpel:flow/bpel:pick[@name='fromparts']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='fromparts' and @createInstance = 'no']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='fromparts' and not(bpel:fromParts)]").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='fromparts']/bpel:onMessage[@partnerLink = 'serverPartnerLink']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='fromparts']/bpel:onMessage[@operation = 'requestService']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='fromparts']/bpel:onMessage[@variable = 'v0OutputMessage']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='fromparts']/bpel:onMessage[@messageExchange = 'mec']").getLength());
 
         // Check the enclosing scope
         assertEquals(1, getNodes("//bpel:scope[@name='fromparts']/bpel:variables/bpel:variable[@name = 'v0OutputMessage' and @messageType='srv:requestMessage']").getLength());
@@ -136,12 +137,12 @@ public class TransformReceiveTest extends TestCase {
      */
     public final void testElementReceive() {
 
-        assertEquals(1, getNodes("//bpel:scope[@name='elements']/bpel:flow/bpel:receive[@name='elements']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='elements' and @partnerLink   = 'serverPartnerLink']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='elements' and @operation     = 'simpleService']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='elements' and @variable = 'v0OutputMessage']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='elements' and @createInstance = 'no']").getLength());
-        assertEquals(1, getNodes("//bpel:receive[@name='elements' and @messageExchange = 'med']").getLength());
+        assertEquals(1, getNodes("//bpel:scope[@name='elements']/bpel:flow/bpel:pick[@name='elements']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='elements' and @createInstance = 'no']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='elements']/bpel:onMessage[@partnerLink   = 'serverPartnerLink']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='elements']/bpel:onMessage[@operation     = 'simpleService']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='elements']/bpel:onMessage[@variable = 'v0OutputMessage']").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='elements']/bpel:onMessage[@messageExchange = 'med']").getLength());
 
         // Check the enclosing scope
         assertEquals(1, getNodes("//bpel:scope[@name='elements']/bpel:variables/bpel:variable[@name = 'v0OutputMessage' and @messageType='srv:simpleRequestMessage']").getLength());
