@@ -144,7 +144,7 @@
 
   </xsl:template>
   
-  <xsl:template match="bpel:fromParts">
+  <xsl:template match="bpel:onMessage/bpel:fromParts">
     <xsl:param name="uniquePrefix" select="'v0'" />
     <assign>
       <xsl:for-each select="bpel:fromPart">
