@@ -107,6 +107,11 @@ public class SchemaComplianceTest extends TestCase {
         Document document = builder.parse(new File("xslt/language.xsl"));
         this.validator.validate(new DOMSource(document));
     }
+    
+    public final void testPick() throws Exception {
+        Document document = builder.parse(new File("xslt/pick.xsl"));
+        this.validator.validate(new DOMSource(document));
+    }
 
     public final void testProcess() throws Exception {
         Document document = builder.parse(new File("xslt/process.xsl"));
