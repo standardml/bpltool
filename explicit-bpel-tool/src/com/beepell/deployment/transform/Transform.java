@@ -60,6 +60,7 @@ public class Transform {
             "extension-assign.xsl",               // remove extension assignments
             "extension-attributes-elements.xsl",  // remove extension attributes and elements
             "extension-declarations.xsl",         // remove extension declarations
+            "pick.xsl",                           // make implicit assignments explicit
             "irra.xsl",                           // invoke.xsl, receive.xsl, reply.xsl, tofromparts.xsl
             "handlers.xsl", 
             "sequence.xsl", 
