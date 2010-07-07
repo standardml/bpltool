@@ -14,7 +14,8 @@ sugar: ast/info-sig /lib/coll/monoset-sig /lib/coll/pp bg/sigs ast/sigs
 bpl2bgval-sig:
 bpl2bgval: bpl2bgval-sig ast/sigs bg/sigs match/sigs /lib/util/printerrorhandler 
    /lib/util/origin-sig /lib/coll/set %NODASHSIG
-bgadt-sig: bpl2bgval-sig bg/sigs ast/sigs match/sigs sugar-sig /lib/coll/set /lib/util/errorhandler-sig
+bgadt-sig: bpl2bgval-sig bg/sigs ast/sigs match/sigs sugar-sig /lib/coll/set /lib/coll/map
+   /lib/util/errorhandler-sig
 bgadt: bgadt-sig bpl2bgval bg/funs ast/funs sugar match/funs /lib/pp/smlnj/.
    /lib/coll/set /lib/coll/pp /lib/coll/lzlist /lib/util/errorhandler-sig
    /lib/util/origin-sig /lib/util/origin /lib/coll/map

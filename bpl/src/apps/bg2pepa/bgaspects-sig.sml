@@ -63,7 +63,7 @@ val link2pepa : link -> string
 
 datatype point =
          PName of name
-       | PPort of node * portindex
+       | PPort of (node * portindex)
 structure PointOrder : ORDERING    where type T   = point
 structure PointSet   : MONO_SET    where type elt = point
 structure PointMap   : MONO_FINMAP where type dom = point

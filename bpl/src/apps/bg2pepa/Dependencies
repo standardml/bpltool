@@ -10,25 +10,50 @@ sigs = node-sig edge-sig bgaspects-sig concretebigraph-sig pcrule-sig
    bgaspectsssgen-sig pcradt-sig
 funs = node edge bgaspects concretebigraph pcrule pcradt
 
-node-sig: 
-node: /kernel/bg/name
-edge-sig: 
+node-sig: /lib/coll/set
+node: /kernel/bg/name /kernel/bg/control-sig
+   /lib/pp/smlnj/. /lib/util/origin /lib/util/errorhandler-sig
+   /lib/coll/set /lib/coll/map
+   node-sig %NODASHSIG
+
+edge-sig: /lib/coll/set
 edge: /kernel/bg/name
-bgaspects-sig:
-bgaspects: /kernel/bg/name-sig /kernel/bg/control-sig
-   /kernel/bg/interface-sig /kernel/match/instantiation-sig
+   /lib/coll/set /lib/coll/map
+   /lib/pp/smlnj/. /lib/util/origin /lib/util/errorhandler-sig
+   edge-sig %NODASHSIG
+
+bgaspects-sig: /lib/coll/set /lib/coll/map
+bgaspects: node-sig edge-sig
+   /kernel/bg/sigs /kernel/match/instantiation-sig
+   /lib/coll/set /lib/coll/map
+   bgaspects-sig %NODASHSIG
+
 concretebigraph-sig: 
 concretebigraph: node-sig edge-sig bgaspects-sig
-   /kernel/bg/name-sig /kernel/ast/bgval-sig
+   /kernel/ast/sigs /kernel/bg/sigs
+   /lib/coll/set /lib/coll/map /lib/coll/listsort
+   concretebigraph-sig %NODASHSIG
+
 pcrule-sig:
-pcrule: /kernel/ast/info-sig bgaspects-sig concretebigraph-sig
-   /kernel/ast/bgval-sig /kernel/ast/bgbdnf-sig /kernel/match/rule-sig
+pcrule: node-sig bgaspects-sig concretebigraph-sig
+   /kernel/ast/info-sig /kernel/bg/name-sig /kernel/ast/bgval-sig
+   /kernel/ast/bgbdnf-sig /kernel/match/rule-sig /kernel/match/instantiation-sig
+   /lib/coll/set /lib/coll/map
+   pcrule-sig %NODASHSIG
+
 bgaspectsssgen-sig:
-bgaspectsssgen: bgaspects-sig concretebigraph-sig pcrule-sig
-   /lib/coll/setinjection /lib/coll/listutil
-pcradt-sig: 
-pcradt: /kernel/bgadt-sig bgaspectsssgen pcrule concretebigraph bgaspects edge node
-   /lib/util/origin-sig /lib/util/errorhandler-sig
+bgaspectsssgen: node-sig edge-sig bgaspects-sig concretebigraph-sig pcrule-sig
+   /kernel/bg/name-sig /kernel/bg/control-sig /kernel/ast/bgval-sig
+   /lib/coll/set /lib/coll/map /lib/coll/setinjection /lib/coll/listutil /lib/coll/listsort
+   bgaspectsssgen-sig %NODASHSIG
+
+pcradt-sig: bgaspects-sig bgaspectsssgen-sig concretebigraph-sig
+   edge-sig node-sig pcrule-sig /kernel/bg/name-sig
+pcradt: bgaspectsssgen pcrule concretebigraph bgaspects edge node
+   /kernel/bgadt-sig /kernel/bg/name-sig
+   /lib/coll/lazylist /lib/coll/set /lib/coll/map
+   /lib/pp/smlnj/. /lib/util/origin /lib/util/errorhandler-sig
+   pcradt-sig %NODASHSIG
 
 pepabgparser.grm-sig: /lib/ml-yacc/.
 pepabgparser.lex: /lib/util/errormsg /lib/compat/mosml/. pepabgparser.grm-sig
@@ -37,3 +62,4 @@ pepabgparser.grm: /lib/ml-yacc/. pepabgparser.grm-sig
 
 pcr-sig: 
 pcr: /lib/ml-yacc/.
+   pcr-sig %NODASHSIG

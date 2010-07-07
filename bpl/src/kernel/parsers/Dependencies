@@ -9,13 +9,14 @@
 . = bg.grm bg.lex rules.grm rules.lex bplxmlparser bigraphxmlhooks
   signaturexmlhooks bigraphdata bplparser
 bg.grm-sig: /lib/ml-yacc/.
-bg.lex: /lib/util/errormsg /lib/compat/mosml/. bg.grm-sig
-bg.grm: /lib/ml-yacc/.  /lib/coll/monoset-sig bg.grm-sig
+bg.lex: bg.grm-sig /lib/util/errormsg /lib/compat/mosml/.
+bg.grm: bg.grm-sig /lib/ml-yacc/. /lib/coll/monoset-sig
    /kernel/bg/sigs /kernel/ast/sigs /lib/util/errormsg
-   /lib/util/origin-sig /lib/util/origin /lib/pp/smlnj/. %NODASHSIG
+   /lib/util/origin-sig /lib/util/origin /lib/pp/smlnj/.
+   %NODASHSIG
 rules.grm-sig: /lib/ml-yacc/.
-rules.lex: /lib/util/errormsg /lib/compat/mosml/. rules.grm-sig
-rules.grm: /lib/ml-yacc/.  /lib/coll/monoset-sig rules.grm-sig
+rules.lex: rules.grm-sig /lib/util/errormsg /lib/compat/mosml/.
+rules.grm: rules.grm-sig /lib/ml-yacc/. /lib/coll/monoset-sig
    /kernel/bg/sigs /kernel/ast/sigs /kernel/match/sigs /lib/util/errormsg
    /lib/util/origin-sig /lib/util/origin /lib/pp/smlnj/. /lib/coll/listsort
    %NODASHSIG

@@ -28,7 +28,7 @@ functor PCRADT (
       and type ErrorHandler.origin      = Origin.origin
 ) : PCR_ADT
       where type name          = BGADT.Name.name
-and type edge          = BGADT.Name.name
+(*        and type edge          = BGADT.Name.name*)
         and type control       = BGADT.Control.control
         and type inst          = BGADT.Instantiation.inst
         and type interface     = BGADT.Interface.interface
