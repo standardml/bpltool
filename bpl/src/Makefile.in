@@ -382,15 +382,9 @@ clean:
 	$(RM) *~
 
 # only clean generated lexers and parsers if they can be regenerated
-parsersclean: parsersclean-$(MLC)
-
-parsersclean-smlnj:
+parsersclean:
 	for g in $(GRMFILES); do $(RM) $$g{.desc,.sig,-sig.sml,.sml}; done
 	for l in $(LEXFILES); do $(RM) $$l.sml; done
-
-parsersclean-mlton:
-
-parsersclean-mosml:
 
 CMDIRS = $(filter-out lib/pp/smlnj lib/compat/common,$(MOSMAKEDIRS))
 CMCACHEDIRS = $(MOSMAKEDIRS) lib/compat/smlnj/ lib/compat/smlnj/exception \
