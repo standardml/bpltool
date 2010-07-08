@@ -118,4 +118,8 @@ signature MONO_SET =
        * @exception Empty if the set is empty
        *)
     val someElement : Set -> elt
+
+    (** Returns a set of size n equal to {f(0), f(1), ..., f(n-1)}, created from
+     * left to right. It returns the empty set if n <= 0. *)
+    val tabulate : int -> (int -> elt) -> Set
   end

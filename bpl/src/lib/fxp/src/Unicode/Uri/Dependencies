@@ -21,6 +21,7 @@
 # INCLUDE=../../Util/SymDict
 # INCLUDE=../Chars
 # INCLUDE=../..
+# INCLUDE=../../../../compat/mlton/os_process
 
 . = uri uriDecode uriDict uriEncode
 
@@ -28,6 +29,6 @@ uriEncode: ../Chars/uniChar ../Chars/uniClasses /lib/compat/common/legacyvector
 uriDecode: ../Chars/uniChar ../../Util/utilInt
 uri: uriDecode uriEncode ../../Util/utilInt ../../Util/utilError
   ../../Util/utilHash ../Chars/uniChar ../Chars/uniClasses
-  ../../config /lib/compat/common/legacysubstring
+  ../../config /lib/compat/common/legacysubstring /lib/compat/mosml/os_process/.
 uriDict: uri ../../config ../Chars/uniChar ../../Util/SymDict/key ../../Util/SymDict/dict
   

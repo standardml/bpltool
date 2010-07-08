@@ -626,4 +626,19 @@ struct
 			     indent=3,
 			     childsep=EdLibPrettyPrint.RIGHT sep,
 			     children=List.map layoutItem (list s)}
+
+
+    fun tabulate n f =
+      let
+        fun tab' n' s =
+          if n = n' then
+            s
+          else
+            tab' (n' + 1) (insert' (f n') s)
+      in
+        if n < 0 then
+          empty
+        else
+          tab' 0 empty
+      end
 end

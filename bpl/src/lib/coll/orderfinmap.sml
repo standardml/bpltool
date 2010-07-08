@@ -378,6 +378,12 @@ functor OrderFinMap(Order : ORDERING): MONO_FINMAP =
       Fold (fn ((k,d), t') => if f (k,d) then add(k,d,t')
 			      else t') empty t
 
+    fun translate (dom_trans : dom -> dom)
+                  (rng_trans : 'b -> 'c)
+                  (map       : 'b map) =
+      Fold (fn ((d, r), map) => add (dom_trans d, rng_trans r, map))
+           empty map
+
     fun addList [] (t : 'b map) : 'b map = t
       | addList ((k : dom, d : 'b) :: rest) t = 
 	   addList rest (add (k, d, t)) 

@@ -36,6 +36,7 @@ signature MONO_FINMAP =
     val fold       : (('a * 'b) -> 'b) -> 'b -> 'a map -> 'b
     val Fold       : (((dom * 'b) * 'c) -> 'c)-> 'c -> 'b map -> 'c
     val filter     : (dom * 'b -> bool) -> 'b map -> 'b map
+    val translate  : (dom -> dom) -> ('b -> 'c) -> 'b map -> 'c map
 
     (** addList l m; adds a list of associations to a map. *)
     val addList : (dom * 'b) list -> 'b map -> 'b map

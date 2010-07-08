@@ -525,27 +525,11 @@ structure RootNodeUnion = DisjointUnion (structure SSet = WordSet
                                          fun cas (f, _) (PRoot r) = f r
                                            | cas (_, f) (PNode v) = f v)
 
-functor SetTabulate (
-  structure Set : MONO_SET) =
-struct
-  fun tabulate n f =
-    let
-      fun tab' n' s =
-        if n = n' then
-          s
-        else
-          tab' (n' + 1) (Set.insert' (f n') s)
-    in
-      tab' 0 Set.empty
-    end
-end
-structure WordSetTabulate = SetTabulate (structure Set = WordSet)
-
 fun instantiations rule V_a E_a Y_a R_a =
   let
     val {nodes = V_R, edges = E_R} = PCRule.support rule
 
-    val R_R = WordSetTabulate.tabulate (PCRule.width rule) Word.fromInt
+    val R_R = WordSet.tabulate (PCRule.width rule) Word.fromInt
     val Y_R = ConcreteBigraph.outernames (PCRule.redex rule)
 
     val V_injs = NodeInjection.injections V_R V_a
@@ -584,7 +568,7 @@ fun instantiations rule V_a E_a Y_a R_a =
 (*           NONE   => NodeSet.empty *)
 (*         | SOME V => V *)
 
-(*     val R_R = WordSetTabulate.tabulate (ConcreteBigraph.width redex) *)
+(*     val R_R = WordSet.tabulate (ConcreteBigraph.width redex) *)
 (*                                        Word.fromInt *)
 (*     val Y_R = ConcreteBigraph.outernames redex *)
 
@@ -695,7 +679,7 @@ fun ctrl_resp_instantiations' rule ctrl_components_a E_a Y_a R_a =
     val R_R = if dont_care_root then
                 WordSet.empty
               else
-                WordSetTabulate.tabulate (ConcreteBigraph.width redex)
+                WordSet.tabulate (ConcreteBigraph.width redex)
                                          Word.fromInt
     val Y_R = NameSet.difference
                 (ConcreteBigraph.outernames redex)
@@ -775,13 +759,9 @@ insts
   end
 
 
-functor TransitiveReflexiveClosure (
-  structure Set : MONO_SET
-  structure Map : MONO_FINMAP
-  sharing type Set.elt =
-               Map.dom) =
-struct
-
+local
+  structure Set = ControlSet
+  structure Map = ControlMap
   type set = Set.Set
   type rel = set Map.map
 
@@ -815,6 +795,7 @@ struct
              R dom
   fun reflexive_closure R = reflexive_closure' (domain R) R
 
+in
   (* Find the transitive closure of a relation R \subseteq S x S
    * represented as a map S -> 2^S  *)
   fun transitive_reflexive_closure' dom R =
@@ -823,11 +804,6 @@ struct
     transitive_reflexive_closure' (domain R) R
   
 end
-
-structure TransReflClosCtrlRel = TransitiveReflexiveClosure (
-                                   structure Set = ControlSet
-                                   structure Map = ControlMap)
-
 
 
 (* Do a variety of analyses on a set of rules
@@ -956,7 +932,7 @@ fun analyze_rules controls_a ctrl_inv_a rules =
               rules
 
     val ctrl_rel
-      = TransReflClosCtrlRel.transitive_reflexive_closure'
+      = transitive_reflexive_closure'
           (ControlSet.union' controls controls_a)
           ctrl_rel
     (* FIXME find 
@@ -1115,7 +1091,7 @@ fun gen_state_space {agent, rules} =
     val ctrl_inv_a = ConcreteBigraph.ctrl_inv agent_conc
     val E_a        = ConcreteBigraph.edges agent_conc
     val Y_a        = ConcreteBigraph.outernames agent_conc
-    val R_a        = WordSetTabulate.tabulate
+    val R_a        = WordSet.tabulate
                        (ConcreteBigraph.width agent_conc) Word.fromInt
     val controls_a =  ConcreteBigraph.controls agent_conc
     val {controls = controls_R, ctrl_components,

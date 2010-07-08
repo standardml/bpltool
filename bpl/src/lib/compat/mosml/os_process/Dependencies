@@ -1,0 +1,2 @@
+. = os_process
+os_process: ../../common/os_process-sig %NODASHSIG

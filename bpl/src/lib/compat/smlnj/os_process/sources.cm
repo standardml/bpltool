@@ -1,0 +1,9 @@
+Group
+  structure OS_Process
+is
+  os_process.sml
+  ../../common/sources.cm
+#if defined (NEW_CM)
+  $/basis.cm
+#else
+#endif

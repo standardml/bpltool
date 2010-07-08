@@ -18,7 +18,9 @@
 # USA
 #
 
-. = unsafe legacyio hash/. word32/. exception/.
+. = unsafe legacyio integer-sig hash/. word32/. exception/. os_process/.
 unsafe:
 
 legacyio:
+
+integer-sig:

@@ -1,4 +1,4 @@
-# INCLUDE=../
+# INCLUDE=..
 # INCLUDE=../../../kernel
 # INCLUDE=../../../lib/util
 # INCLUDE=../../../lib/smlunit

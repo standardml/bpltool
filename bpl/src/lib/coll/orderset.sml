@@ -430,6 +430,20 @@ functor OrderSet(Order : ORDERING): MONO_SET =
 	       childsep=PP.RIGHT sep,
 	       children=listmap layoutItem (list s)}
 
+    fun tabulate n f =
+      let
+        fun tab' n' s =
+          if n = n' then
+            s
+          else
+            tab' (n' + 1) (insert' (f n') s)
+      in
+        if Int.< (n, 0) then
+          empty
+        else
+          tab' 0 empty
+      end
+
 
 (*
     val pu_bal =

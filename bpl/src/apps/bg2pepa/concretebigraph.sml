@@ -276,26 +276,6 @@ fun idle_names ({outerface, link_inv, ...} : conbg) =
           idle_ns)
     NameSet.empty (Interface.glob outerface)
 
-(* Utility functor implementing translation of finite maps. *)
-functor FinMapTranslate (structure Map : MONO_FINMAP) =
-struct
-  open Map
-  fun translate (dom_trans : dom -> dom)
-                (rng_trans : 'b -> 'c)
-                (map       : 'b map) =
-    Map.Fold
-      (fn ((d, r), map) =>
-          Map.add (dom_trans d, rng_trans r, map))
-      Map.empty map
-end
-structure ChildMapTranslate = FinMapTranslate (structure Map = ChildMap)
-structure EdgeMapTranslate  = FinMapTranslate (structure Map = EdgeMap)
-structure NodeMapTranslate  = FinMapTranslate (structure Map = NodeMap)
-structure NameMapTranslate  = FinMapTranslate (structure Map = NameMap)
-structure PlaceMapTranslate = FinMapTranslate (structure Map = PlaceMap)
-structure LinkMapTranslate  = FinMapTranslate (structure Map = LinkMap)
-structure WordMapTranslate  = FinMapTranslate (structure Map = WordMap)
-
 fun translate {rho_V, rho_E}
               {V, E, ctrl, prnt, prnt_inv,
                nlink, plink, link_inv, innerface, outerface} =
@@ -322,16 +302,16 @@ fun translate {rho_V, rho_E}
        EdgeSet.size E = EdgeMap.size rho_E then
       {V         = NodeSet.map trans_v V,
        E         = EdgeSet.map trans_e E,
-       ctrl      = NodeMapTranslate.translate trans_v id ctrl,
-       prnt      = ChildMapTranslate.translate trans_c trans_p prnt,
-       prnt_inv  = PlaceMapTranslate.translate
+       ctrl      = NodeMap.translate trans_v id ctrl,
+       prnt      = ChildMap.translate trans_c trans_p prnt,
+       prnt_inv  = PlaceMap.translate
                      trans_p (ChildSet.map trans_c) prnt_inv,
-       nlink     = NameMapTranslate.translate id trans_l nlink,
-       plink     = NodeMapTranslate.translate
+       nlink     = NameMap.translate id trans_l nlink,
+       plink     = NodeMap.translate
                      trans_v
-                     (WordMapTranslate.translate id trans_l)
+                     (WordMap.translate id trans_l)
                      plink,
-       link_inv  = LinkMapTranslate.translate
+       link_inv  = LinkMap.translate
                      trans_l (PointSet.map trans_point) link_inv,
        innerface = innerface,
        outerface = outerface}
