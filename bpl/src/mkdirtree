@@ -65,8 +65,8 @@ processdir () { # processdir prefix dirpath dirname
   local prefix="$1"
   local dirpath="$2"
   dirname="$3"
-  local subdirs=`cd $dirpath && find .* * -maxdepth 0 -type d -not '(' -name . -o -name .. $exclude_pat ')'`
-  local last=`echo "$subdirs" | tail -n 1`
+  local subdirs; subdirs=`cd $dirpath && find .* * -maxdepth 0 -type d -not '(' -name . -o -name .. $exclude_pat ')'`
+  local last; last=`echo "$subdirs" | tail -n 1`
   local prefixadd="| "
   for subdir in $subdirs
   do
