@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<subscriptions>
+  <subscription>
+    <address>http://localhost:8305/NotificationContract</address>
+    <operation>ProcessRepositoryUpdated</operation>
+    <contract>ITU.DK.DCRS.CommonTypes.ServiceContracts.IRepositoryNotificationContract</contract>
+  </subscription>
+  <subscription>
+    <address>http://localhost:8305/NotificationContract</address>
+    <operation>ProcessInstanceRepositoryUpdated</operation>
+    <contract>ITU.DK.DCRS.CommonTypes.ServiceContracts.IRepositoryNotificationContract</contract>
+  </subscription>
+  <subscription>
+    <address>http://localhost:8305/NotificationContract</address>
+    <operation>DCRSProcessUpdated</operation>
+    <contract>ITU.DK.DCRS.CommonTypes.ServiceContracts.IRepositoryNotificationContract</contract>
+  </subscription>
+  <subscription>
+    <address>http://localhost:8305/NotificationContract</address>
+    <operation>ProcessInstanceUpdated</operation>
+    <contract>ITU.DK.DCRS.CommonTypes.ServiceContracts.IRepositoryNotificationContract</contract>
+  </subscription>
+  <subscription>
+    <address>http://localhost:8305/NotificationContract</address>
+    <operation>ProcessRepositoryException</operation>
+    <contract>ITU.DK.DCRS.CommonTypes.ServiceContracts.IRepositoryNotificationContract</contract>
+  </subscription>
+</subscriptions>
