@@ -56,6 +56,10 @@ namespace ITU.DK.DCRS.Visualization.Elements
     Set<SelfConnector> UsedSelfConnectors;    /// Set of self-connectors that have been used already.
     Set<SelfConnector> FreeSelfConnectors;    /// Set of free self-connectors.
 
+    /// Fields and/or properties for execution.
+    public Boolean included = true;             /// Is the action currently included?
+    public Boolean responseRequired = false;     /// Is this action required to be performed as a response?      
+
     int[] used = new int[4];
         
     public ActionNode(String name, Vector2 location, Pen dp, Brush tb, Font tf)
@@ -139,6 +143,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
     /// <param name="g"></param>
     public void Draw(Graphics g)
     {
+      if (!included) DrawingPen.DashStyle = DashStyle.Dash;
       g.DrawRectangle(DrawingPen, Location.ToPoint.X - 50, Location.ToPoint.Y - 50, 100, 100);
       g.DrawString(Name, TextFont, TextBrush, Location.ToPoint);
 
