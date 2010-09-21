@@ -22,10 +22,24 @@ namespace ExperimentalWebApplication
             if (Session["processId"] != null)
             {
                 //int processId = Int16.Parse(Request.QueryString["processId"]);
-                int processId = (int)Session["processId"];                
-                var processInstanceXml = RemoteServicesHandler.GetProcess(processId);
+
+                string processInstanceXml;
+                int processId = (int)Session["processId"];               
+                if (Session["processInstanceId"] != null)
+                {
+                    int processInstanceId = (int)Session["processInstanceId"];
+                    processInstanceXml = RemoteServicesHandler.GetProcessInstance(processId, processInstanceId);                    
+                }
+                else
+                {
+                    processInstanceXml = RemoteServicesHandler.GetProcess(processId);                    
+                }
+
+                
+                
 
                 DCRSProcess DCRSProcessInstance = DCRSProcess.Deserialize(processInstanceXml);
+                
 
                 Bitmap image = Visualizer.Visualize(DCRSProcessInstance.Specification);
 

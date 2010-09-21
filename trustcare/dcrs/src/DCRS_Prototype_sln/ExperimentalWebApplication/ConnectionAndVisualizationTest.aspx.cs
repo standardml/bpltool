@@ -29,6 +29,11 @@ namespace ExperimentalWebApplication
             {
                 processId = Int16.Parse(ListBox1.Items[ListBox1.SelectedIndex].Value);
                 Session.Add("processId", processId);
+
+                ListBox2.Items.Clear();
+                foreach (var a in RemoteServicesHandler.GetProcessInstancesList(processId))
+                    ListBox2.Items.Add(new ListItem(a.ToString(), a.ToString()));
+
             }
             Label1.Text = "ProcessId: " + processId.ToString();
             //processId = Int16.Parse(ListBox1.SelectedItem.Value);
@@ -57,6 +62,16 @@ namespace ExperimentalWebApplication
         protected void Image1_Load(object sender, EventArgs e)
         {
             
+        }
+
+        protected void Button2_Click(object sender, EventArgs e)
+        {
+            int processInstanceId = -1;
+            if (ListBox2.SelectedIndex != -1)
+            {
+                processInstanceId = Int16.Parse(ListBox2.Items[ListBox2.SelectedIndex].Value);
+                Session.Add("processInstanceId", processInstanceId);
+            }
         }
 
     }

@@ -9,14 +9,23 @@
 <body>
     <form id="form1" runat="server">
     <div>
-    
+        <table width=100%>
+        <tr>
+        <td width=50%>
         <asp:ListBox ID="ListBox1" runat="server" Height="110px" 
             onselectedindexchanged="ListBox1_SelectedIndexChanged"
             Width="383px" onload="ListBox1_Load">
         </asp:ListBox>
         <asp:Button ID="Button1" runat="server" onclick="Button1_Click" Text="Button" />
             <asp:Label ID="Label1" runat="server" Text="Label"></asp:Label>      
-    
+            </td>
+        <td width=50%>
+        <asp:ListBox ID="ListBox2" runat="server" Height="107px" 
+            style="margin-top: 0px" Width="470px"></asp:ListBox>
+            <asp:Button ID="Button2" runat="server" Text="Button" onclick="Button2_Click" />
+        </td>
+        </tr>
+        </table>
     </div>
     <div><img src="modelvis.aspx"></div>
     </form>
