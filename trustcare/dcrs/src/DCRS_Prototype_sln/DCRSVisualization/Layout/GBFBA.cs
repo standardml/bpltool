@@ -124,7 +124,7 @@ namespace ITU.DK.DCRS.Visualization.Layout
 
         public void initRun()
         {
-            Random rand = new Random();
+            Random rand = new Random(3);
 
             NodeTensions.Clear();
             NodePositions.Clear();
