@@ -60,6 +60,10 @@
     <Content Include="Account\Login.aspx" />
     <Content Include="Account\Register.aspx" />
     <Content Include="Givemedecine.aspx" />
+    <Content Include="modelvis.aspx" />
+    <Content Include="ProcessDefinition.aspx" />
+    <Content Include="ProcessExecution.aspx" />
+    <Content Include="RepositoryView.aspx" />
     <Content Include="Styles\Site.css" />
     <Content Include="Default.aspx" />
     <Content Include="Global.asax" />
@@ -127,6 +131,34 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="modelvis.aspx.cs">
+      <DependentUpon>modelvis.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="modelvis.aspx.designer.cs">
+      <DependentUpon>modelvis.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="ProcessDefinition.aspx.cs">
+      <DependentUpon>ProcessDefinition.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ProcessDefinition.aspx.designer.cs">
+      <DependentUpon>ProcessDefinition.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="ProcessExecution.aspx.cs">
+      <DependentUpon>ProcessExecution.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ProcessExecution.aspx.designer.cs">
+      <DependentUpon>ProcessExecution.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="RepositoryView.aspx.cs">
+      <DependentUpon>RepositoryView.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="RepositoryView.aspx.designer.cs">
+      <DependentUpon>RepositoryView.aspx</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Site.Master.cs">
       <DependentUpon>Site.Master</DependentUpon>
@@ -148,6 +180,10 @@
     <ProjectReference Include="..\DCRSCommonTypes\DCRSCommonTypes.csproj">
       <Project>{CD66ABEA-E0E2-497B-9E7F-7A9AFF6E5704}</Project>
       <Name>DCRSCommonTypes</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DCRSRemoteService\DCRSRemoteServices.csproj">
+      <Project>{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}</Project>
+      <Name>DCRSRemoteServices</Name>
     </ProjectReference>
     <ProjectReference Include="..\DCRSVisualization\DCRSVisualization.csproj">
       <Project>{94921E64-D876-4B53-AAEF-8E410AD6103B}</Project>
