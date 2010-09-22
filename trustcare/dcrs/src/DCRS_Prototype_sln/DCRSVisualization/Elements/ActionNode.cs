@@ -45,6 +45,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
     static public int NODE_HEIGHT = 100;
     static public int ROLEBOX_HEIGHT = 30;
 
+    short ID;                                 /// ID of this node in corresponding specification.
     String Name;                              /// Name of the action that this node represents.
     List<String> Roles;                       /// The roles that can execute the Action.
     public Vector2 Location;                  /// Location that the node should be drawn at. The vector represents the center of the node.
@@ -58,19 +59,28 @@ namespace ITU.DK.DCRS.Visualization.Elements
 
     /// Fields and/or properties for execution.
     public Boolean included = true;             /// Is the action currently included?
-    public Boolean responseRequired = false;     /// Is this action required to be performed as a response?      
+    public Boolean pendingResponse = false;     /// Is this action required to be performed as a response?      
+    public Boolean hasExecuted = false;         /// Has this action eben executed at least one?
 
     int[] used = new int[4];
         
-    public ActionNode(String name, Vector2 location, Pen dp, Brush tb, Font tf)
+    public ActionNode(short id, String name, Vector2 location, Pen dp, Brush tb, Font tf)
     {
       Location = location;
+      ID = id;
       Name = name;
       Roles = new List<String>();
       DrawingPen = dp;
       TextBrush = tb;
       TextFont = tf;
       InitiateConnectors();
+    }
+
+    public void ApplyRuntime(DCRS.CommonTypes.Process.DCRSRuntime r)
+    {
+        included = r.CurrentState.StateVector.IncludedActions.Contains(this.ID);
+        pendingResponse = r.CurrentState.StateVector.PendingResponseActions.Contains(this.ID);
+        hasExecuted = r.CurrentState.StateVector.ExecutedActions.Contains(this.ID);
     }
 
 
@@ -155,6 +165,14 @@ namespace ITU.DK.DCRS.Visualization.Elements
         g.DrawString(r, TextFont, TextBrush, Location.ToPoint.X, (Location.ToPoint.Y - (80 - (offset * 5))));
         offset++;
       }
+
+      TextBrush = Brushes.Red;
+      TextFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
+      if (pendingResponse) g.DrawString("!", TextFont, TextBrush, (Location + new Vector2(35, -45)).ToPoint);
+
+      TextBrush = Brushes.Green;
+      TextFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
+      if (hasExecuted) g.DrawString("V", TextFont, TextBrush, (Location + new Vector2(-45, -45)).ToPoint);
     }
 
     /// <summary>

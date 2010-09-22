@@ -144,7 +144,7 @@ namespace ITU.DK.DCRS.Visualization
 
             foreach (var p in placement)
             {
-              ActionNode n = new ActionNode(spec.ActionList[p.Key], new Vector2(p.Value), acticityPen, activityBrush, activityFont);
+              ActionNode n = new ActionNode(p.Key, spec.ActionList[p.Key], new Vector2(p.Value), acticityPen, activityBrush, activityFont);
               n.SetRoles(spec.ActionsToRolesDictionary[p.Key]);
               n.Draw(g);
               nodeDict.Add(p.Key, n);

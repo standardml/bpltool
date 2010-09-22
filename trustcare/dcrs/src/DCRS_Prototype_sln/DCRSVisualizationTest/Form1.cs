@@ -31,10 +31,12 @@ namespace DCRSVisualizationTest
         private void panel1_Paint(object sender, PaintEventArgs e)
         {          
           //ITU.DK.DCRS.Visualization.Visualizer.Draw(ITU.DK.DCRS.CommonTypes.Samples.DCRSSampleModels.GetGiveMedicineSpecification(), panel1.CreateGraphics());
-          //vis.Draw(ITU.DK.DCRS.CommonTypes.Samples.DCRSSampleModels.GetGiveMedicineSpecification(), panel1.CreateGraphics());
-            ITU.DK.DCRS.Visualization.Visualizer.Draw(ITU.DK.DCRS.CommonTypes.Samples.DCRSSampleModels.GetGiveMedicineSpecification(), panel1.CreateGraphics());
+          //vis.Draw(ITU.DK.DCRS.CommonTypes.Samples.DCRSSampleModels.GetGiveMedicineSpecification(), panel1.CreateGraphics());            
             //Graphics g = panel1.CreateGraphics();
             //g.DrawImage(Visualizer.Visualize(ITU.DK.DCRS.CommonTypes.Samples.DCRSSampleModels.GetGiveMedicineSpecification()), new Point(0,0));
+
+            //most recent:
+            ITU.DK.DCRS.Visualization.Visualizer.Draw(ITU.DK.DCRS.CommonTypes.Samples.DCRSSampleModels.GetGiveMedicineSpecification(), panel1.CreateGraphics());
         }
 
 

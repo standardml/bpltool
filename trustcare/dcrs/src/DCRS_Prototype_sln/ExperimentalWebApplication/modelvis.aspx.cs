@@ -41,7 +41,7 @@ namespace ExperimentalWebApplication
                 DCRSProcess DCRSProcessInstance = DCRSProcess.Deserialize(processInstanceXml);
                 
 
-                Bitmap image = Visualizer.Visualize(DCRSProcessInstance.Specification);
+                Bitmap image = Visualizer.Visualize(DCRSProcessInstance);
 
                 Response.ContentType = "image/jpeg";
                 image.Save(Response.OutputStream, ImageFormat.Jpeg);

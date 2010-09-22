@@ -18,13 +18,13 @@ namespace ITU.DK.DCRS.Visualization
         /// </summary>
         /// <param name="spec"></param>
         /// <returns></returns>
-        public static Bitmap Visualize(DCRS.CommonTypes.Process.DCRSSpecification spec)
+        public static Bitmap Visualize(DCRS.CommonTypes.Process.DCRSProcess proc)
         {
 
             // set size dynamically?
             Bitmap result = new Bitmap(1000,1000);
             Graphics.FromImage(result).FillRegion(Brushes.White, new Region(new Rectangle(0,0,1000,1000)));
-            Draw(spec, Graphics.FromImage(result));
+            Draw(proc, Graphics.FromImage(result));
             return result;
         }
 
@@ -125,13 +125,22 @@ namespace ITU.DK.DCRS.Visualization
             return g;
         }
 
+
+        public static void Draw(DCRS.CommonTypes.Process.DCRSSpecification spec, Graphics g)
+        {
+            DCRS.CommonTypes.Process.DCRSProcess p = new CommonTypes.Process.DCRSProcess();
+            p.Specification = spec;
+            Draw(p, g);
+        }
+
         /// <summary>
         /// Main method fro drawing a specification, that takes a graphics object to draw on.
         /// </summary>
         /// <param name="spec"></param>
         /// <param name="g"></param>
-        public static void Draw(DCRS.CommonTypes.Process.DCRSSpecification spec, Graphics g)
+        public static void Draw(DCRS.CommonTypes.Process.DCRSProcess proc, Graphics g)
         {
+            DCRS.CommonTypes.Process.DCRSSpecification spec = proc.Specification;
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
             var placement = CalculatePlacement(spec);
@@ -159,7 +168,8 @@ namespace ITU.DK.DCRS.Visualization
             /// Draw the nodes first.
             foreach (var p in placement)
             {
-              ActionNode n = new ActionNode(spec.ActionList[p.Key], new Vector2(p.Value), acticityPen, activityBrush, activityFont);
+              ActionNode n = new ActionNode(p.Key, spec.ActionList[p.Key], new Vector2(p.Value), acticityPen, activityBrush, activityFont);
+              if (proc.Runtime != null) n.ApplyRuntime(proc.Runtime);
               n.SetRoles(spec.ActionsToRolesDictionary[p.Key]);
               n.Draw(g);
               nodeDict.Add(p.Key, n);
