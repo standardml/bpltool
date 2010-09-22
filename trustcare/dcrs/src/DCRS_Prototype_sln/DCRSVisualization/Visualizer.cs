@@ -28,6 +28,14 @@ namespace ITU.DK.DCRS.Visualization
             return result;
         }
 
+
+        public static Bitmap Visualize(DCRS.CommonTypes.Process.DCRSSpecification spec)
+        {
+            DCRS.CommonTypes.Process.DCRSProcess p = new CommonTypes.Process.DCRSProcess();
+            p.Specification = spec;
+            Visualize(p, g);
+        }
+
         /// <summary>
         /// Method for determining the intended placement of nodes in the image to be generated.
         /// </summary>
