@@ -173,6 +173,8 @@ namespace ITU.DK.DCRS.Visualization.Elements
       TextBrush = Brushes.Green;
       TextFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
       if (hasExecuted) g.DrawString("V", TextFont, TextBrush, (Location + new Vector2(-45, -45)).ToPoint);
+
+      if (!included) DrawingPen.DashStyle = DashStyle.Solid;
     }
 
     /// <summary>

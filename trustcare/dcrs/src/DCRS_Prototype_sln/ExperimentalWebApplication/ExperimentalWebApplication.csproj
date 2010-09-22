@@ -52,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="ConnectionAndVisualizationTest.aspx" />
+    <Content Include="ExecutionTest.aspx" />
     <Content Include="modelvis.aspx" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
@@ -68,6 +69,13 @@
     </Compile>
     <Compile Include="ConnectionAndVisualizationTest.aspx.designer.cs">
       <DependentUpon>ConnectionAndVisualizationTest.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="ExecutionTest.aspx.cs">
+      <DependentUpon>ExecutionTest.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ExecutionTest.aspx.designer.cs">
+      <DependentUpon>ExecutionTest.aspx</DependentUpon>
     </Compile>
     <Compile Include="modelvis.aspx.cs">
       <DependentUpon>modelvis.aspx</DependentUpon>
