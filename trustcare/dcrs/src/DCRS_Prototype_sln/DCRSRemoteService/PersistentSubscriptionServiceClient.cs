@@ -2,7 +2,7 @@
 using System.ServiceModel.Channels;
 using ITU.DK.DCRS.CommonTypes.ServiceContracts;
 
-namespace ExperimentalWebApplication.Services
+namespace ITU.DK.DCRS.RemoteServices
 {
     public class PersistentSubscriptionServiceClient : ClientBase<IPersistentSubscriptionService>, IPersistentSubscriptionService
     {

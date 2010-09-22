@@ -77,16 +77,15 @@
       <DependentUpon>modelvis.aspx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\NotificationContract.cs" />
-    <Compile Include="Services\PersistentSubscriptionServiceClient.cs" />
-    <Compile Include="Services\ProcessExecutionServiceClient.cs" />
-    <Compile Include="Services\RemoteServicesHandler.cs" />
-    <Compile Include="Services\RepositoryServiceClient.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DCRSCommonTypes\DCRSCommonTypes.csproj">
       <Project>{CD66ABEA-E0E2-497B-9E7F-7A9AFF6E5704}</Project>
       <Name>DCRSCommonTypes</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DCRSRemoteService\DCRSRemoteServices.csproj">
+      <Project>{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}</Project>
+      <Name>DCRSRemoteServices</Name>
     </ProjectReference>
     <ProjectReference Include="..\DCRSVisualization\DCRSVisualization.csproj">
       <Project>{94921E64-D876-4B53-AAEF-8E410AD6103B}</Project>

@@ -5,7 +5,7 @@ using System.ServiceModel;
 using ITU.DK.DCRS.CommonTypes.Exceptions;
 using ITU.DK.DCRS.CommonTypes.ServiceContracts;
 
-namespace ExperimentalWebApplication.Services
+namespace ITU.DK.DCRS.RemoteServices
 {
     public class RemoteServicesHandler
     {

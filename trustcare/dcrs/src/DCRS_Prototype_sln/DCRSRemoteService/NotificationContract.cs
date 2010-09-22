@@ -5,7 +5,7 @@ using System.Threading;
 using ITU.DK.DCRS.CommonTypes.Process;
 using ITU.DK.DCRS.CommonTypes.ServiceContracts;
 
-namespace ExperimentalWebApplication.Services
+namespace ITU.DK.DCRS.RemoteServices
 {
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall)]
     class NotificationContract : IRepositoryNotificationContract

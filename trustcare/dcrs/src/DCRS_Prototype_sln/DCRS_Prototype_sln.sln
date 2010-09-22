@@ -41,6 +41,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExperimentalWebApplication"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCRSWebUI", "DCRSWebUI\DCRSWebUI.csproj", "{6D2606D2-8127-41F2-8D0F-C199FC620883}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCRSRemoteServices", "DCRSRemoteService\DCRSRemoteServices.csproj", "{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}"
+EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
 		Svn-Managed = True
@@ -205,6 +207,16 @@ Global
 		{6D2606D2-8127-41F2-8D0F-C199FC620883}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{6D2606D2-8127-41F2-8D0F-C199FC620883}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{6D2606D2-8127-41F2-8D0F-C199FC620883}.Release|x86.ActiveCfg = Release|Any CPU
+		{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

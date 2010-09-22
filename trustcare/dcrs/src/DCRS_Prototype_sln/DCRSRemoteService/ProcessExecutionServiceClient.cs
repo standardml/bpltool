@@ -5,7 +5,7 @@ using System.ServiceModel;
 using System.Text;
 using ITU.DK.DCRS.CommonTypes.ServiceContracts;
 
-namespace ExperimentalWebApplication.Services
+namespace ITU.DK.DCRS.RemoteServices
 {
     class ProcessExecutionServiceClient : ClientBase<IProcessExecutionServiceContract>, IProcessExecutionServiceContract
     {

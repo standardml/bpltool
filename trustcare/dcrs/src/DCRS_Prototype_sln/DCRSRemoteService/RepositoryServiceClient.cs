@@ -3,7 +3,7 @@ using System.ServiceModel;
 using ITU.DK.DCRS.CommonTypes.Process;
 using ITU.DK.DCRS.CommonTypes.ServiceContracts;
 
-namespace ExperimentalWebApplication.Services
+namespace ITU.DK.DCRS.RemoteServices
 {
     internal class RepositoryServiceClient : ClientBase<IRepositoryServiceContract>, IRepositoryServiceContract
     {

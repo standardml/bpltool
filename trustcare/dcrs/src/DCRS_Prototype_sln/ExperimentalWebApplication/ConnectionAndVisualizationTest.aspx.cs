@@ -7,10 +7,9 @@ using System.Web.UI.WebControls;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Drawing.Drawing2D;
-using ExperimentalWebApplication.Services;
 using ITU.DK.DCRS.CommonTypes.Process;
 using ITU.DK.DCRS.Visualization;
-
+using ITU.DK.DCRS.RemoteServices;
 
 namespace ExperimentalWebApplication
 {
