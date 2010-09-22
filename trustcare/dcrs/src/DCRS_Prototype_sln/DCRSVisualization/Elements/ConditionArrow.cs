@@ -17,6 +17,8 @@ namespace ITU.DK.DCRS.Visualization.Elements
 
     public override void Draw(Graphics g)
     {
+        arrowBrush = Brushes.Blue;
+        arrowPen.Brush = arrowBrush;
       base.Draw(g);
       g.FillEllipse(arrowBrush, ArrowDst.ToPoint.X - 3, ArrowDst.ToPoint.Y - 3, 6, 6);
     }

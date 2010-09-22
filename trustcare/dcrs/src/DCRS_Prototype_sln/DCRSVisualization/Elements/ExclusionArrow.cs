@@ -43,6 +43,8 @@ namespace ITU.DK.DCRS.Visualization.Elements
 
     public override void Draw(Graphics g)
     {
+        arrowBrush = Brushes.Red;
+        arrowPen.Brush = arrowBrush;
       base.Draw(g);
 
       //Vector2 arrowSymbol = ArrowDst - ArrowSrc;
