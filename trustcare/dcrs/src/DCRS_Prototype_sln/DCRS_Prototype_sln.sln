@@ -13,8 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCRSCommonTypes", "DCRSComm
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphSharpTutorials", "GraphSharpTutorials\GraphSharpTutorials.csproj", "{E16DD70B-77C6-423E-ADE0-9C2261D12ECE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsApplication", "..\..\Program Files\Microsoft Research\GLEE\samples\WindowsApplication\WindowsApplication\WindowsApplication.csproj", "{B1239B8B-1A27-4DB8-8A66-EAC760A9E9DB}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documents", "Documents", "{0E2A3F7E-F623-4AED-945A-CBC0FF111093}"
 	ProjectSection(SolutionItems) = preProject
 		DCRSStateSpacev 1.0.xml = DCRSStateSpacev 1.0.xml
@@ -40,6 +38,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCRSVisualizationTest", "DCRSVisualizationTest\DCRSVisualizationTest.csproj", "{31FF01D8-3900-47C7-A1B4-8B8D85DCA84D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExperimentalWebApplication", "ExperimentalWebApplication\ExperimentalWebApplication.csproj", "{B457B429-0FFA-406A-A499-F45249CB02AC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCRSWebUI", "DCRSWebUI\DCRSWebUI.csproj", "{6D2606D2-8127-41F2-8D0F-C199FC620883}"
 EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
@@ -115,16 +115,6 @@ Global
 		{E16DD70B-77C6-423E-ADE0-9C2261D12ECE}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{E16DD70B-77C6-423E-ADE0-9C2261D12ECE}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{E16DD70B-77C6-423E-ADE0-9C2261D12ECE}.Release|x86.ActiveCfg = Release|Any CPU
-		{B1239B8B-1A27-4DB8-8A66-EAC760A9E9DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B1239B8B-1A27-4DB8-8A66-EAC760A9E9DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B1239B8B-1A27-4DB8-8A66-EAC760A9E9DB}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{B1239B8B-1A27-4DB8-8A66-EAC760A9E9DB}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{B1239B8B-1A27-4DB8-8A66-EAC760A9E9DB}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{B1239B8B-1A27-4DB8-8A66-EAC760A9E9DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B1239B8B-1A27-4DB8-8A66-EAC760A9E9DB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B1239B8B-1A27-4DB8-8A66-EAC760A9E9DB}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{B1239B8B-1A27-4DB8-8A66-EAC760A9E9DB}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{B1239B8B-1A27-4DB8-8A66-EAC760A9E9DB}.Release|x86.ActiveCfg = Release|Any CPU
 		{D9DDEEF5-BC77-4B62-B9ED-787B32DE72AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D9DDEEF5-BC77-4B62-B9ED-787B32DE72AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D9DDEEF5-BC77-4B62-B9ED-787B32DE72AD}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -205,6 +195,16 @@ Global
 		{B457B429-0FFA-406A-A499-F45249CB02AC}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{B457B429-0FFA-406A-A499-F45249CB02AC}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{B457B429-0FFA-406A-A499-F45249CB02AC}.Release|x86.ActiveCfg = Release|Any CPU
+		{6D2606D2-8127-41F2-8D0F-C199FC620883}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D2606D2-8127-41F2-8D0F-C199FC620883}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D2606D2-8127-41F2-8D0F-C199FC620883}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{6D2606D2-8127-41F2-8D0F-C199FC620883}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{6D2606D2-8127-41F2-8D0F-C199FC620883}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6D2606D2-8127-41F2-8D0F-C199FC620883}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D2606D2-8127-41F2-8D0F-C199FC620883}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D2606D2-8127-41F2-8D0F-C199FC620883}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{6D2606D2-8127-41F2-8D0F-C199FC620883}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{6D2606D2-8127-41F2-8D0F-C199FC620883}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
