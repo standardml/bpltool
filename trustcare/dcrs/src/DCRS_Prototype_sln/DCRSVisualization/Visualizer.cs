@@ -33,7 +33,7 @@ namespace ITU.DK.DCRS.Visualization
         {
             DCRS.CommonTypes.Process.DCRSProcess p = new CommonTypes.Process.DCRSProcess();
             p.Specification = spec;
-            Visualize(p, g);
+            return Visualize(p);
         }
 
         /// <summary>
