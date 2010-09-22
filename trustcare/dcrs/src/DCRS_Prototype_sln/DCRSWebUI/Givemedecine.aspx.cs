@@ -17,8 +17,8 @@ namespace DCRSWebUI
         protected void Page_Load(object sender, EventArgs e)
         {
             DCRSSpecification gmspec = DCRSSampleModels.GetGiveMedicineSpecification();
-            Bitmap img = Visualizer.Visualize(gmspec);
-            img.Save("C:\\Documents and Settings\\jadu\\My Documents\\Telechargements\\DCRS_Prototype_sln\\DCRS_Prototype_sln\\DCRSWebUI\\tmp\\img.jpg",ImageFormat.Jpeg);
+            //Bitmap img = Visualizer.Visualize(gmspec);
+            //img.Save("C:\\Documents and Settings\\jadu\\My Documents\\Telechargements\\DCRS_Prototype_sln\\DCRS_Prototype_sln\\DCRSWebUI\\tmp\\img.jpg",ImageFormat.Jpeg);
 
         }
     }
