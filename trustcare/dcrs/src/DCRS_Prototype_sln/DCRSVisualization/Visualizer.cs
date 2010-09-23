@@ -22,10 +22,27 @@ namespace ITU.DK.DCRS.Visualization
         {
 
             // set size dynamically?
-            Bitmap result = new Bitmap(1000,1000);
-            Graphics.FromImage(result).FillRegion(Brushes.White, new Region(new Rectangle(0,0,1000,1000)));
+            Point p = CalculateRequiredSize(proc);
+
+            Bitmap result = new Bitmap(p.X, p.Y);
+            Graphics.FromImage(result).FillRegion(Brushes.White, new Region(new Rectangle(0,0,p.X,p.Y)));
             Draw(proc, Graphics.FromImage(result));
             return result;
+        }
+
+        public static Point CalculateRequiredSize(DCRS.CommonTypes.Process.DCRSProcess proc)
+        {
+            var a = CalculatePlacement(proc.Specification);
+            int maxX = 0;
+            int maxY = 0;
+
+            foreach (var x in a)
+            {
+                maxX = Math.Max(x.Value.X, maxX);
+                maxY = Math.Max(x.Value.Y, maxY);
+            }
+
+            return new Point(maxX + 200, maxY + 200);
         }
 
 

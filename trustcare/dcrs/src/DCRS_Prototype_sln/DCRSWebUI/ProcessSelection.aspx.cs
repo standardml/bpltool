@@ -30,6 +30,12 @@ namespace DCRSWebUI
         protected void ddlProcessInstance_SelectedIndexChanged(object sender, EventArgs e)
         {
             int processInstanceId = Int16.Parse(ddlProcessInstance.Items[ddlProcessInstance.SelectedIndex].Value);
+
+            if (processInstanceId == -2)
+            {
+                processInstanceId = RemoteServicesHandler.StartNewInstance(processId);                
+            }
+
             if (processInstanceId != -1)
             {
                 Session.Add("processInstanceId", processInstanceId);
@@ -53,7 +59,7 @@ namespace DCRSWebUI
             
             if (ddlProcess.SelectedIndex == -1)
             {
-                ddlProcess.Items.Add(new ListItem("----", "-1"));
+                ddlProcess.Items.Add(new ListItem("Select Process", "-1"));
                 foreach (var a in RemoteServicesHandler.GetProcessList())
                     ddlProcess.Items.Add(new ListItem(a.Value.ToString() + " (" + a.Key.ToString() + ")", a.Key.ToString()));                
             }
@@ -68,9 +74,11 @@ namespace DCRSWebUI
         private void UpdateProcessInstanceList()
         {
             ddlProcessInstance.Items.Clear();
-            ddlProcessInstance.Items.Add(new ListItem("----", "-1"));
+            ddlProcessInstance.Items.Add(new ListItem("Select Process Instance", "-1"));
             foreach (var a in RemoteServicesHandler.GetProcessInstancesList(processId))
                 ddlProcessInstance.Items.Add(new ListItem(a.ToString(), a.ToString()));
+
+            ddlProcessInstance.Items.Add(new ListItem("New Process Instance...", "-2"));
             
 
         }

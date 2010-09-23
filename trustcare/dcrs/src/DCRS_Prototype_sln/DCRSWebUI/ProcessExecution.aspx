@@ -8,14 +8,34 @@
 </h2>
 <div>
     <div>        
-        <asp:ListBox ID="lbPrincipals" runat="server" AutoPostBack="True" 
-            onselectedindexchanged="lbPrincipals_SelectedIndexChanged"></asp:ListBox>
-        <asp:ListBox ID="lbActions" runat="server"></asp:ListBox>
-        <asp:Button ID="btnExecute" runat="server" Text="Execute" 
-            onclick="btnExecute_Click" />
+        <table>
+            <tr>
+                <td valign=top>
+                    <table>
+                        <tr valign=top>
+                            <td valign=top>
+                                <asp:ListBox ID="lbPrincipals" runat="server" AutoPostBack="True" 
+                                    onselectedindexchanged="lbPrincipals_SelectedIndexChanged" Height="200px" 
+                                    Width="150px"></asp:ListBox>
+                            </td>
+                        </tr>
+                        <tr valign=top>                            
+                            <td valign=top>
+                                <asp:ListBox ID="lbActions" runat="server" Height="200px" Width="150px"></asp:ListBox>
+                                <br/>
+                                <asp:Button ID="btnExecute" runat="server" Text="Execute" 
+                                    onclick="btnExecute_Click" />
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td>
+                    <div><img src="modelvis.aspx"></div>    
+                </td>
+            </tr>
+        </table>
     </div>
     <div>
-    </div>    
-    <div><img src="modelvis.aspx"></div>    
+    </div>        
 </div>
 </asp:Content>
