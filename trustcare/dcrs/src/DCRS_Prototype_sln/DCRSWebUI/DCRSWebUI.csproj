@@ -36,6 +36,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AjaxControlToolkit, Version=4.1.40412.0, Culture=neutral, PublicKeyToken=28f01b0e84b6d53e, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -63,6 +66,7 @@
     <Content Include="modelvis.aspx" />
     <Content Include="ProcessDefinition.aspx" />
     <Content Include="ProcessExecution.aspx" />
+    <Content Include="ProcessSelection.aspx" />
     <Content Include="RepositoryView.aspx" />
     <Content Include="Styles\Site.css" />
     <Content Include="Default.aspx" />
@@ -151,6 +155,13 @@
     </Compile>
     <Compile Include="ProcessExecution.aspx.designer.cs">
       <DependentUpon>ProcessExecution.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="ProcessSelection.aspx.cs">
+      <DependentUpon>ProcessSelection.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ProcessSelection.aspx.designer.cs">
+      <DependentUpon>ProcessSelection.aspx</DependentUpon>
     </Compile>
     <Compile Include="RepositoryView.aspx.cs">
       <DependentUpon>RepositoryView.aspx</DependentUpon>

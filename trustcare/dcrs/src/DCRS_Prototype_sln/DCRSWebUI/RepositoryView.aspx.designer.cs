@@ -13,15 +13,6 @@ namespace DCRSWebUI {
     public partial class RepositoryView {
         
         /// <summary>
-        /// select_process_list control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlForm select_process_list;
-        
-        /// <summary>
         /// ProcessList control.
         /// </summary>
         /// <remarks>

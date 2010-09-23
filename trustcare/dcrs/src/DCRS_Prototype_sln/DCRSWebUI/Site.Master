@@ -10,6 +10,7 @@
 </head>
 <body>
     <div class="page">
+    <form id="global" runat="server">
         <div class="header">
             <div class="title">
                 <h1>
@@ -18,23 +19,24 @@
             </div>
             <div class="clear hideSkiplink">
                 <div>
-                <%--<asp:Menu ID="NavigationMenu" runat="server" CssClass="menu" EnableViewState="false" IncludeStyleBlock="false" Orientation="Horizontal">
+                <asp:Menu ID="NavigationMenu" runat="server" CssClass="menu" EnableViewState="false" IncludeStyleBlock="false" Orientation="Horizontal">
                     <Items>
                         <asp:MenuItem NavigateUrl="~/Default.aspx" Text="Home"/>                     
                         <asp:MenuItem NavigateUrl="~/RepositoryView.aspx" Text="Process list"/>   
                         <asp:MenuItem NavigateUrl="~/ProcessDefinition.aspx" Text="Process edition"/>
                         <asp:MenuItem NavigateUrl="~/ProcessExecution.aspx" Text="Process execution"/>
                         <asp:MenuItem NavigateUrl="~/Givemedecine.aspx" Text="Give Medecine"/>
-                        <asp:MenuItem NavigateUrl="~/About.aspx" Text="About"/>                        
-                        
+                        <asp:MenuItem NavigateUrl="~/About.aspx" Text="About"/>                                                
                     </Items>
-                </asp:Menu>--%>
+                </asp:Menu>
+                <%--
                     <a href="Default.aspx">Home</a><br />                     
                     <a href="RepositoryView.aspx">Process list</a><br />      
                     <a href="ProcessDefinition.aspx">Process edition</a><br />      
                     <a href="ProcessExecution.aspx">Process execution</a><br />      
                     <a href="Givemedecine.aspx">Give Medecine</a><br />      
                     <a href="About.aspx">About</a><br />      
+                    --%>
                 </div>
             </div>
         </div>
@@ -45,7 +47,7 @@
         </div>
     </div>
     <div class="footer">
-        
+    </form>    
     </div>
 </body>
 </html>

@@ -4,9 +4,6 @@
 <asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">
 
 <h2>Existing process list</h2>
-
-
-	<form id="select_process_list" runat="server">
 	<p>
 		<asp:ListBox ID="ProcessList" runat="server" Height="110px" 
 			onselectedindexchanged="ProcessList_SelectedIndexChanged"
@@ -23,7 +20,6 @@
 			<asp:Button ID="SelectInstance" runat="server" Text="Select" onclick="SelectInstance_Click" />
 
 	</p>
-	</form>
 	<div><img src="modelvis.aspx" alt="spec preview" /></div>
 	
 
