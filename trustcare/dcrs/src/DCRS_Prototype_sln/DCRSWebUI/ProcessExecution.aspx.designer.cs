@@ -13,6 +13,24 @@ namespace DCRSWebUI {
     public partial class ProcessExecution {
         
         /// <summary>
+        /// ScriptManager1 control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.ScriptManager ScriptManager1;
+        
+        /// <summary>
+        /// CascadingDropDown2 control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::AjaxControlToolkit.CascadingDropDown CascadingDropDown2;
+        
+        /// <summary>
         /// lProcessName control.
         /// </summary>
         /// <remarks>
@@ -28,7 +46,7 @@ namespace DCRSWebUI {
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.ListBox lbPrincipals;
+        protected global::System.Web.UI.WebControls.DropDownList lbPrincipals;
         
         /// <summary>
         /// lbActions control.
@@ -37,7 +55,7 @@ namespace DCRSWebUI {
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.ListBox lbActions;
+        protected global::System.Web.UI.WebControls.DropDownList lbActions;
         
         /// <summary>
         /// btnExecute control.

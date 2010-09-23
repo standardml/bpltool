@@ -1,7 +1,23 @@
-﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Site.Master" AutoEventWireup="true" CodeBehind="ProcessExecution.aspx.cs" Inherits="DCRSWebUI.ProcessExecution" %>
+﻿<%@ Register
+Assembly="AjaxControlToolkit" 
+Namespace="AjaxControlToolkit"
+TagPrefix="ajaxToolkit" %>
+<%@ Page Title="" Language="C#" MasterPageFile="~/Site.Master" AutoEventWireup="true" CodeBehind="ProcessExecution.aspx.cs" Inherits="DCRSWebUI.ProcessExecution" EnableEventValidation="false" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="HeadContent" runat="server">
 </asp:Content>
 <asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">
+
+<asp:ScriptManager ID="ScriptManager1" runat="server">
+    </asp:ScriptManager>
+<ajaxToolkit:CascadingDropDown
+ID="CascadingDropDown2"    
+runat="server"
+TargetControlID="lbActions"
+ParentControlID="lbPrincipals"
+PromptText="Please select an Action"
+ServiceMethod="GetActions"
+ServicePath="services/ExecutionAssistanceService.asmx"
+Category="Action" />
 <h2>
     Process execution<br />
     <asp:Label ID="lProcessName" runat="server" Text="Label"></asp:Label>
@@ -14,14 +30,15 @@
                     <table>
                         <tr valign=top>
                             <td valign=top>
-                                <asp:ListBox ID="lbPrincipals" runat="server" AutoPostBack="True" 
-                                    onselectedindexchanged="lbPrincipals_SelectedIndexChanged" Height="200px" 
-                                    Width="150px"></asp:ListBox>
+                             <!-- AutoPostBack="True" OnSelectedIndexChanged="lbPrincipals_SelectedIndexChanged" --> 
+                                <asp:DropDownList ID="lbPrincipals" runat="server" Width="150px">
+                                </asp:DropDownList>
                             </td>
                         </tr>
                         <tr valign=top>                            
                             <td valign=top>
-                                <asp:ListBox ID="lbActions" runat="server" Height="200px" Width="150px"></asp:ListBox>
+                                <asp:DropDownList ID="lbActions" runat="server" Width="152px">
+                                </asp:DropDownList>
                                 <br/>
                                 <asp:Button ID="btnExecute" runat="server" Text="Execute" 
                                     onclick="btnExecute_Click" />

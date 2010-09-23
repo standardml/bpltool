@@ -31,7 +31,7 @@ namespace DCRSWebUI
             {
                 Session.Add("returnPage", "ProcessExecution.aspx");
                 Server.Transfer("ProcessSelection.aspx");
-            }
+            }            
         }
 
         private DCRSProcess GetActiveProcessInstance()
@@ -46,10 +46,12 @@ namespace DCRSWebUI
             if (lbPrincipals.SelectedIndex == -1)
             {
                 lbPrincipals.Items.Clear();
+                lbPrincipals.Items.Add(new ListItem("Select Principal", "-1"));
                 foreach (string principal in p.Specification.Principals)
                 {
                     lbPrincipals.Items.Add(principal);
                 }
+                CascadingDropDown2.ContextKey = processId.ToString() + "." + processInstanceId.ToString();
             }
         }
 
@@ -57,6 +59,8 @@ namespace DCRSWebUI
         {
 
             lbActions.Items.Clear();
+
+            lbActions.Items.Add(new ListItem("Select Action", "-1"));
 
             if (lbPrincipals.SelectedIndex == -1) return;
             string selectedPrincipal = lbPrincipals.Items[lbPrincipals.SelectedIndex].Value;
