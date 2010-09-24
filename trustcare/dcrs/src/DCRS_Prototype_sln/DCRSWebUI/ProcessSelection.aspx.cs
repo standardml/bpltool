@@ -29,6 +29,7 @@ namespace DCRSWebUI
 
         protected void ddlProcessInstance_SelectedIndexChanged(object sender, EventArgs e)
         {
+            /*
             int processInstanceId = Int16.Parse(ddlProcessInstance.Items[ddlProcessInstance.SelectedIndex].Value);
 
             if (processInstanceId == -2)
@@ -40,7 +41,7 @@ namespace DCRSWebUI
             {
                 Session.Add("processInstanceId", processInstanceId);
                 if (processIdExists && processInstanceIdExists && returnPageExists) Server.Transfer(returnPage);
-            }
+            }*/
         }
 
         protected void ddlProcess_SelectedIndexChanged(object sender, EventArgs e)
@@ -75,12 +76,31 @@ namespace DCRSWebUI
         {
             ddlProcessInstance.Items.Clear();
             ddlProcessInstance.Items.Add(new ListItem("Select Process Instance", "-1"));
+            ddlProcessInstance.Items.Add(new ListItem("New Process Instance...", "-2"));
             foreach (var a in RemoteServicesHandler.GetProcessInstancesList(processId))
                 ddlProcessInstance.Items.Add(new ListItem(a.ToString(), a.ToString()));
+        }
 
-            ddlProcessInstance.Items.Add(new ListItem("New Process Instance...", "-2"));
-            
+        protected void Button1_Click(object sender, EventArgs e)
+        {
+            int processId = Int16.Parse(ddlProcess.Items[ddlProcess.SelectedIndex].Value);
+            if (processId != -1)
+            {
+                Session.Add("processId", processId);
+            }
 
+            int processInstanceId = Int16.Parse(ddlProcessInstance.Items[ddlProcessInstance.SelectedIndex].Value);
+
+            if (processInstanceId == -2)
+            {
+                processInstanceId = RemoteServicesHandler.StartNewInstance(processId);
+            }
+
+            if (processInstanceId != -1)
+            {
+                Session.Add("processInstanceId", processInstanceId);
+                if (processIdExists && processInstanceIdExists && returnPageExists) Server.Transfer(returnPage);
+            }
         }
 
     }
