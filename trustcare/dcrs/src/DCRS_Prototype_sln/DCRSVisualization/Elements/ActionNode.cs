@@ -153,28 +153,39 @@ namespace ITU.DK.DCRS.Visualization.Elements
     /// <param name="g"></param>
     public void Draw(Graphics g)
     {
-      if (!included) DrawingPen.DashStyle = DashStyle.Dash;
-      g.DrawRectangle(DrawingPen, Location.ToPoint.X - 50, Location.ToPoint.Y - 50, 100, 100);
-      g.DrawString(Name, TextFont, TextBrush, Location.ToPoint);
+        if (!included) DrawingPen.DashStyle = DashStyle.Dash;
+        g.DrawRectangle(DrawingPen, Location.ToPoint.X - 50, Location.ToPoint.Y - 50, 100, 100);
+        //g.DrawString(Name, TextFont, TextBrush, Location.ToPoint);
+        StringFormat sf = new StringFormat();
+        sf.Alignment = StringAlignment.Center;
+        sf.LineAlignment = StringAlignment.Center;
+        g.DrawString(Name, TextFont, TextBrush, new Rectangle((int)(Location.X - 45), (int)(Location.Y - 45), 90, 90), sf);
+        
 
-      g.DrawRectangle(DrawingPen, Location.ToPoint.X, Location.ToPoint.Y - 80, 50, ROLEBOX_HEIGHT);
+        g.DrawRectangle(DrawingPen, Location.ToPoint.X, Location.ToPoint.Y - 80, 50, ROLEBOX_HEIGHT);
 
-      int offset = 0;
-      foreach (String r in Roles)
-      {
-        g.DrawString(r, TextFont, TextBrush, Location.ToPoint.X, (Location.ToPoint.Y - (80 - (offset * 5))));
-        offset++;
-      }
+        string rString = "";
+        //int offset = 0;
+        foreach (String r in Roles)
+        {
+        //g.DrawString(r, TextFont, TextBrush, Location.ToPoint.X, (Location.ToPoint.Y - (80 - (offset * 5))));
+        //offset++;
+            rString += r + ", ";
+        }
 
-      TextBrush = Brushes.Red;
-      TextFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
-      if (pendingResponse) g.DrawString("!", TextFont, TextBrush, (Location + new Vector2(35, -45)).ToPoint);
+        rString = rString.Substring(0, rString.Length - 2);
+        g.DrawString(rString, TextFont, TextBrush, new Rectangle((int)(Location.X + 1), (int)(Location.Y - 79), 48, 28), sf);
 
-      TextBrush = Brushes.Green;
-      TextFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
-      if (hasExecuted) g.DrawString("V", TextFont, TextBrush, (Location + new Vector2(-45, -45)).ToPoint);
 
-      if (!included) DrawingPen.DashStyle = DashStyle.Solid;
+        TextBrush = Brushes.Red;
+        TextFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
+        if (pendingResponse) g.DrawString("!", TextFont, TextBrush, (Location + new Vector2(35, -45)).ToPoint);
+
+        TextBrush = Brushes.Green;
+        TextFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
+        if (hasExecuted) g.DrawString("V", TextFont, TextBrush, (Location + new Vector2(-45, -45)).ToPoint);
+
+        if (!included) DrawingPen.DashStyle = DashStyle.Solid;
     }
 
     /// <summary>
