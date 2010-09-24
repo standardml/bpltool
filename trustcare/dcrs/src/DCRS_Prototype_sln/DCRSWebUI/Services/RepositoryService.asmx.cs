@@ -10,7 +10,7 @@ using ITU.DK.DCRS.CommonTypes.Process;
 namespace DCRSWebUI.Services
 {
     /// <summary>
-    /// Summary description for RepositoryService
+    /// Webservice for accessing the process repository.
     /// </summary>
     [WebService(Namespace = "http://tempuri.org/")]
     [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
@@ -20,6 +20,12 @@ namespace DCRSWebUI.Services
     public class RepositoryService : System.Web.Services.WebService
     {
 
+        /// <summary>
+        /// Method for retrieving all the process instances belonging to a process.
+        /// </summary>
+        /// <param name="knownCategoryValues">Contains the selected processId</param>
+        /// <param name="category"></param>
+        /// <returns></returns>
         [WebMethod]
         public CascadingDropDownNameValue[] GetProcessInstanceIdsByProcessId(
                 string knownCategoryValues,

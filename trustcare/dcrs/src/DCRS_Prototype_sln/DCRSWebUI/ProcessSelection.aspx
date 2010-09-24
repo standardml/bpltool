@@ -22,6 +22,6 @@ Category="ProcessInstance" />
 Select a process...<br />
 <asp:DropDownList ID="ddlProcess" runat="server"></asp:DropDownList><br />
 <asp:DropDownList ID="ddlProcessInstance" runat="server"></asp:DropDownList><br/>
-<asp:Button ID="Button1" runat="server" Text="Select" onclick="Button1_Click" />
+<asp:Button ID="btnSelect" runat="server" Text="Select" onclick="btnSelect_Click" />
 &nbsp;
 </asp:Content>

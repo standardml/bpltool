@@ -12,7 +12,7 @@ using ITU.DK.DCRS.CommonTypes.Process;
 namespace DCRSWebUI
 {
     /// <summary>
-    /// Summary description for ExecutionAssistanceService
+    /// Web service has functions for assisting in the execution of DRCS instances.
     /// </summary>
     [WebService(Namespace = "http://tempuri.org/")]
     [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
@@ -21,11 +21,10 @@ namespace DCRSWebUI
     [System.Web.Script.Services.ScriptService]
     public class ExecutionAssistanceService : System.Web.Services.WebService
     {
-
-        int processId = -1;
-        int processInstanceId = -1;
-        private DCRSProcess ActiveProcessInstance { get { return GetActiveProcessInstance(); } }
-        private DCRSProcess GetActiveProcessInstance()
+        /// <summary>
+        /// Helper method for retrieving a processinstance.
+        /// </summary>
+        private DCRSProcess GetProcessInstance(int processId, int processInstanceId)
         {
             string processInstanceXml = RemoteServicesHandler.GetProcessInstance(processId, processInstanceId);
             DCRSProcess DCRSProcessInstance = DCRSProcess.Deserialize(processInstanceXml);
@@ -33,26 +32,30 @@ namespace DCRSWebUI
         }
 
 
-
-
+        /// <summary>
+        /// Method for getting available actions, given a process, process instance and principal.
+        /// </summary>
+        /// <param name="knownCategoryValues">Contains the selected principal.</param>
+        /// <param name="category"></param>
+        /// <param name="contextKey">Contains the processId and processInstanceId, formatted as "[processId].[processInstanceId]" </param>
+        /// <returns></returns>
         [WebMethod]
         public CascadingDropDownNameValue[] GetActions(
                 string knownCategoryValues,
                 string category, string contextKey)
         {
 
-            processId = Int16.Parse(contextKey.Split('.')[0]);
-            processInstanceId = Int16.Parse(contextKey.Split('.')[1]);
+            int processId = Int16.Parse(contextKey.Split('.')[0]);
+            int processInstanceId = Int16.Parse(contextKey.Split('.')[1]);
 
             if (processId != -1 && processInstanceId != -1)
             {
                 string[] _categoryValues = knownCategoryValues.Split(':', ';');
                 string selectedPrincipal =_categoryValues[1];
 
-                DCRSProcess p = ActiveProcessInstance;
+                DCRSProcess p = GetProcessInstance(processId, processInstanceId);
                 List<CascadingDropDownNameValue> values =
                   new List<CascadingDropDownNameValue>();
-
 
                 foreach (var a in p.Runtime.CurrentState.EnabledActions)
                 {

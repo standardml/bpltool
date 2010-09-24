@@ -11,15 +11,32 @@ namespace DCRSWebUI
 {
     public partial class ProcessExecution : System.Web.UI.Page
     {
-        //private int processId { get { if (Session["processId"] != null) return (int)Session["processId"]; else return -1; } }
-        //private int processInstanceId { get { if (Session["processInstanceId"] != null) return (int)Session["processInstanceId"]; else return -1; } }
+        /// <summary>
+        /// Helper properties for checking existance of and retrieving process(Instance)Ids.
+        /// </summary>
         private bool processIdExists { get { return (Session["processId"] != null); } }
         private bool processInstanceIdExists { get { return (Session["processInstanceId"] != null); } }
-
         private int processId { get { return (int)Session["processId"]; } }
         private int processInstanceId { get { return (int)Session["processInstanceId"]; } }
-        private DCRSProcess ActiveProcessInstance { get { return GetActiveProcessInstance(); } }
 
+        /// <summary>
+        /// Helper method and property for retrieving the process instance being executed.
+        /// </summary>
+        private DCRSProcess ActiveProcessInstance { get { return GetActiveProcessInstance(); } }
+        private DCRSProcess GetActiveProcessInstance()
+        {
+            string processInstanceXml = RemoteServicesHandler.GetProcessInstance(processId, processInstanceId);
+            DCRSProcess DCRSProcessInstance = DCRSProcess.Deserialize(processInstanceXml);
+            return DCRSProcessInstance;
+        }
+
+
+        /// <summary>
+        /// On PageLoad:    if a process ID and process Instance ID have been provided then fill the principals dropdownlist, 
+        ///                 otherwise call the process selection page.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         protected void Page_Load(object sender, EventArgs e)
         {
             if (processIdExists && processInstanceIdExists)
@@ -34,13 +51,10 @@ namespace DCRSWebUI
             }            
         }
 
-        private DCRSProcess GetActiveProcessInstance()
-        {
-            string processInstanceXml = RemoteServicesHandler.GetProcessInstance(processId, processInstanceId);
-            DCRSProcess DCRSProcessInstance = DCRSProcess.Deserialize(processInstanceXml);
-            return DCRSProcessInstance;
-        }
-
+        /// <summary>
+        /// Updates the principals dropdownlist.
+        /// </summary>
+        /// <param name="p"></param>
         private void UpdatePrincipals(DCRSProcess p)
         {
             if (lbPrincipals.SelectedIndex == -1)
@@ -55,41 +69,11 @@ namespace DCRSWebUI
             }
         }
 
-        private void UpdateExecutableActions(DCRSProcess p)
-        {
-
-            lbActions.Items.Clear();
-
-            lbActions.Items.Add(new ListItem("Select Action", "-1"));
-
-            if (lbPrincipals.SelectedIndex == -1) return;
-            string selectedPrincipal = lbPrincipals.Items[lbPrincipals.SelectedIndex].Value;
-            
-            foreach (var a in p.Runtime.CurrentState.EnabledActions)
-            {
-                bool found = false;
-                foreach (string role in p.Specification.ActionsToRolesDictionary[a])
-                {
-                    if (found) break;
-                    foreach (string principal in p.Specification.RolesToPrincipalsDictionary[role])
-                    {
-                        if (principal == selectedPrincipal)
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-                if (found)
-                    lbActions.Items.Add(new ListItem(p.Specification.ActionList[a], a.ToString()));
-            }            
-        }
-
-        protected void lbPrincipals_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            UpdateExecutableActions(ActiveProcessInstance);
-        }
-
+        /// <summary>
+        /// Executes an action for a given principal.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         protected void btnExecute_Click(object sender, EventArgs e)
         {
             if (lbPrincipals.SelectedIndex == -1) return;
@@ -97,7 +81,6 @@ namespace DCRSWebUI
             string selectedPrincipal = lbPrincipals.Items[lbPrincipals.SelectedIndex].Value;
             short selectedAction = Int16.Parse(lbActions.Items[lbActions.SelectedIndex].Value);
             var actionExecuteResult = RemoteServicesHandler.ExecuteAction(processId, processInstanceId, selectedAction, selectedPrincipal);
-            UpdateExecutableActions(ActiveProcessInstance);
         }
 
     }
