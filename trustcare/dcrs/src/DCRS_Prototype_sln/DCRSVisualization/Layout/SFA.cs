@@ -1,5 +1,4 @@
-﻿// Simple force based algorithm.
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,9 +6,14 @@ using System.Diagnostics;
 
 namespace ITU.DK.DCRS.Visualization.Layout
 {
-  class SFALayoutProvider<ST, LT> : LayoutProvider<ST, LT> where ST : IEquatable<ST>
-  {
-            public Dictionary<ST, Vector2> NodePositions;
+    /// <summary>
+    /// Layoutprovider that implements a fairly basic force-based algorithm.
+    /// </summary>
+    /// <typeparam name="ST">State type</typeparam>
+    /// <typeparam name="LT">Label type</typeparam>
+    class SFALayoutProvider<ST, LT> : LayoutProvider<ST, LT> where ST : IEquatable<ST>
+    {
+        public Dictionary<ST, Vector2> NodePositions;
         public Dictionary<ST, Vector2> NodeVelocities;
         Graph<ST, LT> TargetGraph;
         public Set<ST> StabileNodes;
@@ -31,34 +35,9 @@ namespace ITU.DK.DCRS.Visualization.Layout
             return result;
         }
 
-     
-        /*
-         
- set up initial node velocities to (0,0)
- set up initial node positions randomly // make sure no 2 nodes are in exactly the same position
- loop
-     total_kinetic_energy := 0 // running sum of total kinetic energy over all particles
-     for each node
-         net-force := (0, 0) // running sum of total force on this particular node
-         
-         for each other node
-             net-force := net-force + Coulomb_repulsion( this_node, other_node )
-         next node
-         
-         for each spring connected to this node
-             net-force := net-force + Hooke_attraction( this_node, spring )
-         next spring
-         
-         // without damping, it moves forever
-         this_node.velocity := (this_node.velocity + timestep * net-force) * damping
-         this_node.position := this_node.position + timestep * this_node.velocity
-         total_kinetic_energy := total_kinetic_energy + this_node.mass * (this_node.velocity)^2
-     next node
- until total_kinetic_energy is less than some small number  // the simulation has stopped moving         
-                  
-         */
-    
-
+        /// <summary>
+        /// Initializes the layout provider.
+        /// </summary>
         public void initRun()
         {
             Random rand = new Random();
@@ -77,6 +56,10 @@ namespace ITU.DK.DCRS.Visualization.Layout
                 NodePositions.Add(s, new Vector2(500, 500));
             }
         }
+
+        /// <summary>
+        /// Executes the algorithm until it ends.
+        /// </summary>
         public void Run()
         {
             initRun();
@@ -89,32 +72,13 @@ namespace ITU.DK.DCRS.Visualization.Layout
             }            
         }
     
-
-        /*
-              total_kinetic_energy := 0 // running sum of total kinetic energy over all particles
-             for each node
-                 net-force := (0, 0) // running sum of total force on this particular node
-         
-                 for each other node
-                     net-force := net-force + Coulomb_repulsion( this_node, other_node )
-                 next node
-         
-                 for each spring connected to this node
-                     net-force := net-force + Hooke_attraction( this_node, spring )
-                 next spring
-         
-                 // without damping, it moves forever
-                 this_node.velocity := (this_node.velocity + timestep * net-force) * damping
-                 this_node.position := this_node.position + timestep * this_node.velocity
-                 total_kinetic_energy := total_kinetic_energy + this_node.mass * (this_node.velocity)^2
-             next node
-
- 
-         */
-
         float timestep = 0f;
         float damping = 0.1f;
-    
+
+        /// <summary>
+        /// Executes the algorithm for a single step.
+        /// </summary>
+        /// <returns></returns>    
         public float RunOnce()
         {
             float total_kinetic_energy = 0;
@@ -148,8 +112,14 @@ namespace ITU.DK.DCRS.Visualization.Layout
             return total_kinetic_energy;
         }
 
-        // just implement vectors for the velocities? and positions for that matter...
 
+        /// <summary>
+        /// Calculates the attraction between two nodes because of a connecting edge.
+        /// </summary>
+        /// <param name="netforce"></param>
+        /// <param name="s"></param>
+        /// <param name="s2"></param>
+        /// <returns></returns>
         private Vector2 Hooke_attraction(Vector2 netforce, ST s, ST s2)
         {
             //throw new NotImplementedException();
@@ -170,13 +140,16 @@ namespace ITU.DK.DCRS.Visualization.Layout
                 Vector2 change = dif * attraction;
                 result = result + change;
             }
-
-
-
             return result;
-
         }
 
+        /// <summary>
+        /// Calculates the repulsion between two nodes.
+        /// </summary>
+        /// <param name="netforce"></param>
+        /// <param name="s"></param>
+        /// <param name="s2"></param>
+        /// <returns></returns>
         private Vector2 Coulomb_repulsion(Vector2 netforce, ST s, ST s2)
         {
             Vector2 result = new Vector2(netforce.X, netforce.Y);
@@ -192,59 +165,19 @@ namespace ITU.DK.DCRS.Visualization.Layout
             }
             else if (dis < 300)
             {
-                //double factor = Math.Round((50 - dis));
-                //float repulsion = (float)(Math.Pow(2, factor) * -1);                                
-                //double factor = Math.Round((200 - dis))/10;
-                //float repulsion = (float)((factor * factor) * -1);                                
-                //float repulsion = (float)(Math.Pow(2, factor) * -1);                                
-
                 float adis = Math.Max(1, dis - 200);
 
                 float repulsion = 20000f / (adis * adis);
-
 
                 dif = dif.Normalize();
                 change = dif * repulsion;
                 result = result + change;
             }
-
-            /*
-            if (s.ToString() == "B")
-            {
-                Debug.Write("Repellor: ");
-                Debug.Write(s2);
-                Debug.Write("Netforce: ");
-                Debug.Write(netforce);
-                Debug.Write(" Difference: ");
-                Debug.Write(dif);
-                Debug.Write(" Distance: ");
-                Debug.Write(dis);
-                Debug.Write(" Change: ");
-                Debug.Write(change);
-                Debug.Write(" Result: ");
-                Debug.WriteLine(result);
-            }
-            */
-            
-
-            /*
-            if ((Math.Abs(Math.Abs(NodePositions[s].lhs) - Math.Abs(NodePositions[s2].lhs)) < 10) 
-                && (Math.Abs(Math.Abs(NodePositions[s].lhs) - Math.Abs(NodePositions[s2].lhs)) > 0))
-            {
-                result.lhs += 1 / (NodePositions[s].lhs - NodePositions[s2].lhs);
-            }
-            if ((Math.Abs(Math.Abs(NodePositions[s].rhs) - Math.Abs(NodePositions[s2].rhs)) < 10)
-                            && (Math.Abs(Math.Abs(NodePositions[s].rhs) - Math.Abs(NodePositions[s2].rhs)) > 0))
-            {
-                result.rhs += 1 / (NodePositions[s].rhs - NodePositions[s2].rhs);
-            }*/
             return result;
         }
-        
-        
     }
 
-  
+
     
 
     public class Pair<LT, RT> where LT : IEquatable<LT> where RT : IEquatable<RT>

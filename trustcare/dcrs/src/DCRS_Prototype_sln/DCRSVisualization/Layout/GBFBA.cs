@@ -1,5 +1,4 @@
-﻿/// Grid based force based algorithm. (this so needs a better name :P)
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,6 +6,13 @@ using System.Diagnostics;
 
 namespace ITU.DK.DCRS.Visualization.Layout
 {
+    /// <summary>
+    /// Layoutprovider that implements a force-based inspired algorithm that keeps states in a strict grid,
+    /// does not allow them to overlap and under those conditions moves them closer together based on tension
+    /// provided by edges.
+    /// </summary>
+    /// <typeparam name="ST">State type</typeparam>
+    /// <typeparam name="LT">Label type</typeparam>
   class GBFBALayoutProvider<ST, LT> : LayoutProvider<ST, LT> where ST : IEquatable<ST>
   {
         private Dictionary<ST, Vector2> NodePositions;
@@ -34,6 +40,12 @@ namespace ITU.DK.DCRS.Visualization.Layout
             Grid = new ST[20, 20]; // eventually set limits dynamically...
         }
 
+        /// <summary>
+        /// Sets the position of a node s to a position p, if that position is empty.
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="p"></param>
+        /// <returns>False if a node already exists in position p.</returns>
         public bool SetNodePosition(ST s, Vector2 p)
         {
           if (Grid[(int)p.X, (int)p.Y].Equals(default(ST)))
@@ -45,7 +57,12 @@ namespace ITU.DK.DCRS.Visualization.Layout
           else
             return false;
         }
-
+        
+        /// <summary>
+        /// Changes the position of a node s to a position p. If there is already a node s2 in p, then s2 will be moved to the current position of s.
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="p"></param>
         public void ChangeNodePosition(ST s, Vector2 p)
         {
           if (Grid[(int)p.X, (int)p.Y] == null)
@@ -62,25 +79,33 @@ namespace ITU.DK.DCRS.Visualization.Layout
             NodePositions[s] = p;
           }
         }
-
-
-
-        // include a check here to see if they're neighbours and then not add any tension?
+  
+        /// <summary>
+        /// Calculates the tension on a node s.
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
         public Vector2 CalcTension(ST s)
         {
-          Vector2 result = new Vector2(0, 0);
-          foreach (Edge<ST, LT> e in TargetGraph.OutgoingEdges[s])
-          {
+            Vector2 result = new Vector2(0, 0);
+            foreach (Edge<ST, LT> e in TargetGraph.OutgoingEdges[s])
+            {
             result += NodePositions[e.d] - NodePositions[s];            
-          }
+            }
 
-          foreach (Edge<ST, LT> e in TargetGraph.IncomingEdges[s])
-          {
+            foreach (Edge<ST, LT> e in TargetGraph.IncomingEdges[s])
+            {
             result += NodePositions[e.s] - NodePositions[s];            
-          }
-          return result;
+            }
+            return result;
         }
 
+        /// <summary>
+        /// Calculates hypothetical tension on a node s, in case some offset is applied to it.
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
         public Vector2 CalcTensionWithOffset(ST s, Vector2 offset)
         {
           Vector2 result = new Vector2(0, 0);
@@ -106,7 +131,10 @@ namespace ITU.DK.DCRS.Visualization.Layout
         }
 
 
-
+        /// <summary>
+        /// Finds the node with the highest tension on it.
+        /// </summary>
+        /// <returns></returns>
         public ST MaxTensionNode()
         {
           double maxTension = 0;
@@ -122,6 +150,9 @@ namespace ITU.DK.DCRS.Visualization.Layout
           return result;
         }
 
+        /// <summary>
+        /// Initializes the layout provider.
+        /// </summary>
         public void initRun()
         {
             Random rand = new Random(3);
@@ -148,6 +179,14 @@ namespace ITU.DK.DCRS.Visualization.Layout
             }
         }
 
+        /// <summary>
+        ///  Basically calculates the the change in tension on the system in case a node if moved by a certain offset.
+        ///  However, it doesn't substract the original tension of the one or two nodes that got moved.
+        ///  [[Basically this piece of code should be restructured a bit so that it's easier to understand and document.]]
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
         public double changeWithOffset(ST s, Vector2 offset)
         {
           double result = 0;
@@ -167,6 +206,10 @@ namespace ITU.DK.DCRS.Visualization.Layout
           return result;
         }
 
+        /// <summary>
+        /// Executes the algorithm for a single step.
+        /// </summary>
+        /// <returns></returns>
         public bool RunOnce()
         {
           ST s = MaxTensionNode();
@@ -266,6 +309,9 @@ namespace ITU.DK.DCRS.Visualization.Layout
           return true;
         }
 
+        /// <summary>
+        /// Executes the algorithm until it ends.
+        /// </summary>
         public void Run()
         {
             initRun();
