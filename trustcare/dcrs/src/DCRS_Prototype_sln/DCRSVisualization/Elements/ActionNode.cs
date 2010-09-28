@@ -65,6 +65,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
     public Boolean included = true;             /// Is the action currently included?
     public Boolean pendingResponse = false;     /// Is this action required to be performed as a response?      
     public Boolean hasExecuted = false;         /// Has this action eben executed at least one?
+    public Boolean enabled = false;             /// Is the action currently enabled?                                                
 
     int[] used = new int[4];
         
@@ -85,6 +86,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
         included = r.CurrentState.StateVector.IncludedActions.Contains(this.ID);
         pendingResponse = r.CurrentState.StateVector.PendingResponseActions.Contains(this.ID);
         hasExecuted = r.CurrentState.StateVector.ExecutedActions.Contains(this.ID);
+        enabled = r.CurrentState.EnabledActions.Contains(this.ID);
     }
 
 
@@ -168,6 +170,8 @@ namespace ITU.DK.DCRS.Visualization.Elements
 
         g.DrawRectangle(DrawingPen, Location.ToPoint.X, Location.ToPoint.Y - 80, 50, ROLEBOX_HEIGHT);
 
+        if (!included) DrawingPen.DashStyle = DashStyle.Solid;
+
         string rString = "";
         //int offset = 0;
         foreach (String r in Roles)
@@ -187,9 +191,20 @@ namespace ITU.DK.DCRS.Visualization.Elements
 
         TextBrush = Brushes.Green;
         TextFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
-        if (hasExecuted) g.DrawString("V", TextFont, TextBrush, (Location + new Vector2(-45, -45)).ToPoint);
+        if (hasExecuted) g.DrawString("V", TextFont, TextBrush, (Location + new Vector2(-48, -45)).ToPoint);
 
-        if (!included) DrawingPen.DashStyle = DashStyle.Solid;
+
+
+        DrawingPen.Brush = Brushes.Red;
+        if (!enabled)
+        {
+            g.DrawEllipse(DrawingPen, Location.ToPoint.X - 30, Location.ToPoint.Y - 47, 20,20);
+            g.DrawLine(DrawingPen, (Location + new Vector2(-20, -37) + new Vector2(7, -7)).ToPoint, (Location + new Vector2(-20, -37) + new Vector2(-7, 7)).ToPoint);
+        }
+        DrawingPen.Brush = Brushes.Black;
+
+
+        
     }
 
     /// <summary>

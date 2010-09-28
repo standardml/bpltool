@@ -16,10 +16,15 @@ namespace DCRSWebUI
         void Application_Start(object sender, EventArgs e)
         {
             // Code that runs on application startup
-
+            try
+            {
             RemoteServicesHandler.HostSubscriptionServiceClient();
             RemoteServicesHandler.HostNotificationService();
-
+            }
+            catch (Exception exception)
+            {
+                //LOG(exception.Message);
+            }
         }
 
         void Application_End(object sender, EventArgs e)
