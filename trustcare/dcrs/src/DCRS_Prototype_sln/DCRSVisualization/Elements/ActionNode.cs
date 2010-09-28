@@ -45,6 +45,10 @@ namespace ITU.DK.DCRS.Visualization.Elements
     static public int NODE_HEIGHT = 100;
     static public int ROLEBOX_HEIGHT = 30;
 
+    static public int HALF_NODE_WIDTH = (NODE_WIDTH/2);
+    static public int HALF_NODE_HEIGHT = (NODE_HEIGHT/2);
+
+
     short ID;                                 /// ID of this node in corresponding specification.
     String Name;                              /// Name of the action that this node represents.
     List<String> Roles;                       /// The roles that can execute the Action.
@@ -154,7 +158,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
     public void Draw(Graphics g)
     {
         if (!included) DrawingPen.DashStyle = DashStyle.Dash;
-        g.DrawRectangle(DrawingPen, Location.ToPoint.X - 50, Location.ToPoint.Y - 50, 100, 100);
+        g.DrawRectangle(DrawingPen, Location.ToPoint.X - (NODE_WIDTH / 2), Location.ToPoint.Y - (NODE_HEIGHT / 2), NODE_WIDTH, NODE_HEIGHT);
         //g.DrawString(Name, TextFont, TextBrush, Location.ToPoint);
         StringFormat sf = new StringFormat();
         sf.Alignment = StringAlignment.Center;
@@ -278,44 +282,44 @@ namespace ITU.DK.DCRS.Visualization.Elements
     /// <returns>The point of intersection. Throws an exception incase no such point exists.</returns>
     public Point RectIntersect(Point src, Point dst)
     {
-      Point topRight = new Point(Location.ToPoint.X + 50, Location.ToPoint.Y - 50);
-      Point bottomRight = new Point(Location.ToPoint.X + 50, Location.ToPoint.Y + 50);
+        Point topRight = new Point(Location.ToPoint.X + HALF_NODE_WIDTH, Location.ToPoint.Y - HALF_NODE_HEIGHT);
+        Point bottomRight = new Point(Location.ToPoint.X + HALF_NODE_WIDTH, Location.ToPoint.Y + HALF_NODE_HEIGHT);
 
-      Point topLeft = new Point(Location.ToPoint.X - 50, Location.ToPoint.Y - 50);
-      Point bottomLeft = new Point(Location.ToPoint.X - 50, Location.ToPoint.Y + 50);
+        Point topLeft = new Point(Location.ToPoint.X - HALF_NODE_WIDTH, Location.ToPoint.Y - HALF_NODE_HEIGHT);
+        Point bottomLeft = new Point(Location.ToPoint.X - HALF_NODE_WIDTH, Location.ToPoint.Y + HALF_NODE_HEIGHT);
 
-      Point Right = VisualizationHelper.Intersection(topRight, bottomRight, src, dst);
-      Point Left = VisualizationHelper.Intersection(topLeft, bottomLeft, src, dst);
-      Point Top = VisualizationHelper.Intersection(topRight, topLeft, src, dst);
-      Point Bottom = VisualizationHelper.Intersection(bottomLeft, bottomRight, src, dst);
+        Point Right = VisualizationHelper.Intersection(topRight, bottomRight, src, dst);
+        Point Left = VisualizationHelper.Intersection(topLeft, bottomLeft, src, dst);
+        Point Top = VisualizationHelper.Intersection(topRight, topLeft, src, dst);
+        Point Bottom = VisualizationHelper.Intersection(bottomLeft, bottomRight, src, dst);
 
-      if (VisualizationHelper.ValidPoint(Right))
-      {
-        if (VisualizationHelper.ValidPoint(Bottom))
-          return bottomRight;
+        if (VisualizationHelper.ValidPoint(Right))
+        {
+            if (VisualizationHelper.ValidPoint(Bottom))
+                return bottomRight;
+            else if (VisualizationHelper.ValidPoint(Top))
+                return topRight;
+            else return Right;
+        }
+        else if (VisualizationHelper.ValidPoint(Left))
+        {
+            if (VisualizationHelper.ValidPoint(Bottom))
+                return bottomLeft;
+            else if (VisualizationHelper.ValidPoint(Top))
+                return topLeft;
+            else return Left;
+        }
         else if (VisualizationHelper.ValidPoint(Top))
-          return topRight;
-        else return Right;
-      }
-      else if (VisualizationHelper.ValidPoint(Left))
-      {
-        if (VisualizationHelper.ValidPoint(Bottom))
-          return bottomLeft;
-        else if (VisualizationHelper.ValidPoint(Top))
-          return topLeft;
-        else return Left;
-      }
-      else if (VisualizationHelper.ValidPoint(Top))
-      {
-        // already covered the corner exceptions
-        return Top;
-      }
-      else if (VisualizationHelper.ValidPoint(Bottom))
-      {
-        // already covered the corner exceptions
-        return Bottom;
-      }
-      throw new Exception("Invalid execution point - there should always be an intersection between a rectangle and a line going from it's center to some point outside the rectangle!");
+        {
+            // already covered the corner exceptions
+            return Top;
+        }
+        else if (VisualizationHelper.ValidPoint(Bottom))
+        {
+            // already covered the corner exceptions
+            return Bottom;
+        }
+        throw new Exception("Invalid execution point - there should always be an intersection between a rectangle and a line going from it's center to some point outside the rectangle!");
     }
 
 
@@ -326,10 +330,10 @@ namespace ITU.DK.DCRS.Visualization.Elements
     /// <param name="ncSrc"></param>
     internal void LockConnector(NodeConnector ncSrc)
     {
-      used[(int)ncSrc.Side]++;
-      FreeConnectors.Remove(ncSrc);
-      //ncSrc.Used = true;
-      UsedConnectors.Add(ncSrc);
+        used[(int)ncSrc.Side]++;
+        FreeConnectors.Remove(ncSrc);
+        //ncSrc.Used = true;
+        UsedConnectors.Add(ncSrc);
     }
   }
 }

@@ -83,5 +83,13 @@ namespace DCRSWebUI
             var actionExecuteResult = RemoteServicesHandler.ExecuteAction(processId, processInstanceId, selectedAction, selectedPrincipal);
         }
 
+        protected void btnChangeProcess_Click(object sender, EventArgs e)
+        {
+            Session["processId"] = null;
+            Session["processInstanceId"] = null;
+            Session.Add("returnPage", "ProcessExecution.aspx");
+            Server.Transfer("ProcessSelection.aspx");
+        }
+
     }
 }

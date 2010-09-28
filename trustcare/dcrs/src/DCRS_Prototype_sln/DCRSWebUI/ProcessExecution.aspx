@@ -20,7 +20,7 @@ ServicePath="services/ExecutionAssistanceService.asmx"
 Category="Action" />
 <h2>
     Process execution<br />
-    <asp:Label ID="lProcessName" runat="server" Text="Label"></asp:Label>
+    <asp:Label ID="lProcessName" runat="server" Text="Label"></asp:Label>    
 </h2>
 <div>
     <div>        
@@ -42,6 +42,8 @@ Category="Action" />
                                 <br/>
                                 <asp:Button ID="btnExecute" runat="server" Text="Execute" 
                                     onclick="btnExecute_Click" />
+                                <asp:Button ID="btnChangeProcess" runat="server" Text="Change Process" 
+                                    onclick="btnChangeProcess_Click" />
                             </td>
                         </tr>
                     </table>
