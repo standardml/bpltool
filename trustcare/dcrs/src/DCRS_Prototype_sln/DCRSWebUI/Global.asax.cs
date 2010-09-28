@@ -4,6 +4,9 @@ using System.Linq;
 using System.Web;
 using System.Web.Security;
 using System.Web.SessionState;
+using ITU.DK.DCRS.RemoteServices;
+//using ITU.DK.DCRS.CommonTypes.ServiceContracts;
+
 
 namespace DCRSWebUI
 {
@@ -13,6 +16,9 @@ namespace DCRSWebUI
         void Application_Start(object sender, EventArgs e)
         {
             // Code that runs on application startup
+
+            RemoteServicesHandler.HostSubscriptionServiceClient();
+            RemoteServicesHandler.HostNotificationService();
 
         }
 
