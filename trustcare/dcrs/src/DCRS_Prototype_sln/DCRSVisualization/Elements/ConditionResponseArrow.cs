@@ -7,10 +7,10 @@ using System.Drawing.Drawing2D;
 
 namespace ITU.DK.DCRS.Visualization.Elements
 {
-  public class ConditionArrow : Arrow
+  public class ConditionReponseArrow : Arrow
   {
 
-    public ConditionArrow(System.Drawing.Brush arrowBrush, System.Drawing.Pen arrowPen, ActionNode actionNode, ActionNode actionNode_2) 
+      public ConditionReponseArrow(System.Drawing.Brush arrowBrush, System.Drawing.Pen arrowPen, ActionNode actionNode, ActionNode actionNode_2) 
       : base(arrowBrush, arrowPen, actionNode, actionNode_2)
     {
     }
@@ -21,6 +21,10 @@ namespace ITU.DK.DCRS.Visualization.Elements
         arrowPen.Brush = arrowBrush;
         base.Draw(g);
         g.FillEllipse(arrowBrush, ArrowDst.ToPoint.X - 3, ArrowDst.ToPoint.Y - 3, 6, 6);
+
+        arrowBrush = Brushes.DarkOrange;
+        arrowPen.Brush = arrowBrush;
+        g.FillEllipse(arrowBrush, ArrowSrc.ToPoint.X - 3, ArrowSrc.ToPoint.Y - 3, 6, 6);
     }
   }
 }

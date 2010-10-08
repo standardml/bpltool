@@ -189,7 +189,7 @@ namespace ITU.DK.DCRS.Visualization
 
             Set<Arrow> arrows = new Set<Arrow>();
             Set<Arrow> selfarrows = new Set<Arrow>();
-
+            
             /// Draw the nodes first.
             foreach (var p in placement)
             {
@@ -199,6 +199,91 @@ namespace ITU.DK.DCRS.Visualization
               n.Draw(g);
               nodeDict.Add(p.Key, n);
             }
+
+            ShortHandFinder shf = new ShortHandFinder(spec);
+
+            foreach (var x in shf.Conditions)
+                foreach (var y in x.Value)
+                {
+                    short srcAction = y.Key;
+                    short dstAction = x.Key;
+                    ConditionArrow Arrow = new ConditionArrow(arrowBrush, arrowPen, nodeDict[srcAction], nodeDict[dstAction]);
+                    if (!srcAction.Equals(dstAction))
+                        arrows.Add(Arrow);
+                    else
+                        selfarrows.Add(Arrow);
+                }
+
+
+            foreach (var x in shf.Responses)
+                foreach (var y in x.Value)
+                {
+                    short srcAction = x.Key;
+                    short dstAction = y.Key;
+                    ResponseArrow Arrow = new ResponseArrow(arrowBrush, arrowPen, nodeDict[srcAction], nodeDict[dstAction]);
+                    if (!srcAction.Equals(dstAction))
+                        arrows.Add(Arrow);
+                    else
+                        selfarrows.Add(Arrow);
+                }
+
+
+
+            foreach (var x in shf.Includes)
+                foreach (var y in x.Value)
+                {
+                    short srcAction = x.Key;
+                    short dstAction = y.Key;
+                    InclusionArrow Arrow = new InclusionArrow(arrowBrush, arrowPen, activityFont, nodeDict[srcAction], nodeDict[dstAction]);
+                    if (!srcAction.Equals(dstAction))
+                        arrows.Add(Arrow);
+                    else
+                        selfarrows.Add(Arrow);
+                }
+
+
+            foreach (var x in shf.Excludes)
+                foreach (var y in x.Value)
+                {
+                    short srcAction = x.Key;
+                    short dstAction = y.Key;
+                    ExclusionArrow Arrow = new ExclusionArrow(arrowBrush, arrowPen, activityFont, nodeDict[srcAction], nodeDict[dstAction]);
+                    if (!srcAction.Equals(dstAction))
+                        arrows.Add(Arrow);
+                    else
+                        selfarrows.Add(Arrow);
+                }
+
+
+
+            foreach (var x in shf.ConditionResponses)
+                foreach (var y in x.Value)
+                {
+                    short srcAction = x.Key;
+                    short dstAction = y.Key;
+                    ConditionReponseArrow Arrow = new ConditionReponseArrow(arrowBrush, arrowPen, nodeDict[srcAction], nodeDict[dstAction]);
+                    if (!srcAction.Equals(dstAction))
+                        arrows.Add(Arrow);
+                    else
+                        selfarrows.Add(Arrow);
+                }
+
+
+            foreach (var x in shf.Mutexes)
+                foreach (var y in x.Value)
+                {
+                    short srcAction = x.Key;
+                    short dstAction = y.Key;
+                    MutualExclusionArrow Arrow = new MutualExclusionArrow(arrowBrush, arrowPen, activityFont, nodeDict[srcAction], nodeDict[dstAction]);
+                    if (!srcAction.Equals(dstAction))
+                        arrows.Add(Arrow);
+                    else
+                        selfarrows.Add(Arrow);
+                }
+
+
+
+            /*
 
             /// Add conditions to the lists of arrows to draw.
             for (var index = 0; index < spec.Conditions.GetLength(0); index++)
@@ -247,6 +332,7 @@ namespace ITU.DK.DCRS.Visualization
               else
                 selfarrows.Add(Arrow);
             }
+            */
 
             /// Draw normal arrows.
             foreach (var a in arrows)

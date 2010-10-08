@@ -21,11 +21,13 @@ namespace ITU.DK.DCRS.Visualization.Elements
     {
       ArrowEnd = ArrowDst - ArrowSrc;
       ArrowEnd = ArrowEnd - (ArrowEnd.Normalize() * 15) + ArrowSrc;
+
+      ArrowStart = ArrowSrc;
     }
 
     protected override void AdjustLinePoints(SelfConnector sc, int l, Point[] linePoints)
     {
-      Vector2 t = new Vector2(linePoints[l - 1]) + sc.SymbolAdjustment;
+      Vector2 t = new Vector2(linePoints[l - 1]) + sc.SymbolAdjustmentEnd;
       linePoints[l - 1] = t.ToPoint;
     }
 

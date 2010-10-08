@@ -7,11 +7,11 @@ using System.Drawing.Drawing2D;
 
 namespace ITU.DK.DCRS.Visualization.Elements
 {
-  public class InclusionArrow : Arrow
+  public class MutualExclusionArrow : Arrow
   {
     private System.Drawing.Font arrowFont;
 
-    public InclusionArrow(System.Drawing.Brush arrowBrush, System.Drawing.Pen arrowPen, System.Drawing.Font arrowFont, ActionNode actionNode, ActionNode actionNode_2)
+    public MutualExclusionArrow(System.Drawing.Brush arrowBrush, System.Drawing.Pen arrowPen, System.Drawing.Font arrowFont, ActionNode actionNode, ActionNode actionNode_2)
       : base(arrowBrush, arrowPen, actionNode, actionNode_2)
     {
       this.arrowFont = arrowFont;
@@ -22,13 +22,19 @@ namespace ITU.DK.DCRS.Visualization.Elements
       ArrowEnd = ArrowDst - ArrowSrc;
       ArrowEnd = ArrowEnd - (ArrowEnd.Normalize() * 15) + ArrowSrc;
 
-      ArrowStart = ArrowSrc;
+
+      ArrowStart = ArrowDst - ArrowSrc;
+      ArrowStart = (ArrowStart.Normalize() * 15) + ArrowSrc;
+
     }
 
     protected override void AdjustLinePoints(SelfConnector sc, int l, Point[] linePoints)
     {
       Vector2 t = new Vector2(linePoints[l - 1]) + sc.SymbolAdjustmentEnd;
       linePoints[l - 1] = t.ToPoint;
+
+      t = new Vector2(linePoints[0]) + sc.SymbolAdjustmentStart;
+      linePoints[0] = t.ToPoint;
     }
 
 
@@ -42,16 +48,27 @@ namespace ITU.DK.DCRS.Visualization.Elements
     }
 
 
+
     public override void Draw(Graphics g)
     {
-        arrowBrush = Brushes.Green;
+        arrowBrush = Brushes.Red;
         arrowPen.Brush = arrowBrush;
       base.Draw(g);
 
+      //Vector2 arrowSymbol = ArrowDst - ArrowSrc;
+      //arrowSymbol = arrowSymbol - (arrowSymbol.Normalize() * 7) + ArrowSrc;
+
       Vector2 arrowSymbol = ((ArrowDst - ArrowEnd) / 2) + ArrowEnd;
 
-      g.DrawString("+", arrowFont, arrowBrush, new Point(arrowSymbol.ToPoint.X - 5, arrowSymbol.ToPoint.Y - 7));
+      g.DrawString("%", arrowFont, arrowBrush, new Point(arrowSymbol.ToPoint.X - 6, arrowSymbol.ToPoint.Y - 6));
 
+
+      arrowSymbol = ((ArrowStart - ArrowSrc) / 2) + ArrowSrc;
+
+      g.DrawString("%", arrowFont, arrowBrush, new Point(arrowSymbol.ToPoint.X - 6, arrowSymbol.ToPoint.Y - 6));
+
+      DrawStartHead(g);
     }
+
   }
 }

@@ -29,6 +29,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
     protected Vector2 ArrowSrc; // The source of the arrow
     protected Vector2 ArrowDst; // The destination of the arrow
     protected Vector2 ArrowEnd; // The arrowtip, excluding any symbols ahead of the arrowtip.
+    protected Vector2 ArrowStart; // The arrow starting point, excluding any symbols at the start of the arrow.
 
     /// <summary>
     /// Main drawing method, makes a distinction between arrows that loopback to the same node, or arrows between different nodes.
@@ -58,12 +59,13 @@ namespace ITU.DK.DCRS.Visualization.Elements
         linePoints[i] = (srcNode.Location + sc.Locations[i]).ToPoint;
 
       ArrowDst = sc.Locations[l - 1] + srcNode.Location;
+      ArrowSrc = sc.Locations[0] + srcNode.Location;
 
       AdjustLinePoints(sc, l, linePoints);  
-
       g.DrawCurve(arrowPen, linePoints);
 
-      ArrowSrc = new Vector2(linePoints[0]);
+      
+      ArrowStart = new Vector2(linePoints[0]);
       ArrowEnd = new Vector2(linePoints[l - 1]);
 
       Vector2 head1;
@@ -73,8 +75,6 @@ namespace ITU.DK.DCRS.Visualization.Elements
 
       g.DrawLine(arrowPen, ArrowEnd.ToPoint, head1.ToPoint);
       g.DrawLine(arrowPen, ArrowEnd.ToPoint, head2.ToPoint);
-
-
     }
 
     /// <summary>
@@ -127,10 +127,39 @@ namespace ITU.DK.DCRS.Visualization.Elements
     /// <param name="head2"></param>
     private void DrawStraightArrow(Graphics g, Vector2 head1, Vector2 head2)
     {
-      g.DrawLine(arrowPen, ArrowSrc.ToPoint, ArrowEnd.ToPoint);
+      g.DrawLine(arrowPen, ArrowStart.ToPoint, ArrowEnd.ToPoint);
       g.DrawLine(arrowPen, ArrowEnd.ToPoint, head1.ToPoint);
       g.DrawLine(arrowPen, ArrowEnd.ToPoint, head2.ToPoint);
     }
+
+
+    protected void DrawStartHead(Graphics g)
+    {
+        Vector2 head1;
+        Vector2 head2;
+        if (srcNode == dstNode)
+        {
+            // This should be overridable at somepoint (be in its own function), but for now there is only one arrow type using it anyway....
+            head1 = ArrowEnd - ArrowSrc;
+            head1 = (head1.Rotate(345).Normalize() * 20) + ArrowStart;
+
+            head2 = ArrowEnd - ArrowSrc;
+            head2 = (head2.Rotate(285).Normalize() * 20) + ArrowStart;
+        }
+        else
+        {
+            head1 = ArrowDst - ArrowSrc;
+            head1 = (head1.Rotate(-20).Normalize() * 20) + ArrowStart;
+
+            head2 = ArrowDst - ArrowSrc;
+            head2 = (head2.Rotate(20).Normalize() * 20) + ArrowStart;
+
+        }
+            
+        g.DrawLine(arrowPen, ArrowStart.ToPoint, head1.ToPoint);
+        g.DrawLine(arrowPen, ArrowStart.ToPoint, head2.ToPoint);
+    }
+
 
     /// <summary>
     /// Calculates vectors for drawing the head of the arrow in the case where DrawOther is called.
@@ -152,6 +181,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
     protected virtual void CalculateArrowEnd()
     {
       ArrowEnd = ArrowDst;
+      ArrowStart = ArrowSrc;
     }
 
     /// <summary>
@@ -233,8 +263,6 @@ namespace ITU.DK.DCRS.Visualization.Elements
 
       srcNode.LockConnector(toLockSrc);
       dstNode.LockConnector(toLockDst);
-
-
     }
   }
 }

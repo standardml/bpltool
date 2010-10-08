@@ -35,7 +35,8 @@ namespace ITU.DK.DCRS.Visualization.Elements
     public Vector2[] Locations;         /// Several locations that can be used for drawing an arced line or arrow from the node to itself. All vectors are relative to the center of the node.
     public NodeSide Side;               /// The side of the node that the connector is on.
     public Boolean Used;                // !! Remove this? !!
-    public Vector2 SymbolAdjustment;    /// A vector that can be used for placing a symbol at the head of the arrow. Value is relative to the last vector in Locations.
+    public Vector2 SymbolAdjustmentEnd; /// A vector that can be used for placing a symbol at the head of the arrow. Value is relative to the last vector in Locations.
+    public Vector2 SymbolAdjustmentStart; /// A vector that can be used for placing a symbol at the head of the arrow. Value is relative to the last vector in Locations.
   }
 
   
@@ -132,7 +133,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
       s.Side = NodeSide.Right;
       s.Used = false;
       s.Locations = new Vector2[3] { new Vector2((NODE_WIDTH / 2), (NODE_WIDTH / -2) - ROLEBOX_HEIGHT), new Vector2((NODE_WIDTH / 2) * 2, ROLEBOX_HEIGHT / -2), new Vector2((NODE_WIDTH / 2), (NODE_WIDTH / 2)) };
-      s.SymbolAdjustment = new Vector2(10, -10);
+      s.SymbolAdjustmentEnd = new Vector2(10, -10);
       FreeSelfConnectors.Add(s);
 
     }
@@ -248,7 +249,8 @@ namespace ITU.DK.DCRS.Visualization.Elements
         s.Side = NodeSide.Right;
         s.Used = false;
         s.Locations = new Vector2[3] { new Vector2((NODE_WIDTH / 2), (NODE_WIDTH / -2) - ROLEBOX_HEIGHT), new Vector2((NODE_WIDTH / 2) * 2, ROLEBOX_HEIGHT / -2), new Vector2((NODE_WIDTH / 2), (NODE_WIDTH / 2)) };
-        s.SymbolAdjustment = new Vector2(10, -10);
+        s.SymbolAdjustmentEnd = new Vector2(10, -10);
+        s.SymbolAdjustmentStart = new Vector2(15, 15);
         return s;
       }
 
@@ -259,7 +261,8 @@ namespace ITU.DK.DCRS.Visualization.Elements
         s.Side = NodeSide.Left;
         s.Used = false;
         s.Locations = new Vector2[3] { new Vector2((NODE_WIDTH / -2), (NODE_WIDTH / 2)), new Vector2((NODE_WIDTH / -2) * 2, 0), new Vector2((NODE_WIDTH / -2), (NODE_WIDTH / -2)) };
-        s.SymbolAdjustment = new Vector2(-10, 10);
+        s.SymbolAdjustmentEnd = new Vector2(-10, 10);
+        s.SymbolAdjustmentStart = new Vector2(-10, -10);
         return s;
       }
 
@@ -270,7 +273,8 @@ namespace ITU.DK.DCRS.Visualization.Elements
         s.Side = NodeSide.Bottom;
         s.Used = false;
         s.Locations = new Vector2[3] { new Vector2((NODE_WIDTH / 2), (NODE_WIDTH / 2)), new Vector2(0, (NODE_WIDTH / 2) * 2), new Vector2((NODE_WIDTH / -2), (NODE_WIDTH / 2)) };
-        s.SymbolAdjustment = new Vector2(10, 10);
+        s.SymbolAdjustmentEnd = new Vector2(10, 10);
+        s.SymbolAdjustmentStart = new Vector2(-10, 10);
         return s;
       }
 
@@ -281,7 +285,8 @@ namespace ITU.DK.DCRS.Visualization.Elements
         s.Side = NodeSide.Top;
         s.Used = false;
         s.Locations = new Vector2[3] { new Vector2((NODE_WIDTH / -2), (NODE_WIDTH / -2)), new Vector2(0, (NODE_WIDTH / 2) * -2), new Vector2((NODE_WIDTH / 2), (NODE_WIDTH / -2) - ROLEBOX_HEIGHT) };
-        s.SymbolAdjustment = new Vector2(-10, -10);
+        s.SymbolAdjustmentEnd = new Vector2(-10, -10);
+        s.SymbolAdjustmentStart = new Vector2(10, -10);
         return s;
       }
 
