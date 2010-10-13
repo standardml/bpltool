@@ -36,7 +36,32 @@ namespace DCRSVisualizationTest
             //g.DrawImage(Visualizer.Visualize(ITU.DK.DCRS.CommonTypes.Samples.DCRSSampleModels.GetGiveMedicineSpecification()), new Point(0,0));
 
             //most recent:
-            ITU.DK.DCRS.Visualization.Visualizer.Draw(ITU.DK.DCRS.CommonTypes.Samples.DCRSSampleModels.GetGiveMedicineSpecification(), panel1.CreateGraphics());
+
+            ITU.DK.DCRS.CommonTypes.Process.DCRSSpecification spec = ITU.DK.DCRS.CommonTypes.Samples.DCRSSampleModels.GetGiveMedicineSpecification();
+            //spec.Excludes[1, 0] = 2;
+            //spec.Excludes[1, 1] = 2;           
+            ITU.DK.DCRS.Visualization.Visualizer.Draw(spec, panel1.CreateGraphics());
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {/*
+            Placement<short> p = new Placement<short>();
+            //p.Locations.Add(0, new Point(100, 100));
+            //p.Locations.Add(1, new Point(100, 200));
+            //p.Locations.Add(2, new Point(100, 300));
+            //p.Locations.Add(3, new Point(100, 400));
+
+            //p.Locations.Add(new KeyValuePair<short, Point>(0, new Point(100, 100)));
+            //p.Locations.Add(new KeyValuePair<short, Point>(1, new Point(100, 200)));
+            //p.Locations.Add(new KeyValuePair<short, Point>(2, new Point(100, 300)));
+            //p.Locations.Add(new KeyValuePair<short, Point>(3, new Point(100, 400)));
+            p.Add(0, new Point(100, 100));
+            p.Add(1, new Point(100, 200));
+            p.Add(2, new Point(100, 300));
+            p.Add(3, new Point(100, 400));
+
+            Placement<short>.SerializeToXML(p);
+          */
         }
 
 

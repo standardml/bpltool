@@ -43,6 +43,8 @@
   <ItemGroup>
     <Compile Include="Elements\ConditionResponseArrow.cs" />
     <Compile Include="Elements\MultualExclusionArrow.cs" />
+    <Compile Include="Layout\StoredLayout.cs" />
+    <Compile Include="Placement.cs" />
     <Compile Include="ShortHandFinder.cs" />
     <Compile Include="TestVisualizer.cs" />
     <Compile Include="Elements\ActionNode.cs" />

@@ -65,9 +65,7 @@ namespace ITU.DK.DCRS.Visualization
             
             int c = 0;
 
-            Graph<short, bool> g = CreateGraphFromSpec(spec);
-
-            if (layoutProvider == null) layoutProvider = new GBFBALayoutProvider<short, bool>(g);
+            if (layoutProvider == null) layoutProvider = new GBFBALayoutProvider<short, bool>(CreateGraphFromSpec(spec));
             layoutProvider.Run();  
 
             foreach (var x in layoutProvider.GetNodePositions())
@@ -110,7 +108,7 @@ namespace ITU.DK.DCRS.Visualization
         /// </summary>
         /// <param name="spec"></param>
         /// <returns></returns>
-        private static Graph<short, bool> CreateGraphFromSpec(DCRS.CommonTypes.Process.DCRSSpecification spec)
+        internal static Graph<short, bool> CreateGraphFromSpec(DCRS.CommonTypes.Process.DCRSSpecification spec)
         {
             Graph<short, bool> g = new Graph<short, bool>();
             foreach (var a in spec.ActionList)
@@ -168,8 +166,8 @@ namespace ITU.DK.DCRS.Visualization
             DCRS.CommonTypes.Process.DCRSSpecification spec = proc.Specification;
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
-            var placement = CalculatePlacement(spec);
-            //var placement = CalculatePlacement(spec, new StoredLayout<short, bool>());
+            //var placement = CalculatePlacement(spec);
+            var placement = CalculatePlacement(spec, new StoredLayout<short, bool>(proc, CreateGraphFromSpec(spec)));
 
             //Pen acticityPen = Pens.Black;
             //Font activityFont = SystemFonts.DefaultFont;

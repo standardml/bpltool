@@ -34,6 +34,19 @@ namespace ITU.DK.DCRS.Visualization
         }
 
 
+        public void SerializeToXML()
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(Placement<ST>));
+            TextWriter textWriter;
+            if ((instanceID) > 0)
+                textWriter = new StreamWriter(@"C:\PhDWork\placements\placement#" + processID.ToString() + "#" + instanceID.ToString() + "#.xml");
+            else
+                textWriter = new StreamWriter(@"C:\PhDWork\placements\placement#" + processID.ToString() + "#.xml");
+            serializer.Serialize(textWriter, this);
+            textWriter.Close();
+        }
+
+
         static public void SerializeToXML(Placement<ST> p)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(Placement<ST>));
@@ -52,6 +65,18 @@ namespace ITU.DK.DCRS.Visualization
 
             return p;
         }
+
+        static public Placement<ST> DeserializeFromXML(int processId)
+        {
+            XmlSerializer deserializer = new XmlSerializer(typeof(Placement<ST>));
+            TextReader textReader = new StreamReader(@"C:\PhDWork\placements\placement#" + processId.ToString() + "#.xml");
+            Placement<ST> p;
+            p = (Placement<ST>)deserializer.Deserialize(textReader);
+            textReader.Close();
+
+            return p;
+        }
+
 
 
 
