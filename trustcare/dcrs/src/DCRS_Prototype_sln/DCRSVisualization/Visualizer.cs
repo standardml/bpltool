@@ -168,8 +168,8 @@ namespace ITU.DK.DCRS.Visualization
             DCRS.CommonTypes.Process.DCRSSpecification spec = proc.Specification;
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
-            //var placement = CalculatePlacement(spec);
-            var placement = CalculatePlacement(spec, new StoredLayout<short, bool>());
+            var placement = CalculatePlacement(spec);
+            //var placement = CalculatePlacement(spec, new StoredLayout<short, bool>());
 
             //Pen acticityPen = Pens.Black;
             //Font activityFont = SystemFonts.DefaultFont;
