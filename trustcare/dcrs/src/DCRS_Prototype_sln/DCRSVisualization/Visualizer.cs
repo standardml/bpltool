@@ -168,14 +168,7 @@ namespace ITU.DK.DCRS.Visualization
 
             //var placement = CalculatePlacement(spec);
             var placement = CalculatePlacement(spec, new StoredLayout<short, bool>(proc, CreateGraphFromSpec(spec)));
-
-            //Pen acticityPen = Pens.Black;
-            //Font activityFont = SystemFonts.DefaultFont;
-            //Brush activityBrush = Brushes.Black;
-
-            //Pen arrowPen = Pens.Black;
-            //Brush arrowBrush = Brushes.Black;
-
+            
             // !! Make these public fields at some point so that they can be set programatically. !!
             Pen acticityPen = new Pen(Color.Black, 2f);
             Font activityFont = new Font(FontFamily.GenericSansSerif, 10f);
@@ -279,59 +272,6 @@ namespace ITU.DK.DCRS.Visualization
                     else
                         selfarrows.Add(Arrow);
                 }
-
-
-
-            /*
-
-            /// Add conditions to the lists of arrows to draw.
-            for (var index = 0; index < spec.Conditions.GetLength(0); index++)
-            {
-              short srcAction = spec.Conditions[index, 1];
-              short dstAction = spec.Conditions[index, 0];
-              ConditionArrow Arrow = new ConditionArrow(arrowBrush, arrowPen, nodeDict[srcAction], nodeDict[dstAction]);
-              if (!srcAction.Equals(dstAction))
-                arrows.Add(Arrow);
-              else
-                selfarrows.Add(Arrow);          
-            }
-
-            /// Add responses to the lists of arrows to draw.                      
-            for (var index = 0; index < spec.Responses.GetLength(0); index++)
-            {
-              short srcAction = spec.Responses[index, 0];
-              short dstAction = spec.Responses[index, 1];
-              ResponseArrow Arrow = new ResponseArrow(arrowBrush, arrowPen, nodeDict[srcAction], nodeDict[dstAction]);
-              if (!srcAction.Equals(dstAction))
-                arrows.Add(Arrow);
-              else
-                selfarrows.Add(Arrow);
-            }
-
-            /// Add includes to the lists of arrows to draw.                      
-            for (var index = 0; index < spec.Includes.GetLength(0); index++)
-            {
-              short srcAction = spec.Includes[index, 0];
-              short dstAction = spec.Includes[index, 1];
-              InclusionArrow Arrow = new InclusionArrow(arrowBrush, arrowPen, activityFont, nodeDict[srcAction], nodeDict[dstAction]);
-              if (!srcAction.Equals(dstAction))
-                arrows.Add(Arrow);
-              else
-                selfarrows.Add(Arrow);
-            }
-
-            /// Add excludes to the lists of arrows to draw.                      
-            for (var index = 0; index < spec.Excludes.GetLength(0); index++)
-            {
-              short srcAction = spec.Excludes[index, 0];
-              short dstAction = spec.Excludes[index, 1];
-              ExclusionArrow Arrow = new ExclusionArrow(arrowBrush, arrowPen, activityFont, nodeDict[srcAction], nodeDict[dstAction]);
-              if (!srcAction.Equals(dstAction))
-                arrows.Add(Arrow);
-              else
-                selfarrows.Add(Arrow);
-            }
-            */
 
             /// Draw normal arrows.
             foreach (var a in arrows)

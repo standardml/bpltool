@@ -12,16 +12,11 @@ namespace ITU.DK.DCRS.Visualization
     {
         public int processID;
         public int instanceID;
-        //public Dictionary<ST, Point> Locations;
-        //public List<KeyValuePair<ST, Point>> Locations;
-
         public List<ST> Keys;
         public List<Point>Values;
 
         public Placement()
         {
-            //Locations = new Dictionary<ST, Point>();
-            //Locations = new List<KeyValuePair<ST, Point>>();
             Keys = new List<ST>();
             Values = new List<Point>();
         }

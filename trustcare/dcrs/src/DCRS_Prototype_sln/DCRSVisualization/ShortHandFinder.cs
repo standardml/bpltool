@@ -35,7 +35,6 @@ namespace ITU.DK.DCRS.Visualization
 
             for (var index = 0; index < spec.Responses.GetLength(0); index++)
             {
-                //Responses.Add(spec.Responses[index, 0], spec.Responses[index, 1]);
                 short s = spec.Responses[index, 0];
                 short d = spec.Responses[index, 1];
 
@@ -52,7 +51,6 @@ namespace ITU.DK.DCRS.Visualization
 
             for (var index = 0; index < spec.Excludes.GetLength(0); index++)
             {
-                //Responses.Add(spec.Responses[index, 0], spec.Responses[index, 1]);
                 short s = spec.Excludes[index, 0];
                 short d = spec.Excludes[index, 1];
 

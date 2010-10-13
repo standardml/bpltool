@@ -49,9 +49,6 @@ namespace ITU.DK.DCRS.Visualization.Elements
         arrowPen.Brush = arrowBrush;
       base.Draw(g);
 
-      //Vector2 arrowSymbol = ArrowDst - ArrowSrc;
-      //arrowSymbol = arrowSymbol - (arrowSymbol.Normalize() * 7) + ArrowSrc;
-
       Vector2 arrowSymbol = ((ArrowDst - ArrowEnd) / 2) + ArrowEnd;
 
       g.DrawString("%", arrowFont, arrowBrush, new Point(arrowSymbol.ToPoint.X - 6, arrowSymbol.ToPoint.Y - 6));

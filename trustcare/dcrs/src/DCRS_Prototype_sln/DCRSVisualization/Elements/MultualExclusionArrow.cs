@@ -25,7 +25,6 @@ namespace ITU.DK.DCRS.Visualization.Elements
 
       ArrowStart = ArrowDst - ArrowSrc;
       ArrowStart = (ArrowStart.Normalize() * 15) + ArrowSrc;
-
     }
 
     protected override void AdjustLinePoints(SelfConnector sc, int l, Point[] linePoints)
@@ -54,9 +53,6 @@ namespace ITU.DK.DCRS.Visualization.Elements
         arrowBrush = Brushes.Red;
         arrowPen.Brush = arrowBrush;
       base.Draw(g);
-
-      //Vector2 arrowSymbol = ArrowDst - ArrowSrc;
-      //arrowSymbol = arrowSymbol - (arrowSymbol.Normalize() * 7) + ArrowSrc;
 
       Vector2 arrowSymbol = ((ArrowDst - ArrowEnd) / 2) + ArrowEnd;
 
