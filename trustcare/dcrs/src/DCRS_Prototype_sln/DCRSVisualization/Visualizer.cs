@@ -27,12 +27,14 @@ namespace ITU.DK.DCRS.Visualization
             Bitmap result = new Bitmap(p.X, p.Y);
             Graphics.FromImage(result).FillRegion(Brushes.White, new Region(new Rectangle(0,0,p.X,p.Y)));
             Draw(proc, Graphics.FromImage(result));
+            //Graphics.FromImage(result).DrawString(p.X.ToString() + ":" + p.Y.ToString(), SystemFonts.DefaultFont, Brushes.Aqua, new Point(20, 20));
             return result;
         }
 
         public static Point CalculateRequiredSize(DCRS.CommonTypes.Process.DCRSProcess proc)
         {
-            var a = CalculatePlacement(proc.Specification);
+            //var a = CalculatePlacement(proc.Specification);
+            var a = CalculatePlacement(proc.Specification, new StoredLayout<short, bool>(proc, CreateGraphFromSpec(proc.Specification)));
             int maxX = 0;
             int maxY = 0;
 
