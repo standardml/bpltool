@@ -6,6 +6,8 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 using ITU.DK.DCRS.RemoteServices;
 using ITU.DK.DCRS.CommonTypes.Process;
+using System.Drawing;
+using ITU.DK.DCRS.Visualization;
 
 namespace DCRSWebUI
 {
@@ -18,6 +20,7 @@ namespace DCRSWebUI
         private bool processInstanceIdExists { get { return (Session["processInstanceId"] != null); } }
         private int processId { get { return (int)Session["processId"]; } }
         private int processInstanceId { get { return (int)Session["processInstanceId"]; } }
+        private string principal { get { return (string)Session["principal"]; } }
 
         /// <summary>
         /// Helper method and property for retrieving the process instance being executed.
@@ -78,10 +81,10 @@ namespace DCRSWebUI
 
         protected void btnSelect_Click(object sender, EventArgs e)
         {
-            string principal = lbPrincipals.Items[lbPrincipals.SelectedIndex].Value;
-            if (principal != "")
+            string p = lbPrincipals.Items[lbPrincipals.SelectedIndex].Value;
+            if (p != "")
             {
-                Session.Add("principal", principal);
+                Session.Add("principal", p);
             }
 
         }
@@ -89,6 +92,14 @@ namespace DCRSWebUI
         protected void ImageButton1_Click(object sender, ImageClickEventArgs e)
         {
             // do some execution here.
+            Point p = new Point(e.X, e.Y);
+            short action = Visualizer.GetActionByPos(p, ActiveProcessInstance);
+            
+            var actionExecuteResult = RemoteServicesHandler.ExecuteAction(processId, processInstanceId, action, principal);
+            if (!actionExecuteResult.Status)
+                errorLabel.Text = actionExecuteResult.Message;
+            else
+                errorLabel.Text = "";
         }
 
     }

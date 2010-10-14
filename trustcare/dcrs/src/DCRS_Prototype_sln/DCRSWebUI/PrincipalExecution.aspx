@@ -28,6 +28,7 @@ TagPrefix="ajaxToolkit" %>
              <tr valign=top>                            
                 <td valign=top>
                     <div>
+                        <asp:Label ID="errorLabel" runat="server" Text=""></asp:Label>
                         <asp:ImageButton ID="ImageButton1" src="principalvis.aspx" runat="server" 
                             onclick="ImageButton1_Click" />
                     </div>    

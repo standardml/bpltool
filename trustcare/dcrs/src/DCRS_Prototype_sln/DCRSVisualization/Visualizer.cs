@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using ITU.DK.DCRS.CommonTypes;
+using ITU.DK.DCRS.CommonTypes.Process;
 using ITU.DK.DCRS.Visualization.Layout;
 using ITU.DK.DCRS.Visualization.Elements;
 
@@ -341,6 +341,21 @@ namespace ITU.DK.DCRS.Visualization
                     nodeDict.Add(p.Key, n);
                 }
             }
+        }
+
+
+        // we wont need this when we unstatic the class.
+        public static short GetActionByPos(Point p, DCRSProcess proc)
+        {
+            var a = CalculatePlacement(proc.Specification, new StoredLayout<short, bool>(proc, CreateGraphFromSpec(proc.Specification)));
+
+            foreach (var x in a)
+            {
+                if (p.X < x.Value.X + 50 && p.X > x.Value.X - 50)
+                    if (p.Y < x.Value.Y + 50 && p.Y > x.Value.Y - 50)
+                        return x.Key;
+            }
+            return -1;
         }
     }
 }
