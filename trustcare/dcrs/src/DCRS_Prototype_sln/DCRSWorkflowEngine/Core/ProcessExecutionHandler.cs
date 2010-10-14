@@ -62,6 +62,21 @@ namespace ITU.DK.DCRS.WorkflowEngine.Core
                 }
 
 
+                // Check wether the action is enabled.
+                if (!processInstance.Runtime.CurrentState.EnabledActions.Contains(action))
+                {
+
+                    return new TaskResult
+                    {
+                        Status = false,
+                        Message =
+                            string.Format("The action: {0} is not enabled for execution.",
+                                          processInstance.Specification.ActionList[action])
+                    };
+                }
+
+
+
                 // Compute start state by using FinitStateProvider.
                 // Here the state number should be computed from some algorithm
                 // based on the previous states which are same as this.
