@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="modelvis.aspx.cs" Inherits="DCRSWebUI.modelvis" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="principalvis.aspx.cs" Inherits="DCRSWebUI.principalvis" %>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 

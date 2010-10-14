@@ -62,6 +62,8 @@
     <Content Include="Account\ChangePasswordSuccess.aspx" />
     <Content Include="Account\Login.aspx" />
     <Content Include="Account\Register.aspx" />
+    <Content Include="PrincipalExecution.aspx" />
+    <Content Include="principalvis.aspx" />
     <Content Include="Services\ExecutionAssistanceService.asmx" />
     <Content Include="Givemedecine.aspx" />
     <Content Include="modelvis.aspx" />
@@ -119,6 +121,20 @@
     </Compile>
     <Compile Include="Account\Register.aspx.designer.cs">
       <DependentUpon>Register.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="PrincipalExecution.aspx.cs">
+      <DependentUpon>PrincipalExecution.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PrincipalExecution.aspx.designer.cs">
+      <DependentUpon>PrincipalExecution.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="principalvis.aspx.cs">
+      <DependentUpon>principalvis.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="principalvis.aspx.designer.cs">
+      <DependentUpon>principalvis.aspx</DependentUpon>
     </Compile>
     <Compile Include="Default.aspx.cs">
       <DependentUpon>Default.aspx</DependentUpon>

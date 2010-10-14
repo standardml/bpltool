@@ -10,6 +10,6 @@
 namespace DCRSWebUI {
     
     
-    public partial class modelvis {
+    public partial class principalvis {
     }
 }

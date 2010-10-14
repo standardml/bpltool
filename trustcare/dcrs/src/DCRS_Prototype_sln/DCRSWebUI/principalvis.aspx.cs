@@ -12,19 +12,20 @@ using ITU.DK.DCRS.CommonTypes.Process;
 using ITU.DK.DCRS.Visualization;
 namespace DCRSWebUI
 {
-    public partial class modelvis : System.Web.UI.Page
+    public partial class principalvis : System.Web.UI.Page
     {
         protected void Page_Load(object sender, EventArgs e)
         {
 
                 //int processId = Request.QueryString("processId")  
             //if (Request.QueryString["processId"] != null)
-            if (Session["processId"] != null)
+            if (Session["processId"] != null && Session["principal"] != null)
             {
                 //int processId = Int16.Parse(Request.QueryString["processId"]);
 
                 string processInstanceXml;
-                int processId = (int)Session["processId"];               
+                int processId = (int)Session["processId"];
+                string principal = (string)Session["principal"];               
                 if (Session["processInstanceId"] != null)
                 {
                     int processInstanceId = (int)Session["processInstanceId"];
@@ -41,7 +42,7 @@ namespace DCRSWebUI
                 DCRSProcess DCRSProcessInstance = DCRSProcess.Deserialize(processInstanceXml);
                 
 
-                Bitmap image = Visualizer.Visualize(DCRSProcessInstance);
+                Bitmap image = Visualizer.VisualizePrincipalView(DCRSProcessInstance, principal);
 
                 Response.ContentType = "image/jpeg";
                 image.Save(Response.OutputStream, ImageFormat.Jpeg);

@@ -31,6 +31,21 @@ namespace ITU.DK.DCRS.Visualization
             return result;
         }
 
+
+        public static Bitmap VisualizePrincipalView(DCRS.CommonTypes.Process.DCRSProcess proc, string principal)
+        {
+
+            // set size dynamically?
+            Point p = CalculateRequiredSize(proc);
+
+            Bitmap result = new Bitmap(p.X, p.Y);
+            Graphics.FromImage(result).FillRegion(Brushes.White, new Region(new Rectangle(0, 0, p.X, p.Y)));
+            DrawPrincipalView(proc, Graphics.FromImage(result), principal);
+            //Graphics.FromImage(result).DrawString(p.X.ToString() + ":" + p.Y.ToString(), SystemFonts.DefaultFont, Brushes.Aqua, new Point(20, 20));
+            return result;
+        }
+
+
         public static Point CalculateRequiredSize(DCRS.CommonTypes.Process.DCRSProcess proc)
         {
             //var a = CalculatePlacement(proc.Specification);
@@ -282,6 +297,50 @@ namespace ITU.DK.DCRS.Visualization
             /// Draw arrows that loop back upon the same node last.
             foreach (var a in selfarrows)
               a.Draw(g);
+        }
+
+        public static void DrawPrincipalView(DCRS.CommonTypes.Process.DCRSProcess proc, Graphics g, String principal)
+        {
+            DCRS.CommonTypes.Process.DCRSSpecification spec = proc.Specification;
+
+
+            List<String> roles = new List<string>();
+
+            foreach (var x in spec.RolesToPrincipalsDictionary)
+            {
+                if (x.Value.Contains(principal)) roles.Add(x.Key);
+            }
+
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            //var placement = CalculatePlacement(spec);
+            var placement = CalculatePlacement(spec, new StoredLayout<short, bool>(proc, CreateGraphFromSpec(spec)));
+
+            // !! Make these public fields at some point so that they can be set programatically. !!
+            Pen acticityPen = new Pen(Color.Black, 2f);
+            Font activityFont = new Font(FontFamily.GenericSansSerif, 10f);
+            Brush activityBrush = Brushes.Black;
+
+            Pen arrowPen = new Pen(Color.Black, 1f);
+            Brush arrowBrush = Brushes.Black;
+
+            Dictionary<short, ActionNode> nodeDict = new Dictionary<short, ActionNode>();
+
+            Set<Arrow> arrows = new Set<Arrow>();
+            Set<Arrow> selfarrows = new Set<Arrow>();
+
+            /// Draw the nodes first.
+            foreach (var p in placement)
+            {
+                if (spec.ActionsToRolesDictionary[p.Key].Intersect(roles).Count() > 0)
+                {
+                    ActionNode n = new ActionNode(p.Key, spec.ActionList[p.Key], new Vector2(p.Value), acticityPen, activityBrush, activityFont);
+                    if (proc.Runtime != null) n.ApplyRuntime(proc.Runtime);
+                    n.SetRoles(spec.ActionsToRolesDictionary[p.Key]);
+                    n.Draw(g);
+                    nodeDict.Add(p.Key, n);
+                }
+            }
         }
     }
 }

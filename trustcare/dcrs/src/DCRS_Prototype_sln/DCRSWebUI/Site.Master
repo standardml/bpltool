@@ -25,6 +25,8 @@
                         <asp:MenuItem NavigateUrl="~/RepositoryView.aspx" Text="Process list"/>   
                         <asp:MenuItem NavigateUrl="~/ProcessDefinition.aspx" Text="Process edition"/>
                         <asp:MenuItem NavigateUrl="~/ProcessExecution.aspx" Text="Process execution"/>
+                        <asp:MenuItem NavigateUrl="~/PrincipalExecution.aspx" 
+                            Text="Principal Execution" Value="Principal Execution"></asp:MenuItem>
                         <asp:MenuItem NavigateUrl="~/Givemedecine.aspx" Text="Give Medecine"/>
                         <asp:MenuItem NavigateUrl="~/About.aspx" Text="About"/>                                                
                     </Items>
