@@ -48,6 +48,16 @@ namespace ITU.DK.DCRS.WorkflowEngine.Core
             try
             {
 
+                // Check wether the action exists.
+                if (!processInstance.Specification.ActionList.ContainsKey(action))
+                    return new TaskResult
+                    {
+                        Status = false,
+                        Message =
+                            string.Format("The action: {0} does not exist.",
+                                          action)
+                    };
+
                 // Check access rights whether the principal is allowed to execute the action.
                 if (!processInstance.Specification.CanExecuteAction(principal, action))
                 {
@@ -74,7 +84,6 @@ namespace ITU.DK.DCRS.WorkflowEngine.Core
                                           processInstance.Specification.ActionList[action])
                     };
                 }
-
 
 
                 // Compute start state by using FinitStateProvider.
