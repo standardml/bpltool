@@ -10,8 +10,233 @@ using ITU.DK.DCRS.Visualization.Elements;
 
 namespace ITU.DK.DCRS.Visualization
 {
-    public static class Visualizer
+    public class Visualizer
     {
+        private DCRSProcess Process;
+        private DCRSSpecification Specification { get { return Process.Specification; } }
+        private Dictionary<short, Point> Placement;
+        private LayoutProvider<short, bool> LayoutProvider;
+        private Size ImageSize;
+
+        private Pen acticityPen = new Pen(Color.Black, 2f);
+        private Font activityFont = new Font(FontFamily.GenericSansSerif, 10f);
+        private Brush activityBrush = Brushes.Black;
+
+        private Pen arrowPen = new Pen(Color.Black, 1f);
+        private Brush arrowBrush = Brushes.Black;
+
+
+        public Visualizer(DCRSProcess p)
+        {
+            Process = p;
+            LayoutProvider = new StoredLayout<short, bool>(p, CreateGraphFromSpec(p.Specification));
+            CalculatePlacement();
+            SetUp();
+        }
+
+
+        public void UpdateProcess(DCRSProcess p)
+        {
+            if (p.Specification.ProcessId == Process.Specification.ProcessId && p.Runtime.ProcessInstanceId == Process.Runtime.ProcessInstanceId)
+            {
+                Process = p;
+                UpdateRuntime();
+            }
+            else
+            {
+                Process = p;
+                SetUp();
+            }
+        }
+
+        private void UpdateRuntime()
+        {
+            /// Build up the nodes
+            foreach (var x in Nodes)
+            {               
+                if (Process.Runtime != null) x.Value.ApplyRuntime(Process.Runtime);                
+            }
+        }
+
+
+        /// <summary>
+        /// Method for visualizing a dcrs on a bitmap image.
+        /// </summary>
+        /// <param name="spec"></param>
+        /// <returns></returns>
+        public Bitmap Visualize()
+        {
+            Bitmap result = new Bitmap(ImageSize.Width, ImageSize.Height);
+            Graphics.FromImage(result).FillRegion(Brushes.White, new Region(new Rectangle(0, 0, ImageSize.Width, ImageSize.Height)));
+            Draw(Graphics.FromImage(result));            
+            return result;
+        }
+
+        /// <summary>
+        /// Method for determining the intended placement of nodes in the image to be generated.
+        /// </summary>
+        /// <param name="spec"></param>
+        /// <param name="layoutProvider"></param>
+        /// <returns></returns>
+        private void CalculatePlacement()
+        {
+            Placement = new Dictionary<short, Point>();
+                       
+            LayoutProvider.Run();
+
+            foreach (var x in LayoutProvider.GetNodePositions())
+            {
+                Placement.Add(x.Key, new Point((int)Math.Round(x.Value.X), (int)Math.Round(x.Value.Y)));
+            }
+
+            Placement = ShiftPlacementTowardsTopLeft(Placement);
+
+            CalculateImageSize();
+        }
+
+        private void CalculateImageSize()
+        {
+            int maxX = 0;
+            int maxY = 0;
+
+            foreach (var x in Placement)
+            {
+                maxX = Math.Max(x.Value.X, maxX);
+                maxY = Math.Max(x.Value.Y, maxY);
+            }
+
+            ImageSize = new Size(maxX + 200, maxY + 200);
+        }
+
+
+
+        Dictionary<short, ActionNode> Nodes = new Dictionary<short, ActionNode>();
+
+        Set<Arrow> Arrows = new Set<Arrow>();
+        Set<Arrow> SelfArrows = new Set<Arrow>();
+
+        private void SetUp()
+        {
+            /// Build up the nodes
+            foreach (var p in Placement)
+            {
+                ActionNode n = new ActionNode(p.Key, Specification.ActionList[p.Key], new Vector2(p.Value), acticityPen, activityBrush, activityFont);
+                if (Process.Runtime != null) n.ApplyRuntime(Process.Runtime);
+                n.SetRoles(Specification.ActionsToRolesDictionary[p.Key]);                
+                Nodes.Add(p.Key, n);
+            }
+
+
+            ShortHandFinder shf = new ShortHandFinder(Specification);
+            
+            // soemhow generalize this:
+            foreach (var x in shf.Conditions)
+                foreach (var y in x.Value)
+                {
+                    short srcAction = y.Key;
+                    short dstAction = x.Key;
+                    ConditionArrow Arrow = new ConditionArrow(arrowBrush, arrowPen, Nodes[srcAction], Nodes[dstAction]);
+                    if (!srcAction.Equals(dstAction))
+                        Arrows.Add(Arrow);
+                    else
+                        SelfArrows.Add(Arrow);
+                }
+
+
+            foreach (var x in shf.Responses)
+                foreach (var y in x.Value)
+                {
+                    short srcAction = x.Key;
+                    short dstAction = y.Key;
+                    ResponseArrow Arrow = new ResponseArrow(arrowBrush, arrowPen, Nodes[srcAction], Nodes[dstAction]);
+                    if (!srcAction.Equals(dstAction))
+                        Arrows.Add(Arrow);
+                    else
+                        SelfArrows.Add(Arrow);
+                }
+
+
+
+            foreach (var x in shf.Includes)
+                foreach (var y in x.Value)
+                {
+                    short srcAction = x.Key;
+                    short dstAction = y.Key;
+                    InclusionArrow Arrow = new InclusionArrow(arrowBrush, arrowPen, activityFont, Nodes[srcAction], Nodes[dstAction]);
+                    if (!srcAction.Equals(dstAction))
+                        Arrows.Add(Arrow);
+                    else
+                        SelfArrows.Add(Arrow);
+                }
+
+
+            foreach (var x in shf.Excludes)
+                foreach (var y in x.Value)
+                {
+                    short srcAction = x.Key;
+                    short dstAction = y.Key;
+                    ExclusionArrow Arrow = new ExclusionArrow(arrowBrush, arrowPen, activityFont, Nodes[srcAction], Nodes[dstAction]);
+                    if (!srcAction.Equals(dstAction))
+                        Arrows.Add(Arrow);
+                    else
+                        SelfArrows.Add(Arrow);
+                }
+
+
+
+            foreach (var x in shf.ConditionResponses)
+                foreach (var y in x.Value)
+                {
+                    short srcAction = x.Key;
+                    short dstAction = y.Key;
+                    ConditionReponseArrow Arrow = new ConditionReponseArrow(arrowBrush, arrowPen, Nodes[srcAction], Nodes[dstAction]);
+                    if (!srcAction.Equals(dstAction))
+                        Arrows.Add(Arrow);
+                    else
+                        SelfArrows.Add(Arrow);
+                }
+
+
+            foreach (var x in shf.Mutexes)
+                foreach (var y in x.Value)
+                {
+                    short srcAction = x.Key;
+                    short dstAction = y.Key;
+                    MutualExclusionArrow Arrow = new MutualExclusionArrow(arrowBrush, arrowPen, activityFont, Nodes[srcAction], Nodes[dstAction]);
+                    if (!srcAction.Equals(dstAction))
+                        Arrows.Add(Arrow);
+                    else
+                        SelfArrows.Add(Arrow);
+                }
+
+        }
+
+
+        /// <summary>
+        /// Main method for drawing a specification, that takes a graphics object to draw on.
+        /// </summary>
+        /// <param name="spec"></param>
+        /// <param name="g"></param>
+        public void Draw(Graphics g)
+        {
+            DCRSSpecification spec = Specification;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            /// Draw the nodes first.
+            foreach (var x in Nodes)
+                x.Value.Draw(g);
+
+            /// Draw normal arrows.
+            foreach (var a in Arrows)
+                a.Draw(g);
+
+            /// Draw arrows that loop back upon the same node last.
+            foreach (var a in SelfArrows)
+                a.Draw(g);
+        }
+        
+        
+        #region Static Functionality
 
         /// <summary>
         /// Method for visualizing a dcrs on a bitmap image.
@@ -25,7 +250,7 @@ namespace ITU.DK.DCRS.Visualization
             Point p = CalculateRequiredSize(proc);
 
             Bitmap result = new Bitmap(p.X, p.Y);
-            Graphics.FromImage(result).FillRegion(Brushes.White, new Region(new Rectangle(0,0,p.X,p.Y)));
+            Graphics.FromImage(result).FillRegion(Brushes.White, new Region(new Rectangle(0, 0, p.X, p.Y)));
             Draw(proc, Graphics.FromImage(result));
             //Graphics.FromImage(result).DrawString(p.X.ToString() + ":" + p.Y.ToString(), SystemFonts.DefaultFont, Brushes.Aqua, new Point(20, 20));
             return result;
@@ -79,20 +304,20 @@ namespace ITU.DK.DCRS.Visualization
         private static Dictionary<short, Point> CalculatePlacement(DCRS.CommonTypes.Process.DCRSSpecification spec, LayoutProvider<short, bool> layoutProvider = null)
         {
             Dictionary<short, Point> result = new Dictionary<short, Point>();
-            
+
             int c = 0;
 
             if (layoutProvider == null) layoutProvider = new GBFBALayoutProvider<short, bool>(CreateGraphFromSpec(spec));
-            layoutProvider.Run();  
+            layoutProvider.Run();
 
             foreach (var x in layoutProvider.GetNodePositions())
-            {              
-              result.Add(x.Key, new Point((int)Math.Round(x.Value.X), (int)Math.Round(x.Value.Y)));
+            {
+                result.Add(x.Key, new Point((int)Math.Round(x.Value.X), (int)Math.Round(x.Value.Y)));
             }
 
             result = ShiftPlacementTowardsTopLeft(result);
 
-            return result;        
+            return result;
 
         }
 
@@ -185,7 +410,7 @@ namespace ITU.DK.DCRS.Visualization
 
             //var placement = CalculatePlacement(spec);
             var placement = CalculatePlacement(spec, new StoredLayout<short, bool>(proc, CreateGraphFromSpec(spec)));
-            
+
             // !! Make these public fields at some point so that they can be set programatically. !!
             Pen acticityPen = new Pen(Color.Black, 2f);
             Font activityFont = new Font(FontFamily.GenericSansSerif, 10f);
@@ -193,20 +418,20 @@ namespace ITU.DK.DCRS.Visualization
 
             Pen arrowPen = new Pen(Color.Black, 1f);
             Brush arrowBrush = Brushes.Black;
-                        
+
             Dictionary<short, ActionNode> nodeDict = new Dictionary<short, ActionNode>();
 
             Set<Arrow> arrows = new Set<Arrow>();
             Set<Arrow> selfarrows = new Set<Arrow>();
-            
+
             /// Draw the nodes first.
             foreach (var p in placement)
             {
-              ActionNode n = new ActionNode(p.Key, spec.ActionList[p.Key], new Vector2(p.Value), acticityPen, activityBrush, activityFont);
-              if (proc.Runtime != null) n.ApplyRuntime(proc.Runtime);
-              n.SetRoles(spec.ActionsToRolesDictionary[p.Key]);
-              n.Draw(g);
-              nodeDict.Add(p.Key, n);
+                ActionNode n = new ActionNode(p.Key, spec.ActionList[p.Key], new Vector2(p.Value), acticityPen, activityBrush, activityFont);
+                if (proc.Runtime != null) n.ApplyRuntime(proc.Runtime);
+                n.SetRoles(spec.ActionsToRolesDictionary[p.Key]);
+                n.Draw(g);
+                nodeDict.Add(p.Key, n);
             }
 
             ShortHandFinder shf = new ShortHandFinder(spec);
@@ -292,11 +517,11 @@ namespace ITU.DK.DCRS.Visualization
 
             /// Draw normal arrows.
             foreach (var a in arrows)
-              a.Draw(g);
+                a.Draw(g);
 
             /// Draw arrows that loop back upon the same node last.
             foreach (var a in selfarrows)
-              a.Draw(g);
+                a.Draw(g);
         }
 
         public static void DrawPrincipalView(DCRS.CommonTypes.Process.DCRSProcess proc, Graphics g, String principal)
@@ -356,6 +581,8 @@ namespace ITU.DK.DCRS.Visualization
                         return x.Key;
             }
             return -1;
-        }
+        } 
+        #endregion
+
     }
 }
