@@ -43,6 +43,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCRSWebUI", "DCRSWebUI\DCRS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCRSRemoteServices", "DCRSRemoteService\DCRSRemoteServices.csproj", "{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCRSGraphicalEditor", "DCRSGraphicalEditor\DCRSGraphicalEditor.csproj", "{3DB76538-ABBE-4BEB-B3A8-60D93DB91815}"
+EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
 		Svn-Managed = True
@@ -217,6 +219,16 @@ Global
 		{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}.Release|x86.ActiveCfg = Release|Any CPU
+		{3DB76538-ABBE-4BEB-B3A8-60D93DB91815}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{3DB76538-ABBE-4BEB-B3A8-60D93DB91815}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{3DB76538-ABBE-4BEB-B3A8-60D93DB91815}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{3DB76538-ABBE-4BEB-B3A8-60D93DB91815}.Debug|x86.ActiveCfg = Debug|x86
+		{3DB76538-ABBE-4BEB-B3A8-60D93DB91815}.Debug|x86.Build.0 = Debug|x86
+		{3DB76538-ABBE-4BEB-B3A8-60D93DB91815}.Release|Any CPU.ActiveCfg = Release|x86
+		{3DB76538-ABBE-4BEB-B3A8-60D93DB91815}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{3DB76538-ABBE-4BEB-B3A8-60D93DB91815}.Release|Mixed Platforms.Build.0 = Release|x86
+		{3DB76538-ABBE-4BEB-B3A8-60D93DB91815}.Release|x86.ActiveCfg = Release|x86
+		{3DB76538-ABBE-4BEB-B3A8-60D93DB91815}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

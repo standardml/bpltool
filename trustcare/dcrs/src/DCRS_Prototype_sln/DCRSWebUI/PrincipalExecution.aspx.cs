@@ -22,6 +22,21 @@ namespace DCRSWebUI
         private int processInstanceId { get { return (int)Session["processInstanceId"]; } }
         private string principal { get { return (string)Session["principal"]; } }
 
+        private Visualizer visualizer { 
+            get 
+            {
+                if (Session["visualizer"] == null)
+                    Session["visualizer"] = new Visualizer(GetActiveProcessInstance());
+                return (Visualizer)Session["visualizer"]; 
+            } 
+        }
+
+        private void InitVisualizer()
+        {
+            if (Session["visualizer"] == null)
+                Session["visualizer"] = new Visualizer(GetActiveProcessInstance());
+        }
+
         /// <summary>
         /// Helper method and property for retrieving the process instance being executed.
         /// </summary>
@@ -46,6 +61,7 @@ namespace DCRSWebUI
             {
                 DCRSProcess p = ActiveProcessInstance;
                 UpdatePrincipals(p);
+                InitVisualizer();
             }
             else
             {
@@ -75,7 +91,8 @@ namespace DCRSWebUI
         {
             Session["processId"] = null;
             Session["processInstanceId"] = null;
-            Session.Add("returnPage", "ProcessExecution.aspx");
+            Session.Add("returnPage", "PrincipalExecution.aspx");
+            Session.Remove("visualizer");
             Server.Transfer("ProcessSelection.aspx");
         }
 
@@ -93,13 +110,17 @@ namespace DCRSWebUI
         {
             // do some execution here.
             Point p = new Point(e.X, e.Y);
-            short action = Visualizer.GetActionByPos(p, ActiveProcessInstance);
+            //short action = Visualizer.GetActionByPos(p, ActiveProcessInstance);
+            short action = visualizer.GetActionByPos(p);
             
             var actionExecuteResult = RemoteServicesHandler.ExecuteAction(processId, processInstanceId, action, principal);
             if (!actionExecuteResult.Status)
                 errorLabel.Text = actionExecuteResult.Message;
             else
-                errorLabel.Text = "";
+            {
+                errorLabel.Text = "";                
+            }
+            visualizer.UpdateProcess(ActiveProcessInstance);
         }
 
     }

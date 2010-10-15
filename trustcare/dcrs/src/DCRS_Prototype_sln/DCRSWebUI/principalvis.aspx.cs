@@ -14,10 +14,30 @@ namespace DCRSWebUI
 {
     public partial class principalvis : System.Web.UI.Page
     {
+
+        private Visualizer visualizer
+        {
+            get
+            {
+                return (Visualizer)Session["visualizer"];
+            }
+        }
+
+
         protected void Page_Load(object sender, EventArgs e)
         {
+            if (Session["processId"] != null && Session["principal"] != null)
+            {
+                string principal = (string)Session["principal"];
 
-                //int processId = Request.QueryString("processId")  
+                Bitmap image = visualizer.VisualizePrincipalView(principal);
+
+                Response.ContentType = "image/jpeg";
+                image.Save(Response.OutputStream, ImageFormat.Jpeg);
+            }
+
+            /*
+            //int processId = Request.QueryString("processId")  
             //if (Request.QueryString["processId"] != null)
             if (Session["processId"] != null && Session["principal"] != null)
             {
@@ -47,6 +67,7 @@ namespace DCRSWebUI
                 Response.ContentType = "image/jpeg";
                 image.Save(Response.OutputStream, ImageFormat.Jpeg);
             }
+            */
             
         }
     }

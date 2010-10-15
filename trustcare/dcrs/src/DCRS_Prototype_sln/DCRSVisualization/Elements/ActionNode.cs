@@ -186,15 +186,15 @@ namespace ITU.DK.DCRS.Visualization.Elements
         g.DrawString(rString, TextFont, TextBrush, new Rectangle((int)(Location.X + 1), (int)(Location.Y - 79), 48, 28), sf);
 
 
+        Font BoldFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
         TextBrush = Brushes.Red;
-        TextFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
-        if (pendingResponse) g.DrawString("!", TextFont, TextBrush, (Location + new Vector2(35, -45)).ToPoint);
+        //TextFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
+        if (pendingResponse) g.DrawString("!", BoldFont, TextBrush, (Location + new Vector2(35, -45)).ToPoint);
 
         TextBrush = Brushes.Green;
-        TextFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
-        if (hasExecuted) g.DrawString("V", TextFont, TextBrush, (Location + new Vector2(-48, -45)).ToPoint);
-
-
+        //TextFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
+        if (hasExecuted) g.DrawString("V", BoldFont, TextBrush, (Location + new Vector2(-48, -45)).ToPoint);
+        TextBrush = Brushes.Black;
 
         DrawingPen.Brush = Brushes.Red;
         if (!enabled)

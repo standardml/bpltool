@@ -24,12 +24,35 @@ namespace ITU.DK.DCRS.Visualization.Elements
       this.arrowPen = arrowPen;
       this.srcNode = actionNode;
       this.dstNode = actionNode_2;
+      Init();
     }
 
     protected Vector2 ArrowSrc; // The source of the arrow
     protected Vector2 ArrowDst; // The destination of the arrow
     protected Vector2 ArrowEnd; // The arrowtip, excluding any symbols ahead of the arrowtip.
     protected Vector2 ArrowStart; // The arrow starting point, excluding any symbols at the start of the arrow.
+
+
+    protected void Init()
+    {
+        if (srcNode == dstNode)
+            InitSelf();
+        else
+            InitOther();
+    }
+
+    protected void InitOther()
+    {
+        FindBestConnectors();   // really needs to be made cleaner...
+    }
+
+
+    protected SelfConnector selfConnector;
+    protected void InitSelf()
+    {
+        selfConnector = srcNode.NextSelfConnector();
+    }
+
 
     /// <summary>
     /// Main drawing method, makes a distinction between arrows that loopback to the same node, or arrows between different nodes.
@@ -49,32 +72,32 @@ namespace ITU.DK.DCRS.Visualization.Elements
     /// <param name="g"></param>
     private void DrawSelf(Graphics g)
     {
-      SelfConnector sc = srcNode.NextSelfConnector();
+        SelfConnector sc = selfConnector;
 
-      int l = sc.Locations.Length;
-      Point[] linePoints = new Point[l];
+        int l = sc.Locations.Length;
+        Point[] linePoints = new Point[l];
 
 
-      for (int i = 0; i < linePoints.Length; i++)
+        for (int i = 0; i < linePoints.Length; i++)
         linePoints[i] = (srcNode.Location + sc.Locations[i]).ToPoint;
 
-      ArrowDst = sc.Locations[l - 1] + srcNode.Location;
-      ArrowSrc = sc.Locations[0] + srcNode.Location;
+        ArrowDst = sc.Locations[l - 1] + srcNode.Location;
+        ArrowSrc = sc.Locations[0] + srcNode.Location;
 
-      AdjustLinePoints(sc, l, linePoints);  
-      g.DrawCurve(arrowPen, linePoints);
+        AdjustLinePoints(sc, l, linePoints);  
+        g.DrawCurve(arrowPen, linePoints);
 
       
-      ArrowStart = new Vector2(linePoints[0]);
-      ArrowEnd = new Vector2(linePoints[l - 1]);
+        ArrowStart = new Vector2(linePoints[0]);
+        ArrowEnd = new Vector2(linePoints[l - 1]);
 
-      Vector2 head1;
-      Vector2 head2;
-      CalcArrowHeadSelfLoop(out head1, out head2);
+        Vector2 head1;
+        Vector2 head2;
+        CalcArrowHeadSelfLoop(out head1, out head2);
 
 
-      g.DrawLine(arrowPen, ArrowEnd.ToPoint, head1.ToPoint);
-      g.DrawLine(arrowPen, ArrowEnd.ToPoint, head2.ToPoint);
+        g.DrawLine(arrowPen, ArrowEnd.ToPoint, head1.ToPoint);
+        g.DrawLine(arrowPen, ArrowEnd.ToPoint, head2.ToPoint);
     }
 
     /// <summary>
@@ -108,7 +131,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
     /// <param name="g"></param>
     public void DrawOther(Graphics g)
     {
-      FindBestConnectors();
+      //FindBestConnectors();
 
       CalculateArrowEnd();
 

@@ -14,6 +14,15 @@ namespace DCRSWebUI
 {
     public partial class modelvis : System.Web.UI.Page
     {
+
+        private Visualizer visualizer
+        {
+            get
+            {
+                return (Visualizer)Session["visualizer"];
+            }
+        }
+
         protected void Page_Load(object sender, EventArgs e)
         {
 
@@ -23,25 +32,11 @@ namespace DCRSWebUI
             {
                 //int processId = Int16.Parse(Request.QueryString["processId"]);
 
-                string processInstanceXml;
-                int processId = (int)Session["processId"];               
-                if (Session["processInstanceId"] != null)
-                {
-                    int processInstanceId = (int)Session["processInstanceId"];
-                    processInstanceXml = RemoteServicesHandler.GetProcessInstance(processId, processInstanceId);                    
-                }
-                else
-                {
-                    processInstanceXml = RemoteServicesHandler.GetProcess(processId);                    
-                }
 
-                
-                
+                Bitmap image = visualizer.Visualize();
 
-                DCRSProcess DCRSProcessInstance = DCRSProcess.Deserialize(processInstanceXml);
-                
-
-                Bitmap image = Visualizer.Visualize(DCRSProcessInstance);
+                Response.ContentType = "image/jpeg";
+                image.Save(Response.OutputStream, ImageFormat.Jpeg);
 
                 Response.ContentType = "image/jpeg";
                 image.Save(Response.OutputStream, ImageFormat.Jpeg);

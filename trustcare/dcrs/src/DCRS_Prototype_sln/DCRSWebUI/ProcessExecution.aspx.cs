@@ -6,6 +6,7 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 using ITU.DK.DCRS.RemoteServices;
 using ITU.DK.DCRS.CommonTypes.Process;
+using ITU.DK.DCRS.Visualization;
 
 namespace DCRSWebUI
 {
@@ -18,6 +19,22 @@ namespace DCRSWebUI
         private bool processInstanceIdExists { get { return (Session["processInstanceId"] != null); } }
         private int processId { get { return (int)Session["processId"]; } }
         private int processInstanceId { get { return (int)Session["processInstanceId"]; } }
+
+        private Visualizer visualizer
+        {
+            get
+            {
+                if (Session["visualizer"] == null)
+                    Session["visualizer"] = new Visualizer(GetActiveProcessInstance());
+                return (Visualizer)Session["visualizer"];
+            }
+        }
+
+        private void InitVisualizer()
+        {
+            if (Session["visualizer"] == null)
+                Session["visualizer"] = new Visualizer(GetActiveProcessInstance());
+        }
 
         /// <summary>
         /// Helper method and property for retrieving the process instance being executed.
@@ -42,6 +59,7 @@ namespace DCRSWebUI
             if (processIdExists && processInstanceIdExists)
             {
                 DCRSProcess p = ActiveProcessInstance;
+                InitVisualizer();
                 UpdatePrincipals(p);
             }
             else
@@ -81,6 +99,7 @@ namespace DCRSWebUI
             string selectedPrincipal = lbPrincipals.Items[lbPrincipals.SelectedIndex].Value;
             short selectedAction = Int16.Parse(lbActions.Items[lbActions.SelectedIndex].Value);
             var actionExecuteResult = RemoteServicesHandler.ExecuteAction(processId, processInstanceId, selectedAction, selectedPrincipal);
+            visualizer.UpdateProcess(ActiveProcessInstance);
         }
 
         protected void btnChangeProcess_Click(object sender, EventArgs e)
@@ -88,6 +107,7 @@ namespace DCRSWebUI
             Session["processId"] = null;
             Session["processInstanceId"] = null;
             Session.Add("returnPage", "ProcessExecution.aspx");
+            Session.Remove("visualizer");
             Server.Transfer("ProcessSelection.aspx");
         }
 

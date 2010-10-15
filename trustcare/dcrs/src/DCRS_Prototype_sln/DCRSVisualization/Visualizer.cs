@@ -72,6 +72,16 @@ namespace ITU.DK.DCRS.Visualization
             return result;
         }
 
+
+        public Bitmap VisualizePrincipalView(string principal)
+        {
+            Bitmap result = new Bitmap(ImageSize.Width, ImageSize.Height);
+            Graphics.FromImage(result).FillRegion(Brushes.White, new Region(new Rectangle(0, 0, ImageSize.Width, ImageSize.Height)));
+            DrawPrincipalView(Graphics.FromImage(result), principal);
+            //Graphics.FromImage(result).DrawString(p.X.ToString() + ":" + p.Y.ToString(), SystemFonts.DefaultFont, Brushes.Aqua, new Point(20, 20));
+            return result;
+        }
+
         /// <summary>
         /// Method for determining the intended placement of nodes in the image to be generated.
         /// </summary>
@@ -114,7 +124,7 @@ namespace ITU.DK.DCRS.Visualization
 
         Set<Arrow> Arrows = new Set<Arrow>();
         Set<Arrow> SelfArrows = new Set<Arrow>();
-
+        
         private void SetUp()
         {
             /// Build up the nodes
@@ -129,7 +139,6 @@ namespace ITU.DK.DCRS.Visualization
 
             ShortHandFinder shf = new ShortHandFinder(Specification);
             
-            // soemhow generalize this:
             foreach (var x in shf.Conditions)
                 foreach (var y in x.Value)
                 {
@@ -219,7 +228,6 @@ namespace ITU.DK.DCRS.Visualization
         /// <param name="g"></param>
         public void Draw(Graphics g)
         {
-            DCRSSpecification spec = Specification;
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
             /// Draw the nodes first.
@@ -234,6 +242,37 @@ namespace ITU.DK.DCRS.Visualization
             foreach (var a in SelfArrows)
                 a.Draw(g);
         }
+
+
+        public void DrawPrincipalView(Graphics g, String principal)
+        {
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+
+            List<String> roles = new List<string>();
+
+            foreach (var x in Specification.RolesToPrincipalsDictionary)
+            {
+                if (x.Value.Contains(principal)) roles.Add(x.Key);
+            }
+
+            foreach (var x in Nodes)
+                if (Specification.ActionsToRolesDictionary[x.Key].Intersect(roles).Count() > 0)
+                    x.Value.Draw(g);            
+        }
+
+
+        public short GetActionByPos(Point p)
+        {
+            foreach (var x in Placement)
+            {
+                if (p.X < x.Value.X + 50 && p.X > x.Value.X - 50)
+                    if (p.Y < x.Value.Y + 50 && p.Y > x.Value.Y - 50)
+                        return x.Key;
+            }
+            return -1;
+        } 
+
         
         
         #region Static Functionality
