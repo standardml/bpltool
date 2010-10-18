@@ -21,6 +21,8 @@ namespace ITU.DK.DCRS.Visualization.Layout
         private ST[,] Grid;
         private Set<ST> StabileNodes;
         private Set<ST> PausedNodes;
+        protected int GridWidth = 100;
+        protected int GridHeight = 100;
 
         public Dictionary<ST, Vector2> GetNodePositions()
         {
@@ -37,7 +39,7 @@ namespace ITU.DK.DCRS.Visualization.Layout
             StabileNodes = new Set<ST>();
             PausedNodes = new Set<ST>();
             TargetGraph = g;
-            Grid = new ST[20, 20]; // eventually set limits dynamically...
+            Grid = new ST[GridWidth, GridHeight]; // eventually set limits dynamically...
         }
 
         /// <summary>
@@ -155,16 +157,28 @@ namespace ITU.DK.DCRS.Visualization.Layout
         /// </summary>
         public void initRun()
         {
-            Random rand = new Random(3);
+            Random rand = new Random(/*3*/);
 
             NodeTensions.Clear();
             NodePositions.Clear();
             foreach (ST s in TargetGraph.States.Difference(StabileNodes))
             {
-              NodeTensions.Add(s, new Vector2(0, 0));
-              while (!SetNodePosition(s, new Vector2(rand.Next(7, 13), rand.Next(7, 13))))
-                // skip
-                ;              
+                // Original method:                
+                  NodeTensions.Add(s, new Vector2(0, 0));
+                  while (!SetNodePosition(s, new Vector2(rand.Next(7, 13), rand.Next(7, 13))))
+                    // skip
+                    ;              
+                 
+                // New method:
+                /*
+                NodeTensions.Add(s, new Vector2(0, 0));
+                int inc = TargetGraph.IncomingEdges[s].Count;
+                int outg = TargetGraph.OutgoingEdges[s].Count;
+                while (!SetNodePosition(s, new Vector2((((1+inc) * 10) + rand.Next(0, 4)), (((1+inc) * 10) + rand.Next(0, 4)))))
+                    // skip
+                    ;              
+                */
+
             }
 
             foreach (ST s in StabileNodes)
@@ -195,8 +209,8 @@ namespace ITU.DK.DCRS.Visualization.Layout
 
           if ((offset.X == 0) && offset.Y == 0) return result;
 
-          if ((int)(NodePositions[s] + offset).X > 20) return 9999999;
-          if ((int)(NodePositions[s] + offset).Y > 20) return 9999999;
+          if ((int)(NodePositions[s] + offset).X > GridWidth) return 9999999;
+          if ((int)(NodePositions[s] + offset).Y > GridHeight) return 9999999;
           if ((int)(NodePositions[s] + offset).X < 0) return 9999999;
           if ((int)(NodePositions[s] + offset).Y < 0) return 9999999;
 

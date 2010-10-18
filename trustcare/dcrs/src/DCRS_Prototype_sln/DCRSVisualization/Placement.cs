@@ -8,12 +8,19 @@ using System.IO;
 
 namespace ITU.DK.DCRS.Visualization
 {
+    /// <summary>
+    /// Class that makes it possible to store a placement/layout of nodes to a xml file.
+    /// The clumsy storage mechanism is there to both enable xml serialization and still allow generic types. Dictionaries are not xml serializable regretfully.
+    /// Would be good to improve on this in the future, for example by making a serializable dictionary, or making pairs of keys and values and storing those into a list.
+    /// </summary>
+    /// <typeparam name="ST"></typeparam>
     public class Placement<ST> where ST : IEquatable<ST>
     {
         public int processID;
         public int instanceID;
-        public List<ST> Keys;
-        public List<Point>Values;
+        public List<ST> Keys;       // Keys that represent the nodes of a graph.
+        public List<Point>Values;   // The locations of those nodes.
+                                    // Keys and Values should always remain in the same order.
 
         public Placement()
         {
