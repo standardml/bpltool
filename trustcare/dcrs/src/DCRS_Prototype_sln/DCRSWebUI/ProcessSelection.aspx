@@ -16,7 +16,7 @@ TargetControlID="ddlProcessInstance"
 ParentControlID="ddlProcess"
 PromptText="Please select a process instance"
 ServiceMethod="GetProcessInstanceIdsByProcessId"
-ServicePath="services/RepositoryService.asmx"
+ServicePath="~/services/RepositoryService.asmx"
 Category="ProcessInstance" />
 
 Select a process...<br />

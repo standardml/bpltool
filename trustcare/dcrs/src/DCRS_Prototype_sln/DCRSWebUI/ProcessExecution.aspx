@@ -16,7 +16,7 @@ TargetControlID="lbActions"
 ParentControlID="lbPrincipals"
 PromptText="Please select an Action"
 ServiceMethod="GetActions"
-ServicePath="services/ExecutionAssistanceService.asmx"
+ServicePath="~/services/ExecutionAssistanceService.asmx"
 Category="Action" />
 <h2>
     Process execution<br />
