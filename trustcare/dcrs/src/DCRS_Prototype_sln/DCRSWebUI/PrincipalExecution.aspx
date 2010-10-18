@@ -20,15 +20,17 @@ TagPrefix="ajaxToolkit" %>
                 <td valign=top>
                     <asp:Button ID="btnChangeProcess" runat="server" Text="Change Process" 
                         onclick="btnChangeProcess_Click" />
+                        <br/>
                     <asp:DropDownList ID="lbPrincipals" runat="server" Width="150px">
                     </asp:DropDownList>
                     <asp:Button ID="btnSelect" runat="server" Text="Select" onclick="btnSelect_Click" />
+                    <br/>
                 </td>
             </tr>
              <tr valign=top>                            
                 <td valign=top>
                     <div>
-                        <asp:Label ID="errorLabel" runat="server" Text=""></asp:Label>
+                        <asp:Label ID="errorLabel" runat="server" Text="" ForeColor="#CC0000"></asp:Label><br/>
                         <asp:ImageButton ID="ImageButton1" src="principalvis.aspx" runat="server" 
                             onclick="ImageButton1_Click" />
                     </div>    
