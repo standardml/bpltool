@@ -131,6 +131,9 @@ namespace ITU.DK.DCRS.Visualization
             p = (Placement<ST>)deserializer.Deserialize(textReader);
             textReader.Close();
 
+            p.processID = processId;
+            p.instanceID = instancId;
+
             return p;
         }
 
@@ -141,6 +144,8 @@ namespace ITU.DK.DCRS.Visualization
             Placement<ST> p;
             p = (Placement<ST>)deserializer.Deserialize(textReader);
             textReader.Close();
+
+            p.processID = processId;
 
             return p;
         }

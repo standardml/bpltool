@@ -19,7 +19,10 @@ namespace DCRSGraphicalEditor
 
         public MainForm()
         {
-            InitializeComponent();                        
+            InitializeComponent();
+                        
+            DCRSProcess p = DCRSProcess.Deserialize(RemoteServicesHandler.GetProcess(9));
+            spd_ProcessSelected(p);
         }
 
         private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
@@ -48,6 +51,9 @@ namespace DCRSGraphicalEditor
             this.processPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.processPanel_MouseMove);
             this.processPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.processPanel_MouseUp);
             processPanel.Refresh();
+
+            foreach (var a in process.Specification.Roles)
+                clbRoles.Items.Add(a);
         }
 
         private void processPanel_Paint(object sender, PaintEventArgs e)
@@ -65,6 +71,7 @@ namespace DCRSGraphicalEditor
         protected short selectedAction = -1;
         protected bool dragging = false;
         protected Point dragOffset;
+        protected Point contextLocation;
 
         protected short contextRequestAction = -1;
 
@@ -75,6 +82,7 @@ namespace DCRSGraphicalEditor
                 if (!dragging)
                 {
                     selectedAction = Visualizer.GetActionByPos(e.Location);
+                    UpdateSelectedAction(selectedAction);
                     if (selectedAction != -1)
                     {
                         dragging = true;
@@ -87,7 +95,38 @@ namespace DCRSGraphicalEditor
             else if (e.Button == MouseButtons.Right)
             {
                 contextRequestAction = Visualizer.GetActionByPos(e.Location);
+                contextLocation = e.Location;
             }
+        }
+
+
+        private void UpdateSelectedAction(short a)
+        {
+            if (a == -1)
+            {
+                tbName.Text = "";
+                cbEnabled.Checked = false;
+                cbIncluded.Checked = false;
+                for (int i = 0; i < clbRoles.Items.Count; i++)
+                    clbRoles.SetItemChecked(i, false);
+                btnStoreActionDetails.Enabled = false;
+            }
+            else
+            {
+                tbName.Text = Process.Specification.ActionList[a];
+                cbEnabled.Checked = Process.Runtime.CurrentState.EnabledActions.Contains(selectedAction);
+                cbIncluded.Checked = Process.Runtime.CurrentState.StateVector.IncludedActions.Contains(selectedAction);                
+                btnStoreActionDetails.Enabled = true;
+
+                for (int i = 0; i < clbRoles.Items.Count; i++)
+                    clbRoles.SetItemChecked(i, false);
+
+                foreach (string x in Process.Specification.ActionsToRolesDictionary[a])
+                {
+                    clbRoles.SetItemChecked(clbRoles.Items.IndexOf(x), true);
+                }
+            }
+
         }
 
         private void processPanel_MouseUp(object sender, MouseEventArgs e)
@@ -124,8 +163,25 @@ namespace DCRSGraphicalEditor
 
         private void cmProcessPanel_Opening(object sender, CancelEventArgs e)
         {
-            if ((selectedAction == -1) || (contextRequestAction == -1))
+            if ((selectedAction == -1) && (contextRequestAction != -1))
                 e.Cancel = true;
+
+            if (contextRequestAction == -1)
+            {
+                addConditionToolStripMenuItem.Visible = false;
+                addResponseToolStripMenuItem.Visible = false;
+                addIncludeToolStripMenuItem.Visible = false;
+                addExcludeToolStripMenuItem.Visible = false;
+                addNodeToolStripMenuItem.Visible = true;
+            }
+            else
+            {
+                addConditionToolStripMenuItem.Visible = true;
+                addResponseToolStripMenuItem.Visible = true;
+                addIncludeToolStripMenuItem.Visible = true;
+                addExcludeToolStripMenuItem.Visible = true;
+                addNodeToolStripMenuItem.Visible = false;
+            }
         }
 
         private void testToolStripMenuItem_Click(object sender, EventArgs e)
@@ -210,7 +266,49 @@ namespace DCRSGraphicalEditor
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            RemoteServicesHandler.ImportSpecification(Process);            
+            RemoteServicesHandler.ImportSpecification(Process);
+            Visualizer.StorePlacement();
+        }
+
+        private void addNodeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            short maxNode = Process.Specification.ActionList.Max(x => x.Key);
+            short newNode = (short)(maxNode + 1);
+            Process.Specification.ActionList.Add(newNode, "Action " + newNode.ToString());
+            Process.Specification.ActionsToRolesDictionary.Add(newNode, new List<string>());
+            Visualizer.Placement.Add(newNode, contextLocation);
+            Visualizer.ProcessUpdate();
+            processPanel.Refresh();
+        }
+
+        private void btnStoreActionDetails_Click(object sender, EventArgs e)
+        {
+            Process.Specification.ActionList[selectedAction] = tbName.Text;
+
+            if (cbEnabled.Checked)
+                if (!Process.Runtime.CurrentState.EnabledActions.Contains(selectedAction))
+                    Process.Runtime.CurrentState.EnabledActions.Add(selectedAction);
+
+            if (!cbEnabled.Checked)
+                if (Process.Runtime.CurrentState.EnabledActions.Contains(selectedAction))
+                    Process.Runtime.CurrentState.EnabledActions.Remove(selectedAction);
+
+
+            if (cbIncluded.Checked)
+                if (!Process.Runtime.CurrentState.StateVector.IncludedActions.Contains(selectedAction))
+                    Process.Runtime.CurrentState.StateVector.IncludedActions.Add(selectedAction);
+
+            if (!cbIncluded.Checked)
+                if (Process.Runtime.CurrentState.StateVector.IncludedActions.Contains(selectedAction))
+                    Process.Runtime.CurrentState.StateVector.IncludedActions.Remove(selectedAction);
+
+
+            Process.Specification.ActionsToRolesDictionary[selectedAction].Clear();
+            foreach (string s in clbRoles.CheckedItems)
+                Process.Specification.ActionsToRolesDictionary[selectedAction].Add(s);            
+
+            Visualizer.ProcessUpdate();
+            processPanel.Refresh();
         }
     }
 }

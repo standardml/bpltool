@@ -1,0 +1,3 @@
+﻿- If there is more then one selfarrow on a node then they are all drawn on the same side.
+
+- Stop using the stored layoutprovider and directly load placements from file, as the current situation leads to confusion and bugged code.

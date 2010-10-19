@@ -101,6 +101,9 @@ namespace ITU.DK.DCRS.Visualization
         {
             Placement = Placement<short>.FromLayoutProvider(LayoutProvider);
 
+            Placement.processID = Process.Specification.ProcessId;
+            Placement.instanceID = Process.Runtime.ProcessInstanceId;
+
             Placement.ShiftTowardsTopLeft();
 
             CalculateImageSize();

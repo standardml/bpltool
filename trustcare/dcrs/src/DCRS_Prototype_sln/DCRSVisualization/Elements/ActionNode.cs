@@ -189,7 +189,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
             rString += r + ", ";
         }
 
-        rString = rString.Substring(0, rString.Length - 2);
+        if (rString != "") rString = rString.Substring(0, rString.Length - 2);
         g.DrawString(rString, TextFont, TextBrush, new Rectangle((int)(Location.X + 1), (int)(Location.Y - 79), 48, 28), sf);
 
 

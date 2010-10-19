@@ -38,13 +38,22 @@
             this.storePlacementToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.storeProcessToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cmProcessPanel = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.testToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.testToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.addConditionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.addResponseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addIncludeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addExcludeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.addNodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.processPanel = new DCRSGraphicalEditor.DoubleBufferPanel();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.cbIncluded = new System.Windows.Forms.CheckBox();
+            this.cbEnabled = new System.Windows.Forms.CheckBox();
+            this.tbName = new System.Windows.Forms.TextBox();
+            this.btnStoreActionDetails = new System.Windows.Forms.Button();
+            this.clbRoles = new System.Windows.Forms.CheckedListBox();
             this.menuStrip1.SuspendLayout();
             this.cmProcessPanel.SuspendLayout();
+            this.processPanel.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -72,21 +81,21 @@
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(111, 22);
             this.openToolStripMenuItem.Text = "New";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
             // openToolStripMenuItem1
             // 
             this.openToolStripMenuItem1.Name = "openToolStripMenuItem1";
-            this.openToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+            this.openToolStripMenuItem1.Size = new System.Drawing.Size(111, 22);
             this.openToolStripMenuItem1.Text = "Open";
             this.openToolStripMenuItem1.Click += new System.EventHandler(this.openToolStripMenuItem1_Click);
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(111, 22);
             this.saveToolStripMenuItem.Text = "Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
@@ -115,27 +124,28 @@
             // cmProcessPanel
             // 
             this.cmProcessPanel.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.testToolStripMenuItem,
-            this.testToolStripMenuItem1,
+            this.addConditionToolStripMenuItem,
+            this.addResponseToolStripMenuItem,
             this.addIncludeToolStripMenuItem,
-            this.addExcludeToolStripMenuItem});
+            this.addExcludeToolStripMenuItem,
+            this.addNodeToolStripMenuItem});
             this.cmProcessPanel.Name = "cmProcessPanel";
-            this.cmProcessPanel.Size = new System.Drawing.Size(155, 92);
+            this.cmProcessPanel.Size = new System.Drawing.Size(155, 114);
             this.cmProcessPanel.Opening += new System.ComponentModel.CancelEventHandler(this.cmProcessPanel_Opening);
             // 
-            // testToolStripMenuItem
+            // addConditionToolStripMenuItem
             // 
-            this.testToolStripMenuItem.Name = "testToolStripMenuItem";
-            this.testToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
-            this.testToolStripMenuItem.Text = "Add &Condition";
-            this.testToolStripMenuItem.Click += new System.EventHandler(this.testToolStripMenuItem_Click);
+            this.addConditionToolStripMenuItem.Name = "addConditionToolStripMenuItem";
+            this.addConditionToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.addConditionToolStripMenuItem.Text = "Add &Condition";
+            this.addConditionToolStripMenuItem.Click += new System.EventHandler(this.testToolStripMenuItem_Click);
             // 
-            // testToolStripMenuItem1
+            // addResponseToolStripMenuItem
             // 
-            this.testToolStripMenuItem1.Name = "testToolStripMenuItem1";
-            this.testToolStripMenuItem1.Size = new System.Drawing.Size(154, 22);
-            this.testToolStripMenuItem1.Text = "Add &Response";
-            this.testToolStripMenuItem1.Click += new System.EventHandler(this.testToolStripMenuItem1_Click);
+            this.addResponseToolStripMenuItem.Name = "addResponseToolStripMenuItem";
+            this.addResponseToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.addResponseToolStripMenuItem.Text = "Add &Response";
+            this.addResponseToolStripMenuItem.Click += new System.EventHandler(this.testToolStripMenuItem1_Click);
             // 
             // addIncludeToolStripMenuItem
             // 
@@ -151,14 +161,82 @@
             this.addExcludeToolStripMenuItem.Text = "Add &Exclude";
             this.addExcludeToolStripMenuItem.Click += new System.EventHandler(this.addExcludeToolStripMenuItem_Click);
             // 
+            // addNodeToolStripMenuItem
+            // 
+            this.addNodeToolStripMenuItem.Name = "addNodeToolStripMenuItem";
+            this.addNodeToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.addNodeToolStripMenuItem.Text = "Add Node";
+            this.addNodeToolStripMenuItem.Click += new System.EventHandler(this.addNodeToolStripMenuItem_Click);
+            // 
             // processPanel
             // 
             this.processPanel.ContextMenuStrip = this.cmProcessPanel;
+            this.processPanel.Controls.Add(this.groupBox1);
             this.processPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.processPanel.Location = new System.Drawing.Point(0, 24);
             this.processPanel.Name = "processPanel";
             this.processPanel.Size = new System.Drawing.Size(899, 502);
             this.processPanel.TabIndex = 1;
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.clbRoles);
+            this.groupBox1.Controls.Add(this.cbIncluded);
+            this.groupBox1.Controls.Add(this.cbEnabled);
+            this.groupBox1.Controls.Add(this.tbName);
+            this.groupBox1.Controls.Add(this.btnStoreActionDetails);
+            this.groupBox1.Location = new System.Drawing.Point(651, 0);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(248, 290);
+            this.groupBox1.TabIndex = 0;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Action Details";
+            // 
+            // cbIncluded
+            // 
+            this.cbIncluded.AutoSize = true;
+            this.cbIncluded.Location = new System.Drawing.Point(7, 71);
+            this.cbIncluded.Name = "cbIncluded";
+            this.cbIncluded.Size = new System.Drawing.Size(67, 17);
+            this.cbIncluded.TabIndex = 3;
+            this.cbIncluded.Text = "Included";
+            this.cbIncluded.UseVisualStyleBackColor = true;
+            // 
+            // cbEnabled
+            // 
+            this.cbEnabled.AutoSize = true;
+            this.cbEnabled.Location = new System.Drawing.Point(7, 47);
+            this.cbEnabled.Name = "cbEnabled";
+            this.cbEnabled.Size = new System.Drawing.Size(65, 17);
+            this.cbEnabled.TabIndex = 2;
+            this.cbEnabled.Text = "Enabled";
+            this.cbEnabled.UseVisualStyleBackColor = true;
+            // 
+            // tbName
+            // 
+            this.tbName.Location = new System.Drawing.Point(7, 20);
+            this.tbName.Name = "tbName";
+            this.tbName.Size = new System.Drawing.Size(187, 20);
+            this.tbName.TabIndex = 1;
+            // 
+            // btnStoreActionDetails
+            // 
+            this.btnStoreActionDetails.Location = new System.Drawing.Point(7, 254);
+            this.btnStoreActionDetails.Name = "btnStoreActionDetails";
+            this.btnStoreActionDetails.Size = new System.Drawing.Size(75, 23);
+            this.btnStoreActionDetails.TabIndex = 0;
+            this.btnStoreActionDetails.Text = "Update";
+            this.btnStoreActionDetails.UseVisualStyleBackColor = true;
+            this.btnStoreActionDetails.Click += new System.EventHandler(this.btnStoreActionDetails_Click);
+            // 
+            // clbRoles
+            // 
+            this.clbRoles.FormattingEnabled = true;
+            this.clbRoles.Location = new System.Drawing.Point(7, 95);
+            this.clbRoles.Name = "clbRoles";
+            this.clbRoles.Size = new System.Drawing.Size(187, 139);
+            this.clbRoles.TabIndex = 4;
             // 
             // MainForm
             // 
@@ -173,6 +251,9 @@
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.cmProcessPanel.ResumeLayout(false);
+            this.processPanel.ResumeLayout(false);
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -190,10 +271,17 @@
         private System.Windows.Forms.ToolStripMenuItem storePlacementToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem storeProcessToolStripMenuItem;
         private System.Windows.Forms.ContextMenuStrip cmProcessPanel;
-        private System.Windows.Forms.ToolStripMenuItem testToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem testToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem addConditionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem addResponseToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addIncludeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addExcludeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem addNodeToolStripMenuItem;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.TextBox tbName;
+        private System.Windows.Forms.Button btnStoreActionDetails;
+        private System.Windows.Forms.CheckBox cbIncluded;
+        private System.Windows.Forms.CheckBox cbEnabled;
+        private System.Windows.Forms.CheckedListBox clbRoles;
     }
 }
 
