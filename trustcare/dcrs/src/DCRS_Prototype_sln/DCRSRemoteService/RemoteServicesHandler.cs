@@ -4,6 +4,7 @@ using System.Configuration;
 using System.ServiceModel;
 using ITU.DK.DCRS.CommonTypes.Exceptions;
 using ITU.DK.DCRS.CommonTypes.ServiceContracts;
+using ITU.DK.DCRS.CommonTypes.Process;
 
 namespace ITU.DK.DCRS.RemoteServices
 {
@@ -219,6 +220,40 @@ ConfigurationManager.AppSettings.Get("ProcessExecutionServiceURL");
                         "Failed to call GetProcess with process Id:{0} from {1}! Error message: {2}",
                         processId, REPOSITORY_PROVIDER_SERVICE_URL, exception.Message));
             }
+
+
+        }
+
+
+        public static void ImportSpecification(DCRSProcess process)
+        {/*
+            try
+            {*/
+                var netTcpBinding = new NetTcpBinding(SecurityMode.Transport, true) { TransactionFlow = true };
+
+                var factory =
+                    new ChannelFactory<IRepositoryServiceContract>(netTcpBinding,
+                                                                        new EndpointAddress(
+                                                                            REPOSITORY_PROVIDER_SERVICE_URL));
+
+                var proxy = factory.CreateChannel();
+
+                proxy.ImportSpecification(process);
+
+                ((IClientChannel)proxy).Close();
+
+                factory.Close();
+
+                
+                /*
+            }
+            catch (Exception exception)
+            {
+                throw new DCRSWorkflowException(
+                    string.Format(
+                        "An error from {1}! Error message: {2}",
+                        REPOSITORY_PROVIDER_SERVICE_URL, exception.Message));
+            }*/
 
 
         }

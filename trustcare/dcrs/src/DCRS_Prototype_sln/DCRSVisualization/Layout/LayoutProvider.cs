@@ -10,7 +10,7 @@ namespace ITU.DK.DCRS.Visualization.Layout
     /// </summary>
     /// <typeparam name="ST">State type of the graph that the layoutprovider operates on.</typeparam>
     /// <typeparam name="LT">Label type of the graph that the layoutprovider operates on.</typeparam>
-    interface LayoutProvider<ST, LT> where ST : IEquatable<ST>
+    public interface LayoutProvider<ST, LT> where ST : IEquatable<ST>
     {        
         /// <summary>
         /// Executes the underlying algorithm of the layout provider.

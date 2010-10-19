@@ -14,7 +14,8 @@ namespace ITU.DK.DCRS.Visualization
     {
         private DCRSProcess Process;
         private DCRSSpecification Specification { get { return Process.Specification; } }
-        private Dictionary<short, Point> Placement;
+        //private Dictionary<short, Point> Placement;
+        public Placement<short> Placement;
         private LayoutProvider<short, bool> LayoutProvider;
         private Size ImageSize;
 
@@ -24,6 +25,9 @@ namespace ITU.DK.DCRS.Visualization
 
         private Pen arrowPen = new Pen(Color.Black, 1f);
         private Brush arrowBrush = Brushes.Black;
+        
+        private short selectedAction = -1;
+        public short SelectedAction { get { return selectedAction; } set { if (selectedAction != -1) Nodes[selectedAction].selected = false; selectedAction = value; if (selectedAction != -1) Nodes[selectedAction].selected = true; } }
 
 
         public Visualizer(DCRSProcess p)
@@ -47,6 +51,11 @@ namespace ITU.DK.DCRS.Visualization
                 Process = p;
                 SetUp();
             }
+        }
+
+        public void ProcessUpdate()
+        {
+            SetUp();
         }
 
         private void UpdateRuntime()
@@ -90,16 +99,9 @@ namespace ITU.DK.DCRS.Visualization
         /// <returns></returns>
         private void CalculatePlacement()
         {
-            Placement = new Dictionary<short, Point>();
-                       
-            LayoutProvider.Run();
+            Placement = Placement<short>.FromLayoutProvider(LayoutProvider);
 
-            foreach (var x in LayoutProvider.GetNodePositions())
-            {
-                Placement.Add(x.Key, new Point((int)Math.Round(x.Value.X), (int)Math.Round(x.Value.Y)));
-            }
-
-            Placement = ShiftPlacementTowardsTopLeft(Placement);
+            Placement.ShiftTowardsTopLeft();
 
             CalculateImageSize();
         }
@@ -109,7 +111,7 @@ namespace ITU.DK.DCRS.Visualization
             int maxX = 0;
             int maxY = 0;
 
-            foreach (var x in Placement)
+            foreach (var x in Placement.NodeLocations)
             {
                 maxX = Math.Max(x.Value.X, maxX);
                 maxY = Math.Max(x.Value.Y, maxY);
@@ -118,21 +120,40 @@ namespace ITU.DK.DCRS.Visualization
             ImageSize = new Size(maxX + 200, maxY + 200);
         }
 
+        public Boolean MoveNode(short id, Point newLocation)
+        {
+            Placement.MoveNode(id, newLocation);
+            SetUp(); // could be much more efficient...
+            return true;
+        }
 
 
-        Dictionary<short, ActionNode> Nodes = new Dictionary<short, ActionNode>();
 
-        Set<Arrow> Arrows = new Set<Arrow>();
-        Set<Arrow> SelfArrows = new Set<Arrow>();
+        //Dictionary<short, ActionNode> Nodes = new Dictionary<short, ActionNode>();
+
+        //Set<Arrow> Arrows = new Set<Arrow>();
+        //Set<Arrow> SelfArrows = new Set<Arrow>();
+
+        Dictionary<short, ActionNode> Nodes;
+
+        Set<Arrow> Arrows;
+        Set<Arrow> SelfArrows;
+
+
         
         private void SetUp()
         {
+            Nodes = new Dictionary<short, ActionNode>();
+            Arrows = new Set<Arrow>();
+            SelfArrows = new Set<Arrow>();
+
             /// Build up the nodes
-            foreach (var p in Placement)
+            foreach (var p in Placement.NodeLocations)
             {
                 ActionNode n = new ActionNode(p.Key, Specification.ActionList[p.Key], new Vector2(p.Value), acticityPen, activityBrush, activityFont);
                 if (Process.Runtime != null) n.ApplyRuntime(Process.Runtime);
-                n.SetRoles(Specification.ActionsToRolesDictionary[p.Key]);                
+                n.SetRoles(Specification.ActionsToRolesDictionary[p.Key]);
+                if (selectedAction == p.Key) n.selected = true;
                 Nodes.Add(p.Key, n);
             }
 
@@ -264,16 +285,20 @@ namespace ITU.DK.DCRS.Visualization
 
         public short GetActionByPos(Point p)
         {
-            foreach (var x in Placement)
+            foreach (var x in Placement.NodeLocations)
             {
                 if (p.X < x.Value.X + 50 && p.X > x.Value.X - 50)
                     if (p.Y < x.Value.Y + 50 && p.Y > x.Value.Y - 50)
                         return x.Key;
             }
             return -1;
-        } 
+        }
 
-        
+
+        public void StorePlacement()
+        {
+            Placement.SerializeToXML();
+        }        
         
         #region Static Functionality
 
@@ -622,6 +647,5 @@ namespace ITU.DK.DCRS.Visualization
             return -1;
         } 
         #endregion
-
     }
 }

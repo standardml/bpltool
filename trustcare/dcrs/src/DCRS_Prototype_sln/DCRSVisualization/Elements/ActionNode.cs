@@ -67,6 +67,10 @@ namespace ITU.DK.DCRS.Visualization.Elements
     public Boolean pendingResponse = false;     /// Is this action required to be performed as a response?      
     public Boolean hasExecuted = false;         /// Has this action eben executed at least one?
     public Boolean enabled = false;             /// Is the action currently enabled?                                                
+                                                /// 
+    
+      /// Fields for visualization related to the graphical editor
+    public Boolean selected = false;             /// Is the action currently selected?
 
     int[] used = new int[4];
         
@@ -161,7 +165,8 @@ namespace ITU.DK.DCRS.Visualization.Elements
     public void Draw(Graphics g)
     {
         if (!included) DrawingPen.DashStyle = DashStyle.Dash;
-        g.DrawRectangle(DrawingPen, Location.ToPoint.X - (NODE_WIDTH / 2), Location.ToPoint.Y - (NODE_HEIGHT / 2), NODE_WIDTH, NODE_HEIGHT);
+        if (selected) DrawingPen.Color = Color.DarkTurquoise;
+        g.DrawRectangle(DrawingPen, Location.ToPoint.X - (NODE_WIDTH / 2), Location.ToPoint.Y - (NODE_HEIGHT / 2), NODE_WIDTH, NODE_HEIGHT);        
         //g.DrawString(Name, TextFont, TextBrush, Location.ToPoint);
         StringFormat sf = new StringFormat();
         sf.Alignment = StringAlignment.Center;
@@ -172,6 +177,8 @@ namespace ITU.DK.DCRS.Visualization.Elements
         g.DrawRectangle(DrawingPen, Location.ToPoint.X, Location.ToPoint.Y - 80, 50, ROLEBOX_HEIGHT);
 
         if (!included) DrawingPen.DashStyle = DashStyle.Solid;
+        if (selected) DrawingPen.Color = Color.Black;
+        
 
         string rString = "";
         //int offset = 0;

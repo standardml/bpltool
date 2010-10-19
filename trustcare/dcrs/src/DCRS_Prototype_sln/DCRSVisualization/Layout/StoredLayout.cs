@@ -60,10 +60,17 @@ namespace ITU.DK.DCRS.Visualization.Layout
         public Dictionary<ST, Vector2> GetNodePositions()
         {
             Dictionary<ST, Vector2> result = new Dictionary<ST, Vector2>();
+            /*
             for (int i = 0; i < placement.Keys.Count; i++)
             {
                 result.Add(placement.Keys.ElementAt(i), new Vector2(placement.Values.ElementAt(i)));
             }
+            */
+            foreach (var a in placement.NodeLocations)
+            {
+                result.Add(a.Key, new Vector2(a.Value));
+            }
+
             return result;
         }
     }

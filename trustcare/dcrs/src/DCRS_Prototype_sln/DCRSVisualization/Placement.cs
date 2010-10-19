@@ -5,6 +5,7 @@ using System.Text;
 using System.Drawing;
 using System.Xml.Serialization;
 using System.IO;
+using ITU.DK.DCRS.Visualization.Layout;
 
 namespace ITU.DK.DCRS.Visualization
 {
@@ -18,23 +19,88 @@ namespace ITU.DK.DCRS.Visualization
     {
         public int processID;
         public int instanceID;
-        public List<ST> Keys;       // Keys that represent the nodes of a graph.
-        public List<Point>Values;   // The locations of those nodes.
-                                    // Keys and Values should always remain in the same order.
+        public SerializableDictionary<ST, Point> NodeLocations;
 
         public Placement()
         {
-            Keys = new List<ST>();
-            Values = new List<Point>();
+            NodeLocations = new SerializableDictionary<ST, Point>();
         }
 
 
         public void Add(ST n, Point p)
         {
-            Keys.Add(n);
-            Values.Add(p);
+            NodeLocations.Add(n, p);
         }
 
+
+        public void ShiftTowardsTopLeft()
+        {
+            int minX = 9999999;
+            int minY = 9999999;
+            foreach (var x in NodeLocations)
+            {
+                minX = Math.Min(x.Value.X, minX);
+                minY = Math.Min(x.Value.Y, minY);
+            }
+
+            SerializableDictionary<ST, Point> t = new SerializableDictionary<ST, Point>();
+
+            foreach (var x in NodeLocations)
+            {
+                t.Add(x.Key, new Point((x.Value.X - minX) + 55 + 100, (x.Value.Y - minY) + 85 + 30));
+            }
+            
+            NodeLocations = t;
+        }
+
+
+        public static Placement<ST> FromLayoutProvider(LayoutProvider<ST, bool> layoutProvider)
+        {
+            Placement<ST> result = new Placement<ST>();
+
+            layoutProvider.Run();
+
+            foreach (var x in layoutProvider.GetNodePositions())
+            {
+                result.NodeLocations.Add(x.Key, new Point((int)Math.Round(x.Value.X), (int)Math.Round(x.Value.Y)));
+            }
+
+            return result;
+        }
+
+        public Boolean MoveNode(ST id, Point newLocation)
+        {
+            NodeLocations[id] = newLocation;
+            return true;
+        }
+
+
+        public int AlignX(ST a, int x)
+        {
+            int minDif=10;
+            int alignedX = x;
+            foreach (var v in NodeLocations)
+            {
+                if (!v.Key.Equals(a))
+                    if (Math.Abs(v.Value.X - x) < minDif)
+                        alignedX = v.Value.X;
+            }
+            return alignedX;
+        }
+
+
+        public int AlignY(ST a, int y)
+        {
+            int minDif = 10;
+            int alignedY = y;
+            foreach (var v in NodeLocations)
+            {
+                if (!v.Key.Equals(a))
+                    if (Math.Abs(v.Value.Y - y) < minDif)
+                        alignedY = v.Value.Y;
+            }
+            return alignedY;
+        }
 
         public void SerializeToXML()
         {
