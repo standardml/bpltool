@@ -9,9 +9,9 @@ namespace ITU.DK.DCRS.WorkflowEngine.Services
     {
         #region Implementation of IRepositoryServiceContract
 
-        public void ImportSpecification(DCRSProcess process)
+        public void ImportSpecification(string process)
         {
-            XmlRepositoryProvider.RepositoryProvider.SaveProcess(process);
+            XmlRepositoryProvider.RepositoryProvider.SaveProcess(DCRSProcess.Deserialize(process));
         }
 
         public string GetProcess(int processId)

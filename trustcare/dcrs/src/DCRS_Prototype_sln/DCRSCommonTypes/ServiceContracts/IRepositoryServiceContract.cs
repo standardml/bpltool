@@ -8,7 +8,7 @@ namespace ITU.DK.DCRS.CommonTypes.ServiceContracts
     public interface IRepositoryServiceContract
     {
         [OperationContract]
-        void ImportSpecification(DCRSProcess process);
+        void ImportSpecification(string process);
 
 
         [OperationContract]

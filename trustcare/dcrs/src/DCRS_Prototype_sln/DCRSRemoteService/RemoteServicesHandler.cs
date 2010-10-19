@@ -226,9 +226,9 @@ ConfigurationManager.AppSettings.Get("ProcessExecutionServiceURL");
 
 
         public static void ImportSpecification(DCRSProcess process)
-        {/*
+        {
             try
-            {*/
+            {
                 var netTcpBinding = new NetTcpBinding(SecurityMode.Transport, true) { TransactionFlow = true };
 
                 var factory =
@@ -238,24 +238,22 @@ ConfigurationManager.AppSettings.Get("ProcessExecutionServiceURL");
 
                 var proxy = factory.CreateChannel();
 
-                proxy.ImportSpecification(process);
+                proxy.ImportSpecification(DCRSProcess.Serialize(process));
 
                 ((IClientChannel)proxy).Close();
 
                 factory.Close();
 
                 
-                /*
+                
             }
             catch (Exception exception)
             {
                 throw new DCRSWorkflowException(
                     string.Format(
-                        "An error from {1}! Error message: {2}",
+                        "Failed to import a process to {1}! Error message: {2}",
                         REPOSITORY_PROVIDER_SERVICE_URL, exception.Message));
-            }*/
-
-
+            }
         }
 
 

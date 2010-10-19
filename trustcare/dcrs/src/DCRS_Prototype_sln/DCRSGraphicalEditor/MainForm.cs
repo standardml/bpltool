@@ -210,7 +210,7 @@ namespace DCRSGraphicalEditor
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //RemoteServicesHandler.ImportSpecification(Process);            
+            RemoteServicesHandler.ImportSpecification(Process);            
         }
     }
 }

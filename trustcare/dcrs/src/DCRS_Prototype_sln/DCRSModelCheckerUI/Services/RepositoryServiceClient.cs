@@ -9,7 +9,7 @@ namespace DCRSModelCheckerUI.Services
     {
         #region Implementation of IRepositoryServiceContract
 
-        public void ImportSpecification(DCRSProcess process)
+        public void ImportSpecification(string process)
         {
             Channel.ImportSpecification(process);
         }
