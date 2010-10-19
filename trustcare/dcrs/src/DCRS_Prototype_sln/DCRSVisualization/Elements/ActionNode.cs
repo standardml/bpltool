@@ -258,6 +258,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
         s.Locations = new Vector2[3] { new Vector2((NODE_WIDTH / 2), (NODE_WIDTH / -2) - ROLEBOX_HEIGHT), new Vector2((NODE_WIDTH / 2) * 2, ROLEBOX_HEIGHT / -2), new Vector2((NODE_WIDTH / 2), (NODE_WIDTH / 2)) };
         s.SymbolAdjustmentEnd = new Vector2(10, -10);
         s.SymbolAdjustmentStart = new Vector2(15, 15);
+        used[(int)s.Side] += 999;
         return s;
       }
 
@@ -270,6 +271,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
         s.Locations = new Vector2[3] { new Vector2((NODE_WIDTH / -2), (NODE_WIDTH / 2)), new Vector2((NODE_WIDTH / -2) * 2, 0), new Vector2((NODE_WIDTH / -2), (NODE_WIDTH / -2)) };
         s.SymbolAdjustmentEnd = new Vector2(-10, 10);
         s.SymbolAdjustmentStart = new Vector2(-10, -10);
+        used[(int)s.Side] += 999;
         return s;
       }
 
@@ -282,6 +284,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
         s.Locations = new Vector2[3] { new Vector2((NODE_WIDTH / 2), (NODE_WIDTH / 2)), new Vector2(0, (NODE_WIDTH / 2) * 2), new Vector2((NODE_WIDTH / -2), (NODE_WIDTH / 2)) };
         s.SymbolAdjustmentEnd = new Vector2(10, 10);
         s.SymbolAdjustmentStart = new Vector2(-10, 10);
+        used[(int)s.Side] += 999;
         return s;
       }
 
@@ -294,6 +297,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
         s.Locations = new Vector2[3] { new Vector2((NODE_WIDTH / -2), (NODE_WIDTH / -2)), new Vector2(0, (NODE_WIDTH / 2) * -2), new Vector2((NODE_WIDTH / 2), (NODE_WIDTH / -2) - ROLEBOX_HEIGHT) };
         s.SymbolAdjustmentEnd = new Vector2(-10, -10);
         s.SymbolAdjustmentStart = new Vector2(10, -10);
+        used[(int)s.Side] += 999;
         return s;
       }
 
