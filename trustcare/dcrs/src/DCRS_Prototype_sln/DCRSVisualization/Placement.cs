@@ -17,6 +17,7 @@ namespace ITU.DK.DCRS.Visualization
     /// <typeparam name="ST"></typeparam>
     public class Placement<ST> where ST : IEquatable<ST>
     {
+        private static string placementPath;
         public int processID;
         public int instanceID;
         public SerializableDictionary<ST, Point> NodeLocations;
@@ -109,11 +110,7 @@ namespace ITU.DK.DCRS.Visualization
         public void SerializeToXML()
         {
             XmlSerializer serializer = new XmlSerializer(typeof(Placement<ST>));
-            TextWriter textWriter;
-            if ((instanceID) > 0)
-                textWriter = new StreamWriter(@"C:\PhDWork\placements\placement#" + processID.ToString() + "#" + instanceID.ToString() + "#.xml");
-            else
-                textWriter = new StreamWriter(@"C:\PhDWork\placements\placement#" + processID.ToString() + "#.xml");
+            TextWriter textWriter = new StreamWriter(getFilePath(processID,instanceID));
             serializer.Serialize(textWriter, this);
             textWriter.Close();
         }
@@ -122,7 +119,7 @@ namespace ITU.DK.DCRS.Visualization
         static public void SerializeToXML(Placement<ST> p)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(Placement<ST>));
-            TextWriter textWriter = new StreamWriter(@"C:\PhDWork\placements\placement#" + p.processID.ToString() + "#" + p.instanceID.ToString() + "#.xml");
+            TextWriter textWriter = new StreamWriter(getFilePath(p.processID,p.instanceID));
             serializer.Serialize(textWriter, p);
             textWriter.Close();
         }
@@ -130,7 +127,7 @@ namespace ITU.DK.DCRS.Visualization
         static public Placement<ST> DeserializeFromXML(int processId, int instancId)
         {
             XmlSerializer deserializer = new XmlSerializer(typeof(Placement<ST>));
-            TextReader textReader = new StreamReader(@"C:\PhDWork\placements\placement#" + processId.ToString() + "#" + instancId.ToString() + "#.xml");
+            TextReader textReader = new StreamReader(getFilePath(processId,instancId));
             Placement<ST> p;
             p = (Placement<ST>)deserializer.Deserialize(textReader);
             textReader.Close();
@@ -144,7 +141,7 @@ namespace ITU.DK.DCRS.Visualization
         static public Placement<ST> DeserializeFromXML(int processId)
         {
             XmlSerializer deserializer = new XmlSerializer(typeof(Placement<ST>));
-            TextReader textReader = new StreamReader(@"C:\PhDWork\placements\placement#" + processId.ToString() + "#.xml");
+            TextReader textReader = new StreamReader(getFilePath(processId,0));
             Placement<ST> p;
             p = (Placement<ST>)deserializer.Deserialize(textReader);
             textReader.Close();
@@ -154,27 +151,27 @@ namespace ITU.DK.DCRS.Visualization
             return p;
         }
 
-
-
-
-        static public void SerializeToXMLOld(Placement<ST> p)
+        public static string getFilePath(int processId, int instanceId)
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(Placement<ST>));
-            TextWriter textWriter = new StreamWriter(@"C:\PhDWork\placement.xml");
-            serializer.Serialize(textWriter, p);
-            textWriter.Close();
+            if (placementPath == null)
+                initPlacementDir();
+            String fileName = "placement#" + processId.ToString();
+            if (instanceId > 0)
+                fileName = fileName + "#" + instanceId.ToString();
+            fileName = fileName + "#.xml";
+            return System.IO.Path.Combine(placementPath, fileName);
         }
 
-
-        static public Placement<ST> DeserializeFromXMLOld()
+        // create the placement Directory if necessary. Init placementPath.
+        public static void initPlacementDir()
         {
-            XmlSerializer deserializer = new XmlSerializer(typeof(Placement<ST>));
-            TextReader textReader = new StreamReader(@"C:\PhDWork\placement.xml");
-            Placement<ST> p;
-            p = (Placement<ST>)deserializer.Deserialize(textReader);
-            textReader.Close();
-
-            return p;
+            Uri appUri = new Uri(System.IO.Path.GetDirectoryName(
+                                     System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase));
+            String appPath = System.IO.Path.GetFullPath(appUri.AbsolutePath);
+            String placementPath = System.IO.Path.Combine(appPath, @"..\placements");
+            if (!System.IO.Directory.Exists(placementPath))
+                System.IO.Directory.CreateDirectory(placementPath);
+            Placement<ST>.placementPath = placementPath;
         }
 
     }
