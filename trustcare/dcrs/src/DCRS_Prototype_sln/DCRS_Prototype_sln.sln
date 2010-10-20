@@ -37,8 +37,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCRSVisualization", "DCRSVi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCRSVisualizationTest", "DCRSVisualizationTest\DCRSVisualizationTest.csproj", "{31FF01D8-3900-47C7-A1B4-8B8D85DCA84D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExperimentalWebApplication", "ExperimentalWebApplication\ExperimentalWebApplication.csproj", "{B457B429-0FFA-406A-A499-F45249CB02AC}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCRSWebUI", "DCRSWebUI\DCRSWebUI.csproj", "{6D2606D2-8127-41F2-8D0F-C199FC620883}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCRSRemoteServices", "DCRSRemoteService\DCRSRemoteServices.csproj", "{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}"
@@ -189,16 +187,6 @@ Global
 		{31FF01D8-3900-47C7-A1B4-8B8D85DCA84D}.Release|Mixed Platforms.Build.0 = Release|x86
 		{31FF01D8-3900-47C7-A1B4-8B8D85DCA84D}.Release|x86.ActiveCfg = Release|x86
 		{31FF01D8-3900-47C7-A1B4-8B8D85DCA84D}.Release|x86.Build.0 = Release|x86
-		{B457B429-0FFA-406A-A499-F45249CB02AC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B457B429-0FFA-406A-A499-F45249CB02AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B457B429-0FFA-406A-A499-F45249CB02AC}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{B457B429-0FFA-406A-A499-F45249CB02AC}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{B457B429-0FFA-406A-A499-F45249CB02AC}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{B457B429-0FFA-406A-A499-F45249CB02AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B457B429-0FFA-406A-A499-F45249CB02AC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B457B429-0FFA-406A-A499-F45249CB02AC}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{B457B429-0FFA-406A-A499-F45249CB02AC}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{B457B429-0FFA-406A-A499-F45249CB02AC}.Release|x86.ActiveCfg = Release|Any CPU
 		{6D2606D2-8127-41F2-8D0F-C199FC620883}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6D2606D2-8127-41F2-8D0F-C199FC620883}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D2606D2-8127-41F2-8D0F-C199FC620883}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
