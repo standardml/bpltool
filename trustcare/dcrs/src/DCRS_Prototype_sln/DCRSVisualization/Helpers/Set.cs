@@ -23,8 +23,16 @@ namespace ITU.DK.DCRS.Visualization
 
     public void Add(T item)
     {
-      contents.Add(item, true);
+        try
+        {
+            contents.Add(item, true);
+        }
+        catch (ArgumentException ae)
+        {
+            // probably because it has already been added...
+        }
     }
+      
 
     public void Clear()
     {

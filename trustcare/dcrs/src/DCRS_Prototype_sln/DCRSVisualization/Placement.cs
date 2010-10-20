@@ -32,6 +32,10 @@ namespace ITU.DK.DCRS.Visualization
             NodeLocations.Add(n, p);
         }
 
+        public void Remove(ST n)
+        {
+            NodeLocations.Remove(n);
+        }
 
         public void ShiftTowardsTopLeft()
         {
@@ -172,5 +176,6 @@ namespace ITU.DK.DCRS.Visualization
 
             return p;
         }
+
     }
 }

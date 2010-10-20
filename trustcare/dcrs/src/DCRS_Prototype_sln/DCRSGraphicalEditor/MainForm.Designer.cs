@@ -45,11 +45,12 @@
             this.addNodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.processPanel = new DCRSGraphicalEditor.DoubleBufferPanel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.clbRoles = new System.Windows.Forms.CheckedListBox();
             this.cbIncluded = new System.Windows.Forms.CheckBox();
             this.cbEnabled = new System.Windows.Forms.CheckBox();
             this.tbName = new System.Windows.Forms.TextBox();
             this.btnStoreActionDetails = new System.Windows.Forms.Button();
-            this.clbRoles = new System.Windows.Forms.CheckedListBox();
+            this.removeNodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.cmProcessPanel.SuspendLayout();
             this.processPanel.SuspendLayout();
@@ -128,9 +129,10 @@
             this.addResponseToolStripMenuItem,
             this.addIncludeToolStripMenuItem,
             this.addExcludeToolStripMenuItem,
-            this.addNodeToolStripMenuItem});
+            this.addNodeToolStripMenuItem,
+            this.removeNodeToolStripMenuItem});
             this.cmProcessPanel.Name = "cmProcessPanel";
-            this.cmProcessPanel.Size = new System.Drawing.Size(155, 114);
+            this.cmProcessPanel.Size = new System.Drawing.Size(155, 158);
             this.cmProcessPanel.Opening += new System.ComponentModel.CancelEventHandler(this.cmProcessPanel_Opening);
             // 
             // addConditionToolStripMenuItem
@@ -193,6 +195,14 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Action Details";
             // 
+            // clbRoles
+            // 
+            this.clbRoles.FormattingEnabled = true;
+            this.clbRoles.Location = new System.Drawing.Point(7, 95);
+            this.clbRoles.Name = "clbRoles";
+            this.clbRoles.Size = new System.Drawing.Size(187, 139);
+            this.clbRoles.TabIndex = 4;
+            // 
             // cbIncluded
             // 
             this.cbIncluded.AutoSize = true;
@@ -230,13 +240,12 @@
             this.btnStoreActionDetails.UseVisualStyleBackColor = true;
             this.btnStoreActionDetails.Click += new System.EventHandler(this.btnStoreActionDetails_Click);
             // 
-            // clbRoles
+            // removeNodeToolStripMenuItem
             // 
-            this.clbRoles.FormattingEnabled = true;
-            this.clbRoles.Location = new System.Drawing.Point(7, 95);
-            this.clbRoles.Name = "clbRoles";
-            this.clbRoles.Size = new System.Drawing.Size(187, 139);
-            this.clbRoles.TabIndex = 4;
+            this.removeNodeToolStripMenuItem.Name = "removeNodeToolStripMenuItem";
+            this.removeNodeToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.removeNodeToolStripMenuItem.Text = "Remove Node";
+            this.removeNodeToolStripMenuItem.Click += new System.EventHandler(this.removeNodeToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -282,6 +291,7 @@
         private System.Windows.Forms.CheckBox cbIncluded;
         private System.Windows.Forms.CheckBox cbEnabled;
         private System.Windows.Forms.CheckedListBox clbRoles;
+        private System.Windows.Forms.ToolStripMenuItem removeNodeToolStripMenuItem;
     }
 }
 

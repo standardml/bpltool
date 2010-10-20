@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DCRSProcessHandler.cs" />
     <Compile Include="DoubleBufferPanel.cs">
       <SubType>Component</SubType>
     </Compile>

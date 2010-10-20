@@ -15,13 +15,14 @@ namespace DCRSGraphicalEditor
     public partial class MainForm : Form
     {
         protected DCRSProcess Process;
+        protected DCRSProcessHandler ProcessHandler;
         protected Visualizer Visualizer;
 
         public MainForm()
         {
             InitializeComponent();
                         
-            DCRSProcess p = DCRSProcess.Deserialize(RemoteServicesHandler.GetProcess(9));
+            DCRSProcess p = DCRSProcess.Deserialize(RemoteServicesHandler.GetProcess(9));            
             spd_ProcessSelected(p);
         }
 
@@ -46,6 +47,7 @@ namespace DCRSGraphicalEditor
         {
             Process = process;
             Visualizer = new Visualizer(process);
+            ProcessHandler = new DCRSProcessHandler(process);
             this.processPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.processPanel_Paint);
             this.processPanel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.processPanel_MouseDown);
             this.processPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.processPanel_MouseMove);
@@ -146,7 +148,7 @@ namespace DCRSGraphicalEditor
         {
             if (dragging)
             {
-                if ((DateTime.Now - lastUpdate).TotalMilliseconds > 50)
+                if (true) //((DateTime.Now - lastUpdate).TotalMilliseconds > 50)
                 {
                     //Visualizer.MoveNode(selectedAction, e.Location);
                     Visualizer.MoveNode(selectedAction, new Point(Visualizer.Placement.AlignX(selectedAction, e.Location.X - dragOffset.X), Visualizer.Placement.AlignY(selectedAction, e.Location.Y - dragOffset.Y)));
@@ -164,15 +166,22 @@ namespace DCRSGraphicalEditor
         private void cmProcessPanel_Opening(object sender, CancelEventArgs e)
         {
             if ((selectedAction == -1) && (contextRequestAction != -1))
-                e.Cancel = true;
-
-            if (contextRequestAction == -1)
+            {
+                addConditionToolStripMenuItem.Visible = false;
+                addResponseToolStripMenuItem.Visible = false;
+                addIncludeToolStripMenuItem.Visible = false;
+                addExcludeToolStripMenuItem.Visible = false;
+                addNodeToolStripMenuItem.Visible = false;
+                removeNodeToolStripMenuItem.Visible = true;
+            }
+            else if (contextRequestAction == -1)
             {
                 addConditionToolStripMenuItem.Visible = false;
                 addResponseToolStripMenuItem.Visible = false;
                 addIncludeToolStripMenuItem.Visible = false;
                 addExcludeToolStripMenuItem.Visible = false;
                 addNodeToolStripMenuItem.Visible = true;
+                removeNodeToolStripMenuItem.Visible = false;
             }
             else
             {
@@ -181,88 +190,39 @@ namespace DCRSGraphicalEditor
                 addIncludeToolStripMenuItem.Visible = true;
                 addExcludeToolStripMenuItem.Visible = true;
                 addNodeToolStripMenuItem.Visible = false;
+                removeNodeToolStripMenuItem.Visible = false;
             }
         }
 
         private void testToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            short[,] temp;
-
-            temp = new short[Process.Specification.Conditions.GetLength(0) + 1, 2];
-
-            for (var index = 0; index < Process.Specification.Conditions.GetLength(0); index++)
-            {                
-                temp[index, 0] = Process.Specification.Conditions[index, 0];
-                temp[index, 1] = Process.Specification.Conditions[index, 1];
-            }
-
-            temp[Process.Specification.Conditions.GetLength(0), 1] = selectedAction;
-            temp[Process.Specification.Conditions.GetLength(0), 0] = contextRequestAction;
-
-            Process.Specification.Conditions = temp;
+            ProcessHandler.AddCondition(contextRequestAction, selectedAction); 
             Visualizer.ProcessUpdate();
             processPanel.Refresh();
         }
 
         private void testToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            short[,] temp;
-
-            temp = new short[Process.Specification.Responses.GetLength(0) + 1, 2];
-
-            for (var index = 0; index < Process.Specification.Responses.GetLength(0); index++)
-            {
-                temp[index, 0] = Process.Specification.Responses[index, 0];
-                temp[index, 1] = Process.Specification.Responses[index, 1];
-            }
-
-            temp[Process.Specification.Responses.GetLength(0), 0] = selectedAction;
-            temp[Process.Specification.Responses.GetLength(0), 1] = contextRequestAction;
-
-            Process.Specification.Responses = temp;
+            ProcessHandler.AddResponse(selectedAction, contextRequestAction); 
             Visualizer.ProcessUpdate();
             processPanel.Refresh();
         }
 
         private void addIncludeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            short[,] temp;
-
-            temp = new short[Process.Specification.Includes.GetLength(0) + 1, 2];
-
-            for (var index = 0; index < Process.Specification.Includes.GetLength(0); index++)
-            {
-                temp[index, 0] = Process.Specification.Includes[index, 0];
-                temp[index, 1] = Process.Specification.Includes[index, 1];
-            }
-
-            temp[Process.Specification.Includes.GetLength(0), 0] = selectedAction;
-            temp[Process.Specification.Includes.GetLength(0), 1] = contextRequestAction;
-
-            Process.Specification.Includes = temp;
+            ProcessHandler.AddInclude(selectedAction, contextRequestAction);
             Visualizer.ProcessUpdate();
             processPanel.Refresh();
         }
 
         private void addExcludeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            short[,] temp;
-
-            temp = new short[Process.Specification.Excludes.GetLength(0) + 1, 2];
-
-            for (var index = 0; index < Process.Specification.Excludes.GetLength(0); index++)
-            {
-                temp[index, 0] = Process.Specification.Excludes[index, 0];
-                temp[index, 1] = Process.Specification.Excludes[index, 1];
-            }
-
-            temp[Process.Specification.Excludes.GetLength(0), 0] = selectedAction;
-            temp[Process.Specification.Excludes.GetLength(0), 1] = contextRequestAction;
-
-            Process.Specification.Excludes = temp;
+            
+            ProcessHandler.AddExclude(selectedAction, contextRequestAction);
             Visualizer.ProcessUpdate();
             processPanel.Refresh();
         }
+
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -272,10 +232,7 @@ namespace DCRSGraphicalEditor
 
         private void addNodeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            short maxNode = Process.Specification.ActionList.Max(x => x.Key);
-            short newNode = (short)(maxNode + 1);
-            Process.Specification.ActionList.Add(newNode, "Action " + newNode.ToString());
-            Process.Specification.ActionsToRolesDictionary.Add(newNode, new List<string>());
+            short newNode = ProcessHandler.AddAction();            
             Visualizer.Placement.Add(newNode, contextLocation);
             Visualizer.ProcessUpdate();
             processPanel.Refresh();
@@ -307,6 +264,14 @@ namespace DCRSGraphicalEditor
             foreach (string s in clbRoles.CheckedItems)
                 Process.Specification.ActionsToRolesDictionary[selectedAction].Add(s);            
 
+            Visualizer.ProcessUpdate();
+            processPanel.Refresh();
+        }
+
+        private void removeNodeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ProcessHandler.RemoveAction(contextRequestAction);
+            Visualizer.Placement.Remove(contextRequestAction);
             Visualizer.ProcessUpdate();
             processPanel.Refresh();
         }
