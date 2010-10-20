@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ITU.DK.DCRS.CommonTypes.Process;
+using ITU.DK.DCRS.Visualization.Elements;
 
 namespace DCRSGraphicalEditor
 {
@@ -139,7 +140,26 @@ namespace DCRSGraphicalEditor
         }
 
 
+        public void RemovePrimitive(Arrow a)
+        {
+            if (a.GetType() == typeof(ConditionArrow))
+            {
+                RemoveCondition(a.DestinationNode.Id, a.SourceNode.Id);
+            }
+            else if (a.GetType() == typeof(ResponseArrow))
+            {
+                RemoveResponse(a.SourceNode.Id, a.DestinationNode.Id);
+            }
+            else if (a.GetType() == typeof(ExclusionArrow))
+            {
+                RemoveExclude(a.SourceNode.Id, a.DestinationNode.Id);
+            }
+            else if (a.GetType() == typeof(InclusionArrow))
+            {
+                RemoveInclude(a.SourceNode.Id, a.DestinationNode.Id);
+            }
 
 
+        }
     }
 }

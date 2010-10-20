@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using ITU.DK.DCRS.CommonTypes.Process;
 using ITU.DK.DCRS.Visualization;
+using ITU.DK.DCRS.Visualization.Elements;
 using ITU.DK.DCRS.RemoteServices;
 
 namespace DCRSGraphicalEditor
@@ -76,6 +77,7 @@ namespace DCRSGraphicalEditor
         protected Point contextLocation;
 
         protected short contextRequestAction = -1;
+        protected Arrow contextRequestArrow = null;
 
         private void processPanel_MouseDown(object sender, MouseEventArgs e)
         {
@@ -97,6 +99,7 @@ namespace DCRSGraphicalEditor
             else if (e.Button == MouseButtons.Right)
             {
                 contextRequestAction = Visualizer.GetActionByPos(e.Location);
+                contextRequestArrow = Visualizer.GetArrowByPos(e.Location);
                 contextLocation = e.Location;
             }
         }
@@ -165,7 +168,17 @@ namespace DCRSGraphicalEditor
 
         private void cmProcessPanel_Opening(object sender, CancelEventArgs e)
         {
-            if ((selectedAction == -1) && (contextRequestAction != -1))
+            if (contextRequestArrow != null)
+            {
+                addConditionToolStripMenuItem.Visible = false;
+                addResponseToolStripMenuItem.Visible = false;
+                addIncludeToolStripMenuItem.Visible = false;
+                addExcludeToolStripMenuItem.Visible = false;
+                addNodeToolStripMenuItem.Visible = false;
+                removeNodeToolStripMenuItem.Visible = false;
+                removePrimitiveToolStripMenuItem.Visible = true;
+            } 
+            else if ((selectedAction == -1) && (contextRequestAction != -1))
             {
                 addConditionToolStripMenuItem.Visible = false;
                 addResponseToolStripMenuItem.Visible = false;
@@ -173,6 +186,7 @@ namespace DCRSGraphicalEditor
                 addExcludeToolStripMenuItem.Visible = false;
                 addNodeToolStripMenuItem.Visible = false;
                 removeNodeToolStripMenuItem.Visible = true;
+                removePrimitiveToolStripMenuItem.Visible = false;
             }
             else if (contextRequestAction == -1)
             {
@@ -182,6 +196,7 @@ namespace DCRSGraphicalEditor
                 addExcludeToolStripMenuItem.Visible = false;
                 addNodeToolStripMenuItem.Visible = true;
                 removeNodeToolStripMenuItem.Visible = false;
+                removePrimitiveToolStripMenuItem.Visible = false;
             }
             else
             {
@@ -191,6 +206,7 @@ namespace DCRSGraphicalEditor
                 addExcludeToolStripMenuItem.Visible = true;
                 addNodeToolStripMenuItem.Visible = false;
                 removeNodeToolStripMenuItem.Visible = false;
+                removePrimitiveToolStripMenuItem.Visible = false;
             }
         }
 
@@ -272,6 +288,13 @@ namespace DCRSGraphicalEditor
         {
             ProcessHandler.RemoveAction(contextRequestAction);
             Visualizer.Placement.Remove(contextRequestAction);
+            Visualizer.ProcessUpdate();
+            processPanel.Refresh();
+        }
+
+        private void removePrimitiveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ProcessHandler.RemovePrimitive(contextRequestArrow);
             Visualizer.ProcessUpdate();
             processPanel.Refresh();
         }

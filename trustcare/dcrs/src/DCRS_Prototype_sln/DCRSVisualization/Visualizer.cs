@@ -297,6 +297,37 @@ namespace ITU.DK.DCRS.Visualization
             return -1;
         }
 
+        // improve this - for example finding the closest line to point p?
+        // also perhaps do some kidn of selection...
+        public Arrow GetArrowByPos(Point p)
+        {
+            foreach (Arrow x in Arrows)
+            {
+                if (p.X < x.ArrowSource.X + 10 && p.X > x.ArrowSource.X - 10)
+                    if (p.Y < x.ArrowSource.Y + 10 && p.Y > x.ArrowSource.Y - 10)
+                        return x;
+
+                if (p.X < x.ArrowDestination.X + 10 && p.X > x.ArrowDestination.X - 10)
+                    if (p.Y < x.ArrowDestination.Y + 10 && p.Y > x.ArrowDestination.Y - 10)
+                        return x;
+            }
+
+
+            foreach (Arrow x in SelfArrows)
+            {
+                if (p.X < x.ArrowSource.X + 10 && p.X > x.ArrowSource.X - 10)
+                    if (p.Y < x.ArrowSource.Y + 10 && p.Y > x.ArrowSource.Y - 10)
+                        return x;
+
+                if (p.X < x.ArrowDestination.X + 10 && p.X > x.ArrowDestination.X - 10)
+                    if (p.Y < x.ArrowDestination.Y + 10 && p.Y > x.ArrowDestination.Y - 10)
+                        return x;
+            }
+
+            return null;
+        }
+
+
 
         public void StorePlacement()
         {

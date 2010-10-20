@@ -61,6 +61,8 @@ namespace ITU.DK.DCRS.Visualization.Elements
     Set<NodeConnector> FreeConnectors;        /// Set of free connectors.
     Set<SelfConnector> UsedSelfConnectors;    /// Set of self-connectors that have been used already.
     Set<SelfConnector> FreeSelfConnectors;    /// Set of free self-connectors.
+                                              /// 
+    public short Id { get { return ID; } }
 
     /// Fields and/or properties for execution.
     public Boolean included = true;             /// Is the action currently included?

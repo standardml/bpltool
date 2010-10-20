@@ -32,6 +32,12 @@ namespace ITU.DK.DCRS.Visualization.Elements
     protected Vector2 ArrowEnd; // The arrowtip, excluding any symbols ahead of the arrowtip.
     protected Vector2 ArrowStart; // The arrow starting point, excluding any symbols at the start of the arrow.
 
+    public Point ArrowSource { get { return ArrowSrc.ToPoint; } }
+    public Point ArrowDestination { get { return ArrowDst.ToPoint; } }
+
+    public ActionNode SourceNode { get { return srcNode; } }
+    public ActionNode DestinationNode { get { return dstNode; } }
+
 
     protected void Init()
     {

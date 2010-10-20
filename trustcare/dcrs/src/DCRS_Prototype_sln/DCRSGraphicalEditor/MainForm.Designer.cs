@@ -43,6 +43,7 @@
             this.addIncludeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addExcludeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addNodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.removeNodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.processPanel = new DCRSGraphicalEditor.DoubleBufferPanel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.clbRoles = new System.Windows.Forms.CheckedListBox();
@@ -50,7 +51,7 @@
             this.cbEnabled = new System.Windows.Forms.CheckBox();
             this.tbName = new System.Windows.Forms.TextBox();
             this.btnStoreActionDetails = new System.Windows.Forms.Button();
-            this.removeNodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.removePrimitiveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.cmProcessPanel.SuspendLayout();
             this.processPanel.SuspendLayout();
@@ -130,45 +131,53 @@
             this.addIncludeToolStripMenuItem,
             this.addExcludeToolStripMenuItem,
             this.addNodeToolStripMenuItem,
-            this.removeNodeToolStripMenuItem});
+            this.removeNodeToolStripMenuItem,
+            this.removePrimitiveToolStripMenuItem});
             this.cmProcessPanel.Name = "cmProcessPanel";
-            this.cmProcessPanel.Size = new System.Drawing.Size(155, 158);
+            this.cmProcessPanel.Size = new System.Drawing.Size(168, 180);
             this.cmProcessPanel.Opening += new System.ComponentModel.CancelEventHandler(this.cmProcessPanel_Opening);
             // 
             // addConditionToolStripMenuItem
             // 
             this.addConditionToolStripMenuItem.Name = "addConditionToolStripMenuItem";
-            this.addConditionToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.addConditionToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
             this.addConditionToolStripMenuItem.Text = "Add &Condition";
             this.addConditionToolStripMenuItem.Click += new System.EventHandler(this.testToolStripMenuItem_Click);
             // 
             // addResponseToolStripMenuItem
             // 
             this.addResponseToolStripMenuItem.Name = "addResponseToolStripMenuItem";
-            this.addResponseToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.addResponseToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
             this.addResponseToolStripMenuItem.Text = "Add &Response";
             this.addResponseToolStripMenuItem.Click += new System.EventHandler(this.testToolStripMenuItem1_Click);
             // 
             // addIncludeToolStripMenuItem
             // 
             this.addIncludeToolStripMenuItem.Name = "addIncludeToolStripMenuItem";
-            this.addIncludeToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.addIncludeToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
             this.addIncludeToolStripMenuItem.Text = "Add &Include";
             this.addIncludeToolStripMenuItem.Click += new System.EventHandler(this.addIncludeToolStripMenuItem_Click);
             // 
             // addExcludeToolStripMenuItem
             // 
             this.addExcludeToolStripMenuItem.Name = "addExcludeToolStripMenuItem";
-            this.addExcludeToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.addExcludeToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
             this.addExcludeToolStripMenuItem.Text = "Add &Exclude";
             this.addExcludeToolStripMenuItem.Click += new System.EventHandler(this.addExcludeToolStripMenuItem_Click);
             // 
             // addNodeToolStripMenuItem
             // 
             this.addNodeToolStripMenuItem.Name = "addNodeToolStripMenuItem";
-            this.addNodeToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.addNodeToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
             this.addNodeToolStripMenuItem.Text = "Add Node";
             this.addNodeToolStripMenuItem.Click += new System.EventHandler(this.addNodeToolStripMenuItem_Click);
+            // 
+            // removeNodeToolStripMenuItem
+            // 
+            this.removeNodeToolStripMenuItem.Name = "removeNodeToolStripMenuItem";
+            this.removeNodeToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.removeNodeToolStripMenuItem.Text = "Remove Node";
+            this.removeNodeToolStripMenuItem.Click += new System.EventHandler(this.removeNodeToolStripMenuItem_Click);
             // 
             // processPanel
             // 
@@ -240,12 +249,12 @@
             this.btnStoreActionDetails.UseVisualStyleBackColor = true;
             this.btnStoreActionDetails.Click += new System.EventHandler(this.btnStoreActionDetails_Click);
             // 
-            // removeNodeToolStripMenuItem
+            // removePrimitiveToolStripMenuItem
             // 
-            this.removeNodeToolStripMenuItem.Name = "removeNodeToolStripMenuItem";
-            this.removeNodeToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
-            this.removeNodeToolStripMenuItem.Text = "Remove Node";
-            this.removeNodeToolStripMenuItem.Click += new System.EventHandler(this.removeNodeToolStripMenuItem_Click);
+            this.removePrimitiveToolStripMenuItem.Name = "removePrimitiveToolStripMenuItem";
+            this.removePrimitiveToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.removePrimitiveToolStripMenuItem.Text = "Remove Primitive";
+            this.removePrimitiveToolStripMenuItem.Click += new System.EventHandler(this.removePrimitiveToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -292,6 +301,7 @@
         private System.Windows.Forms.CheckBox cbEnabled;
         private System.Windows.Forms.CheckedListBox clbRoles;
         private System.Windows.Forms.ToolStripMenuItem removeNodeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem removePrimitiveToolStripMenuItem;
     }
 }
 
