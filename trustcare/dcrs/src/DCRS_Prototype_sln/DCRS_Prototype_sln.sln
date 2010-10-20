@@ -27,8 +27,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCRSToZingCompiler", "DCRST
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCRSModelCheckerUI", "DCRSModelCheckerUI\DCRSModelCheckerUI.csproj", "{7B711B10-BFE5-44B4-9D16-5A996510F0F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkflowEngineHost", "SampleConsoleTestApplication\WorkflowEngineHost.csproj", "{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamplePropertyMonitor", "SamplePropertyMonitor\SamplePropertyMonitor.csproj", "{0AA2CB1F-C64F-4F4F-9503-B57B92272A3B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PropertiesMonitorLibrary", "PropertiesMonitorLibrary\PropertiesMonitorLibrary.csproj", "{18C34D28-C96F-44B9-9B4A-9D07489A0463}"
@@ -42,6 +40,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCRSRemoteServices", "DCRSRemoteService\DCRSRemoteServices.csproj", "{9F9841B3-2E9F-42BA-B744-E2C1500ECE39}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCRSGraphicalEditor", "DCRSGraphicalEditor\DCRSGraphicalEditor.csproj", "{3DB76538-ABBE-4BEB-B3A8-60D93DB91815}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkflowEngineHost", "WorkflowEngineHost\WorkflowEngineHost.csproj", "{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}"
 EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
@@ -137,16 +137,6 @@ Global
 		{7B711B10-BFE5-44B4-9D16-5A996510F0F0}.Release|Mixed Platforms.Build.0 = Release|x86
 		{7B711B10-BFE5-44B4-9D16-5A996510F0F0}.Release|x86.ActiveCfg = Release|x86
 		{7B711B10-BFE5-44B4-9D16-5A996510F0F0}.Release|x86.Build.0 = Release|x86
-		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Debug|Mixed Platforms.Build.0 = Debug|x86
-		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Debug|x86.ActiveCfg = Debug|x86
-		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Debug|x86.Build.0 = Debug|x86
-		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Release|Any CPU.ActiveCfg = Release|x86
-		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Release|Mixed Platforms.Build.0 = Release|x86
-		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Release|x86.ActiveCfg = Release|x86
-		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Release|x86.Build.0 = Release|x86
 		{0AA2CB1F-C64F-4F4F-9503-B57B92272A3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0AA2CB1F-C64F-4F4F-9503-B57B92272A3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0AA2CB1F-C64F-4F4F-9503-B57B92272A3B}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -217,6 +207,16 @@ Global
 		{3DB76538-ABBE-4BEB-B3A8-60D93DB91815}.Release|Mixed Platforms.Build.0 = Release|x86
 		{3DB76538-ABBE-4BEB-B3A8-60D93DB91815}.Release|x86.ActiveCfg = Release|x86
 		{3DB76538-ABBE-4BEB-B3A8-60D93DB91815}.Release|x86.Build.0 = Release|x86
+		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Debug|x86.ActiveCfg = Debug|x86
+		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Debug|x86.Build.0 = Debug|x86
+		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Release|Any CPU.ActiveCfg = Release|x86
+		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Release|Mixed Platforms.Build.0 = Release|x86
+		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Release|x86.ActiveCfg = Release|x86
+		{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
