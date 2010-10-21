@@ -301,20 +301,27 @@ namespace ITU.DK.DCRS.Visualization
         // also perhaps do some kidn of selection...
         public Arrow GetArrowByPos(Point p)
         {
+            Arrow result = null;
+            double mindist = 20;
+
             foreach (Arrow x in Arrows)
             {
+                /*
                 if (p.X < x.ArrowSource.X + 10 && p.X > x.ArrowSource.X - 10)
                     if (p.Y < x.ArrowSource.Y + 10 && p.Y > x.ArrowSource.Y - 10)
                         return x;
 
                 if (p.X < x.ArrowDestination.X + 10 && p.X > x.ArrowDestination.X - 10)
                     if (p.Y < x.ArrowDestination.Y + 10 && p.Y > x.ArrowDestination.Y - 10)
-                        return x;
+                        return x;*/
+
+                if (x.StraightDistance(p) < mindist) { result = x; mindist = x.StraightDistance(p); }
             }
 
 
             foreach (Arrow x in SelfArrows)
             {
+                /*
                 if (p.X < x.ArrowSource.X + 10 && p.X > x.ArrowSource.X - 10)
                     if (p.Y < x.ArrowSource.Y + 10 && p.Y > x.ArrowSource.Y - 10)
                         return x;
@@ -322,9 +329,12 @@ namespace ITU.DK.DCRS.Visualization
                 if (p.X < x.ArrowDestination.X + 10 && p.X > x.ArrowDestination.X - 10)
                     if (p.Y < x.ArrowDestination.Y + 10 && p.Y > x.ArrowDestination.Y - 10)
                         return x;
+                 */
+
+                if (x.PointWithinSelfConnectorBoudningBox(p)) { result = x; }
             }
 
-            return null;
+            return result;
         }
 
 

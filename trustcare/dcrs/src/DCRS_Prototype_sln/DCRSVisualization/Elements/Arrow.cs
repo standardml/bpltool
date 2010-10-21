@@ -92,7 +92,6 @@ namespace ITU.DK.DCRS.Visualization.Elements
 
         AdjustLinePoints(sc, l, linePoints);  
         g.DrawCurve(arrowPen, linePoints);
-
       
         ArrowStart = new Vector2(linePoints[0]);
         ArrowEnd = new Vector2(linePoints[l - 1]);
@@ -293,5 +292,44 @@ namespace ITU.DK.DCRS.Visualization.Elements
       srcNode.LockConnector(toLockSrc);
       dstNode.LockConnector(toLockDst);
     }
+
+    public double StraightDistance(Point clicked)
+    {
+        Vector2 a = this.ArrowSrc;
+        Vector2 b = this.ArrowDst;
+        Vector2 c = new Vector2(clicked);
+        double u = ((c.X - a.X) * (b.X - a.X) + (c.Y - a.Y) * (b.Y - a.Y)) / ((b - a).Length() * (b - a).Length());
+
+        Vector2 t = new Vector2(a.X + u * (b.X - a.X), a.Y + u * (b.Y - a.Y));
+
+        if (!(t.X <= Math.Max(a.X, b.X) && t.X >= Math.Min(a.X, b.X) && t.Y <= Math.Max(a.Y, b.Y) && t.Y >= Math.Min(a.Y, b.Y)))
+            return Math.Min((c - a).Length(), (c - b).Length());
+        else
+            return (t - c).Length();
+    }
+
+
+    public bool PointWithinSelfConnectorBoudningBox(Point clicked)
+    {
+        double maxX = this.selfConnector.Locations[0].X;
+        double maxY = this.selfConnector.Locations[0].Y;
+        double minX = this.selfConnector.Locations[0].X;
+        double minY = this.selfConnector.Locations[0].Y;
+        foreach (Vector2 v in this.selfConnector.Locations)
+        {
+            maxX = Math.Max(maxX, v.X);
+            maxY = Math.Max(maxY, v.Y);
+            minX = Math.Min(minX, v.X);
+            minY = Math.Min(minY, v.Y);
+        }
+
+        maxX += this.srcNode.Location.X;
+        minX += this.srcNode.Location.X;
+        maxY += this.srcNode.Location.Y;
+        minY += this.srcNode.Location.Y;
+
+        return (clicked.X < maxX && clicked.Y < maxY && clicked.X > minX && clicked.Y > minY);
+    }
+
   }
 }
