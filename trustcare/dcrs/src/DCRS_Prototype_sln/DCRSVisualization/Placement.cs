@@ -167,8 +167,12 @@ namespace ITU.DK.DCRS.Visualization
         {
             Uri appUri = new Uri(System.IO.Path.GetDirectoryName(
                                      System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase));
-            String appPath = System.IO.Path.GetFullPath(appUri.AbsolutePath);
-            String placementPath = System.IO.Path.Combine(appPath, @"..\placements");
+            String appPath = System.IO.Path.GetFullPath(appUri.LocalPath); // absolute path gives a path containing %20 for spaces, which windows(XP) can nto handle
+#if DEBUG
+            String placementPath = System.IO.Path.Combine(appPath, @"..\..\placements"); // so that they can be stored and editted in the solution
+#else
+            String placementPath = System.IO.Path.Combine(appPath, @".\placements"); // so that they can be deployed with the release version
+#endif
             if (!System.IO.Directory.Exists(placementPath))
                 System.IO.Directory.CreateDirectory(placementPath);
             Placement<ST>.placementPath = placementPath;
