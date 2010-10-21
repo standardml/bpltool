@@ -21,6 +21,8 @@ namespace ITU.DK.DCRS.Visualization.Elements
         arrowBrush = Brushes.DarkOrange;
         arrowPen.Brush = arrowBrush;
       base.Draw(g);
+      if (stopDrawing)
+          return;
       g.FillEllipse(arrowBrush, ArrowSrc.ToPoint.X - 3, ArrowSrc.ToPoint.Y - 3, 6, 6);
     }
   }

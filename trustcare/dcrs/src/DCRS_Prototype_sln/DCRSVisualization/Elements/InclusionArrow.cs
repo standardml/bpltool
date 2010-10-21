@@ -47,6 +47,8 @@ namespace ITU.DK.DCRS.Visualization.Elements
         arrowBrush = Brushes.Green;
         arrowPen.Brush = arrowBrush;
       base.Draw(g);
+      if (stopDrawing)
+          return;
 
       Vector2 arrowSymbol = ((ArrowDst - ArrowEnd) / 2) + ArrowEnd;
 

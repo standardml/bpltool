@@ -130,6 +130,8 @@ namespace ITU.DK.DCRS.Visualization.Elements
       //skip
     }
 
+    protected bool stopDrawing = false;
+
     /// <summary>
     ///  Method for drawing an arrow between two different nodes.
     /// </summary>
@@ -137,14 +139,20 @@ namespace ITU.DK.DCRS.Visualization.Elements
     public void DrawOther(Graphics g)
     {
       //FindBestConnectors();
+        if (ArrowDst.Equals(ArrowSrc))
+        {
+            stopDrawing = true;
+            return;
+        }
 
-      CalculateArrowEnd();
+        CalculateArrowEnd();
 
-      Vector2 head1;
-      Vector2 head2;
-      CalculateArrowHead(out head1, out head2);
+        Vector2 head1;
+        Vector2 head2;
+        CalculateArrowHead(out head1, out head2);
 
-      DrawStraightArrow(g, head1, head2);
+        DrawStraightArrow(g, head1, head2);
+      
     }
 
     /// <summary>
@@ -220,7 +228,16 @@ namespace ITU.DK.DCRS.Visualization.Elements
       NodeConnector toLockSrc;
       NodeConnector toLockDst;
 
-      Vector2 v = new Vector2(srcNode.RectIntersect(srcNode.Location.ToPoint, dstNode.Location.ToPoint));
+      Vector2 v;
+      try
+      {
+          v = new Vector2(srcNode.RectIntersect(srcNode.Location.ToPoint, dstNode.Location.ToPoint));
+      }
+      catch (Exception e)
+      {
+          ArrowDst = ArrowSrc = new Vector2(0,0);
+          return;
+      }
       NodeConnector ncSrc1 = srcNode.ClosestFreeConnector(v);
 
       Vector2 arrowSrc1 = ncSrc1.Location + srcNode.Location;

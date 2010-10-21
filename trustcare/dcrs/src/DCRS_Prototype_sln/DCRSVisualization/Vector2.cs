@@ -188,5 +188,36 @@ namespace ITU.DK.DCRS.Visualization
             return Math.PI * angle / 180.0;
         }
 
+        
+        public override bool Equals(System.Object obj)
+        {
+            // If parameter is null return false.
+            if (obj == null)
+            {
+                return false;
+            }
+
+            // If parameter cannot be cast to Point return false.
+            Vector2 v = obj as Vector2;
+            if ((System.Object)v == null)
+            {
+                return false;
+            }
+
+            // Return true if the fields match:
+            return (X == v.X) && (Y == v.Y);
+        }
+
+        public bool Equals(Vector2 v)
+        {
+            // If parameter is null return false:
+            if ((object)v == null)
+            {
+                return false;
+            }
+
+            // Return true if the fields match:
+            return (X == v.X) && (Y == v.Y);
+        }
     }
 }

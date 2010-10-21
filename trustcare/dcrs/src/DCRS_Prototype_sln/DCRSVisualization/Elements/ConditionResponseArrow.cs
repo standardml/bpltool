@@ -20,6 +20,8 @@ namespace ITU.DK.DCRS.Visualization.Elements
         arrowBrush = Brushes.Blue;
         arrowPen.Brush = arrowBrush;
         base.Draw(g);
+        if (stopDrawing)
+            return;
         g.FillEllipse(arrowBrush, ArrowDst.ToPoint.X - 3, ArrowDst.ToPoint.Y - 3, 6, 6);
 
         arrowBrush = Brushes.DarkOrange;

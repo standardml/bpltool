@@ -158,8 +158,16 @@ namespace DCRSGraphicalEditor
             {
                 RemoveInclude(a.SourceNode.Id, a.DestinationNode.Id);
             }
-
-
+            else if (a.GetType() == typeof(ConditionReponseArrow))
+            {
+                RemoveCondition(a.DestinationNode.Id, a.SourceNode.Id);
+                RemoveResponse(a.SourceNode.Id, a.DestinationNode.Id);
+            }
+            else if (a.GetType() == typeof(MutualExclusionArrow))
+            {
+                RemoveExclude(a.SourceNode.Id, a.DestinationNode.Id);
+                RemoveExclude(a.DestinationNode.Id, a.SourceNode.Id);
+            }
         }
     }
 }
