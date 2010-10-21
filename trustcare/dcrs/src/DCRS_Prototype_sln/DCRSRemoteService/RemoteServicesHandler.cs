@@ -5,6 +5,7 @@ using System.ServiceModel;
 using ITU.DK.DCRS.CommonTypes.Exceptions;
 using ITU.DK.DCRS.CommonTypes.ServiceContracts;
 using ITU.DK.DCRS.CommonTypes.Process;
+using System.Runtime.Serialization;
 
 namespace ITU.DK.DCRS.RemoteServices
 {
@@ -197,6 +198,8 @@ ConfigurationManager.AppSettings.Get("ProcessExecutionServiceURL");
             {
                 var netTcpBinding = new NetTcpBinding(SecurityMode.Transport, true) { TransactionFlow = true };
 
+                netTcpBinding.ReaderQuotas.MaxStringContentLength = int.MaxValue;
+
                 var factory =
                     new ChannelFactory<IRepositoryServiceContract>(netTcpBinding,
                                                                         new EndpointAddress(
@@ -231,6 +234,8 @@ ConfigurationManager.AppSettings.Get("ProcessExecutionServiceURL");
             {
                 var netTcpBinding = new NetTcpBinding(SecurityMode.Transport, true) { TransactionFlow = true };
 
+                netTcpBinding.ReaderQuotas.MaxStringContentLength = int.MaxValue;
+
                 var factory =
                     new ChannelFactory<IRepositoryServiceContract>(netTcpBinding,
                                                                         new EndpointAddress(
@@ -262,6 +267,8 @@ ConfigurationManager.AppSettings.Get("ProcessExecutionServiceURL");
             try
             {
                 var netTcpBinding = new NetTcpBinding(SecurityMode.Transport, true) { TransactionFlow = true };
+                
+                netTcpBinding.ReaderQuotas.MaxStringContentLength = int.MaxValue;
 
                 var factory =
                     new ChannelFactory<IRepositoryServiceContract>(netTcpBinding,
@@ -300,6 +307,8 @@ ConfigurationManager.AppSettings.Get("ProcessExecutionServiceURL");
             try
             {
                 var netTcpBinding = new NetTcpBinding(SecurityMode.Transport, true) { TransactionFlow = true };
+
+                netTcpBinding.ReaderQuotas.MaxStringContentLength = int.MaxValue;
 
                 var factory =
                     new ChannelFactory<IProcessExecutionServiceContract>(netTcpBinding,
