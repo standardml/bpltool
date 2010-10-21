@@ -33,17 +33,33 @@ namespace ITU.DK.DCRS.WorkflowEngine.EventManagement
 
         static void Publish(T[] subscribers, bool closeSubscribers, string methodName, params object[] args)
         {
-            WaitCallback fire = delegate(object subscriber)
+            try
             {
-                Invoke(subscriber as T, methodName, args);
-                if (!closeSubscribers) return;
-                using (subscriber as IDisposable)
-                { }
-            };
 
-            Action<T> queueUp = subscriber => ThreadPool.QueueUserWorkItem(fire, subscriber);
+                WaitCallback fire = delegate(object subscriber)
+                {
+                    try
+                    {
+                        Invoke(subscriber as T, methodName, args);
+                        if (!closeSubscribers) return;
+                        using (subscriber as IDisposable)
+                        { }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("An exception of type: " + e.GetType().Name.ToString() + "occured with message: " + e.Message);
+                    }
 
-            Array.ForEach(subscribers, queueUp);
+                };
+
+                Action<T> queueUp = subscriber => ThreadPool.QueueUserWorkItem(fire, subscriber);
+
+                Array.ForEach(subscribers, queueUp);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("An exception of type: " + e.GetType().Name.ToString() + "occured with message: " + e.Message);
+            }
         }
 
 
