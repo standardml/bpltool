@@ -90,14 +90,20 @@ namespace ITU.DK.DCRS.Visualization.Layout
         public Vector2 CalcTension(ST s)
         {
             Vector2 result = new Vector2(0, 0);
+
+            foreach (ST n in TargetGraph.States)
+            {
+                result += (NodePositions[n] - NodePositions[s]);
+            }
+
             foreach (Edge<ST, LT> e in TargetGraph.OutgoingEdges[s])
             {
-            result += NodePositions[e.d] - NodePositions[s];            
+                result += (NodePositions[e.d] - NodePositions[s]) * 5;            
             }
 
             foreach (Edge<ST, LT> e in TargetGraph.IncomingEdges[s])
             {
-            result += NodePositions[e.s] - NodePositions[s];            
+                result += (NodePositions[e.s] - NodePositions[s]) * 5;            
             }
             return result;
         }
@@ -111,12 +117,21 @@ namespace ITU.DK.DCRS.Visualization.Layout
         public Vector2 CalcTensionWithOffset(ST s, Vector2 offset)
         {
           Vector2 result = new Vector2(0, 0);
+            
+          foreach (ST n in TargetGraph.States)
+          {
+              if (((NodePositions[n] - (NodePositions[s] + offset)).X == 0) && ((NodePositions[n] - (NodePositions[s] + offset)).Y == 0))
+                  result += ((NodePositions[n] - offset) - (NodePositions[s] + offset)) * 1;
+              else
+                  result += (NodePositions[n] - (NodePositions[s] + offset)) * 1;
+          }
+
           foreach (Edge<ST, LT> e in TargetGraph.OutgoingEdges[s])
           {
             if (((NodePositions[e.d] - (NodePositions[s] + offset)).X == 0) && ( (NodePositions[e.d] - (NodePositions[s] + offset)).Y == 0))
-              result += (NodePositions[e.d] - offset) - (NodePositions[s] + offset);
+              result += ((NodePositions[e.d] - offset) - (NodePositions[s] + offset)) * 5;
             else
-              result += NodePositions[e.d] - (NodePositions[s] + offset);
+              result += (NodePositions[e.d] - (NodePositions[s] + offset)) * 5;
             //result += NodePositions[e.d] - (NodePositions[s] + offset);
           }
 
@@ -124,10 +139,9 @@ namespace ITU.DK.DCRS.Visualization.Layout
           {
             //result += NodePositions[e.s] - (NodePositions[s] + offset);
             if (((NodePositions[e.s] - (NodePositions[s] + offset)).X == 0) && ((NodePositions[e.s] - (NodePositions[s] + offset)).Y == 0))
-              result += (NodePositions[e.s] - offset) - (NodePositions[s] + offset);
+                result += ((NodePositions[e.s] - offset) - (NodePositions[s] + offset)) * 5;
             else
-              result += NodePositions[e.s] - (NodePositions[s] + offset);
-
+              result += (NodePositions[e.s] - (NodePositions[s] + offset)) * 5;
           }
           return result;
         }
