@@ -163,6 +163,9 @@ namespace ITU.DK.DCRS.WorkflowEngine.Core
                 {
                     if (SpecificationInternal.Conditions[index, 0] != enabledEvent)
                         continue;
+                    // Conditions only hold incase the required state is currently included.
+                    if (!StateInternal.StateVector.IncludedActions.Contains(SpecificationInternal.Conditions[index, 1]))
+                        continue;
                     if (!StateInternal.StateVector.ExecutedActions.Contains(SpecificationInternal.Conditions[index, 1]))
                     {
                         StateInternal.EnabledActions.Remove(
