@@ -20,7 +20,11 @@ namespace DCRSGraphicalEditor
 
         public short AddAction()
         {
-            short maxNode = Process.Specification.ActionList.Max(x => x.Key);
+            short maxNode;
+            if (Process.Specification.ActionList.Count == 0)
+                maxNode = -1;
+            else
+                maxNode = Process.Specification.ActionList.Max(x => x.Key);
             short newNode = (short)(maxNode + 1);
             Process.Specification.ActionList.Add(newNode, "Action " + newNode.ToString());
             Process.Specification.ActionsToRolesDictionary.Add(newNode, new List<string>());

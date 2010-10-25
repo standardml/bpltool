@@ -243,7 +243,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
     public SelfConnector NextSelfConnector()
     {
 
-      int minUsed = 999;
+      int minUsed = 99999;
 
       foreach (int i in used)
       {

@@ -242,6 +242,13 @@ namespace ITU.DK.DCRS.Visualization
                         SelfArrows.Add(Arrow);
                 }
 
+
+            foreach (var x in Arrows)
+                x.Init();
+
+            foreach (var x in SelfArrows)
+                x.Init();
+
         }
 
 

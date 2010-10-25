@@ -24,7 +24,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
       this.arrowPen = arrowPen;
       this.srcNode = actionNode;
       this.dstNode = actionNode_2;
-      Init();
+      //Init();
     }
 
     protected Vector2 ArrowSrc; // The source of the arrow
@@ -39,7 +39,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
     public ActionNode DestinationNode { get { return dstNode; } }
 
 
-    protected void Init()
+    public void Init()
     {
         if (srcNode == dstNode)
             InitSelf();
