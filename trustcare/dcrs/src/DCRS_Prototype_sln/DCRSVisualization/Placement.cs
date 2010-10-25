@@ -167,9 +167,14 @@ namespace ITU.DK.DCRS.Visualization
         {
             Uri appUri = new Uri(System.IO.Path.GetDirectoryName(
                                      System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase));
-            String appPath = System.IO.Path.GetFullPath(appUri.LocalPath); // absolute path gives a path containing %20 for spaces, which windows(XP) can nto handle
+            String appPath = System.IO.Path.GetFullPath(appUri.LocalPath); // absolute path gives a path containing %20 for spaces, which windows(XP) can nto handle            
 #if DEBUG
-            String placementPath = System.IO.Path.Combine(appPath, @"..\..\placements"); // so that they can be stored and editted in the solution
+            // so that they can be stored and editted in the solution
+            String placementPath;
+            if (appPath.Contains("Debug")) // check is not really correct, but easy... at some point see if there isn't a way of checking if its being used by a webapplication.
+                placementPath = System.IO.Path.Combine(appPath, @"..\..\placements"); // In the case of a normal application
+            else
+                placementPath = System.IO.Path.Combine(appPath, @"..\placements"); // In the case of a web application
 #else
             String placementPath = System.IO.Path.Combine(appPath, @".\placements"); // so that they can be deployed with the release version
 #endif
