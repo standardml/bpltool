@@ -19,6 +19,12 @@ namespace DCRSGraphicalEditor
         protected DCRSProcessHandler ProcessHandler;
         protected Visualizer Visualizer;
 
+        protected Boolean NodeOnlyViewEnabled = false;
+        protected Boolean ExecutionEnabled = false;
+
+        protected DCRSProcess ExecutionProcessInstance;
+        protected int ExecutionStep;
+
         public MainForm()
         {
             InitializeComponent();
@@ -63,7 +69,12 @@ namespace DCRSGraphicalEditor
         {
             if (Visualizer != null)
             {
-                Visualizer.Draw(e.Graphics);
+                if (NodeOnlyViewEnabled)
+                    Visualizer.DrawNodeOnlyView(e.Graphics);
+                else
+                    Visualizer.Draw(e.Graphics);
+
+                
                 //Bitmap temp = Visualizer.Visualize();
                 //e.Graphics.DrawImageUnscaled(temp, 0, 0);
             }
@@ -168,7 +179,18 @@ namespace DCRSGraphicalEditor
 
         private void cmProcessPanel_Opening(object sender, CancelEventArgs e)
         {
-            if (contextRequestArrow != null)
+            if ((contextRequestAction != -1) && (ExecutionEnabled))
+            {
+                addConditionToolStripMenuItem.Visible = false;
+                addResponseToolStripMenuItem.Visible = false;
+                addIncludeToolStripMenuItem.Visible = false;
+                addExcludeToolStripMenuItem.Visible = false;
+                addNodeToolStripMenuItem.Visible = false;
+                removeNodeToolStripMenuItem.Visible = false;
+                removePrimitiveToolStripMenuItem.Visible = false;
+                executeToolStripMenuItem.Visible = true;
+            }
+            else if (contextRequestArrow != null)
             {
                 addConditionToolStripMenuItem.Visible = false;
                 addResponseToolStripMenuItem.Visible = false;
@@ -177,7 +199,8 @@ namespace DCRSGraphicalEditor
                 addNodeToolStripMenuItem.Visible = false;
                 removeNodeToolStripMenuItem.Visible = false;
                 removePrimitiveToolStripMenuItem.Visible = true;
-            } 
+                executeToolStripMenuItem.Visible = false;
+            }
             else if ((selectedAction == -1) && (contextRequestAction != -1))
             {
                 addConditionToolStripMenuItem.Visible = false;
@@ -187,6 +210,7 @@ namespace DCRSGraphicalEditor
                 addNodeToolStripMenuItem.Visible = false;
                 removeNodeToolStripMenuItem.Visible = true;
                 removePrimitiveToolStripMenuItem.Visible = false;
+                executeToolStripMenuItem.Visible = false;
             }
             else if (contextRequestAction == -1)
             {
@@ -197,6 +221,7 @@ namespace DCRSGraphicalEditor
                 addNodeToolStripMenuItem.Visible = true;
                 removeNodeToolStripMenuItem.Visible = false;
                 removePrimitiveToolStripMenuItem.Visible = false;
+                executeToolStripMenuItem.Visible = false;
             }
             else
             {
@@ -207,6 +232,7 @@ namespace DCRSGraphicalEditor
                 addNodeToolStripMenuItem.Visible = false;
                 removeNodeToolStripMenuItem.Visible = false;
                 removePrimitiveToolStripMenuItem.Visible = false;
+                executeToolStripMenuItem.Visible = false;
             }
         }
 
@@ -297,6 +323,63 @@ namespace DCRSGraphicalEditor
             ProcessHandler.RemovePrimitive(contextRequestArrow);
             Visualizer.ProcessUpdate();
             processPanel.Refresh();
+        }
+
+        private void enableNodeOnlyViewToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            NodeOnlyViewEnabled = true;
+            processPanel.Refresh();
+        }
+
+        private void enableExecutionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ExecutionEnabled = true;
+            int instanceId = RemoteServicesHandler.StartNewInstance(Process.Specification.ProcessId);
+
+            Process = DCRSProcess.Deserialize(RemoteServicesHandler.GetProcessInstance(Process.Specification.ProcessId, instanceId));
+
+            Visualizer.UpdateProcess(Process);
+            processPanel.Refresh();
+
+            Bitmap bm;
+            if (NodeOnlyViewEnabled)
+                bm = Visualizer.VisualizeNodeOnlyView();
+            else
+                bm = Visualizer.Visualize();
+            bm.Save(
+                Application.StartupPath
+                + "\\Execution_"
+                + Process.Specification.ProcessId.ToString()
+                + "_"
+                + Process.Runtime.ProcessInstanceId.ToString()
+                + "_("
+                + ExecutionStep.ToString()
+                + ").bmp");
+            ExecutionStep++;
+        }
+
+        private void executeToolStripMenuItem_Click(object sender, EventArgs e)
+        {                        
+            string principal = Process.Specification.RolesToPrincipalsDictionary[Process.Specification.ActionsToRolesDictionary[contextRequestAction][0]][0];
+            var actionExecuteResult = RemoteServicesHandler.ExecuteAction(Process.Specification.ProcessId, Process.Runtime.ProcessInstanceId, contextRequestAction, principal);
+            Process = DCRSProcess.Deserialize(RemoteServicesHandler.GetProcessInstance(Process.Specification.ProcessId, Process.Runtime.ProcessInstanceId));
+            Visualizer.UpdateProcess(Process);
+            processPanel.Refresh();
+            Bitmap bm;
+            if (NodeOnlyViewEnabled)
+                bm = Visualizer.VisualizeNodeOnlyView();
+            else
+                bm = Visualizer.Visualize();
+            bm.Save(
+                Application.StartupPath
+                + "\\Execution_"
+                + Process.Specification.ProcessId.ToString()
+                + "_"
+                + Process.Runtime.ProcessInstanceId.ToString()
+                + "_("
+                + ExecutionStep.ToString()
+                + ").bmp");
+            ExecutionStep++;
         }
     }
 }

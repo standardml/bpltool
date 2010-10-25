@@ -91,6 +91,33 @@ namespace ITU.DK.DCRS.Visualization
             return result;
         }
 
+
+        public Bitmap VisualizeNodeOnlyView()
+        {
+            Bitmap result = new Bitmap(ImageSize.Width, ImageSize.Height);
+            Graphics.FromImage(result).FillRegion(Brushes.White, new Region(new Rectangle(0, 0, ImageSize.Width, ImageSize.Height)));
+            DrawNodeOnlyView(Graphics.FromImage(result));
+            //Graphics.FromImage(result).DrawString(p.X.ToString() + ":" + p.Y.ToString(), SystemFonts.DefaultFont, Brushes.Aqua, new Point(20, 20));
+
+            int x = result.Width;
+            int y = result.Height;
+            int w = 0;
+            int h = 0;
+            foreach (short a in Nodes.Keys)
+            {
+                x = Math.Min(x, Placement.NodeLocations[a].X - 55);
+                y = Math.Min(y, Placement.NodeLocations[a].Y - 85);
+                w = Math.Max(w, Placement.NodeLocations[a].X + 55);
+                h = Math.Max(h, Placement.NodeLocations[a].Y + 55);
+            }
+
+            Rectangle rect = new Rectangle(x, y, w-x, h-y);
+            result = result.Clone(rect, result.PixelFormat);
+
+            return result;
+        }
+
+
         /// <summary>
         /// Method for determining the intended placement of nodes in the image to be generated.
         /// </summary>
@@ -122,7 +149,7 @@ namespace ITU.DK.DCRS.Visualization
 
             ImageSize = new Size(maxX + 200, maxY + 200);
         }
-
+        
         public Boolean MoveNode(short id, Point newLocation)
         {
             Placement.MoveNode(id, newLocation);
@@ -291,6 +318,16 @@ namespace ITU.DK.DCRS.Visualization
                 if (Specification.ActionsToRolesDictionary[x.Key].Intersect(roles).Count() > 0)
                     x.Value.Draw(g);            
         }
+
+
+        public void DrawNodeOnlyView(Graphics g)
+        {
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            foreach (var x in Nodes)
+                    x.Value.Draw(g);
+        }
+
 
 
         public short GetActionByPos(Point p)

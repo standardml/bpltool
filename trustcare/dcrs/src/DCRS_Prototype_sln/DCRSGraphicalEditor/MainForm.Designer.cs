@@ -44,6 +44,9 @@
             this.addExcludeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addNodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeNodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.removePrimitiveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.simulationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.enableNodeOnlyViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.processPanel = new DCRSGraphicalEditor.DoubleBufferPanel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.clbRoles = new System.Windows.Forms.CheckedListBox();
@@ -51,7 +54,8 @@
             this.cbEnabled = new System.Windows.Forms.CheckBox();
             this.tbName = new System.Windows.Forms.TextBox();
             this.btnStoreActionDetails = new System.Windows.Forms.Button();
-            this.removePrimitiveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.enableExecutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.executeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.cmProcessPanel.SuspendLayout();
             this.processPanel.SuspendLayout();
@@ -62,7 +66,8 @@
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.processToolStripMenuItem});
+            this.processToolStripMenuItem,
+            this.simulationToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(899, 24);
@@ -132,9 +137,10 @@
             this.addExcludeToolStripMenuItem,
             this.addNodeToolStripMenuItem,
             this.removeNodeToolStripMenuItem,
-            this.removePrimitiveToolStripMenuItem});
+            this.removePrimitiveToolStripMenuItem,
+            this.executeToolStripMenuItem});
             this.cmProcessPanel.Name = "cmProcessPanel";
-            this.cmProcessPanel.Size = new System.Drawing.Size(168, 180);
+            this.cmProcessPanel.Size = new System.Drawing.Size(168, 202);
             this.cmProcessPanel.Opening += new System.ComponentModel.CancelEventHandler(this.cmProcessPanel_Opening);
             // 
             // addConditionToolStripMenuItem
@@ -178,6 +184,29 @@
             this.removeNodeToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
             this.removeNodeToolStripMenuItem.Text = "Remove Node";
             this.removeNodeToolStripMenuItem.Click += new System.EventHandler(this.removeNodeToolStripMenuItem_Click);
+            // 
+            // removePrimitiveToolStripMenuItem
+            // 
+            this.removePrimitiveToolStripMenuItem.Name = "removePrimitiveToolStripMenuItem";
+            this.removePrimitiveToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.removePrimitiveToolStripMenuItem.Text = "Remove Primitive";
+            this.removePrimitiveToolStripMenuItem.Click += new System.EventHandler(this.removePrimitiveToolStripMenuItem_Click);
+            // 
+            // simulationToolStripMenuItem
+            // 
+            this.simulationToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.enableNodeOnlyViewToolStripMenuItem,
+            this.enableExecutionToolStripMenuItem});
+            this.simulationToolStripMenuItem.Name = "simulationToolStripMenuItem";
+            this.simulationToolStripMenuItem.Size = new System.Drawing.Size(67, 20);
+            this.simulationToolStripMenuItem.Text = "Simulation";
+            // 
+            // enableNodeOnlyViewToolStripMenuItem
+            // 
+            this.enableNodeOnlyViewToolStripMenuItem.Name = "enableNodeOnlyViewToolStripMenuItem";
+            this.enableNodeOnlyViewToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
+            this.enableNodeOnlyViewToolStripMenuItem.Text = "Enable Node Only View";
+            this.enableNodeOnlyViewToolStripMenuItem.Click += new System.EventHandler(this.enableNodeOnlyViewToolStripMenuItem_Click);
             // 
             // processPanel
             // 
@@ -249,12 +278,19 @@
             this.btnStoreActionDetails.UseVisualStyleBackColor = true;
             this.btnStoreActionDetails.Click += new System.EventHandler(this.btnStoreActionDetails_Click);
             // 
-            // removePrimitiveToolStripMenuItem
+            // enableExecutionToolStripMenuItem
             // 
-            this.removePrimitiveToolStripMenuItem.Name = "removePrimitiveToolStripMenuItem";
-            this.removePrimitiveToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
-            this.removePrimitiveToolStripMenuItem.Text = "Remove Primitive";
-            this.removePrimitiveToolStripMenuItem.Click += new System.EventHandler(this.removePrimitiveToolStripMenuItem_Click);
+            this.enableExecutionToolStripMenuItem.Name = "enableExecutionToolStripMenuItem";
+            this.enableExecutionToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
+            this.enableExecutionToolStripMenuItem.Text = "Enable Execution";
+            this.enableExecutionToolStripMenuItem.Click += new System.EventHandler(this.enableExecutionToolStripMenuItem_Click);
+            // 
+            // executeToolStripMenuItem
+            // 
+            this.executeToolStripMenuItem.Name = "executeToolStripMenuItem";
+            this.executeToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.executeToolStripMenuItem.Text = "Execute";
+            this.executeToolStripMenuItem.Click += new System.EventHandler(this.executeToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -302,6 +338,10 @@
         private System.Windows.Forms.CheckedListBox clbRoles;
         private System.Windows.Forms.ToolStripMenuItem removeNodeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removePrimitiveToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem simulationToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem enableNodeOnlyViewToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem enableExecutionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem executeToolStripMenuItem;
     }
 }
 
