@@ -36,6 +36,8 @@ namespace ITU.DK.DCRS.WorkflowEngine.Services
 
                 var netTcpBinding = new NetTcpBinding(SecurityMode.Transport, true) { TransactionFlow = true };
 
+                netTcpBinding.ReaderQuotas.MaxStringContentLength = int.MaxValue;
+
                 subscriptionServiceHost.AddServiceEndpoint(typeof(IPersistentSubscriptionService),
                                         netTcpBinding,
                                         "RepositorySubscriptionService");
@@ -69,6 +71,8 @@ namespace ITU.DK.DCRS.WorkflowEngine.Services
                         });
 
                 var netTcpBinding = new NetTcpBinding(SecurityMode.Transport, true) { TransactionFlow = true };
+
+                netTcpBinding.ReaderQuotas.MaxStringContentLength = int.MaxValue;
 
                 repositoryServiceHost.AddServiceEndpoint(typeof(IRepositoryServiceContract),
                                         netTcpBinding,
@@ -104,6 +108,8 @@ namespace ITU.DK.DCRS.WorkflowEngine.Services
                         });
 
                 var netTcpBinding = new NetTcpBinding(SecurityMode.Transport, true) { TransactionFlow = true };
+
+                netTcpBinding.ReaderQuotas.MaxStringContentLength = int.MaxValue;
 
                 executionServiceHost.AddServiceEndpoint(typeof(IProcessExecutionServiceContract),
                                         netTcpBinding,
