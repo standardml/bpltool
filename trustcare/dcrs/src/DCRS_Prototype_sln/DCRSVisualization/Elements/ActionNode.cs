@@ -206,7 +206,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
         TextBrush = Brushes.Black;
 
         DrawingPen.Brush = Brushes.Red;
-        if (!enabled)
+        if (included && !enabled)
         {
             g.DrawEllipse(DrawingPen, Location.ToPoint.X - 30, Location.ToPoint.Y - 47, 20,20);
             g.DrawLine(DrawingPen, (Location + new Vector2(-20, -37) + new Vector2(7, -7)).ToPoint, (Location + new Vector2(-20, -37) + new Vector2(-7, 7)).ToPoint);
