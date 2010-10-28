@@ -31,6 +31,11 @@ namespace DCRSGraphicalEditor
                         
             DCRSProcess p = DCRSProcess.Deserialize(RemoteServicesHandler.GetProcess(9));            
             spd_ProcessSelected(p);
+
+            RemoteServicesHandler.HostSubscriptionServiceClient();
+
+
+            RemoteServicesHandler.HostNotificationService();
         }
 
         private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
@@ -380,6 +385,11 @@ namespace DCRSGraphicalEditor
                 + ExecutionStep.ToString()
                 + ").bmp");
             ExecutionStep++;
+        }
+
+        private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
+        {   
+            RemoteServicesHandler.CloseNotificationService();            
         }
     }
 }

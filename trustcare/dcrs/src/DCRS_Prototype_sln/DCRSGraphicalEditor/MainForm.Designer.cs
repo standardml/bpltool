@@ -37,6 +37,9 @@
             this.processToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.storePlacementToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.storeProcessToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.simulationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.enableNodeOnlyViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.enableExecutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cmProcessPanel = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.addConditionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addResponseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -45,8 +48,7 @@
             this.addNodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeNodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removePrimitiveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.simulationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.enableNodeOnlyViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.executeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.processPanel = new DCRSGraphicalEditor.DoubleBufferPanel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.clbRoles = new System.Windows.Forms.CheckedListBox();
@@ -54,8 +56,6 @@
             this.cbEnabled = new System.Windows.Forms.CheckBox();
             this.tbName = new System.Windows.Forms.TextBox();
             this.btnStoreActionDetails = new System.Windows.Forms.Button();
-            this.enableExecutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.executeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.cmProcessPanel.SuspendLayout();
             this.processPanel.SuspendLayout();
@@ -128,6 +128,29 @@
             this.storeProcessToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
             this.storeProcessToolStripMenuItem.Text = "Store Process";
             // 
+            // simulationToolStripMenuItem
+            // 
+            this.simulationToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.enableNodeOnlyViewToolStripMenuItem,
+            this.enableExecutionToolStripMenuItem});
+            this.simulationToolStripMenuItem.Name = "simulationToolStripMenuItem";
+            this.simulationToolStripMenuItem.Size = new System.Drawing.Size(67, 20);
+            this.simulationToolStripMenuItem.Text = "Simulation";
+            // 
+            // enableNodeOnlyViewToolStripMenuItem
+            // 
+            this.enableNodeOnlyViewToolStripMenuItem.Name = "enableNodeOnlyViewToolStripMenuItem";
+            this.enableNodeOnlyViewToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
+            this.enableNodeOnlyViewToolStripMenuItem.Text = "Enable Node Only View";
+            this.enableNodeOnlyViewToolStripMenuItem.Click += new System.EventHandler(this.enableNodeOnlyViewToolStripMenuItem_Click);
+            // 
+            // enableExecutionToolStripMenuItem
+            // 
+            this.enableExecutionToolStripMenuItem.Name = "enableExecutionToolStripMenuItem";
+            this.enableExecutionToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
+            this.enableExecutionToolStripMenuItem.Text = "Enable Execution";
+            this.enableExecutionToolStripMenuItem.Click += new System.EventHandler(this.enableExecutionToolStripMenuItem_Click);
+            // 
             // cmProcessPanel
             // 
             this.cmProcessPanel.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -192,21 +215,12 @@
             this.removePrimitiveToolStripMenuItem.Text = "Remove Primitive";
             this.removePrimitiveToolStripMenuItem.Click += new System.EventHandler(this.removePrimitiveToolStripMenuItem_Click);
             // 
-            // simulationToolStripMenuItem
+            // executeToolStripMenuItem
             // 
-            this.simulationToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.enableNodeOnlyViewToolStripMenuItem,
-            this.enableExecutionToolStripMenuItem});
-            this.simulationToolStripMenuItem.Name = "simulationToolStripMenuItem";
-            this.simulationToolStripMenuItem.Size = new System.Drawing.Size(67, 20);
-            this.simulationToolStripMenuItem.Text = "Simulation";
-            // 
-            // enableNodeOnlyViewToolStripMenuItem
-            // 
-            this.enableNodeOnlyViewToolStripMenuItem.Name = "enableNodeOnlyViewToolStripMenuItem";
-            this.enableNodeOnlyViewToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
-            this.enableNodeOnlyViewToolStripMenuItem.Text = "Enable Node Only View";
-            this.enableNodeOnlyViewToolStripMenuItem.Click += new System.EventHandler(this.enableNodeOnlyViewToolStripMenuItem_Click);
+            this.executeToolStripMenuItem.Name = "executeToolStripMenuItem";
+            this.executeToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.executeToolStripMenuItem.Text = "Execute";
+            this.executeToolStripMenuItem.Click += new System.EventHandler(this.executeToolStripMenuItem_Click);
             // 
             // processPanel
             // 
@@ -278,20 +292,6 @@
             this.btnStoreActionDetails.UseVisualStyleBackColor = true;
             this.btnStoreActionDetails.Click += new System.EventHandler(this.btnStoreActionDetails_Click);
             // 
-            // enableExecutionToolStripMenuItem
-            // 
-            this.enableExecutionToolStripMenuItem.Name = "enableExecutionToolStripMenuItem";
-            this.enableExecutionToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
-            this.enableExecutionToolStripMenuItem.Text = "Enable Execution";
-            this.enableExecutionToolStripMenuItem.Click += new System.EventHandler(this.enableExecutionToolStripMenuItem_Click);
-            // 
-            // executeToolStripMenuItem
-            // 
-            this.executeToolStripMenuItem.Name = "executeToolStripMenuItem";
-            this.executeToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
-            this.executeToolStripMenuItem.Text = "Execute";
-            this.executeToolStripMenuItem.Click += new System.EventHandler(this.executeToolStripMenuItem_Click);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -302,6 +302,7 @@
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
             this.Text = "Form1";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.cmProcessPanel.ResumeLayout(false);
