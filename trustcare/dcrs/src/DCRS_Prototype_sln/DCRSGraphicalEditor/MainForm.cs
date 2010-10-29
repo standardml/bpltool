@@ -35,7 +35,7 @@ namespace DCRSGraphicalEditor
             RemoteServicesHandler.HostSubscriptionServiceClient();
 
 
-            RemoteServicesHandler.HostNotificationService();
+            //RemoteServicesHandler.HostNotificationService();
         }
 
         private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
@@ -389,7 +389,7 @@ namespace DCRSGraphicalEditor
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {   
-            RemoteServicesHandler.CloseNotificationService();            
+            //RemoteServicesHandler.CloseNotificationService();            
         }
     }
 }
