@@ -44,7 +44,6 @@
   </xsl:template>
 
 
-
   <xsl:template match="bpel:sequence">
     <xsl:param name="prefix" />
     <xsl:param name="isSqChild" />
@@ -67,33 +66,32 @@
         <xsl:with-param name="prefix" select="$prefix" />
       </xsl:call-template>
         
-        
-        <xsl:if test="$childCount &gt; 1">
-          <xsl:variable name="childPrefix">
-              <xsl:value-of select="$uniquePrefix" />
-              <xsl:value-of select="string('s')" />
-              <xsl:number level="multiple" count="bpel:sequence" format="1.1"/>              
-              <xsl:value-of select="string('l')" />
-          </xsl:variable>
-        
-          <xsl:call-template name="sequence-links">
-            <xsl:with-param name="prefix" select="$childPrefix" />
-          </xsl:call-template>
+      <xsl:if test="$childCount &gt; 1">
+        <xsl:variable name="childPrefix">
+          <xsl:value-of select="$uniquePrefix" />
+          <xsl:value-of select="string('s')" />
+          <xsl:number level="multiple" count="bpel:sequence" format="1.1"/>              
+          <xsl:value-of select="string('l')" />
+        </xsl:variable>
+      
+        <xsl:call-template name="sequence-links">
+          <xsl:with-param name="prefix" select="$childPrefix" />
+        </xsl:call-template>
 
-          <xsl:apply-templates select="bpel:assign | bpel:compensate | bpel:compensateScope | bpel:empty | bpel:exit | bpel:invoke | bpel:receive | bpel:reply | bpel:rethrow | bpel:throw | bpel:validate | bpel:wait | bpel:flow | bpel:forEach | bpel:if | bpel:pick | bpel:repeatUntil | bpel:sequence | bpel:while | bpel:scope">
-            <xsl:with-param name="uniquePrefix" select="string($uniquePrefix)" />
-            <xsl:with-param name="prefix" select="$childPrefix" />
-            <xsl:with-param name="isSqChild" select="true()" />
-          </xsl:apply-templates>
-        </xsl:if>
+        <xsl:apply-templates select="bpel:assign | bpel:compensate | bpel:compensateScope | bpel:empty | bpel:exit | bpel:invoke | bpel:receive | bpel:reply | bpel:rethrow | bpel:throw | bpel:validate | bpel:wait | bpel:flow | bpel:forEach | bpel:if | bpel:pick | bpel:repeatUntil | bpel:sequence | bpel:while | bpel:scope">
+          <xsl:with-param name="uniquePrefix" select="string($uniquePrefix)" />
+          <xsl:with-param name="prefix" select="$childPrefix" />
+          <xsl:with-param name="isSqChild" select="true()" />
+        </xsl:apply-templates>
+      </xsl:if>
 
-        <!-- IF ONLY ONE CHILD IN THE SEQUENCE -->
-        <!-- THEN NO LINKS ARE NEEDED -->
-        <xsl:if test="$childCount = 1">
-          <xsl:apply-templates>
-            <xsl:with-param name="uniquePrefix" select="string($uniquePrefix)" />
-          </xsl:apply-templates>
-        </xsl:if>
+      <!-- IF ONLY ONE CHILD IN THE SEQUENCE -->
+      <!-- THEN NO LINKS ARE NEEDED -->
+      <xsl:if test="$childCount = 1">
+        <xsl:apply-templates>
+          <xsl:with-param name="uniquePrefix" select="string($uniquePrefix)" />
+        </xsl:apply-templates>
+      </xsl:if>
 
     </bpel:flow>
   </xsl:template>

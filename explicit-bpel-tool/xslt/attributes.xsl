@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
+<!-- Make the inherited default attribute values explicit.
+     Attributes: suppressJoinFailure, exitOnStandardFault -->
+
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable">

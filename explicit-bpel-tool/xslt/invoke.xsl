@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
+<!-- Move the <scope>-parts of an <invoke> into an explicit enclosing <scope>. -->
+<!-- Also, make temporary variables and assignments, due to the use of <toParts>,
+     <fromParts>, and/or references to element variables, explicit. -->
+
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"

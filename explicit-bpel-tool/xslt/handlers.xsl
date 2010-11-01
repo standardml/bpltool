@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
+<!-- Make the default fault, compensation, and termination handlers explicit. -->
+
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable">
@@ -57,9 +59,9 @@
             
       <xsl:apply-templates select="bpel:terminationHandler" />
       <xsl:if test="not(bpel:terminationHandler)">
-          <bpel:terminationHandler>
-            <bpel:compensate />
-          </bpel:terminationHandler>
+        <bpel:terminationHandler>
+          <bpel:compensate />
+        </bpel:terminationHandler>
         <xsl:message terminate="no">Added default terminationHandler</xsl:message>
       </xsl:if>
     
