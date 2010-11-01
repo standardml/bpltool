@@ -49,7 +49,11 @@ public class TransformAttributesTest extends TestCase {
     
     public final void testExitOnStandardFault() {
         
-        assertEquals("yes", getString("/bpel:process/@exitOnStandardFault"));
+        try {
+            assertFalse((Boolean) xPath.evaluate("/bpel:process/@exitOnStandardFault", transformed, XPathConstants.BOOLEAN));
+        } catch (XPathExpressionException e) {
+            assertTrue(false);
+        }
         assertEquals("yes", getString("//bpel:scope[@name='a']/@exitOnStandardFault"));
         assertEquals("no", getString("//bpel:scope[@name='b']/@exitOnStandardFault"));
         assertEquals("no", getString("//bpel:scope[@name='c']/@exitOnStandardFault"));
@@ -58,7 +62,11 @@ public class TransformAttributesTest extends TestCase {
     
     public final void testSuppressJoinFailure() {
 
-        assertEquals("yes", getString("/bpel:process/@suppressJoinFailure"));
+        try {
+            assertFalse((Boolean) xPath.evaluate("/bpel:process/@suppressJoinFailure", transformed, XPathConstants.BOOLEAN));
+        } catch (XPathExpressionException e) {
+            assertTrue(false);
+        }
         assertEquals("yes", getString("//bpel:scope[@name='a']/@suppressJoinFailure"));
         assertEquals("no", getString("//bpel:scope[@name='b']/@suppressJoinFailure"));
         assertEquals("no", getString("//bpel:scope[@name='c']/@suppressJoinFailure"));

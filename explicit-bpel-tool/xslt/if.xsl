@@ -38,11 +38,18 @@
       <bpel:else>
         <bpel:if>
           <xsl:copy-of select="*" />
-
-          <xsl:if test="$if/bpel:else">
-            <xsl:copy-of select="$if/bpel:else" />
-          </xsl:if>
-
+          
+          <xsl:choose>
+            <xsl:when test="$if/bpel:else">
+              <xsl:copy-of select="$if/bpel:else" />
+            </xsl:when>
+            <xsl:otherwise>
+              <bpel:else>
+                <bpel:empty/>
+              </bpel:else>
+            </xsl:otherwise>
+          </xsl:choose>
+  
         </bpel:if>
       </bpel:else>
     </xsl:if>    
@@ -60,6 +67,17 @@
         <xsl:with-param name="count" select="count(bpel:elseif)"/>
         <xsl:with-param name="index" select="1"/>
       </xsl:apply-templates>
+    </xsl:copy>
+  </xsl:template>
+
+  
+  <xsl:template match="bpel:if[not(bpel:else | bpel:elseif)]">
+    <xsl:copy>
+      <xsl:copy-of select="@*" />
+      <xsl:apply-templates />
+      <bpel:else>
+        <bpel:empty />
+      </bpel:else>
     </xsl:copy>
   </xsl:template>
   

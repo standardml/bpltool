@@ -51,11 +51,11 @@ public class Transform {
     private final Schema cBpelSchema;
     private final boolean verbose;
     private String[] sheets = { 
-    		"process.xsl",                        // Move process scope to an explicit scope
+            "process.xsl",                        // Move process scope to an explicit scope
+            "while.xsl",                          // while to repeatUntil
     		"if.xsl",                             // Add missing else-clause and turn elseif into nested if
-    		"while.xsl",                          // while to repeatUntil
     		"scope.xsl",                          // Variable initializations
-    		"documentation.xsl",                  // remove human readable documantation
+    		"documentation.xsl",                  // remove human readable documentation
     		"extension-activity.xsl",             // remove extension activities
             "extension-assign.xsl",               // remove extension assignments
             "extension-attributes-elements.xsl",  // remove extension attributes and elements
@@ -63,11 +63,14 @@ public class Transform {
             "pick.xsl",                           // make implicit assignments explicit
             "irra.xsl",                           // invoke.xsl, receive.xsl, reply.xsl, tofromparts.xsl
             "handlers.xsl", 
-            "sequence.xsl", 
-            "defaultconditions.xsl", 
+            "sequence.xsl",
+            "defaults.xsl",
+            "language.xsl", 
             "attributes.xsl", 
-            "defaults.xsl", 
-            "language.xsl" };
+            "defaultconditions.xsl",
+            //"default-message-exchanges.xsl",    // FIXME 
+            //"activity-names.xsl",               // FIXME 
+            "process-redundant-attributes.xsl"};
     
     private boolean validate = true;
 
@@ -78,30 +81,30 @@ public class Transform {
     }
 
     public Document transform(File source) throws TransformerException {
-        Document bpel = null, ebpel = null;
+        Document bpel = null, cbpel = null;
         try {
             String uniquePrefix = getUniquePrefix(source);
             System.out.println("Unique Prefix: " + uniquePrefix);
 
             bpel = parse(source, this.bpelSchema);
-            ebpel = transform(bpel, uniquePrefix);
+            cbpel = transform(bpel, uniquePrefix);
             
             if (this.validate) {
-              this.validate(ebpel, this.bpelSchema);
+              this.validate(cbpel, this.bpelSchema);
               System.out.println("Transformed process description is valid WS-BPEL.");
-              this.validate(ebpel, this.cBpelSchema);
+              this.validate(cbpel, this.cBpelSchema);
               System.out.println("Transformed process description is valid Core BPEL.");
             }
             
             if (this.verbose)
-                System.out.println(toString(ebpel));
+                System.out.println(toString(cbpel));
 
-            return ebpel;
+            return cbpel;
 
         } catch (TransformerException exception) {
             throw exception;
         } catch (Exception exception) {
-            System.out.println(toString(ebpel));
+            System.out.println(toString(cbpel));
             throw new TransformerException(exception.getLocalizedMessage(), exception);
         }
     }
