@@ -10,56 +10,56 @@
 
   <xsl:template match="bpel:toParts">
     <xsl:param name="uniquePrefix" select="'v0'" />
-    <assign>
+    <bpel:assign>
       <xsl:for-each select="bpel:toPart">
-        <copy>
+        <bpel:copy>
           <xsl:variable name="variableName" select="@fromVariable" />
           <xsl:if test="(ancestor::*/bpel:variables/bpel:variable[@name=$variableName and @element])[1]">
             <xsl:attribute name="keepSrcElementName">yes</xsl:attribute>
           </xsl:if>
-          <from>
+          <bpel:from>
             <xsl:attribute name="variable">
               <xsl:value-of select="@fromVariable" />
             </xsl:attribute>
-          </from>
-          <to>
+          </bpel:from>
+          <bpel:to>
             <xsl:attribute name="variable">
               <xsl:value-of select="concat($uniquePrefix, 'InputMessage')" />
             </xsl:attribute>
             <xsl:attribute name="part">
               <xsl:value-of select="@part" />
             </xsl:attribute>
-          </to>
-        </copy>
+          </bpel:to>
+        </bpel:copy>
       </xsl:for-each>
-    </assign>
+    </bpel:assign>
   </xsl:template>
 
   <xsl:template match="bpel:fromParts">
     <xsl:param name="uniquePrefix" select="'v0'" />
-    <assign>
+    <bpel:assign>
       <xsl:for-each select="bpel:fromPart">
-        <copy>
+        <bpel:copy>
           <xsl:variable name="variableName" select="@toVariable" />
           <xsl:if test="(ancestor::*/bpel:variables/bpel:variable[@name=$variableName and @element])[1]">
             <xsl:attribute name="keepSrcElementName">yes</xsl:attribute>
           </xsl:if>
-          <from>
+          <bpel:from>
             <xsl:attribute name="variable">
               <xsl:value-of select="concat($uniquePrefix, 'OutputMessage')" />
             </xsl:attribute>
             <xsl:attribute name="part">
               <xsl:value-of select="@part" />
             </xsl:attribute>
-          </from>
-          <to>
+          </bpel:from>
+          <bpel:to>
             <xsl:attribute name="variable">
               <xsl:value-of select="@toVariable" />
             </xsl:attribute>
-          </to>
-        </copy>
+          </bpel:to>
+        </bpel:copy>
       </xsl:for-each>
-    </assign>
+    </bpel:assign>
   </xsl:template>
 
 </xsl:stylesheet>

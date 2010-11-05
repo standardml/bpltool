@@ -71,11 +71,11 @@ public class TransformWhileTest extends TestCase {
         Document ebpel = transfomer.transform(file);
 
         // 1. Test preservation of join condition
-        expression = "//bpel:if/bpel:targets/bpel:joinCondition/text()";
+        expression = "(//bpel:if/ancestor::bpel:scope [1])/bpel:targets/bpel:joinCondition/text()";
         assertEquals("$l1 or not($l1)", (String) xPath.evaluate(expression, ebpel, XPathConstants.STRING));
 
         // 2. Test preservation of transition condition
-        expression = "//bpel:if/bpel:sources/bpel:source/bpel:transitionCondition/text()";
+        expression = "(//bpel:if/ancestor::bpel:scope [1])/bpel:sources/bpel:source/bpel:transitionCondition/text()";
         assertEquals("true() or false()", (String) xPath.evaluate(expression, ebpel, XPathConstants.STRING));
         
         // 3. Test if condition

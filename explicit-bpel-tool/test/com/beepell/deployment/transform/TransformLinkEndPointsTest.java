@@ -17,10 +17,10 @@ import org.w3c.dom.NodeList;
 import com.beepell.xml.namespace.DocumentNamespaceContext;
 
 /**
- * @author Tim Hallwyl
+ * @author Espen H¿jsgaard
  * 
  */
-public class TransformReceive2Test extends TestCase {
+public class TransformLinkEndPointsTest extends TestCase {
 
     private Document transformed;
     private XPath xPath = XPathFactory.newInstance().newXPath();
@@ -29,7 +29,7 @@ public class TransformReceive2Test extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        File source = new File("test/com/beepell/deployment/transform/receive2.bpel");
+        File source = new File("test/com/beepell/deployment/transform/link-end-points.bpel");
         Transform transform = new Transform();
         transformed = transform.transform(source);
 
@@ -61,26 +61,7 @@ public class TransformReceive2Test extends TestCase {
      * Testing 
      */
     public final void testPostReceive() {
-        // Attributes
-        assertEquals("yes", getString("//bpel:pick/@createInstance"));
-        //assertEquals("receive", getString("//bpel:pick/@name"));
-        
-        // Links
-        // FIXME the link is moved to a wrapping <scope>
-        //assertEquals("link1", getString("//bpel:pick/bpel:sources/bpel:source/@linkName"));
-        
-        // onMessage attributes
-        assertEquals("echoPartnerLink", getString("//bpel:pick/bpel:onMessage/@partnerLink"));
-        assertEquals("echoOperation", getString("//bpel:pick/bpel:onMessage/@operation"));
-        assertEquals("requestMessage", getString("//bpel:pick/bpel:onMessage/@variable"));
-        assertEquals("main", getString("//bpel:pick/bpel:onMessage/@messageExchange"));
-        
-        // onMessage correlation
-        assertEquals("order-invoice", getString("//bpel:pick/bpel:onMessage/bpel:correlations/bpel:correlation/@set"));
-        assertEquals("yes", getString("//bpel:pick/bpel:onMessage/bpel:correlations/bpel:correlation/@initiate"));
-        
-        // onMessage activity
-        assertEquals(1, getNodes("//bpel:pick/bpel:onMessage/bpel:empty").getLength());
+        // FIXME
     }    
 
 

@@ -21,7 +21,7 @@
         <xsl:variable name="definitions" select="document(/bpel:process/bpel:import[@importType='http://schemas.xmlsoap.org/wsdl/']/@location)/wsdl:definitions[@targetNamespace=$partnerLinkNamespace]" />
         <xsl:variable name="portType" select="substring-after($definitions/plnk:partnerLinkType[@name=substring-after($partnerLink/@partnerLinkType, ':')]/plnk:role[@name=$partnerLink/@myRole]/@portType, ':')" />
         
-        <scope>
+        <bpel:scope>
           <xsl:message terminate="no">Implicit scope in receive made explicit.</xsl:message>
           <xsl:copy-of select="@name" />
           <xsl:copy-of select="@suppressJoinFailure" />
@@ -30,9 +30,9 @@
           
           <xsl:message terminate="no">Implicit temporary variables in receive made explicit.</xsl:message>
           
-          <variables>
+          <bpel:variables>
             <!-- add temporary output message variable -->
-            <variable>
+            <bpel:variable>
               <xsl:attribute name="name">
                 <xsl:value-of select="concat($uniquePrefix, 'OutputMessage')" />
               </xsl:attribute>
@@ -43,11 +43,11 @@
                 <xsl:variable name="namespacePrefix" select="name(namespace::*[self::node() = $messageNamespace][1])" />
                 <xsl:value-of select="concat($namespacePrefix, ':', substring-after($message/@message, ':'))" />
               </xsl:attribute>
-            </variable>
-          </variables>
+            </bpel:variable>
+          </bpel:variables>
           
           <xsl:message terminate="no">Implicit assignments in receive made explicit.</xsl:message>
-          <sequence>
+          <bpel:sequence>
             
             <xsl:message>Transforming a Receive activity '<xsl:value-of select="@name" />' into a Pick activity.</xsl:message>
             <bpel:pick>
@@ -73,9 +73,9 @@
             
             <!-- Create assignment to copy single part to element variable -->
             <xsl:if test="$outputElement">
-              <assign>
-                <copy keepSrcElementName="yes">
-                  <from>
+              <bpel:assign>
+                <bpel:copy keepSrcElementName="yes">
+                  <bpel:from>
                     <xsl:attribute name="variable">
                       <xsl:value-of select="concat($uniquePrefix, 'OutputMessage')" />
                     </xsl:attribute>
@@ -83,17 +83,17 @@
                     <xsl:attribute name="part">
                       <xsl:value-of select="$definitions/wsdl:message[@name=$message]/wsdl:part/@name" />
                     </xsl:attribute>
-                  </from>
-                  <to>
+                  </bpel:from>
+                  <bpel:to>
                     <xsl:attribute name="variable">
                       <xsl:value-of select="@variable" />
                     </xsl:attribute>
-                  </to>
-                </copy>
-              </assign>
+                  </bpel:to>
+                </bpel:copy>
+              </bpel:assign>
             </xsl:if>
-          </sequence>
-        </scope>
+          </bpel:sequence>
+        </bpel:scope>
       </xsl:when>
       <xsl:otherwise>
         <!-- A core receive activity, leaving out portType, if there -->

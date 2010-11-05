@@ -7,7 +7,6 @@
   xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
   xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype">
 
-  <!-- ${workspace_loc:/core-bpel-tool/test/com/beepell/deployment/transform/pick-temp.bpel}  -->
   <xsl:output indent="yes" method="xml" />
 
   <xsl:param name="uniquePrefix">v0</xsl:param>
@@ -30,7 +29,7 @@
     <xsl:variable name="outputElement" select="count(ancestor::*/bpel:variables/bpel:variable[@name=$variable][1]/@element) = 1" />
 
     <xsl:if test="bpel:fromParts or $outputElement">
-      <variable>
+      <bpel:variable>
         <xsl:attribute name="name">
           <xsl:value-of select="concat(concat($uniquePrefix, position()), 'OutputMessage')" />          
         </xsl:attribute>
@@ -41,7 +40,7 @@
           <xsl:variable name="namespacePrefix" select="name(namespace::*[self::node() = $messageNamespace][1])" />
           <xsl:value-of select="concat($namespacePrefix, ':', substring-after($message/@message, ':'))" />
         </xsl:attribute>
-      </variable>
+      </bpel:variable>
     </xsl:if>
   </xsl:template>
   
@@ -74,7 +73,7 @@
           Implicit assignments in onMessage (pick) made explicit.
         </xsl:message>
 
-        <sequence>
+        <bpel:sequence>
           <!-- Transform fromParts into an assignment, if present -->
           <xsl:apply-templates select="bpel:fromParts">
             <xsl:with-param name="uniquePrefix" select="concat($uniquePrefix, position())" />
@@ -82,9 +81,9 @@
 
           <!-- Create assignment to copy single part to element variable -->
           <xsl:if test="$outputElement">
-            <assign>
-              <copy keepSrcElementName="yes">
-                <from>
+            <bpel:assign>
+              <bpel:copy keepSrcElementName="yes">
+                <bpel:from>
                   <xsl:attribute name="variable">
                   <xsl:value-of select="concat(concat($uniquePrefix, position()), 'OutputMessage')" />
                 </xsl:attribute>
@@ -92,26 +91,26 @@
                   <xsl:attribute name="part">
                   <xsl:value-of select="$definitions/wsdl:message[@name=$message]/wsdl:part/@name" />
                 </xsl:attribute>
-                </from>
-                <to>
+                </bpel:from>
+                <bpel:to>
                   <xsl:attribute name="variable">
                   <xsl:value-of select="@variable" />
                 </xsl:attribute>
-                </to>
-              </copy>
-            </assign>
+                </bpel:to>
+              </bpel:copy>
+            </bpel:assign>
           </xsl:if>
 
-          <xsl:apply-templates select="bpel:*[not(local-name()='fromParts') and not(local-name()='correlations')]"/>
+          <xsl:apply-templates select="*[not(self::bpel:fromParts or self::bpel:correlations)]"/>
 
-        </sequence>
+        </bpel:sequence>
       </xsl:if>
       
     </xsl:copy>
   </xsl:template>
 
   <xsl:template match="bpel:pick">
-    <scope>
+    <bpel:scope>
       <xsl:message terminate="no">
         Implicit scope in pick made explicit.
       </xsl:message>
@@ -120,14 +119,14 @@
       <xsl:copy-of select="bpel:targets" />
       <xsl:copy-of select="bpel:sources" />
 
-      <variables>
+      <bpel:variables>
         <xsl:message terminate="no">
           Implicit temporary variables in pick made explicit.
         </xsl:message>
         <xsl:for-each select="bpel:onMessage">
           <xsl:call-template name="variable" />
         </xsl:for-each>
-      </variables>
+      </bpel:variables>
 
       <xsl:copy>
         <xsl:copy-of select="@createInstance" />
@@ -140,35 +139,35 @@
         
         <xsl:apply-templates select="bpel:onAlarm" />
       </xsl:copy>
-    </scope>
+    </bpel:scope>
 
   </xsl:template>
   
   <xsl:template match="bpel:onMessage/bpel:fromParts">
     <xsl:param name="uniquePrefix" select="'v0'" />
-    <assign>
+    <bpel:assign>
       <xsl:for-each select="bpel:fromPart">
-        <copy>
+        <bpel:copy>
           <xsl:variable name="variableName" select="@toVariable" />
           <xsl:if test="(ancestor::*/bpel:variables/bpel:variable[@name=$variableName and @element])[1]">
             <xsl:attribute name="keepSrcElementName">yes</xsl:attribute>
           </xsl:if>
-          <from>
+          <bpel:from>
             <xsl:attribute name="variable">
               <xsl:value-of select="concat($uniquePrefix, 'OutputMessage')" />
             </xsl:attribute>
             <xsl:attribute name="part">
               <xsl:value-of select="@part" />
             </xsl:attribute>
-          </from>
-          <to>
+          </bpel:from>
+          <bpel:to>
             <xsl:attribute name="variable">
               <xsl:value-of select="@toVariable" />
             </xsl:attribute>
-          </to>
-        </copy>
+          </bpel:to>
+        </bpel:copy>
       </xsl:for-each>
-    </assign>
+    </bpel:assign>
   </xsl:template>
 
 </xsl:stylesheet>

@@ -19,7 +19,11 @@
   
   <xsl:template match="bpel:process">
     <bpel:process>
-      <xsl:copy-of select="@*[local-name() != 'queryLanguage' and local-name() != 'expressionLanguage' and local-name() != 'suppressJoinFailure' and local-name() != 'exitOnStandardFault']" />
+      <xsl:copy-of select="@*[not(namespace-uri() = '' and
+                                  (local-name() = 'queryLanguage' or
+                                   local-name() = 'expressionLanguage' or
+                                   local-name() = 'suppressJoinFailure' or
+                                   local-name() = 'exitOnStandardFault'))]" />
       <xsl:apply-templates />
     </bpel:process>
   </xsl:template>

@@ -21,8 +21,11 @@
       <xsl:copy-of select="bpel:extensions" />
       <xsl:copy-of select="bpel:import" />
       <bpel:scope>
-        <xsl:copy-of select="@*[local-name() != 'targetNamespace' and local-name() != 'expressionLanguage' and local-name() != 'queryLanguage']" />
-        <xsl:apply-templates select="*[local-name() != 'import' and local-name() != 'extensions']" />
+        <xsl:copy-of select="@*[not(namespace-uri() = '' and
+                                    (local-name() = 'targetNamespace' or
+                                     local-name() = 'expressionLanguage' or
+                                     local-name() = 'queryLanguage'))]" />
+        <xsl:apply-templates select="*[not(self::bpel:import or self::bpel:extensions)]" />
       </bpel:scope>
     </bpel:process>
   </xsl:template>

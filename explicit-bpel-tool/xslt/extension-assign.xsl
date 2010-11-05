@@ -15,11 +15,11 @@
   
   <!-- Replace any assign elements left without at least one copy child element -->
   <xsl:template match="bpel:assign[count(child::bpel:copy) = 0]">
-    <empty>
-      <xsl:copy-of select="@*[namespace-uri()='' and local-name() != 'validate']" />
+    <bpel:empty>
+      <xsl:copy-of select="@*[not(namespace-uri() = '' and local-name() = 'validate')]" />
       <xsl:copy-of select="./bpel:*[not(self::bpel:extensionAssignOperation)]" />
       <xsl:message terminate="no">Replaced an assign element with an empty activity.</xsl:message>
-    </empty>
+    </bpel:empty>
   </xsl:template>
 
   <!-- Remove any remaining extensionAssignOperation elements -->

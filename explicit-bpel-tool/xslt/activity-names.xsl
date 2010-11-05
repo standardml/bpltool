@@ -20,7 +20,7 @@
   <!-- Remove names from all named activities except scopes. -->
   <xsl:template match="bpel:assign | bpel:compensate | bpel:compensateScope | bpel:empty | bpel:exit | bpel:invoke | bpel:receive | bpel:reply | bpel:rethrow | bpel:throw | bpel:validate | bpel:wait | bpel:flow | bpel:forEach | bpel:if | bpel:pick | bpel:repeatUntil | bpel:sequence | bpel:while">
     <xsl:copy>
-      <xsl:copy-of select="@*[local-name() != 'name']"/>
+      <xsl:copy-of select="@*[not(namespace-uri() = '' and local-name() = 'name')]"/>
       <xsl:apply-templates></xsl:apply-templates>
     </xsl:copy>
   </xsl:template>

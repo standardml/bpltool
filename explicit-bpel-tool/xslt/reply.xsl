@@ -21,7 +21,7 @@
         <xsl:variable name="definitions" select="document(/bpel:process/bpel:import[@importType='http://schemas.xmlsoap.org/wsdl/']/@location)/wsdl:definitions[@targetNamespace=$partnerLinkNamespace]" />
         <xsl:variable name="portType" select="substring-after($definitions/plnk:partnerLinkType[@name=substring-after($partnerLink/@partnerLinkType, ':')]/plnk:role[@name=$partnerLink/@myRole]/@portType, ':')" />
         
-        <scope>
+        <bpel:scope>
           <xsl:message terminate="no">Implicit scope in reply made explicit.</xsl:message>
           <xsl:copy-of select="@name" />
           <xsl:copy-of select="@suppressJoinFailure" />
@@ -30,9 +30,9 @@
           
           <xsl:message terminate="no">Implicit temporary variables in reply made explicit.</xsl:message>
           
-          <variables>
+          <bpel:variables>
             <!-- add temporary output message variable -->
-            <variable>
+            <bpel:variable>
               <xsl:attribute name="name">
                 <xsl:value-of select="concat($uniquePrefix, 'InputMessage')" />
               </xsl:attribute>
@@ -42,25 +42,25 @@
                 <xsl:variable name="namespacePrefix" select="name(namespace::*[self::node() = $messageNamespace][1])" />
                 <xsl:value-of select="concat($namespacePrefix, ':', substring-after($message/@message, ':'))" />
               </xsl:attribute>
-            </variable>
-          </variables>
+            </bpel:variable>
+          </bpel:variables>
           
           <xsl:message terminate="no">Implicit assignments in invoke made explicit.</xsl:message>
-          <sequence>
+          <bpel:sequence>
             
             <!-- Transform toParts into an assignment, if present -->
             <xsl:apply-templates select="bpel:toParts" />
             
             <!-- Create assignment to copy element variable to single part -->
             <xsl:if test="$inputElement">
-              <assign>
-                <copy keepSrcElementName="yes">
-                  <from>
+              <bpel:assign>
+                <bpel:copy keepSrcElementName="yes">
+                  <bpel:from>
                     <xsl:attribute name="variable">
                       <xsl:value-of select="@variable" />
                     </xsl:attribute>
-                  </from>
-                  <to>
+                  </bpel:from>
+                  <bpel:to>
                     <xsl:variable name="message" select="substring-after($definitions/wsdl:portType[@name=$portType]/wsdl:operation[@name=$operation]/wsdl:output/@message, ':')" />
                     <xsl:attribute name="variable">
                       <xsl:value-of select="concat($uniquePrefix, 'InputMessage')" />
@@ -68,9 +68,9 @@
                     <xsl:attribute name="part">
                       <xsl:value-of select="$definitions/wsdl:message[@name=$message]/wsdl:part/@name" />
                     </xsl:attribute>
-                  </to>
-                </copy>
-              </assign>
+                  </bpel:to>
+                </bpel:copy>
+              </bpel:assign>
             </xsl:if>
             
             <xsl:copy>
@@ -85,8 +85,8 @@
               <xsl:copy-of select="bpel:correlations" />
             </xsl:copy>
             
-          </sequence>
-        </scope>
+          </bpel:sequence>
+        </bpel:scope>
       </xsl:when>
       <xsl:otherwise>
         <!-- A core reply activity, leaving out portType, if there -->

@@ -62,15 +62,18 @@ public class Transform {
             "extension-declarations.xsl",         // remove extension declarations
             "pick.xsl",                           // make implicit assignments explicit
             "irra.xsl",                           // invoke.xsl, receive.xsl, reply.xsl, tofromparts.xsl
-            "handlers.xsl", 
+            "standard-atts-elts.xsl",
             "sequence.xsl",
+            "handlers.xsl", 
+            "defaultconditions.xsl",
             "defaults.xsl",
             "language.xsl", 
             "attributes.xsl", 
-            "defaultconditions.xsl",
             //"default-message-exchanges.xsl",    // FIXME 
-            //"activity-names.xsl",               // FIXME 
-            "process-redundant-attributes.xsl"};
+            //"activity-names.xsl",               // FIXME
+            "redundant-attributes.xsl"/*,
+            "process-redundant-attributes.xsl"*/
+            };
     
     private boolean validate = true;
 

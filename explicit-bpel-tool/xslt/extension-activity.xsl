@@ -15,10 +15,10 @@
 
   <!-- Replace all extension activities with empty activities. -->
   <xsl:template match="bpel:extensionActivity">
-    <empty>
+    <bpel:empty>
       <xsl:copy-of select="child::*/@*[namespace-uri()='']" />
       <xsl:copy-of select="child::*/bpel:*" />
-    </empty>
+    </bpel:empty>
     <xsl:message terminate="no">Replaced an extensionActivity element with an empty activity.</xsl:message>
   </xsl:template>
 
