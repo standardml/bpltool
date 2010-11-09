@@ -48,7 +48,8 @@
             this.addNodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeNodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removePrimitiveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.executeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tpProcessModel = new System.Windows.Forms.TabPage();
             this.processPanel = new DCRSGraphicalEditor.DoubleBufferPanel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.clbRoles = new System.Windows.Forms.CheckedListBox();
@@ -56,10 +57,15 @@
             this.cbEnabled = new System.Windows.Forms.CheckBox();
             this.tbName = new System.Windows.Forms.TextBox();
             this.btnStoreActionDetails = new System.Windows.Forms.Button();
+            this.tpExecution = new System.Windows.Forms.TabPage();
+            this.executionPanel = new System.Windows.Forms.Panel();
             this.menuStrip1.SuspendLayout();
             this.cmProcessPanel.SuspendLayout();
+            this.tabControl1.SuspendLayout();
+            this.tpProcessModel.SuspendLayout();
             this.processPanel.SuspendLayout();
             this.groupBox1.SuspendLayout();
+            this.tpExecution.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -134,8 +140,8 @@
             this.enableNodeOnlyViewToolStripMenuItem,
             this.enableExecutionToolStripMenuItem});
             this.simulationToolStripMenuItem.Name = "simulationToolStripMenuItem";
-            this.simulationToolStripMenuItem.Size = new System.Drawing.Size(67, 20);
-            this.simulationToolStripMenuItem.Text = "Simulation";
+            this.simulationToolStripMenuItem.Size = new System.Drawing.Size(66, 20);
+            this.simulationToolStripMenuItem.Text = "Execution";
             // 
             // enableNodeOnlyViewToolStripMenuItem
             // 
@@ -148,7 +154,7 @@
             // 
             this.enableExecutionToolStripMenuItem.Name = "enableExecutionToolStripMenuItem";
             this.enableExecutionToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
-            this.enableExecutionToolStripMenuItem.Text = "Enable Execution";
+            this.enableExecutionToolStripMenuItem.Text = "Start Execution";
             this.enableExecutionToolStripMenuItem.Click += new System.EventHandler(this.enableExecutionToolStripMenuItem_Click);
             // 
             // cmProcessPanel
@@ -160,10 +166,9 @@
             this.addExcludeToolStripMenuItem,
             this.addNodeToolStripMenuItem,
             this.removeNodeToolStripMenuItem,
-            this.removePrimitiveToolStripMenuItem,
-            this.executeToolStripMenuItem});
+            this.removePrimitiveToolStripMenuItem});
             this.cmProcessPanel.Name = "cmProcessPanel";
-            this.cmProcessPanel.Size = new System.Drawing.Size(168, 202);
+            this.cmProcessPanel.Size = new System.Drawing.Size(168, 158);
             this.cmProcessPanel.Opening += new System.ComponentModel.CancelEventHandler(this.cmProcessPanel_Opening);
             // 
             // addConditionToolStripMenuItem
@@ -215,22 +220,37 @@
             this.removePrimitiveToolStripMenuItem.Text = "Remove Primitive";
             this.removePrimitiveToolStripMenuItem.Click += new System.EventHandler(this.removePrimitiveToolStripMenuItem_Click);
             // 
-            // executeToolStripMenuItem
+            // tabControl1
             // 
-            this.executeToolStripMenuItem.Name = "executeToolStripMenuItem";
-            this.executeToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
-            this.executeToolStripMenuItem.Text = "Execute";
-            this.executeToolStripMenuItem.Click += new System.EventHandler(this.executeToolStripMenuItem_Click);
+            this.tabControl1.Controls.Add(this.tpProcessModel);
+            this.tabControl1.Controls.Add(this.tpExecution);
+            this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabControl1.Location = new System.Drawing.Point(0, 24);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.Size = new System.Drawing.Size(899, 502);
+            this.tabControl1.TabIndex = 2;
+            // 
+            // tpProcessModel
+            // 
+            this.tpProcessModel.Controls.Add(this.processPanel);
+            this.tpProcessModel.Location = new System.Drawing.Point(4, 22);
+            this.tpProcessModel.Name = "tpProcessModel";
+            this.tpProcessModel.Padding = new System.Windows.Forms.Padding(3);
+            this.tpProcessModel.Size = new System.Drawing.Size(891, 476);
+            this.tpProcessModel.TabIndex = 0;
+            this.tpProcessModel.Text = "Process Model";
+            this.tpProcessModel.UseVisualStyleBackColor = true;
             // 
             // processPanel
             // 
             this.processPanel.ContextMenuStrip = this.cmProcessPanel;
             this.processPanel.Controls.Add(this.groupBox1);
             this.processPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.processPanel.Location = new System.Drawing.Point(0, 24);
+            this.processPanel.Location = new System.Drawing.Point(3, 3);
             this.processPanel.Name = "processPanel";
-            this.processPanel.Size = new System.Drawing.Size(899, 502);
-            this.processPanel.TabIndex = 1;
+            this.processPanel.Size = new System.Drawing.Size(885, 470);
+            this.processPanel.TabIndex = 2;
             // 
             // groupBox1
             // 
@@ -240,7 +260,7 @@
             this.groupBox1.Controls.Add(this.cbEnabled);
             this.groupBox1.Controls.Add(this.tbName);
             this.groupBox1.Controls.Add(this.btnStoreActionDetails);
-            this.groupBox1.Location = new System.Drawing.Point(651, 0);
+            this.groupBox1.Location = new System.Drawing.Point(637, 0);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(248, 290);
             this.groupBox1.TabIndex = 0;
@@ -292,12 +312,33 @@
             this.btnStoreActionDetails.UseVisualStyleBackColor = true;
             this.btnStoreActionDetails.Click += new System.EventHandler(this.btnStoreActionDetails_Click);
             // 
+            // tpExecution
+            // 
+            this.tpExecution.Controls.Add(this.executionPanel);
+            this.tpExecution.Location = new System.Drawing.Point(4, 22);
+            this.tpExecution.Name = "tpExecution";
+            this.tpExecution.Padding = new System.Windows.Forms.Padding(3);
+            this.tpExecution.Size = new System.Drawing.Size(891, 476);
+            this.tpExecution.TabIndex = 1;
+            this.tpExecution.Text = "Execution";
+            this.tpExecution.UseVisualStyleBackColor = true;
+            // 
+            // executionPanel
+            // 
+            this.executionPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.executionPanel.Location = new System.Drawing.Point(3, 3);
+            this.executionPanel.Name = "executionPanel";
+            this.executionPanel.Size = new System.Drawing.Size(885, 470);
+            this.executionPanel.TabIndex = 0;
+            this.executionPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.executionPanel_Paint);
+            this.executionPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.executionPanel_MouseUp);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(899, 526);
-            this.Controls.Add(this.processPanel);
+            this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
@@ -306,9 +347,12 @@
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.cmProcessPanel.ResumeLayout(false);
+            this.tabControl1.ResumeLayout(false);
+            this.tpProcessModel.ResumeLayout(false);
             this.processPanel.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.tpExecution.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -321,7 +365,6 @@
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
-        private DoubleBufferPanel processPanel;
         private System.Windows.Forms.ToolStripMenuItem processToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem storePlacementToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem storeProcessToolStripMenuItem;
@@ -331,18 +374,22 @@
         private System.Windows.Forms.ToolStripMenuItem addIncludeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addExcludeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addNodeToolStripMenuItem;
-        private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.TextBox tbName;
-        private System.Windows.Forms.Button btnStoreActionDetails;
-        private System.Windows.Forms.CheckBox cbIncluded;
-        private System.Windows.Forms.CheckBox cbEnabled;
-        private System.Windows.Forms.CheckedListBox clbRoles;
         private System.Windows.Forms.ToolStripMenuItem removeNodeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removePrimitiveToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem simulationToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem enableNodeOnlyViewToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem enableExecutionToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem executeToolStripMenuItem;
+        private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.TabPage tpProcessModel;
+        private DoubleBufferPanel processPanel;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.CheckedListBox clbRoles;
+        private System.Windows.Forms.CheckBox cbIncluded;
+        private System.Windows.Forms.CheckBox cbEnabled;
+        private System.Windows.Forms.TextBox tbName;
+        private System.Windows.Forms.Button btnStoreActionDetails;
+        private System.Windows.Forms.TabPage tpExecution;
+        private System.Windows.Forms.Panel executionPanel;
     }
 }
 
