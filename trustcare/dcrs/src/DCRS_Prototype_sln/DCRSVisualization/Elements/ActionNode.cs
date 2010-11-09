@@ -173,10 +173,10 @@ namespace ITU.DK.DCRS.Visualization.Elements
         StringFormat sf = new StringFormat();
         sf.Alignment = StringAlignment.Center;
         sf.LineAlignment = StringAlignment.Center;
-        g.DrawString(Name, TextFont, TextBrush, new Rectangle((int)(Location.X - 45), (int)(Location.Y - 45), 90, 90), sf);
-        
+        g.DrawString(Name, TextFont, TextBrush, new Rectangle((int)((Location.X - (NODE_WIDTH / 2)) + 5), (int)((Location.Y - (NODE_HEIGHT / 2)) + 5), NODE_WIDTH - 10, NODE_HEIGHT - 10), sf);
 
-        g.DrawRectangle(DrawingPen, Location.ToPoint.X, Location.ToPoint.Y - 80, 50, ROLEBOX_HEIGHT);
+
+        g.DrawRectangle(DrawingPen, Location.ToPoint.X, Location.ToPoint.Y - ((NODE_HEIGHT / 2) + ROLEBOX_HEIGHT), (NODE_WIDTH / 2), ROLEBOX_HEIGHT);
 
         if (!included) DrawingPen.DashStyle = DashStyle.Solid;
         if (selected) DrawingPen.Color = Color.Black;
@@ -192,7 +192,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
         }
 
         if (rString != "") rString = rString.Substring(0, rString.Length - 2);
-        g.DrawString(rString, TextFont, TextBrush, new Rectangle((int)(Location.X + 1), (int)(Location.Y - 79), 48, 28), sf);
+        g.DrawString(rString, TextFont, TextBrush, new Rectangle((int)(Location.X + 1), (int)(Location.Y - ((NODE_HEIGHT / 2) + (ROLEBOX_HEIGHT - 1))), (NODE_WIDTH / 2)-2, ROLEBOX_HEIGHT - 2), sf);
 
 
         Font BoldFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
