@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<!-- Remove names from all activities but scope. -->
-<!-- Add fresh names to unnamed scopes. -->
+<!-- Add fresh names to unnamed <flow>s and <scope>s. -->
 <!-- FIXME: how should we generate fresh names? -->
 
 <xsl:stylesheet version="1.0"
@@ -17,15 +16,7 @@
     </xsl:copy>
   </xsl:template>
   
-  <!-- Remove names from all named activities except scopes. -->
-  <xsl:template match="bpel:assign | bpel:compensate | bpel:compensateScope | bpel:empty | bpel:exit | bpel:invoke | bpel:receive | bpel:reply | bpel:rethrow | bpel:throw | bpel:validate | bpel:wait | bpel:flow | bpel:forEach | bpel:if | bpel:pick | bpel:repeatUntil | bpel:sequence | bpel:while">
-    <xsl:copy>
-      <xsl:copy-of select="@*[not(namespace-uri() = '' and local-name() = 'name')]"/>
-      <xsl:apply-templates></xsl:apply-templates>
-    </xsl:copy>
-  </xsl:template>
-  
-  <xsl:template match="bpel:scope">
+  <xsl:template match="bpel:flow | bpel:scope">
     <xsl:copy>
       <xsl:copy-of select="@*"/>
       <xsl:if test="not(@name)">

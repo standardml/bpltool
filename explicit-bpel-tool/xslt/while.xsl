@@ -6,8 +6,6 @@
   
   <xsl:output indent="yes" method="xml" />
 
-  <xsl:param name="uniquePrefix" select="'v0'" />
-
   <xsl:template match="*">
     <xsl:copy>
       <xsl:copy-of select="@*" />

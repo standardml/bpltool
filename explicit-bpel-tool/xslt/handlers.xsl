@@ -39,55 +39,10 @@
       <xsl:if test="not(bpel:faultHandlers)">
         <bpel:faultHandlers>
           <bpel:catchAll>
-            <!-- The below <flow> is a static desugaring of the following <sequence>:
             <bpel:sequence>
               <bpel:compensate />
               <bpel:rethrow />
-            </bpel:sequence> -->          
-            <bpel:flow>
-              <bpel:links>
-                <bpel:link name="l" />
-              </bpel:links>
-              <bpel:scope>
-                <bpel:sources>
-                  <bpel:source linkName="l">
-                    <bpel:transitionCondition expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">
-                      true()
-                    </bpel:transitionCondition>
-                  </bpel:source>
-                </bpel:sources>
-                <bpel:faultHandlers>
-                  <bpel:catchAll>
-                    <bpel:rethrow />
-                  </bpel:catchAll>
-                </bpel:faultHandlers>
-				        <bpel:compensationHandler>
-				          <bpel:empty />
-				        </bpel:compensationHandler>
-				        <bpel:terminationHandler>
-				          <bpel:empty />
-				        </bpel:terminationHandler>
-                <bpel:compensate />
-              </bpel:scope>
-              <bpel:scope>
-                <bpel:targets>
-                  <bpel:target linkName="l">
-                  </bpel:target>
-                </bpel:targets>
-                <bpel:faultHandlers>
-                  <bpel:catchAll>
-                    <bpel:rethrow />
-                  </bpel:catchAll>
-                </bpel:faultHandlers>
-                <bpel:compensationHandler>
-                  <bpel:empty />
-                </bpel:compensationHandler>
-                <bpel:terminationHandler>
-                  <bpel:empty />
-                </bpel:terminationHandler>
-                <bpel:rethrow />
-              </bpel:scope>
-            </bpel:flow>
+            </bpel:sequence>
           </bpel:catchAll>
         </bpel:faultHandlers>
       </xsl:if>

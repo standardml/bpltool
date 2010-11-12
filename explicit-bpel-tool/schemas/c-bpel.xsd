@@ -15,7 +15,7 @@
   </xsd:annotation>
   <xsd:import namespace="http://www.w3.org/XML/1998/namespace"
               schemaLocation="http://www.w3.org/2001/xml.xsd"/>
-  <xsd:element type="tProcess" name="process">
+  <xsd:element name="process" type="tProcess">
     <xsd:annotation>
       <xsd:documentation>
         This is the root element for a Core BPEL process.
@@ -27,8 +27,8 @@
       <xsd:element maxOccurs="unbounded" minOccurs="0" ref="import"/>
       <xsd:element minOccurs="1" ref="scope"/>
     </xsd:sequence>
-    <xsd:attribute use="required" type="xsd:NCName" name="name"/>
-    <xsd:attribute use="required" type="xsd:anyURI" name="targetNamespace"/>
+    <xsd:attribute name="name" type="xsd:NCName" use="required"/>
+    <xsd:attribute name="targetNamespace" type="xsd:anyURI" use="required"/>
   </xsd:complexType>
   <xsd:group name="activity">
     <xsd:annotation>
@@ -62,64 +62,64 @@
       <xsd:element ref="wait"/>
     </xsd:choice>
   </xsd:group>
-  <xsd:element type="tImport" name="import"/>
+  <xsd:element name="import" type="tImport"/>
   <xsd:complexType name="tImport">
-    <xsd:attribute use="optional" type="xsd:anyURI" name="namespace"/>
-    <xsd:attribute use="optional" type="xsd:anyURI" name="location"/>
-    <xsd:attribute use="required" type="xsd:anyURI" name="importType"/>
+    <xsd:attribute name="namespace" type="xsd:anyURI" use="optional"/>
+    <xsd:attribute name="location" type="xsd:anyURI" use="optional"/>
+    <xsd:attribute name="importType" type="xsd:anyURI" use="required"/>
   </xsd:complexType>
-  <xsd:element type="tPartnerLinks" name="partnerLinks"/>
+  <xsd:element name="partnerLinks" type="tPartnerLinks"/>
   <xsd:complexType name="tPartnerLinks">
     <xsd:sequence>
       <xsd:element maxOccurs="unbounded" ref="partnerLink"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:element type="tPartnerLink" name="partnerLink"/>
+  <xsd:element name="partnerLink" type="tPartnerLink"/>
   <xsd:complexType name="tPartnerLink">
-    <xsd:attribute use="required" type="xsd:NCName" name="name"/>
-    <xsd:attribute use="required" type="xsd:QName" name="partnerLinkType"/>
-    <xsd:attribute type="xsd:NCName" name="myRole"/>
-    <xsd:attribute type="xsd:NCName" name="partnerRole"/>
-    <xsd:attribute type="tBoolean" name="initializePartnerRole"/>
+    <xsd:attribute name="name" type="xsd:NCName" use="required"/>
+    <xsd:attribute name="partnerLinkType" type="xsd:QName" use="required"/>
+    <xsd:attribute name="myRole" type="xsd:NCName"/>
+    <xsd:attribute name="partnerRole" type="xsd:NCName"/>
+    <xsd:attribute name="initializePartnerRole" type="tBoolean"/>
   </xsd:complexType>
-  <xsd:element type="tMessageExchanges" name="messageExchanges"/>
+  <xsd:element name="messageExchanges" type="tMessageExchanges"/>
   <xsd:complexType name="tMessageExchanges">
     <xsd:sequence>
       <xsd:element maxOccurs="unbounded" ref="messageExchange"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:element type="tMessageExchange" name="messageExchange"/>
+  <xsd:element name="messageExchange" type="tMessageExchange"/>
   <xsd:complexType name="tMessageExchange">
-    <xsd:attribute use="required" type="xsd:NCName" name="name"/>
+    <xsd:attribute name="name" type="xsd:NCName" use="required"/>
   </xsd:complexType>
-  <xsd:element type="tVariables" name="variables"/>
+  <xsd:element name="variables" type="tVariables"/>
   <xsd:complexType name="tVariables">
     <xsd:sequence>
       <xsd:element maxOccurs="unbounded" ref="variable"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:element type="tVariable" name="variable"/>
+  <xsd:element name="variable" type="tVariable"/>
   <xsd:complexType name="tVariable">
-    <xsd:attribute use="required" type="BPELVariableName" name="name"/>
-    <xsd:attribute use="optional" type="xsd:QName" name="messageType"/>
-    <xsd:attribute use="optional" type="xsd:QName" name="type"/>
-    <xsd:attribute use="optional" type="xsd:QName" name="element"/>
+    <xsd:attribute name="name" type="BPELVariableName" use="required"/>
+    <xsd:attribute name="messageType" type="xsd:QName" use="optional"/>
+    <xsd:attribute name="type" type="xsd:QName" use="optional"/>
+    <xsd:attribute name="element" type="xsd:QName" use="optional"/>
   </xsd:complexType>
   <xsd:simpleType name="BPELVariableName">
     <xsd:restriction base="xsd:NCName">
       <xsd:pattern value="[^\.]+"/>
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:element type="tCorrelationSets" name="correlationSets"/>
+  <xsd:element name="correlationSets" type="tCorrelationSets"/>
   <xsd:complexType name="tCorrelationSets">
     <xsd:sequence>
       <xsd:element maxOccurs="unbounded" ref="correlationSet"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:element type="tCorrelationSet" name="correlationSet"/>
+  <xsd:element name="correlationSet" type="tCorrelationSet"/>
   <xsd:complexType name="tCorrelationSet">
-    <xsd:attribute use="required" type="QNames" name="properties"/>
-    <xsd:attribute use="required" type="xsd:NCName" name="name"/>
+    <xsd:attribute name="properties" type="QNames" use="required"/>
+    <xsd:attribute name="name" type="xsd:NCName" use="required"/>
   </xsd:complexType>
   <xsd:simpleType name="QNames">
     <xsd:restriction>
@@ -129,14 +129,14 @@
       <xsd:minLength value="1"/>
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:element type="tFaultHandlers" name="faultHandlers"/>
+  <xsd:element name="faultHandlers" type="tFaultHandlers"/>
   <xsd:complexType name="tFaultHandlers">
     <xsd:sequence>
       <xsd:element maxOccurs="unbounded" minOccurs="0" ref="catch"/>
       <xsd:element minOccurs="0" ref="catchAll"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:element type="tCatch" name="catch">
+  <xsd:element name="catch" type="tCatch">
     <xsd:annotation>
       <xsd:documentation>
         This element can contain all activities including the
@@ -147,14 +147,14 @@
   <xsd:complexType name="tCatch">
     <xsd:complexContent>
       <xsd:extension base="tActivityContainer">
-        <xsd:attribute type="xsd:QName" name="faultName"/>
-        <xsd:attribute type="BPELVariableName" name="faultVariable"/>
-        <xsd:attribute type="xsd:QName" name="faultMessageType"/>
-        <xsd:attribute type="xsd:QName" name="faultElement"/>
+        <xsd:attribute name="faultName" type="xsd:QName"/>
+        <xsd:attribute name="faultVariable" type="BPELVariableName"/>
+        <xsd:attribute name="faultMessageType" type="xsd:QName"/>
+        <xsd:attribute name="faultElement" type="xsd:QName"/>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
-  <xsd:element type="tActivityContainer" name="catchAll">
+  <xsd:element name="catchAll" type="tActivityContainer">
     <xsd:annotation>
       <xsd:documentation>
         This element can contain all activities including the
@@ -167,7 +167,7 @@
       <xsd:group ref="activity"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:element type="tEventHandlers" name="eventHandlers"/>
+  <xsd:element name="eventHandlers" type="tEventHandlers"/>
   <xsd:complexType name="tEventHandlers">
     <xsd:annotation>
       <xsd:documentation>
@@ -178,19 +178,19 @@
     </xsd:annotation>
     <xsd:sequence>
       <xsd:element maxOccurs="unbounded" minOccurs="0" ref="onEvent"/>
-      <xsd:element maxOccurs="unbounded" type="tOnAlarmEvent"
-                   minOccurs="0" name="onAlarm"/>
+      <xsd:element name="onAlarm" type="tOnAlarmEvent"
+                   maxOccurs="unbounded" minOccurs="0"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:element type="tOnEvent" name="onEvent"/>
+  <xsd:element name="onEvent" type="tOnEvent"/>
   <xsd:complexType name="tOnEvent">
     <xsd:complexContent>
       <xsd:extension base="tOnMsgCommon">
         <xsd:sequence>
           <xsd:element ref="scope"/>
         </xsd:sequence>
-        <xsd:attribute use="optional" type="xsd:QName" name="messageType"/>
-        <xsd:attribute use="optional" type="xsd:QName" name="element"/>
+        <xsd:attribute name="messageType" type="xsd:QName" use="optional"/>
+        <xsd:attribute name="element" type="xsd:QName" use="optional"/>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -203,13 +203,13 @@
       </xsd:documentation>
     </xsd:annotation>
     <xsd:sequence>
-      <xsd:element type="tCorrelations" minOccurs="0" name="correlations"/>
+      <xsd:element name="correlations" type="tCorrelations" minOccurs="0"/>
       <xsd:element minOccurs="0" ref="fromParts"/>
     </xsd:sequence>
-    <xsd:attribute use="required" type="xsd:NCName" name="partnerLink"/>
-    <xsd:attribute use="required" type="xsd:NCName" name="operation"/>
-    <xsd:attribute use="optional" type="xsd:NCName" name="messageExchange"/>
-    <xsd:attribute use="optional" type="BPELVariableName" name="variable"/>
+    <xsd:attribute name="partnerLink" type="xsd:NCName" use="required"/>
+    <xsd:attribute name="operation" type="xsd:NCName" use="required"/>
+    <xsd:attribute name="messageExchange" type="xsd:NCName" use="required"/>
+    <xsd:attribute name="variable" type="BPELVariableName" use="optional"/>
   </xsd:complexType>
   <xsd:complexType name="tCorrelations">
     <xsd:annotation>
@@ -220,13 +220,13 @@
       </xsd:documentation>
     </xsd:annotation>
     <xsd:sequence>
-      <xsd:element maxOccurs="unbounded" type="tCorrelation"
-                   name="correlation"/>
+      <xsd:element name="correlation" type="tCorrelation"
+                   maxOccurs="unbounded"/>
     </xsd:sequence>
   </xsd:complexType>
   <xsd:complexType name="tCorrelation">
-    <xsd:attribute use="required" type="xsd:NCName" name="set"/>
-    <xsd:attribute default="no" type="tInitiate" name="initiate"/>
+    <xsd:attribute name="set" type="xsd:NCName" use="required"/>
+    <xsd:attribute name="initiate" type="tInitiate" use="required"/>
   </xsd:complexType>
   <xsd:simpleType name="tInitiate">
     <xsd:restriction base="xsd:string">
@@ -253,86 +253,84 @@
       <xsd:element ref="until"/>
     </xsd:choice>
   </xsd:group>
-  <xsd:element type="tDuration-expr" name="for"/>
-  <xsd:element type="tDeadline-expr" name="until"/>
-  <xsd:element type="tDuration-expr" name="repeatEvery"/>
-  <xsd:element type="tTargets" name="targets"/>
+  <xsd:element name="for" type="tDuration-expr"/>
+  <xsd:element name="until" type="tDeadline-expr"/>
+  <xsd:element name="repeatEvery" type="tDuration-expr"/>
+  <xsd:element name="targets" type="tTargets"/>
   <xsd:complexType name="tTargets">
     <xsd:sequence>
       <xsd:element minOccurs="1" ref="joinCondition"/>
       <xsd:element maxOccurs="unbounded" ref="target"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:element type="tCondition" name="joinCondition"/>
-  <xsd:element type="tTarget" name="target"/>
+  <xsd:element name="joinCondition" type="tCondition"/>
+  <xsd:element name="target" type="tTarget"/>
   <xsd:complexType name="tTarget">
-    <xsd:attribute use="required" type="xsd:NCName" name="linkName"/>
+    <xsd:attribute name="linkName" type="xsd:NCName" use="required"/>
   </xsd:complexType>
-  <xsd:element type="tSources" name="sources"/>
+  <xsd:element name="sources" type="tSources"/>
   <xsd:complexType name="tSources">
     <xsd:sequence>
       <xsd:element maxOccurs="unbounded" ref="source"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:element type="tSource" name="source"/>
+  <xsd:element name="source" type="tSource"/>
   <xsd:complexType name="tSource">
     <xsd:sequence>
       <xsd:element minOccurs="1" ref="transitionCondition"/>
     </xsd:sequence>
-    <xsd:attribute use="required" type="xsd:NCName" name="linkName"/>
+    <xsd:attribute name="linkName" type="xsd:NCName" use="required"/>
   </xsd:complexType>
-  <xsd:element type="tCondition" name="transitionCondition"/>
-  <xsd:element type="tAssign" name="assign"/>
+  <xsd:element name="transitionCondition" type="tCondition"/>
+  <xsd:element name="assign" type="tAssign"/>
   <xsd:complexType name="tAssign">
     <xsd:sequence>
       <xsd:choice maxOccurs="unbounded">
         <xsd:element ref="copy"/>
       </xsd:choice>
     </xsd:sequence>
-    <xsd:attribute use="optional" default="no"
-                   type="tBoolean" name="validate"/>
+    <xsd:attribute name="validate" type="tBoolean" use="required"/>
   </xsd:complexType>
-  <xsd:element type="tCopy" name="copy"/>
+  <xsd:element name="copy" type="tCopy"/>
   <xsd:complexType name="tCopy">
     <xsd:sequence>
       <xsd:element ref="from"/>
       <xsd:element ref="to"/>
     </xsd:sequence>
-    <xsd:attribute use="optional" type="tBoolean"
-                   name="keepSrcElementName"/>
-    <xsd:attribute use="optional" default="no" type="tBoolean"
-                   name="ignoreMissingFromData"/>
+    <xsd:attribute name="keepSrcElementName" type="tBoolean" use="optional"/>
+    <xsd:attribute name="ignoreMissingFromData" type="tBoolean"
+                   use="required"/>
   </xsd:complexType>
-  <xsd:element type="tFrom" name="from"/>
-  <xsd:complexType mixed="true" name="tFrom">
+  <xsd:element name="from" type="tFrom" />
+  <xsd:complexType name="tFrom" mixed="true">
     <xsd:sequence>
+      <xsd:any namespace="##other" processContents="lax" minOccurs="0"
+        maxOccurs="unbounded" />
       <xsd:choice minOccurs="0">
-        <xsd:element ref="literal"/>
-        <xsd:element ref="query"/>
+        <xsd:element ref="literal" />
+        <xsd:element ref="query" />
       </xsd:choice>
     </xsd:sequence>
-    <xsd:attribute fixed="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0"
-                   type="xsd:anyURI" name="expressionLanguage"/>
-    <xsd:attribute type="BPELVariableName" name="variable"/>
-    <xsd:attribute type="xsd:NCName" name="part"/>
-    <xsd:attribute type="xsd:QName" name="property"/>
-    <xsd:attribute type="xsd:NCName" name="partnerLink"/>
-    <xsd:attribute type="tRoles" name="endpointReference"/>
+    <xsd:attribute name="expressionLanguage" type="xsd:anyURI" />
+    <xsd:attribute name="variable" type="BPELVariableName"/>
+    <xsd:attribute name="part" type="xsd:NCName"/>
+    <xsd:attribute name="property" type="xsd:QName"/>
+    <xsd:attribute name="partnerLink" type="xsd:NCName"/>
+    <xsd:attribute name="endpointReference" type="tRoles"/>
   </xsd:complexType>
-  <xsd:element type="tLiteral" name="literal"/>
-  <xsd:complexType mixed="true" name="tLiteral">
+  <xsd:element name="literal" type="tLiteral"/>
+  <xsd:complexType name="tLiteral" mixed="true">
     <xsd:sequence>
       <xsd:any namespace="##any" minOccurs="0" processContents="lax"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:element type="tQuery" name="query"/>
+  <xsd:element name="query" type="tQuery"/>
   <xsd:complexType name="tQuery">
-    <xsd:simpleContent>
-      <xsd:extension base="xpath">
-        <xsd:attribute fixed="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0"
-                       type="xsd:anyURI" name="queryLanguage"/>
-      </xsd:extension>
-    </xsd:simpleContent>
+    <xsd:sequence>
+      <xsd:any processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+    </xsd:sequence>
+    <xsd:attribute name="queryLanguage" type="xsd:anyURI" />
+    <xsd:anyAttribute namespace="##other" processContents="lax" />
   </xsd:complexType>
   <xsd:simpleType name="tRoles">
     <xsd:restriction base="xsd:string">
@@ -340,46 +338,49 @@
       <xsd:enumeration value="partnerRole"/>
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:element type="tTo" name="to"/>
-  <xsd:complexType mixed="true" name="tTo">
+  <xsd:element name="to" type="tTo"/>
+  <xsd:complexType name="tTo" mixed="true">
     <xsd:sequence>
       <xsd:element minOccurs="0" ref="query"/>
     </xsd:sequence>
-    <xsd:attribute fixed="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0"
-                   type="xsd:anyURI" name="expressionLanguage"/>
-    <xsd:attribute type="BPELVariableName" name="variable"/>
-    <xsd:attribute type="xsd:NCName" name="part"/>
-    <xsd:attribute type="xsd:QName" name="property"/>
-    <xsd:attribute type="xsd:NCName" name="partnerLink"/>
+    <xsd:attribute name="expressionLanguage" type="xsd:anyURI" />
+    <xsd:attribute name="variable" type="BPELVariableName"/>
+    <xsd:attribute name="part" type="xsd:NCName"/>
+    <xsd:attribute name="property" type="xsd:QName"/>
+    <xsd:attribute name="partnerLink" type="xsd:NCName"/>
   </xsd:complexType>
-  <xsd:element type="tCompensate" name="compensate"/>
+  <xsd:element name="compensate" type="tCompensate"/>
   <xsd:complexType name="tCompensate"/>
-  <xsd:element type="tCompensateScope" name="compensateScope"/>
+  <xsd:element name="compensateScope" type="tCompensateScope"/>
   <xsd:complexType name="tCompensateScope">
-    <xsd:attribute use="required" type="xsd:NCName" name="target"/>
+    <xsd:attribute name="target" type="xsd:NCName" use="required"/>
   </xsd:complexType>
-  <xsd:element type="tEmpty" name="empty"/>
+  <xsd:element name="empty" type="tEmpty"/>
   <xsd:complexType name="tEmpty"/>
-  <xsd:element type="tExit" name="exit"/>
+  <xsd:element name="exit" type="tExit"/>
   <xsd:complexType name="tExit"/>
-  <xsd:element type="tFlow" name="flow"/>
+  <xsd:element name="flow" type="tFlow"/>
   <xsd:complexType name="tFlow">
     <xsd:sequence>
+      <xsd:element minOccurs="0" ref="targets"/>
+      <xsd:element minOccurs="0" ref="sources"/>
       <xsd:element minOccurs="0" ref="links"/>
       <xsd:group maxOccurs="unbounded" ref="activity"/>
     </xsd:sequence>
+    <xsd:attribute name="name" type="xsd:NCName" use="required"/>
+    <xsd:attribute name="suppressJoinFailure" type="tBoolean" use="required"/>
   </xsd:complexType>
-  <xsd:element type="tLinks" name="links"/>
+  <xsd:element name="links" type="tLinks"/>
   <xsd:complexType name="tLinks">
     <xsd:sequence>
       <xsd:element maxOccurs="unbounded" ref="link"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:element type="tLink" name="link"/>
+  <xsd:element name="link" type="tLink"/>
   <xsd:complexType name="tLink">
-    <xsd:attribute use="required" type="xsd:NCName" name="name"/>
+    <xsd:attribute name="name" type="xsd:NCName" use="required"/>
   </xsd:complexType>
-  <xsd:element type="tForEach" name="forEach"/>
+  <xsd:element name="forEach" type="tForEach"/>
   <xsd:complexType name="tForEach">
     <xsd:sequence>
       <xsd:element ref="startCounterValue"/>
@@ -387,28 +388,27 @@
       <xsd:element minOccurs="0" ref="completionCondition"/>
       <xsd:element ref="scope"/>
     </xsd:sequence>
-    <xsd:attribute use="required"
-                   type="BPELVariableName" name="counterName"/>
-    <xsd:attribute use="required" type="tBoolean" name="parallel"/>
+    <xsd:attribute name="counterName" type="BPELVariableName" use="required"/>
+    <xsd:attribute name="parallel" type="tBoolean" use="required"/>
   </xsd:complexType>
-  <xsd:element type="tExpression" name="startCounterValue"/>
-  <xsd:element type="tExpression" name="finalCounterValue"/>
-  <xsd:element type="tCompletionCondition" name="completionCondition"/>
+  <xsd:element name="startCounterValue" type="tExpression"/>
+  <xsd:element name="finalCounterValue" type="tExpression"/>
+  <xsd:element name="completionCondition" type="tCompletionCondition"/>
   <xsd:complexType name="tCompletionCondition">
     <xsd:sequence>
       <xsd:element minOccurs="0" ref="branches"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:element type="tBranches" name="branches"/>
+  <xsd:element name="branches" type="tBranches"/>
   <xsd:complexType name="tBranches">
     <xsd:complexContent>
       <xsd:extension base="tExpression">
-        <xsd:attribute default="no" type="tBoolean"
-                       name="successfulBranchesOnly"/>
+        <xsd:attribute name="successfulBranchesOnly" type="tBoolean"
+                       use="required"/>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
-  <xsd:element type="tIf" name="if"/>
+  <xsd:element name="if" type="tIf"/>
   <xsd:complexType name="tIf">
     <xsd:sequence>
       <xsd:element ref="condition"/>
@@ -416,8 +416,8 @@
       <xsd:element ref="else"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:element type="tActivityContainer" name="else"/>
-  <xsd:element type="tInvoke" name="invoke"/>
+  <xsd:element name="else" type="tActivityContainer"/>
+  <xsd:element name="invoke" type="tInvoke"/>
   <xsd:complexType name="tInvoke">
     <xsd:annotation>
       <xsd:documentation>
@@ -427,15 +427,15 @@
       </xsd:documentation>
     </xsd:annotation>
     <xsd:sequence>
-      <xsd:element type="tCorrelationsWithPattern" minOccurs="0"
-                   name="correlations"/>
+      <xsd:element name="correlations" type="tCorrelationsWithPattern"
+                   minOccurs="0"/>
     </xsd:sequence>
-    <xsd:attribute use="required" type="xsd:NCName" name="partnerLink"/>
-    <xsd:attribute use="required" type="xsd:NCName" name="operation"/>
-    <xsd:attribute use="optional" type="BPELVariableName"
-                   name="inputVariable"/>
-    <xsd:attribute use="optional" type="BPELVariableName"
-                   name="outputVariable"/>
+    <xsd:attribute name="partnerLink" type="xsd:NCName" use="required"/>
+    <xsd:attribute name="operation" type="xsd:NCName" use="required"/>
+    <xsd:attribute name="inputVariable" type="BPELVariableName"
+                   use="optional"/>
+    <xsd:attribute name="outputVariable" type="BPELVariableName"
+                   use="optional"/>
   </xsd:complexType>
   <xsd:complexType name="tCorrelationsWithPattern">
     <xsd:annotation>
@@ -446,14 +446,14 @@
       </xsd:documentation>
     </xsd:annotation>
     <xsd:sequence>
-      <xsd:element maxOccurs="unbounded" type="tCorrelationWithPattern"
-                   name="correlation"/>
+      <xsd:element name="correlation" type="tCorrelationWithPattern"
+                   maxOccurs="unbounded"/>
     </xsd:sequence>
   </xsd:complexType>
   <xsd:complexType name="tCorrelationWithPattern">
     <xsd:complexContent>
       <xsd:extension base="tCorrelation">
-        <xsd:attribute type="tPattern" name="pattern"/>
+        <xsd:attribute name="pattern" type="tPattern"/>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -464,29 +464,29 @@
       <xsd:enumeration value="request-response"/>
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:element type="tFromParts" name="fromParts"/>
+  <xsd:element name="fromParts" type="tFromParts"/>
   <xsd:complexType name="tFromParts">
     <xsd:sequence>
       <xsd:element maxOccurs="unbounded" ref="fromPart"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:element type="tFromPart" name="fromPart"/>
+  <xsd:element name="fromPart" type="tFromPart"/>
   <xsd:complexType name="tFromPart">
-    <xsd:attribute use="required" type="xsd:NCName" name="part"/>
-    <xsd:attribute use="required" type="BPELVariableName" name="toVariable"/>
+    <xsd:attribute name="part" type="xsd:NCName" use="required"/>
+    <xsd:attribute name="toVariable" type="BPELVariableName" use="required"/>
   </xsd:complexType>
-  <xsd:element type="tToParts" name="toParts"/>
+  <xsd:element name="toParts" type="tToParts"/>
   <xsd:complexType name="tToParts">
     <xsd:sequence>
       <xsd:element maxOccurs="unbounded" ref="toPart"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:element type="tToPart" name="toPart"/>
+  <xsd:element name="toPart" type="tToPart"/>
   <xsd:complexType name="tToPart">
-    <xsd:attribute use="required" type="xsd:NCName" name="part"/>
-    <xsd:attribute use="required" type="BPELVariableName" name="fromVariable"/>
+    <xsd:attribute name="part" type="xsd:NCName" use="required"/>
+    <xsd:attribute name="fromVariable" type="BPELVariableName" use="required"/>
   </xsd:complexType>
-  <xsd:element type="tPick" name="pick"/>
+  <xsd:element name="pick" type="tPick"/>
   <xsd:complexType name="tPick">
     <xsd:annotation>
       <xsd:documentation>
@@ -497,12 +497,12 @@
     </xsd:annotation>
     <xsd:sequence>
       <xsd:element maxOccurs="unbounded" ref="onMessage"/>
-      <xsd:element maxOccurs="unbounded" type="tOnAlarmPick" minOccurs="0"
-                   name="onAlarm"/>
+      <xsd:element name="onAlarm" type="tOnAlarmPick"
+                   maxOccurs="unbounded" minOccurs="0"/>
     </xsd:sequence>
-    <xsd:attribute default="no" type="tBoolean" name="createInstance"/>
+    <xsd:attribute name="createInstance" type="tBoolean" use="required"/>
   </xsd:complexType>
-  <xsd:element type="tOnMessage" name="onMessage"/>
+  <xsd:element name="onMessage" type="tOnMessage"/>
   <xsd:complexType name="tOnMessage">
     <xsd:complexContent>
       <xsd:extension base="tOnMsgCommon">
@@ -518,14 +518,14 @@
       <xsd:group ref="activity"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:element type="tRepeatUntil" name="repeatUntil"/>
+  <xsd:element name="repeatUntil" type="tRepeatUntil"/>
   <xsd:complexType name="tRepeatUntil">
     <xsd:sequence>
       <xsd:group ref="activity"/>
       <xsd:element ref="condition"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:element type="tReply" name="reply"/>
+  <xsd:element name="reply" type="tReply"/>
   <xsd:complexType name="tReply">
     <xsd:annotation>
       <xsd:documentation>
@@ -535,17 +535,17 @@
       </xsd:documentation>
     </xsd:annotation>
     <xsd:sequence>
-      <xsd:element type="tCorrelations" minOccurs="0" name="correlations"/>
+      <xsd:element name="correlations" type="tCorrelations" minOccurs="0"/>
     </xsd:sequence>
-    <xsd:attribute use="required" type="xsd:NCName" name="partnerLink"/>
-    <xsd:attribute use="required" type="xsd:NCName" name="operation"/>
-    <xsd:attribute use="optional" type="BPELVariableName" name="variable"/>
-    <xsd:attribute type="xsd:QName" name="faultName"/>
-    <xsd:attribute use="optional" type="xsd:NCName" name="messageExchange"/>
+    <xsd:attribute name="partnerLink" type="xsd:NCName" use="required"/>
+    <xsd:attribute name="operation" type="xsd:NCName" use="required"/>
+    <xsd:attribute name="variable" type="BPELVariableName" use="optional"/>
+    <xsd:attribute name="faultName" type="xsd:QName"/>
+    <xsd:attribute name="messageExchange" type="xsd:NCName" use="required"/>
   </xsd:complexType>
-  <xsd:element type="tRethrow" name="rethrow"/>
+  <xsd:element name="rethrow" type="tRethrow"/>
   <xsd:complexType name="tRethrow"/>
-  <xsd:element type="tScope" name="scope"/>
+  <xsd:element name="scope" type="tScope"/>
   <xsd:complexType name="tScope">
     <xsd:annotation>
       <xsd:documentation>
@@ -555,8 +555,6 @@
       </xsd:documentation>
     </xsd:annotation>
     <xsd:sequence>
-      <xsd:element minOccurs="0" ref="targets"/>
-      <xsd:element minOccurs="0" ref="sources"/>
       <xsd:element minOccurs="0" ref="partnerLinks"/>
       <xsd:element minOccurs="0" ref="messageExchanges"/>
       <xsd:element minOccurs="0" ref="variables"/>
@@ -567,13 +565,11 @@
       <xsd:element minOccurs="0" ref="eventHandlers"/>
       <xsd:group ref="activity"/>
     </xsd:sequence>
-    <xsd:attribute use="required" type="tBoolean" name="suppressJoinFailure"/>
-    <xsd:attribute type="xsd:NCName" name="name"/>
-    <xsd:attribute default="no" type="tBoolean" name="isolated"/>
-    <xsd:attribute use="required" type="tBoolean"
-                   name="exitOnStandardFault"/>
+    <xsd:attribute name="name" type="xsd:NCName" use="required"/>
+    <xsd:attribute name="isolated" type="tBoolean" use="required"/>
+    <xsd:attribute name="exitOnStandardFault" type="tBoolean" use="required"/>
   </xsd:complexType>
-  <xsd:element type="tActivityContainer" name="compensationHandler">
+  <xsd:element name="compensationHandler" type="tActivityContainer">
     <xsd:annotation>
       <xsd:documentation>
         This element can contain all activities including the
@@ -581,7 +577,7 @@
       </xsd:documentation>
     </xsd:annotation>
   </xsd:element>
-  <xsd:element type="tActivityContainer" name="terminationHandler">
+  <xsd:element name="terminationHandler" type="tActivityContainer">
     <xsd:annotation>
       <xsd:documentation>
         This element can contain all activities including the
@@ -589,15 +585,14 @@
       </xsd:documentation>
     </xsd:annotation>
   </xsd:element>
-  <xsd:element type="tThrow" name="throw"/>
+  <xsd:element name="throw" type="tThrow"/>
   <xsd:complexType name="tThrow">
-    <xsd:attribute use="required" type="xsd:QName" name="faultName"/>
-    <xsd:attribute type="BPELVariableName" name="faultVariable"/>
+    <xsd:attribute name="faultName" type="xsd:QName" use="required"/>
+    <xsd:attribute name="faultVariable" type="BPELVariableName"/>
   </xsd:complexType>
-  <xsd:element type="tValidate" name="validate"/>
+  <xsd:element name="validate" type="tValidate"/>
   <xsd:complexType name="tValidate">
-    <xsd:attribute use="required" type="BPELVariableNames"
-                   name="variables"/>
+    <xsd:attribute name="variables" type="BPELVariableNames" use="required"/>
   </xsd:complexType>
   <xsd:simpleType name="BPELVariableNames">
     <xsd:restriction>
@@ -607,49 +602,46 @@
       <xsd:minLength value="1"/>
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:element type="tWait" name="wait"/>
+  <xsd:element name="wait" type="tWait"/>
   <xsd:complexType name="tWait">
     <xsd:choice>
       <xsd:element ref="for"/>
       <xsd:element ref="until"/>
     </xsd:choice>
   </xsd:complexType>
-  <xsd:complexType name="tExpression">
-    <xsd:simpleContent>
-      <xsd:extension base="xpath">
-        <xsd:attribute fixed="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0"
-                       type="xsd:anyURI" name="expressionLanguage"/>
-      </xsd:extension>
-    </xsd:simpleContent>
+  <xsd:complexType name="tExpression" mixed="true">
+    <xsd:sequence>
+      <xsd:any processContents="lax" minOccurs="0"
+        maxOccurs="unbounded" />
+    </xsd:sequence>
+    <xsd:attribute name="expressionLanguage" type="xsd:anyURI" />
+    <xsd:anyAttribute namespace="##other" processContents="lax" />
   </xsd:complexType>
   <xsd:complexType name="tCondition">
-    <xsd:simpleContent>
-      <xsd:extension base="tExpression"/>
-    </xsd:simpleContent>
+    <xsd:complexContent mixed="true">
+      <xsd:extension base="tExpression" />
+    </xsd:complexContent>
   </xsd:complexType>
-  <xsd:element type="tBoolean-expr" name="condition"/>
+  <xsd:element name="condition" type="tBoolean-expr"/>
   <xsd:complexType name="tBoolean-expr">
-    <xsd:simpleContent>
-      <xsd:extension base="tExpression"/>
-    </xsd:simpleContent>
+    <xsd:complexContent mixed="true">
+      <xsd:extension base="tExpression" />
+    </xsd:complexContent>
   </xsd:complexType>
   <xsd:complexType name="tDuration-expr">
-    <xsd:simpleContent>
-      <xsd:extension base="tExpression"/>
-    </xsd:simpleContent>
+    <xsd:complexContent mixed="true">
+      <xsd:extension base="tExpression" />
+    </xsd:complexContent>
   </xsd:complexType>
   <xsd:complexType name="tDeadline-expr">
-    <xsd:simpleContent>
-      <xsd:extension base="tExpression"/>
-    </xsd:simpleContent>
+    <xsd:complexContent mixed="true">
+      <xsd:extension base="tExpression" />
+    </xsd:complexContent>
   </xsd:complexType>
   <xsd:simpleType name="tBoolean">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="yes"/>
       <xsd:enumeration value="no"/>
     </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="xpath">
-    <xsd:restriction base="xsd:normalizedString"/>
   </xsd:simpleType>
 </xsd:schema>

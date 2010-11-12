@@ -41,6 +41,7 @@ import com.beepell.xml.namespace.DocumentNamespaceContext;
  * Command-line toolkit to transform WS-BPEL into Core BPEL.
  * 
  * @author Tim Hallwyl, IT-University of Copenhagen, 2008 - 2010
+ * @author Espen H¿jsgaard, IT-University of Copenhagen, 2006 - 2010
  */
 public class Transform {
 
@@ -60,17 +61,18 @@ public class Transform {
             "extension-assign.xsl",               // remove extension assignments
             "extension-attributes-elements.xsl",  // remove extension attributes and elements
             "extension-declarations.xsl",         // remove extension declarations
-            "pick.xsl",                           // make implicit assignments explicit
-            "irra.xsl",                           // invoke.xsl, receive.xsl, reply.xsl, tofromparts.xsl
-            "standard-atts-elts.xsl",
+            "receive.xsl",                        // Change <receive>s into <pick>s
+            "invoke.xsl",
+            "pick.xsl",
+            "reply.xsl",
+            "handlers.xsl",
             "sequence.xsl",
-            "handlers.xsl", 
+            "standard-atts-elts.xsl",             // Move standard attributes and elements to wrapper <flow>s
             "defaultconditions.xsl",
             "defaults.xsl",
             "language.xsl", 
             "attributes.xsl", 
-            //"default-message-exchanges.xsl",    // FIXME 
-            //"activity-names.xsl",               // FIXME
+            //"default-message-exchanges.xsl",    // FIXME
             "redundant-attributes.xsl"/*,
             "process-redundant-attributes.xsl"*/
             };
@@ -93,8 +95,10 @@ public class Transform {
             cbpel = transform(bpel, uniquePrefix);
             
             if (this.validate) {
+              System.out.println("Validating that transformed process description is valid WS-BPEL.");
               this.validate(cbpel, this.bpelSchema);
               System.out.println("Transformed process description is valid WS-BPEL.");
+              System.out.println("Validating that transformed process description is valid Core BPEL.");
               this.validate(cbpel, this.cBpelSchema);
               System.out.println("Transformed process description is valid Core BPEL.");
             }

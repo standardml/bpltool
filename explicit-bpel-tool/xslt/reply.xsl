@@ -1,100 +1,71 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
+<!-- Make temporary variables and assignments, due to the use of <toParts>,
+     and/or references to an element variable, explicit. -->
+<!-- NB: this template should _not_ be applied by itself - it is included by irra.xsl. -->
+
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-  xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
-  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-  xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype">
+  xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable">
+
+  <xsl:output indent="yes" method="xml" />
+
+  <xsl:include href="tofromparts.xsl" />
+
+  <!-- Copy all elements and attributes -->
+  <xsl:template match="*">
+    <xsl:copy>
+      <xsl:copy-of select="@*" />
+      <xsl:apply-templates />
+    </xsl:copy>
+  </xsl:template>
 
   <!-- Unfold reply -->
   <xsl:template match="bpel:reply">
-    <xsl:param name="uniquePrefix" select="'v0'" />
-    <xsl:variable name="variable" select="@variable" />
-    <xsl:variable name="inputElement" select="count(ancestor::*/bpel:variables/bpel:variable[@name=$variable][1]/@element) = 1" />
+    <xsl:variable name="inputVariable" select="@variable" />
+    <xsl:variable name="inputElement" select="count(ancestor::*/bpel:variables/bpel:variable[@name=$inputVariable][1]/@element) = 1" />
     
     <xsl:choose>
-      <xsl:when test="bpel:toParts or $inputElement">
-        <xsl:variable name="partnerLinkName" select="@partnerLink" />
-        <xsl:variable name="operation" select="@operation" />
-        <xsl:variable name="partnerLink" select="(ancestor::*/bpel:partnerLinks/bpel:partnerLink[@name=$partnerLinkName])[1]" />
-        <xsl:variable name="partnerLinkNamespace" select="namespace::*[local-name() = substring-before($partnerLink/@partnerLinkType, ':')]" />
-        <xsl:variable name="definitions" select="document(/bpel:process/bpel:import[@importType='http://schemas.xmlsoap.org/wsdl/']/@location)/wsdl:definitions[@targetNamespace=$partnerLinkNamespace]" />
-        <xsl:variable name="portType" select="substring-after($definitions/plnk:partnerLinkType[@name=substring-after($partnerLink/@partnerLinkType, ':')]/plnk:role[@name=$partnerLink/@myRole]/@portType, ':')" />
-        
+      <xsl:when test="bpel:toParts or $inputElement">        
         <bpel:scope>
-          <xsl:message terminate="no">Implicit scope in reply made explicit.</xsl:message>
-          <xsl:copy-of select="@name" />
-          <xsl:copy-of select="@suppressJoinFailure" />
-          <xsl:copy-of select="bpel:targets" />
-          <xsl:copy-of select="bpel:sources" />
-          
-          <xsl:message terminate="no">Implicit temporary variables in reply made explicit.</xsl:message>
-          
           <bpel:variables>
-            <!-- add temporary output message variable -->
-            <bpel:variable>
-              <xsl:attribute name="name">
-                <xsl:value-of select="concat($uniquePrefix, 'InputMessage')" />
-              </xsl:attribute>
-              <xsl:attribute name="messageType">
-                <xsl:variable name="message" select="$definitions/wsdl:portType[@name=$portType]/wsdl:operation[@name=$operation]/wsdl:output" />
-                <xsl:variable name="messageNamespace" select="$message/namespace::*[local-name() = substring-before($message/@message, ':')]" />
-                <xsl:variable name="namespacePrefix" select="name(namespace::*[self::node() = $messageNamespace][1])" />
-                <xsl:value-of select="concat($namespacePrefix, ':', substring-after($message/@message, ':'))" />
-              </xsl:attribute>
-            </bpel:variable>
+			      <xsl:call-template name="message-activities-temp-variables">
+			        <xsl:with-param name="messageActivities" select="." />
+			      </xsl:call-template>
           </bpel:variables>
           
-          <xsl:message terminate="no">Implicit assignments in invoke made explicit.</xsl:message>
           <bpel:sequence>
-            
             <!-- Transform toParts into an assignment, if present -->
-            <xsl:apply-templates select="bpel:toParts" />
-            
+            <xsl:if test="bpel:toParts">
+              <xsl:call-template name="copy-to-parts-explicitly" />
+            </xsl:if>
+
             <!-- Create assignment to copy element variable to single part -->
             <xsl:if test="$inputElement">
-              <bpel:assign>
-                <bpel:copy keepSrcElementName="yes">
-                  <bpel:from>
-                    <xsl:attribute name="variable">
-                      <xsl:value-of select="@variable" />
-                    </xsl:attribute>
-                  </bpel:from>
-                  <bpel:to>
-                    <xsl:variable name="message" select="substring-after($definitions/wsdl:portType[@name=$portType]/wsdl:operation[@name=$operation]/wsdl:output/@message, ':')" />
-                    <xsl:attribute name="variable">
-                      <xsl:value-of select="concat($uniquePrefix, 'InputMessage')" />
-                    </xsl:attribute>
-                    <xsl:attribute name="part">
-                      <xsl:value-of select="$definitions/wsdl:message[@name=$message]/wsdl:part/@name" />
-                    </xsl:attribute>
-                  </bpel:to>
-                </bpel:copy>
-              </bpel:assign>
+              <xsl:call-template name="copy-input-element-explicitly">
+                <xsl:with-param name="inputVariable" select="$inputVariable" />
+              </xsl:call-template>
             </xsl:if>
             
             <xsl:copy>
-              <xsl:copy-of select="@name" />
-              <xsl:copy-of select="@partnerLink" />
-              <xsl:copy-of select="@faultName" />
-              <xsl:copy-of select="@operation" />
-              <xsl:copy-of select="@messageExchange" />
-              <xsl:attribute name="variable">
-                <xsl:value-of select="concat($uniquePrefix, 'InputMessage')" />
-              </xsl:attribute>
-              <xsl:copy-of select="bpel:correlations" />
+              <xsl:copy-of select="@*[not(namespace-uri() = '' and
+                                          (local-name() = 'variable' or
+                                           local-name() = 'portType'))]" />
+		          <xsl:call-template name="attribute-with-unique-element-name">
+		            <xsl:with-param name="attributeName" select="'variable'" />
+		            <xsl:with-param name="element" select="." />
+		            <xsl:with-param name="postfix" select="'InputMessage'" />
+		          </xsl:call-template>
+              <xsl:apply-templates select="*[not(self::bpel:toParts)]" />
             </xsl:copy>
-            
           </bpel:sequence>
         </bpel:scope>
       </xsl:when>
+
       <xsl:otherwise>
-        <!-- A core reply activity, leaving out portType, if there -->
         <xsl:copy>
-          <xsl:copy-of select="@*[namespace-uri()='' and not(@portType)]" />
-          <xsl:copy-of select="bpel:targets" />
-          <xsl:copy-of select="bpel:sources" />
-          <xsl:copy-of select="bpel:correlations" />
+          <xsl:copy-of select="@*[not(namespace-uri() = '' and local-name() = 'portType')]" />
+          <xsl:apply-templates select="*" />
         </xsl:copy>
       </xsl:otherwise>
     </xsl:choose>
