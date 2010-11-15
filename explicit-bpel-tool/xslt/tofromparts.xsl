@@ -394,20 +394,20 @@
 		        <xsl:with-param name="inputVariable">
 		          <xsl:choose>
 		            <xsl:when test="$first-activity[self::bpel:invoke]">
-		              <xsl:value-of select="@inputVariable" />
+		              <xsl:value-of select="$first-activity/@inputVariable" />
 		            </xsl:when>
 		            <xsl:when test="$first-activity[self::bpel:reply]">
-		              <xsl:value-of select="@variable" />
+		              <xsl:value-of select="$first-activity/@variable" />
 		            </xsl:when>
 		          </xsl:choose>
 		        </xsl:with-param>
 		        <xsl:with-param name="outputVariable">
 		          <xsl:choose>
 		            <xsl:when test="$first-activity[self::bpel:invoke]">
-		              <xsl:value-of select="@outputVariable" />
+		              <xsl:value-of select="$first-activity/@outputVariable" />
 		            </xsl:when>
 		            <xsl:when test="$first-activity[self::bpel:onMessage or self::bpel:receive]">
-		              <xsl:value-of select="@variable" />
+		              <xsl:value-of select="$first-activity/@variable" />
 		            </xsl:when>
 		          </xsl:choose>
 		        </xsl:with-param>

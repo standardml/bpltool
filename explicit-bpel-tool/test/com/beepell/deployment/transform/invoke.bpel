@@ -69,7 +69,7 @@
       </invoke>
 
 
-      <!-- IMPLICIT SCOP TEST -->
+      <!-- IMPLICIT SCOPE TEST -->
       <!-- Note: this is valid BPEL as we are using links that are not defined, but it is suitable for testing -->  
       <invoke
         name="localscope"

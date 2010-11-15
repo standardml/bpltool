@@ -98,7 +98,9 @@
 
                   <xsl:apply-templates select="*[not(self::bpel:catch or
                                                      self::bpel:catchAll or
-                                                     self::bpel:compensationHandler)]"/>
+                                                     self::bpel:compensationHandler or
+                                                     self::bpel:toParts or
+                                                     self::bpel:fromParts)]"/>
                 </xsl:copy>
 
                 <!-- Transform fromParts into an assignment, if present -->

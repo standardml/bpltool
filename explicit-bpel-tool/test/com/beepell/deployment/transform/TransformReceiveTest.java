@@ -16,10 +16,8 @@ import org.w3c.dom.NodeList;
 import com.beepell.xml.namespace.DocumentNamespaceContext;
 
 /**
- * This test is not transforming into true Core BPEL as is is testing the
- * intermediate core receive before this is transformed into a Pick activity.
- * 
  * @author Tim Hallwyl
+ * @author Espen H¿jsgaard
  */
 public class TransformReceiveTest extends TestCase {
 
@@ -32,26 +30,6 @@ public class TransformReceiveTest extends TestCase {
 
         File source = new File("test/com/beepell/deployment/transform/receive.bpel");
         Transform transform = new Transform();
-        /*
-        transform.setSheets(new String[] { 
-        		"process.xsl",                        // Move process scope to an explicit scope
-        		"if.xsl",                             // Add missing else-clause and turn elseif into nested if
-        		"while.xsl",                          // while to repeatUntil
-        		"scope.xsl",                          // Variable initializations
-        		"documentation.xsl",                  // remove human readable documantation
-        		"extension-activity.xsl",             // remove extension activities
-                "extension-assign.xsl",               // remove extension assignments
-                "extension-attributes-elements.xsl",  // remove extension attributes and elements
-                "extension-declarations.xsl",         // remove extension declarations
-                "irra.xsl",                           // invoke.xsl, receive.xsl, reply.xsl, tofromparts.xsl
-                // "receive2.xsl",                    // receive to pick
-                "handlers.xsl", 
-                "sequence.xsl", 
-                "defaultconditions.xsl", 
-                "attributes.xsl", 
-                "defaults.xsl", 
-                "language.xsl" }); */
-        transform.setValidate(false);
         transformed = transform.transform(source);
 
         NamespaceContext namespaceContext = new DocumentNamespaceContext(transformed);
@@ -73,20 +51,20 @@ public class TransformReceiveTest extends TestCase {
      */
     public final void testCoreReceive() {
 
-        //FIXME name attributes are removed from all activities but <scope>s
-//        assertEquals(1, getNodes("//bpel:pick[@name='core']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='core' and @suppressJoinFailure = 'yes']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='core' and @createInstance = 'no']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='core']/bpel:onMessage[@partnerLink = 'serverPartnerLink']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='core']/bpel:onMessage[@operation = 'requestService']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='core']/bpel:onMessage[@variable = 'request']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='core']/bpel:onMessage[@messageExchange = 'mea']").getLength());
-//
-//        assertEquals(1, getNodes("//bpel:pick[@name='core']/bpel:targets/bpel:joinCondition").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='core']/bpel:targets/bpel:target").getLength());
-//
-//        assertEquals(1, getNodes("//bpel:pick[@name='core']/bpel:sources/bpel:source[@linkName='ship-to-scheduling']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='core']/bpel:sources/bpel:source[@linkName='ship-to-scheduling']/bpel:transitionCondition").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='core' and @suppressJoinFailure = 'yes']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:pick").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:pick[@createInstance = 'no']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:pick/bpel:onMessage").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:pick/bpel:onMessage[@partnerLink = 'serverPartnerLink']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:pick/bpel:onMessage[@operation = 'requestService']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:pick/bpel:onMessage[@variable = 'request']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:pick/bpel:onMessage[@messageExchange = 'mea']").getLength());
+
+        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:targets/bpel:joinCondition").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:targets/bpel:target").getLength());
+
+        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:sources/bpel:source[@linkName='ship-to-scheduling']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:sources/bpel:source[@linkName='ship-to-scheduling']/bpel:transitionCondition").getLength());
 
     }
 
@@ -95,14 +73,12 @@ public class TransformReceiveTest extends TestCase {
      */
     public final void testNovariableReceive() {
 
-        //FIXME name attributes are removed from all activities but <scope>s
-//        assertEquals(1, getNodes("//bpel:pick[@name='novariable']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='novariable' and @suppressJoinFailure = 'yes']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='novariable' and @createInstance = 'no']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='novariable']/bpel:onMessage[@partnerLink = 'serverPartnerLink']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='novariable']/bpel:onMessage[@operation = 'noticeService']").getLength());
-//        assertEquals(0, getNodes("//bpel:pick[@name='novariable']/bpel:onMessage[@variable]").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='novariable']/bpel:onMessage[@messageExchange = 'meb']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='novariable' and @suppressJoinFailure = 'yes']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='novariable']/bpel:pick").getLength());
+        assertEquals(1, getNodes("//bpel:pick[@name='novariable']/bpel:pick[@createInstance = 'no']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='novariable']/bpel:pick/bpel:onMessage[@partnerLink = 'serverPartnerLink']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='novariable']/bpel:pick/bpel:onMessage[@operation = 'noticeService']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='novariable']/bpel:pick/bpel:onMessage[@messageExchange = 'meb']").getLength());
     }
 
     /**
@@ -110,27 +86,23 @@ public class TransformReceiveTest extends TestCase {
      */
     public final void testFromPartsReceive() {
 
-        //FIXME name attributes are removed from all activities but <scope>s
-//        // Check the invoke activity
-//        assertEquals(1, getNodes("//bpel:scope[@name='fromparts']/bpel:flow/bpel:pick[@name='fromparts']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='fromparts' and @createInstance = 'no']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='fromparts' and not(bpel:fromParts)]").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='fromparts']/bpel:onMessage[@partnerLink = 'serverPartnerLink']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='fromparts']/bpel:onMessage[@operation = 'requestService']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='fromparts']/bpel:onMessage[@variable = 'v0OutputMessage']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='fromparts']/bpel:onMessage[@messageExchange = 'mec']").getLength());
-//
-//        // Check the enclosing scope
-//        assertEquals(1, getNodes("//bpel:scope[@name='fromparts']/bpel:variables/bpel:variable[@name = 'v0OutputMessage' and @messageType='srv:requestMessage']").getLength());
-//        assertEquals(3, getNodes("//bpel:scope[@name='fromparts']/bpel:flow/*").getLength());
-//
-//        // Check the assignments
-//        assertEquals(1, getNodes("//bpel:scope[@name='fromparts']/bpel:flow/bpel:assign").getLength());
-//        assertEquals(2, getNodes("//bpel:scope[@name='fromparts']/bpel:flow/bpel:assign/bpel:copy").getLength());
-//        assertEquals(1, getNodes("//bpel:scope[@name='fromparts']/bpel:flow/bpel:assign/bpel:copy/bpel:from[@variable='v0OutputMessage' and @part='id']").getLength());
-//        assertEquals(1, getNodes("//bpel:scope[@name='fromparts']/bpel:flow/bpel:assign/bpel:copy/bpel:to[@variable='idVariable']").getLength());
-//        assertEquals(1, getNodes("//bpel:scope[@name='fromparts']/bpel:flow/bpel:assign/bpel:copy/bpel:from[@variable='v0OutputMessage' and @part='description']").getLength());
-//        assertEquals(1, getNodes("//bpel:scope[@name='fromparts']/bpel:flow/bpel:assign/bpel:copy/bpel:to[@variable='descriptionVariable' ]").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpel:pick").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpel:pick[@createInstance = 'no']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpel:pick/onMessage[not(bpel:fromParts)]").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpel:pick/bpel:onMessage[@partnerLink = 'serverPartnerLink']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpel:pick/bpel:onMessage[@operation = 'requestService']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpel:pick/bpel:onMessage[@messageExchange = 'mec']").getLength());
+
+        // Check the enclosing scope
+        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/ancestor::bpel:scope[1]/bpel:variables/bpel:variable[@messageType='srv:requestMessage']").getLength());
+
+        // Check the assignments
+        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpeL:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign").getLength());
+        assertEquals(2, getNodes("//bpel:flow[@name='fromparts']/bpeL:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpeL:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy/bpel:from[@part='id']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpeL:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy/bpel:to[@variable='idVariable']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpeL:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy/bpel:from[@part='description']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpeL:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy/bpel:to[@variable='descriptionVariable']").getLength());
 
     }
 
@@ -140,23 +112,20 @@ public class TransformReceiveTest extends TestCase {
      */
     public final void testElementReceive() {
 
-        //FIXME name attributes are removed from all activities but <scope>s
-//        assertEquals(1, getNodes("//bpel:scope[@name='elements']/bpel:flow/bpel:pick[@name='elements']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='elements' and @createInstance = 'no']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='elements']/bpel:onMessage[@partnerLink   = 'serverPartnerLink']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='elements']/bpel:onMessage[@operation     = 'simpleService']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='elements']/bpel:onMessage[@variable = 'v0OutputMessage']").getLength());
-//        assertEquals(1, getNodes("//bpel:pick[@name='elements']/bpel:onMessage[@messageExchange = 'med']").getLength());
-//
-//        // Check the enclosing scope
-//        assertEquals(1, getNodes("//bpel:scope[@name='elements']/bpel:variables/bpel:variable[@name = 'v0OutputMessage' and @messageType='srv:simpleRequestMessage']").getLength());
-//        assertEquals(3, getNodes("//bpel:scope[@name='elements']/bpel:flow/*").getLength());
-//
-//        // Check the assignments
-//        assertEquals(1, getNodes("//bpel:scope[@name='elements']/bpel:flow/bpel:assign").getLength());
-//        assertEquals(1, getNodes("//bpel:scope[@name='elements']/bpel:flow/bpel:assign/bpel:copy").getLength());
-//        assertEquals(1, getNodes("//bpel:scope[@name='elements']/bpel:flow/bpel:assign/bpel:copy/bpel:from[@variable='v0OutputMessage' and @part='addressIn']").getLength());
-//        assertEquals(1, getNodes("//bpel:scope[@name='elements']/bpel:flow/bpel:assign/bpel:copy/bpel:to[@variable='addressVariable']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='elements']/bpel:pick").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='elements']/bpel:pick[@createInstance = 'no']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='elements']/bpel:pick/bpel:onMessage[@partnerLink     = 'serverPartnerLink']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='elements']/bpel:pick/bpel:onMessage[@operation       = 'simpleService']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='elements']/bpel:pick/bpel:onMessage[@messageExchange = 'med']").getLength());
+
+        // Check the enclosing scope
+        assertEquals(1, getNodes("//bpel:flow[@name='elements']/ancestor::bpel:scope[1]/bpel:variables/bpel:variable[@messageType='srv:simpleRequestMessage']").getLength());
+
+        // Check the assignments
+        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpeL:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpeL:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpeL:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy/bpel:from[@part='addressIn']").getLength());
+        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpeL:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy/bpel:to[@variable='addressVariable']").getLength());
     }
 
 }

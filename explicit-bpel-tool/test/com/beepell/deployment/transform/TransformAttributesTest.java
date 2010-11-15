@@ -67,13 +67,15 @@ public class TransformAttributesTest extends TestCase {
         } catch (XPathExpressionException e) {
             assertTrue(false);
         }
-        assertEquals("yes", getString("//bpel:scope[@name='a']/@suppressJoinFailure"));
-        assertEquals("no", getString("//bpel:scope[@name='b']/@suppressJoinFailure"));
-        assertEquals("no", getString("//bpel:scope[@name='c']/@suppressJoinFailure"));
-        // Only <scope> has the suppressJoinFailure
-        //assertEquals("no", getString("//bpel:pick/@suppressJoinFailure"));
-        //assertEquals("yes", getString("//bpel:scope[@name='c']/bpel:assign/@suppressJoinFailure"));
-        //assertEquals("no", getString("//bpel:reply/@suppressJoinFailure"));
+        assertEquals("yes", getString("//bpel:scope[@name='a']/bpel:flow/@suppressJoinFailure"));
+        assertEquals("yes", getString("//bpel:scope[@name='a']/bpel:flow/bpel:flow[1]/@suppressJoinFailure"));
+        assertEquals("yes", getString("//bpel:scope[@name='a']/bpel:flow/bpel:flow[2]/@suppressJoinFailure"));
+        assertEquals("yes", getString("//bpel:scope[@name='b']/bpel:flow/@suppressJoinFailure"));
+        assertEquals("no", getString("//bpel:scope[@name='b']/bpel:flow/bpel:flow[1]/@suppressJoinFailure"));
+        assertEquals("no", getString("//bpel:scope[@name='b']/bpel:flow/bpel:flow[2]/@suppressJoinFailure"));
+        assertEquals("yes", getString("//bpel:scope[@name='c']/bpel:flow/@suppressJoinFailure"));
+        assertEquals("no", getString("//bpel:scope[@name='c']/bpel:flow/bpel:flow[1]/@suppressJoinFailure"));
+        assertEquals("no", getString("//bpel:scope[@name='c']/bpel:flow/bpel:flow[2]/@suppressJoinFailure"));
         
     }
     

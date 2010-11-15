@@ -62,14 +62,14 @@
   </xsl:template>
 
   <xsl:template match="bpel:pick">
-    <xsl:variable name="need-temp-variables">
+    <xsl:variable name="needs-temp-variables">
       <xsl:call-template name="message-activities-need-temp-variables">
         <xsl:with-param name="messageActivities" select="bpel:onMessage" />
       </xsl:call-template>
     </xsl:variable>
     
     <xsl:choose>
-      <xsl:when test="$need-temp-variables = 'true'">
+      <xsl:when test="$needs-temp-variables = 'true'">
 		    <bpel:scope>
           <bpel:variables>
 			      <xsl:call-template name="message-activities-temp-variables">

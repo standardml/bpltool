@@ -66,8 +66,7 @@ public class TransformReceive2Test extends TestCase {
         //assertEquals("receive", getString("//bpel:pick/@name"));
         
         // Links
-        // FIXME the link is moved to a wrapping <scope>
-        //assertEquals("link1", getString("//bpel:pick/bpel:sources/bpel:source/@linkName"));
+        assertEquals("link1", getString("//bpel:pick/ancestor::bpel:flow[1]/bpel:sources/bpel:source/@linkName"));
         
         // onMessage attributes
         assertEquals("echoPartnerLink", getString("//bpel:pick/bpel:onMessage/@partnerLink"));

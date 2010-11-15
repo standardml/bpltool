@@ -32,32 +32,38 @@
         messageType="srv:echoMessage" />
     </variables>
 
-    <scope name="b" exitOnStandardFault="no" suppressJoinFailure="no">
-      <sequence>
-        <receive
-          partnerLink="echoPartnerLink"
-          operation="echoOperation"
-          variable="request"
-          createInstance="yes" />
-
-        <scope 
-          name="c">
-          <assign suppressJoinFailure="yes">
-            <copy>
-              <from
-                variable="request" />
-              <to
-                variable="response" />
-            </copy>
-          </assign>
-        </scope>
-
-        <reply
-          partnerLink="echoPartnerLink"
-          operation="echoOperation"
-          variable="response" />
-      </sequence>
-    </scope>
+    <sequence>
+	    <scope name="b" exitOnStandardFault="no" suppressJoinFailure="no">
+	      <sequence>
+	        <receive
+	          partnerLink="echoPartnerLink"
+	          operation="echoOperation"
+	          variable="request"
+	          createInstance="yes" />
+	
+	        <scope 
+	          name="c">
+	          <sequence>
+		          <assign suppressJoinFailure="yes">
+		            <copy>
+		              <from
+		                variable="request" />
+		              <to
+		                variable="response" />
+		            </copy>
+		          </assign>
+		          <empty />
+            </sequence>
+	        </scope>
+	
+	        <reply
+	          partnerLink="echoPartnerLink"
+	          operation="echoOperation"
+	          variable="response" />
+	      </sequence>
+	    </scope>
+	    <empty />
+    </sequence>
     
   </scope>
 
