@@ -9,25 +9,7 @@
 
   <xsl:output indent="yes" method="xml" />
 
-  <xsl:param name="uniquePrefix" select="'fresh'" />
-  
-  <xsl:template name="unique-element-name">
-    <xsl:param name="element" />
-    <xsl:param name="postfix" select="''" />
-    <xsl:value-of select="$uniquePrefix" />
-    <xsl:value-of select="generate-id($element)" />
-    <xsl:value-of select="$postfix" />
-  </xsl:template>
-  
-  <xsl:template name="attribute-with-unique-element-name">
-    <xsl:param name="attributeName" />
-    <xsl:param name="element" />
-    <xsl:attribute name="{$attributeName}">
-      <xsl:call-template name="unique-element-name">
-        <xsl:with-param name="element" select="$element" />
-      </xsl:call-template>
-    </xsl:attribute>
-  </xsl:template>
+  <xsl:include href="fresh-names.xsl" />
     
   <xsl:template match="*">
     <xsl:copy>
@@ -42,7 +24,8 @@
       <xsl:when test="normalize-space(string($name)) = ''">
 			  <xsl:call-template name="attribute-with-unique-element-name">
 			    <xsl:with-param name="attributeName" select="'name'" />
-			    <xsl:with-param name="element" select="." />
+          <xsl:with-param name="element" select="." />
+          <xsl:with-param name="postfix" select="'FreshName'" />
 			  </xsl:call-template>
       </xsl:when>
       <xsl:otherwise>

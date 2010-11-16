@@ -8,25 +8,7 @@
 
   <xsl:output indent="yes" method="xml" />
 
-  <xsl:param name="uniquePrefix" select="'fresh'" />
-  
-  <xsl:template name="unique-element-name">
-    <xsl:param name="element" />
-    <xsl:param name="postfix" select="''" />
-    <xsl:value-of select="$uniquePrefix" />
-    <xsl:value-of select="generate-id($element)" />
-    <xsl:value-of select="$postfix" />
-  </xsl:template>
-  
-  <xsl:template name="attribute-with-unique-element-name">
-    <xsl:param name="attributeName" />
-    <xsl:param name="element" />
-    <xsl:attribute name="{$attributeName}">
-      <xsl:call-template name="unique-element-name">
-        <xsl:with-param name="element" select="$element" />
-      </xsl:call-template>
-    </xsl:attribute>
-  </xsl:template>
+  <xsl:include href="fresh-names.xsl"/>  
 
   <xsl:template match="*">
     <xsl:copy>
@@ -51,6 +33,7 @@
             <xsl:call-template name="attribute-with-unique-element-name">
               <xsl:with-param name="attributeName" select="'linkName'" />
               <xsl:with-param name="element" select="preceding-sibling::*[1]" />
+              <xsl:with-param name="postfix" select="'SequenceLink'" />
             </xsl:call-template>
           </bpel:target>
         </bpel:targets>        
@@ -62,6 +45,7 @@
             <xsl:call-template name="attribute-with-unique-element-name">
               <xsl:with-param name="attributeName" select="'linkName'" />
               <xsl:with-param name="element" select="." />
+              <xsl:with-param name="postfix" select="'SequenceLink'" />
             </xsl:call-template>
             <bpel:transitionCondition expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">
               true()
@@ -114,7 +98,6 @@
     </bpel:flow>
   </xsl:template>
 
-  <!-- creating numbered links using a prefix -->
   <xsl:template name="sequence-links">
     <bpel:links>
       <xsl:for-each select="bpel:assign | bpel:compensate | bpel:compensateScope | bpel:empty | bpel:exit | bpel:extensionActivity | bpel:flow | bpel:forEach | bpel:if | bpel:invoke | bpel:pick | bpel:receive | bpel:repeatUntil | bpel:reply | bpel:rethrow | bpel:scope | bpel:sequence | bpel:throw | bpel:validate | bpel:wait | bpel:while">
@@ -123,6 +106,7 @@
             <xsl:call-template name="attribute-with-unique-element-name">
               <xsl:with-param name="attributeName" select="'name'" />
               <xsl:with-param name="element" select="." />
+              <xsl:with-param name="postfix" select="'SequenceLink'" />
             </xsl:call-template>
           </bpel:link>
         </xsl:if>

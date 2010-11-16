@@ -8,7 +8,7 @@
   <xsl:param name="uniquePrefix" select="'fresh'" />
   
   <xsl:template name="unique-element-name">
-    <xsl:param name="element" />
+    <xsl:param name="element" select="." />
     <xsl:param name="postfix" select="''" />
     <xsl:value-of select="$uniquePrefix" />
     <xsl:value-of select="generate-id($element)" />
@@ -17,7 +17,7 @@
   
   <xsl:template name="attribute-with-unique-element-name">
     <xsl:param name="attributeName" />
-    <xsl:param name="element" />
+    <xsl:param name="element" select="." />
     <xsl:param name="postfix" select="''" />
     <xsl:attribute name="{$attributeName}">
       <xsl:call-template name="unique-element-name">
