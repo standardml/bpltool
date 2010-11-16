@@ -52,6 +52,7 @@ public class Transform {
     private final Schema cBpelSchema;
     private final boolean verbose;
     private String[] sheets = { 
+            "default-message-exchanges.xsl",      // FIXME
             "process.xsl",                        // Move process scope to an explicit scope
             "while.xsl",                          // while to repeatUntil
     		"if.xsl",                             // Add missing else-clause and turn elseif into nested if
@@ -72,7 +73,6 @@ public class Transform {
             "defaults.xsl",
             "language.xsl", 
             "attributes.xsl", 
-            //"default-message-exchanges.xsl",    // FIXME
             "redundant-attributes.xsl"/*,
             "process-redundant-attributes.xsl"*/
             };

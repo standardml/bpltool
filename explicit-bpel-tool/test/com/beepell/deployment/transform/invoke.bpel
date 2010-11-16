@@ -43,7 +43,7 @@
 
 
       <!--- CORE INVOKE TEST -->
-      <invoke xmlns:one="urn:foo" xmlns:two="urn:bar"
+      <invoke
         name="core"
         suppressJoinFailure="yes"
         partnerLink="serverPartnerLink"
@@ -57,7 +57,7 @@
           <target linkName="ship-to-invoice" />
         </targets> 
         <sources> 
-          <source xmlns:one="urn:one" xmlns:two="urn:two" linkName="ship-to-scheduling">
+          <source linkName="ship-to-scheduling">
             <transitionCondition expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">
                 true()
             </transitionCondition>

@@ -19,6 +19,10 @@
       partnerLinkType="srv:echoPartnerLinkType"
       myRole="echoServiceProvider" />
   </partnerLinks>
+  
+  <messageExchanges>
+    <messageExchange name="main" />
+  </messageExchanges>
 
   <variables>
     <variable

@@ -18,6 +18,7 @@ import com.beepell.xml.namespace.DocumentNamespaceContext;
 
 /**
  * @author Tim Hallwyl
+ * @author Espen H¿jsgaard
  * 
  */
 public class TransformInvokeTest extends TestCase {
@@ -32,7 +33,6 @@ public class TransformInvokeTest extends TestCase {
 
         File source = new File("test/com/beepell/deployment/transform/invoke.bpel");
         this.transform = new Transform();
-        transform.setValidate(false);
         transformed = transform.transform(source);
         NamespaceContext namespaceContext = new DocumentNamespaceContext(transformed);
         xPath.setNamespaceContext(namespaceContext);

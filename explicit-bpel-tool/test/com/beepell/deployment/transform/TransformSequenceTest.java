@@ -91,7 +91,7 @@ public class TransformSequenceTest extends TestCase {
         Document ebpel = transfomer.transform(sequence1);
 
         // 1. Test preservation of join condition in non-sequenced activity
-        expression = "//bpel:flow[@name='reply']//bpel:reply/bpel:targets/bpel:joinCondition/text()";
+        expression = "//bpel:flow[@name='reply']/bpel:targets/bpel:joinCondition/text()";
         assertEquals("$reply or not($reply)", (String) xPath.evaluate(expression, ebpel, XPathConstants.STRING));
 
         // 2. Test preservation of join condition in sequenced activity
@@ -110,10 +110,10 @@ public class TransformSequenceTest extends TestCase {
         assertEquals("true() or false()", (String) xPath.evaluate(expression, ebpel, XPathConstants.STRING));
         
         // 5. Test the extension of sources
-        expression = "count(//bpel:flow[@name='receive']/bpel:sources/bpel:source)";
+        expression = "count(//bpel:flow[@name='receive']/parent::bpel:flow/bpel:sources/bpel:source)";
         assertEquals(1, ((Double) xPath.evaluate(expression, ebpel, XPathConstants.NUMBER)).intValue());
 
-        expression = "count(//bpel:flow[@name='assign']/bpel:sources/bpel:source)";
+        expression = "count(//bpel:flow[@name='assign']/parent::bpel:flow/bpel:sources/bpel:source)";
         assertEquals(1, ((Double) xPath.evaluate(expression, ebpel, XPathConstants.NUMBER)).intValue());
 
         
