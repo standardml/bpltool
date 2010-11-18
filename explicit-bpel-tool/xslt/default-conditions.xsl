@@ -7,6 +7,8 @@
   xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable">
 
   <xsl:output indent="yes" method="xml" />
+  
+  <xsl:include href="constants.xsl" />
 
   <xsl:template match="*">
     <xsl:copy>
@@ -18,14 +20,14 @@
   <xsl:template match="bpel:source[not(bpel:transitionCondition)]">
     <xsl:copy>
       <xsl:copy-of select="@*" />
-      <bpel:transitionCondition>true()</bpel:transitionCondition>
+      <bpel:transitionCondition expressionLanguage="{$xpathURN}">true()</bpel:transitionCondition>
     </xsl:copy>
   </xsl:template>
 
   <xsl:template match="bpel:targets[not(bpel:joinCondition)]">
     <xsl:copy>
       <xsl:copy-of select="@*" />
-      <bpel:joinCondition>
+      <bpel:joinCondition expressionLanguage="{$xpathURN}">
         <xsl:for-each select="bpel:target">
           <xsl:value-of select="concat('$', string(@linkName))"/>
           <xsl:if test="following-sibling::bpel:target">

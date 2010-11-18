@@ -5,7 +5,7 @@
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-  <xsl:param name="uniquePrefix" select="'fresh'" />
+  <xsl:param name="uniquePrefix" />
   
   <xsl:template name="unique-element-name">
     <xsl:param name="element" select="." />

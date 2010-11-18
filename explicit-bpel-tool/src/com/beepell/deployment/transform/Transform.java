@@ -52,29 +52,28 @@ public class Transform {
     private final Schema cBpelSchema;
     private final boolean verbose;
     private String[] sheets = { 
-            "default-message-exchanges.xsl",      // FIXME
-            "process.xsl",                        // Move process scope to an explicit scope
-            "while.xsl",                          // while to repeatUntil
-    		"if.xsl",                             // Add missing else-clause and turn elseif into nested if
-    		"scope.xsl",                          // Variable initializations
-    		"documentation.xsl",                  // remove human readable documentation
-    		"extension-activity.xsl",             // remove extension activities
-            "extension-assign.xsl",               // remove extension assignments
-            "extension-attributes-elements.xsl",  // remove extension attributes and elements
-            "extension-declarations.xsl",         // remove extension declarations
-            "receive.xsl",                        // Change <receive>s into <pick>s
+            "remove-documentation.xsl",                  // Remove human readable documentation
+            "remove-extension-activity.xsl",             // Remove extension activities
+            "remove-extension-assign.xsl",               // Remove extension assignments
+            "remove-extension-attributes-elements.xsl",  // Remove extension attributes and elements
+            "remove-extension-declarations.xsl",         // Remove extension declarations
+            "default-message-exchanges.xsl",             // Make default message exchanges explicit
+            "process.xsl",                               // Move process scope to an explicit scope
+            "while.xsl",                                 // while to repeatUntil
+    		"if.xsl",                                    // Add missing else-clause and turn elseif into nested if
+    		"scope.xsl",                                 // Variable initializations
+            "receive.xsl",                               // Change <receive>s into <pick>s
             "invoke.xsl",
             "pick.xsl",
             "reply.xsl",
-            "handlers.xsl",
-            "sequence.xsl",
-            "standard-atts-elts.xsl",             // Move standard attributes and elements to wrapper <flow>s
-            "defaultconditions.xsl",
-            "defaults.xsl",
-            "language.xsl", 
-            "attributes.xsl", 
-            "redundant-attributes.xsl"/*,
-            "process-redundant-attributes.xsl"*/
+            "default-handlers.xsl",
+            "sequence.xsl",                              // Change <sequence>s into <flow>s
+            "standard-attributes-elements.xsl",          // Move standard attributes and elements to wrapper <flow>s
+            "default-conditions.xsl",
+            "default-attribute-values-simple.xsl",
+            "default-attribute-values-global.xsl", 
+            "default-attribute-values-inherited.xsl", 
+            "remove-redundant-attributes.xsl"
             };
     
     private boolean validate = true;
@@ -384,6 +383,15 @@ public class Transform {
      */
     public void setSheets(String[] sheets) {
         this.sheets = sheets;
+    }
+    
+    /**
+     * Get the current list of style sheets.
+     * 
+     * @return a list of style sheet file names.
+     */
+    public String[] getSheets() {
+        return sheets;
     }
 
     /**

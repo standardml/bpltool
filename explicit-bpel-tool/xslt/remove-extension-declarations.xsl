@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
+<!-- Remove all ignorable extension declarations -->
+
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable">
@@ -12,14 +14,14 @@
       <xsl:apply-templates />
     </xsl:copy>
   </xsl:template>
-
-  <!-- Replace all extension activities with empty activities. -->
-  <xsl:template match="bpel:extensionActivity">
-    <bpel:empty>
-      <xsl:copy-of select="child::*/@*[namespace-uri()='']" />
-      <xsl:copy-of select="child::*/bpel:*" />
-    </bpel:empty>
-    <xsl:message terminate="no">Replaced an extensionActivity element with an empty activity.</xsl:message>
+  
+  <xsl:template match="bpel:extensions">
+    <xsl:if test="bpel:extension[@mustUnderstand='yes']">
+      <xsl:copy>
+        <xsl:copy-of select="@*" />
+        <xsl:apply-templates select="*[not(self::bpel:extension and @mustUnderstand='no')]" />
+      </xsl:copy>
+    </xsl:if>
   </xsl:template>
 
 </xsl:stylesheet>
