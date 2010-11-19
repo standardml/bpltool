@@ -49,9 +49,9 @@
     <xsl:param name="scope" select="ancestor-or-self::*[self::bpel:process or self::bpel:scope[parent::bpel:onEvent or parent::bpel:forEach[@parallel='yes']]][1]" />
     <bpel:messageExchange>
       <xsl:attribute name="name">
-	      <xsl:call-template name="default-message-exchange-name">
-	        <xsl:with-param name="scope" select="$scope" />
-	      </xsl:call-template>
+        <xsl:call-template name="default-message-exchange-name">
+          <xsl:with-param name="scope" select="$scope" />
+        </xsl:call-template>
       </xsl:attribute>
     </bpel:messageExchange>
   </xsl:template>
@@ -61,9 +61,9 @@
     <xsl:variable name="is-default-message-exchange-used">
       <xsl:choose>
         <xsl:when test="parent::bpel:process">
-		      <xsl:call-template name="is-default-message-exchange-used">
-		        <xsl:with-param name="activity" select=".." />
-		      </xsl:call-template>
+          <xsl:call-template name="is-default-message-exchange-used">
+            <xsl:with-param name="activity" select=".." />
+          </xsl:call-template>
         </xsl:when>
         <xsl:otherwise>
           <xsl:call-template name="is-default-message-exchange-used">
@@ -98,10 +98,10 @@
       <xsl:copy-of select="bpel:partnerLinks" />
       
       <xsl:if test="$is-default-message-exchange-used = 'true'">
-	      <bpel:messageExchanges>
-	        <xsl:call-template name="default-message-exchange" />
-	      </bpel:messageExchanges>
-	    </xsl:if>
+        <bpel:messageExchanges>
+          <xsl:call-template name="default-message-exchange" />
+        </bpel:messageExchanges>
+      </xsl:if>
       
       <xsl:apply-templates select="*[not(
         self::bpel:extensions or

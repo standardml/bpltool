@@ -11,7 +11,7 @@
 
   <xsl:output indent="yes" method="xml" />
 
-  <xsl:include href="tofromparts.xsl" />
+  <xsl:include href="to-from-parts-element-variables.xsl" />
 
   <!-- Copy all elements and attributes -->
   <xsl:template match="*">
@@ -34,9 +34,9 @@
         <bpel:scope>
           <xsl:if test="bpel:toParts or $inputElement or bpel:fromParts or $outputElement">
             <bpel:variables>
-				      <xsl:call-template name="message-activities-temp-variables">
-				        <xsl:with-param name="messageActivities" select="." />
-				      </xsl:call-template>
+              <xsl:call-template name="message-activities-temp-variables">
+                <xsl:with-param name="messageActivities" select="." />
+              </xsl:call-template>
             </bpel:variables>
           </xsl:if>
 
@@ -53,9 +53,9 @@
             <xsl:when test="bpel:toParts or bpel:fromParts or $inputElement or $outputElement">
               <bpel:sequence>
                 <!-- Transform toParts into an assignment, if present -->
-		            <xsl:if test="bpel:toParts">
-		              <xsl:call-template name="copy-to-parts-explicitly" />
-		            </xsl:if>
+                <xsl:if test="bpel:toParts">
+                  <xsl:call-template name="copy-to-parts-explicitly" />
+                </xsl:if>
 
                 <!-- Create assignment to copy element variable to single part -->
                 <xsl:if test="$inputElement">
@@ -72,11 +72,11 @@
 
                   <xsl:choose>
                     <xsl:when test="bpel:toParts or $inputElement">
-						          <xsl:call-template name="attribute-with-unique-element-name">
-						            <xsl:with-param name="attributeName" select="'inputVariable'" />
-						            <xsl:with-param name="element" select="." />
-						            <xsl:with-param name="postfix" select="'InputMessage'" />
-						          </xsl:call-template>
+                      <xsl:call-template name="attribute-with-unique-element-name">
+                        <xsl:with-param name="attributeName" select="'inputVariable'" />
+                        <xsl:with-param name="element" select="." />
+                        <xsl:with-param name="postfix" select="$tmp-input-message-variable-postfix" />
+                      </xsl:call-template>
                     </xsl:when>
                     <xsl:otherwise>
                       <xsl:copy-of select="@inputVariable" />
@@ -88,7 +88,7 @@
                       <xsl:call-template name="attribute-with-unique-element-name">
                         <xsl:with-param name="attributeName" select="'outputVariable'" />
                         <xsl:with-param name="element" select="." />
-                        <xsl:with-param name="postfix" select="'OutputMessage'" />
+                        <xsl:with-param name="postfix" select="$tmp-output-message-variable-postfix" />
                       </xsl:call-template>
                     </xsl:when>
                     <xsl:otherwise>
@@ -104,9 +104,9 @@
                 </xsl:copy>
 
                 <!-- Transform fromParts into an assignment, if present -->
-		            <xsl:if test="bpel:fromParts">
-		              <xsl:call-template name="copy-from-parts-explicitly" />
-		            </xsl:if>
+                <xsl:if test="bpel:fromParts">
+                  <xsl:call-template name="copy-from-parts-explicitly" />
+                </xsl:if>
 
                 <!-- Create assignment to copy single part to element variable -->
                 <xsl:if test="$outputElement">

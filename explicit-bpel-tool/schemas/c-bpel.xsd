@@ -190,7 +190,6 @@
           <xsd:element ref="scope"/>
         </xsd:sequence>
         <xsd:attribute name="messageType" type="xsd:QName" use="optional"/>
-        <xsd:attribute name="element" type="xsd:QName" use="optional"/>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -204,7 +203,6 @@
     </xsd:annotation>
     <xsd:sequence>
       <xsd:element name="correlations" type="tCorrelations" minOccurs="0"/>
-      <xsd:element minOccurs="0" ref="fromParts"/>
     </xsd:sequence>
     <xsd:attribute name="partnerLink" type="xsd:NCName" use="required"/>
     <xsd:attribute name="operation" type="xsd:NCName" use="required"/>
@@ -464,28 +462,6 @@
       <xsd:enumeration value="request-response"/>
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:element name="fromParts" type="tFromParts"/>
-  <xsd:complexType name="tFromParts">
-    <xsd:sequence>
-      <xsd:element maxOccurs="unbounded" ref="fromPart"/>
-    </xsd:sequence>
-  </xsd:complexType>
-  <xsd:element name="fromPart" type="tFromPart"/>
-  <xsd:complexType name="tFromPart">
-    <xsd:attribute name="part" type="xsd:NCName" use="required"/>
-    <xsd:attribute name="toVariable" type="BPELVariableName" use="required"/>
-  </xsd:complexType>
-  <xsd:element name="toParts" type="tToParts"/>
-  <xsd:complexType name="tToParts">
-    <xsd:sequence>
-      <xsd:element maxOccurs="unbounded" ref="toPart"/>
-    </xsd:sequence>
-  </xsd:complexType>
-  <xsd:element name="toPart" type="tToPart"/>
-  <xsd:complexType name="tToPart">
-    <xsd:attribute name="part" type="xsd:NCName" use="required"/>
-    <xsd:attribute name="fromVariable" type="BPELVariableName" use="required"/>
-  </xsd:complexType>
   <xsd:element name="pick" type="tPick"/>
   <xsd:complexType name="tPick">
     <xsd:annotation>

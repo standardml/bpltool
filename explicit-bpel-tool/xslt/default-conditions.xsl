@@ -29,10 +29,8 @@
       <xsl:copy-of select="@*" />
       <bpel:joinCondition expressionLanguage="{$xpathURN}">
         <xsl:for-each select="bpel:target">
-          <xsl:value-of select="concat('$', string(@linkName))"/>
-          <xsl:if test="following-sibling::bpel:target">
-            <xsl:value-of select="string(' or ')"/>
-          </xsl:if>
+          <xsl:value-of select="concat('$', @linkName)"/>
+          <xsl:if test="following-sibling::bpel:target"> or </xsl:if>
         </xsl:for-each>        
       </bpel:joinCondition>
       <xsl:apply-templates />

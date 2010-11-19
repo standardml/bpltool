@@ -16,8 +16,8 @@
   <!-- Copy all other elements. -->
   <xsl:template match="*">
     <xsl:copy>
-	    <xsl:copy-of select="@*[not(namespace-uri() = /bpel:process/bpel:extensions/bpel:extension[@mustUnderstand='no']/@namespace) or
-	                            namespace-uri() = /bpel:process/bpel:extensions/bpel:extension[@mustUnderstand='yes']/@namespace]" />
+      <xsl:copy-of select="@*[not(namespace-uri() = /bpel:process/bpel:extensions/bpel:extension[@mustUnderstand='no']/@namespace) or
+                              namespace-uri() = /bpel:process/bpel:extensions/bpel:extension[@mustUnderstand='yes']/@namespace]" />
       <xsl:apply-templates />
     </xsl:copy>
   </xsl:template>

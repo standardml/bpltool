@@ -9,6 +9,7 @@
 
   <xsl:output indent="yes" method="xml" />
 
+  <xsl:include href="constants.xsl"/>
   <xsl:include href="fresh-names.xsl" />
     
   <xsl:template match="*">
@@ -22,11 +23,11 @@
     <xsl:param name="name" />
     <xsl:choose>
       <xsl:when test="normalize-space(string($name)) = ''">
-			  <xsl:call-template name="attribute-with-unique-element-name">
-			    <xsl:with-param name="attributeName" select="'name'" />
+        <xsl:call-template name="attribute-with-unique-element-name">
+          <xsl:with-param name="attributeName" select="'name'" />
           <xsl:with-param name="element" select="." />
-          <xsl:with-param name="postfix" select="'FreshName'" />
-			  </xsl:call-template>
+          <xsl:with-param name="postfix" select="$fresh-activity-name-postfix" />
+        </xsl:call-template>
       </xsl:when>
       <xsl:otherwise>
         <xsl:copy-of select="$name" />
@@ -55,19 +56,19 @@
   
   <xsl:template match="bpel:flow | bpel:scope">
     <xsl:copy>
-	    <xsl:call-template name="name">
-	      <xsl:with-param name="name" select="@name"/>
-	    </xsl:call-template>
-	    <xsl:copy-of select="@*[not(namespace-uri() = '' and local-name() = 'name')]" />
-	    <xsl:apply-templates />
+      <xsl:call-template name="name">
+        <xsl:with-param name="name" select="@name"/>
+      </xsl:call-template>
+      <xsl:copy-of select="@*[not(namespace-uri() = '' and local-name() = 'name')]" />
+      <xsl:apply-templates />
     </xsl:copy>
   </xsl:template>
 
   <xsl:template match="bpel:scope[bpel:targets or bpel:sources]">
     <bpel:flow>
-	    <xsl:call-template name="name">
-	      <xsl:with-param name="name" select="@name"/>
-	    </xsl:call-template>
+      <xsl:call-template name="name">
+        <xsl:with-param name="name" select="@name"/>
+      </xsl:call-template>
       <xsl:copy-of select="@suppressJoinFailure" />
       <xsl:copy-of select="bpel:targets" />
       <xsl:copy-of select="bpel:sources" />

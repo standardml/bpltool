@@ -43,20 +43,20 @@
         <bpel:condition expressionLanguage="{$xpathURN}">
           not($<xsl:value-of select="$conditionVariable" />)
         </bpel:condition>
-	      <bpel:sequence>
-	        <xsl:apply-templates select="*[not(self::bpel:targets or self::bpel:sources or self::bpel:condition)]" />
-	        <bpel:if>
-	          <xsl:apply-templates select="bpel:condition" />
-	          <bpel:assign>
-	            <bpel:copy>
-		            <bpel:from expressionLanguage="{$xpathURN}">
-		              true()
-		            </bpel:from>
-		            <bpel:to variable="{$conditionVariable}" />
+        <bpel:sequence>
+          <xsl:apply-templates select="*[not(self::bpel:targets or self::bpel:sources or self::bpel:condition)]" />
+          <bpel:if>
+            <xsl:apply-templates select="bpel:condition" />
+            <bpel:assign>
+              <bpel:copy>
+                <bpel:from expressionLanguage="{$xpathURN}">
+                  true()
+                </bpel:from>
+                <bpel:to variable="{$conditionVariable}" />
               </bpel:copy>
-	          </bpel:assign>
-	        </bpel:if>
-	      </bpel:sequence>
+            </bpel:assign>
+          </bpel:if>
+        </bpel:sequence>
       </bpel:while>
     </bpel:scope>
   </xsl:template>

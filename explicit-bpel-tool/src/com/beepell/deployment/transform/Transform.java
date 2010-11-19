@@ -296,7 +296,7 @@ public class Transform {
      */
     @SuppressWarnings("unchecked")
     private static String getUniquePrefix(File file) throws Exception {
-        final String prefixBase = "v";
+        final String prefixBase = "fresh-prefix-";
         int prefixCount = 0;
 
         try {
@@ -319,7 +319,7 @@ public class Transform {
             XPathFactory factory = XPathFactory.newInstance();
             XPath xPath = factory.newXPath();
             xPath.setNamespaceContext(namespaceContext);
-            NodeList variables = (NodeList) xPath.evaluate("//" + bpel + ":variable/@name | //" + bpel + ":link/@name", document, XPathConstants.NODESET);
+            NodeList variables = (NodeList) xPath.evaluate("//" + bpel + ":*/@* | //" + bpel + ":extensionActivity/*/@name", document, XPathConstants.NODESET);
 
             // Build String array with all names
             String[] names = new String[variables.getLength()];

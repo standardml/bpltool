@@ -10,7 +10,7 @@
 
   <xsl:output indent="yes" method="xml" />
 
-  <xsl:include href="tofromparts.xsl" />
+  <xsl:include href="to-from-parts-element-variables.xsl" />
 
   <!-- Copy all elements and attributes -->
   <xsl:template match="*">
@@ -29,9 +29,9 @@
       <xsl:when test="bpel:toParts or $inputElement">        
         <bpel:scope>
           <bpel:variables>
-			      <xsl:call-template name="message-activities-temp-variables">
-			        <xsl:with-param name="messageActivities" select="." />
-			      </xsl:call-template>
+            <xsl:call-template name="message-activities-temp-variables">
+              <xsl:with-param name="messageActivities" select="." />
+            </xsl:call-template>
           </bpel:variables>
           
           <bpel:sequence>
@@ -51,11 +51,11 @@
               <xsl:copy-of select="@*[not(namespace-uri() = '' and
                                           (local-name() = 'variable' or
                                            local-name() = 'portType'))]" />
-		          <xsl:call-template name="attribute-with-unique-element-name">
-		            <xsl:with-param name="attributeName" select="'variable'" />
-		            <xsl:with-param name="element" select="." />
-		            <xsl:with-param name="postfix" select="'InputMessage'" />
-		          </xsl:call-template>
+              <xsl:call-template name="attribute-with-unique-element-name">
+                <xsl:with-param name="attributeName" select="'variable'" />
+                <xsl:with-param name="element" select="." />
+                <xsl:with-param name="postfix" select="$tmp-input-message-variable-postfix" />
+              </xsl:call-template>
               <xsl:apply-templates select="*[not(self::bpel:toParts)]" />
             </xsl:copy>
           </bpel:sequence>

@@ -2,7 +2,6 @@
 
 <!-- Make temporary variables and assignments, due to the use of
      <fromParts>, and/or references to element variables in <onMessage>s, explicit. -->
-<!-- NB: this template should _not_ be applied by itself - it is included by irra.xsl. -->
 
 <xsl:stylesheet 
   version="1.0" 
@@ -11,7 +10,7 @@
 
   <xsl:output indent="yes" method="xml" />
 
-  <xsl:include href="tofromparts.xsl" />
+  <xsl:include href="to-from-parts-element-variables.xsl" />
 
   <!-- Copy all elements and attributes -->
   <xsl:template match="*">
@@ -30,30 +29,30 @@
       <xsl:copy-of select="bpel:correlations" />
       
       <xsl:choose>
-	      <xsl:when test="bpel:fromParts or $outputElement">
-	        <xsl:call-template name="attribute-with-unique-element-name">
+        <xsl:when test="bpel:fromParts or $outputElement">
+          <xsl:call-template name="attribute-with-unique-element-name">
             <xsl:with-param name="attributeName" select="'variable'" />
             <xsl:with-param name="element" select="." />
-		        <xsl:with-param name="postfix" select="'OutputMessage'" />
-	        </xsl:call-template>
-	
-	        <bpel:sequence>
-	          <!-- Transform fromParts into an assignment, if present -->
+            <xsl:with-param name="postfix" select="$tmp-output-message-variable-postfix" />
+          </xsl:call-template>
+  
+          <bpel:sequence>
+            <!-- Transform fromParts into an assignment, if present -->
             <xsl:if test="bpel:fromParts">
-  	          <xsl:call-template name="copy-from-parts-explicitly" />
+              <xsl:call-template name="copy-from-parts-explicitly" />
             </xsl:if>
-	
-	          <!-- Create assignment to copy single part to element variable -->
-	          <xsl:if test="$outputElement">
-	            <xsl:call-template name="copy-output-element-explicitly">
-	              <xsl:with-param name="outputVariable" select="$outputVariable" />
-	            </xsl:call-template>
-	          </xsl:if>
-	
-	          <xsl:apply-templates select="*[not(self::bpel:fromParts or self::bpel:correlations)]"/>
-	
-	        </bpel:sequence>
-	      </xsl:when>
+  
+            <!-- Create assignment to copy single part to element variable -->
+            <xsl:if test="$outputElement">
+              <xsl:call-template name="copy-output-element-explicitly">
+                <xsl:with-param name="outputVariable" select="$outputVariable" />
+              </xsl:call-template>
+            </xsl:if>
+  
+            <xsl:apply-templates select="*[not(self::bpel:fromParts or self::bpel:correlations)]"/>
+  
+          </bpel:sequence>
+        </xsl:when>
         <xsl:otherwise>
           <xsl:apply-templates select="*[not(self::bpel:correlations)]"/>
         </xsl:otherwise>
@@ -70,31 +69,31 @@
     
     <xsl:choose>
       <xsl:when test="$needs-temp-variables = 'true'">
-		    <bpel:scope>
+        <bpel:scope>
           <bpel:variables>
-			      <xsl:call-template name="message-activities-temp-variables">
-			        <xsl:with-param name="messageActivities" select="bpel:onMessage" />
-			      </xsl:call-template>
+            <xsl:call-template name="message-activities-temp-variables">
+              <xsl:with-param name="messageActivities" select="bpel:onMessage" />
+            </xsl:call-template>
           </bpel:variables>
-		
-		      <xsl:copy>
-		        <xsl:copy-of select="@*" />
-		
-		        <xsl:for-each select="bpel:onMessage">
-		          <xsl:call-template name="onMessage" />
-		        </xsl:for-each>
-		        
-		        <xsl:apply-templates select="*[not(self::bpel:onMessage)]" />
-		      </xsl:copy>
-		    </bpel:scope>
- 	    </xsl:when>
-	    
-	    <xsl:otherwise>
-	      <xsl:copy>
-	        <xsl:copy-of select="@*" />
-	        <xsl:apply-templates />
-	      </xsl:copy>
-	    </xsl:otherwise>
+    
+          <xsl:copy>
+            <xsl:copy-of select="@*" />
+    
+            <xsl:for-each select="bpel:onMessage">
+              <xsl:call-template name="onMessage" />
+            </xsl:for-each>
+            
+            <xsl:apply-templates select="*[not(self::bpel:onMessage)]" />
+          </xsl:copy>
+        </bpel:scope>
+       </xsl:when>
+      
+      <xsl:otherwise>
+        <xsl:copy>
+          <xsl:copy-of select="@*" />
+          <xsl:apply-templates />
+        </xsl:copy>
+      </xsl:otherwise>
     </xsl:choose>
 
   </xsl:template>

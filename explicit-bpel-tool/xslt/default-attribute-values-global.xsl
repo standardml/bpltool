@@ -11,6 +11,8 @@
 
   <xsl:output indent="yes" method="xml" />
   
+  <xsl:include href="constants.xsl" />
+  
   <xsl:template match="*">
     <xsl:param name="expressionLanguage" />
     <xsl:param name="queryLanguage" />
@@ -25,8 +27,8 @@
   
   <!-- Special case for the process element, that has both attributes and default values -->
   <xsl:template match="bpel:process">
-    <xsl:param name="expressionLanguage">urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0</xsl:param>
-    <xsl:param name="queryLanguage">urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0</xsl:param>
+    <xsl:param name="expressionLanguage" select="$xpathURN" />
+    <xsl:param name="queryLanguage" select="$xpathURN" />
     <xsl:copy>
       <xsl:copy-of select="@*" />
       
