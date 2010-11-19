@@ -41,14 +41,17 @@ namespace ITU.DK.DCRS.Visualization.Elements
 
   
   public class ActionNode
-  {
+  { 
     static public int NODE_WIDTH = 100;
     static public int NODE_HEIGHT = 100;
     static public int ROLEBOX_HEIGHT = 30;
 
-    static public int HALF_NODE_WIDTH = (NODE_WIDTH/2);
-    static public int HALF_NODE_HEIGHT = (NODE_HEIGHT/2);
+    private int _nodeWidth = NODE_WIDTH;
+    private int _nodeHeight = NODE_HEIGHT;
+    private int _roleboxHeight = ROLEBOX_HEIGHT;
 
+    private int _halfNodeWidth { get { return (_nodeWidth / 2); } }
+    private int _halfNodeHeight { get { return (_nodeHeight / 2); } }
 
     short ID;                                 /// ID of this node in corresponding specification.
     String Name;                              /// Name of the action that this node represents.
@@ -67,7 +70,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
     /// Fields and/or properties for execution.
     public Boolean included = true;             /// Is the action currently included?
     public Boolean pendingResponse = false;     /// Is this action required to be performed as a response?      
-    public Boolean hasExecuted = false;         /// Has this action eben executed at least one?
+    public Boolean hasExecuted = false;         /// Has this action been executed at least once?
     public Boolean enabled = false;             /// Is the action currently enabled?                                                
                                                 /// 
     
@@ -75,6 +78,11 @@ namespace ITU.DK.DCRS.Visualization.Elements
     public Boolean selected = false;             /// Is the action currently selected?
 
     int[] used = new int[4];
+
+
+    // For subevents:
+    private Set<ActionNode> subNodes;
+    private Boolean isSuper { get { return subNodes.Count == 0; } }
         
     public ActionNode(short id, String name, Vector2 location, Pen dp, Brush tb, Font tf)
     {
@@ -86,6 +94,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
       TextBrush = tb;
       TextFont = tf;
       InitiateConnectors();
+      subNodes = new Set<ActionNode>();
     }
 
     public void ApplyRuntime(DCRS.CommonTypes.Process.DCRSRuntime r)
@@ -110,26 +119,26 @@ namespace ITU.DK.DCRS.Visualization.Elements
       NodeConnector c;
       for (double d = 1; d < 8; d++)
       {
-        c = new NodeConnector(); c.Location = new Vector2((NODE_WIDTH / -2), (NODE_WIDTH / -2) + (d * (NODE_WIDTH / 8))); c.Side = NodeSide.Left; c.Used = false; FreeConnectors.Add(c);
-        c = new NodeConnector(); c.Location = new Vector2((NODE_WIDTH / 2), (NODE_WIDTH / -2) + (d * (NODE_WIDTH / 8))); c.Side = NodeSide.Right; c.Used = false; FreeConnectors.Add(c);
-        c = new NodeConnector(); c.Location = new Vector2((NODE_WIDTH / -2) + (d * (NODE_WIDTH / 8)), (NODE_WIDTH / 2)); c.Side = NodeSide.Bottom; c.Used = false; FreeConnectors.Add(c);
+        c = new NodeConnector(); c.Location = new Vector2((_nodeWidth / -2), (_nodeWidth / -2) + (d * (_nodeWidth / 8))); c.Side = NodeSide.Left; c.Used = false; FreeConnectors.Add(c);
+        c = new NodeConnector(); c.Location = new Vector2((_nodeWidth / 2), (_nodeWidth / -2) + (d * (_nodeWidth / 8))); c.Side = NodeSide.Right; c.Used = false; FreeConnectors.Add(c);
+        c = new NodeConnector(); c.Location = new Vector2((_nodeWidth / -2) + (d * (_nodeWidth / 8)), (_nodeWidth / 2)); c.Side = NodeSide.Bottom; c.Used = false; FreeConnectors.Add(c);
       }
 
       
       for (double d = 1; d < 4; d++)
       {
-        c = new NodeConnector(); c.Location = new Vector2((NODE_WIDTH / -2) + (d * (NODE_WIDTH / 8)), (NODE_WIDTH / -2)); c.Side = NodeSide.Top; c.Used = false; FreeConnectors.Add(c);
+        c = new NodeConnector(); c.Location = new Vector2((_nodeWidth / -2) + (d * (_nodeWidth / 8)), (_nodeWidth / -2)); c.Side = NodeSide.Top; c.Used = false; FreeConnectors.Add(c);
       }
 
       for (double d = 5; d < 8; d++)
       {
-        c = new NodeConnector(); c.Location = new Vector2((NODE_WIDTH / -2) + (d * (NODE_WIDTH / 8)), (NODE_WIDTH / -2) - ROLEBOX_HEIGHT); c.Side = NodeSide.Top; c.Used = false; FreeConnectors.Add(c);
+        c = new NodeConnector(); c.Location = new Vector2((_nodeWidth / -2) + (d * (_nodeWidth / 8)), (_nodeWidth / -2) - _roleboxHeight); c.Side = NodeSide.Top; c.Used = false; FreeConnectors.Add(c);
       }
 
 
       for (double d = 0; d < 2; d++)
       {
-        c = new NodeConnector(); c.Location = new Vector2((NODE_WIDTH / 2), (NODE_WIDTH / -2) - (d * (ROLEBOX_HEIGHT / 2))); c.Side = NodeSide.Right; c.Used = false; FreeConnectors.Add(c);
+        c = new NodeConnector(); c.Location = new Vector2((_nodeWidth / 2), (_nodeWidth / -2) - (d * (_roleboxHeight / 2))); c.Side = NodeSide.Right; c.Used = false; FreeConnectors.Add(c);
       }
 
 
@@ -138,7 +147,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
       s = new SelfConnector();
       s.Side = NodeSide.Right;
       s.Used = false;
-      s.Locations = new Vector2[3] { new Vector2((NODE_WIDTH / 2), (NODE_WIDTH / -2) - ROLEBOX_HEIGHT), new Vector2((NODE_WIDTH / 2) * 2, ROLEBOX_HEIGHT / -2), new Vector2((NODE_WIDTH / 2), (NODE_WIDTH / 2)) };
+      s.Locations = new Vector2[3] { new Vector2((_nodeWidth / 2), (_nodeWidth / -2) - _roleboxHeight), new Vector2((_nodeWidth / 2) * 2, _roleboxHeight / -2), new Vector2((_nodeWidth / 2), (_nodeWidth / 2)) };
       s.SymbolAdjustmentEnd = new Vector2(10, -10);
       FreeSelfConnectors.Add(s);
 
@@ -168,15 +177,15 @@ namespace ITU.DK.DCRS.Visualization.Elements
     {
         if (!included) DrawingPen.DashStyle = DashStyle.Dash;
         if (selected) DrawingPen.Color = Color.DarkTurquoise;
-        g.DrawRectangle(DrawingPen, Location.ToPoint.X - (NODE_WIDTH / 2), Location.ToPoint.Y - (NODE_HEIGHT / 2), NODE_WIDTH, NODE_HEIGHT);        
+        g.DrawRectangle(DrawingPen, Location.ToPoint.X - (_nodeWidth / 2), Location.ToPoint.Y - (_nodeHeight / 2), _nodeWidth, _nodeHeight);        
         //g.DrawString(Name, TextFont, TextBrush, Location.ToPoint);
         StringFormat sf = new StringFormat();
         sf.Alignment = StringAlignment.Center;
         sf.LineAlignment = StringAlignment.Center;
-        g.DrawString(Name, TextFont, TextBrush, new Rectangle((int)((Location.X - (NODE_WIDTH / 2)) + 5), (int)((Location.Y - (NODE_HEIGHT / 2)) + 5), NODE_WIDTH - 10, NODE_HEIGHT - 10), sf);
+        g.DrawString(Name, TextFont, TextBrush, new Rectangle((int)((Location.X - (_nodeWidth / 2)) + 5), (int)((Location.Y - (_nodeHeight / 2)) + 5), _nodeWidth - 10, _nodeHeight - 10), sf);
 
 
-        g.DrawRectangle(DrawingPen, Location.ToPoint.X, Location.ToPoint.Y - ((NODE_HEIGHT / 2) + ROLEBOX_HEIGHT), (NODE_WIDTH / 2), ROLEBOX_HEIGHT);
+        g.DrawRectangle(DrawingPen, Location.ToPoint.X, Location.ToPoint.Y - ((_nodeHeight / 2) + _roleboxHeight), (_nodeWidth / 2), _roleboxHeight);
 
         if (!included) DrawingPen.DashStyle = DashStyle.Solid;
         if (selected) DrawingPen.Color = Color.Black;
@@ -192,7 +201,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
         }
 
         if (rString != "") rString = rString.Substring(0, rString.Length - 2);
-        g.DrawString(rString, TextFont, TextBrush, new Rectangle((int)(Location.X + 1), (int)(Location.Y - ((NODE_HEIGHT / 2) + (ROLEBOX_HEIGHT - 1))), (NODE_WIDTH / 2)-2, ROLEBOX_HEIGHT - 2), sf);
+        g.DrawString(rString, TextFont, TextBrush, new Rectangle((int)(Location.X + 1), (int)(Location.Y - ((_nodeHeight / 2) + (_roleboxHeight - 1))), (_nodeWidth / 2)-2, _roleboxHeight - 2), sf);
 
 
         Font BoldFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
@@ -257,7 +266,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
         s = new SelfConnector();
         s.Side = NodeSide.Right;
         s.Used = false;
-        s.Locations = new Vector2[3] { new Vector2((NODE_WIDTH / 2), (NODE_WIDTH / -2) - ROLEBOX_HEIGHT), new Vector2((NODE_WIDTH / 2) * 2, ROLEBOX_HEIGHT / -2), new Vector2((NODE_WIDTH / 2), (NODE_WIDTH / 2)) };
+        s.Locations = new Vector2[3] { new Vector2((_nodeWidth / 2), (_nodeWidth / -2) - _roleboxHeight), new Vector2((_nodeWidth / 2) * 2, _roleboxHeight / -2), new Vector2((_nodeWidth / 2), (_nodeWidth / 2)) };
         s.SymbolAdjustmentEnd = new Vector2(10, -10);
         s.SymbolAdjustmentStart = new Vector2(15, 15);
         used[(int)s.Side] += 999;
@@ -270,7 +279,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
         s = new SelfConnector();
         s.Side = NodeSide.Left;
         s.Used = false;
-        s.Locations = new Vector2[3] { new Vector2((NODE_WIDTH / -2), (NODE_WIDTH / 2)), new Vector2((NODE_WIDTH / -2) * 2, 0), new Vector2((NODE_WIDTH / -2), (NODE_WIDTH / -2)) };
+        s.Locations = new Vector2[3] { new Vector2((_nodeWidth / -2), (_nodeWidth / 2)), new Vector2((_nodeWidth / -2) * 2, 0), new Vector2((_nodeWidth / -2), (_nodeWidth / -2)) };
         s.SymbolAdjustmentEnd = new Vector2(-10, 10);
         s.SymbolAdjustmentStart = new Vector2(-10, -10);
         used[(int)s.Side] += 999;
@@ -283,7 +292,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
         s = new SelfConnector();
         s.Side = NodeSide.Bottom;
         s.Used = false;
-        s.Locations = new Vector2[3] { new Vector2((NODE_WIDTH / 2), (NODE_WIDTH / 2)), new Vector2(0, (NODE_WIDTH / 2) * 2), new Vector2((NODE_WIDTH / -2), (NODE_WIDTH / 2)) };
+        s.Locations = new Vector2[3] { new Vector2((_nodeWidth / 2), (_nodeWidth / 2)), new Vector2(0, (_nodeWidth / 2) * 2), new Vector2((_nodeWidth / -2), (_nodeWidth / 2)) };
         s.SymbolAdjustmentEnd = new Vector2(10, 10);
         s.SymbolAdjustmentStart = new Vector2(-10, 10);
         used[(int)s.Side] += 999;
@@ -296,7 +305,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
         s = new SelfConnector();
         s.Side = NodeSide.Top;
         s.Used = false;
-        s.Locations = new Vector2[3] { new Vector2((NODE_WIDTH / -2), (NODE_WIDTH / -2)), new Vector2(0, (NODE_WIDTH / 2) * -2), new Vector2((NODE_WIDTH / 2), (NODE_WIDTH / -2) - ROLEBOX_HEIGHT) };
+        s.Locations = new Vector2[3] { new Vector2((_nodeWidth / -2), (_nodeWidth / -2)), new Vector2(0, (_nodeWidth / 2) * -2), new Vector2((_nodeWidth / 2), (_nodeWidth / -2) - _roleboxHeight) };
         s.SymbolAdjustmentEnd = new Vector2(-10, -10);
         s.SymbolAdjustmentStart = new Vector2(10, -10);
         used[(int)s.Side] += 999;
@@ -315,11 +324,11 @@ namespace ITU.DK.DCRS.Visualization.Elements
     /// <returns>The point of intersection. Throws an exception incase no such point exists.</returns>
     public Point RectIntersect(Point src, Point dst)
     {
-        Point topRight = new Point(Location.ToPoint.X + HALF_NODE_WIDTH, Location.ToPoint.Y - HALF_NODE_HEIGHT);
-        Point bottomRight = new Point(Location.ToPoint.X + HALF_NODE_WIDTH, Location.ToPoint.Y + HALF_NODE_HEIGHT);
+        Point topRight = new Point(Location.ToPoint.X + _halfNodeWidth, Location.ToPoint.Y - _halfNodeHeight);
+        Point bottomRight = new Point(Location.ToPoint.X + _halfNodeWidth, Location.ToPoint.Y + _halfNodeHeight);
 
-        Point topLeft = new Point(Location.ToPoint.X - HALF_NODE_WIDTH, Location.ToPoint.Y - HALF_NODE_HEIGHT);
-        Point bottomLeft = new Point(Location.ToPoint.X - HALF_NODE_WIDTH, Location.ToPoint.Y + HALF_NODE_HEIGHT);
+        Point topLeft = new Point(Location.ToPoint.X - _halfNodeWidth, Location.ToPoint.Y - _halfNodeHeight);
+        Point bottomLeft = new Point(Location.ToPoint.X - _halfNodeWidth, Location.ToPoint.Y + _halfNodeHeight);
 
         Point Right = VisualizationHelper.Intersection(topRight, bottomRight, src, dst);
         Point Left = VisualizationHelper.Intersection(topLeft, bottomLeft, src, dst);
