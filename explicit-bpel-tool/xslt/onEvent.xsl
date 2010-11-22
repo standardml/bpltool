@@ -5,7 +5,7 @@
 <!-- This stylesheet is included by scope.xsl and shouldn't be applied alone. -->
 
 <xsl:stylesheet 
-  version="1.0" 
+  version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
   xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable">
 

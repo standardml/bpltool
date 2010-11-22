@@ -27,7 +27,9 @@
     
     <xsl:variable name="partnerLinkName" select="@partnerLink" />
     <xsl:variable name="operation" select="@operation" />
-    <xsl:variable name="partnerLink" select="ancestor::*/bpel:partnerLinks/bpel:partnerLink[@name=$partnerLinkName][1]" />
+    <xsl:variable name="partnerLink" select="(self::*[self::bpel:invoke or self::bpel:onMessage or self::bpel:receive or self::bpel:reply] |
+                                              self::bpel:onEvent/bpel:scope)
+                                             /ancestor-or-self::*/bpel:partnerLinks/bpel:partnerLink[@name=$partnerLinkName][1]" />
     <xsl:variable name="partnerLinkNamespace" select="namespace::*[local-name() = substring-before($partnerLink/@partnerLinkType, ':')]" />
     <xsl:variable name="definitions" select="document(/bpel:process/bpel:import[@importType='http://schemas.xmlsoap.org/wsdl/']/@location)/wsdl:definitions[@targetNamespace=$partnerLinkNamespace]" />
     <xsl:variable name="portType">
@@ -61,7 +63,9 @@
     
     <xsl:variable name="partnerLinkName" select="@partnerLink" />
     <xsl:variable name="operation" select="@operation" />
-    <xsl:variable name="partnerLink" select="ancestor::*/bpel:partnerLinks/bpel:partnerLink[@name=$partnerLinkName][1]" />
+    <xsl:variable name="partnerLink" select="(self::*[self::bpel:invoke or self::bpel:onMessage or self::bpel:receive or self::bpel:reply] |
+                                              self::bpel:onEvent/bpel:scope)
+                                             /ancestor-or-self::*/bpel:partnerLinks/bpel:partnerLink[@name=$partnerLinkName][1]" />
     <xsl:variable name="partnerLinkNamespace" select="namespace::*[local-name() = substring-before($partnerLink/@partnerLinkType, ':')]" />
     <xsl:variable name="definitions" select="document(/bpel:process/bpel:import[@importType='http://schemas.xmlsoap.org/wsdl/']/@location)/wsdl:definitions[@targetNamespace=$partnerLinkNamespace]" />
     <xsl:variable name="portType">
@@ -100,10 +104,12 @@
          otherwise it is provided by the partner. -->
     <xsl:param name="myRole" />
     
-    <xsl:variable name="partnerLinkName" select="@partnerLink" />
-    <xsl:variable name="operation" select="@operation" />
-    <xsl:variable name="partnerLink" select="ancestor::*/bpel:partnerLinks/bpel:partnerLink[@name=$partnerLinkName][1]" />
-    <xsl:variable name="partnerLinkNamespace" select="namespace::*[local-name() = substring-before($partnerLink/@partnerLinkType, ':')]" />
+    <xsl:variable name="partnerLinkName" select="$messageActivity/@partnerLink" />
+    <xsl:variable name="operation" select="$messageActivity/@operation" />
+    <xsl:variable name="partnerLink" select="($messageActivity/self::*[self::bpel:invoke or self::bpel:onMessage or self::bpel:receive or self::bpel:reply] |
+                                              $messageActivity/self::bpel:onEvent/bpel:scope)
+                                             /ancestor-or-self::*/bpel:partnerLinks/bpel:partnerLink[@name=$partnerLinkName][1]" />
+    <xsl:variable name="partnerLinkNamespace" select="$messageActivity/namespace::*[local-name() = substring-before($partnerLink/@partnerLinkType, ':')]" />
     <xsl:variable name="definitions" select="document(/bpel:process/bpel:import[@importType='http://schemas.xmlsoap.org/wsdl/']/@location)/wsdl:definitions[@targetNamespace=$partnerLinkNamespace]" />
     <xsl:variable name="portType">
       <xsl:choose>
@@ -143,10 +149,12 @@
          otherwise it is provided by the partner. -->
     <xsl:param name="myRole" />
     
-    <xsl:variable name="partnerLinkName" select="@partnerLink" />
-    <xsl:variable name="operation" select="@operation" />
-    <xsl:variable name="partnerLink" select="ancestor::*/bpel:partnerLinks/bpel:partnerLink[@name=$partnerLinkName][1]" />
-    <xsl:variable name="partnerLinkNamespace" select="namespace::*[local-name() = substring-before($partnerLink/@partnerLinkType, ':')]" />
+    <xsl:variable name="partnerLinkName" select="$messageActivity/@partnerLink" />
+    <xsl:variable name="operation" select="$messageActivity/@operation" />
+    <xsl:variable name="partnerLink" select="(self::*[self::bpel:invoke or self::bpel:onMessage or self::bpel:receive or self::bpel:reply] |
+                                              self::bpel:onEvent/bpel:scope)
+                                             /ancestor-or-self::*/bpel:partnerLinks/bpel:partnerLink[@name=$partnerLinkName][1]" />
+    <xsl:variable name="partnerLinkNamespace" select="$messageActivity/namespace::*[local-name() = substring-before($partnerLink/@partnerLinkType, ':')]" />
     <xsl:variable name="definitions" select="document(/bpel:process/bpel:import[@importType='http://schemas.xmlsoap.org/wsdl/']/@location)/wsdl:definitions[@targetNamespace=$partnerLinkNamespace]" />
     <xsl:variable name="portType">
       <xsl:choose>
@@ -499,7 +507,8 @@
     </xsl:variable>
 
     <xsl:variable name="inputElement" select="count(ancestor::*/bpel:variables/bpel:variable[@name=$inputVariable][1]/@element) = 1" />
-    <xsl:variable name="outputElement" select="count(ancestor::*/bpel:variables/bpel:variable[@name=$outputVariable][1]/@element) = 1" />
+    <xsl:variable name="outputElement" select="count(self::*[self::bpel:invoke or self::bpel:onMessage or self::bpel:receive or self::bpel:reply]/ancestor::*/bpel:variables/bpel:variable[@name=$outputVariable][1]/@element |
+                                                     self::bpel:onEvent[@element]) = 1" />
 
     <xsl:if test="bpel:toParts or $inputElement">
       <bpel:variable>
@@ -562,7 +571,8 @@
     <xsl:param name="outputVariable" />
 
     <xsl:variable name="inputElement" select="count($activity/ancestor::*/bpel:variables/bpel:variable[@name=$inputVariable][1]/@element) = 1" />
-    <xsl:variable name="outputElement" select="count($activity/ancestor::*/bpel:variables/bpel:variable[@name=$outputVariable][1]/@element) = 1" />
+    <xsl:variable name="outputElement" select="count($activity/self::*[self::bpel:invoke or self::bpel:onMessage or self::bpel:receive or self::bpel:reply]/ancestor::*/bpel:variables/bpel:variable[@name=$outputVariable][1]/@element |
+                                                     $activity/self::bpel:onEvent[@element]) = 1" />
 
     <xsl:value-of select="$activity/bpel:toParts or $inputElement or $activity/bpel:fromParts or $outputElement" />
   </xsl:template>
