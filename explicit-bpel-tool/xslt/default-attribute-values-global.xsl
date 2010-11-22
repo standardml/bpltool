@@ -54,7 +54,7 @@
   </xsl:template>
   
   <!-- Adding missing expressionLanguge attributes -->
-  <xsl:template match="bpel:branches | bpel:condition | bpel:finalCounterValue | bpel:for | bpel:from | bpel:joinCondition | bpel:repeatEvery | bpel:startCounterValue | bpel:to | bpel:transitionCondition | bpel:until">
+  <xsl:template match="bpel:branches | bpel:condition | bpel:finalCounterValue | bpel:for | bpel:from[text()] | bpel:joinCondition | bpel:repeatEvery | bpel:startCounterValue | bpel:to[text()] | bpel:transitionCondition | bpel:until">
     <xsl:param name="expressionLanguage" />
     <xsl:param name="queryLanguage" />
     <xsl:copy>
