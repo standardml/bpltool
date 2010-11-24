@@ -53,13 +53,13 @@
       <xsd:element ref="if"/>
       <xsd:element ref="invoke"/>
       <xsd:element ref="pick"/>
-      <xsd:element ref="repeatUntil"/>
       <xsd:element ref="reply"/>
       <xsd:element ref="rethrow"/>
       <xsd:element ref="scope"/>
       <xsd:element ref="throw"/>
       <xsd:element ref="validate"/>
       <xsd:element ref="wait"/>
+      <xsd:element ref="while" />
     </xsd:choice>
   </xsd:group>
   <xsd:element name="import" type="tImport"/>
@@ -494,13 +494,6 @@
       <xsd:group ref="activity"/>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:element name="repeatUntil" type="tRepeatUntil"/>
-  <xsd:complexType name="tRepeatUntil">
-    <xsd:sequence>
-      <xsd:group ref="activity"/>
-      <xsd:element ref="condition"/>
-    </xsd:sequence>
-  </xsd:complexType>
   <xsd:element name="reply" type="tReply"/>
   <xsd:complexType name="tReply">
     <xsd:annotation>
@@ -584,6 +577,13 @@
       <xsd:element ref="for"/>
       <xsd:element ref="until"/>
     </xsd:choice>
+  </xsd:complexType>
+  <xsd:element name="while" type="tWhile" />
+  <xsd:complexType name="tWhile">
+    <xsd:sequence>
+      <xsd:element ref="condition" />
+      <xsd:group ref="activity" />
+    </xsd:sequence>
   </xsd:complexType>
   <xsd:complexType name="tExpression" mixed="true">
     <xsd:sequence>

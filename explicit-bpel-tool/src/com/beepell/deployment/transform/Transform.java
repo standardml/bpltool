@@ -59,7 +59,7 @@ public class Transform {
             "remove-extension-declarations.xsl",         // Remove extension declarations
             "default-message-exchanges.xsl",             // Make default message exchanges explicit
             "process.xsl",                               // Move process scope to an explicit scope
-            "while.xsl",                                 // while to repeatUntil
+            "repeatUntil.xsl",                           // repeatUntil to while
     		"if.xsl",                                    // Add missing else-clause and turn elseif into nested if
     		"scope.xsl",                                 // Variable initializations
             "receive.xsl",                               // Change <receive>s into <pick>s

@@ -13,7 +13,7 @@ import org.w3c.dom.Document;
 
 import com.beepell.xml.namespace.DocumentNamespaceContext;
 
-public class TransformWhileTest extends TestCase {
+public class TransformRepeatUntilTest extends TestCase {
 
     private XPath xPath;
     private DocumentBuilder documentBuilder;
@@ -23,7 +23,7 @@ public class TransformWhileTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        this.file = new File("test/com/beepell/deployment/transform/while.bpel");
+        this.file = new File("test/com/beepell/deployment/transform/repeatUntil.bpel");
 
         XPathFactory factory = XPathFactory.newInstance();
         this.xPath = factory.newXPath();
@@ -44,23 +44,23 @@ public class TransformWhileTest extends TestCase {
      * 
      * @throws Exception if anything goes wrong.
      */
-    public final void testWhile() throws Exception {
+    public final void testRepeatUntil() throws Exception {
         Transform transfomer = new Transform();
         Document ebpel1 = transfomer.transform(file);
         assertNotNull(ebpel1);
     }
-        
+
     public final void testPreConditions() throws Exception {
         String expression;
         Document document = documentBuilder.parse(file);
 
-        expression = "//bpel:while/bpel:sources/bpel:source/bpel:transitionCondition/text()";
+        expression = "//bpel:repeatUntil/bpel:sources/bpel:source/bpel:transitionCondition/text()";
         assertEquals("true() or false()", (String) xPath.evaluate(expression, document, XPathConstants.STRING));
 
-        expression = "//bpel:while/bpel:targets/bpel:joinCondition/text()";
+        expression = "//bpel:repeatUntil/bpel:targets/bpel:joinCondition/text()";
         assertEquals("$l1 or not($l1)", (String) xPath.evaluate(expression, document, XPathConstants.STRING));
 
-        expression = "//bpel:while/bpel:condition/text()";
+        expression = "//bpel:repeatUntil/bpel:condition/text()";
         assertEquals("true()", (String) xPath.evaluate(expression, document, XPathConstants.STRING));
         
     }
@@ -70,24 +70,27 @@ public class TransformWhileTest extends TestCase {
         Transform transfomer = new Transform();
         Document ebpel = transfomer.transform(file);
 
-        // 1. Test preservation of join condition
-        expression = "(//bpel:if/ancestor::bpel:flow [1])/bpel:targets/bpel:joinCondition/text()";
+        // Test preservation of join condition
+        expression = "//bpel:flow[@name='repeatUntil']/bpel:targets/bpel:joinCondition/text()";
         assertEquals("$l1 or not($l1)", (String) xPath.evaluate(expression, ebpel, XPathConstants.STRING));
 
-        // 2. Test preservation of transition condition
-        expression = "(//bpel:if/ancestor::bpel:flow [1])/bpel:sources/bpel:source/bpel:transitionCondition/text()";
+        // Test preservation of transition condition
+        expression = "//bpel:flow[@name='repeatUntil']/bpel:sources/bpel:source/bpel:transitionCondition/text()";
         assertEquals("true() or false()", (String) xPath.evaluate(expression, ebpel, XPathConstants.STRING));
         
-        // 3. Test if condition
-        expression = "//bpel:if/bpel:condition/text()";
+        // Test if condition
+        expression = "//bpel:flow[@name='repeatUntil']/descendant::bpel:if/bpel:condition/text()";
         assertEquals("true()", (String) xPath.evaluate(expression, ebpel, XPathConstants.STRING));
 
-        // 4. Test repeatUntil condition
-        expression = "//bpel:repeatUntil/bpel:condition/text()";
-        assertEquals("not(true())", (String) xPath.evaluate(expression, ebpel, XPathConstants.STRING));
+        // Test while condition
+        //  get the condition variable name
+        expression = "//bpel:flow[@name='repeatUntil']/ancestor::bpel:scope[bpel:variables][1]/bpel:variables/bpel:variable/@name";
+        String tmpCondVar = (String) xPath.evaluate(expression, ebpel, XPathConstants.STRING);
+        expression = "normalize-space(//bpel:flow[@name='repeatUntil']/descendant::bpel:while/bpel:condition/text())";
+        assertEquals("not($" + tmpCondVar + ")", (String) xPath.evaluate(expression, ebpel, XPathConstants.STRING));
 
-        // 5. Test preservation of enclosed activity
-        expression = "count(//bpel:if/bpel:repeatUntil/bpel:scope[@name='empty'])";
+        // Test preservation of enclosed activity
+        expression = "count(//bpel:flow[@name='repeatUntil']/descendant::bpel:while/bpel:flow/bpel:flow[1]/bpel:flow[@name='empty']/bpel:empty)";
         assertEquals(1, ((Double) xPath.evaluate(expression, ebpel, XPathConstants.NUMBER)).intValue());
         
         

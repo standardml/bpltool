@@ -3,7 +3,8 @@
 <!-- Transform <repeatUntil> into <while>. -->
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-  xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable">
+  xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   
   <xsl:output indent="yes" method="xml" />
   
@@ -29,7 +30,7 @@
       <xsl:apply-templates select="bpel:targets | bpel:sources" />
     
       <bpel:variables>
-        <bpel:variable>
+        <bpel:variable type="xsd:boolean">
           <xsl:attribute name="name">
             <xsl:value-of select="$conditionVariable" />
           </xsl:attribute>

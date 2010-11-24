@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
 <process
-  name="while"
+  name="repeatUntil"
   targetNamespace="http://beepell.com/samples/proxy"
   xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
   xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
@@ -10,7 +10,7 @@
 
   <import
     namespace="http://beepell.com/samples/proxy/definitions"
-    location="./while.wsdl"
+    location="./repeatUntil.wsdl"
     importType="http://schemas.xmlsoap.org/wsdl/" />
 
   <partnerLinks>
@@ -50,8 +50,8 @@
         <source linkName="l1" />
       </sources>
     </receive>
-
-    <while name="repeatUntil" suppressJoinFailure="yes">
+    
+    <repeatUntil name="repeatUntil" suppressJoinFailure="yes">
       <targets>
         <bpel:joinCondition>$l1 or not($l1)</bpel:joinCondition>
         <target linkName="l1" />
@@ -61,11 +61,9 @@
           <bpel:transitionCondition>true() or false()</bpel:transitionCondition>
         </source>
       </sources>
+      <empty name="empty" />
       <condition>true()</condition>
-      <scope name="empty">
-        <empty />
-      </scope>
-    </while>
+    </repeatUntil>
 
     <reply
       partnerLink="proxyPartnerLink"
