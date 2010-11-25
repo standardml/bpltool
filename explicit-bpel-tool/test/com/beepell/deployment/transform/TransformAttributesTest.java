@@ -70,10 +70,10 @@ public class TransformAttributesTest extends TestCase {
         assertEquals("yes", getString("//bpel:scope[@name='a']/bpel:flow/@suppressJoinFailure"));
         assertEquals("yes", getString("//bpel:scope[@name='a']/bpel:flow/bpel:flow[1]/@suppressJoinFailure"));
         assertEquals("yes", getString("//bpel:scope[@name='a']/bpel:flow/bpel:flow[2]/@suppressJoinFailure"));
-        assertEquals("yes", getString("//bpel:scope[@name='b']/bpel:flow/@suppressJoinFailure"));
+        assertEquals("no", getString("//bpel:scope[@name='b']/bpel:flow/@suppressJoinFailure"));
         assertEquals("no", getString("//bpel:scope[@name='b']/bpel:flow/bpel:flow[1]/@suppressJoinFailure"));
         assertEquals("no", getString("//bpel:scope[@name='b']/bpel:flow/bpel:flow[2]/@suppressJoinFailure"));
-        assertEquals("yes", getString("//bpel:scope[@name='c']/bpel:flow/@suppressJoinFailure"));
+        assertEquals("no", getString("//bpel:scope[@name='c']/bpel:flow/@suppressJoinFailure"));
         assertEquals("no", getString("//bpel:scope[@name='c']/bpel:flow/bpel:flow[1]/@suppressJoinFailure"));
         assertEquals("no", getString("//bpel:scope[@name='c']/bpel:flow/bpel:flow[2]/@suppressJoinFailure"));
         

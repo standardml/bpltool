@@ -5,12 +5,12 @@
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-  <xsl:param name="uniquePrefix" />
+  <xsl:param name="freshPrefix" />
   
   <xsl:template name="unique-element-name">
     <xsl:param name="element" select="." />
     <xsl:param name="postfix" select="''" />
-    <xsl:value-of select="$uniquePrefix" />
+    <xsl:value-of select="$freshPrefix" />
     <xsl:value-of select="generate-id($element)" />
     <xsl:value-of select="$postfix" />
   </xsl:template>

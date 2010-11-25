@@ -87,11 +87,11 @@ public class Transform {
     public Document transform(File source) throws TransformerException {
         Document bpel = null, cbpel = null;
         try {
-            String uniquePrefix = getUniquePrefix(source);
-            System.out.println("Unique Prefix: " + uniquePrefix);
+            String freshPrefix = getFreshPrefix(source);
+            System.out.println("Unique Prefix: " + freshPrefix);
 
             bpel = parse(source, this.bpelSchema);
-            cbpel = transform(bpel, uniquePrefix);
+            cbpel = transform(bpel, freshPrefix);
             
             if (this.validate) {
               System.out.println("Validating that transformed process description is valid WS-BPEL.");
@@ -295,7 +295,7 @@ public class Transform {
      * @param document
      */
     @SuppressWarnings("unchecked")
-    private static String getUniquePrefix(File file) throws Exception {
+    private static String getFreshPrefix(File file) throws Exception {
         final String prefixBase = "fresh-prefix-";
         int prefixCount = 0;
 
@@ -344,7 +344,7 @@ public class Transform {
 
         } catch (Exception exception) {
 
-            System.err.println("Failed to generate an unique prefix: " + exception.getLocalizedMessage());
+            System.err.println("Failed to generate an fresh prefix: " + exception.getLocalizedMessage());
             exception.printStackTrace();
         }
         return null;
