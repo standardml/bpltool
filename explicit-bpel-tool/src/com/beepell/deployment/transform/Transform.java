@@ -80,7 +80,7 @@ public class Transform {
 
     public Transform() throws SAXException {
         this.bpelSchema = this.schemaFactory.newSchema(new File("schemas/bpel.xsd"));
-        this.cBpelSchema = this.schemaFactory.newSchema(new File("schemas/c-bpel.xsd"));
+        this.cBpelSchema = this.schemaFactory.newSchema(new File("schemas/core-bpel.xsd"));
         this.verbose = true;
     }
 
