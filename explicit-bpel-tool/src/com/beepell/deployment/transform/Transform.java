@@ -52,11 +52,8 @@ public class Transform {
     private final Schema cBpelSchema;
     private final boolean verbose;
     private String[] sheets = { 
+            "remove-optional-extensions.xsl",            // Remove optional extensions
             "remove-documentation.xsl",                  // Remove human readable documentation
-            "remove-extension-activity.xsl",             // Remove extension activities
-            "remove-extension-assign.xsl",               // Remove extension assignments
-            "remove-extension-attributes-elements.xsl",  // Remove extension attributes and elements
-            "remove-extension-declarations.xsl",         // Remove extension declarations
             "default-message-exchanges.xsl",             // Make default message exchanges explicit
             "process.xsl",                               // Move process scope to an explicit scope
             "repeatUntil.xsl",                           // repeatUntil to while
