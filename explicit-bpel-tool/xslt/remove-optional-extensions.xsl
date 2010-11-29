@@ -13,7 +13,7 @@
   <!-- Initiate the removal of optional extensions by collecting the set of
        namespace URIs for mandatory extensions. -->
   <xsl:template match="bpel:process">
-    <xsl:call-template name="clean-node">
+    <xsl:call-template name="clean-bpel-node">
       <xsl:with-param name="mandatory-URIs" select="bpel:extensions/bpel:extension[@mustUnderstand='yes']/@namespace" /> 
     </xsl:call-template>
   </xsl:template>
@@ -59,7 +59,7 @@
 
     <xsl:choose>
       <xsl:when test="bpel:copy or bpel:extensionAssignOperation/*[1][namespace-uri() = $mandatory-URIs]">
-		    <xsl:call-template name="clean-node">
+		    <xsl:call-template name="clean-bpel-node">
 		      <xsl:with-param name="mandatory-URIs" select="$mandatory-URIs" /> 
 		    </xsl:call-template>
       </xsl:when>
@@ -91,24 +91,38 @@
       </xsl:copy>
     </xsl:if>
   </xsl:template>
+  
+  <!-- Protect <literal>s. -->
+  <xsl:template match="bpel:literal">
+    <xsl:param name="mandatory-URIs" />
 
-  <!-- Remove elements that are in an optional namespace. -->
-  <xsl:template match="*" name="clean-node">
+    <xsl:copy-of select="." />
+  </xsl:template>
+  
+  <!-- BPEL constructs recursively. -->
+  <xsl:template match="bpel:*" name="clean-bpel-node">
+    <xsl:param name="mandatory-URIs" />
+
+    <xsl:copy>
+      <xsl:apply-templates select="@*">
+        <xsl:with-param name="mandatory-URIs" select="$mandatory-URIs" />
+      </xsl:apply-templates>
+      <xsl:apply-templates>
+        <xsl:with-param name="mandatory-URIs" select="$mandatory-URIs" />
+      </xsl:apply-templates>
+    </xsl:copy>
+  </xsl:template>
+
+  <!-- Remove extensions that are in an optional namespace, and leave the rest untouched. -->
+  <xsl:template match="*">
     <xsl:param name="mandatory-URIs" />
     
-    <xsl:if test="namespace-uri() = $WS-BPEL-namespace-URI or namespace-uri() = $mandatory-URIs">
-      <xsl:copy>
-        <xsl:apply-templates select="@*">
-          <xsl:with-param name="mandatory-URIs" select="$mandatory-URIs" />
-        </xsl:apply-templates>
-        <xsl:apply-templates>
-          <xsl:with-param name="mandatory-URIs" select="$mandatory-URIs" />
-        </xsl:apply-templates>
-      </xsl:copy>
+    <xsl:if test="namespace-uri() = $mandatory-URIs">
+      <xsl:copy-of select="." />
     </xsl:if>
   </xsl:template>
 
-  <!-- Remove attributes that are in an optional namespace. -->
+  <!-- Remove extension attributes that are in an optional namespace. -->
   <xsl:template match="@*">
     <xsl:param name="mandatory-URIs" />
     
