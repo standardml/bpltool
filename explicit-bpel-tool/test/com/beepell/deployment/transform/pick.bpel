@@ -90,12 +90,12 @@
        <pick
          name="elements"
          createInstance="no">
-        <onMessage
-         partnerLink="serverPartnerLink"
-         operation="simpleService"
-         variable="addressVariable"
-         messageExchange="med">
-           <bpel:empty />
+         <onMessage
+	         partnerLink="serverPartnerLink"
+	         operation="simpleService"
+	         variable="addressVariable"
+	         messageExchange="med">
+           <empty />
          </onMessage>
        </pick>
  

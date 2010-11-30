@@ -62,7 +62,7 @@
     </xsl:copy>
   </xsl:template>
 
-  <xsl:template match="bpel:assign | bpel:compensate | bpel:compensateScope | bpel:empty | bpel:exit | bpel:invoke | bpel:receive | bpel:reply | bpel:rethrow | bpel:throw | bpel:validate | bpel:wait | bpel:flow | bpel:forEach | bpel:if | bpel:pick | bpel:repeatUntil | bpel:sequence | bpel:while | bpel:extensionActivity/*">
+  <xsl:template match="bpel:assign | bpel:compensate | bpel:compensateScope | bpel:empty | bpel:exit | bpel:extensionActivity/* | bpel:flow | bpel:forEach | bpel:if | bpel:invoke | bpel:pick | bpel:receive | bpel:repeatUntil | bpel:reply | bpel:rethrow | bpel:sequence | bpel:throw | bpel:validate | bpel:wait | bpel:while">
     <xsl:param name="suppressJoinFailure">no</xsl:param>
     <xsl:param name="exitOnStandardFault">no</xsl:param>
 
