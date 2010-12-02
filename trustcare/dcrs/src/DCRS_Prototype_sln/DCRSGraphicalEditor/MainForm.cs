@@ -518,5 +518,13 @@ namespace DCRSGraphicalEditor
         {
             MessageBox.Show(e.Exception.Message, "Invalid Entry", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
+
+        private void tbName_def_TextChanged(object sender, EventArgs e)
+        {
+            if (tbName_def.Text == "")
+                tbName_def.Text = Process.Specification.ModelName;
+            else
+                Process.Specification.ModelName = tbName_def.Text;
+        }
     }
 }

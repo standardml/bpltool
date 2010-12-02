@@ -140,6 +140,10 @@ namespace ITU.DK.DCRS.WorkflowEngine.DataAccess
         {
             try
             {
+                // In case the model name got changed.
+                var oldpath = repositorySettings.GetPathByProcessId(process.Specification.ProcessId);
+                File.Delete(oldpath);
+
                 var path = repositorySettings.GetProcessSavePath(process.Specification.ModelName,
                                                          process.Specification.ProcessId);
                 DCRSProcess.Save(process, path);
