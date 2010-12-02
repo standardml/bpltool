@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using ITU.DK.DCRS.CommonTypes.Process;
 using ITU.DK.DCRS.Visualization.Elements;
+using System.Data;
 
 namespace DCRSGraphicalEditor
 {
@@ -12,9 +13,214 @@ namespace DCRSGraphicalEditor
     public class DCRSProcessHandler
     {
         DCRSProcess Process;
+
+        //public DataSet DS;
+        public DataTable Roles;
+        public DataTable Principals;
+
         public DCRSProcessHandler(DCRSProcess p)
         {
             Process = p;
+            DefineRoles();
+            DefinePrincipals();
+        }
+
+        private void DefineRoles()
+        {
+            Roles = new DataTable("Roles");
+            Roles.Columns.Add("srcName", typeof(String));
+            Roles.Columns.Add("Name", typeof(String));
+            foreach (String a in Process.Specification.Roles)
+                Roles.Rows.Add(new Object[] { a, a });
+
+            Roles.RowDeleting += new DataRowChangeEventHandler(Roles_RowDeleting);
+            Roles.RowChanged += new DataRowChangeEventHandler(Roles_RowChanged);
+                       
+            Roles.Constraints.Add(new UniqueConstraint(Roles.Columns[1]));
+            Roles.Columns[1].AllowDBNull = false;
+        }
+
+
+        private void DefinePrincipals()
+        {
+            Principals = new DataTable("Principals");
+            Principals.Columns.Add("srcName", typeof(String));
+            Principals.Columns.Add("Name", typeof(String));
+
+            Principals.Constraints.Add(new UniqueConstraint(Principals.Columns[1]));
+            Principals.Columns[1].AllowDBNull = false;
+
+            foreach (String a in Process.Specification.Roles)
+            {
+                Principals.Columns.Add("src_" + a, typeof(Boolean));
+                Principals.Columns.Add(a, typeof(Boolean));
+            }
+
+            foreach (String a in Process.Specification.Principals)
+            {
+                Object[] row = new Object[(Process.Specification.Roles.Count + 1) * 2];
+
+                row[0] = a;
+                row[1] = a;
+                int i = 2;
+                foreach (String b in Process.Specification.Roles)
+                {
+                    var d = Process.Specification.RolesToPrincipalsDictionary[b];
+                    row[i] = d.Contains(a);
+                    i++;
+                    row[i] = d.Contains(a);
+                    i++;
+                }
+                Principals.Rows.Add(row);
+            }
+            Principals.RowDeleting += new DataRowChangeEventHandler(Principals_RowDeleting);
+            Principals.RowChanged += new DataRowChangeEventHandler(Principals_RowChanged);
+        }
+
+
+        bool updating = false;
+        void Roles_RowChanged(object sender, DataRowChangeEventArgs e)
+        {
+            if (updating) return;
+            updating = true;
+            String a = (String)e.Row[1];
+            if (e.Action == DataRowAction.Change)
+            {                
+                String oldName = (String)e.Row[0];
+                RenameRole(oldName, a);
+                e.Row[0] = e.Row[1];
+            }
+            else if (e.Action == DataRowAction.Add)
+            {                
+                AddRole(a);
+                e.Row[0] = e.Row[1];
+            }
+            updating = false;
+        }
+
+        void Roles_RowDeleting(object sender, DataRowChangeEventArgs e)
+        {
+            String a = e.Row.Field<String>(0);
+            RemoveRole(a);
+        }
+
+        private void RemoveRole(string a, bool colremove = true)
+        {
+            Process.Specification.Roles.Remove(a);
+            Process.Specification.RolesToPrincipalsDictionary.Remove(a);
+            foreach (var v in Process.Specification.ActionsToRolesDictionary)
+                if (v.Value.Contains(a)) v.Value.Remove(a);
+            if (colremove)
+            {
+                Principals.Columns.Remove("src_" + a);
+                Principals.Columns.Remove(a);
+            }
+        }
+
+
+        private void AddRole(string a)
+        {
+            Process.Specification.Roles.Add(a);
+            Process.Specification.RolesToPrincipalsDictionary.Add(a, new List<string>());
+            Principals.Columns.Add("src_" + a, typeof(Boolean));
+            Principals.Columns.Add(a, typeof(Boolean));
+        }
+
+
+        private void RenameRole(string o, string n)
+        {
+            Process.Specification.Roles.Add(n);
+            Process.Specification.RolesToPrincipalsDictionary.Add(n, Process.Specification.RolesToPrincipalsDictionary[o]);
+            foreach (var v in Process.Specification.ActionsToRolesDictionary)
+                if (v.Value.Contains(o)) v.Value.Add(n);
+            RemoveRole(o, false);
+            Principals.Columns[Principals.Columns.IndexOf("src_" + o)].ColumnName = "src_" + n;
+            Principals.Columns[Principals.Columns.IndexOf(o)].ColumnName = n;
+        }
+
+
+
+
+        bool Principalsupdating = false;
+        void Principals_RowChanged(object sender, DataRowChangeEventArgs e)
+        {
+            if (Principalsupdating) return;
+            Principalsupdating = true;
+            String a = (String)e.Row[1];
+            if (e.Action == DataRowAction.Change)
+            {
+                String oldName = (String)e.Row[0];
+                if (oldName != a)
+                {                    
+                    RenamePrincipal(oldName, a);
+                    e.Row[0] = e.Row[1];
+                }
+                // do role assignment changes
+                for (int i = 0; i < Principals.Columns.Count; i = i + 2)
+                {
+                    if (e.Row[i] != e.Row[i + 1])
+                    {
+                        //update
+                        string role = Principals.Columns[i + 1].ColumnName;// role name
+                        string principal = a;
+                        if ((bool)e.Row[i + 1])
+                            AddPrincipalToRole(role, principal);
+                        else
+                            RemovePrincipalFromRole(role, principal);
+
+                        e.Row[i] = e.Row[i + 1];
+                    }
+                }
+
+            }
+            else if (e.Action == DataRowAction.Add)
+            {
+                AddPrincipal(a);
+                e.Row[0] = e.Row[1];
+                // do role assignments?
+            }
+            Principalsupdating = false;
+        }
+
+        void Principals_RowDeleting(object sender, DataRowChangeEventArgs e)
+        {
+            String a = e.Row.Field<String>(0);
+            RemovePrincipal(a);
+        }
+
+        private void RemovePrincipal(string a)
+        {
+            Process.Specification.Principals.Remove(a);
+            foreach (var d in Process.Specification.RolesToPrincipalsDictionary)
+                if (d.Value.Contains(a)) d.Value.Remove(a);            
+        }
+
+
+        private void AddPrincipal(string a)
+        {
+            Process.Specification.Principals.Add(a);
+        }
+
+
+        private void RenamePrincipal(string o, string n)
+        {
+            Process.Specification.Principals.Add(n);
+            foreach (var d in Process.Specification.RolesToPrincipalsDictionary)
+                if (d.Value.Contains(o)) d.Value.Add(n);
+            RemovePrincipal(o);
+        }
+
+        private void AddPrincipalToRole(string r, string p)
+        {
+            if (!Process.Specification.RolesToPrincipalsDictionary[r].Contains(p))
+                Process.Specification.RolesToPrincipalsDictionary[r].Add(p);
+        }
+
+
+        private void RemovePrincipalFromRole(string r, string p)
+        {
+            if (Process.Specification.RolesToPrincipalsDictionary[r].Contains(p))
+                Process.Specification.RolesToPrincipalsDictionary[r].Remove(p);
         }
 
 

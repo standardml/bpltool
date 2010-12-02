@@ -64,10 +64,43 @@ namespace DCRSGraphicalEditor
             this.processPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.processPanel_MouseMove);
             this.processPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.processPanel_MouseUp);
             processPanel.Refresh();
-
+            
             clbRoles.Items.Clear();
             foreach (var a in process.Specification.Roles)
                 clbRoles.Items.Add(a);
+
+            /*dgRoles.Rows.Clear();
+            foreach (var a in process.Specification.Roles)
+            { 
+                int i = dgRoles.Rows.Add();
+                dgRoles
+            }*/
+
+            //BindingList<String> BindingLstVars = new BindingList<String>(process.Specification.Roles);
+            //dgRoles.DataSource = BindingLstVars;
+            //dgRoles
+
+            //dgvRoles.DataSource = process.Specification.Roles.Select(x => new { Value = x }).ToList();
+            //dgvRoles.DataSource = process.Specification.Roles;
+
+            /*
+            foreach (var a in process.Specification.Roles)
+            { 
+                int i = dgvRoles.Rows.Add(new Object[] {a});                
+            }*/
+
+            dgvRoles.DataSource = ProcessHandler.Roles;
+            dgvRoles.Columns[0].Visible = false;
+
+            dgvPrincipals.DataSource = ProcessHandler.Principals;
+            dgvPrincipals.Columns[0].Visible = false;
+            /*for (int i = 0; i < dgvPrincipals.Columns.Count; i = i + 2)
+            {
+                dgvPrincipals.Columns[i].Visible = false;
+            }*/
+
+            tbName_def.Text = process.Specification.ModelName;
+            lblID.Text = process.Specification.ProcessId.ToString();
 
             ExecutionProcessInstance = null;
             ExecutionVisualizer = null;            
@@ -445,6 +478,31 @@ namespace DCRSGraphicalEditor
                 StartExecution();
             }
 
+        }
+
+        private void dgvPrincipals_ColumnAdded(object sender, DataGridViewColumnEventArgs e)
+        {
+            if (e.Column.Name.Contains("src_"))
+            {
+                e.Column.Visible = false;
+            }
+        }
+
+        private void tpProcessModel_Enter(object sender, EventArgs e)
+        {
+            clbRoles.Items.Clear();
+            foreach (var a in Process.Specification.Roles)
+                clbRoles.Items.Add(a);
+        }
+
+        private void dgvRoles_DataError(object sender, DataGridViewDataErrorEventArgs e)
+        {
+            MessageBox.Show(e.Exception.Message, "Invalid Entry", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        private void dgvPrincipals_DataError(object sender, DataGridViewDataErrorEventArgs e)
+        {
+            MessageBox.Show(e.Exception.Message, "Invalid Entry", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }
 }
