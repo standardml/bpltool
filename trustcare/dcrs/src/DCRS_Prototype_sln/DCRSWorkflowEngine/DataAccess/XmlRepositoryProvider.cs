@@ -71,6 +71,71 @@ namespace ITU.DK.DCRS.WorkflowEngine.DataAccess
             }
         }
 
+
+        public DCRSProcess NewProcess()
+        {
+            try
+            {
+                var path = repositorySettings.GetPathByProcessId(1);
+
+                if (string.IsNullOrEmpty(path))
+                    throw new DCRSWorkflowException(
+                        string.Format("The process with processId: {0} does not exists in the Repository.", 1));
+
+                DCRSProcess process = DCRSProcess.Load(path);
+
+                var fileNames = Directory.GetFiles(repositorySettings.ProcessRepositoryPath);
+
+                int newId = 0;
+
+                foreach (var fileName in fileNames)
+                {
+                    string modelName;
+
+                    int processId;
+
+                    GetProcessIdAndModelName(fileName, out modelName, out processId);
+
+                    if (processId != 0) 
+                    {
+                        newId = Math.Max(processId, newId);
+                    }
+
+                }
+
+                newId++;
+
+                process.Specification.ProcessId = newId;
+
+                path = repositorySettings.GetProcessSavePath(process.Specification.ModelName,
+                                                         process.Specification.ProcessId);
+                DCRSProcess.Save(process, path);
+
+                // Invoke ProcessRepositoryUpdated event to intimate to the listeners that process repository has been updated.
+                PublishService<IRepositoryNotificationContract>.FireEventWithMethodname("ProcessRepositoryUpdated",
+                                                                                        GetProcessList());
+
+                // Invoke DCRSProcessUpdated event to intimate to the listeners.
+                PublishService<IRepositoryNotificationContract>.FireEventWithMethodname("DCRSProcessUpdated",
+                                                                                        DCRSProcess.Serialize(process));
+                
+                return process;
+
+            }
+            catch (Exception exception)
+            {
+
+                var workflowException = new DCRSWorkflowException(
+                    string.Format("Failed to create a new process. Error message: {1}",                                  
+                                  exception.Message));
+
+                //InvokeRepositoryErrorEvent(workflowException);
+
+                throw workflowException;
+
+            }
+        }
+
         public void SaveProcess(DCRSProcess process)
         {
             try

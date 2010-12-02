@@ -187,6 +187,42 @@ namespace ITU.DK.DCRS.RemoteServices
         }
 
 
+
+        public static string NewProcess()
+        {
+            try
+            {
+                //var netTcpBinding = new NetTcpBinding(SecurityMode.Transport, true) { TransactionFlow = true };
+
+                //netTcpBinding.ReaderQuotas.MaxStringContentLength = int.MaxValue;
+
+                //var factory =
+                //    new ChannelFactory<IRepositoryServiceContract>(netTcpBinding,
+                //                                                        new EndpointAddress(
+                //                                                          REPOSITORY_PROVIDER_SERVICE_URL));
+
+                var factory = CreateChannelFactory<IRepositoryServiceContract>(_RepositoryProviderServiceUrl);
+                var proxy = factory.CreateChannel();
+
+                var processXml = proxy.NewProcess();
+
+                ((IClientChannel)proxy).Close();
+                factory.Close();
+
+                return processXml;
+
+            }
+            catch (Exception exception)
+            {
+                throw new DCRSWorkflowException(
+                    string.Format(
+                        "Failed to call NewProcess from {0}! Error message: {1}",
+                        _RepositoryProviderServiceUrl, exception.Message));
+            }
+        }
+
+
+
         public static void ImportSpecification(DCRSProcess process)
         {
             try

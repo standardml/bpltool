@@ -19,6 +19,13 @@ namespace ITU.DK.DCRS.WorkflowEngine.Services
             return DCRSProcess.Serialize(XmlRepositoryProvider.RepositoryProvider.LoadProcess(processId));
         }
 
+
+        public string NewProcess()
+        {
+            return DCRSProcess.Serialize(XmlRepositoryProvider.RepositoryProvider.NewProcess());
+        }
+
+
         public string GetProcessInstance(int processId, int processInstanceId)
         {
             return

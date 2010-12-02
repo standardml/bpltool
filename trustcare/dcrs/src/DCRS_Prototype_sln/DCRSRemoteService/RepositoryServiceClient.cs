@@ -18,6 +18,11 @@ namespace ITU.DK.DCRS.RemoteServices
         {
             return Channel.GetProcess(processId);
         }
+        
+        public string NewProcess()
+        {
+            return Channel.NewProcess();
+        }
 
         public string GetProcessInstance(int processId, int processInstanceId)
         {

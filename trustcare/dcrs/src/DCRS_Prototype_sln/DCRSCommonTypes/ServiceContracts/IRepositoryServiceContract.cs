@@ -14,6 +14,9 @@ namespace ITU.DK.DCRS.CommonTypes.ServiceContracts
         [OperationContract]
         string GetProcess(int processId);
 
+        [OperationContract]
+        string NewProcess();
+
         
         [OperationContract]
         string GetProcessInstance(int processId, int processInstanceId);

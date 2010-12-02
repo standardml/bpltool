@@ -38,12 +38,26 @@ namespace DCRSGraphicalEditor
 
         private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
+            /*
+             DCRSProcess p = DCRSProcess.Deserialize(RemoteServicesHandler.GetProcess(9));            
+                        spd_ProcessSelected(p);
+             */
+            /*
+            var d = RemoteServicesHandler.GetProcessList();
+            int max = 0;
+            foreach (var v in d)
+                max = Math.Max(v.Key, max);
 
+            DCRSProcess p = new DCRSProcess();*/
+
+            //DCRSProcess p = DCRSProcess.Deserialize(RemoteServicesHandler.NewProcess());
+            //spd_ProcessSelected(p);
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
+            DCRSProcess p = DCRSProcess.Deserialize(RemoteServicesHandler.NewProcess());
+            spd_ProcessSelected(p);
         }
 
         private void openToolStripMenuItem1_Click(object sender, EventArgs e)
