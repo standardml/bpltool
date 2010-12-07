@@ -7,6 +7,8 @@ using ITU.DK.DCRS.Visualization.Elements;
 using System.Data;
 using ITU.DK.DCRS.WorkflowEngine.Core;
 
+
+// reorder functions to make more sense at some point, create regions
 namespace DCRSGraphicalEditor
 {
     public enum PrimitiveType { Condition=0, Response, Include, Exclude };
@@ -27,7 +29,46 @@ namespace DCRSGraphicalEditor
         }
 
 
-        public void ComputeState()
+        public void UpdateActionName(short id, string name)
+        {
+            Process.Specification.ActionList[id] = name;
+        }
+
+
+        public void IncludeAction(short id)
+        {
+            if (!Process.Runtime.CurrentState.StateVector.IncludedActions.Contains(id))
+                Process.Runtime.CurrentState.StateVector.IncludedActions.Add(id);
+            ComputeState();
+        }
+
+        public void ExcludeAction(short id)
+        {
+            if (Process.Runtime.CurrentState.StateVector.IncludedActions.Contains(id))
+                Process.Runtime.CurrentState.StateVector.IncludedActions.Remove(id);
+            ComputeState();
+        }
+
+        public void ClearActionRoles(short id)
+        {
+            Process.Specification.ActionsToRolesDictionary[id].Clear();
+        }
+
+        public void AddActionRole(short id, string r)
+        {
+            if (!Process.Specification.ActionsToRolesDictionary[id].Contains(r))
+                Process.Specification.ActionsToRolesDictionary[id].Add(r);
+        }
+
+        public void RemoveActionRole(short id, string r)
+        {
+            if (Process.Specification.ActionsToRolesDictionary[id].Contains(r))
+                Process.Specification.ActionsToRolesDictionary[id].Remove(r);
+        }
+
+
+
+        private void ComputeState()
         {
                 var finiteStateProvider = new DCRSFiniteStateProvider(Process.Runtime.CurrentState.StateNumber,
                                                                       -1,

@@ -63,9 +63,7 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.clbRoles = new System.Windows.Forms.CheckedListBox();
             this.cbIncluded = new System.Windows.Forms.CheckBox();
-            this.cbEnabled = new System.Windows.Forms.CheckBox();
             this.tbName = new System.Windows.Forms.TextBox();
-            this.btnStoreActionDetails = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.cmProcessPanel.SuspendLayout();
             this.tabControl1.SuspendLayout();
@@ -104,21 +102,21 @@
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(111, 22);
             this.openToolStripMenuItem.Text = "New";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
             // openToolStripMenuItem1
             // 
             this.openToolStripMenuItem1.Name = "openToolStripMenuItem1";
-            this.openToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+            this.openToolStripMenuItem1.Size = new System.Drawing.Size(111, 22);
             this.openToolStripMenuItem1.Text = "Open";
             this.openToolStripMenuItem1.Click += new System.EventHandler(this.openToolStripMenuItem1_Click);
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(111, 22);
             this.saveToolStripMenuItem.Text = "Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
@@ -363,9 +361,7 @@
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.Controls.Add(this.clbRoles);
             this.groupBox1.Controls.Add(this.cbIncluded);
-            this.groupBox1.Controls.Add(this.cbEnabled);
             this.groupBox1.Controls.Add(this.tbName);
-            this.groupBox1.Controls.Add(this.btnStoreActionDetails);
             this.groupBox1.Location = new System.Drawing.Point(754, 0);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(248, 290);
@@ -376,30 +372,22 @@
             // clbRoles
             // 
             this.clbRoles.FormattingEnabled = true;
-            this.clbRoles.Location = new System.Drawing.Point(7, 95);
+            this.clbRoles.Location = new System.Drawing.Point(7, 65);
             this.clbRoles.Name = "clbRoles";
-            this.clbRoles.Size = new System.Drawing.Size(187, 139);
+            this.clbRoles.Size = new System.Drawing.Size(187, 214);
             this.clbRoles.TabIndex = 4;
+            this.clbRoles.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.clbRoles_ItemCheck);
             // 
             // cbIncluded
             // 
             this.cbIncluded.AutoSize = true;
-            this.cbIncluded.Location = new System.Drawing.Point(7, 71);
+            this.cbIncluded.Location = new System.Drawing.Point(6, 46);
             this.cbIncluded.Name = "cbIncluded";
             this.cbIncluded.Size = new System.Drawing.Size(67, 17);
             this.cbIncluded.TabIndex = 3;
             this.cbIncluded.Text = "Included";
             this.cbIncluded.UseVisualStyleBackColor = true;
-            // 
-            // cbEnabled
-            // 
-            this.cbEnabled.AutoSize = true;
-            this.cbEnabled.Location = new System.Drawing.Point(7, 47);
-            this.cbEnabled.Name = "cbEnabled";
-            this.cbEnabled.Size = new System.Drawing.Size(65, 17);
-            this.cbEnabled.TabIndex = 2;
-            this.cbEnabled.Text = "Enabled";
-            this.cbEnabled.UseVisualStyleBackColor = true;
+            this.cbIncluded.CheckedChanged += new System.EventHandler(this.cbIncluded_CheckedChanged);
             // 
             // tbName
             // 
@@ -407,16 +395,7 @@
             this.tbName.Name = "tbName";
             this.tbName.Size = new System.Drawing.Size(187, 20);
             this.tbName.TabIndex = 1;
-            // 
-            // btnStoreActionDetails
-            // 
-            this.btnStoreActionDetails.Location = new System.Drawing.Point(7, 254);
-            this.btnStoreActionDetails.Name = "btnStoreActionDetails";
-            this.btnStoreActionDetails.Size = new System.Drawing.Size(75, 23);
-            this.btnStoreActionDetails.TabIndex = 0;
-            this.btnStoreActionDetails.Text = "Update";
-            this.btnStoreActionDetails.UseVisualStyleBackColor = true;
-            this.btnStoreActionDetails.Click += new System.EventHandler(this.btnStoreActionDetails_Click);
+            this.tbName.TextChanged += new System.EventHandler(this.tbName_TextChanged);
             // 
             // MainForm
             // 
@@ -474,9 +453,7 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.CheckedListBox clbRoles;
         private System.Windows.Forms.CheckBox cbIncluded;
-        private System.Windows.Forms.CheckBox cbEnabled;
         private System.Windows.Forms.TextBox tbName;
-        private System.Windows.Forms.Button btnStoreActionDetails;
         private System.Windows.Forms.TabPage tpExecution;
         private System.Windows.Forms.Panel executionPanel;
         private System.Windows.Forms.TabPage tpProcessData;

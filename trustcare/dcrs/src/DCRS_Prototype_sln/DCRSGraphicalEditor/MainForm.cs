@@ -90,10 +90,12 @@ namespace DCRSGraphicalEditor
             this.processPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.processPanel_MouseMove);
             this.processPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.processPanel_MouseUp);
             processPanel.Refresh();
-            
+
+            updatingClbRoles = true;
             clbRoles.Items.Clear();
             foreach (var a in process.Specification.Roles)
                 clbRoles.Items.Add(a);
+            updatingClbRoles = false;
 
             /*dgRoles.Rows.Clear();
             foreach (var a in process.Specification.Roles)
@@ -188,24 +190,21 @@ namespace DCRSGraphicalEditor
 
         private void UpdateSelectedAction(short a)
         {
+            updatingClbRoles = true;
             selectedAction = a;
             Visualizer.SelectedAction = selectedAction;
             if (a == -1)
             {
                 tbName.Text = "";
-                cbEnabled.Checked = false;
                 cbIncluded.Checked = false;
                 for (int i = 0; i < clbRoles.Items.Count; i++)
-                    clbRoles.SetItemChecked(i, false);
-                btnStoreActionDetails.Enabled = false;
+                    clbRoles.SetItemChecked(i, false);                
             }
             else
             {
                 tbName.Text = Process.Specification.ActionList[a];
-                cbEnabled.Checked = Process.Runtime.CurrentState.EnabledActions.Contains(selectedAction);
                 cbIncluded.Checked = Process.Runtime.CurrentState.StateVector.IncludedActions.Contains(selectedAction);                
-                btnStoreActionDetails.Enabled = true;
-
+                
                 for (int i = 0; i < clbRoles.Items.Count; i++)
                     clbRoles.SetItemChecked(i, false);
 
@@ -214,6 +213,7 @@ namespace DCRSGraphicalEditor
                     clbRoles.SetItemChecked(clbRoles.Items.IndexOf(x), true);
                 }
             }
+            updatingClbRoles = false;
 
         }
 
@@ -368,31 +368,18 @@ namespace DCRSGraphicalEditor
         // possibly movem ost functionality to the process handler?
         private void btnStoreActionDetails_Click(object sender, EventArgs e)
         {
-            Process.Specification.ActionList[selectedAction] = tbName.Text;
-
-            if (cbEnabled.Checked)
-                if (!Process.Runtime.CurrentState.EnabledActions.Contains(selectedAction))
-                    Process.Runtime.CurrentState.EnabledActions.Add(selectedAction);
-
-            if (!cbEnabled.Checked)
-                if (Process.Runtime.CurrentState.EnabledActions.Contains(selectedAction))
-                    Process.Runtime.CurrentState.EnabledActions.Remove(selectedAction);
-
+            ProcessHandler.UpdateActionName(selectedAction,tbName.Text);
 
             if (cbIncluded.Checked)
-                if (!Process.Runtime.CurrentState.StateVector.IncludedActions.Contains(selectedAction))
-                    Process.Runtime.CurrentState.StateVector.IncludedActions.Add(selectedAction);
+                ProcessHandler.IncludeAction(selectedAction);
 
             if (!cbIncluded.Checked)
-                if (Process.Runtime.CurrentState.StateVector.IncludedActions.Contains(selectedAction))
-                    Process.Runtime.CurrentState.StateVector.IncludedActions.Remove(selectedAction);
+                ProcessHandler.ExcludeAction(selectedAction);
 
 
-            Process.Specification.ActionsToRolesDictionary[selectedAction].Clear();
+            ProcessHandler.ClearActionRoles(selectedAction);
             foreach (string s in clbRoles.CheckedItems)
-                Process.Specification.ActionsToRolesDictionary[selectedAction].Add(s);
-
-            ProcessHandler.ComputeState();
+                ProcessHandler.AddActionRole(selectedAction, s);           
 
             Visualizer.ProcessUpdate();
             processPanel.Refresh();
@@ -552,9 +539,11 @@ namespace DCRSGraphicalEditor
 
         private void tpProcessModel_Enter(object sender, EventArgs e)
         {
+            updatingClbRoles = true;
             clbRoles.Items.Clear();
             foreach (var a in Process.Specification.Roles)
                 clbRoles.Items.Add(a);
+            updatingClbRoles = false;
         }
 
         private void dgvRoles_DataError(object sender, DataGridViewDataErrorEventArgs e)
@@ -574,5 +563,43 @@ namespace DCRSGraphicalEditor
             else
                 Process.Specification.ModelName = tbName_def.Text;
         }
+
+        private void tbName_TextChanged(object sender, EventArgs e)
+        {
+            ProcessHandler.UpdateActionName(selectedAction, tbName.Text);
+            Visualizer.ProcessUpdate();
+            processPanel.Refresh();
+        }
+
+        private void cbIncluded_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbIncluded.Checked)
+                ProcessHandler.IncludeAction(selectedAction);
+
+            if (!cbIncluded.Checked)
+                ProcessHandler.ExcludeAction(selectedAction);
+            Visualizer.ProcessUpdate();
+            processPanel.Refresh();
+        }
+
+        bool updatingClbRoles = false;
+        // also fires when updating... hmm...
+        private void clbRoles_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            if (selectedAction != -1 && !updatingClbRoles)
+            {
+                string role = clbRoles.Items[e.Index].ToString();
+
+                if (e.NewValue == CheckState.Checked)
+                    ProcessHandler.AddActionRole(selectedAction, role);
+                else
+                    ProcessHandler.RemoveActionRole(selectedAction, role);
+
+                Visualizer.ProcessUpdate();
+                processPanel.Refresh();
+            }
+        }
+
+
     }
 }
