@@ -108,6 +108,10 @@
       <Project>{94921E64-D876-4B53-AAEF-8E410AD6103B}</Project>
       <Name>DCRSVisualization</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DCRSWorkflowEngine\DCRSWorkflowEngine.csproj">
+      <Project>{A03A1C21-5107-4E22-BF8E-18EAF4D1510D}</Project>
+      <Name>DCRSWorkflowEngine</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="placements\placement#12#.xml">

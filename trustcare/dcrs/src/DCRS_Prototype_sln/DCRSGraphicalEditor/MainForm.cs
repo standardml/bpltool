@@ -188,6 +188,8 @@ namespace DCRSGraphicalEditor
 
         private void UpdateSelectedAction(short a)
         {
+            selectedAction = a;
+            Visualizer.SelectedAction = selectedAction;
             if (a == -1)
             {
                 tbName.Text = "";
@@ -357,11 +359,13 @@ namespace DCRSGraphicalEditor
         private void addNodeToolStripMenuItem_Click(object sender, EventArgs e)
         {
             short newNode = ProcessHandler.AddAction();            
-            Visualizer.Placement.Add(newNode, contextLocation);
+            Visualizer.Placement.Add(newNode, contextLocation);            
             Visualizer.ProcessUpdate();
+            UpdateSelectedAction(newNode);            
             processPanel.Refresh();
         }
 
+        // possibly movem ost functionality to the process handler?
         private void btnStoreActionDetails_Click(object sender, EventArgs e)
         {
             Process.Specification.ActionList[selectedAction] = tbName.Text;
@@ -386,7 +390,9 @@ namespace DCRSGraphicalEditor
 
             Process.Specification.ActionsToRolesDictionary[selectedAction].Clear();
             foreach (string s in clbRoles.CheckedItems)
-                Process.Specification.ActionsToRolesDictionary[selectedAction].Add(s);            
+                Process.Specification.ActionsToRolesDictionary[selectedAction].Add(s);
+
+            ProcessHandler.ComputeState();
 
             Visualizer.ProcessUpdate();
             processPanel.Refresh();

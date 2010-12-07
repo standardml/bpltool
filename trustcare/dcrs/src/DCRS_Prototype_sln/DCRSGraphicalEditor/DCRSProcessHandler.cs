@@ -5,6 +5,7 @@ using System.Text;
 using ITU.DK.DCRS.CommonTypes.Process;
 using ITU.DK.DCRS.Visualization.Elements;
 using System.Data;
+using ITU.DK.DCRS.WorkflowEngine.Core;
 
 namespace DCRSGraphicalEditor
 {
@@ -23,6 +24,22 @@ namespace DCRSGraphicalEditor
             Process = p;
             DefineRoles();
             DefinePrincipals();
+        }
+
+
+        public void ComputeState()
+        {
+                var finiteStateProvider = new DCRSFiniteStateProvider(Process.Runtime.CurrentState.StateNumber,
+                                                                      -1,
+                                                                      Process.Runtime.CurrentState.StateVector,
+                                                                      Process.Specification);
+
+                var dcrsUpdatedState = finiteStateProvider.ComputeState();
+
+                var executionTrace = (Process.Runtime.ExecutionTrace);
+            
+                // update the process instance with latest state and save it.
+                Process.Runtime = new DCRSRuntime(dcrsUpdatedState, Process.Runtime.ProcessInstanceId, executionTrace);
         }
 
         private void DefineRoles()
@@ -234,6 +251,9 @@ namespace DCRSGraphicalEditor
             short newNode = (short)(maxNode + 1);
             Process.Specification.ActionList.Add(newNode, "Action " + newNode.ToString());
             Process.Specification.ActionsToRolesDictionary.Add(newNode, new List<string>());
+            Process.Runtime.CurrentState.StateVector.IncludedActions.Add(newNode); // auto include
+            
+            ComputeState();
             return newNode;
         }
 
@@ -253,6 +273,8 @@ namespace DCRSGraphicalEditor
 
             Process.Specification.ActionsToRolesDictionary.Remove(a);
             Process.Specification.ActionList.Remove(a);
+
+            ComputeState();
         }
 
 
@@ -307,6 +329,8 @@ namespace DCRSGraphicalEditor
             temp[a.GetLength(0), 1] = d;
 
             a = temp;
+            
+            ComputeState();
         }
 
         public void RemoveCondition(short s, short d)
@@ -378,6 +402,8 @@ namespace DCRSGraphicalEditor
                 RemoveExclude(a.SourceNode.Id, a.DestinationNode.Id);
                 RemoveExclude(a.DestinationNode.Id, a.SourceNode.Id);
             }
+            
+            ComputeState();
         }
     }
 }
