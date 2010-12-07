@@ -290,7 +290,7 @@ namespace DCRSGraphicalEditor
             else
                 maxNode = Process.Specification.ActionList.Max(x => x.Key);
             short newNode = (short)(maxNode + 1);
-            Process.Specification.ActionList.Add(newNode, "Action " + newNode.ToString());
+            Process.Specification.ActionList.Add(newNode, "Event " + newNode.ToString());
             Process.Specification.ActionsToRolesDictionary.Add(newNode, new List<string>());
             Process.Runtime.CurrentState.StateVector.IncludedActions.Add(newNode); // auto include
             

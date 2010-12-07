@@ -176,7 +176,7 @@
             this.removeNodeToolStripMenuItem,
             this.removePrimitiveToolStripMenuItem});
             this.cmProcessPanel.Name = "cmProcessPanel";
-            this.cmProcessPanel.Size = new System.Drawing.Size(168, 158);
+            this.cmProcessPanel.Size = new System.Drawing.Size(168, 180);
             this.cmProcessPanel.Opening += new System.ComponentModel.CancelEventHandler(this.cmProcessPanel_Opening);
             // 
             // addConditionToolStripMenuItem
@@ -211,21 +211,21 @@
             // 
             this.addNodeToolStripMenuItem.Name = "addNodeToolStripMenuItem";
             this.addNodeToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
-            this.addNodeToolStripMenuItem.Text = "Add Node";
+            this.addNodeToolStripMenuItem.Text = "&Add Event";
             this.addNodeToolStripMenuItem.Click += new System.EventHandler(this.addNodeToolStripMenuItem_Click);
             // 
             // removeNodeToolStripMenuItem
             // 
             this.removeNodeToolStripMenuItem.Name = "removeNodeToolStripMenuItem";
             this.removeNodeToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
-            this.removeNodeToolStripMenuItem.Text = "Remove Node";
+            this.removeNodeToolStripMenuItem.Text = "&Remove Event";
             this.removeNodeToolStripMenuItem.Click += new System.EventHandler(this.removeNodeToolStripMenuItem_Click);
             // 
             // removePrimitiveToolStripMenuItem
             // 
             this.removePrimitiveToolStripMenuItem.Name = "removePrimitiveToolStripMenuItem";
             this.removePrimitiveToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
-            this.removePrimitiveToolStripMenuItem.Text = "Remove Primitive";
+            this.removePrimitiveToolStripMenuItem.Text = "Remove &Primitive";
             this.removePrimitiveToolStripMenuItem.Click += new System.EventHandler(this.removePrimitiveToolStripMenuItem_Click);
             // 
             // tabControl1
@@ -367,7 +367,7 @@
             this.groupBox1.Size = new System.Drawing.Size(248, 290);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Action Details";
+            this.groupBox1.Text = "Event Details";
             // 
             // clbRoles
             // 
