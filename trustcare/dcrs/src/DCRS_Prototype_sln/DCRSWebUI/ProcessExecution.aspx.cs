@@ -7,6 +7,7 @@ using System.Web.UI.WebControls;
 using ITU.DK.DCRS.RemoteServices;
 using ITU.DK.DCRS.CommonTypes.Process;
 using ITU.DK.DCRS.Visualization;
+using ITU.DK.DCRS.Visualization.Layout;
 
 namespace DCRSWebUI
 {
@@ -24,16 +25,32 @@ namespace DCRSWebUI
         {
             get
             {
-                if (Session["visualizer"] == null)
-                    Session["visualizer"] = new Visualizer(GetActiveProcessInstance());
+                //if (Session["visualizer"] == null)
+                    //Session["visualizer"] = new Visualizer(GetActiveProcessInstance());
+                InitVisualizer();
                 return (Visualizer)Session["visualizer"];
             }
         }
 
         private void InitVisualizer()
         {
+            //if (Session["visualizer"] == null)
+//                Session["visualizer"] = new Visualizer(GetActiveProcessInstance());
+
             if (Session["visualizer"] == null)
-                Session["visualizer"] = new Visualizer(GetActiveProcessInstance());
+            {
+                try
+                {
+                    DCRSProcessLayout dpl = DCRSProcessLayout.Deserialize(RemoteServicesHandler.GetProcessLayout(GetActiveProcessInstance().Specification.ProcessId, ""));
+                    DCRSLayoutProvider dlp = new DCRSLayoutProvider(dpl);
+                    Session["visualizer"] = new Visualizer(GetActiveProcessInstance(), dlp);
+                }
+                catch (Exception e)
+                {
+                    Session["visualizer"] = new Visualizer(GetActiveProcessInstance());
+                }
+            }
+
         }
 
         /// <summary>

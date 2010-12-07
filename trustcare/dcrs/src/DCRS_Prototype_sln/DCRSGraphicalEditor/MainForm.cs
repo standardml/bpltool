@@ -10,6 +10,7 @@ using ITU.DK.DCRS.CommonTypes.Process;
 using ITU.DK.DCRS.Visualization;
 using ITU.DK.DCRS.Visualization.Elements;
 using ITU.DK.DCRS.RemoteServices;
+using ITU.DK.DCRS.Visualization.Layout;
 
 namespace DCRSGraphicalEditor
 {
@@ -70,7 +71,18 @@ namespace DCRSGraphicalEditor
         void spd_ProcessSelected(ITU.DK.DCRS.CommonTypes.Process.DCRSProcess process)
         {            
             Process = process;
-            Visualizer = new Visualizer(process);
+
+            try
+            {
+                DCRSProcessLayout dpl = DCRSProcessLayout.Deserialize(RemoteServicesHandler.GetProcessLayout(process.Specification.ProcessId, ""));
+                DCRSLayoutProvider dlp = new DCRSLayoutProvider(dpl);
+                Visualizer = new Visualizer(process, dlp);
+            }
+            catch (Exception e)
+            {
+                Visualizer = new Visualizer(process);
+            }            
+            
             ProcessHandler = new DCRSProcessHandler(process);
             // multiple handlers will be open after opening multiple processes? check this...
             this.processPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.processPanel_Paint);
@@ -232,7 +244,15 @@ namespace DCRSGraphicalEditor
 
         private void storePlacementToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Visualizer.StorePlacement();
+            //Visualizer.StorePlacement();
+            DCRSProcessLayout pl = new DCRSProcessLayout();
+            pl.role = "";
+            pl.processID = Process.Specification.ProcessId;
+
+            foreach (var x in Visualizer.Placement.NodeLocations)
+                pl.Add(x.Key, x.Value);
+
+            RemoteServicesHandler.ImportProcessLayout(pl);
         }
 
         private void cmProcessPanel_Opening(object sender, CancelEventArgs e)
@@ -322,7 +342,16 @@ namespace DCRSGraphicalEditor
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
             RemoteServicesHandler.ImportSpecification(Process);
-            Visualizer.StorePlacement();
+            //Visualizer.StorePlacement();
+
+            DCRSProcessLayout pl = new DCRSProcessLayout();
+            pl.role = "";
+            pl.processID = Process.Specification.ProcessId;
+
+            foreach (var x in Visualizer.Placement.NodeLocations)
+                pl.Add(x.Key, x.Value);
+
+            RemoteServicesHandler.ImportProcessLayout(pl);
         }
 
         private void addNodeToolStripMenuItem_Click(object sender, EventArgs e)
@@ -405,7 +434,20 @@ namespace DCRSGraphicalEditor
 
             ExecutionProcessInstance = DCRSProcess.Deserialize(RemoteServicesHandler.GetProcessInstance(Process.Specification.ProcessId, instanceId));
 
-            ExecutionVisualizer = new Visualizer(ExecutionProcessInstance);
+
+            try
+            {
+                DCRSProcessLayout dpl = DCRSProcessLayout.Deserialize(RemoteServicesHandler.GetProcessLayout(Process.Specification.ProcessId, ""));
+                DCRSLayoutProvider dlp = new DCRSLayoutProvider(dpl);
+                ExecutionVisualizer = new Visualizer(ExecutionProcessInstance, dlp);
+            }
+            catch (Exception e)
+            {
+                ExecutionVisualizer = new Visualizer(ExecutionProcessInstance);
+            }            
+
+
+            //ExecutionVisualizer = new Visualizer(ExecutionProcessInstance);
             //Visualizer.UpdateProcess(Process);
             executionPanel.Refresh();
             enableExecutionToolStripMenuItem.Text = "Restart Execution";

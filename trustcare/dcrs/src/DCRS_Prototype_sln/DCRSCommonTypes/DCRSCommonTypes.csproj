@@ -60,6 +60,7 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq">
@@ -79,6 +80,7 @@
     <Compile Include="GlobalDeclarations.cs" />
     <Compile Include="OldProcessDefinition\DCRSModel.cs" />
     <Compile Include="Process\ActionInfo.cs" />
+    <Compile Include="Process\DCRSProcessLayout.cs" />
     <Compile Include="Process\PropertyPattern.cs" />
     <Compile Include="Process\Copy of DCRSAtomicState.cs" />
     <Compile Include="Process\DCRSProcess.cs" />
@@ -94,6 +96,7 @@
     <Compile Include="PropertyMonitor\PropertyMonitorBase.cs" />
     <Compile Include="PropertyMonitor\IPropertyMonitorFactory.cs" />
     <Compile Include="Samples\DCRSSampleModels.cs" />
+    <Compile Include="Serialization\SerializableDictionary.cs" />
     <Compile Include="Serialization\DCRSModelSerializer.cs" />
     <Compile Include="Serialization\DCRSRuntimeSerializer.cs" />
     <Compile Include="Serialization\DCRSSerializer.cs">

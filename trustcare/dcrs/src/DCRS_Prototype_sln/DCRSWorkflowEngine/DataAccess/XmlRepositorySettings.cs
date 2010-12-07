@@ -12,6 +12,8 @@ namespace ITU.DK.DCRS.WorkflowEngine.DataAccess
 
         private readonly string processArchiveRepositoryPath;
 
+        private readonly string processLayoutRepositoryPath;
+
         #region Constructor.
         
         
@@ -23,6 +25,8 @@ namespace ITU.DK.DCRS.WorkflowEngine.DataAccess
             processInstanceRepositoryPath = ConfigurationManager.AppSettings.Get("XmlProcessInstancesRepositoryPath");
 
             processArchiveRepositoryPath = ConfigurationManager.AppSettings.Get("XmlProcessArchiveRepositoryPath");
+
+            processLayoutRepositoryPath = ConfigurationManager.AppSettings.Get("XmlProcessLayoutRepositoryPath");
         }
 
         #endregion
@@ -37,6 +41,11 @@ namespace ITU.DK.DCRS.WorkflowEngine.DataAccess
         public string ProcessInstanceRepositoryPath
         {
             get { return processInstanceRepositoryPath; }
+        }
+
+        public string ProcessLayoutRepositoryPath
+        {
+            get { return processLayoutRepositoryPath; }
         }
 
         public string ProcessRepositoryPath
@@ -62,8 +71,6 @@ namespace ITU.DK.DCRS.WorkflowEngine.DataAccess
             return string.Format(@"{0}\({1}).[pid#{2}#].[iid#{3}#].Xml", processArchiveRepositoryPath, modelName,
                                  processId, processInstanceId);
         }
-
-
 
 
         public string GetProcessSavePath(string modelName, int processId)
@@ -98,6 +105,20 @@ namespace ITU.DK.DCRS.WorkflowEngine.DataAccess
 
         }
 
+        public string GetProcessLayoutSavePath(int processId, string roleName)
+        {
+            // (model name).[pid#3#].Xml
+            return string.Format(@"{0}\layout[pid#{1}#]({2}).Xml", processLayoutRepositoryPath,
+                                 processId, roleName);
+        }
+
+        public string GetLayoutPathByProcessId(int processId, string roleName)
+        {
+            var format = string.Format("layout[pid#{0}#]({1})", processId, roleName);
+
+            return Directory.GetFiles(processLayoutRepositoryPath).Where(path => path.Contains(format)).First();
+
+        }
 
 
 

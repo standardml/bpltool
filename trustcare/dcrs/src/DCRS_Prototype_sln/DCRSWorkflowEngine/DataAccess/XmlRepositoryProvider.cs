@@ -174,6 +174,54 @@ namespace ITU.DK.DCRS.WorkflowEngine.DataAccess
             }
         }
 
+
+        public DCRSProcessLayout LoadLayout(int processId, string role)
+        {
+            try
+            {
+                var path = repositorySettings.GetLayoutPathByProcessId(processId, role);
+
+                if (string.IsNullOrEmpty(path))
+                    throw new DCRSWorkflowException(
+                        string.Format("A layout for the process with processId: {0} does not exists in the Repository.", processId));
+
+                return DCRSProcessLayout.DeserializeFromXML(path);
+            }
+            catch (Exception exception)
+            {
+
+                var workflowException = new DCRSWorkflowException(
+                    string.Format("Failed to load layout for DCRS process with processId: {0} . Error message: {1}",
+                                  processId,
+                                  exception.Message));
+
+                //InvokeRepositoryErrorEvent(workflowException);
+
+                throw workflowException;
+
+            }
+        }
+
+
+
+        public void SaveLayout(DCRSProcessLayout processLayout)
+        {
+            try
+            {
+                var path = repositorySettings.GetProcessLayoutSavePath(processLayout.processID, processLayout.role);
+                DCRSProcessLayout.SerializeToXML(processLayout, path);
+            }
+            catch (Exception exception)
+            {
+                var workflowException = new DCRSWorkflowException(
+                    string.Format("Failed to save DCRS process layout with processId: {0} . Error message: {1}",
+                                  processLayout.processID,
+                                  exception.Message));
+
+                throw workflowException;
+            }
+        }
+
         public DCRSProcess LoadProcessInstance(int processId, int instanceId)
         {
 

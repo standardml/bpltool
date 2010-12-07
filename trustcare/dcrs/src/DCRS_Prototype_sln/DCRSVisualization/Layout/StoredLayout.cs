@@ -9,7 +9,7 @@ namespace ITU.DK.DCRS.Visualization.Layout
 {
     public class StoredLayout<ST, LT> : LayoutProvider<ST, LT> where ST : IEquatable<ST>
     {
-        Placement<ST> placement;
+        Layout<ST> placement;
         
 
         public StoredLayout(DCRSProcess p, Graph<ST, LT> g)
@@ -24,7 +24,7 @@ namespace ITU.DK.DCRS.Visualization.Layout
         {
             try
             {
-                placement = Placement<ST>.DeserializeFromXML(p.Specification.ProcessId, p.Runtime.ProcessInstanceId);
+                placement = Layout<ST>.DeserializeFromXML(p.Specification.ProcessId, p.Runtime.ProcessInstanceId);
             }
             catch (FileNotFoundException e)
             {
@@ -36,13 +36,13 @@ namespace ITU.DK.DCRS.Visualization.Layout
         {
             try
             {
-                placement = Placement<ST>.DeserializeFromXML(p.Specification.ProcessId);
+                placement = Layout<ST>.DeserializeFromXML(p.Specification.ProcessId);
             }
             catch (FileNotFoundException e)
             {
                 GBFBALayoutProvider<ST, LT> gbfba = new GBFBALayoutProvider<ST, LT>(g);
                 gbfba.Run();
-                placement = new Placement<ST>();
+                placement = new Layout<ST>();
                 placement.processID = p.Specification.ProcessId;
                 foreach (var x in gbfba.GetNodePositions())
                 {

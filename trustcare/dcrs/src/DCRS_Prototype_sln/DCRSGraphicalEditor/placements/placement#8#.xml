@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PlacementOfInt16 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<LayoutOfInt16 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <processID>8</processID>
   <instanceID>0</instanceID>
   <NodeLocations>
@@ -48,4 +48,4 @@
       </value>
     </item>
   </NodeLocations>
-</PlacementOfInt16>
+</LayoutOfInt16>

@@ -18,6 +18,16 @@ namespace ITU.DK.DCRS.RemoteServices
         {
             return Channel.GetProcess(processId);
         }
+
+        public void ImportProcessLayout(string processLayout)
+        {
+            Channel.ImportProcessLayout(processLayout);
+        }
+
+        public string GetProcessLayout(int processId, string role)
+        {
+            return Channel.GetProcessLayout(processId, role);
+        }
         
         public string NewProcess()
         {

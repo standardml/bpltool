@@ -10,19 +10,18 @@ using ITU.DK.DCRS.Visualization.Layout;
 namespace ITU.DK.DCRS.Visualization
 {
     /// <summary>
-    /// Class that makes it possible to store a placement/layout of nodes to a xml file.
-    /// The clumsy storage mechanism is there to both enable xml serialization and still allow generic types. Dictionaries are not xml serializable regretfully.
-    /// Would be good to improve on this in the future, for example by making a serializable dictionary, or making pairs of keys and values and storing those into a list.
+    /// Class that makes it possible to store a placement/layout of nodes to a xml file.    
     /// </summary>
     /// <typeparam name="ST"></typeparam>
-    public class Placement<ST> where ST : IEquatable<ST>
+    public class Layout<ST> where ST : IEquatable<ST>
     {
         private static string placementPath;
         public int processID;
         public int instanceID;
+        public string role;
         public SerializableDictionary<ST, Point> NodeLocations;
 
-        public Placement()
+        public Layout()
         {
             NodeLocations = new SerializableDictionary<ST, Point>();
         }
@@ -59,9 +58,9 @@ namespace ITU.DK.DCRS.Visualization
         }
 
 
-        public static Placement<ST> FromLayoutProvider(LayoutProvider<ST, bool> layoutProvider)
+        public static Layout<ST> FromLayoutProvider(LayoutProvider<ST, bool> layoutProvider)
         {
-            Placement<ST> result = new Placement<ST>();
+            Layout<ST> result = new Layout<ST>();
 
             layoutProvider.Run();
 
@@ -109,27 +108,27 @@ namespace ITU.DK.DCRS.Visualization
 
         public void SerializeToXML()
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(Placement<ST>));
+            XmlSerializer serializer = new XmlSerializer(typeof(Layout<ST>));
             TextWriter textWriter = new StreamWriter(getFilePath(processID,instanceID));
             serializer.Serialize(textWriter, this);
             textWriter.Close();
         }
 
 
-        static public void SerializeToXML(Placement<ST> p)
+        static public void SerializeToXML(Layout<ST> p)
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(Placement<ST>));
+            XmlSerializer serializer = new XmlSerializer(typeof(Layout<ST>));
             TextWriter textWriter = new StreamWriter(getFilePath(p.processID,p.instanceID));
             serializer.Serialize(textWriter, p);
             textWriter.Close();
         }
 
-        static public Placement<ST> DeserializeFromXML(int processId, int instancId)
+        static public Layout<ST> DeserializeFromXML(int processId, int instancId)
         {
-            XmlSerializer deserializer = new XmlSerializer(typeof(Placement<ST>));
+            XmlSerializer deserializer = new XmlSerializer(typeof(Layout<ST>));
             TextReader textReader = new StreamReader(getFilePath(processId,instancId));
-            Placement<ST> p;
-            p = (Placement<ST>)deserializer.Deserialize(textReader);
+            Layout<ST> p;
+            p = (Layout<ST>)deserializer.Deserialize(textReader);
             textReader.Close();
 
             p.processID = processId;
@@ -138,12 +137,12 @@ namespace ITU.DK.DCRS.Visualization
             return p;
         }
 
-        static public Placement<ST> DeserializeFromXML(int processId)
+        static public Layout<ST> DeserializeFromXML(int processId)
         {
-            XmlSerializer deserializer = new XmlSerializer(typeof(Placement<ST>));
+            XmlSerializer deserializer = new XmlSerializer(typeof(Layout<ST>));
             TextReader textReader = new StreamReader(getFilePath(processId,0));
-            Placement<ST> p;
-            p = (Placement<ST>)deserializer.Deserialize(textReader);
+            Layout<ST> p;
+            p = (Layout<ST>)deserializer.Deserialize(textReader);
             textReader.Close();
 
             p.processID = processId;
@@ -180,7 +179,7 @@ namespace ITU.DK.DCRS.Visualization
 #endif
             if (!System.IO.Directory.Exists(placementPath))
                 System.IO.Directory.CreateDirectory(placementPath);
-            Placement<ST>.placementPath = placementPath;
+            Layout<ST>.placementPath = placementPath;
         }
 
     }

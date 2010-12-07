@@ -15,7 +15,7 @@ namespace ITU.DK.DCRS.Visualization
         private DCRSProcess Process;
         private DCRSSpecification Specification { get { return Process.Specification; } }
         //private Dictionary<short, Point> Placement;
-        public Placement<short> Placement;
+        public Layout<short> Placement;
         private LayoutProvider<short, bool> LayoutProvider;
         private Size ImageSize;
 
@@ -34,6 +34,15 @@ namespace ITU.DK.DCRS.Visualization
         {
             Process = p;
             LayoutProvider = new StoredLayout<short, bool>(p, CreateGraphFromSpec(p.Specification));
+            CalculatePlacement();
+            SetUp();
+        }
+
+
+        public Visualizer(DCRSProcess p, LayoutProvider<short, bool> lp)
+        {
+            Process = p;
+            LayoutProvider = lp;
             CalculatePlacement();
             SetUp();
         }
@@ -126,7 +135,7 @@ namespace ITU.DK.DCRS.Visualization
         /// <returns></returns>
         private void CalculatePlacement()
         {
-            Placement = Placement<short>.FromLayoutProvider(LayoutProvider);
+            Placement = Layout<short>.FromLayoutProvider(LayoutProvider);
 
             Placement.processID = Process.Specification.ProcessId;
             Placement.instanceID = Process.Runtime.ProcessInstanceId;

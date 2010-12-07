@@ -16,7 +16,12 @@ namespace ITU.DK.DCRS.CommonTypes.ServiceContracts
 
         [OperationContract]
         string NewProcess();
+        
+        [OperationContract]
+        void ImportProcessLayout(string processLayout);
 
+        [OperationContract]
+        string GetProcessLayout(int processId, string role);
         
         [OperationContract]
         string GetProcessInstance(int processId, int processInstanceId);

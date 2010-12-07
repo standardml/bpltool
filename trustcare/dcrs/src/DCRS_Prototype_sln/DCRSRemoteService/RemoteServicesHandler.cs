@@ -243,6 +243,52 @@ namespace ITU.DK.DCRS.RemoteServices
                         _RepositoryProviderServiceUrl, exception.Message));
             }
         }
+
+
+        public static void ImportProcessLayout(DCRSProcessLayout layout)
+        {
+            try
+            {
+                var factory = CreateChannelFactory<IRepositoryServiceContract>(_RepositoryProviderServiceUrl);
+                var proxy = factory.CreateChannel();
+
+                proxy.ImportProcessLayout(DCRSProcessLayout.Serialize(layout));
+
+                ((IClientChannel)proxy).Close();
+                factory.Close();
+            }
+            catch (Exception exception)
+            {
+                throw new DCRSWorkflowException(
+                    string.Format(
+                        "Failed to import a process layout to {0}! Error message: {1}",
+                        _RepositoryProviderServiceUrl, exception.Message));
+            }
+        }
+
+        public static string GetProcessLayout(int processId, string role)
+        {
+            try
+            {
+                var factory = CreateChannelFactory<IRepositoryServiceContract>(_RepositoryProviderServiceUrl);
+                var proxy = factory.CreateChannel();
+
+                var processLayoutXml = proxy.GetProcessLayout(processId, role);
+
+                ((IClientChannel)proxy).Close();
+
+                return processLayoutXml;
+            }
+            catch (Exception exception)
+            {
+                throw new DCRSWorkflowException(
+                    string.Format(
+                        "Failed to call Get Process Instance with process Id:{0}, InstanceId:{1} from {2}! Error message: {3}",
+                        processId, role, _RepositoryProviderServiceUrl, exception.Message));
+            }
+        }
+
+
         
 
         public static string GetProcessInstance(int processId, int processInstanceId)
