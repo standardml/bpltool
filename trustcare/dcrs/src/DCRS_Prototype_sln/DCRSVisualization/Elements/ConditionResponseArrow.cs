@@ -22,11 +22,12 @@ namespace ITU.DK.DCRS.Visualization.Elements
         base.Draw(g);
         if (stopDrawing)
             return;
-        g.FillEllipse(arrowBrush, ArrowDst.ToPoint.X - 3, ArrowDst.ToPoint.Y - 3, 6, 6);
-
+        g.FillEllipse(arrowBrush, ArrowSrc.ToPoint.X - 3, ArrowSrc.ToPoint.Y - 3, 6, 6);
+        
         arrowBrush = Brushes.DarkOrange;
         arrowPen.Brush = arrowBrush;
-        g.FillEllipse(arrowBrush, ArrowSrc.ToPoint.X - 3, ArrowSrc.ToPoint.Y - 3, 6, 6);
+        g.FillEllipse(arrowBrush, ArrowDst.ToPoint.X - 3, ArrowDst.ToPoint.Y - 3, 6, 6);
+        
     }
   }
 }

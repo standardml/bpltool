@@ -18,7 +18,7 @@ namespace ITU.DK.DCRS.Visualization.Elements
 
     public override void Draw(Graphics g)
     {
-        arrowBrush = Brushes.DarkOrange;
+        arrowBrush = Brushes.Blue;
         arrowPen.Brush = arrowBrush;
       base.Draw(g);
       if (stopDrawing)
