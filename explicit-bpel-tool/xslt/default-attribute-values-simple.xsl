@@ -16,62 +16,50 @@
     </xsl:copy>
   </xsl:template>
   
-  <xsl:template match="bpel:pick | bpel:receive">
+  <xsl:template match="bpel:pick[not(@createInstance)] | bpel:receive[not(@createInstance)]">
     <xsl:copy>
       <xsl:copy-of select="@*" />
-      <xsl:if test="not(@createInstance)">
-        <xsl:attribute name="createInstance">no</xsl:attribute>
-      </xsl:if>
+      <xsl:attribute name="createInstance">no</xsl:attribute>
       <xsl:apply-templates />
     </xsl:copy>
   </xsl:template>
   
-  <xsl:template match="bpel:copy">
+  <xsl:template match="bpel:copy[not(@ignoreMissingFromData)]">
     <xsl:copy>
       <xsl:copy-of select="@*" />
-      <xsl:if test="not(@ignoreMissingFromData)">
-        <xsl:attribute name="ignoreMissingFromData">no</xsl:attribute>
-      </xsl:if>
+      <xsl:attribute name="ignoreMissingFromData">no</xsl:attribute>
       <xsl:apply-templates />
     </xsl:copy>
   </xsl:template>
   
-  <xsl:template match="bpel:correlation">
+  <xsl:template match="bpel:correlation[not(@initiate)]">
     <xsl:copy>
       <xsl:copy-of select="@*" />
-      <xsl:if test="not(@initiate)">
-        <xsl:attribute name="initiate">no</xsl:attribute>
-      </xsl:if>
+      <xsl:attribute name="initiate">no</xsl:attribute>
       <xsl:apply-templates />
     </xsl:copy>
   </xsl:template>
   
-  <xsl:template match="bpel:scope">
+  <xsl:template match="bpel:scope[not(@isolated)]">
     <xsl:copy>
       <xsl:copy-of select="@*" />
-      <xsl:if test="not(@isolated)">
-        <xsl:attribute name="isolated">no</xsl:attribute>
-      </xsl:if>
+      <xsl:attribute name="isolated">no</xsl:attribute>
       <xsl:apply-templates />
     </xsl:copy>
   </xsl:template>
   
-  <xsl:template match="bpel:branches">
+  <xsl:template match="bpel:branches[not(@successfulBranchesOnly)]">
     <xsl:copy>
       <xsl:copy-of select="@*" />
-      <xsl:if test="not(@successfulBranchesOnly)">
-        <xsl:attribute name="successfulBranchesOnly">no</xsl:attribute>
-      </xsl:if>
+      <xsl:attribute name="successfulBranchesOnly">no</xsl:attribute>
       <xsl:apply-templates />
     </xsl:copy>
   </xsl:template>
   
-  <xsl:template match="bpel:assign">
+  <xsl:template match="bpel:assign[not(@validate)]">
     <xsl:copy>
       <xsl:copy-of select="@*" />
-      <xsl:if test="not(@validate)">
-        <xsl:attribute name="validate">no</xsl:attribute>
-      </xsl:if>
+      <xsl:attribute name="validate">no</xsl:attribute>
       <xsl:apply-templates />
     </xsl:copy>
   </xsl:template>

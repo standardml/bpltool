@@ -44,7 +44,6 @@
       <xsl:apply-templates />
       <bpel:completionCondition />        
     </xsl:copy>
-
   </xsl:template>
   
 </xsl:stylesheet>

@@ -5,9 +5,7 @@
 
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-  xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
-  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-  xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype">
+  xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable">
 
   <xsl:output indent="yes" method="xml" />
   
@@ -25,35 +23,37 @@
     </xsl:copy>
   </xsl:template>
   
-  <!-- Special case for the process element, that has both attributes and default values -->
   <xsl:template match="bpel:process">
-    <xsl:param name="expressionLanguage" select="$xpathURN" />
-    <xsl:param name="queryLanguage" select="$xpathURN" />
     <xsl:copy>
-      <xsl:copy-of select="@*" />
-      
-      <!-- if expressionLanguage attribute is missing add it -->
-      <xsl:if test="not(@expressionLanguage)">
-        <xsl:attribute name="expressionLanguage">
-            <xsl:value-of select="$expressionLanguage" />
-        </xsl:attribute>
-      </xsl:if>
-        
-      <!-- if queryLanguage attribute is missing add it -->
-      <xsl:if test="not(@queryLanguage)">
-        <xsl:attribute name="queryLanguage">
-           <xsl:value-of select="$queryLanguage" />
-        </xsl:attribute>
-      </xsl:if>
-
+      <xsl:copy-of select="@*[not(namespace-uri() = '' and
+                                  (local-name() = 'expressionLanguage' or
+                                   local-name() = 'queryLanguage'))]" />
       <xsl:apply-templates>
-        <xsl:with-param name="expressionLanguage" select="$expressionLanguage" />
-        <xsl:with-param name="queryLanguage" select="$queryLanguage" />
+        <xsl:with-param name="expressionLanguage">
+          <xsl:choose>
+            <xsl:when test="@expressionLanguage">
+              <xsl:value-of select="@expressionLanguage" />
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="$xpathURN" />
+            </xsl:otherwise>
+          </xsl:choose>
+        </xsl:with-param>
+        <xsl:with-param name="queryLanguage">
+          <xsl:choose>
+            <xsl:when test="@queryLanguage">
+              <xsl:value-of select="@queryLanguage" />
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="$xpathURN" />
+            </xsl:otherwise>
+          </xsl:choose>
+        </xsl:with-param>
       </xsl:apply-templates>
     </xsl:copy>
   </xsl:template>
   
-  <!-- Adding missing expressionLanguge attributes -->
+  <!-- Adding missing expressionLanguage attributes -->
   <xsl:template match="bpel:branches | bpel:condition | bpel:finalCounterValue | bpel:for | bpel:from[text()] | bpel:joinCondition | bpel:repeatEvery | bpel:startCounterValue | bpel:to[text()] | bpel:transitionCondition | bpel:until">
     <xsl:param name="expressionLanguage" />
     <xsl:param name="queryLanguage" />
@@ -63,7 +63,7 @@
       <!-- if expressionLanguage attribute is missing add it -->
       <xsl:if test="not(@expressionLanguage)">
         <xsl:attribute name="expressionLanguage">
-            <xsl:value-of select="$expressionLanguage" />
+          <xsl:value-of select="$expressionLanguage" />
         </xsl:attribute>
       </xsl:if>
 
@@ -84,7 +84,7 @@
       <!-- if queryLanguage attribute is missing add it -->
       <xsl:if test="not(@queryLanguage)">
         <xsl:attribute name="queryLanguage">
-           <xsl:value-of select="$queryLanguage" />
+          <xsl:value-of select="$queryLanguage" />
         </xsl:attribute>
       </xsl:if>
 

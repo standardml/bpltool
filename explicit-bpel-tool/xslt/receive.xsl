@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<!-- Make temporary variables and assignments, due to the use of <fromParts>,
-     and/or references to an element variable, explicit. -->
-<!-- NB: this template should _not_ be applied by itself - it is included by irra.xsl. -->
+<!-- Transform <receive> into <pick>. -->
 
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"

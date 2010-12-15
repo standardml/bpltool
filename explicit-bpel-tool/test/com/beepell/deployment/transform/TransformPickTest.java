@@ -30,7 +30,6 @@ public class TransformPickTest extends TestCase {
 
         File source = new File("test/com/beepell/deployment/transform/pick.bpel");
         Transform transform = new Transform();
-        transform.setValidate(false);
         //transform.setSheets(new String[]{"pick.xsl"});
         transformed = transform.transform(source);
 

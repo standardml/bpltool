@@ -40,7 +40,7 @@ public class SchemaComplianceTest extends TestCase {
     }
 
     public final void testCBPELSchema() throws Exception {
-        File file = new File("schemas/c-bpel.xsd");
+        File file = new File("schemas/core-bpel.xsd");
         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         Schema schema = factory.newSchema(file);
         this.validator = schema.newValidator();

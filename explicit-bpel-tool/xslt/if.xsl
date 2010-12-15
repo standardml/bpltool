@@ -16,46 +16,45 @@
     </xsl:copy>
   </xsl:template>
 
-
   <xsl:template match="bpel:elseif">
     <xsl:param name="if" />
     <xsl:param name="count" />
     <xsl:param name="index" />
 
-    <xsl:if test="$index &lt; $count">    
-        <bpel:else>
-          <bpel:if>
-            <xsl:copy-of select="*" />
-            <xsl:apply-templates select="$if/bpel:elseif[$index + 1]">
-              <xsl:with-param name="if" select="$if"/>
-              <xsl:with-param name="count" select="$count"/>
-              <xsl:with-param name="index" select="$index + 1"/>
-           </xsl:apply-templates>
-          </bpel:if>
-        </bpel:else>
-    </xsl:if>    
-    
-    
-    <xsl:if test="$index = $count">
-      <xsl:message terminate="no">position = count</xsl:message>
-      <bpel:else>
-        <bpel:if>
-          <xsl:copy-of select="*" />
-          
-          <xsl:choose>
-            <xsl:when test="$if/bpel:else">
-              <xsl:copy-of select="$if/bpel:else" />
-            </xsl:when>
-            <xsl:otherwise>
-              <bpel:else>
-                <bpel:empty/>
-              </bpel:else>
-            </xsl:otherwise>
-          </xsl:choose>
-  
-        </bpel:if>
-      </bpel:else>
-    </xsl:if>    
+    <xsl:choose>
+	    <xsl:when test="$index &lt; $count">    
+	      <bpel:else>
+	        <bpel:if>
+	          <xsl:copy-of select="*" />
+	          <xsl:apply-templates select="$if/bpel:elseif[$index + 1]">
+	            <xsl:with-param name="if" select="$if"/>
+	            <xsl:with-param name="count" select="$count"/>
+	            <xsl:with-param name="index" select="$index + 1"/>
+	         </xsl:apply-templates>
+	        </bpel:if>
+	      </bpel:else>
+	    </xsl:when>
+	    
+	    <xsl:otherwise>
+	      <bpel:else>
+	        <bpel:if>
+	          <xsl:copy-of select="*" />
+	          
+	          <xsl:choose>
+	            <xsl:when test="$if/bpel:else">
+	              <xsl:copy-of select="$if/bpel:else" />
+	            </xsl:when>
+	            <xsl:otherwise>
+	              <bpel:else>
+	                <bpel:empty/>
+	              </bpel:else>
+	            </xsl:otherwise>
+	          </xsl:choose>
+	  
+	        </bpel:if>
+	      </bpel:else>
+	    </xsl:otherwise>    
+    </xsl:choose>
 
   </xsl:template>
 

@@ -15,9 +15,18 @@
     </xsl:copy>
   </xsl:template>
   
-  <xsl:template match="bpel:process">
-    <bpel:process>
-      <xsl:copy-of select="@*" />
+  <xsl:template match="bpel:process[@exitOnStandardFault or
+                                    @suppressJoinFailure or
+                                    bpel:partnerLinks or
+                                    bpel:messageExchanges or
+                                    bpel:variables or
+                                    bpel:correlationSets or
+                                    bpel:faultHandlers or
+                                    bpel:eventHandlers]">
+    <xsl:copy>
+      <xsl:copy-of select="@*[not(namespace-uri() = '' and
+                                  (local-name() = 'exitOnStandardFault' or
+                                   local-name() = 'suppressJoinFailure'))]" />
       <xsl:copy-of select="bpel:extensions" />
       <xsl:copy-of select="bpel:import" />
       <bpel:scope>
@@ -27,7 +36,7 @@
                                      local-name() = 'queryLanguage'))]" />
         <xsl:apply-templates select="*[not(self::bpel:import or self::bpel:extensions)]" />
       </bpel:scope>
-    </bpel:process>
+    </xsl:copy>
   </xsl:template>
   
 </xsl:stylesheet>

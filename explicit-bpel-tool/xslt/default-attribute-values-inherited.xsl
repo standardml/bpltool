@@ -8,63 +8,82 @@
   xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable">
   
   <xsl:output indent="yes" method="xml" />
+  
+  <xsl:template match="bpel:process">
+    <xsl:copy>
+      <xsl:copy-of select="@*" />
+      <xsl:apply-templates>
+        <xsl:with-param name="exitOnStandardFault">
+          <xsl:choose>
+            <xsl:when test="@exitOnStandardFault">
+              <xsl:value-of select="@exitOnStandardFault" />
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="'no'" />
+            </xsl:otherwise>
+          </xsl:choose>
+        </xsl:with-param>
+        <xsl:with-param name="suppressJoinFailure">
+          <xsl:choose>
+            <xsl:when test="@suppressJoinFailure">
+              <xsl:value-of select="@suppressJoinFailure" />
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="'no'" />
+            </xsl:otherwise>
+          </xsl:choose>
+        </xsl:with-param>
+      </xsl:apply-templates>
+    </xsl:copy>
+  </xsl:template>
 
-  <xsl:template match="bpel:process | bpel:scope">
-    
-    <xsl:param name="suppressJoinFailure">no</xsl:param>
-    <xsl:param name="exitOnStandardFault">no</xsl:param>
+  <xsl:template match="bpel:scope">
+    <xsl:param name="exitOnStandardFault" />
+    <xsl:param name="suppressJoinFailure" />
     
     <xsl:copy>
       <xsl:copy-of select="@*" />
-      
-      <xsl:if test="not(@suppressJoinFailure)">
-        <xsl:attribute name="suppressJoinFailure">
-          <xsl:value-of select="$suppressJoinFailure" />
-        </xsl:attribute>
-      </xsl:if>
       
       <xsl:if test="not(@exitOnStandardFault)">
         <xsl:attribute name="exitOnStandardFault">
           <xsl:value-of select="$exitOnStandardFault" />
         </xsl:attribute>
       </xsl:if>
+
+      <xsl:if test="not(@suppressJoinFailure)">
+        <xsl:attribute name="suppressJoinFailure">
+          <xsl:value-of select="$suppressJoinFailure" />
+        </xsl:attribute>
+      </xsl:if>
       
-      <xsl:choose>
-        <xsl:when test="@suppressJoinFailure and @exitOnStandardFault">
-          <xsl:apply-templates>
-            <xsl:with-param name="suppressJoinFailure" select="@suppressJoinFailure" />
-            <xsl:with-param name="exitOnStandardFault" select="@exitOnStandardFault" />
-          </xsl:apply-templates>
-        </xsl:when>
-
-        <xsl:when test="@suppressJoinFailure and not(@exitOnStandardFault)">
-          <xsl:apply-templates>
-            <xsl:with-param name="exitOnStandardFault" select="$exitOnStandardFault" />
-            <xsl:with-param name="suppressJoinFailure" select="@suppressJoinFailure" />
-          </xsl:apply-templates>
-        </xsl:when>
-
-        <xsl:when test="not(@suppressJoinFailure) and @exitOnStandardFault">
-          <xsl:apply-templates>
-            <xsl:with-param name="suppressJoinFailure" select="$suppressJoinFailure" />
-            <xsl:with-param name="exitOnStandardFault" select="@exitOnStandardFault" />
-          </xsl:apply-templates>
-        </xsl:when>
-
-        <xsl:when test="not(@suppressJoinFailure) and not(@exitOnStandardFault)">
-          <xsl:apply-templates>
-            <xsl:with-param name="suppressJoinFailure" select="$suppressJoinFailure" />
-            <xsl:with-param name="exitOnStandardFault" select="$exitOnStandardFault" />
-          </xsl:apply-templates>
-        </xsl:when>
-      </xsl:choose>
-      
+      <xsl:apply-templates>
+        <xsl:with-param name="exitOnStandardFault">
+          <xsl:choose>
+            <xsl:when test="@exitOnStandardFault">
+              <xsl:value-of select="@exitOnStandardFault" />
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="$exitOnStandardFault" />
+            </xsl:otherwise>
+          </xsl:choose>
+        </xsl:with-param>
+        <xsl:with-param name="suppressJoinFailure">
+	        <xsl:choose>
+	          <xsl:when test="@suppressJoinFailure">
+              <xsl:value-of select="@suppressJoinFailure" />
+	          </xsl:when>
+	          <xsl:otherwise>
+              <xsl:value-of select="$suppressJoinFailure" />
+	          </xsl:otherwise>
+	        </xsl:choose>
+        </xsl:with-param>
+      </xsl:apply-templates>
     </xsl:copy>
   </xsl:template>
 
   <xsl:template match="bpel:assign | bpel:compensate | bpel:compensateScope | bpel:empty | bpel:exit | bpel:extensionActivity/* | bpel:flow | bpel:forEach | bpel:if | bpel:invoke | bpel:pick | bpel:receive | bpel:repeatUntil | bpel:reply | bpel:rethrow | bpel:sequence | bpel:throw | bpel:validate | bpel:wait | bpel:while">
-    <xsl:param name="suppressJoinFailure">no</xsl:param>
-    <xsl:param name="exitOnStandardFault">no</xsl:param>
+    <xsl:param name="exitOnStandardFault" />
+    <xsl:param name="suppressJoinFailure" />
 
     <xsl:copy>
       <xsl:copy-of select="@*" />      
@@ -74,31 +93,30 @@
         </xsl:attribute>
       </xsl:if>
 
-      <xsl:if test="not(@suppressJoinFailure)">
-        <xsl:apply-templates>
-            <xsl:with-param name="suppressJoinFailure" select="$suppressJoinFailure" />
-            <xsl:with-param name="exitOnStandardFault" select="$exitOnStandardFault" />
-        </xsl:apply-templates>
-      </xsl:if>
-          
-      <xsl:if test="@suppressJoinFailure">
-        <xsl:apply-templates>
-          <xsl:with-param name="suppressJoinFailure" select="@suppressJoinFailure" />
-          <xsl:with-param name="exitOnStandardFault" select="$exitOnStandardFault" />
-        </xsl:apply-templates>
-      </xsl:if>
+      <xsl:apply-templates>
+        <xsl:with-param name="exitOnStandardFault" select="$exitOnStandardFault" />
+        <xsl:with-param name="suppressJoinFailure">
+          <xsl:choose>
+            <xsl:when test="@suppressJoinFailure">
+              <xsl:value-of select="@suppressJoinFailure" />
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="$suppressJoinFailure" />
+            </xsl:otherwise>
+          </xsl:choose>
+        </xsl:with-param>
+      </xsl:apply-templates>
     </xsl:copy>
-    
   </xsl:template>
   
   <xsl:template match="*">
-    <xsl:param name="suppressJoinFailure">no</xsl:param>
-    <xsl:param name="exitOnStandardFault">no</xsl:param>
+    <xsl:param name="exitOnStandardFault" />
+    <xsl:param name="suppressJoinFailure" />
     <xsl:copy>
       <xsl:copy-of select="@*" />
       <xsl:apply-templates>
-        <xsl:with-param name="suppressJoinFailure" select="$suppressJoinFailure" />
         <xsl:with-param name="exitOnStandardFault" select="$exitOnStandardFault" />
+        <xsl:with-param name="suppressJoinFailure" select="$suppressJoinFailure" />
       </xsl:apply-templates>
     </xsl:copy>
   </xsl:template>

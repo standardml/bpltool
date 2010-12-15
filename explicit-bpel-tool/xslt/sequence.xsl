@@ -80,9 +80,6 @@
               <xsl:with-param name="element" select="." />
               <xsl:with-param name="postfix" select="$fresh-sequence-link-postfix" />
             </xsl:call-template>
-            <bpel:transitionCondition expressionLanguage="{$xpathURN}">
-              true()
-            </bpel:transitionCondition>
           </bpel:source>
         </bpel:sources>
       </xsl:if>

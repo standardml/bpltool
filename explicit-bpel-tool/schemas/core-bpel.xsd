@@ -28,7 +28,7 @@
           <xsd:element ref="extensions" minOccurs="0" />
           <xsd:element ref="import" minOccurs="0"
             maxOccurs="unbounded" />
-          <xsd:element ref="scope" minOccurs="1" />
+          <xsd:group ref="activity" />
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:NCName" use="required" />
         <xsd:attribute name="targetNamespace" type="xsd:anyURI"

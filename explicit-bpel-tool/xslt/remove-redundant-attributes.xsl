@@ -27,18 +27,10 @@
     </xsl:copy>
   </xsl:template>
 
-  <xsl:template match="bpel:assign | bpel:compensate | bpel:compensateScope | bpel:empty | bpel:exit | bpel:forEach | bpel:if | bpel:invoke | bpel:pick | bpel:receive | bpel:repeatUntil | bpel:reply | bpel:rethrow | bpel:sequence | bpel:throw | bpel:validate | bpel:wait | bpel:while">
+  <xsl:template match="bpel:assign | bpel:compensate | bpel:compensateScope | bpel:empty | bpel:exit | bpel:forEach | bpel:if | bpel:invoke | bpel:pick | bpel:receive | bpel:repeatUntil | bpel:reply | bpel:rethrow | bpel:scope | bpel:sequence | bpel:throw | bpel:validate | bpel:wait | bpel:while">
     <xsl:copy>
       <xsl:copy-of select="@*[not(namespace-uri() = '' and
-                                  (local-name() = 'suppressJoinFailure' or
-                                   local-name() = 'name'))]" />
-      <xsl:apply-templates />
-    </xsl:copy>
-  </xsl:template>
-
-  <xsl:template match="bpel:scope">
-    <xsl:copy>
-      <xsl:copy-of select="@*[not(namespace-uri() = '' and local-name() = 'suppressJoinFailure')]" />
+                                  local-name() = 'suppressJoinFailure')]" />
       <xsl:apply-templates />
     </xsl:copy>
   </xsl:template>

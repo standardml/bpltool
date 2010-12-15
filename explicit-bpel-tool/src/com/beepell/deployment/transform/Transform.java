@@ -56,21 +56,21 @@ public class Transform {
             "remove-documentation.xsl",                  // Remove human readable documentation
             "default-message-exchanges.xsl",             // Make default message exchanges explicit
             "process.xsl",                               // Move process scope to an explicit scope
-            "repeatUntil.xsl",                           // repeatUntil to while
-            "if.xsl",                                    // Add missing else-clause and turn elseif into nested if
+            "repeatUntil.xsl",                           // <repeatUntil> to <while>
+            "if.xsl",                                    // Add missing <else>-clause and turn <elseif> into nested <if>
             "scope.xsl",                                 // Variable initializations
             "receive.xsl",                               // Change <receive>s into <pick>s
-            "invoke.xsl",
-            "pick.xsl",
-            "reply.xsl",
-            "default-handlers.xsl",
+            "invoke.xsl",                                // Make implicit <scope> and assignments explicit for <invoke>
+            "pick.xsl",                                  // Make implicit <scope> and assignments explicit for <pick>
+            "reply.xsl",                                 // Make implicit <scope> and assignments explicit for <reply>
+            "default-handlers.xsl",                      // Make the default handlers explicit
             "sequence.xsl",                              // Change <sequence>s into <flow>s
+            "default-conditions.xsl",                    // Make the default conditions explicit
+            "default-attribute-values-simple.xsl",       // Make the simple default attribute values explicit
+            "default-attribute-values-global.xsl",       // Make the global default attribute values explicit
+            "default-attribute-values-inherited.xsl",    // Make the inherited default attribute values explicit
             "standard-attributes-elements.xsl",          // Move standard attributes and elements to wrapper <flow>s
-            "default-conditions.xsl",
-            "default-attribute-values-simple.xsl",
-            "default-attribute-values-global.xsl", 
-            "default-attribute-values-inherited.xsl", 
-            "remove-redundant-attributes.xsl"
+            "remove-redundant-attributes.xsl"            // Remove redundant attributes
             };
     
     private boolean validate = true;
@@ -85,7 +85,7 @@ public class Transform {
         Document bpel = null, cbpel = null;
         try {
             String freshPrefix = getFreshPrefix(source);
-            System.out.println("Unique Prefix: " + freshPrefix);
+            System.out.println("Fresh Prefix: " + freshPrefix);
 
             bpel = parse(source, this.bpelSchema);
             cbpel = transform(bpel, freshPrefix);
@@ -132,12 +132,12 @@ public class Transform {
      * Transforms a WS-BPEL Document into an Core BPEL Document.
      * 
      * @param document The WS-BPEL Document.
-     * @param uniquePrefix The prefix used when generating variable and link
+     * @param freshPrefix The prefix used when generating variable and link
      *            names. This must be unique within the original document.
      * @return The E-BPEL Document.
      * @throws TransformerException If the transformation fails.
      */
-    private Document transform(Document document, String uniquePrefix) throws TransformerException {
+    private Document transform(Document document, String freshPrefix) throws TransformerException {
         try {
             String systemId = document.getBaseURI().toString();
 
@@ -149,7 +149,7 @@ public class Transform {
 
                 System.out.println("Applying transformation 'xslt" + File.separator + sheets[index] + "'.");
                 transformer = getTransformer(sheets[index]);
-                transformer.setParameter("uniquePrefix", uniquePrefix);
+                transformer.setParameter("freshPrefix", freshPrefix);
                 result = new DOMResult();
                 transformer.transform(source, result);
                 source = new DOMSource(result.getNode(), systemId);

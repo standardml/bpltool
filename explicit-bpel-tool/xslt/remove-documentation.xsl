@@ -15,7 +15,6 @@
     </xsl:copy>
   </xsl:template>
   
-  <xsl:template match="bpel:documentation">
-  </xsl:template>
+  <xsl:template match="bpel:documentation" />
   
 </xsl:stylesheet>

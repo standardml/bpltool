@@ -3,7 +3,6 @@
 <!-- Move the <scope>-parts of an <invoke> into an explicit enclosing <scope>. -->
 <!-- Also, make temporary variables and assignments, due to the use of <toParts>,
      <fromParts>, and/or references to element variables, explicit. -->
-<!-- NB: this template should _not_ be applied by itself - it is included by irra.xsl. -->
 
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"

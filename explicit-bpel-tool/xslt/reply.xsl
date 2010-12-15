@@ -2,7 +2,6 @@
 
 <!-- Make temporary variables and assignments, due to the use of <toParts>,
      and/or references to an element variable, explicit. -->
-<!-- NB: this template should _not_ be applied by itself - it is included by irra.xsl. -->
 
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"

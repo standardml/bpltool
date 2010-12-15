@@ -17,8 +17,17 @@
       <xsl:apply-templates />
     </xsl:copy>
   </xsl:template>
+  
+  <xsl:template match="bpel:process[bpel:variables/bpel:variable/bpel:from]">
+    <xsl:copy>
+      <xsl:copy-of select="@*" />
+      <xsl:apply-templates select="bpel:extensions | bpel:import" />
+      <xsl:call-template name="scope" />
+    </xsl:copy>
+  </xsl:template>
 
-  <xsl:template match="bpel:process[bpel:variables/bpel:variable/bpel:from] | bpel:scope[bpel:variables/bpel:variable/bpel:from]">
+  <xsl:template match="bpel:scope[bpel:variables/bpel:variable/bpel:from]"
+                name="scope">
 
     <bpel:scope>
       <bpel:variables>
@@ -55,10 +64,11 @@
           </bpel:assign> 
         </bpel:scope>
       
-        <xsl:copy>
-          <xsl:copy-of select="@*"/>
-          <xsl:apply-templates select="*[not(self::bpel:variables)]" />      
-        </xsl:copy>
+        <bpel:scope>
+          <xsl:copy-of select="@*[not(namespace-uri() = '' and
+                                      local-name() = 'targetNamespace')]"/>
+          <xsl:apply-templates select="*[not(self::bpel:variables or self::bpel:extensions or self::bpel:import)]" />      
+        </bpel:scope>
         
       </bpel:sequence>
     </bpel:scope>
