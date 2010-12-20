@@ -25,9 +25,7 @@
   
   <xsl:template match="bpel:process">
     <xsl:copy>
-      <xsl:copy-of select="@*[not(namespace-uri() = '' and
-                                  (local-name() = 'expressionLanguage' or
-                                   local-name() = 'queryLanguage'))]" />
+      <xsl:copy-of select="@*" />
       <xsl:apply-templates>
         <xsl:with-param name="expressionLanguage">
           <xsl:choose>
