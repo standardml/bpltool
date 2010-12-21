@@ -54,14 +54,26 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+
+<Reference Include="Microsoft.GLEE">
+  <HintPath>..\..\..\..\Program Files\Microsoft Research\GLEE\bin\Microsoft.GLEE.dll</HintPath>
+</Reference> 
     <Reference Include="Microsoft.GLEE">
       <HintPath>..\ExternalCode\GLEE\bin\Microsoft.GLEE.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.GLEE.Drawing">
+      <HintPath>..\..\..\..\Program Files\Microsoft Research\GLEE\bin\Microsoft.GLEE.Drawing.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.GLEE.Drawing">
       <HintPath>..\ExternalCode\GLEE\bin\Microsoft.GLEE.Drawing.dll</HintPath>
+
+    </Reference>
+    <Reference Include="Microsoft.GLEE.GraphViewerGDI">
+      <HintPath>..\..\..\..\Program Files\Microsoft Research\GLEE\bin\Microsoft.GLEE.GraphViewerGDI.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.GLEE.GraphViewerGDI">
       <HintPath>..\ExternalCode\GLEE\bin\Microsoft.GLEE.GraphViewerGDI.dll</HintPath>
+
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">

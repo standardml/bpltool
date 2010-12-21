@@ -38,6 +38,7 @@
   <ItemGroup>
     <Reference Include="AjaxControlToolkit">
       <HintPath>..\ExternalCode\AjaxControlToolkit\AjaxControlToolkit.dll</HintPath>
+      <HintPath>..\ExternalReferences\AjaxControls\AjaxControlToolkit.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
