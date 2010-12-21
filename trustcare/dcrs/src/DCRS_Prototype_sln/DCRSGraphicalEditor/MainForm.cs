@@ -600,6 +600,18 @@ namespace DCRSGraphicalEditor
             }
         }
 
+        private void whiteToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            executionPanel.BackColor = Color.White;
+            processPanel.BackColor = Color.White;
+            groupBox1.BackColor = SystemColors.Control;
+        }
+
+        private void whiteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            processPanel.BackColor = SystemColors.Control;
+        }
+
 
     }
 }

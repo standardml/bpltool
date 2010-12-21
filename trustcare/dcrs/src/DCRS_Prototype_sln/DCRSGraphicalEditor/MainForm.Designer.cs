@@ -59,6 +59,10 @@
             this.tpProcessModel = new System.Windows.Forms.TabPage();
             this.tpExecution = new System.Windows.Forms.TabPage();
             this.executionPanel = new System.Windows.Forms.Panel();
+            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.backgroundColorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.whiteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.whiteToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.processPanel = new DCRSGraphicalEditor.DoubleBufferPanel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.clbRoles = new System.Windows.Forms.CheckedListBox();
@@ -81,7 +85,8 @@
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.processToolStripMenuItem,
-            this.simulationToolStripMenuItem});
+            this.simulationToolStripMenuItem,
+            this.optionsToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(1016, 24);
@@ -176,7 +181,7 @@
             this.removeNodeToolStripMenuItem,
             this.removePrimitiveToolStripMenuItem});
             this.cmProcessPanel.Name = "cmProcessPanel";
-            this.cmProcessPanel.Size = new System.Drawing.Size(168, 180);
+            this.cmProcessPanel.Size = new System.Drawing.Size(168, 158);
             this.cmProcessPanel.Opening += new System.ComponentModel.CancelEventHandler(this.cmProcessPanel_Opening);
             // 
             // addConditionToolStripMenuItem
@@ -346,6 +351,37 @@
             this.executionPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.executionPanel_Paint);
             this.executionPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.executionPanel_MouseUp);
             // 
+            // optionsToolStripMenuItem
+            // 
+            this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.backgroundColorToolStripMenuItem});
+            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(56, 20);
+            this.optionsToolStripMenuItem.Text = "Options";
+            // 
+            // backgroundColorToolStripMenuItem
+            // 
+            this.backgroundColorToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.whiteToolStripMenuItem,
+            this.whiteToolStripMenuItem1});
+            this.backgroundColorToolStripMenuItem.Name = "backgroundColorToolStripMenuItem";
+            this.backgroundColorToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.backgroundColorToolStripMenuItem.Text = "Background Color";
+            // 
+            // whiteToolStripMenuItem
+            // 
+            this.whiteToolStripMenuItem.Name = "whiteToolStripMenuItem";
+            this.whiteToolStripMenuItem.Size = new System.Drawing.Size(120, 22);
+            this.whiteToolStripMenuItem.Text = "Default";
+            this.whiteToolStripMenuItem.Click += new System.EventHandler(this.whiteToolStripMenuItem_Click);
+            // 
+            // whiteToolStripMenuItem1
+            // 
+            this.whiteToolStripMenuItem1.Name = "whiteToolStripMenuItem1";
+            this.whiteToolStripMenuItem1.Size = new System.Drawing.Size(120, 22);
+            this.whiteToolStripMenuItem1.Text = "White";
+            this.whiteToolStripMenuItem1.Click += new System.EventHandler(this.whiteToolStripMenuItem1_Click);
+            // 
             // processPanel
             // 
             this.processPanel.ContextMenuStrip = this.cmProcessPanel;
@@ -464,6 +500,10 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnRoles;
         private System.Windows.Forms.DataGridView dgvRoles;
         private System.Windows.Forms.DataGridView dgvPrincipals;
+        private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem backgroundColorToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem whiteToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem whiteToolStripMenuItem1;
     }
 }
 
