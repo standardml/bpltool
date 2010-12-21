@@ -204,6 +204,8 @@ namespace DCRSUIApplication
 
             stateManager.Specification = DCRSExamples.GetArrangeMeetingSample();
 
+            stateManager.StateMode = AutomatonMode.FiniteSate;
+
             Dictionary<long,AtomicState> stateSpace = stateManager.ComputeStateSpace();
 
 

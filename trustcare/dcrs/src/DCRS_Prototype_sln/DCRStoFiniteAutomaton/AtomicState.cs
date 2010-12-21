@@ -1,22 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ITU.DK.DCRS.CommonTypes;
 
 namespace DCRStoFiniteAutomaton
 {
-    public class AtomicState
+    public abstract class AtomicState
     {
         private readonly short transition;
 
-        private readonly StateVector parentState;
-        
-        public StateVector StateVector  = new StateVector();
+        protected readonly StateVector ParentState;
 
-        //public string Name = string.Empty;
+        public StateVector StateVector = new StateVector();
 
-        StringBuilder printBuilder = new StringBuilder();
+        readonly StringBuilder printBuilder = new StringBuilder();
 
         //public Dictionary<short, long> IncomingTranssitions = new Dictionary<short, long>();
 
@@ -24,13 +21,13 @@ namespace DCRStoFiniteAutomaton
 
         public TransitionList Transitions = new TransitionList();
 
-        public AtomicState(long stateNumber, short transition, StateVector parentState)
+        protected AtomicState(long stateNumber, short transition, StateVector parentState)
         {
             StateNumber = stateNumber;
 
             this.transition = transition;
 
-            this.parentState = parentState;
+            ParentState = parentState;
         }
 
 
@@ -42,7 +39,7 @@ namespace DCRStoFiniteAutomaton
         }
 
 
-        public StateVector ComputeState()
+        public virtual StateVector ComputeState()
         {
 
             UpdateExecutedEventsSet();
@@ -57,7 +54,7 @@ namespace DCRStoFiniteAutomaton
 
             ComputeEnabledTransitions();
 
-            ComputeCurrentState();
+            //ComputeCurrentState();
 
 
             return StateVector;
@@ -67,7 +64,7 @@ namespace DCRStoFiniteAutomaton
         private void UpdateExecutedEventsSet()
         {
             // First Copy the set of executed Events (E).
-            StateVector.ExecutedEvents.AddRange(parentState.ExecutedEvents.ToArray());
+            StateVector.ExecutedEvents.AddRange(ParentState.ExecutedEvents.ToArray());
 
             //// Add the current transition to the E set.
             //if (!StateVector.ExecutedEvents.Contains(LeadingTransition) && (LeadingTransition != -1))
@@ -75,20 +72,20 @@ namespace DCRStoFiniteAutomaton
 
             // NOTE: Chnages for new TAU action.. Start
             // Add the current transition to the E set, if it is not a TAU action and not dummy action at the start state.
-            if (!StateVector.ExecutedEvents.Contains(LeadingTransition) && (LeadingTransition != -1) && (LeadingTransition != Utilities.TAU_ACTION ))
+            if (!StateVector.ExecutedEvents.Contains(LeadingTransition) && (LeadingTransition != -1) && (LeadingTransition != Utilities.TAU_ACTION))
                 StateVector.ExecutedEvents.Add(LeadingTransition);
             // NOTE: Chnages for new TAU action.. End.
 
 
             StateVector.ExecutedEvents.Sort();
-            
+
         }
 
         private void UpdateIncludedEventSet()
         {
-            
+
             // First Copy the set of Included Events (E).
-            StateVector.IncludedEvents.AddRange(parentState.IncludedEvents.ToArray());
+            StateVector.IncludedEvents.AddRange(ParentState.IncludedEvents.ToArray());
 
             // Conditions Relation in Specification is in the following format.
             // PM (0) >> S(1) := 1,0
@@ -97,14 +94,14 @@ namespace DCRStoFiniteAutomaton
 
             // NOTE: Chnages for new TAU action.. Start
             // If the leading transition is a TAU action, then dont go further to check
-            if(LeadingTransition == Utilities.TAU_ACTION)
+            if (LeadingTransition == Utilities.TAU_ACTION)
             {
                 StateVector.IncludedEvents.Sort();
 
                 return;
             }
-            
-            
+
+
             // NOTE: Chnages for new TAU action.. End.
 
 
@@ -167,7 +164,7 @@ namespace DCRStoFiniteAutomaton
 
             foreach (var enabledEvent in StateVector.EnabledTransitions.ToArray())
             {
-                
+
                 // Check for the condition relation.
                 for (int index = 0; index < StateManager.GetStateManagerInstance().Specification.Conditions.GetLength(0); index++)
                 {
@@ -189,7 +186,7 @@ namespace DCRStoFiniteAutomaton
                 {
                     if (StateManager.GetStateManagerInstance().Specification.MileStones[index, 0] != enabledEvent)
                         continue;
-                    
+
                     // If the event at first dimension (1 ie S) is in the included pending responses set, then
                     // remove the event at 0 dimesion (2 ie GM) from the list of enabled transitions.
                     if (StateVector.IncludedPendingResponseEvents.Contains(StateManager.GetStateManagerInstance().Specification.MileStones[index, 1]))
@@ -202,7 +199,7 @@ namespace DCRStoFiniteAutomaton
 
 
 
-            
+
 
 
 
@@ -223,7 +220,7 @@ namespace DCRStoFiniteAutomaton
         {
 
             // First Copy the set of Included Events (E).
-            StateVector.PendingResponseEvents.AddRange(parentState.PendingResponseEvents.ToArray());
+            StateVector.PendingResponseEvents.AddRange(ParentState.PendingResponseEvents.ToArray());
 
             // Response Relation in Specification is in the following format.
             // PM (0) >> S(1)  := 0,1
@@ -268,7 +265,7 @@ namespace DCRStoFiniteAutomaton
             {
 
                 if (StateVector.IncludedEvents.Contains(response))
-                    StateVector.IncludedPendingResponseEvents.Add(response); 
+                    StateVector.IncludedPendingResponseEvents.Add(response);
             }
 
             StateVector.IncludedPendingResponseEvents.Sort();
@@ -282,7 +279,7 @@ namespace DCRStoFiniteAutomaton
             // This set corresponds to I^R \ (I'^R') U {e}
             var allowableResponses = new List<short>();
 
-            foreach (short pendingResponseEvent in parentState.IncludedPendingResponseEvents)
+            foreach (short pendingResponseEvent in ParentState.IncludedPendingResponseEvents)
             {
                 if (!StateVector.IncludedPendingResponseEvents.Contains(pendingResponseEvent))
                     allowableResponses.Add(pendingResponseEvent);
@@ -299,39 +296,39 @@ namespace DCRStoFiniteAutomaton
 
 
             // Case 1: when M set is not empty..
-            if(parentState.HigherPendingResponseEvents.Count > 0)
+            if (ParentState.HigherPendingResponseEvents.Count > 0)
             {
 
-                parentState.HigherPendingResponseEvents.Sort();
+                ParentState.HigherPendingResponseEvents.Sort();
 
                 // if min(M set) belongs to allowable responses, Assign the reank of min(Mset) to staterank.
                 // else inherit rank from the parent.
-                StateVector.StateRank = (allowableResponses.Contains(parentState.HigherPendingResponseEvents[0]))
-                                            ? parentState.HigherPendingResponseEvents[0]
-                                            : parentState.StateRank;
+                StateVector.StateRank = (allowableResponses.Contains(ParentState.HigherPendingResponseEvents[0]))
+                                            ? ParentState.HigherPendingResponseEvents[0]
+                                            : ParentState.StateRank;
 
-                StateVector.StateAccepting = (allowableResponses.Contains(parentState.HigherPendingResponseEvents[0]))
+                StateVector.StateAccepting = (allowableResponses.Contains(ParentState.HigherPendingResponseEvents[0]))
                                                  ? true
                                                  : false;
             }
-            else if (parentState.IncludedPendingResponseEvents.Count > 0)
+            else if (ParentState.IncludedPendingResponseEvents.Count > 0)
             {
                 // Check whether parent min(I^R) belongs to allowable responses.
-                parentState.IncludedPendingResponseEvents.Sort();
+                ParentState.IncludedPendingResponseEvents.Sort();
 
                 // if min(I^R) belongs to allowable responses, Assign the reank of min(I^R) to staterank.
                 // else inherit rank from the parent.
-                StateVector.StateRank = (allowableResponses.Contains(parentState.IncludedPendingResponseEvents[0]))
-                                            ? parentState.IncludedPendingResponseEvents[0]
-                                            : parentState.StateRank;
+                StateVector.StateRank = (allowableResponses.Contains(ParentState.IncludedPendingResponseEvents[0]))
+                                            ? ParentState.IncludedPendingResponseEvents[0]
+                                            : ParentState.StateRank;
 
-                StateVector.StateAccepting = (allowableResponses.Contains(parentState.IncludedPendingResponseEvents[0]))
+                StateVector.StateAccepting = (allowableResponses.Contains(ParentState.IncludedPendingResponseEvents[0]))
                                                  ? true
                                                  : false;
             }
             else
             {
-                StateVector.StateRank = parentState.StateRank;
+                StateVector.StateRank = ParentState.StateRank;
 
                 StateVector.StateAccepting = false;
             }
@@ -372,7 +369,7 @@ namespace DCRStoFiniteAutomaton
                                               Utilities.GetTransitionLabel(
                                                   StateManager.GetStateManagerInstance().Specification.ActionList,
                                                   LeadingTransition)));
- 
+
             printBuilder.Append(string.Format("{0};", PrintList(StateVector.ExecutedEvents)));
 
             printBuilder.Append(string.Format("{0};", PrintList(StateVector.IncludedEvents)));
@@ -390,7 +387,7 @@ namespace DCRStoFiniteAutomaton
             printBuilder.Append(string.Format("{0};", PrintList(StateVector.EnabledTransitions)));
 
             printBuilder.Append(PrintTransitions());
-       
+
 
             return printBuilder.ToString();
 
@@ -398,7 +395,7 @@ namespace DCRStoFiniteAutomaton
 
         private static string PrintList(IEnumerable<short> list)
         {
-            
+
             //foreach (var listmember in list)
             //{
             //    //val += StateManager.GetStateManagerInstance().Specification.ActionList[listmember] + ",";
@@ -424,7 +421,7 @@ namespace DCRStoFiniteAutomaton
 
             foreach (Transition trans in Transitions)
             {
-                if(trans.Direction == TransitionDirection.Incoming)
+                if (trans.Direction == TransitionDirection.Incoming)
                 {
                     //transitionStr += string.Format("s{0}--{1}--s{2},", trans.StateNumber,
                     //                               StateManager.GetStateManagerInstance().Specification.ActionList[

@@ -20,6 +20,10 @@ namespace DCRStoFiniteAutomaton
 
         public DCRSModel Specification;
 
+        public AutomatonMode StateMode;
+
+        
+
         private Dictionary<long, AtomicState> reformatedStates;
         
         
@@ -51,7 +55,21 @@ namespace DCRStoFiniteAutomaton
             var parentStateVectorForInitialState = InitializeParentStateVectorForInitialState();
 
             // Call Initial state
-            var state0 = new AtomicState(_stateNumber, -1, parentStateVectorForInitialState);
+            AtomicState state0;
+            
+
+
+            // Call the respective automaton state class based on StateMode.
+            if(StateMode == AutomatonMode.Buchi)
+            {
+                state0 = new BuchiAutomatonState(_stateNumber, -1, parentStateVectorForInitialState);
+            }
+            else
+            {
+                state0 = new FiniteAutamatonState(_stateNumber, -1, parentStateVectorForInitialState);
+            }
+
+
 
             //var stateVector = state0.ComputeState();
 
@@ -238,7 +256,21 @@ namespace DCRStoFiniteAutomaton
             foreach (var enabledTransition in state.StateVector.EnabledTransitions)
             {
                 // Create a new state for each tranistion.
-                var childstate = new AtomicState(++_stateNumber, enabledTransition, state.StateVector);
+                AtomicState childstate;
+
+                // Call the respective automaton state class based on StateMode.
+                if (StateMode == AutomatonMode.Buchi)
+                {
+                    childstate = new BuchiAutomatonState(++_stateNumber, enabledTransition, state.StateVector);
+                }
+                else
+                {
+                    childstate = new FiniteAutamatonState(++_stateNumber, enabledTransition, state.StateVector);
+                }
+
+
+                //childstate = new AtomicState(++_stateNumber, enabledTransition, state.StateVector);
+
 
                 // Update out going transition from state
                 state.Transitions.Add(new Transition
