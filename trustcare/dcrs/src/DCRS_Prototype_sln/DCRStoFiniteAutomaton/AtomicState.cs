@@ -47,14 +47,15 @@ namespace DCRStoFiniteAutomaton
 
             UpdateExecutedEventsSet();
 
-
             UpdateIncludedEventSet();
 
-            ComputeEnabledTransitions();
+            //ComputeEnabledTransitions();
 
             UpdateResponseEvents();
 
             UpdateIncludedResponseEvents();
+
+            ComputeEnabledTransitions();
 
             ComputeCurrentState();
 
@@ -166,6 +167,8 @@ namespace DCRStoFiniteAutomaton
 
             foreach (var enabledEvent in StateVector.EnabledTransitions.ToArray())
             {
+                
+                // Check for the condition relation.
                 for (int index = 0; index < StateManager.GetStateManagerInstance().Specification.Conditions.GetLength(0); index++)
                 {
                     if (StateManager.GetStateManagerInstance().Specification.Conditions[index, 0] != enabledEvent)
@@ -176,7 +179,31 @@ namespace DCRStoFiniteAutomaton
                             enabledEvent);
                     }
                 }
+
+
+                // Check for the milestone relation.
+                // Note: Rao 2010-12-20: Added logic for milestone relation.
+                // Mile stone relation is specified as follows.
+                // S (1) ---><> GM (2):= [2,1]
+                for (int index = 0; index < StateManager.GetStateManagerInstance().Specification.MileStones.GetLength(0); index++)
+                {
+                    if (StateManager.GetStateManagerInstance().Specification.MileStones[index, 0] != enabledEvent)
+                        continue;
+                    
+                    // If the event at first dimension (1 ie S) is in the included pending responses set, then
+                    // remove the event at 0 dimesion (2 ie GM) from the list of enabled transitions.
+                    if (StateVector.IncludedPendingResponseEvents.Contains(StateManager.GetStateManagerInstance().Specification.MileStones[index, 1]))
+                    {
+                        StateVector.EnabledTransitions.Remove(
+                            enabledEvent);
+                    }
+                }
             }
+
+
+
+            
+
 
 
 
@@ -424,3 +451,4 @@ namespace DCRStoFiniteAutomaton
 
     }
 }
+

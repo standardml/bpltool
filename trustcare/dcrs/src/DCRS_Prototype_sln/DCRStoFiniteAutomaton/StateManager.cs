@@ -329,6 +329,15 @@ namespace DCRStoFiniteAutomaton
 
             parentVectorForIniatialState.IncludedEvents.AddRange(Specification.ActionList.Keys.ToArray());
 
+            for (var index = 0; index < Specification.InitialState.GetLength(0); index++)
+            {
+                if(Specification.InitialState[index,1] == 0)
+                {
+                    parentVectorForIniatialState.IncludedEvents.Remove((short) index);
+                }
+            }
+
+
             parentVectorForIniatialState.IncludedEvents.Sort();
 
             parentVectorForIniatialState.StateRank = 0;

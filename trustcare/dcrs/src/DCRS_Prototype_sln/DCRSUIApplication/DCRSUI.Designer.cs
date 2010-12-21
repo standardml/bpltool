@@ -637,7 +637,7 @@
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(125, 41);
             this.button2.TabIndex = 15;
-            this.button2.Text = "Generate State space for GiveMedicine";
+            this.button2.Text = "Generate State space for ....";
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 

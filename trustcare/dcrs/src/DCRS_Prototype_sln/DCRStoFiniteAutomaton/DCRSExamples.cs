@@ -160,6 +160,40 @@ namespace DCRStoFiniteAutomaton
 
 
 
+        public static DCRSModel GetArrangeMeetingSample()
+        {
+
+
+            var actionsList = new Dictionary<short, string> { { 0, "Cc" }, { 1, "PdLO" }, { 2, "PdDA" }, { 3, "ALO" }, { 4, "ADA" }, { 5, "Hm" } };
+
+
+            // {pldo, cc}, (plda, pldo)
+            var conditions = new short[2, 2] { { 1, 0 }, { 2, 1 } };
+
+            var strongConditions = new short[0, 0];
+
+            var responses = new short[7,2] {{0, 1}, {1, 4}, {2, 3}, {1, 5}, {2, 5}, {3, 5}, {4, 5}};
+
+            // {pldo, cc}, (plda, pldo)
+            var milestones = new short[4,2] {{5, 1}, {5, 2}, {5, 3}, {5, 4}};
+
+            var includes = new short[2, 2] { { 1, 4 }, { 2, 3 } };
+
+            var excludes = new short[4,2] {{3, 4}, {4, 3}, {3, 3}, {4, 4}};
+
+            var initialState = new short[6, 2] { { 0, 1 }, { 1, 1 }, { 2, 1 }, { 3, 0 }, { 4, 0 }, { 5, 1 } };
+
+            var dcrsmodel = new DCRSModel("Arrange-Meeting-Example", actionsList, includes, excludes, responses,
+                                          conditions, strongConditions, milestones) {InitialState = initialState};
+
+
+
+            return dcrsmodel;
+
+
+        }
+
+
 
 
     }

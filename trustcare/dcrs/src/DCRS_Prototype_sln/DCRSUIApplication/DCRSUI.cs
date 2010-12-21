@@ -196,9 +196,13 @@ namespace DCRSUIApplication
             //stateManager.Specification = DCRSExamples.GetTwoSelfResponseEventsExample();
             //stateManager.Specification = DCRSExamples.GetGiveMedicineFullExample();
 
-            stateManager.Specification = DCRSExamples.GetGiveMedicineSmallExample();
+            //stateManager.Specification = DCRSExamples.GetGiveMedicineSmallExample();
+
+
 
             //stateManager.Specification = DCRSExamples.GetGiveMedicineSmallExampleWithTauAction();
+
+            stateManager.Specification = DCRSExamples.GetArrangeMeetingSample();
 
             Dictionary<long,AtomicState> stateSpace = stateManager.ComputeStateSpace();
 
@@ -1057,6 +1061,11 @@ namespace DCRSUIApplication
         private void button10_Click(object sender, EventArgs e)
         {
             //DCRSWorkflowEngine.ProcessRepositoryProvider.CloseNotificationHost();
+        }
+
+        private void button11_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

@@ -15,6 +15,7 @@ namespace ITU.DK.DCRS.CommonTypes.OldProcessDefinition
         private readonly short[,] responses;
         private readonly short[,] conditions;
         private readonly short[,] strongconditions;
+        private readonly short[,] milestones;
         private readonly string modelName;
         /// <summary>
         /// The first column is an Id of an action and the 2nd column referes to included/excluded : 1\0
@@ -53,6 +54,23 @@ namespace ITU.DK.DCRS.CommonTypes.OldProcessDefinition
 
 
 
+        public DCRSModel(string modelName, Dictionary<short, string> actionList, short[,] includes, short[,] excludes, short[,] responses, short[,] conditions, short[,] strongconditions, short [,] milestones)
+        {
+            this.actionList = actionList;
+
+            this.includes = includes;
+            this.excludes = excludes;
+            this.responses = responses;
+            this.conditions = conditions;
+            this.strongconditions = strongconditions;
+
+            this.milestones = milestones;
+            
+            this.modelName = modelName;
+        }
+
+
+
         public string ModelName
         {
             get { return modelName; }
@@ -67,6 +85,12 @@ namespace ITU.DK.DCRS.CommonTypes.OldProcessDefinition
         public short[,] StrongConditions
         {
             get { return strongconditions; }
+        }
+
+
+        public short[,] MileStones
+        {
+            get { return milestones; }
         }
 
 
