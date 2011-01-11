@@ -202,7 +202,7 @@ namespace DCRSUIApplication
 
             //stateManager.Specification = DCRSExamples.GetGiveMedicineSmallExampleWithTauAction();
 
-            stateManager.Specification = DCRSExamples.GetArrangeMeetingSample();
+            stateManager.Specification = DCRSExamples.GetArrangeMeetingSampleShort();
 
             stateManager.StateMode = AutomatonMode.FiniteSate;
 

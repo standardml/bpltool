@@ -43,6 +43,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCRSGraphicalEditor", "DCRS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkflowEngineHost", "WorkflowEngineHost\WorkflowEngineHost.csproj", "{AA774FC7-A3E4-45CC-B664-15BFE30E5DE9}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ExternalDlls", "ExternalDlls", "{D1CDE504-7114-42FC-9BC4-E8FC3FC1B865}"
+	ProjectSection(SolutionItems) = preProject
+		ExternalDlls\AjaxControlToolkit.dll = ExternalDlls\AjaxControlToolkit.dll
+		ExternalDlls\Microsoft.GLEE.dll = ExternalDlls\Microsoft.GLEE.dll
+		ExternalDlls\Microsoft.GLEE.Drawing.dll = ExternalDlls\Microsoft.GLEE.Drawing.dll
+		ExternalDlls\Microsoft.GLEE.GraphViewerGDI.dll = ExternalDlls\Microsoft.GLEE.GraphViewerGDI.dll
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
 		Svn-Managed = True
