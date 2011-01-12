@@ -359,6 +359,9 @@ namespace WindowsApplication
         //g.GraphAttr.NodeAttr.Padding = 3;
         Edge edge = (Edge)g.AddEdge("S24", "27");
         edge.Attr.Label = "Edge Label Test";
+        
+        Style style = new Style();
+        //edge.Attr.AddStyle();
 
         gViewer.Graph = g;
 

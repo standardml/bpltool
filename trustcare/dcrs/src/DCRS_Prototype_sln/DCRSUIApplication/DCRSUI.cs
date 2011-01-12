@@ -263,6 +263,21 @@ namespace DCRSUIApplication
                         //node.AddOutEdge();
                         var edge = graph.AddEdge(nodeId, edgelabel, targetNodeId);
 
+                        if (edgelabel.EndsWith("DA"))
+                        {
+                            edge.EdgeAttr.AddStyle(Style.Dotted);
+
+                            edge.Attr.Color = Color.Red;
+                        }
+                        else
+                        {
+                            edge.Attr.Color = Color.Green;
+
+ 
+                        }
+
+                        edge.Attr.LineWidth = 2;
+
                         node.AddOutEdge(edge);
 
                        

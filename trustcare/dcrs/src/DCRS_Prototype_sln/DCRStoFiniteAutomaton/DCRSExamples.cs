@@ -198,7 +198,7 @@ namespace DCRStoFiniteAutomaton
         {
 
 
-            var actionsList = new Dictionary<short, string> { { 0, "PdLO" }, { 1, "PdDA" }, { 2, "ALO" }, { 3, "ADA" }, { 4, "HmLO" } };
+            var actionsList = new Dictionary<short, string> { { 0, "PdLO" }, { 1, "PdDA" }, { 2, "ALO" }, { 3, "ADA" }, { 4, "Hm" } };
 
 
             // {pldo, cc}, (plda, pldo)
