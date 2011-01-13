@@ -170,7 +170,10 @@ namespace DCRStoFiniteAutomaton
                 {
                     if (StateManager.GetStateManagerInstance().Specification.Conditions[index, 0] != enabledEvent)
                         continue;
-                    if (!StateVector.ExecutedEvents.Contains(StateManager.GetStateManagerInstance().Specification.Conditions[index, 1]))
+
+                    // If the parent condition event is not executed and included then remove this event.
+                    if ((!StateVector.ExecutedEvents.Contains(StateManager.GetStateManagerInstance().Specification.Conditions[index, 1]))
+                        && (StateVector.IncludedEvents.Contains(StateManager.GetStateManagerInstance().Specification.Conditions[index, 1])))
                     {
                         StateVector.EnabledTransitions.Remove(
                             enabledEvent);
@@ -189,7 +192,8 @@ namespace DCRStoFiniteAutomaton
 
                     // If the event at first dimension (1 ie S) is in the included pending responses set, then
                     // remove the event at 0 dimesion (2 ie GM) from the list of enabled transitions.
-                    if (StateVector.IncludedPendingResponseEvents.Contains(StateManager.GetStateManagerInstance().Specification.MileStones[index, 1]))
+                    if ((StateVector.IncludedPendingResponseEvents.Contains(StateManager.GetStateManagerInstance().Specification.MileStones[index, 1]))
+                        && (StateVector.IncludedEvents.Contains(StateManager.GetStateManagerInstance().Specification.MileStones[index, 1])))
                     {
                         StateVector.EnabledTransitions.Remove(
                             enabledEvent);

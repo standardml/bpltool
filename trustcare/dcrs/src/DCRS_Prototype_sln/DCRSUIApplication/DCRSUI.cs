@@ -181,14 +181,14 @@ namespace DCRSUIApplication
         private void button2_Click(object sender, EventArgs e)
         {
             
-            if(string.IsNullOrEmpty(textBoxStatespace.Text))
-            {
+            //if(string.IsNullOrEmpty(textBoxStatespace.Text))
+            //{
 
-                MessageBox.Show("Select the folder path!", "Invalid Folder Path!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            //    MessageBox.Show("Select the folder path!", "Invalid Folder Path!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
-                return;
+            //    return;
 
-            }
+            //}
 
 
             var stateManager = StateManager.GetStateManagerInstance();
@@ -202,30 +202,35 @@ namespace DCRSUIApplication
 
             //stateManager.Specification = DCRSExamples.GetGiveMedicineSmallExampleWithTauAction();
 
-            stateManager.Specification = DCRSExamples.GetArrangeMeetingSampleShort();
+            //stateManager.Specification = DCRSExamples.GetArrangeMeetingSampleShort();
+
+            stateManager.Specification = DCRSExamples.GetArrangeMeetingSampleShortWithCreateCase_withmilestones();
 
             stateManager.StateMode = AutomatonMode.FiniteSate;
 
             Dictionary<long,AtomicState> stateSpace = stateManager.ComputeStateSpace();
 
 
-            string path = string.Format(@"{0}\{1}.csv", textBoxStatespace.Text, stateManager.Specification.ModelName);
-
-            StreamWriter writer = new StreamWriter(path);
-
-            writer.WriteLine("StateNumber;LeadingTransition;ExecutedEvents;IncludedEvents;PendingResponseEvents;IncludedPendingResponseEvents;StateRank;HigherPendingResponseEvents;StateAccepting;EnabledTransitions;Transitions;");
-
-
-            foreach (var keyvalPair in stateSpace)
+            if (!string.IsNullOrEmpty(textBoxStatespace.Text))
             {
-                writer.WriteLine(keyvalPair.Value);
+                string path = string.Format(@"{0}\{1}.csv", textBoxStatespace.Text, stateManager.Specification.ModelName);
+
+                StreamWriter writer = new StreamWriter(path);
+
+                writer.WriteLine("StateNumber;LeadingTransition;ExecutedEvents;IncludedEvents;PendingResponseEvents;IncludedPendingResponseEvents;StateRank;HigherPendingResponseEvents;StateAccepting;EnabledTransitions;Transitions;");
+
+
+                foreach (var keyvalPair in stateSpace)
+                {
+                    writer.WriteLine(keyvalPair.Value);
+
+                }
+
+                writer.Flush();
+
+                writer.Close();
                 
             }
-
-            writer.Flush();
-
-            writer.Close();
-
 
 
 
@@ -241,7 +246,14 @@ namespace DCRSUIApplication
 
                 var node = graph.AddNode(nodeId);
 
-                if (keyValPair.Value.StateVector.StateAccepting) node.Attr.Shape = Shape.DoubleCircle;
+                // Node attributes
+                if (keyValPair.Value.StateVector.StateAccepting) 
+                {
+                    node.Attr.Shape = Shape.DoubleCircle;
+
+                    node.Attr.Fillcolor = new Color(204,255,153);
+
+                }
                 
                 foreach (Transition transition in keyValPair.Value.Transitions)
                 {
@@ -263,20 +275,21 @@ namespace DCRSUIApplication
                         //node.AddOutEdge();
                         var edge = graph.AddEdge(nodeId, edgelabel, targetNodeId);
 
-                        if (edgelabel.EndsWith("DA"))
-                        {
-                            edge.EdgeAttr.AddStyle(Style.Dotted);
+                        //if (edgelabel.EndsWith("DA"))
+                        //{
+                        //    edge.EdgeAttr.AddStyle(Style.Dotted);
 
-                            edge.Attr.Color = Color.Red;
-                        }
-                        else
-                        {
-                            edge.Attr.Color = Color.Green;
+                        //    edge.Attr.Color = Color.Red;
+                        //}
+                        //else
+                        //{
+                        //    edge.Attr.Color = Color.Green;
 
- 
-                        }
+                        //}
 
                         edge.Attr.LineWidth = 2;
+
+                        
 
                         node.AddOutEdge(edge);
 

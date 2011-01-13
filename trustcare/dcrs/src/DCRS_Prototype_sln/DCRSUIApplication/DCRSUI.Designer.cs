@@ -620,7 +620,6 @@
             this.textBoxStatespace.Name = "textBoxStatespace";
             this.textBoxStatespace.Size = new System.Drawing.Size(287, 20);
             this.textBoxStatespace.TabIndex = 18;
-            this.textBoxStatespace.Text = "C:\\PhDWork\\DCRS_Prototype_sln\\Documents";
             // 
             // label8
             // 

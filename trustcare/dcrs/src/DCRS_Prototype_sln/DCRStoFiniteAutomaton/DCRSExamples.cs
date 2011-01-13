@@ -229,5 +229,72 @@ namespace DCRStoFiniteAutomaton
 
 
 
+        public static DCRSModel GetArrangeMeetingSampleShortWithCreateCase()
+        {
+
+
+            var actionsList = new Dictionary<short, string> { { 0, "PdLO" }, { 1, "PdDA" }, { 2, "ALO" }, { 3, "ADA" }, { 4, "Hm" }, { 5, "Cc" }, { 6, "Uc" } };
+
+
+            // {pldo, cc}, (plda, pldo)
+            var conditions = new short[7, 2] { { 1, 0 }, { 3, 0 }, { 2, 1 }, { 0, 5 }, { 6, 5 }, { 4, 3 }, { 4, 2 } };
+
+            var strongConditions = new short[0, 0];
+
+            var responses = new short[4, 2] { { 0, 3 }, { 1, 2 }, { 0, 4 }, { 5, 0 } };
+
+            // {pldo, cc}, (plda, pldo)
+            var milestones = new short[0,2] {};
+
+            var includes = new short[4,2] {{0, 1}, {1, 0}, {0, 3}, {1, 2}};
+
+            var excludes = new short[7,2] {{0, 0}, {1, 1}, {0, 2}, {2, 0}, {1, 3}, {3, 1}, {5, 5}};
+
+            var initialState = new short[5, 2] { { 0, 1 }, { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 } };
+
+            var dcrsmodel = new DCRSModel("Arrange-Meeting-short-Example", actionsList, includes, excludes, responses,
+                                          conditions, strongConditions, milestones) { InitialState = initialState };
+
+
+
+            return dcrsmodel;
+
+
+        }
+
+
+        public static DCRSModel GetArrangeMeetingSampleShortWithCreateCase_withmilestones()
+        {
+
+
+            var actionsList = new Dictionary<short, string> { { 0, "PdLO" }, { 1, "PdDA" }, { 2, "ALO" }, { 3, "ADA" }, { 4, "Hm" }, { 5, "Cc" } };
+
+
+            // {pldo, cc}, (plda, pldo)
+            var conditions = new short[4,2] {{1, 0}, {3, 0}, {2, 1}, {0, 5}};
+
+            var strongConditions = new short[0, 0];
+
+            var responses = new short[4, 2] { { 0, 3 }, { 1, 2 }, { 0, 4 }, { 5, 0 } };
+
+            // {pldo, cc}, (plda, pldo)
+            var milestones = new short[2, 2] { { 4, 3 }, { 4, 2 } };
+
+            var includes = new short[4, 2] { { 0, 1 }, { 1, 0 }, { 0, 3 }, { 1, 2 } };
+
+            var excludes = new short[7, 2] { { 0, 0 }, { 1, 1 }, { 0, 2 }, { 2, 0 }, { 1, 3 }, { 3, 1 }, { 5, 5 } };
+
+            var initialState = new short[5, 2] { { 0, 1 }, { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 } };
+
+            var dcrsmodel = new DCRSModel("Arrange-Meeting-short-Example", actionsList, includes, excludes, responses,
+                                          conditions, strongConditions, milestones) { InitialState = initialState };
+
+
+
+            return dcrsmodel;
+
+
+        }
+
     }
 }
