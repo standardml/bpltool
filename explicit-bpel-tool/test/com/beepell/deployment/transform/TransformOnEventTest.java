@@ -64,7 +64,7 @@ public class TransformOnEventTest extends TestCase {
         assertEquals(1, getNodes("/bpel:process//bpel:scope[1]/bpel:eventHandlers/bpel:onEvent[1]/bpel:scope/bpel:partnerLinks/bpel:partnerLink").getLength());
         assertEquals(1, getNodes("/bpel:process//bpel:scope[1]/bpel:eventHandlers/bpel:onEvent[1]/bpel:scope/bpel:partnerLinks/bpel:partnerLink[@name = 'eventPartnerLink']").getLength());
 
-        assertEquals(1, getNodes("/bpel:process//bpel:scope[1]/bpel:eventHandlers/bpel:onEvent[1]/bpel:scope/bpel:flow[@name = 'emptyCore']/bpel:empty").getLength());
+        assertEquals(1, getNodes("/bpel:process//bpel:scope[1]/bpel:eventHandlers/bpel:onEvent[1]/bpel:scope/bpel:empty").getLength());
     }
 
     /**
@@ -93,7 +93,7 @@ public class TransformOnEventTest extends TestCase {
         assertEquals(1, getNodes("/bpel:process//bpel:scope[1]/bpel:eventHandlers/bpel:onEvent[2]/bpel:scope/bpel:flow/bpel:flow[1]/bpel:assign/bpel:copy[2]/bpel:from[@part='description']").getLength());
         assertEquals(1, getNodes("/bpel:process//bpel:scope[1]/bpel:eventHandlers/bpel:onEvent[2]/bpel:scope/bpel:flow/bpel:flow[1]/bpel:assign/bpel:copy[2]/bpel:to[@variable='descriptionVariable']").getLength());
 
-        assertEquals(1, getNodes("/bpel:process//bpel:scope[1]/bpel:eventHandlers/bpel:onEvent[2]/bpel:scope/bpel:flow/bpel:flow[2]/bpel:flow[@name = 'emptyFromParts']/bpel:empty").getLength());
+        assertEquals(1, getNodes("/bpel:process//bpel:scope[1]/bpel:eventHandlers/bpel:onEvent[2]/bpel:scope/bpel:flow/bpel:flow[2]/bpel:empty").getLength());
     }
 
     /**
@@ -119,7 +119,7 @@ public class TransformOnEventTest extends TestCase {
         assertEquals(1, getNodes("/bpel:process//bpel:scope[1]/bpel:eventHandlers/bpel:onEvent[3]/bpel:scope/bpel:flow/bpel:flow[1]/bpel:assign/bpel:copy[1]/bpel:from[@part='addressIn']").getLength());
         assertEquals(1, getNodes("/bpel:process//bpel:scope[1]/bpel:eventHandlers/bpel:onEvent[3]/bpel:scope/bpel:flow/bpel:flow[1]/bpel:assign/bpel:copy[1]/bpel:to[@variable='addressVariable']").getLength());
 
-        assertEquals(1, getNodes("/bpel:process//bpel:scope[1]/bpel:eventHandlers/bpel:onEvent[3]/bpel:scope/bpel:flow/bpel:flow[2]/bpel:flow[@name = 'emptyElements']/bpel:empty").getLength());
+        assertEquals(1, getNodes("/bpel:process//bpel:scope[1]/bpel:eventHandlers/bpel:onEvent[3]/bpel:scope/bpel:flow/bpel:flow[2]/bpel:empty").getLength());
 }
 
 }

@@ -555,7 +555,6 @@
           <xsd:element ref="links" minOccurs="0" />
           <xsd:group ref="activity" maxOccurs="unbounded" />
         </xsd:sequence>
-        <xsd:attribute name="name" type="xsd:NCName" use="required"/>
         <xsd:attribute name="suppressJoinFailure" type="tBoolean" use="required"/>
       </xsd:extension>
     </xsd:complexContent>

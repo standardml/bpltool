@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<!-- Move <targets>, <sources>, and suppressJoinFailure from activities to a new wrapping <flow>, except
-     for activities that have no <targets> or <sources>, where we push the value of that attribute to all the child activities. -->
-<!-- Names are also moved from activities (except <scope>s) to a new wrapping <flow> and fresh names are added to unnamed <flow>s and <scope>s. -->
+<!-- Move <targets>, <sources>, and suppressJoinFailure from activities to a
+     new wrapping <flow>, except for activities that have no <targets> or
+     <sources>, where we push the value of that attribute to all the child
+     activities. -->
+<!-- Names are also moved from activities (except <scope>s) to a new wrapping
+     <flow> and fresh names are added to unnamed <flow>s and <scope>s. -->
 
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -58,9 +61,6 @@
       </xsl:when>
       <xsl:otherwise>
         <bpel:flow>
-          <xsl:call-template name="name">
-            <xsl:with-param name="name" select="*[1]/@name"/>
-          </xsl:call-template>
           <xsl:copy-of select="*[1]/@suppressJoinFailure" />
           <xsl:if test="not(*[1]/@suppressJoinFailure) and $suppressJoinFailure">
             <xsl:copy-of select="$suppressJoinFailure" />
@@ -80,9 +80,6 @@
 
     <xsl:copy>
       <xsl:copy-of select="@*[not(namespace-uri() = '' and local-name() = 'name')]" />
-      <xsl:call-template name="name">
-        <xsl:with-param name="name" select="@name"/>
-      </xsl:call-template>
       <xsl:if test="not(@suppressJoinFailure) and $suppressJoinFailure">
         <xsl:copy-of select="$suppressJoinFailure" />
       </xsl:if>
@@ -141,9 +138,6 @@
       </xsl:when>
       <xsl:otherwise>
         <bpel:flow>
-          <xsl:call-template name="name">
-            <xsl:with-param name="name" select="@name"/>
-          </xsl:call-template>
           <xsl:copy-of select="@suppressJoinFailure" />
           <xsl:if test="not(@suppressJoinFailure) and $suppressJoinFailure">
             <xsl:copy-of select="$suppressJoinFailure" />
@@ -192,39 +186,41 @@
       </xsl:when>
       <xsl:otherwise>
         <xsl:copy>
-          <xsl:copy-of select="@*" />
+          <xsl:copy-of select="@*[not(namespace-uri() = '' and
+                                      local-name() = 'name')]" />
           <xsl:apply-templates />
         </xsl:copy>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
-  <xsl:template match="bpel:assign[bpel:targets or bpel:sources or @name or @suppressJoinFailure]
-                     | bpel:compensate[bpel:targets or bpel:sources or @name or @suppressJoinFailure]
-                     | bpel:compensateScope[bpel:targets or bpel:sources or @name or @suppressJoinFailure]
-                     | bpel:empty[bpel:targets or bpel:sources or @name or @suppressJoinFailure]
-                     | bpel:exit[bpel:targets or bpel:sources or @name or @suppressJoinFailure]
-                     | bpel:forEach[bpel:targets or bpel:sources or @name or @suppressJoinFailure]
-                     | bpel:if[bpel:targets or bpel:sources or @name or @suppressJoinFailure]
-                     | bpel:invoke[bpel:targets or bpel:sources or @name or @suppressJoinFailure]
-                     | bpel:pick[bpel:targets or bpel:sources or @name or @suppressJoinFailure]
-                     | bpel:receive[bpel:targets or bpel:sources or @name or @suppressJoinFailure]
-                     | bpel:repeatUntil[bpel:targets or bpel:sources or @name or @suppressJoinFailure]
-                     | bpel:reply[bpel:targets or bpel:sources or @name or @suppressJoinFailure]
-                     | bpel:rethrow[bpel:targets or bpel:sources or @name or @suppressJoinFailure]
-                     | bpel:sequence[bpel:targets or bpel:sources or @name or @suppressJoinFailure]
-                     | bpel:throw[bpel:targets or bpel:sources or @name or @suppressJoinFailure]
-                     | bpel:validate[bpel:targets or bpel:sources or @name or @suppressJoinFailure]
-                     | bpel:wait[bpel:targets or bpel:sources or @name or @suppressJoinFailure]
-                     | bpel:while[bpel:targets or bpel:sources or @name or @suppressJoinFailure]"
+  <xsl:template match="bpel:assign[bpel:targets or bpel:sources or @suppressJoinFailure]
+                     | bpel:compensate[bpel:targets or bpel:sources or @suppressJoinFailure]
+                     | bpel:compensateScope[bpel:targets or bpel:sources or @suppressJoinFailure]
+                     | bpel:empty[bpel:targets or bpel:sources or @suppressJoinFailure]
+                     | bpel:exit[bpel:targets or bpel:sources or @suppressJoinFailure]
+                     | bpel:forEach[bpel:targets or bpel:sources or @suppressJoinFailure]
+                     | bpel:if[bpel:targets or bpel:sources or @suppressJoinFailure]
+                     | bpel:invoke[bpel:targets or bpel:sources or @suppressJoinFailure]
+                     | bpel:pick[bpel:targets or bpel:sources or @suppressJoinFailure]
+                     | bpel:receive[bpel:targets or bpel:sources or @suppressJoinFailure]
+                     | bpel:repeatUntil[bpel:targets or bpel:sources or @suppressJoinFailure]
+                     | bpel:reply[bpel:targets or bpel:sources or @suppressJoinFailure]
+                     | bpel:rethrow[bpel:targets or bpel:sources or @suppressJoinFailure]
+                     | bpel:sequence[bpel:targets or bpel:sources or @suppressJoinFailure]
+                     | bpel:throw[bpel:targets or bpel:sources or @suppressJoinFailure]
+                     | bpel:validate[bpel:targets or bpel:sources or @suppressJoinFailure]
+                     | bpel:wait[bpel:targets or bpel:sources or @suppressJoinFailure]
+                     | bpel:while[bpel:targets or bpel:sources or @suppressJoinFailure]"
                 name="activity-with-links">
     <xsl:param name="suppressJoinFailure" select="false()" />
     
     <xsl:choose>
-      <xsl:when test="not(bpel:targets or bpel:sources or @name)">
+      <xsl:when test="not(bpel:targets or bpel:sources)">
         <xsl:copy>
           <xsl:copy-of select="@*[not(namespace-uri() = '' and 
-                                      local-name() = 'suppressJoinFailure')]" />
+                                      (local-name() = 'name' or
+                                       local-name() = 'suppressJoinFailure'))]" />
           
           <xsl:choose>
             <xsl:when test="@suppressJoinFailure">
@@ -242,9 +238,6 @@
       </xsl:when>
       <xsl:otherwise>
 		    <bpel:flow>
-		      <xsl:call-template name="name">
-		        <xsl:with-param name="name" select="@name"/>
-		      </xsl:call-template>
 		      <xsl:copy-of select="@suppressJoinFailure" />
 		      <xsl:if test="not(@suppressJoinFailure) and $suppressJoinFailure">
 		        <xsl:copy-of select="$suppressJoinFailure" />

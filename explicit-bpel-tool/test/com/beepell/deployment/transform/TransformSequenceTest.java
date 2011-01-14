@@ -91,29 +91,29 @@ public class TransformSequenceTest extends TestCase {
         Document ebpel = transfomer.transform(sequence1);
 
         // 1. Test preservation of join condition in non-sequenced activity
-        expression = "//bpel:flow[@name='reply']/bpel:targets/bpel:joinCondition/text()";
+        expression = "(//bpel:reply)[1]/parent::bpel:flow/bpel:targets/bpel:joinCondition/text()";
         assertEquals("$reply or not($reply)", (String) xPath.evaluate(expression, ebpel, XPathConstants.STRING));
 
         // 2. Test preservation of join condition in sequenced activity
-        expression = "//bpel:flow[@name='empty1']/bpel:targets/bpel:joinCondition/text()";
+        expression = "//bpel:target[@linkName='empty']/parent::bpel:targets/bpel:joinCondition/text()";
         assertEquals("$empty or not($empty)", (String) xPath.evaluate(expression, ebpel, XPathConstants.STRING));
         
         // 3. Test preservation of an existing target
-        expression = "count(//bpel:flow[@name='empty1']/bpel:targets/bpel:target[@linkName='empty'])";
+        expression = "count(//bpel:target[@linkName='empty']/ancestor::bpel:flow[1]/bpel:empty)";
         assertEquals(1, ((Double) xPath.evaluate(expression, ebpel, XPathConstants.NUMBER)).intValue());
         
-        expression = "count(//bpel:flow[@name='reply']/bpel:targets/bpel:target[@linkName='reply'])";
+        expression = "count((//bpel:reply)[1]/parent::bpel:flow/bpel:targets/bpel:target[@linkName='reply'])";
         assertEquals(1, ((Double) xPath.evaluate(expression, ebpel, XPathConstants.NUMBER)).intValue());
         
         // 4. Test preservation of a source
-        expression = "//bpel:flow[@name='assign']/bpel:sources/bpel:source/bpel:transitionCondition/text()";
+        expression = "(//bpel:assign)[1]/parent::bpel:flow/bpel:sources/bpel:source/bpel:transitionCondition/text()";
         assertEquals("true() or false()", (String) xPath.evaluate(expression, ebpel, XPathConstants.STRING));
         
         // 5. Test the extension of sources
-        expression = "count(//bpel:flow[@name='receive']/parent::bpel:flow/bpel:sources/bpel:source)";
+        expression = "count((//bpel:pick)[1]/parent::bpel:flow/bpel:sources/bpel:source)";
         assertEquals(1, ((Double) xPath.evaluate(expression, ebpel, XPathConstants.NUMBER)).intValue());
 
-        expression = "count(//bpel:flow[@name='assign']/parent::bpel:flow/bpel:sources/bpel:source)";
+        expression = "count((//bpel:assign)[1]/parent::bpel:flow/bpel:sources/bpel:source)";
         assertEquals(1, ((Double) xPath.evaluate(expression, ebpel, XPathConstants.NUMBER)).intValue());
 
         
@@ -125,57 +125,57 @@ public class TransformSequenceTest extends TestCase {
         String expression;
 
         // 1. Sequences at all levels are transformed into flow
-        expression = "count(//bpel:flow[@name='s1']/bpel:flow/bpel:flow[@name='s1.3']/bpel:flow[@name='s1.3.1']/bpel:flow[@name='s1.3.1.1']/bpel:flow/bpel:empty)";
+        expression = "count(/bpel:process/bpel:scope/bpel:flow[1]/bpel:flow[3]/bpel:flow/bpel:flow[1]/bpel:flow[1]/bpel:flow/bpel:empty)";
         Double count = (Double) xPath.evaluate(expression, ebpel, XPathConstants.NUMBER);
         assertEquals(4, count.intValue());
 
         // 2. The inner most flow declares tree links
-        expression = "//bpel:flow[@name='s1.3.1.1']/bpel:links/bpel:link";
+        expression = "/bpel:process/bpel:scope/bpel:flow[1]/bpel:flow[3]/bpel:flow/bpel:flow[1]/bpel:flow[1]/bpel:links/bpel:link";
         NodeList links = (NodeList) xPath.evaluate(expression, ebpel, XPathConstants.NODESET);
         assertEquals(3, links.getLength());
 
         // 3. The first child of the inner most flow has a source link
-        expression = "//bpel:flow[@name='s1.3.1.1']/bpel:flow[1]/bpel:sources/bpel:source";
+        expression = "/bpel:process/bpel:scope/bpel:flow[1]/bpel:flow[3]/bpel:flow/bpel:flow[1]/bpel:flow[1]/bpel:flow[1]/bpel:sources/bpel:source";
         NodeList sources = (NodeList) xPath.evaluate(expression, ebpel, XPathConstants.NODESET);
         assertEquals(1, sources.getLength());
 
         // 4. The second child of the inner most flow has a source link
-        expression = "//bpel:flow[@name='s1.3.1.1']/bpel:flow[2]/bpel:sources/bpel:source";
+        expression = "/bpel:process/bpel:scope/bpel:flow[1]/bpel:flow[3]/bpel:flow/bpel:flow[1]/bpel:flow[1]/bpel:flow[2]/bpel:sources/bpel:source";
         sources = (NodeList) xPath.evaluate(expression, ebpel, XPathConstants.NODESET);
         assertEquals(1, sources.getLength());
 
         // 5. The second child of the inner most flow has a target link
-        expression = "//bpel:flow[@name='s1.3.1.1']/bpel:flow[2]/bpel:targets/bpel:target";
+        expression = "/bpel:process/bpel:scope/bpel:flow[1]/bpel:flow[3]/bpel:flow/bpel:flow[1]/bpel:flow[1]/bpel:flow[2]/bpel:targets/bpel:target";
         NodeList targets = (NodeList) xPath.evaluate(expression, ebpel, XPathConstants.NODESET);
         assertEquals(1, targets.getLength());
         
         // 6. The outer most flow has two links
-        expression = "//bpel:flow[@name='s1']/bpel:links/bpel:link";
+        expression = "/bpel:process/bpel:scope/bpel:flow[1]/bpel:links/bpel:link";
         links = (NodeList) xPath.evaluate(expression, ebpel, XPathConstants.NODESET);
         assertEquals(2, links.getLength());
 
         // 7. The first child of the outer most flow has a source link
-        expression = "//bpel:flow[@name='s1']/bpel:flow[1]/bpel:sources/bpel:source";
+        expression = "/bpel:process/bpel:scope/bpel:flow[1]/bpel:flow[1]/bpel:sources/bpel:source";
         sources = (NodeList) xPath.evaluate(expression, ebpel, XPathConstants.NODESET);
         assertEquals(1, sources.getLength());
         
         // 8. The second child of the outer most flow has a source link
-        expression = "//bpel:flow[@name='s1']/bpel:flow[2]/bpel:sources/bpel:source";
+        expression = "/bpel:process/bpel:scope/bpel:flow[1]/bpel:flow[2]/bpel:sources/bpel:source";
         sources = (NodeList) xPath.evaluate(expression, ebpel, XPathConstants.NODESET);
         assertEquals(1, sources.getLength());
 
         // 9. The second child of the outer most flow has a target link
-        expression = "//bpel:flow[@name='s1']/bpel:flow[2]/bpel:targets/bpel:target";
+        expression = "/bpel:process/bpel:scope/bpel:flow[1]/bpel:flow[2]/bpel:targets/bpel:target";
         targets = (NodeList) xPath.evaluate(expression, ebpel, XPathConstants.NODESET);
         assertEquals(1, targets.getLength());
         
         // 9. The third child of the outer most flow has a target link
-        expression = "//bpel:flow[@name='s1']/bpel:flow[3]/bpel:targets/bpel:target";
+        expression = "/bpel:process/bpel:scope/bpel:flow[1]/bpel:flow[3]/bpel:targets/bpel:target";
         targets = (NodeList) xPath.evaluate(expression, ebpel, XPathConstants.NODESET);
         assertEquals(1, targets.getLength());
         
         // 10. s1.1 has one link
-        expression = "//bpel:flow[@name='s1.1']/bpel:links/bpel:link";
+        expression = "/bpel:process/bpel:scope/bpel:flow[1]/bpel:flow[1]/bpel:flow/bpel:links/bpel:link";
         links = (NodeList) xPath.evaluate(expression, ebpel, XPathConstants.NODESET);
         assertEquals(1, links.getLength());
         

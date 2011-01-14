@@ -52,19 +52,19 @@ public class TransformPickTest extends TestCase {
      */
     public final void testCorePick() {
 
-        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:pick").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='core' and @suppressJoinFailure = 'yes']/bpel:pick").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:pick[@createInstance = 'no']").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:pick/bpel:onMessage[@partnerLink = 'serverPartnerLink']").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:pick/bpel:onMessage[@operation = 'requestService']").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:pick/bpel:onMessage[@variable = 'request']").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:pick/bpel:onMessage[@messageExchange = 'mea']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[1]").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[1]/parent::bpel:flow[@suppressJoinFailure = 'yes']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[1][@createInstance = 'no']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[1]/bpel:onMessage[@partnerLink = 'serverPartnerLink']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[1]/bpel:onMessage[@operation = 'requestService']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[1]/bpel:onMessage[@variable = 'request']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[1]/bpel:onMessage[@messageExchange = 'mea']").getLength());
 
-        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:targets/bpel:joinCondition").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:targets/bpel:target").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[1]/parent::bpel:flow/bpel:targets/bpel:joinCondition").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[1]/parent::bpel:flow/bpel:targets/bpel:target").getLength());
 
-        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:sources/bpel:source[@linkName='ship-to-scheduling']").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='core']/bpel:sources/bpel:source[@linkName='ship-to-scheduling']/bpel:transitionCondition").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[1]/parent::bpel:flow/bpel:sources/bpel:source[@linkName='ship-to-scheduling']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[1]/parent::bpel:flow/bpel:sources/bpel:source[@linkName='ship-to-scheduling']/bpel:transitionCondition").getLength());
 
     }
 
@@ -74,24 +74,24 @@ public class TransformPickTest extends TestCase {
      */
     public final void testFromPartsPick() {
 
-        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpel:pick").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpel:pick[@createInstance = 'no']").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpel:pick/bpel:onMessage[not(bpel:fromParts)]").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpel:pick/bpel:onMessage[@partnerLink = 'serverPartnerLink']").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpel:pick/bpel:onMessage[@operation = 'requestService']").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpel:pick/bpel:onMessage[@messageExchange = 'mec']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[2]").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[2][@createInstance = 'no']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[2]/bpel:onMessage[not(bpel:fromParts)]").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[2]/bpel:onMessage[@partnerLink = 'serverPartnerLink']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[2]/bpel:onMessage[@operation = 'requestService']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[2]/bpel:onMessage[@messageExchange = 'mec']").getLength());
 
         // Check the enclosing scope
-        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/ancestor::bpel:scope[1]/bpel:variables/bpel:variable[@messageType='srv:requestMessage']").getLength());
-        assertEquals(3, getNodes("//bpel:flow[@name='fromparts']/bpel:pick/bpel:onMessage/bpel:flow/*").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[2]/ancestor::bpel:scope[1]/bpel:variables/bpel:variable[@messageType='srv:requestMessage']").getLength());
+        assertEquals(3, getNodes("(//bpel:pick)[2]/bpel:onMessage/bpel:flow/*").getLength());
 
         // Check the assignments
-        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpel:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign").getLength());
-        assertEquals(2, getNodes("//bpel:flow[@name='fromparts']/bpel:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpel:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy/bpel:from[@part='id']").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpel:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy/bpel:to[@variable='idVariable']").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpel:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy/bpel:from[@part='description']").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='fromparts']/bpel:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy/bpel:to[@variable='descriptionVariable' ]").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[2]/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign").getLength());
+        assertEquals(2, getNodes("(//bpel:pick)[2]/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[2]/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy/bpel:from[@part='id']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[2]/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy/bpel:to[@variable='idVariable']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[2]/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy/bpel:from[@part='description']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[2]/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy/bpel:to[@variable='descriptionVariable' ]").getLength());
 
     }
 
@@ -101,21 +101,21 @@ public class TransformPickTest extends TestCase {
      */
     public final void testElementPick() {
 
-        assertEquals(1, getNodes("//bpel:flow[@name='elements']/bpel:pick").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='elements']/bpel:pick[@createInstance = 'no']").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='elements']/bpel:pick/bpel:onMessage[@partnerLink     = 'serverPartnerLink']").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='elements']/bpel:pick/bpel:onMessage[@operation       = 'simpleService']").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='elements']/bpel:pick/bpel:onMessage[@messageExchange = 'med']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[3]").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[3][@createInstance = 'no']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[3]/bpel:onMessage[@partnerLink     = 'serverPartnerLink']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[3]/bpel:onMessage[@operation       = 'simpleService']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[3]/bpel:onMessage[@messageExchange = 'med']").getLength());
 
         // Check the enclosing scope
-        assertEquals(1, getNodes("//bpel:flow[@name='elements']/ancestor::bpel:scope[1]/bpel:variables/bpel:variable[@messageType='srv:simpleRequestMessage']").getLength());
-        assertEquals(3, getNodes("//bpel:flow[@name='elements']/bpel:pick/bpel:onMessage/bpel:flow/*").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[3]/ancestor::bpel:scope[1]/bpel:variables/bpel:variable[@messageType='srv:simpleRequestMessage']").getLength());
+        assertEquals(3, getNodes("(//bpel:pick)[3]/bpel:onMessage/bpel:flow/*").getLength());
 
         // Check the assignments
-        assertEquals(1, getNodes("//bpel:flow[@name='elements']/bpel:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='elements']/bpel:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='elements']/bpel:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy/bpel:from[@part='addressIn']").getLength());
-        assertEquals(1, getNodes("//bpel:flow[@name='elements']/bpel:pick/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy/bpel:to[@variable='addressVariable']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[3]/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[3]/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[3]/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy/bpel:from[@part='addressIn']").getLength());
+        assertEquals(1, getNodes("(//bpel:pick)[3]/bpel:onMessage/bpel:flow/bpel:flow/bpel:assign/bpel:copy/bpel:to[@variable='addressVariable']").getLength());
     }
 
 }

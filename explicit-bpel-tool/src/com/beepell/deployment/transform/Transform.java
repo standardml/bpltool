@@ -48,8 +48,8 @@ public class Transform {
     private static final String bpelURI = "http://docs.oasis-open.org/wsbpel/2.0/process/executable";
     private final TransformerFactory transformerFactory = TransformerFactory.newInstance();
     private final SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-    private final Schema bpelSchema;
-    private final Schema cBpelSchema;
+    private Schema bpelSchema;
+    private Schema cBpelSchema;
     private final boolean verbose;
     private String[] sheets = { 
             "remove-optional-extensions.xsl",            // Remove optional extensions
@@ -185,7 +185,7 @@ public class Transform {
      * </ul>
      * <p>
      * When no target file is specified a file with same name and location, but
-     * with .ebpel postfix, is created.
+     * with .cbpel postfix, is created.
      * 
      * @param args
      */
@@ -200,7 +200,8 @@ public class Transform {
 
             File target;
             if (args.length < 2) {
-                String fileName = source.getCanonicalPath().substring(0, args[0].lastIndexOf('.')) + ".ebpel";
+                String canonicalPath = source.getCanonicalPath();
+                String fileName = canonicalPath.substring(0, canonicalPath.lastIndexOf('.')) + ".cbpel";
                 target = new File(fileName);
             } else {
                 target = new File(args[1]);
@@ -343,8 +344,8 @@ public class Transform {
 
             System.err.println("Failed to generate an fresh prefix: " + exception.getLocalizedMessage());
             exception.printStackTrace();
+            throw exception;
         }
-        return null;
     }
 
     /**
