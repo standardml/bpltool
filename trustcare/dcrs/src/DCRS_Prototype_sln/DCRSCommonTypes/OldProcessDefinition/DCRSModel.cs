@@ -17,6 +17,9 @@ namespace ITU.DK.DCRS.CommonTypes.OldProcessDefinition
         private readonly short[,] strongconditions;
         private readonly short[,] milestones;
         private readonly string modelName;
+
+        public List<short> NonConditionalEvents = new List<short>();
+        
         /// <summary>
         /// The first column is an Id of an action and the 2nd column referes to included/excluded : 1\0
         /// </summary>
@@ -38,6 +41,8 @@ namespace ITU.DK.DCRS.CommonTypes.OldProcessDefinition
             
             // Assign default null array for strong conditions.
             strongconditions = new short[0, 2];
+
+            calculateNonConditionalEvents();
         }
 
 
@@ -50,6 +55,8 @@ namespace ITU.DK.DCRS.CommonTypes.OldProcessDefinition
             this.conditions = conditions;
             this.strongconditions = strongconditions;
             this.modelName = modelName;
+
+            calculateNonConditionalEvents();
         }
 
 
@@ -67,6 +74,8 @@ namespace ITU.DK.DCRS.CommonTypes.OldProcessDefinition
             this.milestones = milestones;
             
             this.modelName = modelName;
+
+            calculateNonConditionalEvents();
         }
 
 
@@ -113,5 +122,23 @@ namespace ITU.DK.DCRS.CommonTypes.OldProcessDefinition
         {
             get { return actionList; }
         }
+
+
+        private void calculateNonConditionalEvents()
+        {
+            // Add all events.
+            NonConditionalEvents.AddRange(actionList.Keys);
+
+            for (var index = 0; index < conditions.GetLength(0); index++)
+            {
+                // Remove all the events which are conditions to other events.
+                NonConditionalEvents.Remove(conditions[index, 1]);
+
+            }
+
+
+
+        }
+
     }
 }

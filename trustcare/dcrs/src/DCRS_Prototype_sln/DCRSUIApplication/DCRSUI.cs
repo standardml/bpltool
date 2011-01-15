@@ -191,7 +191,12 @@ namespace DCRSUIApplication
             //}
 
 
+            var autamatonSettings = new AutamatonSettings
+                                        {StateMode = AutomatonMode.FiniteSate, ExcludeNonConditionalEvents = true};
+
             var stateManager = StateManager.GetStateManagerInstance();
+
+            stateManager.Settings = autamatonSettings;
 
             //stateManager.Specification = DCRSExamples.GetTwoSelfResponseEventsExample();
             //stateManager.Specification = DCRSExamples.GetGiveMedicineFullExample();
@@ -204,9 +209,9 @@ namespace DCRSUIApplication
 
             //stateManager.Specification = DCRSExamples.GetArrangeMeetingSampleShort();
 
-            stateManager.Specification = DCRSExamples.GetArrangeMeetingSampleShortWithCreateCase_withmilestones();
+            stateManager.Specification = DCRSExamples.GetArrangeMeetingSampleShortWithCreateCase();
 
-            stateManager.StateMode = AutomatonMode.FiniteSate;
+            
 
             Dictionary<long,AtomicState> stateSpace = stateManager.ComputeStateSpace();
 

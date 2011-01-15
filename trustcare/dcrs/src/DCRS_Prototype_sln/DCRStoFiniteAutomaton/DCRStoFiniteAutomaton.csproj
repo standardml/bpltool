@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AtomicState.cs" />
+    <Compile Include="AutamatonSettings.cs" />
     <Compile Include="AutomatonMode.cs" />
     <Compile Include="BuchiAutomatonState.cs" />
     <Compile Include="DCRSExamples.cs" />

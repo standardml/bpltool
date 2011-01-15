@@ -70,11 +70,24 @@ namespace DCRStoFiniteAutomaton
             //if (!StateVector.ExecutedEvents.Contains(LeadingTransition) && (LeadingTransition != -1))
             //    StateVector.ExecutedEvents.Add(LeadingTransition);
 
-            // NOTE: Chnages for new TAU action.. Start
-            // Add the current transition to the E set, if it is not a TAU action and not dummy action at the start state.
-            if (!StateVector.ExecutedEvents.Contains(LeadingTransition) && (LeadingTransition != -1) && (LeadingTransition != Utilities.TAU_ACTION))
-                StateVector.ExecutedEvents.Add(LeadingTransition);
-            // NOTE: Chnages for new TAU action.. End.
+
+
+            // Rao 2011-01-15: added support for excluding execution of non conditional events.
+            if ((!StateManager.GetStateManagerInstance().Settings.ExcludeNonConditionalEvents) ||
+                (!StateManager.GetStateManagerInstance().Specification.NonConditionalEvents.Contains(LeadingTransition)))
+            {
+                // NOTE: Chnages for new TAU action.. Start
+                // Add the current transition to the E set, if it is not a TAU action and not dummy action at the start state.
+                if (!StateVector.ExecutedEvents.Contains(LeadingTransition) && (LeadingTransition != -1) &&
+                    (LeadingTransition != Utilities.TAU_ACTION))
+                    StateVector.ExecutedEvents.Add(LeadingTransition);
+                // NOTE: Chnages for new TAU action.. End.
+            }
+            else
+            {
+                // We dont need to update the leading transition to the executed set, as it might be an non conditional events.
+                
+            }
 
 
             StateVector.ExecutedEvents.Sort();

@@ -20,7 +20,13 @@ namespace DCRStoFiniteAutomaton
 
         public DCRSModel Specification;
 
-        public AutomatonMode StateMode;
+        //public AutomatonMode StateMode;
+
+        public AutamatonSettings Settings = new AutamatonSettings
+                                                {
+                                                    StateMode = AutomatonMode.FiniteSate,
+                                                    ExcludeNonConditionalEvents = false
+                                                };
 
         
 
@@ -43,6 +49,13 @@ namespace DCRStoFiniteAutomaton
             return Manager;
         }
 
+        //public static StateManager GetStateManagerInstance(AutamatonSettings autamatonSettings)
+        //{
+        //    Settings = autamatonSettings;
+            
+        //    return Manager;
+        //}
+
 
         public Dictionary<long, AtomicState> ComputeStateSpace()
         {
@@ -60,7 +73,7 @@ namespace DCRStoFiniteAutomaton
 
 
             // Call the respective automaton state class based on StateMode.
-            if(StateMode == AutomatonMode.Buchi)
+            if(Settings.StateMode == AutomatonMode.Buchi)
             {
                 state0 = new BuchiAutomatonState(_stateNumber, -1, parentStateVectorForInitialState);
             }
@@ -259,7 +272,7 @@ namespace DCRStoFiniteAutomaton
                 AtomicState childstate;
 
                 // Call the respective automaton state class based on StateMode.
-                if (StateMode == AutomatonMode.Buchi)
+                if (Settings.StateMode == AutomatonMode.Buchi)
                 {
                     childstate = new BuchiAutomatonState(++_stateNumber, enabledTransition, state.StateVector);
                 }
