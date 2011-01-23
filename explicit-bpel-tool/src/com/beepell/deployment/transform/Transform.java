@@ -41,10 +41,12 @@ import com.beepell.xml.namespace.DocumentNamespaceContext;
  * Command-line toolkit to transform WS-BPEL into Core BPEL.
  * 
  * @author Tim Hallwyl, IT-University of Copenhagen, 2008 - 2010
- * @author Espen H¿jsgaard, IT-University of Copenhagen, 2006 - 2010
+ * @author Espen HÃ¸jsgaard, IT-University of Copenhagen, 2006 - 2010
  */
 public class Transform {
 
+    private String schemaPath = "schemas";
+    private String xsltPath = "xslt";
     private static final String bpelURI = "http://docs.oasis-open.org/wsbpel/2.0/process/executable";
     private final TransformerFactory transformerFactory = TransformerFactory.newInstance();
     private final SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
@@ -76,8 +78,16 @@ public class Transform {
     private boolean validate = true;
 
     public Transform() throws SAXException {
-        this.bpelSchema = this.schemaFactory.newSchema(new File("schemas/bpel.xsd"));
-        this.cBpelSchema = this.schemaFactory.newSchema(new File("schemas/core-bpel.xsd"));
+        this.bpelSchema = this.schemaFactory.newSchema(new File(this.schemaPath + File.separator + "bpel.xsd"));
+        this.cBpelSchema = this.schemaFactory.newSchema(new File(this.schemaPath + File.separator + "core-bpel.xsd"));
+        this.verbose = true;
+    }
+    
+    public Transform(String schemaDirectory, String xsltDirectory) throws SAXException {
+    	this.schemaPath = schemaDirectory;
+    	this.xsltPath = xsltDirectory;
+        this.bpelSchema = this.schemaFactory.newSchema(new File(schemaDirectory + File.separator + "bpel.xsd"));
+        this.cBpelSchema = this.schemaFactory.newSchema(new File(schemaDirectory + File.separator + "core-bpel.xsd"));
         this.verbose = true;
     }
 
@@ -170,7 +180,7 @@ public class Transform {
     }
 
     private Transformer getTransformer(String filename) throws TransformerConfigurationException, TransformerFactoryConfigurationError, MalformedURLException {
-        URL url = new File("xslt" + File.separator + filename).toURI().toURL();
+        URL url = new File(this.xsltPath + File.separator + filename).toURI().toURL();
         StreamSource source = new StreamSource(url.toString());
         return this.transformerFactory.newTransformer(source);
     }
@@ -411,5 +421,6 @@ public class Transform {
     public boolean getValidate() {
         return this.validate;
     }
+
 
 }
