@@ -10,10 +10,8 @@ import javax.xml.xpath.XPathFactory;
 import junit.framework.TestCase;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import com.beepell.deployment.transform.Transform;
 import com.beepell.xml.namespace.DocumentNamespaceContext;
 
 public class TransformSequenceTest extends TestCase {
