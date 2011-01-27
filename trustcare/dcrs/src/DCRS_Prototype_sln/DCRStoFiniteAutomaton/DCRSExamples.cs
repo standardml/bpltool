@@ -296,5 +296,85 @@ namespace DCRStoFiniteAutomaton
 
         }
 
+
+
+
+        public static DCRSModel BuchiToDCRTranslations()
+        {
+
+
+            var actionsList = new Dictionary<short, string>
+                                  {
+                                      {0, "x"},
+                                      {1, "y"},
+                                      {2, "z"},
+                                      {3, "a"},
+                                      {4, "b"},
+                                      {5, "c"},
+                                      {6, "d"},
+                                      {7, "e"},
+                                      {8, "f"},
+                                      {9, "g"}
+                                  };
+
+            
+            
+            // {pldo, cc}, (plda, pldo)
+            var conditions = new short[,] {
+                                     {0, 0}, {1, 1}, {2, 2}, // Self conditions to blocking events.
+                                     {3, 0}, {9, 0}, // conditions to main events sets such as x condition to : a, g
+                                     {5, 1}, {4, 1}, // conditions to main events sets such as y condition to : c, b
+                                     {6, 2}, {7, 2}, {8, 2} // conditions to main events sets such as z condition to : d, e, f
+                                 };
+
+            var strongConditions = new short[0, 0];
+
+            var responses = new short[, ]
+                                {
+                                    { 3, 3 }, { 9, 9 }
+                                };
+
+            // {pldo, cc}, (plda, pldo)
+            var milestones = new short[,] { };
+
+            var includes = new short[, ]
+                               {
+                                   { 3, 0 }, // a includes x 
+                                   { 9, 0 }, // g includes x
+                                   { 5, 1 }, // c includes y 
+                                   { 4, 1 }, // b includes y
+                                   { 4, 3 }, { 4, 9}, // b includes a and g
+                                   
+                               };
+
+            var excludes = new short[,]
+                               {
+                                   {3, 3}, {3, 9}, // a excludes a and g 
+                                   {3, 1}, // a excludes y
+                                   {9, 3}, {9, 9}, // g excludes a and g 
+                                   {9, 2}, // g excludes z
+                                   {5, 3}, {5, 9}, // c excludes a and g 
+                                   {9, 2}, // c excludes z
+                                   {4, 0}, // b excludes x
+
+
+
+                               };
+
+
+
+            var initialState = new short[5, 2] { { 0, 1 }, { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 } };
+
+            var dcrsmodel = new DCRSModel("Arrange-Meeting-short-Example", actionsList, includes, excludes, responses,
+                                          conditions, strongConditions, milestones) { InitialState = initialState };
+
+
+
+            return dcrsmodel;
+
+
+        }
+
+
     }
 }
