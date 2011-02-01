@@ -37,15 +37,31 @@
       <!--Introduced Events as a seperate entity, which are mapped to actions by a labelled function!  -->
 
       <events>
-        <event id="">
 
+        <!--A event can have the following attributes:
+          1) Id:
+          2) parentId:
+          3) isParent:
+          4) 
+        -->
+        <event 
+          id=""
+          parentId="" 
+          isParent=""
+          isSubProcessEvent="">
           <data>
-            
+            <variables>
+              <variable id=""></variable>
+            </variables>
+            <constants>
+              <constant id="">value</constant>
+           </constants>
           </data>
         </event>
         
         
-      </events>
+        
+     </events>
       
       
     </resources>
