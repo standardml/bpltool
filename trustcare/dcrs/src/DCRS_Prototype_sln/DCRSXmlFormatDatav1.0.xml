@@ -2,9 +2,10 @@
 <dcrs-process xmlns="http://itu.dk/trustcare/dcrs/2010/">
 
   <!--
-  Rao: 2010-06-30: modified the Xml to make it suitable for holding the information for execution engine.
-  Rao: 2010-07-04: modified the root to dcrs-process.
-  Rao: 2010-08-09 : Modified the Xml to support property specifications in the dcrs-specification section.
+  Rao: 2010-06-30 :Modified the Xml to make it suitable for holding the information for execution engine.
+  Rao: 2010-07-04 :Modified the root to dcrs-process.
+  Rao: 2010-08-09 :Modified the Xml to support property specifications in the dcrs-specification section.
+  Rao: 2011-02-01: Modified the Xml Format to accomedate Data and nested hierarchy in actions-to-events. 
 
   -->
 
@@ -16,20 +17,37 @@
 
   <dcrs-specification process-id="" model-name="">
 
+    
     <resources>
       <roles>
         <role  ></role>
         <role  />
       </roles>
 
+    
       <principals>
         <principal  />
       </principals>
 
+      
       <actions>
         <action action-id="" />
-
       </actions>
+      
+      <!--Introduced Events as a seperate entity, which are mapped to actions by a labelled function!  -->
+
+      <events>
+        <event id="">
+
+          <data>
+            
+          </data>
+        </event>
+        
+        
+      </events>
+      
+      
     </resources>
 
     <access-controls>
