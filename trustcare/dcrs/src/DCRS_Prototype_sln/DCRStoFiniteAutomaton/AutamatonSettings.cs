@@ -16,6 +16,8 @@
 
         public bool ExcludeNonConditionalEvents;
 
+        public bool IncludeTauAction;
+
 
     }
 }

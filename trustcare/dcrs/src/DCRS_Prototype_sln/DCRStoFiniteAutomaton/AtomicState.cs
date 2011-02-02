@@ -223,8 +223,11 @@ namespace DCRStoFiniteAutomaton
 
             // NOTE: Chnages for new TAU action.. Start
             // Add a TAU action so that there will be always a TAU action!
-            if (!StateVector.EnabledTransitions.Contains(Utilities.TAU_ACTION))
-                StateVector.EnabledTransitions.Add(Utilities.TAU_ACTION);
+            if (StateManager.GetStateManagerInstance().Settings.IncludeTauAction)
+            {
+                if (!StateVector.EnabledTransitions.Contains(Utilities.TAU_ACTION))
+                    StateVector.EnabledTransitions.Add(Utilities.TAU_ACTION); 
+            }
             // NOTE: Chnages for new TAU action.. End.
 
 
