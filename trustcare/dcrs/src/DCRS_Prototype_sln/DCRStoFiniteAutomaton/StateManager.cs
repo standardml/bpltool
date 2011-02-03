@@ -28,14 +28,14 @@ namespace DCRStoFiniteAutomaton
                                                     ExcludeNonConditionalEvents = false
                                                 };
 
-        
+
 
         private Dictionary<long, AtomicState> reformatedStates;
-        
-        
+
+
         private StateManager()
         {
-            
+
         }
 
         public Dictionary<long, AtomicState> ComputedStates
@@ -52,7 +52,7 @@ namespace DCRStoFiniteAutomaton
         //public static StateManager GetStateManagerInstance(AutamatonSettings autamatonSettings)
         //{
         //    Settings = autamatonSettings;
-            
+
         //    return Manager;
         //}
 
@@ -69,11 +69,11 @@ namespace DCRStoFiniteAutomaton
 
             // Call Initial state
             AtomicState state0;
-            
+
 
 
             // Call the respective automaton state class based on StateMode.
-            if(Settings.StateMode == AutomatonMode.Buchi)
+            if (Settings.StateMode == AutomatonMode.Buchi)
             {
                 state0 = new BuchiAutomatonState(_stateNumber, -1, parentStateVectorForInitialState);
             }
@@ -88,7 +88,7 @@ namespace DCRStoFiniteAutomaton
 
             // Add the initial state to to be computed states.
             _stateRepository.TobeComputedStates.Add(state0);
-            
+
 
             while (_stateRepository.TobeComputedStates.Count > 0)
             {
@@ -154,7 +154,7 @@ namespace DCRStoFiniteAutomaton
             }
 
 
-            
+
             return _stateRepository.ComputedStates;
 
 
@@ -172,15 +172,15 @@ namespace DCRStoFiniteAutomaton
             {
                 var state = keyValPair.Value;
 
-                if(state.StateNumber == oldStateNumber)
+                if (state.StateNumber == oldStateNumber)
                 {
                     state.StateNumber = newStateNumber;
                 }
 
                 foreach (var transition in state.Transitions)
                 {
-                    
-                    if(transition.StateNumber == oldStateNumber)
+
+                    if (transition.StateNumber == oldStateNumber)
                     {
                         transition.StateNumber = newStateNumber;
                     }
@@ -194,7 +194,7 @@ namespace DCRStoFiniteAutomaton
         private void ReformatStateSpace()
         {
 
-            
+
             reformatedStates = new Dictionary<long, AtomicState>();
 
             var keysArray = _stateRepository.ComputedStates.Keys.ToArray();
@@ -203,7 +203,7 @@ namespace DCRStoFiniteAutomaton
 
             foreach (var stateNo in keysArray)
             {
-                
+
                 // First get the state from computed states.
                 var state = _stateRepository.ComputedStates[stateNo];
 
@@ -235,12 +235,12 @@ namespace DCRStoFiniteAutomaton
                                      : ComputedStates[transition.StateNumber];
 
 
-                if(transition.Direction == TransitionDirection.Incoming)
+                if (transition.Direction == TransitionDirection.Incoming)
                 {
-                    
+
                     // First Try getting it from computed states, otherwise get it from renamed states.
 
-                    
+
                     //(_stateRepository.ComputedStates.ContainsKey(transition.StateNumber))
 
 
@@ -336,9 +336,9 @@ namespace DCRStoFiniteAutomaton
             //// NOTE: Implementation for TAU action -- End
 
 
-            
+
             // Finally Add the state to the computed states.
-            
+
             _stateRepository.ComputedStates.Add(state.StateNumber, state);
 
 
@@ -362,7 +362,7 @@ namespace DCRStoFiniteAutomaton
                                                  Label = state.LeadingTransition,
                                                  StateNumber = parentState.StateNumber
                                              });
-            
+
         }
 
 
@@ -376,17 +376,21 @@ namespace DCRStoFiniteAutomaton
 
             for (var index = 0; index < Specification.InitialState.GetLength(0); index++)
             {
-                if(Specification.InitialState[index,1] == 0)
+                if (Specification.InitialState[index, 1] == 0)
                 {
-                    parentVectorForIniatialState.IncludedEvents.Remove((short) index);
+                    parentVectorForIniatialState.IncludedEvents.Remove((short)index);
                 }
             }
 
+            if ((Specification.InitialPendingResponses != null) && (Specification.InitialPendingResponses.Length > 1))
+            {
+                parentVectorForIniatialState.PendingResponseEvents.AddRange(Specification.InitialPendingResponses);
 
+            }
             parentVectorForIniatialState.IncludedEvents.Sort();
 
             parentVectorForIniatialState.StateRank = 0;
- 
+
             return parentVectorForIniatialState;
 
         }

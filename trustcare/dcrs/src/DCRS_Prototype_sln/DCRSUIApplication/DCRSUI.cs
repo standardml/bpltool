@@ -194,7 +194,7 @@ namespace DCRSUIApplication
             //var autamatonSettings = new AutamatonSettings
             //                            {StateMode = AutomatonMode.FiniteSate, ExcludeNonConditionalEvents = true};
 
-            var autamatonSettings = new AutamatonSettings { StateMode = AutomatonMode.FiniteSate, ExcludeNonConditionalEvents = true, IncludeTauAction = false};
+            var autamatonSettings = new AutamatonSettings { StateMode = AutomatonMode.Buchi, ExcludeNonConditionalEvents = false, IncludeTauAction = false};
 
 
             var stateManager = StateManager.GetStateManagerInstance();
@@ -214,7 +214,7 @@ namespace DCRSUIApplication
 
             //stateManager.Specification = DCRSExamples.GetArrangeMeetingSampleShortWithCreateCase();
 
-            stateManager.Specification = DCRSExamples.BuchiToDCRTranslationsExample1();
+            stateManager.Specification = DCRSExamples.BuchiToDCRTranslationsExample2();
 
             
 

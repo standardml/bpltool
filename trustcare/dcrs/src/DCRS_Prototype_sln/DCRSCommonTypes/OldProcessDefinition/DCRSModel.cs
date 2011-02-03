@@ -25,6 +25,8 @@ namespace ITU.DK.DCRS.CommonTypes.OldProcessDefinition
         /// </summary>
         public short[,] InitialState { get; set; }
 
+        public short[] InitialPendingResponses { get; set; }
+
 
 
         public DCRSModel(string modelName, Dictionary<short,string> actionList, short[,] includes, short[,] excludes, short[,] responses, short[,] conditions) 
