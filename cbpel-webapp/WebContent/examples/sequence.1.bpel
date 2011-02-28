@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process
+  name="proxy"
+  targetNamespace="http://beepell.com/samples/proxy"
+  xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+  xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+  xmlns:srv="http://beepell.com/samples/proxy/definitions"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:tim="http://tim.hallwyl.dk/"
+  xmlns:ins="http://tim.hallwyl.dk/insurance"
+  xmlns:sref="http://docs.oasis-open.org/wsbpel/2.0/serviceref">
+
+  <import
+    importType="http://schemas.xmlsoap.org/wsdl/"
+    namespace="http://beepell.com/samples/proxy/definitions"
+    location="echo.wsdl" />
+
+  <partnerLinks>
+    <partnerLink
+      name="echoPartnerLink"
+      partnerLinkType="srv:echoPartnerLinkType"
+      myRole="echoProviderRole" />
+  </partnerLinks>
+
+  <variables>
+    <variable
+      name="request"
+      messageType="srv:echoMessage" />
+    <variable
+      name="response"
+      messageType="srv:echoMessage" />
+  </variables>
+
+  <flow name="mainFlow">
+    <links>
+      <link name="reply"/>
+      <link name="empty"/>
+    </links>
+    <sequence name="InnerSequence">
+      <receive
+        name="receive"
+        partnerLink="echoPartnerLink"
+        operation="echoOperation"
+        variable="request"
+        createInstance="yes" />
+
+      <assign name="assign">
+        <sources>
+          <source linkName="reply">
+            <transitionCondition>true() or false()</transitionCondition>
+          </source>
+        </sources>
+        <copy>
+          <from
+            variable="request" />
+          <to
+            variable="response" />
+        </copy>
+      </assign>
+      
+      <empty name="empty1">
+      <targets>
+        <joinCondition>$empty or not($empty)</joinCondition>
+        <target linkName="empty"/>
+      </targets>
+      </empty>
+    </sequence>
+
+    <reply name="reply"
+      partnerLink="echoPartnerLink"
+      operation="echoOperation"
+      variable="response">
+      <targets>
+        <joinCondition>$reply or not($reply)</joinCondition>
+        <target linkName="reply"/>
+      </targets>
+    </reply>
+
+    <empty name="empty2">
+      <sources>
+        <source linkName="empty" />
+      </sources>
+    </empty>
+
+  </flow>
+</process>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process
+  name="sequence"
+  targetNamespace="http://beepell.com/samples/proxy"
+  xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+  xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable">
+
+  <sequence name="s1">
+    <sequence name="s1.1">
+      <sequence name="s1.1.1">
+        <empty />
+      </sequence>
+      <sequence name="s1.1.2">
+        <empty />
+      </sequence>
+    </sequence>
+    <sequence name="s1.2">
+      <sequence name="s1.2.1">
+        <empty />
+      </sequence>
+    </sequence>
+    <sequence name="s1.3">
+      <sequence name="s1.3.1">
+        <sequence name="s1.3.1.1">
+          <empty />
+          <empty />
+          <empty />
+          <empty />
+        </sequence>
+      </sequence>
+    </sequence>
+  </sequence>
+
+</process>
