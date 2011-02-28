@@ -33,14 +33,14 @@
   <div class="result">
   
     <div class="source">
-      <p>This is the source BPEL:</p>
+      <p>The WS-BPEL process:</p>
 <%
         out.write(request.getAttribute("source").toString());
 %>
     </div>
   
     <div class="target">
-      <p>This is the transformed Core BPEL:</p>
+      <p>The corresponding Core BPEL process:</p>
 <%
         out.write(request.getAttribute("result").toString());
 %>

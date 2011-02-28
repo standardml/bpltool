@@ -73,7 +73,7 @@
       transform.transform(source, target);
       
       // 6. Write the file back
-      %><p>This is the transformed Core BPEL:</p>
+      %><p>This is the resulting Core BPEL process:</p>
       <%
       FileInputStream stream = new FileInputStream(target);
       StringBuffer sb = new StringBuffer();

@@ -13,18 +13,19 @@
 
   <div id="main">
     <h3>Welcome…</h3>
-    <p>…on the Online version of the Core BPEL transformer. To know more about Core BPEL, 
-    please visit <a href="http://www.itu.dk/research/CosmoBiz/wiki/pmwiki.php?n=Main.CoreBPEL" target="_blank">this page</a>. 
-    You can also access several examples by <a href="./examples.jsp">clicking here</a>.</p>
+    <p>… to the Online version of the Core BPEL Transformer. To learn more about Core BPEL and the Transformer tool, including java and XSLT source code, 
+    please visit <a href="http://www.itu.dk/research/CosmoBiz/wiki/pmwiki.php?n=Main.CoreBPEL" target="_blank">this page</a>.</p> 
+    <p>The Core BPEL Transformer turns any <em>executable</em> WS-BPEL process into an equivalent Core BPEL process. 
+    A number of executable WS-BPEL processes are available <a href="./examples.jsp">here</a>; you can use these to experiment with the Transformer and Core BPEL.</p>
     
     <br/>
     <h3>Transformation</h3>
-    <p>Choose the bpel file in order to perform a transformation. You can optionally add wsdl files and xsd schemes.</p>
+    <p>Choose a WS-BPEL file to transform. Any WSDL and XSD files referenced by the process must also be provided; the references must be relative and assume that all the files are in the same directory.</p>
 <%
 	boolean requiredFieldError = request.getAttribute("BpelReq")==Boolean.TRUE;
     if(requiredFieldError){
 %>
-    <p class="error">Error : You must choose at least a valid bpel file.</p>
+    <p class="error">Error : You must choose at least a valid WS-BPEL file.</p>
 <% 
     }
 %>
@@ -34,7 +35,7 @@
     	if (requiredFieldError) {
     		out.write(" class=\"error_required\"");
     	}        
-        %>>Pick a Bpel file :</label></p>
+        %>>Pick a WS-BPEL file :</label></p>
         <p class="file_input"><input name="bpel" type="file" /></p>
         
         <div id="opt_field_zone">        
@@ -50,11 +51,11 @@
         }
         for(int i=0;i<fileNumber;i++){
 %>
-        <p class="file_input_label"><label>Pick an <em>optional</em> wsdl or xsd file :</label></p>
+        <p class="file_input_label"><label>Pick an <em>optional</em> WSDL or XSD file :</label></p>
         <p class="file_input"><input name="opt_file<%out.print(i);%>" type="file" /></p>
 <%      }
 %>
-        <p class="add_link" id=p_add_link><a id=a_add_link href="./index.jsp?filenb=<%out.print(fileNumber+1);%>">Add another file (wsdl or xsd)…</a></p>
+        <p class="add_link" id=p_add_link><a id=a_add_link href="./index.jsp?filenb=<%out.print(fileNumber+1);%>">Add another file (WSDL or XSD)…</a></p>
         </div>
         
         <p><label>Validate files </label><input name="validate" type="checkbox" checked="checked" /></p>

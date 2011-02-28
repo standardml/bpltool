@@ -29,11 +29,11 @@
 %>
   <div id="main">
   <h3>Examples</h3>
-  <p>Here you can find some examples. If you want to try the tool with your own files go back to the 
-  <a href="./">main page</a>.</p>
+  <p>Here are some example WS-BPEL processes that may be transformed by clicking the corresponding "Transform" links. Each of them illustrate a particular aspect of Core BPEL, as hinted to in the file names.</p>
+  <p>If you want to try the tool with your own WS-BPEL processes, go back to the <a href="./">main page</a>.</p>
   <table class="example">
       <tr>
-      <th>BPEL File</th>
+      <th>WS-BPEL File</th>
       <th>WSDL File</th>
       <th>Transform</th>
       </tr>
