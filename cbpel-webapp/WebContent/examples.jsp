@@ -27,11 +27,11 @@
        };  
   
 %>
-  <div id="main" class="example">
+  <div id="main">
   <h3>Examples</h3>
   <p>Here you can find some examples. If you want to try the tool with your own files go back to the 
   <a href="./">main page</a>.</p>
-  <table>
+  <table class="example">
       <tr>
       <th>BPEL File</th>
       <th>WSDL File</th>

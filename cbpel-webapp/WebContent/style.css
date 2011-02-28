@@ -50,7 +50,7 @@ a:hover {
 
 
 #main {	
-	margin : 5px 20px;
+	margin : 10px 20px;
 	min-height : 350px;
 }
 
@@ -114,7 +114,7 @@ label.error_required {
 
 /*** Example style ***/
 
-.example table {
+.example {
 	margin-top : 1em;
 	margin-left : 50px;	
 	border-collapse: collapse;	
@@ -123,6 +123,15 @@ label.error_required {
 .example td, .example th {
 	border : 1px #ffd699 solid;
 	padding : 0.3em 0.5em;
+}
+
+.example a {
+	font-style : normal;
+	color : #562a2a;
+}
+
+.example a:hover {
+	font-style : italic;
 }
 
 
