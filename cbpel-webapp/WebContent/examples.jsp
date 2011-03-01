@@ -18,6 +18,7 @@
         {"invoke.bpel","invoke.wsdl"},
         {"onEvent.bpel","onEvent.wsdl"},
         {"pick.bpel","pick.wsdl"},
+        {"proxy.bpel","proxy.wsdl"},
         {"receive.bpel","receive.wsdl"},
         {"receive2.bpel","receive2.wsdl"},
         {"repeatUntil.bpel","repeatUntil.wsdl"},
