@@ -1,21 +1,18 @@
 
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 
 import org.apache.tomcat.util.http.fileupload.DiskFileUpload;
 import org.apache.tomcat.util.http.fileupload.FileItem;
@@ -26,13 +23,15 @@ import xhtmltool.XmlToXhtmlConverter;
 
 import com.beepell.deployment.transform.Transform;
 
+import errors.InternalErrorException;
+
 /**
  * Servlet implementation class Transform
  */
 public class TransformServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private XmlToXhtmlConverter xmlConverter;
-       
+	
     /**
      * @see HttpServlet#HttpServlet()
      */
@@ -41,39 +40,6 @@ public class TransformServlet extends HttpServlet {
         // TODO Auto-generated constructor stub
     }
     
-	public static String xmlToXhtml(InputStream in, String realPath)
-	{
-		System.out.println(com.sun.org.apache.xalan.internal.Version.getVersion());
-		TransformerFactory tf = TransformerFactory.newInstance();
-
-		try {
-			InputStream xslt = new FileInputStream(realPath);
-			Transformer t = tf.newTransformer(new StreamSource(xslt));
-			t.setParameter("indent-elements", "yes");
-			
-			ByteArrayOutputStream s = new ByteArrayOutputStream();
-			
-			t.transform(new StreamSource(in), new StreamResult(s));
-			byte[] out = s.toByteArray();
-
-			return new String(out);
-		}
-		catch (FileNotFoundException e) {
-			return "An internal error as occured : File Not Found"; 
-		} catch (TransformerException e) {
-			String error = "An internal error as occured : Transformer Exception";
-			e.printStackTrace();
-			error += "<br/>xalan version : "+com.sun.org.apache.xalan.internal.Version.getDevelopmentVersionNum()+"<br/>";
-			error += "<br/>path : "+realPath+"<br/>";
-			error += e.getMessage()+"<br/>";
-		    Writer result = new StringWriter();
-		    PrintWriter printWriter = new PrintWriter(result);
-		    e.printStackTrace(printWriter);
-			error += result.toString()+"<br/>";
-			return error;
-		}
-
-	}
 
 	/**
 	 * Check if the request paramaters are ok,
@@ -107,7 +73,8 @@ public class TransformServlet extends HttpServlet {
         return fileArea;
     }
     
-    private String writeFileToSessionFileArea(List<FileItem> items, String fileArea, HttpServletRequest request){
+    private String writeFileToSessionFileArea(List<FileItem> items, String fileArea, HttpServletRequest request) 
+    	throws InternalErrorException{
 
 	    String bpelFileName = null;
         List<String> uploadedFileNames = new LinkedList<String>();
@@ -124,8 +91,7 @@ public class TransformServlet extends HttpServlet {
 	    			try {
 	    				item.write(target);
 	    			} catch (Exception e) {
-	    				e.printStackTrace();
-	    				//TODO handle exception properly
+	    				throw new InternalErrorException(e,"Unable to write the file "+fileName+" to disk.");
 	    			}
 	    		}  
 	    		if (item.getFieldName().equals("bpel"))
@@ -139,7 +105,7 @@ public class TransformServlet extends HttpServlet {
     }
     
     
-    private File transform(String fileArea, String bpelFileName) {
+    private File transform(String fileArea, String bpelFileName) throws TransformerException, InternalErrorException {
 	    
 	    // 5. Transform the file
 	    File source = new File(fileArea + bpelFileName);
@@ -152,17 +118,33 @@ public class TransformServlet extends HttpServlet {
 			transform = new Transform(getServletContext().getRealPath("/schemas"), getServletContext().getRealPath("/xslt"));
 			transform.transform(source, target);
 		} catch (SAXException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (TransformerException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new InternalErrorException(e,"SAXException");		
 		}
 		return target;
     }
+    
+    private void xhtmlConversion(String sourceFile, File target, HttpServletRequest request) throws InternalErrorException{
+    	
+    	//init xmlConverter if necessary
+    	if(xmlConverter == null)
+       		xmlConverter = new XmlToXhtmlConverter(getServletContext().getRealPath("/xmlverbatim/xmlverbatim.xsl"));
+		try {
+			FileInputStream streamResult = new FileInputStream(target);
+			String result = xmlConverter.XmlToXhtml(streamResult);
+			request.setAttribute("result", result);
+			FileInputStream streamSource = new FileInputStream(sourceFile);
+			String source = xmlConverter.XmlToXhtml(streamSource);
+			request.setAttribute("source", source);
+		} catch (FileNotFoundException e) {
+			throw new InternalErrorException(e, "File not found");
+		} catch (TransformerException e) {
+			throw new InternalErrorException(e,
+					"Conversion of source or result to XHTML failed");
+		}
+    }
 
     
-    private void performRequest(HttpServletRequest request, List<FileItem> items){
+    private void performRequest(HttpServletRequest request, List<FileItem> items) throws InternalErrorException, TransformerException{
 	    
     	// 1. Create session file area
     	String fileArea = getFileArea(request.getSession());
@@ -176,30 +158,7 @@ public class TransformServlet extends HttpServlet {
         File target = transform(fileArea, bpelFileName);
         
         // 4. Convert the source and result to xhtml
-        try {
-        	if(xmlConverter == null)
-        		xmlConverter = new XmlToXhtmlConverter(getServletContext().getRealPath("/xmlverbatim/xmlverbatim.xsl"));
-		} catch (FileNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (TransformerConfigurationException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-        try {
-			FileInputStream streamResult = new FileInputStream(target);
-			String result = xmlConverter.XmlToXhtml(streamResult);
-			request.setAttribute("result", result);
-			FileInputStream streamSource = new FileInputStream(fileArea + bpelFileName);
-			String source = xmlConverter.XmlToXhtml(streamSource);
-			request.setAttribute("source", source);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (TransformerException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        xhtmlConversion(fileArea + bpelFileName, target, request);
 		
 		// 5. Delete session file area
 	    for (String file : fileAreaFile.list()) {
@@ -208,41 +167,36 @@ public class TransformServlet extends HttpServlet {
 	    fileAreaFile.delete();
     }
     
+    private void performExampleRequest(HttpServletRequest request) throws InternalErrorException, TransformerException {
+		String bpelFileName = request.getParameter("example");
+		String fileArea = getServletContext().getRealPath("examples") + "/";
+        File target = transform(fileArea, bpelFileName);
+
+       	if(xmlConverter == null)
+       		xmlConverter = new XmlToXhtmlConverter(getServletContext().getRealPath("/xmlverbatim/xmlverbatim.xsl"));
+
+       	/* Convert source and target to xhtml, and save it in request attributes */
+       	xhtmlConversion(fileArea + bpelFileName, target, request);
+       	
+		target.delete();
+    }
+    
     
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		if(request.getParameter("example")!=null){
-			String bpelFileName = request.getParameter("example");
-			String fileArea = getServletContext().getRealPath("examples") + "/";
-	        File target = transform(fileArea, bpelFileName);
-	        try {
-	        	if(xmlConverter == null)
-	        		xmlConverter = new XmlToXhtmlConverter(getServletContext().getRealPath("/xmlverbatim/xmlverbatim.xsl"));
-			} catch (FileNotFoundException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			} catch (TransformerConfigurationException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-	        try {
-				FileInputStream streamResult = new FileInputStream(target);
-				String result = xmlConverter.XmlToXhtml(streamResult);
-				request.setAttribute("result", result);
-				FileInputStream streamSource = new FileInputStream(fileArea + bpelFileName);
-				String source = xmlConverter.XmlToXhtml(streamSource);
-				request.setAttribute("source", source);
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			try {
+				performExampleRequest(request);
+				getServletConfig().getServletContext().getRequestDispatcher("/displayresult.jsp").forward(request,response);
+			} catch (InternalErrorException e) {
+				request.setAttribute("exception", e);
+				getServletConfig().getServletContext().getRequestDispatcher("/displayerror.jsp").forward(request,response);
 			} catch (TransformerException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			target.delete();
-			getServletConfig().getServletContext().getRequestDispatcher("/displayresult.jsp").forward(request,response);
+				request.setAttribute("exception", e);
+				getServletConfig().getServletContext().getRequestDispatcher("/displayerror.jsp").forward(request,response);
+			}			
 		} else {
 			//redirection to home page
 			getServletConfig().getServletContext().getRequestDispatcher("/index.jsp").forward(request,response);
@@ -270,14 +224,15 @@ public class TransformServlet extends HttpServlet {
 				getServletConfig().getServletContext().getRequestDispatcher("/displayresult.jsp").forward(request,response);
 		    }
 		} catch (FileUploadException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			request.setAttribute("exception", new InternalErrorException(e, "File upload exception"));
+			getServletConfig().getServletContext().getRequestDispatcher("/displayerror.jsp").forward(request,response);
+		} catch (InternalErrorException e) {
+			request.setAttribute("exception", e);
+			getServletConfig().getServletContext().getRequestDispatcher("/displayerror.jsp").forward(request,response);
+		} catch (TransformerException e) {
+			request.setAttribute("exception", e);
+			getServletConfig().getServletContext().getRequestDispatcher("/displayerror.jsp").forward(request,response);
 		}
-
-
-	    
-
-
 			
 	}
 

@@ -47,6 +47,10 @@
     </div>
 
   </div>
+  
+  
+  <br/>
+  <p>Please return to <a href="./">home page</a> to perform a new transformation.</p>
   </div>
 
 
