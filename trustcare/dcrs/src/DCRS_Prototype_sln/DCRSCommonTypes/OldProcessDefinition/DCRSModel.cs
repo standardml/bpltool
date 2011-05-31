@@ -43,6 +43,8 @@ namespace ITU.DK.DCRS.CommonTypes.OldProcessDefinition
             
             // Assign default null array for strong conditions.
             strongconditions = new short[0, 2];
+            milestones = new short[0, 2];
+
 
             calculateNonConditionalEvents();
         }
@@ -57,6 +59,9 @@ namespace ITU.DK.DCRS.CommonTypes.OldProcessDefinition
             this.conditions = conditions;
             this.strongconditions = strongconditions;
             this.modelName = modelName;
+
+            milestones = new short[0, 2];
+
 
             calculateNonConditionalEvents();
         }

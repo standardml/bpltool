@@ -123,9 +123,11 @@ namespace DCRSToProMeLaCompiler.FiniteRuns
             codeBuilder.Append(string.Format("{0}{0}{0}{0}{0} if {1}", Utilities.TAB,
                                              Environment.NewLine));
 
-            //                    :: executed_actions_set[index2] != 1 -> can_execute = 0;
+            // Rao: 2011-05-03: Changed to check if parent is included and not in executed set
+
+            //                    :: included_actions_set[index2] == 1 && executed_actions_set[index2] != 1 -> can_execute = 0;
             codeBuilder.Append(
-                string.Format("{0}{0}{0}{0}{0} :: executed_actions_set[index2] != 1 -> can_execute = 0; {1}",
+                string.Format("{0}{0}{0}{0}{0} :: included_actions_set[index2] == 1 && executed_actions_set[index2] != 1 -> can_execute = 0; {1}",
                               Utilities.TAB,
                               Environment.NewLine));
 
@@ -150,6 +152,75 @@ namespace DCRSToProMeLaCompiler.FiniteRuns
             //                fi;
             codeBuilder.Append(string.Format("{0}{0}{0}{0} fi; {1}", Utilities.TAB,
                                              Environment.NewLine));
+
+
+
+
+
+
+            // Rao: 2011-05-03 Code for Milestones..check
+
+                //// 2011:05:03 For Milestone relation check..
+                // if 
+                // :: milestone_relation[index].column[index2] == 1  -> 
+                //     if 
+                //     :: included_actions_set[index2] == 1 && pending_responses_set[index2] == 1 -> can_execute = 0; 
+                //     :: else ->skip; 
+                //     fi; 
+                // :: else ->skip; 
+                // fi; 
+
+
+
+            
+            //                if
+            codeBuilder.Append(string.Format("{0}{0}{0}{0} if {1}", Utilities.TAB,
+                                             Environment.NewLine));
+
+            //                :: milestone_relation[index].column[index2] == 1  ->
+            codeBuilder.Append(string.Format("{0}{0}{0}{0} :: milestone_relation[index].column[index2] == 1  -> {1}",
+                                             Utilities.TAB,
+                                             Environment.NewLine));
+
+            //                    if
+            codeBuilder.Append(string.Format("{0}{0}{0}{0}{0} if {1}", Utilities.TAB,
+                                             Environment.NewLine));
+
+            //                    :: pending_responses_set[index2] == 1 -> can_execute = 0;
+            codeBuilder.Append(
+                string.Format("{0}{0}{0}{0}{0} :: included_actions_set[index2] == 1 && pending_responses_set[index2] == 1 -> can_execute = 0; {1}",
+                              Utilities.TAB,
+                              Environment.NewLine));
+
+            //                    :: else ->skip;
+            codeBuilder.Append(
+                string.Format("{0}{0}{0}{0}{0} :: else ->skip; {1}",
+                              Utilities.TAB,
+                              Environment.NewLine));
+
+            //                    fi;
+            codeBuilder.Append(
+                string.Format("{0}{0}{0}{0}{0} fi; {1}",
+                              Utilities.TAB,
+                              Environment.NewLine));
+
+
+            //                :: else ->skip;  
+            codeBuilder.Append(string.Format("{0}{0}{0}{0} :: else ->skip; {1}", Utilities.TAB,
+                                             Environment.NewLine));
+
+
+            //                fi;
+            codeBuilder.Append(string.Format("{0}{0}{0}{0} fi; {1}", Utilities.TAB,
+                                             Environment.NewLine));
+
+
+
+
+
+
+
+
 
 
             //                index2 = index2 + 1;

@@ -194,12 +194,11 @@ namespace DCRSUIApplication
             //var autamatonSettings = new AutamatonSettings
             //                            {StateMode = AutomatonMode.FiniteSate, ExcludeNonConditionalEvents = true};
 
-            var autamatonSettings = new AutamatonSettings { StateMode = AutomatonMode.Buchi, ExcludeNonConditionalEvents = false, IncludeTauAction = false};
+            //var autamatonSettings = new AutamatonSettings { StateMode = AutomatonMode.Buchi, ExcludeNonConditionalEvents = false, IncludeTauAction = false};
 
+            //var stateManager = StateManager.GetStateManagerInstance();
 
-            var stateManager = StateManager.GetStateManagerInstance();
-
-            stateManager.Settings = autamatonSettings;
+            //stateManager.Settings = autamatonSettings;
 
             //stateManager.Specification = DCRSExamples.GetTwoSelfResponseEventsExample();
             //stateManager.Specification = DCRSExamples.GetGiveMedicineFullExample();
@@ -214,7 +213,16 @@ namespace DCRSUIApplication
 
             //stateManager.Specification = DCRSExamples.GetArrangeMeetingSampleShortWithCreateCase();
 
-            stateManager.Specification = DCRSExamples.BuchiToDCRTranslationsExample2();
+            var autamatonSettings = new AutamatonSettings { StateMode = AutomatonMode.FiniteSate, ExcludeNonConditionalEvents = false, IncludeTauAction = false };
+
+            var stateManager = StateManager.GetStateManagerInstance();
+
+            stateManager.Settings = autamatonSettings;
+
+            stateManager.Specification = DCRSExamples.GetGiveMedicineSmallExample();
+
+            
+            //stateManager.Specification = DCRSExamples.BuchiToDCRTranslationsExample2();
 
             
 
@@ -739,9 +747,13 @@ namespace DCRSUIApplication
 
             var conditions = TransformRelations(datagrid_condition);
 
+            var milestones = TransformRelations(datagrid_milestones);
+
+            var strongconditions = new short[0, 2];
+
             var initialState = TransformInitialState(datagridactions);
 
-            var dcrModel = new DCRSModel(textBoxModelName.Text,actionsList, includes, excludes, responses, conditions
+            var dcrModel = new DCRSModel(textBoxModelName.Text, actionsList, includes, excludes, responses, conditions,strongconditions, milestones
                                          ) { InitialState = initialState };
 
 
@@ -864,7 +876,7 @@ namespace DCRSUIApplication
 
             datagrid_response.Rows.Clear();
 
-            datagrid_strong_condition.Rows.Clear();
+            datagrid_milestones.Rows.Clear();
 
             datagrid_includes.Rows.Clear();
 
@@ -890,7 +902,7 @@ namespace DCRSUIApplication
 
             FillRelations(datagrid_condition, deSerializedDCRSModel.Conditions);
 
-            FillRelations(datagrid_strong_condition, deSerializedDCRSModel.StrongConditions);
+            FillRelations(datagrid_milestones, deSerializedDCRSModel.MileStones);
 
             FillRelations(datagrid_response, deSerializedDCRSModel.Responses);
 

@@ -40,6 +40,7 @@ namespace ITU.DK.DCRS.CommonTypes.Serialization
             var constraintsElement = new XElement(GlobalDeclarations.DCRS_NAMESPACE_URI + "constraint-set-collection",
                 WriteConstrintSet(model.Conditions, "condition"),
                 WriteConstrintSet(model.StrongConditions, "strongcondition"),
+                WriteConstrintSet(model.MileStones, "milestone"),
                 WriteConstrintSet(model.Responses, "response"),
                 WriteConstrintSet(model.Includes, "include"),
                 WriteConstrintSet(model.Excludes, "exclude")
@@ -106,10 +107,13 @@ namespace ITU.DK.DCRS.CommonTypes.Serialization
 
                 var strongconditions = GetContraintsArray(rootElement, "strongcondition");
 
+                var milestones = GetContraintsArray(rootElement, "milestone");
 
 
 
-                return new DCRSModel(modelName, actionList, includes, excludes, responses, conditions, strongconditions);
+
+                return new DCRSModel(modelName, actionList, includes, excludes, responses, conditions, strongconditions,
+                                     milestones);
 
 
             }

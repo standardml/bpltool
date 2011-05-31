@@ -139,6 +139,9 @@ namespace DCRSToProMeLaCompiler
 
             //ndimarray exclude_relation[actioncount];
 
+            //ndimarray milestone_relation[actioncount];
+
+
 
             codeBuilder.Append("typedef ndimarray {bit column[");
 
@@ -173,6 +176,11 @@ namespace DCRSToProMeLaCompiler
             codeBuilder.Append(string.Format(
                                    "ndimarray exclude_relation[{0}]; {1}",
                                    model.ActionList.Count, Environment.NewLine));
+
+
+            codeBuilder.Append(string.Format(
+                       "ndimarray milestone_relation[{0}]; {1}",
+                       model.ActionList.Count, Environment.NewLine));
 
 
             ///* Declarations of sets included_actions_set, executed_actions_set, pending_responses_set */

@@ -56,6 +56,8 @@ namespace DCRSToProMeLaCompiler
            
             WriteRelations(model, codeBuilder, model.Conditions, "condition_relation");
 
+            WriteRelations(model, codeBuilder, model.MileStones, "milestone_relation");
+
             WriteRelations(model, codeBuilder, model.Responses, "response_relation");
 
 

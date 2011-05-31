@@ -39,7 +39,7 @@
             this.buttonDCRSLoadPath = new System.Windows.Forms.Button();
             this.textBoxDCRSLoadpath = new System.Windows.Forms.TextBox();
             this.label11 = new System.Windows.Forms.Label();
-            this.datagrid_strong_condition = new System.Windows.Forms.DataGridView();
+            this.datagrid_milestones = new System.Windows.Forms.DataGridView();
             this.dataGridViewTextBoxColumn7 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn8 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.label10 = new System.Windows.Forms.Label();
@@ -99,7 +99,7 @@
             this.tabControlStateSpace.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.groupBox1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.datagrid_strong_condition)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.datagrid_milestones)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.datagrid_response)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.datagrid_condition)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.datagrid_excludes)).BeginInit();
@@ -127,7 +127,7 @@
             // tabPage1
             // 
             this.tabPage1.Controls.Add(this.groupBox1);
-            this.tabPage1.Controls.Add(this.datagrid_strong_condition);
+            this.tabPage1.Controls.Add(this.datagrid_milestones);
             this.tabPage1.Controls.Add(this.label10);
             this.tabPage1.Controls.Add(this.textBoxModelName);
             this.tabPage1.Controls.Add(this.label6);
@@ -238,17 +238,17 @@
             this.label11.TabIndex = 11;
             this.label11.Text = "Load Model";
             // 
-            // datagrid_strong_condition
+            // datagrid_milestones
             // 
-            this.datagrid_strong_condition.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.datagrid_strong_condition.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.datagrid_milestones.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.datagrid_milestones.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.dataGridViewTextBoxColumn7,
             this.dataGridViewTextBoxColumn8});
-            this.datagrid_strong_condition.Location = new System.Drawing.Point(642, 28);
-            this.datagrid_strong_condition.Name = "datagrid_strong_condition";
-            this.datagrid_strong_condition.RowTemplate.Height = 15;
-            this.datagrid_strong_condition.Size = new System.Drawing.Size(125, 167);
-            this.datagrid_strong_condition.TabIndex = 15;
+            this.datagrid_milestones.Location = new System.Drawing.Point(642, 28);
+            this.datagrid_milestones.Name = "datagrid_milestones";
+            this.datagrid_milestones.RowTemplate.Height = 15;
+            this.datagrid_milestones.Size = new System.Drawing.Size(125, 167);
+            this.datagrid_milestones.TabIndex = 15;
             // 
             // dataGridViewTextBoxColumn7
             // 
@@ -269,9 +269,9 @@
             this.label10.AutoSize = true;
             this.label10.Location = new System.Drawing.Point(643, 9);
             this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(125, 13);
+            this.label10.Size = new System.Drawing.Size(94, 13);
             this.label10.TabIndex = 14;
-            this.label10.Text = "Strong Condtion Relation";
+            this.label10.Text = "Milestone Relation";
             // 
             // textBoxModelName
             // 
@@ -786,7 +786,7 @@
             this.tabPage1.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.datagrid_strong_condition)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.datagrid_milestones)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.datagrid_response)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.datagrid_condition)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.datagrid_excludes)).EndInit();
@@ -852,7 +852,7 @@
         private System.Windows.Forms.TextBox textBoxZingFolderPath;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Button buttonZingFiniteRuns;
-        private System.Windows.Forms.DataGridView datagrid_strong_condition;
+        private System.Windows.Forms.DataGridView datagrid_milestones;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn7;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn8;
         private System.Windows.Forms.Label label10;
