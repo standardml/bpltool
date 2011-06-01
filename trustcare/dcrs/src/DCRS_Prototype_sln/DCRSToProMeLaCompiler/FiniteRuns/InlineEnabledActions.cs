@@ -16,7 +16,7 @@ namespace DCRSToProMeLaCompiler.FiniteRuns
             //{
             //    index = 0;
             //    do
-            //    :: index <  actioncount -> enabled_actions_set[index] = 0 ; index = index + 1;
+            //    :: index <  action_count -> enabled_actions_set[index] = 0 ; index = index + 1;
             //    :: else ->	break;
             //    od;
             //}
@@ -37,7 +37,7 @@ namespace DCRSToProMeLaCompiler.FiniteRuns
             codeBuilder.Append(string.Format("{0} do {1}", Utilities.TAB,
                                              Environment.NewLine));
 
-            codeBuilder.Append(string.Format("{0} :: index <  actioncount -> enabled_actions_set[index] = 0 ; index = index + 1; {1}", Utilities.TAB,
+            codeBuilder.Append(string.Format("{0} :: index <  action_count -> enabled_actions_set[index] = 0 ; index = index + 1; {1}", Utilities.TAB,
                                              Environment.NewLine));
 
             codeBuilder.Append(string.Format("{0} :: else -> break; {1}", Utilities.TAB,
@@ -82,8 +82,8 @@ namespace DCRSToProMeLaCompiler.FiniteRuns
             codeBuilder.Append(string.Format("{0} do /* Loop for outer dimesion, to loop row ount */ {1}", Utilities.TAB,
                                              Environment.NewLine));
 
-            //    :: index <  actioncount ->
-            codeBuilder.Append(string.Format("{0} :: index <  actioncount -> {1}", Utilities.TAB,
+            //    :: index <  action_count ->
+            codeBuilder.Append(string.Format("{0} :: index <  action_count -> {1}", Utilities.TAB,
                                              Environment.NewLine));
 
             //        if
@@ -106,8 +106,8 @@ namespace DCRSToProMeLaCompiler.FiniteRuns
             codeBuilder.Append(string.Format("{0}{0}{0} do /* inner loop for 2nd dimension */ {1}", Utilities.TAB,
                                              Environment.NewLine));
 
-            //            :: index2 <  actioncount ->
-            codeBuilder.Append(string.Format("{0}{0}{0} :: index2 <  actioncount -> {1}", Utilities.TAB,
+            //            :: index2 <  action_count ->
+            codeBuilder.Append(string.Format("{0}{0}{0} :: index2 <  action_count -> {1}", Utilities.TAB,
                                              Environment.NewLine));
 
             //                if

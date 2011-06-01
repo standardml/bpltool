@@ -82,7 +82,7 @@ namespace DCRSToProMeLaCompiler
         private static void WriteHeaders(DCRSModel model, StringBuilder codeBuilder)
         {
 
-            //#define actioncount	3
+            //#define action_count	3
             //#define OM	0
             //#define S	1
             //#define GM	2
@@ -91,7 +91,7 @@ namespace DCRSToProMeLaCompiler
             codeBuilder.Append(Environment.NewLine);
 
             codeBuilder.Append(string.Format(
-                                   "#define actioncount {0}{1}",
+                                   "#define action_count {0}{1}",
                                    model.ActionList.Count, Environment.NewLine));
 
 
@@ -116,36 +116,36 @@ namespace DCRSToProMeLaCompiler
 
             //typedef action {byte actionid; bit included };
 
-            //action actions_array[actioncount];
+            //action actions_array[action_count];
 
-            codeBuilder.Append(Environment.NewLine);
+            //codeBuilder.Append(Environment.NewLine);
 
-            codeBuilder.Append("typedef action {byte actionid; bit included };");
+            //codeBuilder.Append("typedef action {byte actionid; bit included };");
 
-            codeBuilder.Append(Environment.NewLine);
+            //codeBuilder.Append(Environment.NewLine);
 
-            codeBuilder.Append(string.Format(
-                                   "action actions_array[{0}]; {1}",
-                                   model.ActionList.Count, Environment.NewLine));
-
-
-            //typedef ndimarray {bit column[actioncount]};
-
-            //ndimarray condition_relation[actioncount];
-
-            //ndimarray response_relation[actioncount];
-
-            //ndimarray include_relation[actioncount];
-
-            //ndimarray exclude_relation[actioncount];
-
-            //ndimarray milestone_relation[actioncount];
+            //codeBuilder.Append(string.Format(
+            //                       "action actions_array[{0}]; {1}",
+            //                       model.ActionList.Count, Environment.NewLine));
 
 
+            //typedef ndimarray {bit column[action_count]};
 
-            codeBuilder.Append("typedef ndimarray {bit column[");
+            //ndimarray condition_relation[action_count];
 
-            codeBuilder.Append(model.ActionList.Count);
+            //ndimarray response_relation[action_count];
+
+            //ndimarray include_relation[action_count];
+
+            //ndimarray exclude_relation[action_count];
+
+            //ndimarray milestone_relation[action_count];
+
+
+
+            codeBuilder.Append("typedef ndimarray {bit column[action_count");
+
+            //codeBuilder.Append(model.ActionList.Count);
 
             codeBuilder.Append("]}; ");
 
@@ -159,35 +159,30 @@ namespace DCRSToProMeLaCompiler
 // ReSharper restore FormatStringProblem
 
             codeBuilder.Append(string.Format(
-                                   "ndimarray condition_relation[{0}]; {1}",
-                                   model.ActionList.Count, Environment.NewLine));
+                                   "ndimarray condition_relation[action_count]; {0}", Environment.NewLine));
 
 
             codeBuilder.Append(string.Format(
-                                   "ndimarray response_relation[{0}]; {1}",
-                                   model.ActionList.Count, Environment.NewLine));
+                                   "ndimarray response_relation[action_count]; {0}", Environment.NewLine));
 
 
             codeBuilder.Append(string.Format(
-                                   "ndimarray include_relation[{0}]; {1}",
-                                   model.ActionList.Count, Environment.NewLine));
+                                   "ndimarray include_relation[action_count]; {0}", Environment.NewLine));
 
 
             codeBuilder.Append(string.Format(
-                                   "ndimarray exclude_relation[{0}]; {1}",
-                                   model.ActionList.Count, Environment.NewLine));
+                                   "ndimarray exclude_relation[action_count]; {0}", Environment.NewLine));
 
 
             codeBuilder.Append(string.Format(
-                       "ndimarray milestone_relation[{0}]; {1}",
-                       model.ActionList.Count, Environment.NewLine));
+                       "ndimarray milestone_relation[action_count]; {0}", Environment.NewLine));
 
 
-            ///* Declarations of sets included_actions_set, executed_actions_set, pending_responses_set */
-            //bit included_actions_set[actioncount];
-            //bit executed_actions_set[actioncount];
-            //bit pending_responses_set[actioncount];
-            //bit enabled_actions_set[actioncount];
+            //* Declarations of sets included_actions_set, executed_actions_set, pending_responses_set */
+            //bit included_actions_set[action_count];
+            //bit executed_actions_set[action_count];
+            //bit pending_responses_set[action_count];
+            //bit enabled_actions_set[action_count];
 
 
 
@@ -269,10 +264,13 @@ namespace DCRSToProMeLaCompiler
                                    "byte loopindex = 0; {0}",
                                    Environment.NewLine));
 
+
+            codeBuilder.Append("/* Not possible to assign -1 to a byte, so assign it action_count + 1 */" +
+                               Environment.NewLine);
             //byte random_action_executed = 0;
-            //show byte random_action_executed = actioncount + 1;
+            //show byte random_action_executed = action_count + 1;
             codeBuilder.Append(string.Format(
-                                   "show byte random_action_executed = actioncount + 1; {0}",
+                                   "show byte random_action_executed = action_count + 1; {0}",
                                    Environment.NewLine));
 
             codeBuilder.Append(Environment.NewLine);
@@ -297,37 +295,37 @@ namespace DCRSToProMeLaCompiler
                                    "byte state_index = 0; {0}",
                                    Environment.NewLine));
 
-            //bit include_response_current[actioncount];
+            //bit include_response_current[action_count];
              codeBuilder.Append(string.Format(
-                       "bit include_response_current[actioncount]; {0}",
+                       "bit include_response_current[action_count]; {0}",
                        Environment.NewLine));
             
-            //bit included_actions_nextstate[actioncount];
+            //bit included_actions_nextstate[action_count];
              codeBuilder.Append(string.Format(
-                       "bit included_actions_nextstate[actioncount]; {0}",
+                       "bit included_actions_nextstate[action_count]; {0}",
                        Environment.NewLine));
 
 
-            //bit pending_responses_nextstate[actioncount];
+            //bit pending_responses_nextstate[action_count];
              codeBuilder.Append(string.Format(
-                       "bit pending_responses_nextstate[actioncount]; {0}",
+                       "bit pending_responses_nextstate[action_count]; {0}",
                        Environment.NewLine));
             
-            //bit include_response_nextstate[actioncount];
+            //bit include_response_nextstate[action_count];
              codeBuilder.Append(string.Format(
-                       "bit include_response_nextstate[actioncount]; {0}",
+                       "bit include_response_nextstate[action_count]; {0}",
                        Environment.NewLine));
 
 
-            //bit acceptable_responses_set[actioncount];
+            //bit acceptable_responses_set[action_count];
              codeBuilder.Append(string.Format(
-                       "bit acceptable_responses_set[actioncount]; {0}",
+                       "bit acceptable_responses_set[action_count]; {0}",
                        Environment.NewLine));
 
 
-            //bit m_set[actioncount];
+            //bit m_set[action_count];
              codeBuilder.Append(string.Format(
-                       "bit m_set[actioncount]; {0}",
+                       "bit m_set[action_count]; {0}",
                        Environment.NewLine));
 
 

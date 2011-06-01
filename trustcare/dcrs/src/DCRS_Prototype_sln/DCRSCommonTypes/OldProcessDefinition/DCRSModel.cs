@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace ITU.DK.DCRS.CommonTypes.OldProcessDefinition
 {
@@ -19,13 +20,31 @@ namespace ITU.DK.DCRS.CommonTypes.OldProcessDefinition
         private readonly string modelName;
 
         public List<short> NonConditionalEvents = new List<short>();
-        
+
+        private short[,] _initialIncludedActions = new short[0, 0];
+
+        private short[,] _initialPendingResponses = new short[0, 0];
+
+
         /// <summary>
         /// The first column is an Id of an action and the 2nd column referes to included/excluded : 1\0
         /// </summary>
-        public short[,] InitialState { get; set; }
+        public short[,] InitialIncludedActions
+        {
+            get { return _initialIncludedActions; }
+            set { _initialIncludedActions = value; }
+        }
 
-        public short[] InitialPendingResponses { get; set; }
+        
+        /// <summary>
+        /// The first column is an Id of an action and the 2nd column referes to pending response. 1: pending response 0: no pending response
+        /// </summary>
+        public short[,] InitialPendingResponses
+        {
+            get { return _initialPendingResponses; }
+            set { _initialPendingResponses = value; }
+        }
+
 
 
 
@@ -47,6 +66,8 @@ namespace ITU.DK.DCRS.CommonTypes.OldProcessDefinition
 
 
             calculateNonConditionalEvents();
+
+            CheckActionNamesForspaces();
         }
 
 
@@ -64,6 +85,8 @@ namespace ITU.DK.DCRS.CommonTypes.OldProcessDefinition
 
 
             calculateNonConditionalEvents();
+
+            CheckActionNamesForspaces();
         }
 
 
@@ -83,6 +106,8 @@ namespace ITU.DK.DCRS.CommonTypes.OldProcessDefinition
             this.modelName = modelName;
 
             calculateNonConditionalEvents();
+
+            CheckActionNamesForspaces();
         }
 
 
@@ -142,10 +167,17 @@ namespace ITU.DK.DCRS.CommonTypes.OldProcessDefinition
                 NonConditionalEvents.Remove(conditions[index, 1]);
 
             }
-
-
-
         }
 
+
+        private void CheckActionNamesForspaces()
+        {
+            // REmove spaces if any in names.
+            foreach (var keyValuePair in
+                actionList.Where(keyValuePair => keyValuePair.Value.Contains(" ")))
+            {
+                keyValuePair.Value.Replace(" ", string.Empty);
+            }
+        }
     }
 }

@@ -38,7 +38,7 @@ namespace DCRSUIApplication
 
 
             var model = new DCRSModel("GiveMedicine_short",actionsList, includes, excludes, responses, conditions )
-                            {InitialState = initialState};
+                            {InitialIncludedActions = initialState};
 
 
 

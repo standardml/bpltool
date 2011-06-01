@@ -30,7 +30,7 @@ namespace DCRSToProMeLaCompiler
 
         //    /* Prepare the initial state by copying all the actions with included bit to included_actions_set */
         //    do
-        //    :: index <  actioncount ->
+        //    :: index <  action_count ->
         //        included_actions_set[index] = (actions_array[index].included == 1 -> 1: 0);
         //        index = index + 1;
         //    :: else -> 	break;
@@ -51,7 +51,7 @@ namespace DCRSToProMeLaCompiler
             codeBuilder.Append(Environment.NewLine); 
             
 
-            FillActionsArray(model, codeBuilder);
+            //FillActionsArray(model, codeBuilder);
 
            
             WriteRelations(model, codeBuilder, model.Conditions, "condition_relation");
@@ -66,7 +66,9 @@ namespace DCRSToProMeLaCompiler
             WriteRelations(model, codeBuilder, model.Excludes, "exclude_relation");
 
 
-            CopyInitialState(codeBuilder);
+            //CopyInitialState(codeBuilder);
+
+            CopyInitialStateRevised(model, codeBuilder);
 
 
             codeBuilder.Append("}");
@@ -95,7 +97,7 @@ namespace DCRSToProMeLaCompiler
                                                  keyValuePair.Value, Environment.NewLine));
 
                 // Get the included value from the initial state.
-                var includedbit = Utilities.GetValueFromTwoDimArray(model.InitialState, keyValuePair.Key);
+                var includedbit = Utilities.GetValueFromTwoDimArray(model.InitialIncludedActions, keyValuePair.Key);
 
                 // Here use the default value as 1 for included bit that means, if an action is not 
                 // specified explicitly excluded, we treat the default as included.
@@ -139,11 +141,57 @@ namespace DCRSToProMeLaCompiler
         }
 
 
+        private static void CopyInitialStateRevised(DCRSModel model, StringBuilder codeBuilder)
+        {
+            codeBuilder.Append(Environment.NewLine);
+
+            codeBuilder.Append(string.Format("{0} /* Prepare the initial state */ {1}", Utilities.TAB,
+                                             Environment.NewLine));
+
+
+            codeBuilder.Append(string.Format("{0} /* Included Actions */ {1}", Utilities.TAB,
+                                             Environment.NewLine));
+
+            // Write only the actions that are included, so the rest are 0 anyway..
+            for (short index = 0; index < model.InitialIncludedActions.GetLength(0); index++)
+            {
+                if (model.InitialIncludedActions[index, 1] == 1)
+                {
+                    //parentVectorForIniatialState.IncludedEvents.Remove((short)index);
+
+                    codeBuilder.Append(
+                        string.Format("{0} included_actions_set[{1}] = 1; {2}",
+                                      Utilities.TAB, model.ActionList[index], Environment.NewLine));
+                }
+            }
+
+
+            codeBuilder.Append(Environment.NewLine);
+
+            codeBuilder.Append(string.Format("{0} /* Pending Responses */ {1}", Utilities.TAB,
+                                             Environment.NewLine));
+
+
+            // Write only the actions that are included, so the rest are 0 anyway..
+            for (short index = 0; index < model.InitialPendingResponses.GetLength(0); index++)
+            {
+                if (model.InitialPendingResponses[index, 1] == 1)
+                {
+                    codeBuilder.Append(
+                        string.Format("{0} pending_responses_set[{1}] = 1; {2}",
+                                      Utilities.TAB, model.ActionList[index], Environment.NewLine));
+                }
+            }
+
+
+        }
+
+
         private static void CopyInitialState(StringBuilder codeBuilder)
         {
 
             //do
-            //:: index <  actioncount ->
+            //:: index <  action_count ->
             //    included_actions_set[index] = (actions_array[index].included == 1 -> 1: 0);
             //    index = index + 1;
             //:: else -> 	break;
@@ -159,7 +207,7 @@ namespace DCRSToProMeLaCompiler
             codeBuilder.Append(string.Format("{0} do {1}", Utilities.TAB,
                                   Environment.NewLine));
 
-            codeBuilder.Append(string.Format("{0} :: index <  actioncount -> {1}", Utilities.TAB, Environment.NewLine));
+            codeBuilder.Append(string.Format("{0} :: index <  action_count -> {1}", Utilities.TAB, Environment.NewLine));
 
             codeBuilder.Append(
                 string.Format("{0}{0} included_actions_set[index] = (actions_array[index].included == 1 -> 1: 0); {1}",

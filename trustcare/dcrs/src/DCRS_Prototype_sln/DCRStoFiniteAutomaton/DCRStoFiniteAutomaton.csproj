@@ -71,7 +71,6 @@
     <Compile Include="AutamatonSettings.cs" />
     <Compile Include="AutomatonMode.cs" />
     <Compile Include="BuchiAutomatonState.cs" />
-    <Compile Include="DCRSExamples.cs" />
     <Compile Include="FiniteAutamatonState.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StateManager.cs" />

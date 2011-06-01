@@ -101,14 +101,26 @@ namespace DCRSToProMeLaCompiler.FiniteRuns
             //        ::  accepted_state_reached = 0; 
             //        fi;
 
+            // Rao: 2011.06.01 Fix for progress label and accepting state.
+
             codeBuilder.Append(string.Format("{0}{0} if {1}",
                                              Utilities.TAB,
                                              Environment.NewLine));
 
-            codeBuilder.Append(string.Format("{0}{0} :: state_accepted == 1 -> accepted_state_reached = 1; goto  accepting_state; {1}", Utilities.TAB,
+            //codeBuilder.Append(string.Format("{0}{0} :: state_accepted == 1 -> accepted_state_reached = 1;  {1}", Utilities.TAB,
+            //                                 Environment.NewLine));
+
+
+            codeBuilder.Append(string.Format("{0}{0} :: state_accepted == 1 -> {1}", Utilities.TAB,
                                              Environment.NewLine));
 
-            codeBuilder.Append(string.Format("{0}{0} ::  accepted_state_reached = 0;  {1}",
+
+            codeBuilder.Append(string.Format("{0}{0} progress_state: accepted_state_reached = 1;  {1}", Utilities.TAB,
+                                             Environment.NewLine));
+
+
+
+            codeBuilder.Append(string.Format("{0}{0} :: state_accepted == 0 ->  accepted_state_reached = 0;  {1}",
                                              Utilities.TAB,
                                              Environment.NewLine));
 

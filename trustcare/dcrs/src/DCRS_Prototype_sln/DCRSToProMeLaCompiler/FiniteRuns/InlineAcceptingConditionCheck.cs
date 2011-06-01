@@ -18,7 +18,7 @@ namespace DCRSToProMeLaCompiler.FiniteRuns
             //    index = 0;
             //    state_accepted = 1;
             //    do
-            //    :: index <  actioncount ->
+            //    :: index <  action_count ->
             //        if
             //        :: pending_responses_set[index] == 1 -> state_accepted = 0 ;
             //        :: else -> skip;
@@ -53,7 +53,7 @@ namespace DCRSToProMeLaCompiler.FiniteRuns
                                              Environment.NewLine));
 
 
-            codeBuilder.Append(string.Format("{0} :: index <  actioncount -> {1}", Utilities.TAB,
+            codeBuilder.Append(string.Format("{0} :: index <  action_count -> {1}", Utilities.TAB,
                                              Environment.NewLine));
 
 
@@ -61,8 +61,8 @@ namespace DCRSToProMeLaCompiler.FiniteRuns
             codeBuilder.Append(string.Format("{0}{0} if {1}", Utilities.TAB,
                                              Environment.NewLine));
 
-
-            codeBuilder.Append(string.Format("{0}{0} :: pending_responses_set[index] == 1 -> state_accepted = 0 ; {1}", Utilities.TAB,
+            // Rao: 2011.06.01: Check for included pending responses.
+            codeBuilder.Append(string.Format("{0}{0} :: (pending_responses_set[index] == 1) && (included_actions_set[index] == 1) -> state_accepted = 0 ; {1}", Utilities.TAB,
                                              Environment.NewLine));
 
 

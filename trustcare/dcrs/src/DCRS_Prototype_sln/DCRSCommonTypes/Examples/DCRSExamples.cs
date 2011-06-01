@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using ITU.DK.DCRS.CommonTypes.OldProcessDefinition;
 
-namespace DCRStoFiniteAutomaton
+namespace ITU.DK.DCRS.CommonTypes.Examples
 {
     public class DCRSExamples
     {
@@ -41,7 +38,7 @@ namespace DCRStoFiniteAutomaton
 
             var initialState = new short[4, 2] { { 0, 1 }, { 1, 1 }, { 2, 1 }, { 3, 1 } };
 
-            var model = new DCRSModel("GiveMedicine_full",actionsList, includes, excludes, responses, conditions ) { InitialState = initialState };
+            var model = new DCRSModel("GiveMedicine_full",actionsList, includes, excludes, responses, conditions ) { InitialIncludedActions = initialState };
 
             //string result = DCRSCompiler.ComplileDcrsModelForStrongAcceptanceCondition(model, @"D:\PhDWork\Temp");
 
@@ -78,7 +75,7 @@ namespace DCRStoFiniteAutomaton
 
             var initialState = new short[3, 2] { { 0, 1 }, { 1, 1 }, { 2, 1 } };
 
-            var model = new DCRSModel("GiveMedicine_small", actionsList, includes, excludes, responses, conditions) { InitialState = initialState };
+            var model = new DCRSModel("GiveMedicine_small", actionsList, includes, excludes, responses, conditions) { InitialIncludedActions = initialState };
 
             //string result = DCRSCompiler.ComplileDcrsModelForStrongAcceptanceCondition(model, @"D:\PhDWork\Temp");
 
@@ -113,7 +110,7 @@ namespace DCRStoFiniteAutomaton
 
             var initialState = new short[2,2] {{0, 1}, {1, 1}};
 
-            var model = new DCRSModel("TwinSelfResponseActions",actionsList, includes, excludes, responses, conditions ) { InitialState = initialState };
+            var model = new DCRSModel("TwinSelfResponseActions",actionsList, includes, excludes, responses, conditions ) { InitialIncludedActions = initialState };
 
             //string result = DCRSCompiler.ComplileDcrsModelForStrongAcceptanceCondition(model, @"D:\PhDWork\Temp");
 
@@ -149,7 +146,7 @@ namespace DCRStoFiniteAutomaton
 
             var initialState = new short[4, 2] { { 0, 1 }, { 1, 1 }, { 2, 1 }, { 3, 1 } };
 
-            var model = new DCRSModel("GiveMedicine_small_tau", actionsList, includes, excludes, responses, conditions) { InitialState = initialState };
+            var model = new DCRSModel("GiveMedicine_small_tau", actionsList, includes, excludes, responses, conditions) { InitialIncludedActions = initialState };
 
             //string result = DCRSCompiler.ComplileDcrsModelForStrongAcceptanceCondition(model, @"D:\PhDWork\Temp");
 
@@ -184,7 +181,7 @@ namespace DCRStoFiniteAutomaton
             var initialState = new short[6, 2] { { 0, 1 }, { 1, 1 }, { 2, 1 }, { 3, 0 }, { 4, 0 }, { 5, 1 } };
 
             var dcrsmodel = new DCRSModel("Arrange-Meeting-Example", actionsList, includes, excludes, responses,
-                                          conditions, strongConditions, milestones) {InitialState = initialState};
+                                          conditions, strongConditions, milestones) {InitialIncludedActions = initialState};
 
 
 
@@ -218,7 +215,7 @@ namespace DCRStoFiniteAutomaton
             var initialState = new short[5,2] {{0, 1}, {1, 1}, {2, 1}, {3, 1}, {4, 1}};
 
             var dcrsmodel = new DCRSModel("Arrange-Meeting-short-Example", actionsList, includes, excludes, responses,
-                                          conditions, strongConditions, milestones) { InitialState = initialState };
+                                          conditions, strongConditions, milestones) { InitialIncludedActions = initialState };
 
 
 
@@ -253,7 +250,7 @@ namespace DCRStoFiniteAutomaton
             var initialState = new short[5, 2] { { 0, 1 }, { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 } };
 
             var dcrsmodel = new DCRSModel("Arrange-Meeting-short-Example", actionsList, includes, excludes, responses,
-                                          conditions, strongConditions, milestones) { InitialState = initialState };
+                                          conditions, strongConditions, milestones) { InitialIncludedActions = initialState };
 
 
 
@@ -287,7 +284,7 @@ namespace DCRStoFiniteAutomaton
             var initialState = new short[5, 2] { { 0, 1 }, { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 } };
 
             var dcrsmodel = new DCRSModel("Arrange-Meeting-short-Example", actionsList, includes, excludes, responses,
-                                          conditions, strongConditions, milestones) { InitialState = initialState };
+                                          conditions, strongConditions, milestones) { InitialIncludedActions = initialState };
 
 
 
@@ -366,7 +363,7 @@ namespace DCRStoFiniteAutomaton
             var initialState = new short[5, 2] { { 0, 1 }, { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 } };
 
             var dcrsmodel = new DCRSModel("Arrange-Meeting-short-Example", actionsList, includes, excludes, responses,
-                                          conditions, strongConditions, milestones) { InitialState = initialState };
+                                          conditions, strongConditions, milestones) { InitialIncludedActions = initialState };
 
 
 
@@ -432,7 +429,7 @@ namespace DCRStoFiniteAutomaton
             var initialState = new short[,] { { 0, 0 }, { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 } };
 
             var dcrsmodel = new DCRSModel("Arrange-Meeting-short-Example", actionsList, includes, excludes, responses,
-                                          conditions, strongConditions, milestones) { InitialState = initialState };
+                                          conditions, strongConditions, milestones) { InitialIncludedActions = initialState };
 
 
 
@@ -496,10 +493,12 @@ namespace DCRStoFiniteAutomaton
 
             var initialState = new short[,] { { 0, 0 }, { 1, 1 }, { 2, 1 }, { 3, 1 } }; //, { 4, 1 } 
 
-            var initialpendingresponses = new short[] {2,3};
+            //var initialpendingresponses = new short[] {2,3};
+
+            var pendingresponses = new short[,] { { 0, 0 }, { 1, 0 }, { 2, 1 }, { 3, 1 } }; 
 
             var dcrsmodel = new DCRSModel("Arrange-Meeting-short-Example", actionsList, includes, excludes, responses,
-                                          conditions, strongConditions, milestones) { InitialState = initialState, InitialPendingResponses= initialpendingresponses };
+                                          conditions, strongConditions, milestones) { InitialIncludedActions = initialState, InitialPendingResponses = pendingresponses };
 
 
 
@@ -565,7 +564,7 @@ namespace DCRStoFiniteAutomaton
             var initialState = new short[,] { { 0, 0 }, { 1, 1 }, { 2, 1 }, { 3, 1 } }; //, { 4, 1 } 
 
             var dcrsmodel = new DCRSModel("Arrange-Meeting-short-Example", actionsList, includes, excludes, responses,
-                                          conditions, strongConditions, milestones) { InitialState = initialState };
+                                          conditions, strongConditions, milestones) { InitialIncludedActions = initialState };
 
 
 

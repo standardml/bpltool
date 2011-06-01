@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
 using ITU.DK.DCRS.CommonTypes;
+using ITU.DK.DCRS.CommonTypes.Examples;
 using ITU.DK.DCRS.CommonTypes.OldProcessDefinition;
 using ITU.DK.DCRS.CommonTypes.Process;
 using ITU.DK.DCRS.CommonTypes.Samples;
@@ -147,7 +148,7 @@ namespace DCRSUIApplication
                 var initial_state = TransformInitialState(datagridactions);
 
                 var dcrModel = new DCRSModel(textBoxModelName.Text, actionsList, includes, excludes, responses, conditions
-                                             ) { InitialState = initial_state };
+                                             ) { InitialIncludedActions = initial_state };
 
 
                 var filePath = DCRSCompiler.ComplileDcrsModelWeakerAcceptanceCondition(dcrModel, textBoxPromelaCodePath.Text);
@@ -754,7 +755,7 @@ namespace DCRSUIApplication
             var initialState = TransformInitialState(datagridactions);
 
             var dcrModel = new DCRSModel(textBoxModelName.Text, actionsList, includes, excludes, responses, conditions,strongconditions, milestones
-                                         ) { InitialState = initialState };
+                                         ) { InitialIncludedActions = initialState };
 
 
             return dcrModel;

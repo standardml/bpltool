@@ -56,8 +56,8 @@ namespace DCRSToProMeLaCompiler.InfiniteRuns
                                              Environment.NewLine));
 
 
-            //        :: ((m_set_count == 0) && (min_include_response_current < actioncount) && (acceptable_responses_set[min_include_response_current])) ->
-            codeBuilder.Append(string.Format("{0}{0} :: ((m_set_count == 0) && (min_include_response_current < actioncount) && (acceptable_responses_set[min_include_response_current])) -> {1}",
+            //        :: ((m_set_count == 0) && (min_include_response_current < action_count) && (acceptable_responses_set[min_include_response_current])) ->
+            codeBuilder.Append(string.Format("{0}{0} :: ((m_set_count == 0) && (min_include_response_current < action_count) && (acceptable_responses_set[min_include_response_current])) -> {1}",
                                              Utilities.TAB,
                                              Environment.NewLine));
 

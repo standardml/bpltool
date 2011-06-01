@@ -374,19 +374,34 @@ namespace DCRStoFiniteAutomaton
 
             parentVectorForIniatialState.IncludedEvents.AddRange(Specification.ActionList.Keys.ToArray());
 
-            for (var index = 0; index < Specification.InitialState.GetLength(0); index++)
+            for (var index = 0; index < Specification.InitialIncludedActions.GetLength(0); index++)
             {
-                if (Specification.InitialState[index, 1] == 0)
+                if (Specification.InitialIncludedActions[index, 1] == 0)
                 {
                     parentVectorForIniatialState.IncludedEvents.Remove((short)index);
                 }
             }
 
-            if ((Specification.InitialPendingResponses != null) && (Specification.InitialPendingResponses.Length > 1))
-            {
-                parentVectorForIniatialState.PendingResponseEvents.AddRange(Specification.InitialPendingResponses);
 
+
+            //:Rao 2011-06-01: Changed initial peding responses to a two dimensional array like include pending responses.
+            //if ((Specification.InitialPendingResponses != null) && (Specification.InitialPendingResponses.Length > 1))
+            //{
+            //    parentVectorForIniatialState.PendingResponseEvents.AddRange(Specification.InitialPendingResponses);
+
+            //}
+
+
+            for (var index = 0; index < Specification.InitialPendingResponses.GetLength(0); index++)
+            {
+                if (Specification.InitialPendingResponses[index, 1] == 1)
+                {
+                    parentVectorForIniatialState.PendingResponseEvents.Add((short) index);
+                }
             }
+
+
+
             parentVectorForIniatialState.IncludedEvents.Sort();
 
             parentVectorForIniatialState.StateRank = 0;

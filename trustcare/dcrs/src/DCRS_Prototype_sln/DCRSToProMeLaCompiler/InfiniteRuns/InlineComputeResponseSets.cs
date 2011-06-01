@@ -35,8 +35,8 @@ namespace DCRSToProMeLaCompiler.InfiniteRuns
                                              Utilities.TAB,
                                              Environment.NewLine));
 
-            //    :: index <  actioncount ->
-            codeBuilder.Append(string.Format("{0} :: index <  actioncount -> {1}",
+            //    :: index <  action_count ->
+            codeBuilder.Append(string.Format("{0} :: index <  action_count -> {1}",
                                              Utilities.TAB,
                                              Environment.NewLine));
 
@@ -192,24 +192,24 @@ namespace DCRSToProMeLaCompiler.InfiniteRuns
                                              Utilities.TAB,
                                              Environment.NewLine));
 
-            //    min_m_set = actioncount;
-            codeBuilder.Append(string.Format("{0} min_m_set = actioncount; {1}",
+            //    min_m_set = action_count;
+            codeBuilder.Append(string.Format("{0} min_m_set = action_count; {1}",
                                              Utilities.TAB,
                                              Environment.NewLine));
 
 
-            //    min_include_response_current = actioncount;
-            codeBuilder.Append(string.Format("{0} min_include_response_current = actioncount; {1}",
+            //    min_include_response_current = action_count;
+            codeBuilder.Append(string.Format("{0} min_include_response_current = action_count; {1}",
                                              Utilities.TAB,
                                              Environment.NewLine));
 
-            //    /* Assign the index to actioncount, as we will loop through the array in reverse order to find out min. */
-            codeBuilder.Append(string.Format("{0} /* Assign the index to actioncount, as we will loop through the array in reverse order to find out min. */ {1}",
+            //    /* Assign the index to action_count, as we will loop through the array in reverse order to find out min. */
+            codeBuilder.Append(string.Format("{0} /* Assign the index to action_count, as we will loop through the array in reverse order to find out min. */ {1}",
                                              Utilities.TAB,
                                              Environment.NewLine));
 
-            //    index = actioncount;
-            codeBuilder.Append(string.Format("{0} index = actioncount; {1}",
+            //    index = action_count;
+            codeBuilder.Append(string.Format("{0} index = action_count; {1}",
                                              Utilities.TAB,
                                              Environment.NewLine));
             //m_set_count = 0;

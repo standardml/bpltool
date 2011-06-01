@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 using DCRStoFiniteAutomaton;
+using ITU.DK.DCRS.CommonTypes.Examples;
 using Microsoft.Glee.Drawing;
 namespace WindowsApplication
 {

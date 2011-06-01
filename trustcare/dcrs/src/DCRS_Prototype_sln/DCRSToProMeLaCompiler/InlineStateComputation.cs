@@ -62,8 +62,8 @@ namespace DCRSToProMeLaCompiler
                                  Utilities.TAB,
                                  Environment.NewLine));
            
-            //    :: index <  actioncount ->
-            codeBuilder.Append(string.Format("{0} :: index <  actioncount -> {1}",
+            //    :: index <  action_count ->
+            codeBuilder.Append(string.Format("{0} :: index <  action_count -> {1}",
                                  Utilities.TAB,
                                  Environment.NewLine));
 
