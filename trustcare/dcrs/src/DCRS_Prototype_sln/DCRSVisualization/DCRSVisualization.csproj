@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Elements\ConditionResponseArrow.cs" />
+    <Compile Include="Elements\MilestoneArrow.cs" />
     <Compile Include="Elements\MultualExclusionArrow.cs" />
     <Compile Include="Layout\DCRSLayoutProvider.cs" />
     <Compile Include="Layout\StoredLayout.cs" />
