@@ -364,6 +364,7 @@ namespace DCRSGraphicalEditor
             {
                 temp[index, 0] = a[index, 0];
                 temp[index, 1] = a[index, 1];
+                if ((a[index, 0] == s) && (a[index, 1] == d)) return;
             }
 
             temp[a.GetLength(0), 0] = s;

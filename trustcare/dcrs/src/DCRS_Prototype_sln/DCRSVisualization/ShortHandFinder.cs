@@ -80,7 +80,7 @@ namespace ITU.DK.DCRS.Visualization
         private void AddItem(Dictionary<short, Dictionary<short, bool>> dict, short i, short j)
         {
             if (!dict.ContainsKey(i)) dict.Add(i, new Dictionary<short, bool>());
-            dict[i].Add(j, true);
+            if (!dict[i].ContainsKey(j)) dict[i].Add(j, true);
         }
 
         private void RemoveItem(Dictionary<short, Dictionary<short, bool>> dict, short i, short j)
