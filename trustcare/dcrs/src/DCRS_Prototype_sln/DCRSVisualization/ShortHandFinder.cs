@@ -12,6 +12,7 @@ namespace ITU.DK.DCRS.Visualization
         public Dictionary<short, Dictionary<short, bool>> Conditions;
         public Dictionary<short, Dictionary<short, bool>> Excludes;
         public Dictionary<short, Dictionary<short, bool>> Includes;
+        public Dictionary<short, Dictionary<short, bool>> Milestones;
         public Dictionary<short, Dictionary<short, bool>> Mutexes;
         public Dictionary<short, Dictionary<short, bool>> ConditionResponses;
 
@@ -21,6 +22,7 @@ namespace ITU.DK.DCRS.Visualization
             Conditions = new Dictionary<short, Dictionary<short, bool>>();
             Excludes = new Dictionary<short, Dictionary<short, bool>>();
             Includes = new Dictionary<short, Dictionary<short, bool>>();
+            Milestones = new Dictionary<short, Dictionary<short, bool>>();
             Mutexes = new Dictionary<short, Dictionary<short, bool>>();
             ConditionResponses = new Dictionary<short, Dictionary<short, bool>>();
 
@@ -72,6 +74,15 @@ namespace ITU.DK.DCRS.Visualization
                 short d = spec.Includes[index, 1];
 
                 AddItem(Includes, s, d);
+            }
+
+
+            for (var index = 0; index < spec.Milestones.GetLength(0); index++)
+            {
+                short s = spec.Milestones[index, 0];
+                short d = spec.Milestones[index, 1];
+
+                AddItem(Milestones, s, d);
             }
 
 

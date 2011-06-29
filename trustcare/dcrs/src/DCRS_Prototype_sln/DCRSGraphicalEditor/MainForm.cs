@@ -35,6 +35,9 @@ namespace DCRSGraphicalEditor
             spd_ProcessSelected(p);
 
             RemoteServicesHandler.HostSubscriptionServiceClient();
+
+            // just while testing
+            tabControl1.SelectedTab = tpProcessModel;
         }
 
         private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
@@ -265,7 +268,8 @@ namespace DCRSGraphicalEditor
                 addResponseToolStripMenuItem.Visible = false;
                 addIncludeToolStripMenuItem.Visible = false;
                 addExcludeToolStripMenuItem.Visible = false;
-                addNodeToolStripMenuItem.Visible = false;
+                addMilestoneToolStripMenuItem.Visible = false;
+                addNodeToolStripMenuItem.Visible = false;                
                 removeNodeToolStripMenuItem.Visible = false;
                 removePrimitiveToolStripMenuItem.Visible = false;
             }
@@ -275,6 +279,7 @@ namespace DCRSGraphicalEditor
                 addResponseToolStripMenuItem.Visible = false;
                 addIncludeToolStripMenuItem.Visible = false;
                 addExcludeToolStripMenuItem.Visible = false;
+                addMilestoneToolStripMenuItem.Visible = false;
                 addNodeToolStripMenuItem.Visible = false;
                 removeNodeToolStripMenuItem.Visible = false;
                 removePrimitiveToolStripMenuItem.Visible = true;
@@ -285,6 +290,7 @@ namespace DCRSGraphicalEditor
                 addResponseToolStripMenuItem.Visible = false;
                 addIncludeToolStripMenuItem.Visible = false;
                 addExcludeToolStripMenuItem.Visible = false;
+                addMilestoneToolStripMenuItem.Visible = false;
                 addNodeToolStripMenuItem.Visible = false;
                 removeNodeToolStripMenuItem.Visible = true;
                 removePrimitiveToolStripMenuItem.Visible = false;
@@ -295,6 +301,7 @@ namespace DCRSGraphicalEditor
                 addResponseToolStripMenuItem.Visible = false;
                 addIncludeToolStripMenuItem.Visible = false;
                 addExcludeToolStripMenuItem.Visible = false;
+                addMilestoneToolStripMenuItem.Visible = false;
                 addNodeToolStripMenuItem.Visible = true;
                 removeNodeToolStripMenuItem.Visible = false;
                 removePrimitiveToolStripMenuItem.Visible = false;
@@ -305,6 +312,7 @@ namespace DCRSGraphicalEditor
                 addResponseToolStripMenuItem.Visible = true;
                 addIncludeToolStripMenuItem.Visible = true;
                 addExcludeToolStripMenuItem.Visible = true;
+                addMilestoneToolStripMenuItem.Visible = true;
                 addNodeToolStripMenuItem.Visible = false;
                 removeNodeToolStripMenuItem.Visible = false;
                 removePrimitiveToolStripMenuItem.Visible = false;
@@ -328,6 +336,13 @@ namespace DCRSGraphicalEditor
         private void addIncludeToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ProcessHandler.AddInclude(selectedAction, contextRequestAction);
+            Visualizer.ProcessUpdate();
+            processPanel.Refresh();
+        }
+
+        private void addMilestoneToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ProcessHandler.AddMilestone(selectedAction, contextRequestAction);
             Visualizer.ProcessUpdate();
             processPanel.Refresh();
         }
@@ -611,6 +626,8 @@ namespace DCRSGraphicalEditor
         {
             processPanel.BackColor = SystemColors.Control;
         }
+
+
 
 
     }

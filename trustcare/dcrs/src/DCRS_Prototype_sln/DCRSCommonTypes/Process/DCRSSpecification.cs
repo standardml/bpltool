@@ -49,6 +49,7 @@ namespace ITU.DK.DCRS.CommonTypes.Process
         public short[,] Responses;
         public short[,] Conditions;
         public short[,] StrongConditions;
+        public short[,] Milestones;
 
         #endregion
 

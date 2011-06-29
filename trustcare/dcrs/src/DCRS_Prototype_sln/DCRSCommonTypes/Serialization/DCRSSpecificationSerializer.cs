@@ -166,7 +166,8 @@ namespace ITU.DK.DCRS.CommonTypes.Serialization
                     WriteConstrintSet(specification.StrongConditions, "strongcondition"),
                     WriteConstrintSet(specification.Responses, "response"),
                     WriteConstrintSet(specification.Includes, "include"),
-                    WriteConstrintSet(specification.Excludes, "exclude")
+                    WriteConstrintSet(specification.Excludes, "exclude"),
+                    WriteConstrintSet(specification.Milestones, "milestone")
                     );
 
                 #endregion
@@ -374,6 +375,8 @@ namespace ITU.DK.DCRS.CommonTypes.Serialization
                     dcrsSpecification.Conditions = GetContraintsArray(rootElement, "condition");
 
                     dcrsSpecification.StrongConditions = GetContraintsArray(rootElement, "strongcondition");
+
+                    dcrsSpecification.Milestones = GetContraintsArray(rootElement, "milestone");
 
                 }
                 catch (Exception exception)

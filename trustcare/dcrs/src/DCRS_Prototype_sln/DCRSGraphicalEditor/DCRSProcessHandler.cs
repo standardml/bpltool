@@ -311,6 +311,7 @@ namespace DCRSGraphicalEditor
             InnerRemoveAllActionPrimitives(ref Process.Specification.Responses, a);
             InnerRemoveAllActionPrimitives(ref Process.Specification.Excludes, a);
             InnerRemoveAllActionPrimitives(ref Process.Specification.Includes, a);
+            InnerRemoveAllActionPrimitives(ref Process.Specification.Milestones, a);
 
             Process.Specification.ActionsToRolesDictionary.Remove(a);
             Process.Specification.ActionList.Remove(a);
@@ -353,6 +354,11 @@ namespace DCRSGraphicalEditor
             InnerAddPrimitive(ref Process.Specification.Includes, s, d);
         }
 
+        public void AddMilestone(short s, short d)
+        {
+            InnerAddPrimitive(ref Process.Specification.Milestones, s, d);
+        }
+
 
         private void InnerAddPrimitive(ref short[,] a, short s, short d)
         {
@@ -393,6 +399,11 @@ namespace DCRSGraphicalEditor
         public void RemoveInclude(short s, short d)
         {
             InnerRemovePrimitive(ref Process.Specification.Includes, s, d);
+        }
+
+        public void RemoveMilestone(short s, short d)
+        {
+            InnerRemovePrimitive(ref Process.Specification.Milestones, s, d);
         }
 
         private void InnerRemovePrimitive(ref short[,] a, short s, short d)

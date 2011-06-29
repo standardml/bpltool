@@ -264,6 +264,18 @@ namespace ITU.DK.DCRS.Visualization
                 }
 
 
+            foreach (var x in shf.Milestones)
+                foreach (var y in x.Value)
+                {
+                    short srcAction = x.Key;
+                    short dstAction = y.Key;
+                    MilestoneArrow Arrow = new MilestoneArrow(arrowBrush, arrowPen, Nodes[srcAction], Nodes[dstAction]);
+                    if (!srcAction.Equals(dstAction))
+                        Arrows.Add(Arrow);
+                    else
+                        SelfArrows.Add(Arrow);
+                }
+
 
             foreach (var x in shf.ConditionResponses)
                 foreach (var y in x.Value)
