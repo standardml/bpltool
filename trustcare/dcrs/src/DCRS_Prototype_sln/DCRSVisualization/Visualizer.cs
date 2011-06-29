@@ -186,6 +186,16 @@ namespace ITU.DK.DCRS.Visualization
             Arrows = new Set<Arrow>();
             SelfArrows = new Set<Arrow>();
 
+
+            // test code
+            /// One super node for testing
+            /*
+            ActionNode SuperNode = new ActionNode(3117, "Super", new Vector2(0,0), acticityPen, activityBrush, activityFont);
+            Nodes.Add(3117, SuperNode);
+            if (selectedAction == 3117) SuperNode.selected = true;
+             */
+            // /test code
+
             /// Build up the nodes
             foreach (var p in Placement.NodeLocations)
             {
@@ -194,8 +204,10 @@ namespace ITU.DK.DCRS.Visualization
                 n.SetRoles(Specification.ActionsToRolesDictionary[p.Key]);
                 if (selectedAction == p.Key) n.selected = true;
                 Nodes.Add(p.Key, n);
-            }
-
+                // test code
+                //SuperNode.AddSubNode(n);
+                // /test code
+            }            
 
             ShortHandFinder shf = new ShortHandFinder(Specification);
             

@@ -41,10 +41,10 @@ namespace ITU.DK.DCRS.Visualization.Elements
 
   
   public class ActionNode
-  { 
-    static public int NODE_WIDTH = 100;
-    static public int NODE_HEIGHT = 100;
-    static public int ROLEBOX_HEIGHT = 30;
+  {
+    public const int NODE_WIDTH = 100;
+    public const int NODE_HEIGHT = 100;
+    public const int ROLEBOX_HEIGHT = 30;
 
     private int _nodeWidth = NODE_WIDTH;
     private int _nodeHeight = NODE_HEIGHT;
@@ -82,7 +82,8 @@ namespace ITU.DK.DCRS.Visualization.Elements
 
     // For subevents:
     private Set<ActionNode> subNodes;
-    private Boolean isSuper { get { return subNodes.Count == 0; } }
+    private Boolean isSuper { get { return subNodes.Count > 0; } }
+    private Boolean isAtomic { get { return subNodes.Count == 0; } }
         
     public ActionNode(short id, String name, Vector2 location, Pen dp, Brush tb, Font tf)
     {
@@ -105,6 +106,27 @@ namespace ITU.DK.DCRS.Visualization.Elements
         enabled = r.CurrentState.EnabledActions.Contains(this.ID);
     }
 
+    // method for calculating nessecairy dimensions and location in the case that this is a super event (to contain all sub events)
+    private void calculateDimensions()
+    {
+        Vector2 leftUp = new Vector2(99999,99999);
+        Vector2 rightDown = new Vector2(0, 0);
+        foreach (ActionNode a in subNodes)
+        {
+
+            leftUp.X = Math.Min(leftUp.X, a.Location.X);
+            leftUp.Y = Math.Min(leftUp.Y, a.Location.Y);
+
+            rightDown.X = Math.Max(rightDown.X, a.Location.X);
+            rightDown.Y = Math.Max(rightDown.Y, a.Location.Y);
+        }
+
+        this._nodeWidth = (int)Math.Round(rightDown.X - leftUp.X) + NODE_WIDTH + NODE_WIDTH;
+        this._nodeHeight = (int)Math.Round(rightDown.Y - leftUp.Y) + NODE_HEIGHT + NODE_HEIGHT;
+
+        this.Location.X = (leftUp.X - (NODE_WIDTH)) + _halfNodeWidth;
+        this.Location.Y = (leftUp.Y - (NODE_HEIGHT)) + _halfNodeHeight;
+    }
 
     /// <summary>
     /// Method that creates all the (self-)connectors for this node and adds them to the set of free (self-)connectors.
@@ -162,6 +184,14 @@ namespace ITU.DK.DCRS.Visualization.Elements
     }
 
     /// <summary>
+    /// Adds a subNode to the ActionNode
+    /// </summary>
+    public void AddSubNode(ActionNode subNode)
+    {
+        subNodes.Add(subNode);
+    }
+
+    /// <summary>
     /// Sets a given list of roles as the roles for this ActionNode.
     /// </summary>
     public void SetRoles(List<String> roles)
@@ -175,14 +205,24 @@ namespace ITU.DK.DCRS.Visualization.Elements
     /// <param name="g"></param>
     public void Draw(Graphics g)
     {
+        if (!isAtomic) calculateDimensions();
         if (!included) DrawingPen.DashStyle = DashStyle.Dash;
         if (selected) DrawingPen.Color = Color.DarkTurquoise;
         g.DrawRectangle(DrawingPen, Location.ToPoint.X - (_nodeWidth / 2), Location.ToPoint.Y - (_nodeHeight / 2), _nodeWidth, _nodeHeight);        
         //g.DrawString(Name, TextFont, TextBrush, Location.ToPoint);
         StringFormat sf = new StringFormat();
-        sf.Alignment = StringAlignment.Center;
-        sf.LineAlignment = StringAlignment.Center;
+        if (isAtomic)
+        {
+            sf.Alignment = StringAlignment.Center;
+            sf.LineAlignment = StringAlignment.Center;
+        }
+        else
+        {
+            sf.Alignment = StringAlignment.Far;
+            sf.LineAlignment = StringAlignment.Near;
+        }
         g.DrawString(Name, TextFont, TextBrush, new Rectangle((int)((Location.X - (_nodeWidth / 2)) + 5), (int)((Location.Y - (_nodeHeight / 2)) + 5), _nodeWidth - 10, _nodeHeight - 10), sf);
+
 
 
         g.DrawRectangle(DrawingPen, Location.ToPoint.X, Location.ToPoint.Y - ((_nodeHeight / 2) + _roleboxHeight), (_nodeWidth / 2), _roleboxHeight);
@@ -203,22 +243,24 @@ namespace ITU.DK.DCRS.Visualization.Elements
         if (rString != "") rString = rString.Substring(0, rString.Length - 2);
         g.DrawString(rString, TextFont, TextBrush, new Rectangle((int)(Location.X + 1), (int)(Location.Y - ((_nodeHeight / 2) + (_roleboxHeight - 1))), (_nodeWidth / 2)-2, _roleboxHeight - 2), sf);
 
-
-        Font BoldFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
-        TextBrush = Brushes.Red;
-        //TextFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
-        if (pendingResponse) g.DrawString("!", BoldFont, TextBrush, (Location + new Vector2(35, -45)).ToPoint);
-
-        TextBrush = Brushes.Green;
-        //TextFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
-        if (hasExecuted) g.DrawString("V", BoldFont, TextBrush, (Location + new Vector2(-48, -45)).ToPoint);
-        TextBrush = Brushes.Black;
-
-        DrawingPen.Brush = Brushes.Red;
-        if (included && !enabled)
+        if (isAtomic)
         {
-            g.DrawEllipse(DrawingPen, Location.ToPoint.X - 30, Location.ToPoint.Y - 47, 20,20);
-            g.DrawLine(DrawingPen, (Location + new Vector2(-20, -37) + new Vector2(7, -7)).ToPoint, (Location + new Vector2(-20, -37) + new Vector2(-7, 7)).ToPoint);
+            Font BoldFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);
+            TextBrush = Brushes.Red;
+            //TextFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
+            if (pendingResponse) g.DrawString("!", BoldFont, TextBrush, (Location + new Vector2(35, -45)).ToPoint);
+
+            TextBrush = Brushes.Green;
+            //TextFont = new Font(FontFamily.GenericSansSerif, 14f, FontStyle.Bold);      
+            if (hasExecuted) g.DrawString("V", BoldFont, TextBrush, (Location + new Vector2(-48, -45)).ToPoint);
+            TextBrush = Brushes.Black;
+
+            DrawingPen.Brush = Brushes.Red;
+            if (included && !enabled)
+            {
+                g.DrawEllipse(DrawingPen, Location.ToPoint.X - 30, Location.ToPoint.Y - 47, 20, 20);
+                g.DrawLine(DrawingPen, (Location + new Vector2(-20, -37) + new Vector2(7, -7)).ToPoint, (Location + new Vector2(-20, -37) + new Vector2(-7, 7)).ToPoint);
+            }
         }
         DrawingPen.Brush = Brushes.Black;
 
