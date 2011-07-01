@@ -24,6 +24,9 @@ namespace ITU.DK.DCRS.CommonTypes.Process
 
         public readonly Dictionary<short, string> ActionList;
 
+        // (tijs) perhaps not the best method, but easiest for now:
+        public readonly Dictionary<short, short> Nesting;
+
         public readonly List<string> Roles;
 
         public readonly List<string> Principals;
@@ -70,6 +73,8 @@ namespace ITU.DK.DCRS.CommonTypes.Process
             ProcessId = -1;
             
             ActionList = new Dictionary<short, string>();
+
+            Nesting = new Dictionary<short, short>();
 
             Roles = new List<string>();
 

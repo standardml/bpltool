@@ -50,9 +50,19 @@ namespace ITU.DK.DCRS.CommonTypes.Serialization
                 }
 
 
+                // nestings element 
+                var nestingsElement = new XElement(GlobalDeclarations.DCRS_NAMESPACE_URI + "nestings");
+
+                foreach (var nestingElement in specification.Nesting.Select(actionKeyValPair =>
+                    new XElement(GlobalDeclarations.DCRS_NAMESPACE_URI + "nesting", new XAttribute("sub-id", actionKeyValPair.Key), new XAttribute("sup-id", actionKeyValPair.Value))))
+                {
+                    nestingsElement.Add(nestingElement);
+                }
+
+
                 // resources elements.
                 var resourcesElement = new XElement(GlobalDeclarations.DCRS_NAMESPACE_URI + "resources", rolesElement,
-                                                    principalsElement, actionsElement);
+                                                    principalsElement, actionsElement, nestingsElement);
 
                 #endregion
 
@@ -296,8 +306,23 @@ namespace ITU.DK.DCRS.CommonTypes.Serialization
                     {
                         dcrsSpecification.ActionList.Add(short.Parse(roleElement.Attribute("action-id").Value),
                                                          roleElement.Value);
-                    }
 
+                        // Tijs: might be useful in the future?
+                        /*
+                        foreach (var childElement in roleElement.Nodes())
+                        {
+                            if (childElement.GetType() == typeof(XElement))
+                                dcrsSpecification.Nesting.Add(short.Parse(((XElement)childElement).Attribute("action-id").Value), short.Parse(roleElement.Attribute("action-id").Value));                            
+                        }*/
+                    }
+                    
+                    // Nesting
+                    if (rootElement.Descendants(GlobalDeclarations.DCRS_NAMESPACE_URI + "nestings").Count() > 0)                    
+                        foreach (var roleElement in rootElement.Descendants(GlobalDeclarations.DCRS_NAMESPACE_URI + "nestings").Elements())
+                        {
+                            dcrsSpecification.Nesting.Add(short.Parse(roleElement.Attribute("sub-id").Value),
+                                                             short.Parse(roleElement.Attribute("sup-id").Value));
+                        }
                 }
                 catch (Exception exception)
                 {

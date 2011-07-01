@@ -272,6 +272,8 @@ namespace DCRSGraphicalEditor
                 addNodeToolStripMenuItem.Visible = false;                
                 removeNodeToolStripMenuItem.Visible = false;
                 removePrimitiveToolStripMenuItem.Visible = false;
+                nestUnderToolStripMenuItem.Visible = false;
+                unnestToolStripMenuItem.Visible = false;
             }
             else if (contextRequestArrow != null)
             {
@@ -283,6 +285,8 @@ namespace DCRSGraphicalEditor
                 addNodeToolStripMenuItem.Visible = false;
                 removeNodeToolStripMenuItem.Visible = false;
                 removePrimitiveToolStripMenuItem.Visible = true;
+                nestUnderToolStripMenuItem.Visible = false;
+                unnestToolStripMenuItem.Visible = false;
             }
             else if ((selectedAction == -1) && (contextRequestAction != -1))
             {
@@ -294,6 +298,8 @@ namespace DCRSGraphicalEditor
                 addNodeToolStripMenuItem.Visible = false;
                 removeNodeToolStripMenuItem.Visible = true;
                 removePrimitiveToolStripMenuItem.Visible = false;
+                nestUnderToolStripMenuItem.Visible = false;
+                unnestToolStripMenuItem.Visible = true;
             }
             else if (contextRequestAction == -1)
             {
@@ -305,6 +311,8 @@ namespace DCRSGraphicalEditor
                 addNodeToolStripMenuItem.Visible = true;
                 removeNodeToolStripMenuItem.Visible = false;
                 removePrimitiveToolStripMenuItem.Visible = false;
+                nestUnderToolStripMenuItem.Visible = false;
+                unnestToolStripMenuItem.Visible = false;
             }
             else
             {
@@ -316,6 +324,8 @@ namespace DCRSGraphicalEditor
                 addNodeToolStripMenuItem.Visible = false;
                 removeNodeToolStripMenuItem.Visible = false;
                 removePrimitiveToolStripMenuItem.Visible = false;
+                nestUnderToolStripMenuItem.Visible = true;
+                unnestToolStripMenuItem.Visible = false;
             }
         }
 
@@ -411,6 +421,20 @@ namespace DCRSGraphicalEditor
         private void removePrimitiveToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ProcessHandler.RemovePrimitive(contextRequestArrow);
+            Visualizer.ProcessUpdate();
+            processPanel.Refresh();
+        }
+
+        private void nestUnderToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ProcessHandler.AddNesting(selectedAction, contextRequestAction);
+            Visualizer.ProcessUpdate();
+            processPanel.Refresh();
+        }
+
+        private void unnestToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ProcessHandler.RemoveNesting(contextRequestAction);
             Visualizer.ProcessUpdate();
             processPanel.Refresh();
         }
@@ -626,9 +650,6 @@ namespace DCRSGraphicalEditor
         {
             processPanel.BackColor = SystemColors.Control;
         }
-
-
-
 
     }
 }

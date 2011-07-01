@@ -231,7 +231,10 @@ namespace ITU.DK.DCRS.Visualization.Elements
       Vector2 v;
       try
       {
-          v = new Vector2(srcNode.RectIntersect(srcNode.Location.ToPoint, dstNode.Location.ToPoint));
+          if (srcNode.PointInNode(dstNode.Location.ToPoint))
+              v = new Vector2(srcNode.ClosestEdge(dstNode));
+          else
+              v = new Vector2(srcNode.RectIntersect(srcNode.Location.ToPoint, dstNode.Location.ToPoint));
       }
       catch (Exception e)
       {
@@ -246,8 +249,18 @@ namespace ITU.DK.DCRS.Visualization.Elements
       Vector2 arrowDst1 = ncDst1.Location + dstNode.Location;
 
 
-
-      v = new Vector2(dstNode.RectIntersect(dstNode.Location.ToPoint, srcNode.Location.ToPoint));
+      try
+      {
+          if (dstNode.PointInNode(srcNode.Location.ToPoint))
+              v = new Vector2(dstNode.ClosestEdge(srcNode));
+          else
+              v = new Vector2(dstNode.RectIntersect(dstNode.Location.ToPoint, srcNode.Location.ToPoint));
+      }
+      catch (Exception e)
+      {
+          ArrowDst = ArrowSrc = new Vector2(0, 0);
+          return;
+      }
       NodeConnector ncDst2 = dstNode.ClosestFreeConnector(v);
       Vector2 arrowDst2 = ncDst2.Location + dstNode.Location;
 

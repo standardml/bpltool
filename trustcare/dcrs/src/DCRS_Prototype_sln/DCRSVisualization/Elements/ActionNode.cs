@@ -53,6 +53,9 @@ namespace ITU.DK.DCRS.Visualization.Elements
     private int _halfNodeWidth { get { return (_nodeWidth / 2); } }
     private int _halfNodeHeight { get { return (_nodeHeight / 2); } }
 
+    public int Width { get { return (_nodeHeight); } }
+    public int Height { get { return (_nodeHeight); } }
+
     short ID;                                 /// ID of this node in corresponding specification.
     String Name;                              /// Name of the action that this node represents.
     List<String> Roles;                       /// The roles that can execute the Action.
@@ -106,6 +109,9 @@ namespace ITU.DK.DCRS.Visualization.Elements
         enabled = r.CurrentState.EnabledActions.Contains(this.ID);
     }
 
+    // this should not be nessecairy, should reconsider the flow of drawing for nested nodes etc... but this will do for now.
+    public void CalculateDimensions(){calculateDimensions();}
+
     // method for calculating nessecairy dimensions and location in the case that this is a super event (to contain all sub events)
     private void calculateDimensions()
     {
@@ -126,6 +132,9 @@ namespace ITU.DK.DCRS.Visualization.Elements
 
         this.Location.X = (leftUp.X - (NODE_WIDTH)) + _halfNodeWidth;
         this.Location.Y = (leftUp.Y - (NODE_HEIGHT)) + _halfNodeHeight;
+
+        // we need to also re-calculate connectors... // again... thsi could flow better?
+        InitiateConnectors();
     }
 
     /// <summary>
@@ -141,26 +150,26 @@ namespace ITU.DK.DCRS.Visualization.Elements
       NodeConnector c;
       for (double d = 1; d < 8; d++)
       {
-        c = new NodeConnector(); c.Location = new Vector2((_nodeWidth / -2), (_nodeWidth / -2) + (d * (_nodeWidth / 8))); c.Side = NodeSide.Left; c.Used = false; FreeConnectors.Add(c);
-        c = new NodeConnector(); c.Location = new Vector2((_nodeWidth / 2), (_nodeWidth / -2) + (d * (_nodeWidth / 8))); c.Side = NodeSide.Right; c.Used = false; FreeConnectors.Add(c);
-        c = new NodeConnector(); c.Location = new Vector2((_nodeWidth / -2) + (d * (_nodeWidth / 8)), (_nodeWidth / 2)); c.Side = NodeSide.Bottom; c.Used = false; FreeConnectors.Add(c);
+          c = new NodeConnector(); c.Location = new Vector2((_nodeWidth / -2), (_nodeHeight / -2) + (d * (_nodeHeight / 8))); c.Side = NodeSide.Left; c.Used = false; FreeConnectors.Add(c);
+          c = new NodeConnector(); c.Location = new Vector2((_nodeWidth / 2), (_nodeHeight / -2) + (d * (_nodeHeight / 8))); c.Side = NodeSide.Right; c.Used = false; FreeConnectors.Add(c);
+          c = new NodeConnector(); c.Location = new Vector2((_nodeWidth / -2) + (d * (_nodeWidth / 8)), (_nodeHeight / 2)); c.Side = NodeSide.Bottom; c.Used = false; FreeConnectors.Add(c);
       }
 
       
       for (double d = 1; d < 4; d++)
       {
-        c = new NodeConnector(); c.Location = new Vector2((_nodeWidth / -2) + (d * (_nodeWidth / 8)), (_nodeWidth / -2)); c.Side = NodeSide.Top; c.Used = false; FreeConnectors.Add(c);
+          c = new NodeConnector(); c.Location = new Vector2((_nodeWidth / -2) + (d * (_nodeWidth / 8)), (_nodeHeight / -2)); c.Side = NodeSide.Top; c.Used = false; FreeConnectors.Add(c);
       }
 
       for (double d = 5; d < 8; d++)
       {
-        c = new NodeConnector(); c.Location = new Vector2((_nodeWidth / -2) + (d * (_nodeWidth / 8)), (_nodeWidth / -2) - _roleboxHeight); c.Side = NodeSide.Top; c.Used = false; FreeConnectors.Add(c);
+          c = new NodeConnector(); c.Location = new Vector2((_nodeWidth / -2) + (d * (_nodeWidth / 8)), (_nodeHeight / -2) - _roleboxHeight); c.Side = NodeSide.Top; c.Used = false; FreeConnectors.Add(c);
       }
 
 
       for (double d = 0; d < 2; d++)
       {
-        c = new NodeConnector(); c.Location = new Vector2((_nodeWidth / 2), (_nodeWidth / -2) - (d * (_roleboxHeight / 2))); c.Side = NodeSide.Right; c.Used = false; FreeConnectors.Add(c);
+          c = new NodeConnector(); c.Location = new Vector2((_nodeWidth / 2), (_nodeHeight / -2) - (d * (_roleboxHeight / 2))); c.Side = NodeSide.Right; c.Used = false; FreeConnectors.Add(c);
       }
 
 
@@ -418,6 +427,49 @@ namespace ITU.DK.DCRS.Visualization.Elements
         FreeConnectors.Remove(ncSrc);
         //ncSrc.Used = true;
         UsedConnectors.Add(ncSrc);
+    }
+
+
+    public Boolean PointInNode(Point p)
+    {
+        if (p.X < Location.X + _halfNodeWidth && p.X > Location.X - _halfNodeWidth)
+            if (p.Y < Location.Y + _halfNodeHeight && p.Y > Location.Y - _halfNodeHeight)
+                return true;
+        return false;
+    }
+
+
+    public Point ClosestEdge(ActionNode n)
+    {
+        float horizontalLeft = Math.Abs((Location.ToPoint.X + _halfNodeWidth) - (n.Location.ToPoint.X + (n.Width / 2)));
+        float horizontalRight = Math.Abs((Location.ToPoint.X - _halfNodeWidth) - (n.Location.ToPoint.X - (n.Width / 2)));
+
+        float verticalUp = Math.Abs((Location.ToPoint.Y - _halfNodeHeight) - (n.Location.ToPoint.Y - (n.Height / 2)));
+        float verticalDown = Math.Abs((Location.ToPoint.Y + _halfNodeHeight) - (n.Location.ToPoint.Y + (n.Height / 2)));
+
+        float min = Math.Min(horizontalLeft, horizontalRight);
+        min = Math.Min(min, verticalUp);
+        min = Math.Min(min, verticalDown);
+
+        /*
+        if (min == horizontalLeft) 
+            return new Point((n.Location.ToPoint.X + (n.Width / 2)), n.Location.ToPoint.Y);
+        else if (min == horizontalRight) 
+            return new Point((n.Location.ToPoint.X - (n.Width / 2)), n.Location.ToPoint.Y);
+        else if (min == verticalUp)
+            return new Point(n.Location.ToPoint.X, (n.Location.ToPoint.Y - (n.Height / 2)));
+        else
+            return new Point(n.Location.ToPoint.X, (n.Location.ToPoint.Y + (n.Height / 2)));*/
+
+
+        if (min == horizontalLeft) 
+            return new Point((Location.ToPoint.X + (Width / 2)), Location.ToPoint.Y);
+        else if (min == horizontalRight) 
+            return new Point((Location.ToPoint.X - (Width / 2)), Location.ToPoint.Y);
+        else if (min == verticalUp)
+            return new Point(Location.ToPoint.X, (Location.ToPoint.Y - (Height / 2)));
+        else
+            return new Point(Location.ToPoint.X, (Location.ToPoint.Y + (Height / 2)));
     }
   }
 }

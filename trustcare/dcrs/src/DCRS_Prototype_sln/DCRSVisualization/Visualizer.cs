@@ -209,6 +209,12 @@ namespace ITU.DK.DCRS.Visualization
                 // /test code
             }            
 
+            foreach (var kvp in Specification.Nesting)
+            {
+                Nodes[kvp.Value].AddSubNode(Nodes[kvp.Key]);
+                Nodes[kvp.Value].CalculateDimensions();
+            }
+
             ShortHandFinder shf = new ShortHandFinder(Specification);
             
             foreach (var x in shf.Conditions)
@@ -365,11 +371,17 @@ namespace ITU.DK.DCRS.Visualization
 
         public short GetActionByPos(Point p)
         {
+            /*
             foreach (var x in Placement.NodeLocations)
             {
                 if (p.X < x.Value.X + 50 && p.X > x.Value.X - 50)
                     if (p.Y < x.Value.Y + 50 && p.Y > x.Value.Y - 50)
                         return x.Key;
+            }
+            return -1;*/
+            foreach (var n in Nodes.Values)
+            {
+                if (n.PointInNode(p)) return n.Id;
             }
             return -1;
         }

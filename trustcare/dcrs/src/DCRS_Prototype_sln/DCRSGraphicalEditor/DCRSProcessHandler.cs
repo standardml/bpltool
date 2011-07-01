@@ -458,5 +458,18 @@ namespace DCRSGraphicalEditor
             
             ComputeState();
         }
+
+
+        public void AddNesting(short sub, short sup)
+        {
+            if (!Process.Specification.Nesting.ContainsKey(sub))
+                Process.Specification.Nesting.Add(sub, sup);
+        }
+
+        public void RemoveNesting(short sub)
+        {
+            Process.Specification.Nesting.Remove(sub);
+        }
+
     }
 }
