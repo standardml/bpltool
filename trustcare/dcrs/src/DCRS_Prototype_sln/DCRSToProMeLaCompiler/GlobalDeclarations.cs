@@ -192,21 +192,21 @@ namespace DCRSToProMeLaCompiler
 
 
             codeBuilder.Append(string.Format(
-                                   "bit included_actions_set[{0}]; {1}",
+                                   "bit included_actions_set[action_count]; {1}",
                                    model.ActionList.Count, Environment.NewLine));
 
 
             codeBuilder.Append(string.Format(
-                                   "bit executed_actions_set[{0}]; {1}",
+                                   "bit executed_actions_set[action_count]; {1}",
                                    model.ActionList.Count, Environment.NewLine));
 
             codeBuilder.Append(string.Format(
-                                   "bit pending_responses_set[{0}]; {1}",
+                                   "bit pending_responses_set[action_count]; {1}",
                                    model.ActionList.Count, Environment.NewLine));
 
 
             codeBuilder.Append(string.Format(
-                                   "bit enabled_actions_set[{0}]; {1}",
+                                   "bit enabled_actions_set[action_count]; {1}",
                                    model.ActionList.Count, Environment.NewLine));
 
 
@@ -272,6 +272,12 @@ namespace DCRSToProMeLaCompiler
             codeBuilder.Append(string.Format(
                                    "show byte random_action_executed = action_count + 1; {0}",
                                    Environment.NewLine));
+
+            //bit any_included_pending_responses = 0;
+            codeBuilder.Append(string.Format(
+                                   "bit any_included_pending_responses = 0; {0}",
+                                   Environment.NewLine));
+
 
             codeBuilder.Append(Environment.NewLine);
 

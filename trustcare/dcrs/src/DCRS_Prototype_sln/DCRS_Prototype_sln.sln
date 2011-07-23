@@ -20,6 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documents", "Documents", "{
 		DCRSXmlFormatv1.2.xml = DCRSXmlFormatv1.2.xml
 		DCRSXmlFormatv1.6.xml = DCRSXmlFormatv1.6.xml
 		subscriptions.xml = subscriptions.xml
+		TodoList.txt = TodoList.txt
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCRSToZingCompiler", "DCRSToZingCompiler\DCRSToZingCompiler.csproj", "{D9DDEEF5-BC77-4B62-B9ED-787B32DE72AD}"

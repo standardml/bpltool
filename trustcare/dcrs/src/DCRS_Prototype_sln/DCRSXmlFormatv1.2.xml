@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <dcrs xmlns="http://itu.dk/trustcare/dcrs/2010/">
   <dcrs-specification model-name="">
- 
+
     <actions>
       <!--
       id: integer, should be unique in the specification, . used for computational purposes.
@@ -20,22 +20,22 @@
         <constarint source="" target=""></constarint>
       </constraint-set>
     </constraint-set-collection>
-   
+
 
   </dcrs-specification>
 
   <dcrs-runtime instance-id="">
-    
+
     <!--execution-trace is sequence of executed actions. 
       Here trace element is suitable sequential execution, how can we make it suitable 
       for representing concurrent executions.
     
     As of now, it is a sequence of action-ids represented in the order of execution.
     -->
-    
+
     <execution-trace></execution-trace>
-    
-    
+
+
 
     <current-state state-id="">
 

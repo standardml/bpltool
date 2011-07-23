@@ -220,7 +220,10 @@ namespace DCRSUIApplication
 
             stateManager.Settings = autamatonSettings;
 
-            stateManager.Specification = DCRSExamples.GetGiveMedicineSmallExample();
+            //stateManager.Specification = DCRSExamples.GetGiveMedicineSmallExample();
+
+            //stateManager.Specification = DCRGSamples.GetCaseHandlingDCRGProcess();
+            stateManager.Specification = DCRGSamples.GetCursePrayExample();
 
             
             //stateManager.Specification = DCRSExamples.BuchiToDCRTranslationsExample2();

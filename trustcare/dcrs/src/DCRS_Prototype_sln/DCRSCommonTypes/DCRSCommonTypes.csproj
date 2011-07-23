@@ -76,6 +76,7 @@
     <Compile Include="ConstraintTypeEnum.cs" />
     <Compile Include="Delegates\ProcessEventHandler.cs" />
     <Compile Include="EventArguments\ProcessEventArgs.cs" />
+    <Compile Include="Examples\DCRGSamples.cs" />
     <Compile Include="Examples\DCRSExamples.cs" />
     <Compile Include="Exceptions\DCRSWorkflowException.cs" />
     <Compile Include="GlobalDeclarations.cs" />

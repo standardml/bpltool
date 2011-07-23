@@ -187,45 +187,45 @@ namespace DCRSToProMeLaCompiler
         }
 
 
-        private static void CopyInitialState(StringBuilder codeBuilder)
-        {
+        //private static void CopyInitialState(StringBuilder codeBuilder)
+        //{
 
-            //do
-            //:: index <  action_count ->
-            //    included_actions_set[index] = (actions_array[index].included == 1 -> 1: 0);
-            //    index = index + 1;
-            //:: else -> 	break;
-            //od;
+        //    //do
+        //    //:: index <  action_count ->
+        //    //    included_actions_set[index] = (actions_array[index].included == 1 -> 1: 0);
+        //    //    index = index + 1;
+        //    //:: else -> 	break;
+        //    //od;
 
             
             
-            codeBuilder.Append(Environment.NewLine);
+        //    codeBuilder.Append(Environment.NewLine);
 
-            codeBuilder.Append(string.Format("{0} /* Prepare the initial state */ {1}", Utilities.TAB,
-                                             Environment.NewLine));
+        //    codeBuilder.Append(string.Format("{0} /* Prepare the initial state */ {1}", Utilities.TAB,
+        //                                     Environment.NewLine));
 
-            codeBuilder.Append(string.Format("{0} do {1}", Utilities.TAB,
-                                  Environment.NewLine));
+        //    codeBuilder.Append(string.Format("{0} do {1}", Utilities.TAB,
+        //                          Environment.NewLine));
 
-            codeBuilder.Append(string.Format("{0} :: index <  action_count -> {1}", Utilities.TAB, Environment.NewLine));
+        //    codeBuilder.Append(string.Format("{0} :: index <  action_count -> {1}", Utilities.TAB, Environment.NewLine));
 
-            codeBuilder.Append(
-                string.Format("{0}{0} included_actions_set[index] = (actions_array[index].included == 1 -> 1: 0); {1}",
-                              Utilities.TAB, Environment.NewLine));
+        //    codeBuilder.Append(
+        //        string.Format("{0}{0} included_actions_set[index] = (actions_array[index].included == 1 -> 1: 0); {1}",
+        //                      Utilities.TAB, Environment.NewLine));
 
-            codeBuilder.Append(
-                string.Format("{0}{0} index = index + 1; {1}",
-                              Utilities.TAB, Environment.NewLine));
-
-
-            codeBuilder.Append(
-                string.Format("{0} :: else -> 	break; {1}",
-                              Utilities.TAB, Environment.NewLine));
+        //    codeBuilder.Append(
+        //        string.Format("{0}{0} index = index + 1; {1}",
+        //                      Utilities.TAB, Environment.NewLine));
 
 
-            codeBuilder.Append(string.Format("{0} od; {1}",Utilities.TAB, Environment.NewLine));
+        //    codeBuilder.Append(
+        //        string.Format("{0} :: else -> 	break; {1}",
+        //                      Utilities.TAB, Environment.NewLine));
 
-        }
+
+        //    codeBuilder.Append(string.Format("{0} od; {1}",Utilities.TAB, Environment.NewLine));
+
+        //}
 
         #endregion
 
