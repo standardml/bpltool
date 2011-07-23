@@ -83,6 +83,42 @@ namespace ITU.DK.DCRS.CommonTypes.Examples
 
         }
 
+        public static DCRSModel GetCursePrayExampleStrict()
+        {
+
+
+            var actionsList = new Dictionary<short, string>
+                                  {
+                                      { 0, "bless" }, { 1, "pray" }, { 2, "curse" }
+                                  };
+
+
+            // 
+            var conditions = new short[0, 0];
+
+            var strongConditions = new short[0, 0];
+
+            var responses = new short[1, 2] { { 2, 1 } };
+
+            // {pldo, cc}, (plda, pldo)
+            var milestones = new short[0, 0];
+
+            var includes = new short[1, 2] { { 2, 1 } };
+
+            var excludes = new short[8, 2] { { 0, 0 }, { 1, 1 }, { 2, 2 }, { 0, 1 }, { 0, 2 }, { 1, 0 }, { 1, 2 }, { 2, 0 } };
+
+            var initialState = new short[3, 2] { { 0, 1 }, { 1, 1 }, { 2, 1 } };
+
+            var dcrsmodel = new DCRSModel("cursepraystrict", actionsList, includes, excludes, responses,
+                                          conditions, strongConditions, milestones) { InitialIncludedActions = initialState };
+
+
+
+            return dcrsmodel;
+
+
+        }
+
 
 
 

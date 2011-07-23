@@ -223,7 +223,7 @@ namespace DCRSUIApplication
             //stateManager.Specification = DCRSExamples.GetGiveMedicineSmallExample();
 
             //stateManager.Specification = DCRGSamples.GetCaseHandlingDCRGProcess();
-            stateManager.Specification = DCRGSamples.GetCursePrayExample();
+            stateManager.Specification = DCRGSamples.GetCursePrayExampleStrict();
 
             
             //stateManager.Specification = DCRSExamples.BuchiToDCRTranslationsExample2();
