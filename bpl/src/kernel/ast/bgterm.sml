@@ -801,6 +801,7 @@ struct
            *
            * @param outermost  Is this list the outermost term?
            * @param innermost  Is this list the innermost term?
+           * @param compRop    Is this list the right operand of a composition?
            * @param sep        Separator between list elements.
            * @param empty      Symbol to print if the list is empty.
            * @param pr         Precedence of sep.
@@ -808,7 +809,7 @@ struct
            * @param bs         The terms to print.
            * @return  The set of inner names and the set innernames \ outernames.
            *)
-          fun pplist outermost innermost sep empty pr ppids bs =
+          fun pplist outermost innermost compRop sep empty pr ppids bs =
               (let
                  (* Remove ids if the option is set - but keep track of the
                   * inner names that we don't print. *)
@@ -855,11 +856,11 @@ struct
                => (case bs of
                      [] => (show empty;
                             (NameSet.empty, NameSet.empty))
-                   | bs => (pp''' outermost innermost (widest bs);
+                   | bs => (pp''' outermost innermost compRop (widest bs);
                             (inner_ns, NameSet.empty)))
                | [b] =>
                  let
-                   val (inner_ns', new_ns') = pp''' outermost innermost b
+                   val (inner_ns', new_ns') = pp''' outermost innermost compRop b
                  in
                    (NameSet.union' inner_ns inner_ns', new_ns')
                  end
@@ -872,7 +873,7 @@ struct
                        let
                          val (inner_ns', new_ns')
                            = (show sep; brk();
-                              ppp pr par' prr' aih outermost innermost b)
+                              ppp pr par' prr' aih outermost innermost false b)
                        in
                          (NameSet.union' inner_ns inner_ns',
                           NameSet.union' new_ns new_ns')
@@ -881,7 +882,7 @@ struct
                        let
                          val (inner_ns', new_ns')
                            = (show sep; brk();
-                              ppp pr pr pr aih outermost innermost b)
+                              ppp pr pr pr aih outermost innermost false b)
                        in
                          mappp
                            (b' :: bs)
@@ -891,7 +892,7 @@ struct
                    val (inner_ns', new_ns')
                      = (showlpar();
                         <<();
-                        ppp pal' pr pr aih outermost innermost b)
+                        ppp pal' pr pr aih outermost innermost false b)
                  in
                    mappp bs (NameSet.union' inner_ns inner_ns',
                              new_ns')
@@ -907,15 +908,15 @@ struct
            * @param t          The term to print.
            * @return  The set of inner names and the set innernames \ outernames.
            *)
-          and pp''' _ _ (Mer (0, _)) = (  show "<->"
+          and pp''' _ _ _ (Mer (0, _)) = (  show "<->"
                                         ; (NameSet.empty, NameSet.empty))
-            | pp''' _ _ (Mer (n, _)) = (  show ("merge(" ^ Int.toString n ^ ")")
+            | pp''' _ _ _ (Mer (n, _)) = (  show ("merge(" ^ Int.toString n ^ ")")
                                         ; (NameSet.empty, NameSet.empty))
-            | pp''' _ _ (Con (X, _))
+            | pp''' _ _ _ (Con (X, _))
             = (  (show "`"; NameSetPP.ppbr indent "[" "]" pps X; show "`"
                ; (X, NameSet.empty))
                handle e => raise e)
-            | pp''' _ innermost (Wir (w, _)) = 
+            | pp''' _ innermost _ (Wir (w, _)) = 
               (let
                  val w'       = if ppids orelse innermost then
                                   w
@@ -929,7 +930,7 @@ struct
                   ; Wiring.pp indent pps w'
                   ; (inner_ns, new_ns))
                end handle e => raise e)
-            | pp''' _ _ (Ion (KyX, _)) =
+            | pp''' _ _ _ (Ion (KyX, _)) =
               (let
                  val ctrl     = #ctrl (Ion.unmk KyX)
                  val inner_ns = Ion.innernames KyX
@@ -947,20 +948,29 @@ struct
                     ; Ion.pp indent pps KyX handle e => raise e
                     ; (inner_ns, new_ns))
                end handle e => raise e)
-            | pp''' outermost innermost (Hop (t, _)) =
+            | pp''' outermost innermost _ (Hop (t, _)) =
               (  show "<<("
-               ; pp''' outermost innermost t
+               ; pp''' outermost innermost false t
                  before
                  show ")>>")
-            | pp''' _ _ (Per (pi, _)) =
+            | pp''' _ _ _ (Per (pi, _)) =
               (  Permutation.pp indent pps pi handle e => raise e
                ; (Permutation.innernames pi, NameSet.empty))
-            | pp''' outermost innermost (Abs (X, b, _))
+            | pp''' outermost innermost compRop (Abs (X, b, _))
             = ((if (outermost andalso not (NameSet.isEmpty X)) orelse
                    (* FIXME We cannot in general reconstruct abstractions in
                     *       BgVal.Com', so leaving all abstractions out is
-                    *       unsound
-                    * ppabs andalso *)
+                    *       unsound.
+                    *       For example, if abstractions are left out in the following
+                    *         L[][[x],[y]] o (`[x]` `|` `[y]`) o ((<[x]>K[x]) || (<[y]>K[y]))
+                    *       we get
+                    *         L[][[x],[y]] o (`[x]` `|` `[y]`) o (K[x] || K[y])
+                    *       which the Com' cannot handle...
+                    *       For now, we only handle the case where the abstraction is the
+                    *       right operand of a composition, since this is alway trivial to
+                    *       reconstruct.
+                    *)
+                   (ppabs orelse not compRop) andalso
                    (pp0abs orelse not (NameSet.isEmpty X)) then
                   let
                     val (showlpar, pal', par', prr', showrpar) = 
@@ -977,31 +987,31 @@ struct
                     showlpar();
                     show "<"; NameSetPP.ppbr indent "[" "]" pps X; show ">";
                     brkindent();
-                    ppp pal' par' prr' aih outermost innermost b
+                    ppp pal' par' prr' aih outermost innermost false b
                     before
                    (showrpar();
                     >>())
                   end
                 else
-                  ppp pal par prr aih outermost innermost b)
+                  ppp pal par prr aih outermost innermost compRop b)
                handle e => raise e)
-            | pp''' outermost innermost (Ten (bs, i)) =
+            | pp''' outermost innermost compRop (Ten (bs, i)) =
               if pptenaspar then
-                pp''' outermost innermost (Par (bs, i))
+                pp''' outermost innermost compRop (Par (bs, i))
               else
-                pplist outermost innermost " *" "idx0" PrTen ppids bs
-            | pp''' outermost innermost (Par (bs, _)) =
-              pplist outermost innermost " ||" "idx0" PrPar ppids bs
-            | pp''' outermost innermost (Pri (bs, _)) =
-              pplist outermost innermost " `|`" "<->" PrPri false bs
-            | pp''' outermost innermost (b as (Com (b1, b2, _))) =
+                pplist outermost innermost compRop " *" "idx0" PrTen ppids bs
+            | pp''' outermost innermost compRop (Par (bs, _)) =
+              pplist outermost innermost compRop " ||" "idx0" PrPar ppids bs
+            | pp''' outermost innermost compRop (Pri (bs, _)) =
+              pplist outermost innermost compRop " `|`" "<->" PrPri false bs
+            | pp''' outermost innermost compRop (b as (Com (b1, b2, _))) =
               (let
                  val (showlpar, pal', par', prr', showrpar)
                    = checkprec PrCom
                in
                  if is_atomic_ion b1 then
                    if is_barren_root b2 then
-                     ppp pal par prr false outermost innermost b1
+                     ppp pal par prr false outermost innermost compRop b1
                    else
                      (* Print the atomic ion b1 in a special way which
                       * indicates that it has a hole *)
@@ -1009,11 +1019,11 @@ struct
                        val (inner_ns1, new_ns1)
                          = (showlpar();
                             <<();
-                            ppp pal' PrCom PrCom true outermost false b1)
+                            ppp pal' PrCom PrCom true outermost false compRop b1)
                        val (inner_ns2, new_ns2)
                          = (show " o";
                             brk();
-                            ppp PrCom par' prr' false false innermost b2)
+                            ppp PrCom par' prr' false false innermost true b2)
                      in
                        showrpar();
                        >>();
@@ -1038,7 +1048,7 @@ struct
                                            NONE
                    in
                      case b'' of
-                       SOME b => pp''' outermost innermost b
+                       SOME b => pp''' outermost innermost compRop b
                      | NONE =>
                        let
                          (* Is this too expensive? *)
@@ -1048,19 +1058,19 @@ struct
                                                   (false, false)
                        in
                          if b1isid then
-                           pp''' outermost innermost b2
+                           pp''' outermost innermost compRop b2
                          else if b2isid then
-                           pp''' outermost innermost b1
+                           pp''' outermost innermost compRop b1
                          else
                            let
                              val (inner_ns1, new_ns1)
                                = (showlpar();
                                   <<();
-                                  ppp pal' PrCom PrCom false outermost false b1)
+                                  ppp pal' PrCom PrCom false outermost false compRop b1)
                              val (ns2 as (inner_ns2, new_ns2))
                                = (show " o";
                                   brk();
-                                  ppp PrCom par' prr' aih false innermost b2)
+                                  ppp PrCom par' prr' aih false innermost true b2)
                            in
                              showrpar();
                              >>();
@@ -1077,7 +1087,7 @@ struct
           pp'''
         end
     in
-      (ppp PrMin PrMin PrMax true true true t; ())
+      (ppp PrMin PrMin PrMax true true true false t; ())
     end handle e => raise e
                           
   fun pp indent pps t =
