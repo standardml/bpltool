@@ -35,7 +35,8 @@ struct
   val level =
       Flags.makeIntFlag{name="/debug/level",default=LVL_USER,
                         short="d",long="debug-level",arg="LEVEL",
-                        desc="Set debug level to LEVEL (>= 0)"}
+                        desc="Level of debugging information \
+                             \(0 = no info, >0 = info)"}
 
   fun debug_enabled dbg_lvl = dbg_lvl <= (!level)
      

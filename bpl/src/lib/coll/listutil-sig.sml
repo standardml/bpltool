@@ -8,4 +8,5 @@ sig
 
   val cartesian_product : 'a list -> 'b list -> ('a * 'b) list
 
+  val split : int -> 'a list -> 'a list * 'a list
 end

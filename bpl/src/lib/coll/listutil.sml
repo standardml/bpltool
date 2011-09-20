@@ -17,4 +17,15 @@ fun cartesian_product l1 l2 =
     (fn (x, prod) => foldr (fn (y, prod) => (x, y) :: prod) prod l2)
     [] l1
 
+fun split n l =
+  let
+    fun split' (0, l1, l2)    = (rev l1, l2)
+      | split' (_, l1, [])    = (rev l1, [])
+      | split' (n, l1, l::l2) = split' (n-1,l::l1,l2)
+  in
+    if n >= 0 then
+      split' (n, [], l)
+    else
+      ([], [])
+  end
 end

@@ -90,8 +90,8 @@ sig
    *)
   val Ion : info -> ion -> bgval
   (** Construct a bigraph equivalent to (w * idp(1)) o K_y'X where
-   * y' is a vector of m distinct names, arity(K) = m -> n, and
-   * w : {y'} -> {y} is a substitution satisfying y = w(y').
+   * y' is a vector of n distinct names, arity(K) = m -> n, and
+   * w : {y'} -> {y} is a substitution satisfying y_i = w(y'_i).
    * @params i K_yX
    * @param i     Contextual information.
    * @param K_yX  An ion which might have duplicate outer names.

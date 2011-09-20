@@ -365,3 +365,6 @@ fun use_shorthands flag =
   Flags.setBoolFlag "/kernel/ast/bgterm/pptenaspar" flag;
   Flags.setBoolFlag "/kernel/ast/bgterm/ppmeraspri" flag)
 val (on, off) = (true, false) 
+
+(* Shorthands are enabled by default in the CLI. *)
+val _ = use_shorthands on

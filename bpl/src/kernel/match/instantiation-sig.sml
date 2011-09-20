@@ -160,7 +160,7 @@ sig
    *                <li> if the name lists of a map are empty, the local
    *                     renaming will be inferred as follows:
    *                     <ol>
-   *                       <li> if the relevant sites of I and J has the same
+   *                       <li> if the relevant sites of I and J have the same
    *                            local names, an identity renaming will be used.
    *                       <li> otherwise, if there is only one local name at
    *                            both sites, say x at I_i and y at J_j, the
