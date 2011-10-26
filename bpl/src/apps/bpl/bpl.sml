@@ -111,6 +111,7 @@ val help_topics = [ (* {topic, text} *)
   {topic = "operation", text = fn () =>
 	  "Bigraph operations (A,B,R : 'a bgbdnf; a,r,v : bgval; e : exn;\n\
 	  \                    u : real; c : config; f : filename):\n\
+	  \  v1 === v2            B1 ==== B2           Equality\n\
 	  \  norm_v v             denorm_b B           (De)normalise\n\
 	  \  regl_v v             regl_b B             Regularise\n\
 	  \  simpl_v v            simpl_b B            Attempt to simplify\n\
@@ -225,7 +226,7 @@ infixr 7 o
 infixr 6 `|`
 infixr 5 *  infixr 5 || 
 infix 4 >
-infix 3 &  infix 3 -->  infix 3 ---> infix 3 --   infix 3 --|>  infix 3----|>
+infix 3 &  infix 3 -->  infix 3 ---> infix 3 --   infix 3 --|>  infix 3 ----|>  infix 3 ===  infix 3 ====
 infix 2 =: infix 2 ==:  infix 2 ==  infix 2 -:  infix 2 --:  infix 2 |->  infix 2 |-->  infix 2 :::
 nonfix @
 nonfix <
@@ -236,6 +237,8 @@ type BR = BG.BgBDNF.BR
 type 'class bgbdnf = 'class BG.BgBDNF.bgbdnf
 type match = BG.Match.match
 type rule = BG.Rule.rule
+fun op====(b1,b2) = BG.BgBDNF.eq b1 b2
+fun op===(v1,v2) = (BG.BgBDNF.make v1) ==== (BG.BgBDNF.make v2)
 val norm_v = BG.BgBDNF.make
 val normalize = norm_v
 val denorm_b = BG.BgBDNF.unmk
