@@ -1,5 +1,0 @@
-tools.tracker.enabled=true
-tools.tracker.mode=step
-tools.tracker.maximized=false
-execution.correlationset.normalizepropertyvalues=true
-expressions.functions.getvariableproperty.converttoxpathobjects=true

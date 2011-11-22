@@ -1,0 +1,5 @@
+provides: bpltool v1.0.0
+upstream-url: http://www.itu.dk/research/pls/wiki/index.php/BPL_Tool
+description: The BPL Tool provides manipulation, simulation and visualisation of bigraphs and bigraphical reactive systems, and can be used either through the included web and command line user interfaces or as a programming library
+keywords: bigraphs, bigraphical programming languages, bigraphical reactive systems, concurrency
+

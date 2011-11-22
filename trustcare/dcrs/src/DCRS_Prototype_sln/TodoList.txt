@@ -1,3 +1,0 @@
-To DO List:
-
-1) Add support include bit (initial include bit) and initial pending response (to extent the datamodel), from GUI to persist to Xml format. 

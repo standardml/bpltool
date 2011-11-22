@@ -1,6 +1,0 @@
-stack-sig: /lib/pp/mak/.
-stack: stack-sig util /lib/pp/mak/. %NODASHSIG
-rbset-sig:
-rbset: rbset-sig %NODASHSIG
-util-sig: /lib/coll/monofinmap-sig rbset /lib/pp/mak/.
-util: util-sig /lib/coll/orderfinmap /lib/pp/mak/. rbset %NODASHSIG
